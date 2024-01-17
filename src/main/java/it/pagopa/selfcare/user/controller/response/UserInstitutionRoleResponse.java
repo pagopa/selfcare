@@ -1,12 +1,10 @@
-package it.pagopa.selfcare.user.entity;
+package it.pagopa.selfcare.user.controller.response;
 
 import it.pagopa.selfcare.user.common.PartyRole;
 import lombok.Data;
-import lombok.experimental.FieldNameConstants;
 
 @Data
-@FieldNameConstants(asEnum = true)
-public class UserInstitutionRole {
+public class UserInstitutionRoleResponse {
 
     private String institutionId;
     private String institutionName;
