@@ -1,14 +1,15 @@
 package it.pagopa.selfcare.user.entity;
 
-import it.pagopa.selfcare.user.common.Env;
-import it.pagopa.selfcare.user.common.PartyRole;
+import it.pagopa.selfcare.onboarding.common.Env;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 
 import java.time.OffsetDateTime;
 
-import static it.pagopa.selfcare.user.common.Env.ROOT;
+import static it.pagopa.selfcare.onboarding.common.Env.ROOT;
+
 
 @Data
 @FieldNameConstants(asEnum = true)

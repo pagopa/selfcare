@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.user.controller.response;
 
-import it.pagopa.selfcare.user.common.Env;
-import it.pagopa.selfcare.user.common.PartyRole;
+import it.pagopa.selfcare.onboarding.common.Env;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import lombok.Data;
 

@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.user.entity;
 
-import it.pagopa.selfcare.user.common.PartyRole;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 
