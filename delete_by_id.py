@@ -1,0 +1,16 @@
+from pymongo import MongoClient
+
+HOST = "mongodb://localhost:27017/"
+
+DB = 'selcUser'
+COLLECTION = 'UserInstitution'
+ID = ""
+
+if __name__ == "__main__":
+    client = MongoClient(HOST)
+
+    # Delete
+    users = client[DB][COLLECTION].delete_many({'_id': ID})
+    print("Delete in " + COLLECTION + " " + str(users.deleted_count) + " users")
+
+    client.close()
