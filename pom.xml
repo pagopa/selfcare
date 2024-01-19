@@ -138,11 +138,6 @@
       <artifactId>quarkus-test-security-jwt</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>it.pagopa.selfcare</groupId>
-      <artifactId>user-sdk-common</artifactId>
-      <version>${user-sdk.version}</version>
-    </dependency>
 
   </dependencies>
   <build>
