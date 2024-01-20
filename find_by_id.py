@@ -1,9 +1,9 @@
 from pymongo import MongoClient
 
-HOST = "mongodb://localhost:27017/"
+HOST = ""
 
 DB = 'selcUser'
-COLLECTION = 'UserInstitution'
+COLLECTION = ''
 ID = ""
 
 if __name__ == "__main__":
