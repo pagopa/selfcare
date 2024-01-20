@@ -1,6 +1,9 @@
 # Microservice User
 
-Microservice that contains callback for MongoDB collection operations events.
+Our dedicated microservice is crafted to expertly manage all events related to operations, such as insertion, update, and deletion, 
+within the MongoDB collections residing in the user domain. 
+This specialized solution has been meticulously designed to mitigate potential concurrency issues arising from the presence of multiple active instances 
+on the main microservices.
 
 ## Configuration Properties
 
