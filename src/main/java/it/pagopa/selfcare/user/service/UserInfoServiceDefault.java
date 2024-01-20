@@ -5,26 +5,19 @@ import it.pagopa.selfcare.user.controller.response.UserInfoResponse;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.mapper.UserInfoMapper;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.types.ObjectId;
 
 @Slf4j
 @ApplicationScoped
+@RequiredArgsConstructor
 public class UserInfoServiceDefault implements UserInfoService {
 
-    @Inject
-    private UserInfoMapper userInfoMapper;
+    private final UserInfoMapper userInfoMapper;
 
     @Override
-    public Uni<UserInfoResponse> findById(String id) {
-        Uni<UserInfo> userInfo = UserInfo.findById(new ObjectId(id));
-        return userInfo.onItem().transform(userInfoMapper::toResponse);
-    }
-
-    @Override
-    public Uni<UserInfoResponse> findByUserId(String userId) {
-        Uni<UserInfo> userInfo = UserInfo.find("userId", userId).firstResult();
+    public Uni<UserInfoResponse> findById(String userId) {
+        Uni<UserInfo> userInfo = UserInfo.findById(userId);
         return userInfo.onItem().transform(userInfoMapper::toResponse);
     }
 

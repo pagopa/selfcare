@@ -5,7 +5,6 @@ import it.pagopa.selfcare.user.controller.response.UserInfoResponse;
 
 public interface UserInfoService {
 
-    Uni<UserInfoResponse> findById(String id);
-    Uni<UserInfoResponse> findByUserId(String userId);
+    Uni<UserInfoResponse> findById(String userId);
 
 }

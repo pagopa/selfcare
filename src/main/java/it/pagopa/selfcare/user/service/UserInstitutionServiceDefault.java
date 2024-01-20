@@ -6,16 +6,16 @@ import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 
 @Slf4j
 @ApplicationScoped
+@RequiredArgsConstructor
 public class UserInstitutionServiceDefault implements UserInstitutionService {
 
-    @Inject
-    private UserInstitutionMapper userInstitutionMapper;
+    private final UserInstitutionMapper userInstitutionMapper;
 
     @Override
     public Uni<UserInstitutionResponse> findById(String id) {
