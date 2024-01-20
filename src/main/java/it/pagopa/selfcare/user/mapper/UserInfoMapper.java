@@ -10,13 +10,6 @@ import org.mapstruct.Named;
 @Mapper(componentModel = "jakarta", uses = {UserInstitutionRoleMapper.class})
 public interface UserInfoMapper {
 
-    @Mapping(target = "id", expression = "java(objectIdToString(userInfo.getId()))")
     UserInfoResponse toResponse(UserInfo userInfo);
-
-    @Named("objectIdToString")
-    default String objectIdToString(ObjectId objectId) {
-        return objectId.toHexString();
-    }
-
 
 }
