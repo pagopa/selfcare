@@ -6,6 +6,7 @@ import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 import static it.pagopa.selfcare.onboarding.common.Env.ROOT;
@@ -22,6 +23,6 @@ public class OnboardedProduct {
     private String productRole;
     private PartyRole role;
     private Env env = ROOT;
-    private OffsetDateTime createdAt;
-    private OffsetDateTime updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
