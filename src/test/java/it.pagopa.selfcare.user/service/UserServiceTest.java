@@ -79,7 +79,7 @@ class UserServiceTest {
                 .thenReturn(Uni.createFrom().item(userResource));
 
         UniAssertSubscriber<List<String>> subscriber = userService
-                .getUsersEmailByInstitution("institutionId")
+                .getUsersEmails("institutionId", "productId")
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 

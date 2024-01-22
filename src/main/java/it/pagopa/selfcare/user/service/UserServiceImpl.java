@@ -11,6 +11,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @RequiredArgsConstructor
@@ -21,9 +22,12 @@ public class UserServiceImpl implements UserService {
     @Inject
     UserApi userRegistryApi;
 
+    private final UserInstitutionService userInstitutionService;
+
     @Override
-    public Uni<List<String>> getUsersEmailByInstitution(String institutionId) {
-        Multi<UserInstitution> userInstitutions =  UserInstitution.find("institutionId", institutionId).stream();
+    public Uni<List<String>> getUsersEmails(String institutionId, String productId) {
+        Map<String, Object> parametersMap = Map.of("institutionId", institutionId, "products.productId", productId);
+        Multi<UserInstitution> userInstitutions =  userInstitutionService.findAllWithFilter(parametersMap);
         return userInstitutions.onItem()
                 .transformToUni(obj -> userRegistryApi.findByIdUsingGET("workContacts", obj.getUserId()))
                 .merge()

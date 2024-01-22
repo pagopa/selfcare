@@ -23,39 +23,43 @@ public class UserControllerTest {
     private UserService userService;
 
     /**
-     * Method under test: {@link UserController#getUsersEmailByInstitution(String)}
+     * Method under test: {@link UserController#getUsersEmailByInstitutionAndProduct(String, String)}}
      */
     @Test
     @TestSecurity(user = "userJwt")
     void getUsersEmailByInstitution() {
 
-        Mockito.when(userService.getUsersEmailByInstitution(anyString()))
+        Mockito.when(userService.getUsersEmails(anyString(), anyString()))
                 .thenReturn(Uni.createFrom().item(List.of("test@test.it")));
 
         var institutionId = "institutionId";
+        var productId = "productId";
 
         given()
                 .when()
                 .contentType(ContentType.JSON)
                 .pathParam("institutionId", institutionId)
-                .get("/emails/{institutionId}")
+                .pathParam("productId", productId)
+                .get("/emails/{institutionId}/{productId}")
                 .then()
                 .statusCode(200);
     }
 
     /**
-     * Method under test: {@link UserController#getUsersEmailByInstitution(String)}
+     * Method under test: {@link UserController#getUsersEmailByInstitutionAndProduct(String, String)}
      */
     @Test
     void getUsersEmailByInstitutionNotAuthorized() {
 
         var institutionId = "institutionId";
+        var productId = "productId";
 
         given()
                 .when()
                 .contentType(ContentType.JSON)
                 .pathParam("institutionId", institutionId)
-                .get("/emails/{institutionId}")
+                .pathParam("productId", productId)
+                .get("/emails/{institutionId}/{productId}")
                 .then()
                 .statusCode(401);
     }

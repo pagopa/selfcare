@@ -89,6 +89,12 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         return runUserInstitutionFindQuery(query, null).firstResult();
     }
 
+    @Override
+    public Multi<UserInstitution> findAllWithFilter(Map<String, Object> queryParameter) {
+        Document query = queryUtils.buildQueryDocument(queryParameter);
+        return runUserInstitutionFindQuery(query, null).stream();
+    }
+
     public ReactivePanacheQuery<UserInstitution> runUserInstitutionFindQuery(Document query, Document sort) {
         return UserInstitution.find(query, sort);
     }

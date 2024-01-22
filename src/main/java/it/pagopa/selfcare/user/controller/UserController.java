@@ -23,12 +23,13 @@ public class UserController {
     private final UserMapper userMapper;
     private final UserEventService userEventService;
 
-    @Operation(summary = "The API retrieves Users' emails using institution id")
+    @Operation(summary = "The API retrieves Users' emails using institution id and productId")
     @GET
-    @Path(value = "/emails/{institutionId}")
+    @Path(value = "/emails/{institutionId}/{productId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<List<String>> getUsersEmailByInstitution(@PathParam(value = "institutionId") String institutionId) {
-        return userService.getUsersEmailByInstitution(institutionId);
+    public Uni<List<String>> getUsersEmailByInstitutionAndProduct(@PathParam(value = "institutionId") String institutionId,
+                                                                  @PathParam(value = "productId") String productId) {
+        return userService.getUsersEmails(institutionId, productId);
     }
 }
 

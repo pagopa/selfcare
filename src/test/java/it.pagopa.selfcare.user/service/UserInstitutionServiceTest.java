@@ -8,6 +8,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.mongodb.MongoTestResource;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
@@ -134,6 +135,28 @@ class UserInstitutionServiceTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted().assertItem(userInstitution);
     }
+
+    /*@Test
+    void findAllWithFilter() {
+        Map<String, Object> parameterMap = new HashMap<>();
+        parameterMap.put("institutionId", "institutionId");
+        UserInstitution userInstitution = createDummyUserInstitution();
+        PanacheMock.mock(UserInstitution.class);
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitution));
+        when(UserInstitution.find((Document) any(), any()))
+                .thenReturn(query);
+        when(query.page(anyInt(), anyInt())).thenReturn(query);
+        when(query.list()).thenReturn(Uni.createFrom().item(List.of(userInstitution)));
+        AssertSubscriber<UserInstitution> subscriber =  userInstitutionService.findAllWithFilter(parameterMap)
+                .subscribe().withSubscriber(AssertSubscriber.create());
+
+           .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        List<String> actual = subscriber.assertCompleted().assertCompleted().getItems();
+        subscriber.assertCompleted().assertItem(List.of(userInstitution));
+    }*/
 
     private UserInstitution createDummyUserInstitution() {
         UserInstitution userInstitution = new UserInstitution();
