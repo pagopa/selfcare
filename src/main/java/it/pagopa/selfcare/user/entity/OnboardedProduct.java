@@ -22,6 +22,6 @@ public class OnboardedProduct {
     private String productRole;
     private PartyRole role;
     private Env env = ROOT;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String createdAt;
+    private String updatedAt;
 }

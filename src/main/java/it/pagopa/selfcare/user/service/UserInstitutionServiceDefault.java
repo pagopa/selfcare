@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -27,7 +28,9 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class UserInstitutionServiceDefault implements UserInstitutionService {
 
-    private static final String CURRENT_PRODUCT_REF = ".$[products].";
+    private static final String CURRENT = ".$.";
+    private static final String CURRENT_ANY = ".$[].";
+
 
     private final UserInstitutionMapper userInstitutionMapper;
     private final QueryUtils queryUtils;
@@ -40,13 +43,13 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
     @Override
     public Uni<UserInstitutionResponse> findByInstitutionId(String institutionId) {
-        Uni<UserInstitution> userInstitution = UserInstitution.find("institutionId", institutionId).firstResult();
+        Uni<UserInstitution> userInstitution = UserInstitution.find(UserInstitution.Fields.institutionId.name(), institutionId).firstResult();
         return userInstitution.onItem().transform(userInstitutionMapper::toResponse);
     }
 
     @Override
     public Multi<UserInstitutionResponse> findByUserId(String userId) {
-        Multi<UserInstitution> userInstitutions = UserInstitution.find("userId", userId).stream();
+        Multi<UserInstitution> userInstitutions = UserInstitution.find(UserInstitution.Fields.userId.name(), userId).stream();
         return userInstitutions.onItem().transform(userInstitutionMapper::toResponse);
     }
 
@@ -55,8 +58,13 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         String roleString = Objects.isNull(role) ? null : role.name();
 
         Map<String, Object> fieldToUpdateMap = new HashMap<>();
-        fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_PRODUCT_REF + OnboardedProduct.Fields.status.name(), status);
-        fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_PRODUCT_REF + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
+        if(productFilterIsEmpty(productId, role, productRole)) {
+            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.status.name(), status);
+            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now().toString());
+        }else{
+            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.status.name(), status);
+            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now().toString());
+        }
 
         Map<String, Object> parametersMap = queryUtils.createMapForUserUpdateParameter(userId, institutionId, productId, null, roleString, productRole, null);
 
@@ -68,8 +76,8 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     public Uni<Long> updateUserStatusDaoByRelationshipId(String relationshipId, OnboardedProductState status) {
 
         Map<String, Object> fieldToUpdateMap = new HashMap<>();
-        fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_PRODUCT_REF + OnboardedProduct.Fields.status.name(), status);
-        fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_PRODUCT_REF + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
+        fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.status.name(), status);
+        fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now().toString());
 
         Map<String, Object> parametersMap = queryUtils.createMapForUserUpdateParameter(null, null, null, null, null, null, relationshipId);
 
@@ -87,6 +95,10 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     public Uni<UserInstitution> retrieveFirstFilteredUserInstitution(Map<String, Object> queryParameter) {
         Document query = queryUtils.buildQueryDocument(queryParameter);
         return runUserInstitutionFindQuery(query, null).firstResult();
+    }
+
+    private boolean productFilterIsEmpty(String productId, PartyRole role, String productRole) {
+        return StringUtils.isBlank(productId) && StringUtils.isBlank(productRole) && role != null;
     }
 
     public ReactivePanacheQuery<UserInstitution> runUserInstitutionFindQuery(Document query, Document sort) {
