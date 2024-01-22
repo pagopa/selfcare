@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class QueryUtils {
 
-    private static final String CURRENT_PRODUCT = "current.";
+    private static final String CURRENT_PRODUCT = "products.";
 
     public Document buildUpdateDocument(Map<String, Object> parameters) {
         if (!parameters.isEmpty()) {

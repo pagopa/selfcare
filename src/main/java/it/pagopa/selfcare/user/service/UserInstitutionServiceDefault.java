@@ -27,7 +27,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class UserInstitutionServiceDefault implements UserInstitutionService {
 
-    private static final String CURRENT_PRODUCT_REF = ".$[current].";
+    private static final String CURRENT_PRODUCT_REF = ".$[products].";
 
     private final UserInstitutionMapper userInstitutionMapper;
     private final QueryUtils queryUtils;
@@ -58,7 +58,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_PRODUCT_REF + OnboardedProduct.Fields.status.name(), status);
         fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_PRODUCT_REF + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
 
-        Map<String, Object> parametersMap = queryUtils.createMapForUserUpdateParameter(userId, institutionId, productId, null, roleString , productRole, null);
+        Map<String, Object> parametersMap = queryUtils.createMapForUserUpdateParameter(userId, institutionId, productId, null, roleString, productRole, null);
 
         return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
                 .where(queryUtils.buildQueryDocument(parametersMap));
@@ -71,7 +71,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_PRODUCT_REF + OnboardedProduct.Fields.status.name(), status);
         fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_PRODUCT_REF + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
 
-        Map<String, Object> parametersMap = queryUtils.createMapForUserUpdateParameter(null, null, null, null, null , null, relationshipId);
+        Map<String, Object> parametersMap = queryUtils.createMapForUserUpdateParameter(null, null, null, null, null, null, relationshipId);
 
         return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
                 .where(queryUtils.buildQueryDocument(parametersMap));
