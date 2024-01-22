@@ -2,22 +2,75 @@ package it.pagopa.selfcare.user.service;
 
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.quarkus.panache.mock.PanacheMock;
+import io.quarkus.test.InjectMock;
+import io.quarkus.test.common.QuarkusTestResource;
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.mongodb.MongoTestResource;
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
+import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import jakarta.inject.Inject;
+import org.bson.types.ObjectId;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.openapi.quarkus.user_registry_json.api.UserApi;
+import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
+import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+@QuarkusTest
+@QuarkusTestResource(MongoTestResource.class)
 public class UserServiceTest {
 
+    @Inject
+    private UserService userService;
+
+    @RestClient
+    @InjectMock
+    private UserApi userRegistryApi;
+
+    private static UserResource userResource;
+    private static UserInstitution userInstitution;
+
+    static {
+        userInstitution = new UserInstitution();
+        userInstitution.setId(ObjectId.get());
+        userInstitution.setUserId("userId");
+        userInstitution.setInstitutionId("institutionId");
+        OnboardedProduct product = new OnboardedProduct();
+        product.setProductId("test");
+        userInstitution.setProducts(List.of(product));
+
+        userResource = new UserResource();
+        userResource.setId(UUID.randomUUID());
+        CertifiableFieldResourceOfstring certifiedName = new CertifiableFieldResourceOfstring();
+        certifiedName.setValue("name");
+        userResource.setName(certifiedName);
+        userResource.setFamilyName(certifiedName);
+        userResource.setFiscalCode("taxCode");
+        CertifiableFieldResourceOfstring certifiedEmail = new CertifiableFieldResourceOfstring();
+        certifiedEmail.setValue("test@test.it");
+        WorkContactResource workContactResource = new WorkContactResource();
+        workContactResource.setEmail(certifiedEmail);
+        userResource.setEmail(certifiedEmail);
+        userResource.setWorkContacts(Map.of("institutionId", workContactResource));
+    }
 
     @Test
     void getUserProductsByInstitutionTest() {
-        UserResource userResource = createDummyUserResource();
-        UserInstitution userInstitution = createDummyUserInstitution();
         PanacheMock.mock(UserInstitution.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
         when(query.stream()).thenReturn(Multi.createFrom().item(userInstitution));
@@ -26,7 +79,7 @@ public class UserServiceTest {
         when(userRegistryApi.findByIdUsingGET(any(), any()))
                 .thenReturn(Uni.createFrom().item(userResource));
 
-        AssertSubscriber<UserProductResponse> subscriber = userInstitutionService
+        AssertSubscriber<UserProductResponse> subscriber = userService
                 .getUserProductsByInstitution("institutionId")
                 .subscribe()
                 .withSubscriber(AssertSubscriber.create(10));

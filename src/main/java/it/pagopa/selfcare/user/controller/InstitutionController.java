@@ -13,7 +13,7 @@ import lombok.AllArgsConstructor;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 
 @Authenticated
-@Path("/v1/institutions")
+@Path("/institutions")
 @AllArgsConstructor
 public class InstitutionController {
 

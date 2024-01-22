@@ -16,9 +16,9 @@ public class UserServiceImpl implements UserService {
 
     @RestClient
     @Inject
-    private final UserApi userRegistryApi;
+    private UserApi userRegistryApi;
     private final OnboardedProductMapper onboardedProductMapper;
-    private static final String USERS_WORKS_FIELD_LIST = "fiscalCode,familyName,name,workContacts";
+    private static final String USERS_WORKS_FIELD_LIST = "fiscalCode,familyName,email,name,workContacts";
 
     public Multi<UserProductResponse> getUserProductsByInstitution(String institutionId) {
         Multi<UserInstitution> userInstitutions =  UserInstitution.find("institutionId", institutionId).stream();
@@ -27,7 +27,6 @@ public class UserServiceImpl implements UserService {
                         .map(userResource -> UserProductResponse.builder()
                                 .id(userResource.getId().toString())
                                 .name(userResource.getName().getValue())
-                                .email(userResource.getEmail().getValue())
                                 .surname(userResource.getFamilyName().getValue())
                                 .taxCode(userResource.getFiscalCode())
                                 .products(onboardedProductMapper.toList(userInstitution.getProducts()))
