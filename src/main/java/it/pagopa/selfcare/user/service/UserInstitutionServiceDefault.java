@@ -60,10 +60,10 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         Map<String, Object> fieldToUpdateMap = new HashMap<>();
         if(productFilterIsEmpty(productId, role, productRole)) {
             fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.status.name(), status);
-            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now().toString());
+            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
         }else{
             fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.status.name(), status);
-            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now().toString());
+            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
         }
 
         Map<String, Object> parametersMap = queryUtils.createMapForUserUpdateParameter(userId, institutionId, productId, null, roleString, productRole, null);
@@ -77,7 +77,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
         Map<String, Object> fieldToUpdateMap = new HashMap<>();
         fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.status.name(), status);
-        fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now().toString());
+        fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
 
         Map<String, Object> parametersMap = queryUtils.createMapForUserUpdateParameter(null, null, null, null, null, null, relationshipId);
 
@@ -98,7 +98,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     }
 
     private boolean productFilterIsEmpty(String productId, PartyRole role, String productRole) {
-        return StringUtils.isBlank(productId) && StringUtils.isBlank(productRole) && role != null;
+        return StringUtils.isBlank(productId) && StringUtils.isBlank(productRole) && role == null;
     }
 
     public ReactivePanacheQuery<UserInstitution> runUserInstitutionFindQuery(Document query, Document sort) {

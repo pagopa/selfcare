@@ -5,6 +5,8 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 public class OnboardedProductResponse {
 
@@ -15,7 +17,7 @@ public class OnboardedProductResponse {
     private String productRole;
     private PartyRole role;
     private Env env;
-    private String createdAt;
-    private String updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 }
