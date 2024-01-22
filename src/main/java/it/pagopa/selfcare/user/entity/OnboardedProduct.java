@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 
 import static it.pagopa.selfcare.onboarding.common.Env.ROOT;
 
