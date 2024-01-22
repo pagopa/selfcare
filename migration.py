@@ -4,7 +4,7 @@ from pymongo import MongoClient, WriteConcern
 
 from query import *
 
-HOST = ""
+HOST = "mongodb://selc-d-cosmosdb-mongodb-account:2a3hDZ6QMvbtN1sfiiNBiLXVWAjmFpkIeZ5wHhfc0xzCvm193oZZ7Mv7tVD7lgTH7bWY31P38optBkV6wiMx8Q%3D%3D@selc-d-cosmosdb-mongodb-account.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=%40selc-d-cosmosdb-mongodb-account%40"
 
 CORE_DB = 'selcMsCore'
 USER_COLLECTION = 'User'
@@ -22,8 +22,8 @@ def migrate_user_institution(client):
     print(USER_COLLECTION + " size: " + str(user_size))
     pages = math.ceil(user_size / BATCH_SIZE)
 
-    for page in range(START_PAGE, 1):
-        print("Start page " + str(page) + "/" + str(pages - 1))
+    for page in range(START_PAGE, pages):
+        print("Start page " + str(page) + "/" + str(pages))
 
         result = client[CORE_DB][USER_COLLECTION].aggregate(
             user_institution_from_user_query(page, BATCH_SIZE)
@@ -35,22 +35,29 @@ def migrate_user_institution(client):
                 {"$set": {"products": user.get('products'),
                           "institutionDescription": user.get('institutionDescription')}}, True)
 
-        print("End page " + str(page + 1) + "/" + str(pages))
+        print("End page " + str(page) + "/" + str(pages))
 
 
 def generate_user_info(client):
-    user_institution_size = client[USERS_DB][USER_INSTITUTION_COLLECTION].count_documents({})
-    print(USER_INSTITUTION_COLLECTION + " size: " + str(user_institution_size))
-
     result_info = client[USERS_DB][USER_INSTITUTION_COLLECTION].aggregate(
         user_info_from_user_institution_query(USERS_DB, USER_INFO_COLLECTION)
     )
     # client[USERS_DB][USER_INFO_COLLECTION].delete_many({})
 
     for user_info in result_info:
-        client[USERS_DB][USER_INFO_COLLECTION].update_one(
-            {"_id": user_info.get('_id')},
-            {"$set": {"institutions": user_info.get('institutions')}}, True)
+        user_info['institutions'] = [institution for institution in user_info.get('institutions') if institution.get('status') is not None]
+        if len(user_info.get('institutions')) != 0:
+            client[USERS_DB][USER_INFO_COLLECTION].update_one(
+                {"_id": user_info.get('_id')},
+                {"$set": {"institutions": user_info.get('institutions')}}, True)
+        else:
+            client[USERS_DB][USER_INFO_COLLECTION].delete_one({"_id": user_info.get('_id')})
+
+
+    user_institution_size = client[USERS_DB][USER_INSTITUTION_COLLECTION].count_documents({})
+    print(USER_INSTITUTION_COLLECTION + " size: " + str(user_institution_size))
+    user_info_size = client[USERS_DB][USER_INFO_COLLECTION].count_documents({})
+    print(USER_INFO_COLLECTION + " size: " + str(user_info_size))
 
 if __name__ == "__main__":
     client = MongoClient(HOST)
@@ -59,16 +66,9 @@ if __name__ == "__main__":
         migrate_user_institution(client)
         session.commit_transaction()
 
+    print("Start generate the " + USER_INFO_COLLECTION)
     generate_user_info(client)
+    print("End generate the " + USER_INFO_COLLECTION)
 
-    # check finale USER_INFO_COLLECTION deve avere lo stesso numero di elementi di USER_COLLECTION
-    user_size = client[CORE_DB][USER_COLLECTION].count_documents({})
-    user_info_size = client[USERS_DB][USER_INFO_COLLECTION].count_documents({})
-    if user_info_size != user_size:
-        print("ERROR")
-        print("USER CORE " + str(user_size))
-        print("USER INFO " + str(user_info_size))
-    else:
-        print("MIGRATION SUCCESSFUL")
 
     client.close()

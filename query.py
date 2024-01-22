@@ -16,6 +16,7 @@ def paging(page, size):
         '$limit': Int64(size)
     }
 
+
 def user_institution_from_user_query(page, size):
     return [
         *paging(page, size),
@@ -29,7 +30,27 @@ def user_institution_from_user_query(page, size):
                 'userId': '$_id',
                 'institutionId': '$bindings.institutionId',
                 'institutionDescription': '$bindings.institutionName',
-                'products': '$bindings.products'
+                'products': {
+                    '$map': {
+                        'input': '$bindings.products',
+                        'as': 'product',
+                        'in': {
+                            'productId': '$$product.productId',
+                            'relationshipId': '$$product.relationshipId',
+                            'tokenId': '$$product.tokenId',
+                            'status': '$$product.status',
+                            'productRole': '$$product.productRole',
+                            'role': '$$product.role',
+                            'env': '$$product.env',
+                            'createdAt': {
+                                '$toDate': '$$product.createdAt'
+                            },
+                            'updatedAt': {
+                                '$toDate': '$$product.updatedAt'
+                            }
+                        }
+                    }
+                }
             }
         }
     ]
@@ -42,39 +63,80 @@ def user_info_from_user_institution_query(db, collection):
                 '_id': '$userId',
                 'institutions': {
                     '$addToSet': {
-                        'institutionId': '$institutionId',
-                        'institutionName': '$institutionDescription',
-                        'role': {
-                            '$let': {
-                                'vars': {
-                                    'roles': {
-                                        '$setIntersection': '$products.role'
-                                    }
-                                },
-                                'in': {
-                                    '$cond': [
-                                        {
-                                            '$in': [
-                                                'MANAGER', '$$roles'
-                                            ]
-                                        }, 'MANAGER', {
+                        '$let': {
+                            'vars': {
+                                'status': {
+                                    '$let': {
+                                        'vars': {
+                                            'tmp': {
+                                                '$setIntersection': '$products.status'
+                                            }
+                                        },
+                                        'in': {
                                             '$cond': [
                                                 {
                                                     '$in': [
-                                                        'DELEGATE', '$$roles'
+                                                        'ACTIVE', '$$tmp'
                                                     ]
-                                                }, 'DELEGATE', {
+                                                }, 'ACTIVE', {
                                                     '$cond': [
                                                         {
                                                             '$in': [
-                                                                'SUB_DELEGATE', '$$roles'
+                                                                'PENDING', '$$tmp'
                                                             ]
-                                                        }, 'SUB_DELEGATE', 'OPERATOR'
+                                                        }, 'PENDING', {
+                                                            '$cond': [
+                                                                {
+                                                                    '$in': [
+                                                                        'TOBEVALIDATED', '$$tmp'
+                                                                    ]
+                                                                }, 'TOBEVALIDATED', None
+                                                            ]
+                                                        }
                                                     ]
                                                 }
                                             ]
                                         }
-                                    ]
+                                    }
+                                }
+                            },
+                            'in': {
+                                'institutionId': '$institutionId',
+                                'institutionName': '$institutionDescription',
+                                'status': '$$status',
+                                'role': {
+                                    '$let': {
+                                        'vars': {
+                                            'roles': {
+                                                '$setIntersection': '$products.role'
+                                            }
+                                        },
+                                        'in': {
+                                            '$cond': [
+                                                {
+                                                    '$in': [
+                                                        'MANAGER', '$$roles'
+                                                    ]
+                                                }, 'MANAGER', {
+                                                    '$cond': [
+                                                        {
+                                                            '$in': [
+                                                                'DELEGATE', '$$roles'
+                                                            ]
+                                                        }, 'DELEGATE', {
+                                                            '$cond': [
+                                                                {
+                                                                    '$in': [
+                                                                        'SUB_DELEGATE', '$$roles'
+                                                                    ]
+                                                                }, 'SUB_DELEGATE', 'OPERATOR'
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    }
                                 }
                             }
                         }
