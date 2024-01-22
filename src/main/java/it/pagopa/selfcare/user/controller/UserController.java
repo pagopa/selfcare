@@ -27,7 +27,7 @@ public class UserController {
     @GET
     @Path(value = "/emails/{institutionId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<List<String>> getUsersEmailByInstitutionAndProduct(@PathParam(value = "institutionId") String institutionId) {
+    public Uni<List<String>> getUsersEmailByInstitution(@PathParam(value = "institutionId") String institutionId) {
         return userService.getUsersEmailByInstitution(institutionId);
     }
 }
