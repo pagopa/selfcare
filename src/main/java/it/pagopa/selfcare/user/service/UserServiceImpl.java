@@ -3,6 +3,7 @@ package it.pagopa.selfcare.user.service;
 import io.smallrye.mutiny.Multi;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.mapper.OnboardedProductMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
@@ -15,8 +16,8 @@ public class UserServiceImpl implements UserService {
 
     @RestClient
     @Inject
-    private UserApi userRegistryApi;
-
+    private final UserApi userRegistryApi;
+    private final OnboardedProductMapper onboardedProductMapper;
     private static final String USERS_WORKS_FIELD_LIST = "fiscalCode,familyName,name,workContacts";
 
     public Multi<UserProductResponse> getUserProductsByInstitution(String institutionId) {
