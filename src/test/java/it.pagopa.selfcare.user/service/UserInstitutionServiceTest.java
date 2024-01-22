@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static io.smallrye.common.constraint.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
@@ -136,7 +138,7 @@ class UserInstitutionServiceTest {
         subscriber.assertCompleted().assertItem(userInstitution);
     }
 
-    /*@Test
+    @Test
     void findAllWithFilter() {
         Map<String, Object> parameterMap = new HashMap<>();
         parameterMap.put("institutionId", "institutionId");
@@ -147,16 +149,15 @@ class UserInstitutionServiceTest {
         when(UserInstitution.find((Document) any(), any()))
                 .thenReturn(query);
         when(query.page(anyInt(), anyInt())).thenReturn(query);
-        when(query.list()).thenReturn(Uni.createFrom().item(List.of(userInstitution)));
+        when(query.stream()).thenReturn(Multi.createFrom().item(userInstitution));
+
         AssertSubscriber<UserInstitution> subscriber =  userInstitutionService.findAllWithFilter(parameterMap)
-                .subscribe().withSubscriber(AssertSubscriber.create());
+                .subscribe().withSubscriber(AssertSubscriber.create(10));
 
-           .subscribe()
-                .withSubscriber(UniAssertSubscriber.create());
-
-        List<String> actual = subscriber.assertCompleted().assertCompleted().getItems();
-        subscriber.assertCompleted().assertItem(List.of(userInstitution));
-    }*/
+        List<UserInstitution> actual = subscriber.assertCompleted().getItems();
+        assertNotNull(actual);
+        assertEquals(1, actual.size());
+    }
 
     private UserInstitution createDummyUserInstitution() {
         UserInstitution userInstitution = new UserInstitution();

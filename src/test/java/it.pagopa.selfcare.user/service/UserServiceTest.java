@@ -1,7 +1,5 @@
 package it.pagopa.selfcare.user.service;
 
-import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
-import io.quarkus.panache.mock.PanacheMock;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
@@ -15,7 +13,6 @@ import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
@@ -36,6 +33,9 @@ class UserServiceTest {
 
     @Inject
     private UserService userService;
+
+    @InjectMock
+    private UserInstitutionService userInstitutionService;
 
     @RestClient
     @InjectMock
@@ -69,12 +69,9 @@ class UserServiceTest {
     }
     
     @Test
-    void getUsersEmailByInstitutionTest() {
-        PanacheMock.mock(UserInstitution.class);
-        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
-        when(query.stream()).thenReturn(Multi.createFrom().item(userInstitution));
-        when(UserInstitution.find(any(), (Object) any()))
-                .thenReturn(query);
+    void getUsersEmailsTest() {
+
+        when(userInstitutionService.findAllWithFilter(any())).thenReturn(Multi.createFrom().item(userInstitution));
         when(userRegistryApi.findByIdUsingGET(any(), any()))
                 .thenReturn(Uni.createFrom().item(userResource));
 

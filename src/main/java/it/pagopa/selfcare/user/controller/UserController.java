@@ -23,7 +23,7 @@ public class UserController {
     private final UserMapper userMapper;
     private final UserEventService userEventService;
 
-    @Operation(summary = "The API retrieves Users' emails using institution id and productId")
+    @Operation(summary = "The API retrieves Users' emails using institution id and product id")
     @GET
     @Path(value = "/emails/{institutionId}/{productId}")
     @Produces(MediaType.APPLICATION_JSON)
