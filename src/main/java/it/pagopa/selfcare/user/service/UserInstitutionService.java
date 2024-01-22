@@ -17,4 +17,12 @@ public interface UserInstitutionService {
     Uni<UserInstitutionResponse> findByInstitutionId(String institutionId);
 
     Multi<UserInstitutionResponse> findByUserId(String userId);
+
+    Uni<Long> updateUserStatusDao(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status);
+
+    Uni<Long> updateUserStatusDaoByRelationshipId(String relationshipId, OnboardedProductState status);
+
+    Uni<List<UserInstitution>> paginatedFindAllWithFilter(Map<String, Object> queryParameter, Integer page, Integer size);
+
+    Uni<UserInstitution> retrieveFirstFilteredUserInstitution(Map<String, Object> queryParameter);
 }
