@@ -6,7 +6,6 @@ import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 
 @Data
 public class OnboardedProductResponse {

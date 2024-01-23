@@ -23,8 +23,6 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class QueryUtils {
 
-    private static final String CURRENT_PRODUCT = "products.";
-
     public Document buildUpdateDocument(Map<String, Object> parameters) {
         if (!parameters.isEmpty()) {
             return bsonToDocument(Updates.combine(constructBsonUpdate(parameters)));
@@ -65,7 +63,7 @@ public class QueryUtils {
         return parameters.entrySet().stream()
                 .map(entry -> {
                     if (entry.getValue() instanceof ArrayList<?>) {
-                        return Filters.in(entry.getKey(), entry.getValue());
+                        return Filters.in(entry.getKey(), (Iterable<?>) entry.getValue());
                     }else if(isPresentArrayFilter(parameters)){
                         Map<String, Object> finalParameters = parameters.entrySet().stream().filter(stringObjectEntry -> stringObjectEntry.getKey().contains("\\."))
                                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (x, y) -> x));
@@ -107,11 +105,11 @@ public class QueryUtils {
         Map<String, Object> queryParameterMap = new HashMap<>();
         Optional.ofNullable(userId).ifPresent(value -> queryParameterMap.put(UserInstitution.Fields.userId.name(), value));
         Optional.ofNullable(institutionId).ifPresent(value -> queryParameterMap.put(UserInstitution.Fields.institutionId.name(), value));
-        Optional.ofNullable(productId).ifPresent(value -> queryParameterMap.put(CURRENT_PRODUCT + "productId", value));
-        Optional.ofNullable(status).ifPresent(value -> queryParameterMap.put(CURRENT_PRODUCT + "status", value));
-        Optional.ofNullable(role).ifPresent(value -> queryParameterMap.put(CURRENT_PRODUCT + "role", value));
-        Optional.ofNullable(productRole).ifPresent(value -> queryParameterMap.put(CURRENT_PRODUCT + "productRole", value));
-        Optional.ofNullable(productRole).ifPresent(value -> queryParameterMap.put(CURRENT_PRODUCT + "relationshipId", value));
+        Optional.ofNullable(productId).ifPresent(value -> queryParameterMap.put(UserInstitution.Fields.products.name() + ".productId", value));
+        Optional.ofNullable(status).ifPresent(value -> queryParameterMap.put(UserInstitution.Fields.products.name() + ".status", value));
+        Optional.ofNullable(role).ifPresent(value -> queryParameterMap.put(UserInstitution.Fields.products.name() + ".role", value));
+        Optional.ofNullable(productRole).ifPresent(value -> queryParameterMap.put(UserInstitution.Fields.products.name() + ".productRole", value));
+        Optional.ofNullable(productRole).ifPresent(value -> queryParameterMap.put(UserInstitution.Fields.products.name() + ".relationshipId", value));
         return queryParameterMap;
     }
 
