@@ -3,25 +3,25 @@ package it.pagopa.selfcare.user.service;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
+import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.util.QueryUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+
+import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductFilterField.*;
 
 @Slf4j
 @ApplicationScoped
@@ -54,22 +54,18 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     }
 
     @Override
-    public Uni<Long> updateUserStatusDao(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status) {
-        String roleString = Objects.isNull(role) ? null : role.name();
+    public Uni<Long> updateUserStatusDao(Map<String, Object> filterMap, OnboardedProductState status) {
 
         Map<String, Object> fieldToUpdateMap = new HashMap<>();
-        if(productFilterIsEmpty(productId, role, productRole)) {
+        if(productFilterIsEmpty(filterMap)) {
             fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.status.name(), status);
             fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
         }else{
             fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.status.name(), status);
             fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
         }
-
-        Map<String, Object> parametersMap = queryUtils.createMapForUserUpdateParameter(userId, institutionId, productId, null, roleString, productRole, null);
-
         return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
-                .where(queryUtils.buildQueryDocument(parametersMap));
+                .where(queryUtils.buildQueryDocument(filterMap));
     }
 
     @Override
@@ -79,10 +75,13 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.status.name(), status);
         fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
 
-        Map<String, Object> parametersMap = queryUtils.createMapForUserUpdateParameter(null, null, null, null, null, null, relationshipId);
+        OnboardedProductFilter onboardedProductFilter = OnboardedProductFilter
+                .builder()
+                .relationshipId(relationshipId)
+                .build();
 
         return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
-                .where(queryUtils.buildQueryDocument(parametersMap));
+                .where(queryUtils.buildQueryDocument(onboardedProductFilter.constructMap()));
     }
 
     @Override
@@ -102,9 +101,13 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         Document query = queryUtils.buildQueryDocument(queryParameter);
         return runUserInstitutionFindQuery(query, null).stream();
     }
-  
+
     private boolean productFilterIsEmpty(String productId, PartyRole role, String productRole) {
         return StringUtils.isBlank(productId) && StringUtils.isBlank(productRole) && role == null;
+    private boolean productFilterIsEmpty(Map<String, Object> filterMap) {
+        return !filterMap.containsKey(PRODUCT_ID.getDescription())
+                && !filterMap.containsKey(PRODUCT_ROLE.getDescription())
+                && !filterMap.containsKey(ROLE.getDescription());
     }
 
     public ReactivePanacheQuery<UserInstitution> runUserInstitutionFindQuery(Document query, Document sort) {
