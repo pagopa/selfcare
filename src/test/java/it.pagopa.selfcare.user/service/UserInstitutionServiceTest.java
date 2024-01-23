@@ -24,6 +24,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductFilterField.PRODUCT_ID;
+import static it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter.UserInstitutionFilterEnum.INSTITUTION_ID;
+import static it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter.UserInstitutionFilterEnum.USER_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
@@ -82,8 +85,11 @@ class UserInstitutionServiceTest {
         when(UserInstitution.update((Document) any()))
                 .thenReturn(update);
         when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
-        UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserStatusDao(userId, institutionId, productId, PartyRole.MANAGER,
-                        null, OnboardedProductState.ACTIVE).subscribe().withSubscriber(UniAssertSubscriber.create());
+        Map<String, Object> map = new HashMap<>();
+        map.put(USER_ID.getDescription(), userId);
+        map.put(INSTITUTION_ID.getDescription(), institutionId);
+        map.put(PRODUCT_ID.getDescription(), productId);
+        UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserStatusDao(map, OnboardedProductState.ACTIVE).subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted().assertItem(1L);
     }
 

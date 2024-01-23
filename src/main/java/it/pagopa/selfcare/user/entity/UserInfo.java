@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.user.entity;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
-import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntity;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
