@@ -18,7 +18,7 @@ public interface UserInstitutionService {
 
     Multi<UserInstitutionResponse> findByUserId(String userId);
 
-    Uni<Long> updateUserStatusDao(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status);
+    Uni<Long> updateUserStatusDao(Map<String, Object> filterMap, OnboardedProductState status);
 
     Uni<Long> updateUserStatusDaoByRelationshipId(String relationshipId, OnboardedProductState status);
 
