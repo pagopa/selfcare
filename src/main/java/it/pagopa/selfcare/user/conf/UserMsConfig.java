@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.product.service.ProductServiceCacheable;
 import it.pagopa.selfcare.product.service.ProductServiceDefault;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -22,12 +23,11 @@ public class UserMsConfig {
     String connectionStringProduct;
 
     @ApplicationScoped
-    public ProductService productService(ObjectMapper objectMapper){
+    public ProductService productService(){
         AzureBlobClient azureBlobClient = new AzureBlobClientDefault(connectionStringProduct, containerProduct);
-        String productJsonString = azureBlobClient.getFileAsText(filepathProduct);
-        try {
-            return new ProductServiceDefault(productJsonString, objectMapper);
-        } catch (JsonProcessingException e) {
+        try{
+            return new ProductServiceCacheable(azureBlobClient, filepathProduct);
+        } catch(IllegalArgumentException e){
             throw new IllegalArgumentException("Found an issue when trying to serialize product json string!!");
         }
     }
