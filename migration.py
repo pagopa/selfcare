@@ -4,7 +4,7 @@ from pymongo import MongoClient, WriteConcern
 
 from query import *
 
-HOST = "mongodb://selc-d-cosmosdb-mongodb-account:2a3hDZ6QMvbtN1sfiiNBiLXVWAjmFpkIeZ5wHhfc0xzCvm193oZZ7Mv7tVD7lgTH7bWY31P38optBkV6wiMx8Q%3D%3D@selc-d-cosmosdb-mongodb-account.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=%40selc-d-cosmosdb-mongodb-account%40"
+HOST = ''
 
 CORE_DB = 'selcMsCore'
 USER_COLLECTION = 'User'
