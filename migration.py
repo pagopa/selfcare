@@ -1,10 +1,13 @@
 import math
+import os
+from dotenv import load_dotenv
 
 from pymongo import MongoClient, WriteConcern
 
 from query import *
 
-HOST = ''
+load_dotenv()
+HOST =  os.getenv('HOST')
 
 CORE_DB = 'selcMsCore'
 USER_COLLECTION = 'User'
