@@ -2,8 +2,11 @@ package it.pagopa.selfcare.user.service;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
+import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.mapper.OnboardedProductMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -12,9 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @RequiredArgsConstructor
 @ApplicationScoped
@@ -29,8 +30,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Uni<List<String>> getUsersEmails(String institutionId, String productId) {
-        Map<String, Object> parametersMap = Map.of("institutionId", institutionId, "products.productId", productId);
-        Multi<UserInstitution> userInstitutions =  userInstitutionService.findAllWithFilter(parametersMap);
+        var userInstitutionFilters = constructUserInstitutionFilterMap(institutionId);
+        var productFilters = constructOnboardedProductFilterMap(productId);
+        Multi<UserInstitution> userInstitutions =  userInstitutionService.findAllWithFilter(retrieveMapForFilter(userInstitutionFilters, productFilters));
         return userInstitutions.onItem()
                 .transformToUni(obj -> userRegistryApi.findByIdUsingGET("workContacts", obj.getUserId()))
                 .merge()
@@ -41,8 +43,8 @@ public class UserServiceImpl implements UserService {
                 .map(workContract -> workContract.getEmail().getValue())
                 .collect().asList();
     }
-   
 
+    @Override
     public Multi<UserProductResponse> getUserProductsByInstitution(String institutionId) {
         Multi<UserInstitution> userInstitutions =  UserInstitution.find("institutionId", institutionId).stream();
         return userInstitutions.onItem()
@@ -55,5 +57,26 @@ public class UserServiceImpl implements UserService {
                                 .products(onboardedProductMapper.toList(userInstitution.getProducts()))
                                 .build()))
                 .merge();
+    }
+
+    private Map<String, Object> constructUserInstitutionFilterMap(String institutionId) {
+        return UserInstitutionFilter
+                .builder()
+                .institutionId(institutionId)
+                .build()
+                .constructMap();
+    }
+
+    private Map<String, Object> constructOnboardedProductFilterMap(String productId) {
+        return OnboardedProductFilter.builder()
+                .productId(productId)
+                .build()
+                .constructMap();
+    }
+
+    private Map<String, Object> retrieveMapForFilter(Map<String, Object> ... maps) {
+        Map<String, Object> map = new HashMap<>();
+        Arrays.stream(maps).forEach(map::putAll);
+        return map;
     }
 }

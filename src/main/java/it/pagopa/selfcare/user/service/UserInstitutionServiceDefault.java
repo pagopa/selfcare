@@ -7,8 +7,8 @@ import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
-import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
+import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
 import it.pagopa.selfcare.user.util.QueryUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
@@ -102,8 +102,6 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         return runUserInstitutionFindQuery(query, null).stream();
     }
 
-    private boolean productFilterIsEmpty(String productId, PartyRole role, String productRole) {
-        return StringUtils.isBlank(productId) && StringUtils.isBlank(productRole) && role == null;
     private boolean productFilterIsEmpty(Map<String, Object> filterMap) {
         return !filterMap.containsKey(PRODUCT_ID.getDescription())
                 && !filterMap.containsKey(PRODUCT_ROLE.getDescription())
