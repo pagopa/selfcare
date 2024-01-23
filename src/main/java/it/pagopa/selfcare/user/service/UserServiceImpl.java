@@ -2,7 +2,9 @@ package it.pagopa.selfcare.user.service;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.mapper.OnboardedProductMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
@@ -13,14 +15,6 @@ import org.openapi.quarkus.user_registry_json.api.UserApi;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import it.pagopa.selfcare.user.controller.response.UserProductResponse;
-import it.pagopa.selfcare.user.entity.UserInstitution;
-import it.pagopa.selfcare.user.mapper.OnboardedProductMapper;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import lombok.RequiredArgsConstructor;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.openapi.quarkus.user_registry_json.api.UserApi;
 
 @RequiredArgsConstructor
 @ApplicationScoped
