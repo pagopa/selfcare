@@ -1,5 +1,8 @@
 package it.pagopa.selfcare.user.service;
 
+
+import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
+import io.quarkus.panache.mock.PanacheMock;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
@@ -7,12 +10,14 @@ import io.quarkus.test.mongodb.MongoTestResource;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
@@ -34,12 +39,11 @@ class UserServiceTest {
     @Inject
     private UserService userService;
 
-    @InjectMock
     private UserInstitutionService userInstitutionService;
 
     @RestClient
     @InjectMock
-    UserApi userRegistryApi;
+    private UserApi userRegistryApi;
 
     private static UserResource userResource;
     private static UserInstitution userInstitution;
@@ -86,4 +90,24 @@ class UserServiceTest {
         assertEquals("test@test.it", actual.get(0));
     }
 
+
+    @Test
+    void getUserProductsByInstitutionTest() {
+        PanacheMock.mock(UserInstitution.class);
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(query.stream()).thenReturn(Multi.createFrom().item(userInstitution));
+        when(UserInstitution.find(any(), (Object) any()))
+                .thenReturn(query);
+        when(userRegistryApi.findByIdUsingGET(any(), any()))
+                .thenReturn(Uni.createFrom().item(userResource));
+
+        AssertSubscriber<UserProductResponse> subscriber = userService
+                .getUserProductsByInstitution("institutionId")
+                .subscribe()
+                .withSubscriber(AssertSubscriber.create(10));
+
+        List<UserProductResponse> actual = subscriber.assertCompleted().getItems();
+        assertNotNull(actual);
+        assertEquals(1, actual.size());
+    }
 }
