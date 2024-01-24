@@ -6,12 +6,14 @@ import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
+import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.mapper.OnboardedProductMapper;
 import it.pagopa.selfcare.user.util.QueryUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
@@ -38,8 +40,6 @@ public class UserServiceImpl implements UserService {
     private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
     @Inject
     private QueryUtils queryUtils;
-    @Inject
-    private UserInstitutionService userInstitutionService;
 
 
     @Override
@@ -92,5 +92,40 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> map = new HashMap<>();
         Arrays.stream(maps).forEach(map::putAll);
         return map;
+    }
+
+    @Override
+    public Uni<UserResource> retrievePerson(String userId, String productId, String institutionId) {
+        Map<String, Object> queryParameter = buildQueryParams(userId, productId, institutionId);
+        return userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter)
+                .onItem().ifNull().failWith(() -> {
+                    log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId));
+                    return new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode());
+                })
+                .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId()))
+                .onFailure(this::checkIfNotFoundException).transform(t -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode()));
+    }
+
+    private Map<String, Object> buildQueryParams(String userId, String productId, String institutionId) {
+        OnboardedProductFilter onboardedProductFilter = OnboardedProductFilter.builder()
+                .productId(productId)
+                .build();
+
+        UserInstitutionFilter userInstitutionFilter = UserInstitutionFilter.builder()
+                .userId(userId)
+                .institutionId(institutionId)
+                .build();
+
+        Map<String, Object> filterMap = userInstitutionFilter.constructMap();
+        filterMap.putAll(onboardedProductFilter.constructMap());
+        return filterMap;
+    }
+
+    private boolean checkIfNotFoundException(Throwable throwable) {
+        if(throwable instanceof WebClientApplicationException wex) {
+            return wex.getResponse().getStatus() == HttpStatus.SC_NOT_FOUND;
+        }
+
+        return false;
     }
 }

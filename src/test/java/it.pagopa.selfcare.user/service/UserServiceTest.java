@@ -52,9 +52,6 @@ class UserServiceTest {
     @InjectMock
     private UserApi userRegistryApi;
 
-    @Inject
-    private UserInstitutionService userInstitutionService;
-
     private static UserResource userResource;
     private static UserInstitution userInstitution;
 
@@ -145,7 +142,10 @@ class UserServiceTest {
     void testRetrievePersonFailsWhenUserIsNotPresent() {
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().nullItem());
 
-        UniAssertSubscriber<UserResource> subscriber = userService.retrievePerson("test-user", "test-product", "test-institutionId").subscribe().withSubscriber(UniAssertSubscriber.create());
+        UniAssertSubscriber<UserResource> subscriber = userService
+                .retrievePerson("test-user", "test-product", "test-institutionId")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
 
         subscriber.assertFailedWith(ResourceNotFoundException.class);
     }
