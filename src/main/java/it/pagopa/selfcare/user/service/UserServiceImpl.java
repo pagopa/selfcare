@@ -10,18 +10,28 @@ import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.mapper.OnboardedProductMapper;
 import it.pagopa.selfcare.user.util.QueryUtils;
+import it.pagopa.selfcare.user.util.QueryUtils;
+import it.pagopa.selfcare.user.util.UserUtils;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.openapi.quarkus.user_registry_json.model.UserResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+
+import static it.pagopa.selfcare.user.constant.CustomError.USER_NOT_FOUND_ERROR;
+
+import java.util.*;
 
 @RequiredArgsConstructor
 @ApplicationScoped
@@ -31,17 +41,31 @@ public class UserServiceImpl implements UserService {
     @Inject
     private UserApi userRegistryApi;
     private final OnboardedProductMapper onboardedProductMapper;
+    private final UserInstitutionService userInstitutionService;
+    private static final String USERS_WORKS_FIELD_LIST = "fiscalCode,familyName,email,name,workContacts";
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
     @Inject
     private QueryUtils queryUtils;
     @Inject
     private UserUtils userUtils;
-    @Inject
-    private UserInstitutionService userInstitutionService;
 
-    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
+    @Override
+    public Uni<List<String>> getUsersEmails(String institutionId, String productId) {
+        var userInstitutionFilters = constructUserInstitutionFilterMap(institutionId);
+        var productFilters = constructOnboardedProductFilterMap(productId);
+        Multi<UserInstitution> userInstitutions =  userInstitutionService.findAllWithFilter(retrieveMapForFilter(userInstitutionFilters, productFilters));
+        return userInstitutions.onItem()
+                .transformToUni(obj -> userRegistryApi.findByIdUsingGET("workContacts", obj.getUserId()))
+                .merge()
+                .filter(userResource -> Objects.nonNull(userResource.getWorkContacts())
+                        && userResource.getWorkContacts().containsKey(institutionId))
+                .map(user -> user.getWorkContacts().get(institutionId))
+                .filter(workContract -> StringUtils.isNotBlank(workContract.getEmail().getValue()))
+                .map(workContract -> workContract.getEmail().getValue())
+                .collect().asList();
+    }
 
-    private static final String USERS_WORKS_FIELD_LIST = "fiscalCode,familyName,email,name,workContacts";
-
+    @Override
     public Multi<UserProductResponse> getUserProductsByInstitution(String institutionId) {
         Multi<UserInstitution> userInstitutions =  UserInstitution.find("institutionId", institutionId).stream();
         return userInstitutions.onItem()
@@ -54,6 +78,62 @@ public class UserServiceImpl implements UserService {
                                 .products(onboardedProductMapper.toList(userInstitution.getProducts()))
                                 .build()))
                 .merge();
+    }
+
+    private Map<String, Object> constructUserInstitutionFilterMap(String institutionId) {
+        return UserInstitutionFilter
+                .builder()
+                .institutionId(institutionId)
+                .build()
+                .constructMap();
+    }
+
+    private Map<String, Object> constructOnboardedProductFilterMap(String productId) {
+        return OnboardedProductFilter.builder()
+                .productId(productId)
+                .build()
+                .constructMap();
+    }
+
+    private Map<String, Object> retrieveMapForFilter(Map<String, Object> ... maps) {
+        Map<String, Object> map = new HashMap<>();
+        Arrays.stream(maps).forEach(map::putAll);
+        return map;
+    }
+
+    @Override
+    public Uni<UserResource> retrievePerson(String userId, String productId, String institutionId) {
+        Map<String, Object> queryParameter = buildQueryParams(userId, productId, institutionId);
+        return userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter)
+                .onItem().ifNull().failWith(() -> {
+                    log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId));
+                    return new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode());
+                })
+                .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId()))
+                .onFailure(this::checkIfNotFoundException).transform(t -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode()));
+    }
+
+    private Map<String, Object> buildQueryParams(String userId, String productId, String institutionId) {
+        OnboardedProductFilter onboardedProductFilter = OnboardedProductFilter.builder()
+                .productId(productId)
+                .build();
+
+        UserInstitutionFilter userInstitutionFilter = UserInstitutionFilter.builder()
+                .userId(userId)
+                .institutionId(institutionId)
+                .build();
+
+        Map<String, Object> filterMap = userInstitutionFilter.constructMap();
+        filterMap.putAll(onboardedProductFilter.constructMap());
+        return filterMap;
+    }
+
+    private boolean checkIfNotFoundException(Throwable throwable) {
+        if(throwable instanceof WebClientApplicationException wex) {
+            return wex.getResponse().getStatus() == HttpStatus.SC_NOT_FOUND;
+        }
+
+        return false;
     }
 
     @Override
