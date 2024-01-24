@@ -25,4 +25,6 @@ public interface UserInstitutionService {
     Uni<List<UserInstitution>> paginatedFindAllWithFilter(Map<String, Object> queryParameter, Integer page, Integer size);
 
     Uni<UserInstitution> retrieveFirstFilteredUserInstitution(Map<String, Object> queryParameter);
+
+    Uni<List<UserInstitution>> retrieveFilteredUserInstitution(Map<String, Object> queryParameter);
 }

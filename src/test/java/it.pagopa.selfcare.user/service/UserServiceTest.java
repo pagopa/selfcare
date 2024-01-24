@@ -9,12 +9,15 @@ import io.quarkus.test.mongodb.MongoTestResource;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
+import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
@@ -22,6 +25,7 @@ import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfst
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -41,6 +45,10 @@ public class UserServiceTest {
     @RestClient
     @InjectMock
     private UserApi userRegistryApi;
+
+    @InjectMock
+    private UserInstitutionServiceDefault userInstitutionService;
+
 
     private static UserResource userResource;
     private static UserInstitution userInstitution;
@@ -87,5 +95,36 @@ public class UserServiceTest {
         List<UserProductResponse> actual = subscriber.assertCompleted().getItems();
         assertNotNull(actual);
         assertEquals(1, actual.size());
+    }
+
+    @Test
+    void testRetrieveBindingsOk() {
+        List<OnboardedProduct> onboardedProducts = new ArrayList<>();
+        onboardedProducts.add(new OnboardedProduct());
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setUserId("test-user");
+        userInstitution.setProducts(onboardedProducts);
+        List<UserInstitution> userInstitutions = new ArrayList<>();
+        userInstitutions.add(userInstitution);
+        when(userInstitutionService.retrieveFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(userInstitutions));
+
+        UniAssertSubscriber<List<UserInstitution>>  subscriber = userService
+                .retrieveBindings("test-institutionId", "test-user", null)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertItem(userInstitutions);
+    }
+
+    @Test
+    void testRetrieveBindingsFails() {
+        when(userInstitutionService.retrieveFilteredUserInstitution(any())).thenReturn(Uni.createFrom().nullItem());
+
+        UniAssertSubscriber<List<UserInstitution>>  subscriber = userService
+                .retrieveBindings("test-institutionId", "test-user", null)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(ResourceNotFoundException.class);
     }
 }
