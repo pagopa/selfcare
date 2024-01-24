@@ -21,7 +21,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductFilterField.*;
+import static it.pagopa.selfcare.user.constant.CollectionUtil.USER_INSTITUTION_COLLECTION;
+import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductEnum.*;
 
 @Slf4j
 @ApplicationScoped
@@ -65,7 +66,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
             fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
         }
         return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
-                .where(queryUtils.buildQueryDocument(filterMap));
+                .where(queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION));
     }
 
     @Override
@@ -81,31 +82,31 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
                 .build();
 
         return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
-                .where(queryUtils.buildQueryDocument(onboardedProductFilter.constructMap()));
+                .where(queryUtils.buildQueryDocument(onboardedProductFilter.constructMap(), USER_INSTITUTION_COLLECTION));
     }
 
     @Override
     public Uni<List<UserInstitution>> paginatedFindAllWithFilter(Map<String, Object> queryParameter, Integer page, Integer size) {
-        Document query = queryUtils.buildQueryDocument(queryParameter);
+        Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
         return runUserInstitutionFindQuery(query, null).page(page, size).list();
     }
 
     @Override
     public Uni<UserInstitution> retrieveFirstFilteredUserInstitution(Map<String, Object> queryParameter) {
-        Document query = queryUtils.buildQueryDocument(queryParameter);
+        Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
         return runUserInstitutionFindQuery(query, null).firstResult();
     }
 
     @Override
     public Multi<UserInstitution> findAllWithFilter(Map<String, Object> queryParameter) {
-        Document query = queryUtils.buildQueryDocument(queryParameter);
+        Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
         return runUserInstitutionFindQuery(query, null).stream();
     }
 
     private boolean productFilterIsEmpty(Map<String, Object> filterMap) {
-        return !filterMap.containsKey(PRODUCT_ID.getDescription())
-                && !filterMap.containsKey(PRODUCT_ROLE.getDescription())
-                && !filterMap.containsKey(ROLE.getDescription());
+        return !filterMap.containsKey(PRODUCT_ID.getChild())
+                && !filterMap.containsKey(PRODUCT_ROLE.getChild())
+                && !filterMap.containsKey(ROLE.getChild());
     }
 
     public ReactivePanacheQuery<UserInstitution> runUserInstitutionFindQuery(Document query, Document sort) {

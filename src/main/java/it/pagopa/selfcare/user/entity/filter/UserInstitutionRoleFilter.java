@@ -6,13 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
-import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductFilterField.*;
-import static it.pagopa.selfcare.user.entity.filter.UserInstitutionRoleFilter.UserInstitutionRoleEnum.INSTITUTION_ID;
-import static it.pagopa.selfcare.user.entity.filter.UserInstitutionRoleFilter.UserInstitutionRoleEnum.INSTITUTION_NAME;
+import static it.pagopa.selfcare.user.entity.filter.UserInstitutionRoleFilter.UserInstitutionRoleEnum.*;
 
 @Builder
 public class UserInstitutionRoleFilter {
@@ -25,20 +21,29 @@ public class UserInstitutionRoleFilter {
     @Getter
     @AllArgsConstructor
     public enum UserInstitutionRoleEnum{
-        INSTITUTION_NAME(UserInfo.Fields.institutions.name() + "." + UserInstitutionRole.Fields.institutionName.name()),
-        INSTITUTION_ID(UserInfo.Fields.institutions.name() + "." + UserInstitutionRole.Fields.institutionId.name()),
-        STATUS(UserInfo.Fields.institutions.name() + "." + UserInstitutionRole.Fields.status.name()),
-        ROLE(UserInfo.Fields.institutions.name() + "." + UserInstitutionRole.Fields.role.name());
-        private final String description;
+        INSTITUTION_NAME(UserInfo.Fields.institutions.name(), UserInstitutionRole.Fields.institutionName.name()),
+        INSTITUTION_ID(UserInfo.Fields.institutions.name(), UserInstitutionRole.Fields.institutionId.name()),
+        STATUS(UserInfo.Fields.institutions.name(), UserInstitutionRole.Fields.status.name()),
+        ROLE(UserInfo.Fields.institutions.name(), UserInstitutionRole.Fields.role.name());
+
+        private final String parent;
+        private final String child;
+
+        public static Optional<String> retrieveParent(String child){
+            return Arrays.stream(values())
+                    .filter(userInstitutionRoleEnum -> userInstitutionRoleEnum.getChild().equalsIgnoreCase(child))
+                    .findFirst()
+                    .map(UserInstitutionRoleEnum::getParent);
+        }
     }
 
     public Map<String, Object> constructMap() {
         Map<String, Object> map = new HashMap<>();
 
-        map.put(INSTITUTION_ID.getDescription(), institutionId);
-        map.put(INSTITUTION_NAME.getDescription(), institutionName);
-        map.put(STATUS.getDescription(), status);
-        map.put(ROLE.getDescription(), role);
+        map.put(INSTITUTION_ID.getChild(), institutionId);
+        map.put(INSTITUTION_NAME.getChild(), institutionName);
+        map.put(STATUS.getChild(), status);
+        map.put(ROLE.getChild(), role);
 
         map.values().removeIf(Objects::isNull);
 

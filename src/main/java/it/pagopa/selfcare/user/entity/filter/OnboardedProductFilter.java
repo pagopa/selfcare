@@ -8,7 +8,7 @@ import lombok.Getter;
 
 import java.util.*;
 
-import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductFilterField.*;
+import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductEnum.*;
 
 @Builder
 public class OnboardedProductFilter {
@@ -26,32 +26,40 @@ public class OnboardedProductFilter {
 
     @Getter
     @AllArgsConstructor
-    public enum OnboardedProductFilterField{
-        PRODUCT_ID(UserInstitution.Fields.products.name() + "." + OnboardedProduct.Fields.productId.name()),
-        RELATIONSHIP_ID(UserInstitution.Fields.products.name() + "." + OnboardedProduct.Fields.relationshipId.name()),
-        TOKEN_ID(UserInstitution.Fields.products.name() + "." + OnboardedProduct.Fields.tokenId.name()),
-        STATUS(UserInstitution.Fields.products.name() + "." + OnboardedProduct.Fields.status.name()),
-        PRODUCT_ROLE(UserInstitution.Fields.products.name() + "." + OnboardedProduct.Fields.productRole.name()),
-        ROLE(UserInstitution.Fields.products.name() + "." + OnboardedProduct.Fields.role.name()),
-        ENV(UserInstitution.Fields.products.name() + "." + OnboardedProduct.Fields.env.name()),
-        CREATED_AT(UserInstitution.Fields.products.name() + "." + OnboardedProduct.Fields.createdAt.name()),
-        UPDATED_AT(UserInstitution.Fields.products.name() + "." + OnboardedProduct.Fields.updatedAt.name());
+    public enum OnboardedProductEnum {
+        PRODUCT_ID(UserInstitution.Fields.products.name(), OnboardedProduct.Fields.productId.name()),
+        RELATIONSHIP_ID(UserInstitution.Fields.products.name(), OnboardedProduct.Fields.relationshipId.name()),
+        TOKEN_ID(UserInstitution.Fields.products.name(), OnboardedProduct.Fields.tokenId.name()),
+        STATUS(UserInstitution.Fields.products.name(), OnboardedProduct.Fields.status.name()),
+        PRODUCT_ROLE(UserInstitution.Fields.products.name(), OnboardedProduct.Fields.productRole.name()),
+        ROLE(UserInstitution.Fields.products.name(), OnboardedProduct.Fields.role.name()),
+        ENV(UserInstitution.Fields.products.name(), OnboardedProduct.Fields.env.name()),
+        CREATED_AT(UserInstitution.Fields.products.name(), OnboardedProduct.Fields.createdAt.name()),
+        UPDATED_AT("pippo", OnboardedProduct.Fields.updatedAt.name());
 
-        private final String description;
+        private final String parent;
+        private final String child;
+
+        public static Optional<String> retrieveParent(String child){
+            return Arrays.stream(values())
+                    .filter(onboardedProductEnum -> onboardedProductEnum.getChild().equalsIgnoreCase(child))
+                    .findFirst()
+                    .map(OnboardedProductEnum::getParent);
+        }
     }
 
     public Map<String, Object> constructMap() {
         Map<String, Object> map = new HashMap<>();
 
-        map.put(PRODUCT_ID.getDescription(), productId);
-        map.put(RELATIONSHIP_ID.getDescription(), relationshipId);
-        map.put(TOKEN_ID.getDescription(), tokenId);
-        map.put(STATUS.getDescription(), status);
-        map.put(PRODUCT_ROLE.getDescription(), productRole);
-        map.put(ROLE.getDescription(), role);
-        map.put(ENV.getDescription(), env);
-        map.put(CREATED_AT.getDescription(), createdAt);
-        map.put(UPDATED_AT.getDescription(), updatedAt);
+        map.put(PRODUCT_ID.getChild(), productId);
+        map.put(RELATIONSHIP_ID.getChild(), relationshipId);
+        map.put(TOKEN_ID.getChild(), tokenId);
+        map.put(STATUS.getChild(), status);
+        map.put(PRODUCT_ROLE.getChild(), productRole);
+        map.put(ROLE.getChild(), role);
+        map.put(ENV.getChild(), env);
+        map.put(CREATED_AT.getChild(), createdAt);
+        map.put(UPDATED_AT.getChild(), updatedAt);
 
         map.values().removeIf(Objects::isNull);
 
