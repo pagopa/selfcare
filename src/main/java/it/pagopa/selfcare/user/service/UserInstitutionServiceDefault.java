@@ -7,8 +7,8 @@ import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
-import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
+import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
 import it.pagopa.selfcare.user.util.QueryUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
@@ -94,6 +94,12 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     public Uni<UserInstitution> retrieveFirstFilteredUserInstitution(Map<String, Object> queryParameter) {
         Document query = queryUtils.buildQueryDocument(queryParameter);
         return runUserInstitutionFindQuery(query, null).firstResult();
+    }
+
+    @Override
+    public Multi<UserInstitution> findAllWithFilter(Map<String, Object> queryParameter) {
+        Document query = queryUtils.buildQueryDocument(queryParameter);
+        return runUserInstitutionFindQuery(query, null).stream();
     }
 
     private boolean productFilterIsEmpty(Map<String, Object> filterMap) {

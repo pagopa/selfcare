@@ -8,6 +8,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.mongodb.MongoTestResource;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
@@ -24,6 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static io.smallrye.common.constraint.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductFilterField.PRODUCT_ID;
 import static it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter.UserInstitutionFilterEnum.INSTITUTION_ID;
 import static it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter.UserInstitutionFilterEnum.USER_ID;
@@ -139,6 +142,27 @@ class UserInstitutionServiceTest {
         UniAssertSubscriber<UserInstitution> subscriber =  userInstitutionService.retrieveFirstFilteredUserInstitution(parameterMap)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted().assertItem(userInstitution);
+    }
+
+    @Test
+    void findAllWithFilter() {
+        Map<String, Object> parameterMap = new HashMap<>();
+        parameterMap.put("institutionId", "institutionId");
+        UserInstitution userInstitution = createDummyUserInstitution();
+        PanacheMock.mock(UserInstitution.class);
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitution));
+        when(UserInstitution.find((Document) any(), any()))
+                .thenReturn(query);
+        when(query.page(anyInt(), anyInt())).thenReturn(query);
+        when(query.stream()).thenReturn(Multi.createFrom().item(userInstitution));
+
+        AssertSubscriber<UserInstitution> subscriber =  userInstitutionService.findAllWithFilter(parameterMap)
+                .subscribe().withSubscriber(AssertSubscriber.create(10));
+
+        List<UserInstitution> actual = subscriber.assertCompleted().getItems();
+        assertNotNull(actual);
+        assertEquals(1, actual.size());
     }
 
     private UserInstitution createDummyUserInstitution() {
