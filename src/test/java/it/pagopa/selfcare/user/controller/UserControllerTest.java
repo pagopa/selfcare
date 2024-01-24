@@ -38,11 +38,26 @@ public class UserControllerTest {
         given()
                 .when()
                 .contentType(ContentType.JSON)
-                .pathParam("institutionId", institutionId)
-                .pathParam("productId", productId)
-                .get("/emails/{institutionId}/{productId}")
+                .get("/emails?institutionId=" + institutionId +"&productId=" + productId)
                 .then()
                 .statusCode(200);
+    }
+
+    /**
+     * Method under test: {@link UserController#getUsersEmailByInstitutionAndProduct(String, String)}}
+     */
+    @Test
+    @TestSecurity(user = "userJwt")
+    void getUsersEmailWithNullInstitutionId() {
+
+        var productId = "productId";
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .get("/emails?productId=" + productId)
+                .then()
+                .statusCode(400);
     }
 
     /**
@@ -57,9 +72,7 @@ public class UserControllerTest {
         given()
                 .when()
                 .contentType(ContentType.JSON)
-                .pathParam("institutionId", institutionId)
-                .pathParam("productId", productId)
-                .get("/emails/{institutionId}/{productId}")
+                .get("/emails?institutionId=" + institutionId + "&productId=" + productId)
                 .then()
                 .statusCode(401);
     }
