@@ -11,10 +11,14 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.inject.Inject;
 import org.apache.http.HttpStatus;
 import org.bson.types.ObjectId;
@@ -33,9 +37,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static it.pagopa.selfcare.user.constant.CustomError.STATUS_IS_MANDATORY;
+import static it.pagopa.selfcare.user.constant.CustomError.USER_TO_UPDATE_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @QuarkusTest
@@ -51,6 +57,9 @@ class UserServiceTest {
     @RestClient
     @InjectMock
     private UserApi userRegistryApi;
+
+    @InjectMock
+    private UserUtils userUtils;
 
     private static UserResource userResource;
     private static UserInstitution userInstitution;
@@ -161,4 +170,42 @@ class UserServiceTest {
 
         subscriber.assertFailedWith(ResourceNotFoundException.class);
     }
+
+    @Test
+    void updateUserStatusWithOptionalFilter(){
+        when(userUtils.checkRoles(any(), any(), any())).thenReturn(Uni.createFrom().item(Boolean.TRUE));
+        when(userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().item(1L));
+
+        UniAssertSubscriber<Void> subscriber = userService
+                .updateUserStatusWithOptionalFilter("userId", "institutionId", null, PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertCompleted();
+    }
+
+    @Test
+    void updateUserStatusWithOptionalFilterUserNotFound(){
+        when(userUtils.checkRoles(any(), any(), any())).thenReturn(Uni.createFrom().item(Boolean.TRUE));
+        when(userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().item(0L));
+
+        UniAssertSubscriber<Void> subscriber = userService
+                .updateUserStatusWithOptionalFilter("userId", "institutionId", null, PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(ResourceNotFoundException.class, USER_TO_UPDATE_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    void updateUserStatusWithOptionalFilterInvalidRequest(){
+        UniAssertSubscriber<Void> subscriber = userService
+                .updateUserStatusWithOptionalFilter("userId", "institutionId", null, PartyRole.MANAGER, null, null)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(InvalidRequestException.class, STATUS_IS_MANDATORY.getMessage());
+    }
+
+
 }

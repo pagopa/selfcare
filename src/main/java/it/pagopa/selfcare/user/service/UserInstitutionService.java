@@ -23,4 +23,6 @@ public interface UserInstitutionService {
     Multi<UserInstitution> findAllWithFilter(Map<String, Object> queryParameter);
 
     Uni<UserInstitution> retrieveFirstFilteredUserInstitution(Map<String, Object> queryParameter);
+
+    Uni<Long> updateUserStatusWithOptionalFilterByInstitutionAndProduct(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status);
 }

@@ -6,6 +6,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 
 @QuarkusTest
 @TestHTTPEndpoint(UserController.class)
-public class UserControllerTest {
+class UserControllerTest {
 
     @InjectMock
     private UserService userService;
@@ -129,6 +130,42 @@ public class UserControllerTest {
                 .when()
                 .contentType(ContentType.JSON)
                 .get("/test_user_id")
+                .then()
+                .statusCode(404);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void updateUserStatus() {
+
+        Mockito.when(userService.updateUserStatusWithOptionalFilter("userId", null, "prod-pagopa", null, null, OnboardedProductState.ACTIVE))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("id", "userId")
+                .queryParam("productId", "prod-pagopa")
+                .queryParam("status", OnboardedProductState.ACTIVE)
+                .put("/{id}/status")
+                .then()
+                .statusCode(204);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void updateUserStatusError() {
+
+        Mockito.when(userService.updateUserStatusWithOptionalFilter("userId", null, "prod-pagopa", null, null, OnboardedProductState.ACTIVE))
+                .thenThrow(new ResourceNotFoundException("user non trovato"));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("id", "userId")
+                .queryParam("productId", "prod-pagopa")
+                .queryParam("status", OnboardedProductState.ACTIVE)
+                .put("/{id}/status")
                 .then()
                 .statusCode(404);
     }
