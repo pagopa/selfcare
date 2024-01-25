@@ -7,10 +7,12 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.mongodb.MongoTestResource;
+import io.smallrye.common.constraint.Assert;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -160,5 +162,19 @@ class UserServiceTest {
         UniAssertSubscriber<UserResource> subscriber = userService.retrievePerson("test-user", "test-product", "test-institutionId").subscribe().withSubscriber(UniAssertSubscriber.create());
 
         subscriber.assertFailedWith(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void retrieveUsersTest() {
+        when(userInstitutionService.findAllWithFilter(any())).thenReturn(Multi.createFrom().item(userInstitution));
+        AssertSubscriber<UserInstitutionResponse> subscriber = userService
+                .findAllUserInstitutions("institutionId", "userId", null, null, null, null)
+                .subscribe()
+                .withSubscriber(AssertSubscriber.create(10));
+
+        List<UserInstitutionResponse> actual = subscriber.assertCompleted().getItems();
+        Assert.assertNotNull(actual);
+        assertEquals(1, actual.size());
+        assertEquals(userInstitution.getUserId(), actual.get(0).getUserId());
     }
 }
