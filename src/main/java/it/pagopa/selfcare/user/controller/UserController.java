@@ -16,7 +16,6 @@ import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.jboss.resteasy.reactive.ResponseStatus;
 
 import java.util.List;
-import java.util.Objects;
 
 @Authenticated
 @Path("/users")

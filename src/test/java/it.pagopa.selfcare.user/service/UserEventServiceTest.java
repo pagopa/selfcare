@@ -1,26 +1,45 @@
 package it.pagopa.selfcare.user.service;
 
-import io.quarkus.test.InjectMock;
-import io.smallrye.mutiny.Uni;
+import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
-import io.smallrye.reactive.messaging.MutinyEmitter;
+import io.smallrye.reactive.messaging.memory.InMemoryConnector;
+import io.smallrye.reactive.messaging.memory.InMemorySink;
+import jakarta.enterprise.inject.Any;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.reactive.messaging.Message;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import java.util.List;
 
+import static org.awaitility.Awaitility.await;
+
+@QuarkusTest
 public class UserEventServiceTest {
-    @InjectMock
-    MutinyEmitter<String> userEmitter;
+    @Inject
+    @Any
+    InMemoryConnector connector;
     @Inject
     UserEventService userEventService;
 
+    @BeforeAll
+    public static void switchMyChannels() {
+        InMemoryConnector.switchOutgoingChannelsToInMemory("sc-users");
+    }
     @Test
     void testSendUpdateUserNotificationToQueue() {
-        when(userEmitter.sendMessage(any())).thenReturn(Uni.createFrom().nullItem());
+        InMemorySink<String> usersOut = connector.sink("sc-users");
         UniAssertSubscriber<Void> subscriber = userEventService.sendUpdateUserNotificationToQueue("userId", "institutionId")
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted();
+
+        // Wait that the event is sent on kafka.
+        await().<List<? extends Message<String>>>until(usersOut::received, t -> t.size() == 1);
+
+        String queuedMessage = usersOut.received().get(0).getPayload();
+        Assertions.assertTrue(queuedMessage.contains("userId"));
     }
+
+
 }

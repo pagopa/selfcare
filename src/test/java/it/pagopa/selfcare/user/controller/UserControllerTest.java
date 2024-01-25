@@ -7,6 +7,7 @@ import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.user.service.UserEventService;
 import it.pagopa.selfcare.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -28,6 +29,8 @@ public class UserControllerTest {
 
     @InjectMock
     private UserService userService;
+    @InjectMock
+    private UserEventService userEventService;
 
     /**
      * Method under test: {@link UserController#getUsersEmailByInstitutionAndProduct(String, String)}}
@@ -141,6 +144,18 @@ public class UserControllerTest {
                 .post("/test_user_id/update?institutionId=institutionIdTest")
                 .then()
                 .statusCode(401);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testSendUpdateUserNotificationToQueueSuccess() {
+        Mockito.when(userEventService.sendUpdateUserNotificationToQueue(any(), any())).thenReturn(Uni.createFrom().nullItem());
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .post("/test_user_id/update?institutionId=institutionIdTest")
+                .then()
+                .statusCode(204);
     }
 
 }
