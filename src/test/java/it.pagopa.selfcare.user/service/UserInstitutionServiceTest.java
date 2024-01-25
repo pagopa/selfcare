@@ -79,37 +79,6 @@ class UserInstitutionServiceTest {
     }
 
     @Test
-    void updateUserStatusDao() {
-        final String userId = "userId";
-        String institutionId = "institutionId";
-        String productId = "productId";
-        PanacheMock.mock(UserInstitution.class);
-        ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
-        when(UserInstitution.update((Document) any()))
-                .thenReturn(update);
-        when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
-        Map<String, Object> map = new HashMap<>();
-        map.put(USER_ID.getDescription(), userId);
-        map.put(INSTITUTION_ID.getDescription(), institutionId);
-        map.put(PRODUCT_ID.getChild(), productId);
-        UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserStatusDao(map, OnboardedProductState.ACTIVE).subscribe().withSubscriber(UniAssertSubscriber.create());
-        subscriber.assertCompleted().assertItem(1L);
-    }
-
-    @Test
-    void updateUserStatusDaoByRelationshipId() {
-        String relationshipId = "institutionId";
-        PanacheMock.mock(UserInstitution.class);
-        ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
-        when(UserInstitution.update((Document) any()))
-                .thenReturn(update);
-        when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
-        UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserStatusDaoByRelationshipId(relationshipId, OnboardedProductState.ACTIVE)
-                .subscribe().withSubscriber(UniAssertSubscriber.create());
-        subscriber.assertCompleted().assertItem(1L);
-    }
-
-    @Test
     void paginatedFindAllWithFilter() {
         Map<String, Object> parameterMap = new HashMap<>();
         parameterMap.put("institutionId", "institutionId");

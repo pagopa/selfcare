@@ -7,7 +7,6 @@ import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
-import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
 import it.pagopa.selfcare.user.util.QueryUtils;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -55,37 +54,6 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     }
 
     @Override
-    public Uni<Long> updateUserStatusDao(Map<String, Object> filterMap, OnboardedProductState status) {
-
-        Map<String, Object> fieldToUpdateMap = new HashMap<>();
-        if(productFilterIsEmpty(filterMap)) {
-            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.status.name(), status);
-            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
-        }else{
-            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.status.name(), status);
-            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
-        }
-        return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
-                .where(queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION));
-    }
-
-    @Override
-    public Uni<Long> updateUserStatusDaoByRelationshipId(String relationshipId, OnboardedProductState status) {
-
-        Map<String, Object> fieldToUpdateMap = new HashMap<>();
-        fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.status.name(), status);
-        fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
-
-        OnboardedProductFilter onboardedProductFilter = OnboardedProductFilter
-                .builder()
-                .relationshipId(relationshipId)
-                .build();
-
-        return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
-                .where(queryUtils.buildQueryDocument(onboardedProductFilter.constructMap(), USER_INSTITUTION_COLLECTION));
-    }
-
-    @Override
     public Uni<List<UserInstitution>> paginatedFindAllWithFilter(Map<String, Object> queryParameter, Integer page, Integer size) {
         Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
         return runUserInstitutionFindQuery(query, null).page(page, size).list();
@@ -101,6 +69,20 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     public Multi<UserInstitution> findAllWithFilter(Map<String, Object> queryParameter) {
         Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
         return runUserInstitutionFindQuery(query, null).stream();
+    }
+
+    private Uni<Long> updateUserStatusDao(Map<String, Object> filterMap, OnboardedProductState status) {
+
+        Map<String, Object> fieldToUpdateMap = new HashMap<>();
+        if(productFilterIsEmpty(filterMap)) {
+            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.status.name(), status);
+            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
+        }else{
+            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.status.name(), status);
+            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
+        }
+        return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
+                .where(queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION));
     }
 
     private boolean productFilterIsEmpty(Map<String, Object> filterMap) {
