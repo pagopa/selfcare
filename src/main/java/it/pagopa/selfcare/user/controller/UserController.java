@@ -3,24 +3,20 @@ package it.pagopa.selfcare.user.controller;
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.controller.response.UserResponse;
-import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.service.UserEventService;
 import it.pagopa.selfcare.user.service.UserService;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.validation.constraints.NotNull;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.jboss.resteasy.reactive.ResponseStatus;
 
 import java.util.List;
-import org.eclipse.microprofile.openapi.annotations.Operation;
+import java.util.Objects;
 
 @Authenticated
 @Path("/users")
@@ -60,6 +56,26 @@ public class UserController {
                                          @QueryParam(value = "productId") String productId) {
         return userService.retrievePerson(userId, productId, institutionId)
                 .map(user -> userMapper.toUserResponse(user, institutionId));
+    }
+
+    /**
+     * The sendUpdateUserNotificationToQueue function is a service that sends notification when user data get's updated.
+     *
+     * @param userId String
+     * @param institutionId String
+     *
+     * @return Uni&lt;response&gt;
+     *
+     */
+    @Operation(summary = "Service to send notification when user data gets updated")
+    @ResponseStatus(HttpStatus.SC_NO_CONTENT)
+    @POST
+    @Path("/{id}/update")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Void> sendUpdateUserNotificationToQueue(@PathParam(value = "id") String userId,
+                                                       @QueryParam(value = "institutionId") String institutionId) {
+        return userEventService.sendUpdateUserNotificationToQueue(userId, institutionId);
     }
 }
 

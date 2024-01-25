@@ -133,4 +133,14 @@ public class UserControllerTest {
                 .statusCode(404);
     }
 
+    @Test
+    void testSendUpdateUserNotificationToQueueUnauthorized() {
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .post("/test_user_id/update?institutionId=institutionIdTest")
+                .then()
+                .statusCode(401);
+    }
+
 }
