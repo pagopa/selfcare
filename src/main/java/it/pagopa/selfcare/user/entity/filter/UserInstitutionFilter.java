@@ -34,7 +34,8 @@ public class UserInstitutionFilter {
         map.put(INSTITUTION_ID.getDescription(), institutionId);
         map.put(INSTITUTION_DESCRIPTION.getDescription(), institutionDescription);
 
-        map.values().removeIf(Objects::isNull);
+        map.entrySet().removeIf(e -> Objects.isNull(e.getValue()) ||
+                (e.getValue() instanceof Collection && ((Collection) e.getValue()).isEmpty()));
 
         return map;
     }

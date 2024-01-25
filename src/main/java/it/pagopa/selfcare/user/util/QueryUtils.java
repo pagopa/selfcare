@@ -145,7 +145,7 @@ public class QueryUtils {
     private List<Bson> addEqAndInFilters(Map<String, Object> parameters) {
         return parameters.entrySet().stream()
                 .map(entry -> {
-                    if (entry.getValue() instanceof ArrayList<?>) {
+                    if (entry.getValue() instanceof List<?>) {
                         return Filters.in(entry.getKey(), (Iterable<?>) entry.getValue());
                     }
                     return Filters.eq(entry.getKey(), entry.getValue());
