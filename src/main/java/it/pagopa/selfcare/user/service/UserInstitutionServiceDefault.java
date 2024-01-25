@@ -87,7 +87,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
     @Override
     public Uni<List<UserInstitution>> retrieveFilteredUserInstitution(Map<String, Object> queryParameter) {
-        Document query = queryUtils.buildQueryDocument(queryParameter);
+        Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
         return runUserInstitutionFindQuery(query, null).list();
     }
 

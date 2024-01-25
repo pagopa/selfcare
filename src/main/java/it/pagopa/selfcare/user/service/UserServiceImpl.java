@@ -10,8 +10,6 @@ import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.mapper.OnboardedProductMapper;
 import it.pagopa.selfcare.user.util.QueryUtils;
-import it.pagopa.selfcare.user.util.QueryUtils;
-import it.pagopa.selfcare.user.util.UserUtils;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -21,17 +19,13 @@ import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
+import java.util.*;
 
 import static it.pagopa.selfcare.user.constant.CustomError.USER_NOT_FOUND_ERROR;
-
-import java.util.*;
 
 @RequiredArgsConstructor
 @ApplicationScoped
@@ -149,15 +143,19 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         OnboardedProductFilter onboardedProductFilter = OnboardedProductFilter.builder()
-                .relationshipId(relationshipStates)
+                .status(relationshipStates)
                 .build();
 
 
-        Map<String, Object> queryParameter = userInstitutionFilter.constructMap();
-        queryParameter.putAll(onboardedProductFilter.constructMap());
+        Map<String, Object> queryParameter = retrieveMapForFilter(userInstitutionFilter.constructMap(), onboardedProductFilter.constructMap());
 
         return userInstitutionService.retrieveFilteredUserInstitution(queryParameter)
-                .onItem().ifNull().failWith(new ResourceNotFoundException(""))
+                .map((list) -> {
+                    if(list == null || list.isEmpty()) {
+                        throw new ResourceNotFoundException("");
+                    }
+                    return list;
+                })
                 .onItem().transformToMulti(Multi.createFrom()::iterable)
                 .map(userInstitution -> userUtils.filterProduct(userInstitution, finalStates))
                 .collect()
