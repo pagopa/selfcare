@@ -35,7 +35,7 @@ public class OnboardedProductFilter {
         ROLE(UserInstitution.Fields.products.name(), OnboardedProduct.Fields.role.name()),
         ENV(UserInstitution.Fields.products.name(), OnboardedProduct.Fields.env.name()),
         CREATED_AT(UserInstitution.Fields.products.name(), OnboardedProduct.Fields.createdAt.name()),
-        UPDATED_AT("pippo", OnboardedProduct.Fields.updatedAt.name());
+        UPDATED_AT(UserInstitution.Fields.products.name(), OnboardedProduct.Fields.updatedAt.name());
 
         private final String parent;
         private final String child;
