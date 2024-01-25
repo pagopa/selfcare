@@ -4,6 +4,7 @@ import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 
 @ApplicationScoped
 @RequiredArgsConstructor
+@Slf4j
 public class UserUtils {
 
 
