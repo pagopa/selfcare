@@ -12,6 +12,7 @@ import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.mapper.OnboardedProductMapper;
+import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -38,6 +39,10 @@ public class UserServiceImpl implements UserService {
     private final OnboardedProductMapper onboardedProductMapper;
     private final UserUtils userUtils;
     private final UserInstitutionService userInstitutionService;
+    private final UserInstitutionMapper userInstitutionMapper;
+
+    private static final String WORK_CONTACTS = "workContacts";
+
     private static final String USERS_WORKS_FIELD_LIST = "fiscalCode,familyName,email,name,workContacts";
 
 
@@ -108,15 +113,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId,
-                                                                  String userId,
-                                                                  List<String> roles,
-                                                                  List<String> states,
-                                                                  List<String> products,
-                                                                  List<String> productRoles) {
-        var userInstitutionFilters = constructUserInstitutionFilterMap(institutionId, userId);
-        var productFilters = constructOnboardedProductFilterMap(products, states, roles, productRoles);
-        Multi<UserInstitution> userInstitutions =  userInstitutionService.findAllWithFilter(retrieveMapForFilter(userInstitutionFilters, productFilters));
+    public Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId, String userId, List<String> roles, List<String> states, List<String> products, List<String> productRoles) {
+        var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
+        var productFilters = OnboardedProductFilter.builder().productId(products).status(states).role(roles).productRole(productRoles).build().constructMap();
+        Multi<UserInstitution> userInstitutions =  userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters));
         return userInstitutions.onItem().transform(userInstitutionMapper::toResponse);
     }
 

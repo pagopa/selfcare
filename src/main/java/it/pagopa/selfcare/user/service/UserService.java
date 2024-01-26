@@ -19,5 +19,5 @@ public interface UserService {
     Multi<UserProductResponse> getUserProductsByInstitution(String institutionId);
     Uni<UserResource> retrievePerson(String userId, String productId, String institutionId);
     Uni<Void> updateUserStatusWithOptionalFilter(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status);
-    Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId,
+    Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId, String userId, List<String> roles, List<String> states, List<String> products, List<String> productRoles);
 }
