@@ -134,6 +134,20 @@ class UserInstitutionServiceTest {
         assertEquals(1, actual.size());
     }
 
+    @Test
+    void deleteUserInstitutionProduct(){
+        final String userId = "userId";
+        String institutionId = "institutionId";
+        PanacheMock.mock(UserInstitution.class);
+        ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+        when(UserInstitution.update((Document) any()))
+                .thenReturn(update);
+        when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<Long> subscriber = userInstitutionService.deleteUserInstitutionProduct(userId, institutionId, "productID")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted().assertItem(1L);
+    }
+
     private UserInstitution createDummyUserInstitution() {
         UserInstitution userInstitution = new UserInstitution();
         userInstitution.setId(ObjectId.get());

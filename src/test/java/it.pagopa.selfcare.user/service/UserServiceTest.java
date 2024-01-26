@@ -12,6 +12,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import io.smallrye.mutiny.subscription.UniSubscriber;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
@@ -35,9 +36,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static it.pagopa.selfcare.user.constant.CustomError.USER_TO_UPDATE_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @QuarkusTest
@@ -176,5 +179,29 @@ class UserServiceTest {
         Assert.assertNotNull(actual);
         assertEquals(1, actual.size());
         assertEquals(userInstitution.getUserId(), actual.get(0).getUserId());
+    }
+
+    @Test
+    void deleteUserInstitutionProductFound(){
+        when(userInstitutionService.deleteUserInstitutionProduct(anyString(), any(), any())).thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<Void> subscriber = userService
+                .deleteUserInstitutionProduct("userId", "institutionId", "productId")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertCompleted();
+
+
+    }
+
+    @Test
+    void deleteUserInstitutionProductNotFound(){
+        when(userInstitutionService.deleteUserInstitutionProduct(anyString(), any(), any())).thenReturn(Uni.createFrom().item(0L));
+        UniAssertSubscriber<Void> subscriber = userService
+                .deleteUserInstitutionProduct("userId", "institutionId", "productId")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(ResourceNotFoundException.class, USER_TO_UPDATE_NOT_FOUND.getMessage());
     }
 }

@@ -6,8 +6,10 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.service.UserService;
+import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfLocalDate;
@@ -131,6 +133,64 @@ public class UserControllerTest {
                 .get("/test_user_id")
                 .then()
                 .statusCode(404);
+    }
+
+    /**
+     * Method under test:
+     * {@link UserController#deleteProducts(String, String, String)}
+     */
+    @Test
+    @TestSecurity(user = "userJwt")
+    void deleteDeleteProductsErrorTest() {
+        String PATH_USER_ID = "userId";
+        String PATH_INSTITUTION_ID = "institutionId";
+        String PATH_PRODUCT_ID = "productId";
+        String PATH_DELETE_PRODUCT = "{userId}/institutions/{institutionId}/products/{productId}";
+
+        var user = "user1";
+        var institution = "institution1";
+        var product = "product1";
+        Mockito.when(userService.deleteUserInstitutionProduct(anyString(), anyString(), anyString()))
+                .thenThrow(InvalidRequestException.class);
+
+        given()
+                .when()
+                .pathParam(PATH_USER_ID, user)
+                .pathParam(PATH_INSTITUTION_ID, institution)
+                .pathParam(PATH_PRODUCT_ID, product)
+                .delete(PATH_DELETE_PRODUCT)
+                .then()
+                .statusCode(HttpStatus.SC_BAD_REQUEST);
+    }
+
+    /**
+     * Method under test:
+     * {@link UserController#deleteProducts(String, String, String)}
+     */
+    @Test
+    @TestSecurity(user = "userJwt")
+    void deleteDeleteProductsOKTest() {
+
+        String PATH_USER_ID = "userId";
+        String PATH_INSTITUTION_ID = "institutionId";
+        String PATH_PRODUCT_ID = "productId";
+        String PATH_DELETE_PRODUCT = "{userId}/institutions/{institutionId}/products/{productId}";
+
+        var user = "user123";
+        var institution = "institution123";
+        var product = "product123";
+
+        Mockito.when(userService.deleteUserInstitutionProduct(anyString(), anyString(), anyString()))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        given()
+                .when()
+                .pathParam(PATH_USER_ID, user)
+                .pathParam(PATH_INSTITUTION_ID, institution)
+                .pathParam(PATH_PRODUCT_ID, product)
+                .delete(PATH_DELETE_PRODUCT)
+                .then()
+                .statusCode(HttpStatus.SC_NO_CONTENT);
     }
 
 }

@@ -22,4 +22,6 @@ public interface UserService {
                                                            List<String> states,
                                                            List<String> products,
                                                            List<String> productRoles);
+
+    Uni<Void> deleteUserInstitutionProduct(String userId, String institutionId, String productId);
 }

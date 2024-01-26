@@ -7,8 +7,11 @@ import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
+import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
 import it.pagopa.selfcare.user.util.QueryUtils;
+import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +36,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
     private final UserInstitutionMapper userInstitutionMapper;
     private final QueryUtils queryUtils;
+    private final UserUtils userUtils;
 
     @Override
     public Uni<UserInstitutionResponse> findById(String id) {
@@ -62,6 +66,14 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     public Uni<UserInstitution> retrieveFirstFilteredUserInstitution(Map<String, Object> queryParameter) {
         Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
         return runUserInstitutionFindQuery(query, null).firstResult();
+    }
+
+    @Override
+    public Uni<Long> deleteUserInstitutionProduct(String userId, String institutionId, String productId) {
+        OnboardedProductFilter onboardedProductFilter = OnboardedProductFilter.builder().productId(productId).build();
+        UserInstitutionFilter userInstitutionFilter = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build();
+        Map<String, Object> filterMap = userUtils.retrieveMapForFilter(onboardedProductFilter.constructMap(), userInstitutionFilter.constructMap());
+        return updateUserStatusDao(filterMap, OnboardedProductState.DELETED);
     }
 
     @Override

@@ -2,6 +2,7 @@ package it.pagopa.selfcare.user.service;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 import static it.pagopa.selfcare.user.constant.CustomError.USER_NOT_FOUND_ERROR;
+import static it.pagopa.selfcare.user.constant.CustomError.USER_TO_UPDATE_NOT_FOUND;
 import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
 
 @RequiredArgsConstructor
@@ -95,6 +97,17 @@ public class UserServiceImpl implements UserService {
         var productFilters = constructOnboardedProductFilterMap(products, states, roles, productRoles);
         Multi<UserInstitution> userInstitutions =  userInstitutionService.findAllWithFilter(retrieveMapForFilter(userInstitutionFilters, productFilters));
         return userInstitutions.onItem().transform(userInstitutionMapper::toResponse);
+    }
+
+    @Override
+    public Uni<Void> deleteUserInstitutionProduct(String userId, String institutionId, String productId) {
+        return userInstitutionService.deleteUserInstitutionProduct(userId, institutionId, productId)
+                .onItem().transformToUni(aLong -> {
+                    if (aLong < 1) {
+                        return Uni.createFrom().failure(new ResourceNotFoundException(USER_TO_UPDATE_NOT_FOUND.getMessage()));
+                    }
+                    return Uni.createFrom().nullItem();
+                });
     }
 
     private Map<String, Object> buildQueryParams(String userId, String productId, String institutionId) {

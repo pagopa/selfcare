@@ -54,5 +54,23 @@ public class UserController {
         return userService.retrievePerson(userId, productId, institutionId)
                 .map(user -> userMapper.toUserResponse(user, institutionId));
     }
+
+    /**
+     * The deleteProducts function is used to delete logically the association institution and product.
+     *
+     * @param userId String
+     * @param institutionId String
+     * @param productId String
+     *
+     * @return A uni&lt;void&gt;
+     */
+    @Operation(summary = "Delete logically the association institution and product")
+    @DELETE
+    @Path(value = "/{userId}/institutions/{institutionId}/products/{productId}")
+    public Uni<Void> deleteProducts(@PathParam(value = "userId") String userId,
+                                    @PathParam(value = "institutionId") String institutionId,
+                                    @PathParam(value = "productId") String productId) {
+        return userService.deleteUserInstitutionProduct(userId, institutionId, productId);
+    }
 }
 
