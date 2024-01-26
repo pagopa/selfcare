@@ -2,6 +2,7 @@ package it.pagopa.selfcare.user.util;
 
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -23,13 +24,14 @@ public class UserUtils {
     private final ProductService productService;
 
 
-    public Uni<Boolean> checkProductRole(String productId, PartyRole role, String productRole) {
+    public void checkProductRole(String productId, PartyRole role, String productRole) {
         if(StringUtils.isNotBlank(productRole) && StringUtils.isNotBlank(productId)) {
-            return Uni.createFrom().item(productService.validateProductRole(productId, productRole, role))
-                    .onFailure(IllegalArgumentException.class).transform(throwable -> new InvalidRequestException(throwable.getMessage()))
-                    .replaceWith(true);
+            try {
+                productService.validateProductRole(productId, productRole, role);
+            }catch (IllegalArgumentException e){
+                throw new InvalidRequestException(e.getMessage());
+            }
         }
-        return Uni.createFrom().item(true);
     }
 
     @SafeVarargs

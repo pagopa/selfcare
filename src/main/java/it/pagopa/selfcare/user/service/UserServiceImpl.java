@@ -49,8 +49,10 @@ public class UserServiceImpl implements UserService {
         if (status == null) {
             return Uni.createFrom().failure(new InvalidRequestException(STATUS_IS_MANDATORY.getMessage()));
         }
-        return userUtils.checkProductRole(productId, role, productRole)
-                .onItem().transformToUni(aBoolean -> userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userId, institutionId, productId, role, productRole, status))
+
+        userUtils.checkProductRole(productId, role, productRole);
+
+        return userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userId, institutionId, productId, role, productRole, status)
                 .onItem().transformToUni(aLong -> {
                     if (aLong < 1) {
                         return Uni.createFrom().failure(new ResourceNotFoundException(USER_TO_UPDATE_NOT_FOUND.getMessage()));

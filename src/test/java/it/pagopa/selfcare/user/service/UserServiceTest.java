@@ -42,6 +42,7 @@ import static it.pagopa.selfcare.user.constant.CustomError.USER_TO_UPDATE_NOT_FO
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @QuarkusTest
@@ -173,7 +174,7 @@ class UserServiceTest {
 
     @Test
     void updateUserStatusWithOptionalFilter(){
-        when(userUtils.checkProductRole(any(), any(), any())).thenReturn(Uni.createFrom().item(Boolean.TRUE));
+        doNothing().when(userUtils).checkProductRole(any(), any(), any());
         when(userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().item(1L));
 
         UniAssertSubscriber<Void> subscriber = userService
@@ -186,7 +187,7 @@ class UserServiceTest {
 
     @Test
     void updateUserStatusWithOptionalFilterUserNotFound(){
-        when(userUtils.checkProductRole(any(), any(), any())).thenReturn(Uni.createFrom().item(Boolean.TRUE));
+        doNothing().when(userUtils).checkProductRole(any(), any(), any());
         when(userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().item(0L));
 
         UniAssertSubscriber<Void> subscriber = userService
