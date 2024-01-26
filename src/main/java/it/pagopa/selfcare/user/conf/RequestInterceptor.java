@@ -8,6 +8,10 @@ import org.jboss.resteasy.reactive.server.ServerRequestFilter;
 
 import java.util.stream.IntStream;
 
+/**
+ * This request interceptor is used to support comma separated query params in RestEasy
+ * example: param=123,456 -> param=123&param=456
+ */
 @Slf4j
 @Provider
 public class RequestInterceptor {
