@@ -35,7 +35,6 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     private static final String CURRENT = ".$.";
     private static final String CURRENT_ANY = ".$[].";
 
-
     private final UserInstitutionMapper userInstitutionMapper;
     private final QueryUtils queryUtils;
     private final UserUtils userUtils;
@@ -81,6 +80,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     @Override
     public Multi<UserInstitution> findAllWithFilter(Map<String, Object> queryParameter) {
         Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
+        log.debug("Query: {}", query);
         return runUserInstitutionFindQuery(query, null).stream();
     }
 

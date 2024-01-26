@@ -4,6 +4,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
@@ -67,7 +68,7 @@ public class UserServiceImpl implements UserService {
         var productFilters = OnboardedProductFilter.builder().productId(productId).build().constructMap();
         Multi<UserInstitution> userInstitutions = userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters));
         return userInstitutions.onItem()
-                .transformToUni(obj -> userRegistryApi.findByIdUsingGET("workContacts", obj.getUserId()))
+                .transformToUni(obj -> userRegistryApi.findByIdUsingGET(WORK_CONTACTS, obj.getUserId()))
                 .merge()
                 .filter(userResource -> Objects.nonNull(userResource.getWorkContacts())
                         && userResource.getWorkContacts().containsKey(institutionId))
@@ -104,6 +105,19 @@ public class UserServiceImpl implements UserService {
                 })
                 .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId()))
                 .onFailure(UserUtils::checkIfNotFoundException).transform(t -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode()));
+    }
+
+    @Override
+    public Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId,
+                                                                  String userId,
+                                                                  List<String> roles,
+                                                                  List<String> states,
+                                                                  List<String> products,
+                                                                  List<String> productRoles) {
+        var userInstitutionFilters = constructUserInstitutionFilterMap(institutionId, userId);
+        var productFilters = constructOnboardedProductFilterMap(products, states, roles, productRoles);
+        Multi<UserInstitution> userInstitutions =  userInstitutionService.findAllWithFilter(retrieveMapForFilter(userInstitutionFilters, productFilters));
+        return userInstitutions.onItem().transform(userInstitutionMapper::toResponse);
     }
 
 }
