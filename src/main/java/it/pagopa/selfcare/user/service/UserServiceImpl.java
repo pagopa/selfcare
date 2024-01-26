@@ -49,7 +49,7 @@ public class UserServiceImpl implements UserService {
         if (status == null) {
             return Uni.createFrom().failure(new InvalidRequestException(STATUS_IS_MANDATORY.getMessage()));
         }
-        return userUtils.checkRoles(productId, role, productRole)
+        return userUtils.checkProductRole(productId, role, productRole)
                 .onItem().transformToUni(aBoolean -> userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userId, institutionId, productId, role, productRole, status))
                 .onItem().transformToUni(aLong -> {
                     if (aLong < 1) {

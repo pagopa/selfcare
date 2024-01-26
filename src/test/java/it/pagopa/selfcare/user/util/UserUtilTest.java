@@ -28,13 +28,12 @@ class UserUtilTest {
     @InjectMock
     private ProductService productService;
 
-    /*@Test
+    @Test
     void checkRoleValid(){
 
-        when(productService.getProduct(any())).thenReturn(getProductResource());
-
+        when(productService.validateProductRole(any(), any(), any())).thenReturn(new ProductRole());
         UniAssertSubscriber<Boolean> subscriber = userUtils
-                .checkRoles("prod-pagopa", PartyRole.MANAGER, "operatore")
+                .checkProductRole("prod-pagopa", PartyRole.MANAGER, "operatore")
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -43,51 +42,55 @@ class UserUtilTest {
 
     @Test
     void checkRoleProductRoleNotFound(){
-        when(productService.getProduct(any())).thenReturn(getProductResource());
+        when(productService.validateProductRole(any(), any(), any())).thenThrow(new IllegalArgumentException("RoleMappings map for product prod-pagopa not found"));
         UniAssertSubscriber<Boolean> subscriber = userUtils
-                .checkRoles("prod-pagopa", PartyRole.MANAGER, "amministratore")
+                .checkProductRole("prod-pagopa", PartyRole.MANAGER, "amministratore")
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
-        subscriber.assertCompleted().assertItem(Boolean.FALSE);
+        subscriber.assertFailedWith(InvalidRequestException.class, "RoleMappings map for product prod-pagopa not found");
     }
 
     @Test
     void checkRoleProductRoleListNotExists(){
-        when(productService.getProduct(any())).thenReturn(getProductResource());
+        when(productService.validateProductRole(any(), any(), any())).thenThrow(new IllegalArgumentException("Role DELEGATE not found"));
 
         UniAssertSubscriber<Boolean> subscriber = userUtils
-                .checkRoles("prod-pagopa", PartyRole.DELEGATE, "operatore")
+                .checkProductRole("prod-pagopa", PartyRole.DELEGATE, "operatore")
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
-        subscriber.assertFailedWith(InvalidRequestException.class, "ROLE_NOT_FOUND");
+        subscriber.assertFailedWith(InvalidRequestException.class, "Role DELEGATE not found");
     }
 
     @Test
-    void checkRoleWithoutProductRole(){
+    void checkProductRoleWithoutProductRole(){
+        when(productService.validateProductRole(any(), any(), any())).thenThrow(new IllegalArgumentException("ProductRole operatore not found for role MANAGER"));
         UniAssertSubscriber<Boolean> subscriber = userUtils
-                .checkRoles("prod-io", PartyRole.MANAGER, null)
+                .checkProductRole("prod-io", PartyRole.MANAGER, null)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
-        subscriber.assertCompleted().assertItem(Boolean.TRUE);
+        subscriber.assertFailedWith(InvalidRequestException.class, "ProductRole operatore not found for role MANAGER");
+
     }
 
     @Test
-    void checkRoleWithoutRole(){
+    void checkProductRoleWithoutRole(){
+        when(productService.validateProductRole(any(), any(), any())).thenThrow(new IllegalArgumentException("Role is mandatory to check productRole"));
         UniAssertSubscriber<Boolean> subscriber = userUtils
-                .checkRoles("prod-io", null, "operatore")
+                .checkProductRole("prod-io", null, "operatore")
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
-        subscriber.assertFailedWith(InvalidRequestException.class, "ROLE_IS_NULL - Role is required if productRole is present");
+        subscriber.assertFailedWith(InvalidRequestException.class, "Role is mandatory to check productRole");
     }
 
     @Test
     void checkRoleWithoutProduct(){
+        when(productService.validateProductRole(any(), any(), any())).thenThrow(new IllegalArgumentException("ProductRole admin not found for role MANAGER"));
         UniAssertSubscriber<Boolean> subscriber = userUtils
-                .checkRoles("prod-io", PartyRole.MANAGER, null)
+                .checkProductRole("prod-io", PartyRole.MANAGER, "admin")
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -104,6 +107,6 @@ class UserUtilTest {
         map.put(PartyRole.MANAGER, productRoleInfo);
         productResource.setRoleMappings(map);
         return productResource;
-    }*/
+    }
 
 }
