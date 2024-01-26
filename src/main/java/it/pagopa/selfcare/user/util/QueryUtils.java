@@ -5,6 +5,10 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.Updates;
 import it.pagopa.selfcare.user.constant.SortEnum;
+import it.pagopa.selfcare.user.entity.OnboardedProduct;
+import it.pagopa.selfcare.user.entity.UserInstitutionRole;
+import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
+import it.pagopa.selfcare.user.entity.filter.UserInstitutionRoleFilter;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +21,9 @@ import org.bson.conversions.Bson;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static it.pagopa.selfcare.user.constant.CollectionUtil.USER_INSTITUTION_COLLECTION;
+import static java.util.stream.Collectors.groupingBy;
 
 @RequiredArgsConstructor(access = AccessLevel.NONE)
 @ApplicationScoped
@@ -43,9 +50,9 @@ public class QueryUtils {
      * The function iterates through the key-value pairs in the map, and for each pair it adds an entry to
      * the query document. If there are multiple entries in the map, then they are combined using logical ANDs.
      */
-    public Document buildQueryDocument(Map<String, Object> parameters) {
+    public Document buildQueryDocument(Map<String, Object> parameters, String collection) {
         if (!parameters.isEmpty()) {
-            return bsonToDocument(Filters.and(constructBsonFilter(parameters)));
+            return bsonToDocument(Filters.and(constructBsonFilter(parameters, collection)));
         } else {
             return new Document();
         }
@@ -63,37 +70,14 @@ public class QueryUtils {
         }
     }
 
-
     /**
-     * The constructBsonFilter function takes a Map of parameters and returns a List of Bson objects.
-     * The function iterates over the entries in the parameter map, and for each entry it creates a Bson object.
-     * If the value is an ArrayList, then it creates an &quot;in&quot; filter with that key and value.
-     * Otherwise, if there are any keys containing dots (.), then it calls constructElementMatch to create an element match filter with those keys/values;
-     * otherwise, it creates an &quot;eq&quot; filter with that key/value pair.
+     * The bsonToDocument function converts a Bson object to a Document.
      */
-    private List<Bson> constructBsonFilter(Map<String, Object> parameters) {
-        return parameters.entrySet().stream()
-                .map(entry -> {
-                    if (entry.getValue() instanceof ArrayList<?>) {
-                        return Filters.in(entry.getKey(), (Iterable<?>) entry.getValue());
-                    }else if(isPresentArrayFilter(parameters)){
-                        Map<String, Object> finalParameters = parameters.entrySet().stream().filter(stringObjectEntry -> stringObjectEntry.getKey().contains("\\."))
-                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (x, y) -> x));
-                        return constructElementMatch(finalParameters);
-                    }
-                    return Filters.eq(entry.getKey(), entry.getValue());
-                }).toList();
-    }
-
-    /**
-     * The constructElementMatch function takes a map of parameters and returns a Bson object.
-     * The function is used to construct an element match filter for MongoDB queries.
-     */
-    public Bson constructElementMatch(Map<String, Object> parameters) {
-        String arrayToMatch = Arrays.toString(parameters.keySet().stream().map(s -> s.split("\\."))
-                .toList()
-                .get(0));
-        return Filters.elemMatch(arrayToMatch, Filters.and(constructBsonFilter(parameters)));
+    private Document bsonToDocument(Bson bson) {
+        BsonDocument bsonDocument = bson.toBsonDocument(BsonDocument.class, MongoClientSettings.getDefaultCodecRegistry());
+        DocumentCodec codec = new DocumentCodec();
+        DecoderContext decoderContext = DecoderContext.builder().build();
+        return codec.decode(new BsonDocumentReader(bsonDocument), decoderContext);
     }
 
     /**
@@ -107,18 +91,98 @@ public class QueryUtils {
                 .toList();
     }
 
+
+
     /**
-     * The bsonToDocument function converts a Bson object to a Document.
+     * The constructBsonFilter function takes in a map of parameters and the name of the collection
+     * that we are querying.
+     * The function first checks if there is an array field present in the parameter map, and if so it creates
+     * a new Map object containing only those fields that need to be filtered by elemMatch (i.e., arrays).
+     * This new Map object is then passed into addEleMatchOperatorAndCleanParameterMap(),
+     * which adds an $elemMatch operator to each key-value pair in this new Map object and removes these
+     * Finally iterates on cleaned parameters map to add in or eq query operator and
+     * returns a list of Bson objects, which will be used to filter our query.
      */
-    private Document bsonToDocument(Bson bson) {
-        BsonDocument bsonDocument = bson.toBsonDocument(BsonDocument.class, MongoClientSettings.getDefaultCodecRegistry());
-        DocumentCodec codec = new DocumentCodec();
-        DecoderContext decoderContext = DecoderContext.builder().build();
-        return codec.decode(new BsonDocumentReader(bsonDocument), decoderContext);
+    private List<Bson> constructBsonFilter(Map<String, Object> parameters, String collection) {
+        List<Bson> bsonList = new ArrayList<>();
+
+        Map<String, Object> mapForElemMatch = retrieveArrayFilterIfPresent(parameters, collection);
+
+        if (!mapForElemMatch.isEmpty()) {
+            addElemMatchOperator(mapForElemMatch, collection, bsonList);
+            parameters = parameters.entrySet().stream().filter(stringObjectEntry -> !mapForElemMatch.containsKey(stringObjectEntry.getKey()))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        }
+
+        bsonList.addAll(addEqAndInFilters(parameters));
+
+        return bsonList;
+    }
+
+    /**
+     * The addElemMatchOperator function is used to add the $elemMatch operator to the query.
+     * The function takes in a mapForElemMatch map, parameters map, collection name and bsonList as arguments.
+     * It then iterates through all of the keys in mapForElemMatch and retrieves their parent key using retrieveParent() from enum
+     * chosen based on collection argument.
+     * Then it groups all of these parent keys together into a Map&lt;String, List&lt;String&gt;&gt; object called groupedParentsMap.
+     * Finally it iterates through each entry in groupedParentsMap and adds an elemMatch filter for each one with its value being
+     * an AND filter containing all of the eq and in filters from addAnd
+     */
+    private void addElemMatchOperator(Map<String, Object> mapForElemMatch, String collection, List<Bson> bsonList) {
+        mapForElemMatch.keySet()
+                .stream().map(key -> retrieveParent(key, collection))
+                .collect(groupingBy(o -> o))
+                .forEach((s, strings) -> bsonList.add(Filters.elemMatch(s, Filters.and(addEqAndInFilters(mapForElemMatch)))));
+    }
+
+    /**
+     * The addEqAndInFilters function takes a Map of parameters and returns a List of Bson objects.
+     * The function iterates over the entries in the parameter map, and for each entry it creates
+     * either an eq or an in filter depending on whether the value is an ArrayList or not. It then adds
+     * that filter to a list which it returns at the end of its execution. This function is used by both
+     * findDocumentsWithParameters and updateDocumentsWithParameters to create filters based on user input.
+     */
+    private List<Bson> addEqAndInFilters(Map<String, Object> parameters) {
+        return parameters.entrySet().stream()
+                .map(entry -> {
+                    if (entry.getValue() instanceof List<?>) {
+                        return Filters.in(entry.getKey(), (Iterable<?>) entry.getValue());
+                    }
+                    return Filters.eq(entry.getKey(), entry.getValue());
+                }).toList();
     }
 
 
-    private boolean isPresentArrayFilter(Map<String, Object> parameters) {
-        return parameters.entrySet().stream().anyMatch(stringObjectEntry -> stringObjectEntry.getKey().contains("\\."));
+    /**
+     * The retrieveParent function is used to retrieve the parent of a given key.
+     * The parent is retrieved from enum related to given collection name;
+     */
+    private String retrieveParent(String key, String collection) {
+        if (USER_INSTITUTION_COLLECTION.equalsIgnoreCase(collection)) {
+            return OnboardedProductFilter.OnboardedProductEnum.retrieveParent(key)
+                    .orElse(null);
+        } else {
+            return UserInstitutionRoleFilter.UserInstitutionRoleEnum.retrieveParent(key)
+                    .orElse(null);
+        }
+    }
+
+
+    /**
+     * The retrieveArrayFilterIfPresent function is used to filter out the parameters that are not part of the
+     * OnboardedProduct.Fields or UserInstitutionRole.Fields enumerations, depending on which collection is being queried.
+     * This function retrieve a new parameterMap ,containing only those filters necessary to build an element match filter
+     * The second argument represents which collection we are filtering for (either USER_INSTITUTION_COLLECTION or USER_INFO_COLLECTION)
+     */
+    private Map<String, Object> retrieveArrayFilterIfPresent(Map<String, Object> parameters, String collection) {
+        if (USER_INSTITUTION_COLLECTION.equalsIgnoreCase(collection)) {
+            return parameters.entrySet().stream()
+                    .filter(mapEntry -> Arrays.stream(OnboardedProduct.Fields.values()).anyMatch(field -> field.name().equalsIgnoreCase(mapEntry.getKey())))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (x, y) -> x));
+        } else {
+            return parameters.entrySet().stream()
+                    .filter(mapEntry -> Arrays.stream(UserInstitutionRole.Fields.values()).anyMatch(field -> field.name().equalsIgnoreCase(mapEntry.getKey())))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (x, y) -> x));
+        }
     }
 }

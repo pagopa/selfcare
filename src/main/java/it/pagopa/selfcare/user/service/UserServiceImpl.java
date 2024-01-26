@@ -2,13 +2,14 @@ package it.pagopa.selfcare.user.service;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.mapper.OnboardedProductMapper;
-import it.pagopa.selfcare.user.util.QueryUtils;
+import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
@@ -21,11 +22,10 @@ import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
+import java.util.*;
 
 import static it.pagopa.selfcare.user.constant.CustomError.USER_NOT_FOUND_ERROR;
-
-import java.util.*;
+import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
 
 @RequiredArgsConstructor
 @ApplicationScoped
@@ -35,12 +35,11 @@ public class UserServiceImpl implements UserService {
     @Inject
     private UserApi userRegistryApi;
     private final OnboardedProductMapper onboardedProductMapper;
+    private final UserInstitutionMapper userInstitutionMapper;
     private final UserInstitutionService userInstitutionService;
     private static final String USERS_WORKS_FIELD_LIST = "fiscalCode,familyName,email,name,workContacts";
+    private static final String WORK_CONTACTS = "workContacts";
     private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
-    @Inject
-    private QueryUtils queryUtils;
-
 
     @Override
     public Uni<List<String>> getUsersEmails(String institutionId, String productId) {
@@ -48,7 +47,7 @@ public class UserServiceImpl implements UserService {
         var productFilters = constructOnboardedProductFilterMap(productId);
         Multi<UserInstitution> userInstitutions =  userInstitutionService.findAllWithFilter(retrieveMapForFilter(userInstitutionFilters, productFilters));
         return userInstitutions.onItem()
-                .transformToUni(obj -> userRegistryApi.findByIdUsingGET("workContacts", obj.getUserId()))
+                .transformToUni(obj -> userRegistryApi.findByIdUsingGET(WORK_CONTACTS, obj.getUserId()))
                 .merge()
                 .filter(userResource -> Objects.nonNull(userResource.getWorkContacts())
                         && userResource.getWorkContacts().containsKey(institutionId))
@@ -73,6 +72,68 @@ public class UserServiceImpl implements UserService {
                 .merge();
     }
 
+    @Override
+    public Uni<UserResource> retrievePerson(String userId, String productId, String institutionId) {
+        Map<String, Object> queryParameter = buildQueryParams(userId, productId, institutionId);
+        return userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter)
+                .onItem().ifNull().failWith(() -> {
+                    log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId));
+                    return new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode());
+                })
+                .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId()))
+                .onFailure(this::checkIfNotFoundException).transform(t -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode()));
+    }
+
+    @Override
+    public Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId,
+                                                                  String userId,
+                                                                  List<String> roles,
+                                                                  List<String> states,
+                                                                  List<String> products,
+                                                                  List<String> productRoles) {
+        var userInstitutionFilters = constructUserInstitutionFilterMap(institutionId, userId);
+        var productFilters = constructOnboardedProductFilterMap(products, states, roles, productRoles);
+        Multi<UserInstitution> userInstitutions =  userInstitutionService.findAllWithFilter(retrieveMapForFilter(userInstitutionFilters, productFilters));
+        return userInstitutions.onItem().transform(userInstitutionMapper::toResponse);
+    }
+
+    private Map<String, Object> buildQueryParams(String userId, String productId, String institutionId) {
+        OnboardedProductFilter onboardedProductFilter = OnboardedProductFilter.builder()
+                .productId(productId)
+                .build();
+
+        UserInstitutionFilter userInstitutionFilter = UserInstitutionFilter.builder()
+                .userId(userId)
+                .institutionId(institutionId)
+                .build();
+
+        Map<String, Object> filterMap = userInstitutionFilter.constructMap();
+        filterMap.putAll(onboardedProductFilter.constructMap());
+        return filterMap;
+    }
+
+    private Map<String, Object> constructUserInstitutionFilterMap(String institutionId, String userId) {
+        return UserInstitutionFilter
+                .builder()
+                .institutionId(institutionId)
+                .userId(userId)
+                .build()
+                .constructMap();
+    }
+
+    private Map<String, Object> constructOnboardedProductFilterMap(List<String> products,
+                                                                   List<String> states,
+                                                                   List<String> roles,
+                                                                   List<String> productRoles) {
+        return OnboardedProductFilter.builder()
+                .productId(formatQueryParameterList(products))
+                .role(formatQueryParameterList(roles))
+                .status(formatQueryParameterList(states))
+                .productRole(formatQueryParameterList(productRoles))
+                .build()
+                .constructMap();
+    }
+
     private Map<String, Object> constructUserInstitutionFilterMap(String institutionId) {
         return UserInstitutionFilter
                 .builder()
@@ -92,33 +153,6 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> map = new HashMap<>();
         Arrays.stream(maps).forEach(map::putAll);
         return map;
-    }
-
-    @Override
-    public Uni<UserResource> retrievePerson(String userId, String productId, String institutionId) {
-        Map<String, Object> queryParameter = buildQueryParams(userId, productId, institutionId);
-        return userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter)
-                .onItem().ifNull().failWith(() -> {
-                    log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId));
-                    return new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode());
-                })
-                .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId()))
-                .onFailure(this::checkIfNotFoundException).transform(t -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode()));
-    }
-
-    private Map<String, Object> buildQueryParams(String userId, String productId, String institutionId) {
-        OnboardedProductFilter onboardedProductFilter = OnboardedProductFilter.builder()
-                .productId(productId)
-                .build();
-
-        UserInstitutionFilter userInstitutionFilter = UserInstitutionFilter.builder()
-                .userId(userId)
-                .institutionId(institutionId)
-                .build();
-
-        Map<String, Object> filterMap = userInstitutionFilter.constructMap();
-        filterMap.putAll(onboardedProductFilter.constructMap());
-        return filterMap;
     }
 
     private boolean checkIfNotFoundException(Throwable throwable) {

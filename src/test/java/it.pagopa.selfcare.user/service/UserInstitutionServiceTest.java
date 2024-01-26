@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.Map;
 
 import static io.smallrye.common.constraint.Assert.assertNotNull;
+import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductEnum.PRODUCT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductFilterField.PRODUCT_ID;
 import static it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter.UserInstitutionFilterEnum.INSTITUTION_ID;
 import static it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter.UserInstitutionFilterEnum.USER_ID;
 import static org.mockito.ArgumentMatchers.any;
@@ -76,37 +76,6 @@ class UserInstitutionServiceTest {
                 .thenReturn(query);
         Multi<UserInstitutionResponse> response = userInstitutionService.findByUserId(userId);
         Assertions.assertNotNull(response);
-    }
-
-    @Test
-    void updateUserStatusDao() {
-        final String userId = "userId";
-        String institutionId = "institutionId";
-        String productId = "productId";
-        PanacheMock.mock(UserInstitution.class);
-        ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
-        when(UserInstitution.update((Document) any()))
-                .thenReturn(update);
-        when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
-        Map<String, Object> map = new HashMap<>();
-        map.put(USER_ID.getDescription(), userId);
-        map.put(INSTITUTION_ID.getDescription(), institutionId);
-        map.put(PRODUCT_ID.getDescription(), productId);
-        UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserStatusDao(map, OnboardedProductState.ACTIVE).subscribe().withSubscriber(UniAssertSubscriber.create());
-        subscriber.assertCompleted().assertItem(1L);
-    }
-
-    @Test
-    void updateUserStatusDaoByRelationshipId() {
-        String relationshipId = "institutionId";
-        PanacheMock.mock(UserInstitution.class);
-        ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
-        when(UserInstitution.update((Document) any()))
-                .thenReturn(update);
-        when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
-        UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserStatusDaoByRelationshipId(relationshipId, OnboardedProductState.ACTIVE)
-                .subscribe().withSubscriber(UniAssertSubscriber.create());
-        subscriber.assertCompleted().assertItem(1L);
     }
 
     @Test
