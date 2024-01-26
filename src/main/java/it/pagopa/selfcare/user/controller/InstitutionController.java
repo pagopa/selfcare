@@ -36,8 +36,8 @@ public class InstitutionController {
     @Produces(MediaType.APPLICATION_JSON)
     public Multi<UserInstitutionResponse> retrieveUsers(@PathParam(value = "institutionId") String institutionId,
                                                         @QueryParam(value = "userId") String userId,
-                                                        @QueryParam(value = "roles") List<PartyRole> roles,
-                                                        @QueryParam(value = "roles") List<OnboardedProductState> states,
+                                                        @QueryParam(value = "roles") List<String> roles,
+                                                        @QueryParam(value = "states") List<String> states,
                                                         @QueryParam(value = "products") List<String> products,
                                                         @QueryParam(value = "productRoles") List<String> productRoles) {
         return userService.findAllUserInstitutions(institutionId, userId, roles, states, products, productRoles);

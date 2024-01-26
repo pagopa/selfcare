@@ -18,8 +18,8 @@ public interface UserService {
     Uni<UserResource> retrievePerson(String userId, String productId, String institutionId);
     Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId,
                                                            String userId,
-                                                           List<PartyRole> roles,
-                                                           List<OnboardedProductState> states,
+                                                           List<String> roles,
+                                                           List<String> states,
                                                            List<String> products,
                                                            List<String> productRoles);
 }

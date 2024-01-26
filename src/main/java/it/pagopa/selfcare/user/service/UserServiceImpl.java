@@ -2,8 +2,6 @@ package it.pagopa.selfcare.user.service;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -12,7 +10,6 @@ import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.mapper.OnboardedProductMapper;
 import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
-import it.pagopa.selfcare.user.util.QueryUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
@@ -25,11 +22,10 @@ import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
+import java.util.*;
 
 import static it.pagopa.selfcare.user.constant.CustomError.USER_NOT_FOUND_ERROR;
-
-import java.util.*;
+import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
 
 @RequiredArgsConstructor
 @ApplicationScoped
@@ -44,8 +40,6 @@ public class UserServiceImpl implements UserService {
     private static final String USERS_WORKS_FIELD_LIST = "fiscalCode,familyName,email,name,workContacts";
     private static final String WORK_CONTACTS = "workContacts";
     private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
-    @Inject
-    private QueryUtils queryUtils;
 
     @Override
     public Uni<List<String>> getUsersEmails(String institutionId, String productId) {
@@ -93,8 +87,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId,
                                                                   String userId,
-                                                                  List<PartyRole> roles,
-                                                                  List<OnboardedProductState> states,
+                                                                  List<String> roles,
+                                                                  List<String> states,
                                                                   List<String> products,
                                                                   List<String> productRoles) {
         var userInstitutionFilters = constructUserInstitutionFilterMap(institutionId, userId);
@@ -128,14 +122,14 @@ public class UserServiceImpl implements UserService {
     }
 
     private Map<String, Object> constructOnboardedProductFilterMap(List<String> products,
-                                                                   List<OnboardedProductState> states,
-                                                                   List<PartyRole> roles,
+                                                                   List<String> states,
+                                                                   List<String> roles,
                                                                    List<String> productRoles) {
         return OnboardedProductFilter.builder()
-                .productId(products)
-                .role(roles)
-                .status(states)
-                .productRole(productRoles)
+                .productId(formatQueryParameterList(products))
+                .role(formatQueryParameterList(roles))
+                .status(formatQueryParameterList(states))
+                .productRole(formatQueryParameterList(productRoles))
                 .build()
                 .constructMap();
     }
