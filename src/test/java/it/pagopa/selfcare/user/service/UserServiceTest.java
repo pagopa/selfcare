@@ -176,11 +176,12 @@ class UserServiceTest {
 
     @Test
     void updateUserStatusWithOptionalFilter(){
-        doNothing().when(userUtils).checkProductRole(any(), any(), any());
-        when(userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().item(1L));
+        doNothing().when(userUtils).checkProductRole("prod-pagopa", PartyRole.MANAGER, null);
+        when(userInstitutionService
+                .updateUserStatusWithOptionalFilterByInstitutionAndProduct("userId", "institutionId", "prod-pagopa", PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)).thenReturn(Uni.createFrom().item(1L));
 
         UniAssertSubscriber<Void> subscriber = userService
-                .updateUserStatusWithOptionalFilter("userId", "institutionId", null, PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)
+                .updateUserStatusWithOptionalFilter("userId", "institutionId", "prod-pagopa", PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -189,11 +190,12 @@ class UserServiceTest {
 
     @Test
     void updateUserStatusWithOptionalFilterUserNotFound(){
-        doNothing().when(userUtils).checkProductRole(any(), any(), any());
-        when(userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().item(0L));
+        doNothing().when(userUtils).checkProductRole("prod-pagopa", PartyRole.MANAGER, null);
+        when(userInstitutionService
+                .updateUserStatusWithOptionalFilterByInstitutionAndProduct("userId", "institutionId", "prod-pagopa", PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)).thenReturn(Uni.createFrom().item(0L));
 
         UniAssertSubscriber<Void> subscriber = userService
-                .updateUserStatusWithOptionalFilter("userId", "institutionId", null, PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)
+                .updateUserStatusWithOptionalFilter("userId", "institutionId", "prod-pagopa", PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
