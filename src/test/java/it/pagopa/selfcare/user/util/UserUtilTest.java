@@ -7,11 +7,15 @@ import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
 import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.entity.OnboardedProduct;
+import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +83,27 @@ class UserUtilTest {
         map.put(PartyRole.MANAGER, productRoleInfo);
         productResource.setRoleMappings(map);
         return productResource;
+    }
+
+    @Test
+    void testFilterProductWorks() {
+        OnboardedProduct onboardedProduct1 = new OnboardedProduct();
+        onboardedProduct1.setProductId("test-id");
+        onboardedProduct1.setStatus(OnboardedProductState.ACTIVE);
+        OnboardedProduct onboardedProduct2 = new OnboardedProduct();
+        onboardedProduct2.setProductId("test-id");
+        onboardedProduct2.setStatus(OnboardedProductState.DELETED);
+
+        List<OnboardedProduct> onboardedProducts = new ArrayList<>();
+        onboardedProducts.add(onboardedProduct1);
+        onboardedProducts.add(onboardedProduct2);
+
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setProducts(onboardedProducts);
+
+        String[] states = {"ACTIVE"};
+        UserInstitution filteredUserInstitution = userUtils.filterProduct(userInstitution, states);
+        Assertions.assertEquals(1, filteredUserInstitution.getProducts().size());
     }
 
 }
