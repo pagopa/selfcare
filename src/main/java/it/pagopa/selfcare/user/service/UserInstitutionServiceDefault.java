@@ -70,11 +70,19 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     }
 
     @Override
+    public Uni<Long> deleteUserInstitutionProduct(String userId, String institutionId, String productId) {
+        OnboardedProductFilter onboardedProductFilter = OnboardedProductFilter.builder().productId(productId).build();
+        UserInstitutionFilter userInstitutionFilter = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build();
+        Map<String, Object> filterMap = userUtils.retrieveMapForFilter(onboardedProductFilter.constructMap(), userInstitutionFilter.constructMap());
+        return updateUserStatusDao(filterMap, OnboardedProductState.DELETED);
+    }
+
+    @Override
     public Uni<Long> updateUserStatusWithOptionalFilterByInstitutionAndProduct(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status) {
         Map<String, Object> onboardedProductFilterMap = OnboardedProductFilter.builder().productId(productId).role(role).productRole(productRole).build().constructMap();
         Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
         Map<String, Object> filterMap = userUtils.retrieveMapForFilter(onboardedProductFilterMap, userInstitutionFilterMap);
-        return updateUserStatus(filterMap, status);
+        return updateUserStatusDao(filterMap, status);
     }
 
     @Override
@@ -84,7 +92,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         return runUserInstitutionFindQuery(query, null).stream();
     }
 
-    private Uni<Long> updateUserStatus(Map<String, Object> filterMap, OnboardedProductState status) {
+    private Uni<Long> updateUserStatusDao(Map<String, Object> filterMap, OnboardedProductState status) {
 
         Map<String, Object> fieldToUpdateMap = new HashMap<>();
         if(productFilterIsEmpty(filterMap)) {

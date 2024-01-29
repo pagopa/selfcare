@@ -224,5 +224,27 @@ class UserServiceTest {
         assertEquals(userInstitution.getUserId(), actual.get(0).getUserId());
     }
 
+    @Test
+    void deleteUserInstitutionProductFound(){
+        when(userInstitutionService.deleteUserInstitutionProduct("userId", "institutionId", "productId")).thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<Void> subscriber = userService
+                .deleteUserInstitutionProduct("userId", "institutionId", "productId")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
 
+        subscriber.assertCompleted();
+
+
+    }
+
+    @Test
+    void deleteUserInstitutionProductNotFound(){
+        when(userInstitutionService.deleteUserInstitutionProduct("userId", "institutionId", "productId")).thenReturn(Uni.createFrom().item(0L));
+        UniAssertSubscriber<Void> subscriber = userService
+                .deleteUserInstitutionProduct("userId", "institutionId", "productId")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(ResourceNotFoundException.class, USER_TO_UPDATE_NOT_FOUND.getMessage());
+    }
 }

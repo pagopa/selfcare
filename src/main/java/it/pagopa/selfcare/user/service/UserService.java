@@ -11,8 +11,6 @@ import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import java.util.List;
 
-import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.user.constant.OnboardedProductState;
 
 public interface UserService {
     Uni<List<String>> getUsersEmails(String institutionId, String productId);
@@ -20,4 +18,6 @@ public interface UserService {
     Uni<UserResource> retrievePerson(String userId, String productId, String institutionId);
     Uni<Void> updateUserStatusWithOptionalFilter(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status);
     Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId, String userId, List<String> roles, List<String> states, List<String> products, List<String> productRoles);
+    Uni<Void> deleteUserInstitutionProduct(String userId, String institutionId, String productId);
+
 }

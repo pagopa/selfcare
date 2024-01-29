@@ -120,4 +120,15 @@ public class UserServiceImpl implements UserService {
         return userInstitutions.onItem().transform(userInstitutionMapper::toResponse);
     }
 
+    @Override
+    public Uni<Void> deleteUserInstitutionProduct(String userId, String institutionId, String productId) {
+        return userInstitutionService.deleteUserInstitutionProduct(userId, institutionId, productId)
+                .onItem().transformToUni(aLong -> {
+                    if (aLong < 1) {
+                        return Uni.createFrom().failure(new ResourceNotFoundException(USER_TO_UPDATE_NOT_FOUND.getMessage()));
+                    }
+                    return Uni.createFrom().nullItem();
+                });
+    }
+
 }
