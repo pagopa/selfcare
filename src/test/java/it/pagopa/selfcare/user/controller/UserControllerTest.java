@@ -150,7 +150,7 @@ public class UserControllerTest {
         var user = "user1";
         var institution = "institution1";
         var product = "product1";
-        Mockito.when(userService.deleteUserInstitutionProduct(anyString(), anyString(), anyString()))
+        Mockito.when(userService.deleteUserInstitutionProduct("user1","institution1", "product1"))
                 .thenThrow(InvalidRequestException.class);
 
         given()
@@ -178,9 +178,9 @@ public class UserControllerTest {
 
         var user = "user123";
         var institution = "institution123";
-        var product = "product123";
+        var product = "prod-pagopa";
 
-        Mockito.when(userService.deleteUserInstitutionProduct(anyString(), anyString(), anyString()))
+        Mockito.when(userService.deleteUserInstitutionProduct("user123", "institution123", "prod-pagopa"))
                 .thenReturn(Uni.createFrom().voidItem());
 
         given()

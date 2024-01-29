@@ -183,7 +183,7 @@ class UserServiceTest {
 
     @Test
     void deleteUserInstitutionProductFound(){
-        when(userInstitutionService.deleteUserInstitutionProduct(anyString(), any(), any())).thenReturn(Uni.createFrom().item(1L));
+        when(userInstitutionService.deleteUserInstitutionProduct("userId", "institutionId", "productId")).thenReturn(Uni.createFrom().item(1L));
         UniAssertSubscriber<Void> subscriber = userService
                 .deleteUserInstitutionProduct("userId", "institutionId", "productId")
                 .subscribe()
@@ -196,7 +196,7 @@ class UserServiceTest {
 
     @Test
     void deleteUserInstitutionProductNotFound(){
-        when(userInstitutionService.deleteUserInstitutionProduct(anyString(), any(), any())).thenReturn(Uni.createFrom().item(0L));
+        when(userInstitutionService.deleteUserInstitutionProduct("userId", "institutionId", "productId")).thenReturn(Uni.createFrom().item(0L));
         UniAssertSubscriber<Void> subscriber = userService
                 .deleteUserInstitutionProduct("userId", "institutionId", "productId")
                 .subscribe()

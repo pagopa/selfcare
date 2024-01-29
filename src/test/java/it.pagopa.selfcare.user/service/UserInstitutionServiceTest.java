@@ -140,7 +140,7 @@ class UserInstitutionServiceTest {
         String institutionId = "institutionId";
         PanacheMock.mock(UserInstitution.class);
         ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
-        when(UserInstitution.update((Document) any()))
+        when(UserInstitution.update(any(Document.class)))
                 .thenReturn(update);
         when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
         UniAssertSubscriber<Long> subscriber = userInstitutionService.deleteUserInstitutionProduct(userId, institutionId, "productID")
