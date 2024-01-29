@@ -25,7 +25,6 @@ import jakarta.inject.Inject;
 import org.apache.http.HttpStatus;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.junit.jupiter.api.Assertions;
 import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -45,7 +44,7 @@ import static it.pagopa.selfcare.user.constant.CustomError.STATUS_IS_MANDATORY;
 import static it.pagopa.selfcare.user.constant.CustomError.USER_TO_UPDATE_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
@@ -178,16 +177,13 @@ class UserServiceTest {
 
     @Test
     void testRetrieveBindingsOk() {
-        List<OnboardedProduct> onboardedProducts = new ArrayList<>();
-        onboardedProducts.add(new OnboardedProduct());
-        UserInstitution userInstitution = new UserInstitution();
-        userInstitution.setUserId("test-user");
-        userInstitution.setProducts(onboardedProducts);
         List<UserInstitution> userInstitutions = new ArrayList<>();
         userInstitutions.add(userInstitution);
-        when(userInstitutionService.retrieveFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(userInstitutions));
 
-        UniAssertSubscriber<List<UserInstitution>>  subscriber = userService
+        when(userInstitutionService.retrieveFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(userInstitutions));
+        when(userUtils.filterProduct(any(), any())).thenReturn(userInstitution);
+
+        UniAssertSubscriber<List<UserInstitution>> subscriber = userService
                 .retrieveBindings("test-institutionId", "test-user", null)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());

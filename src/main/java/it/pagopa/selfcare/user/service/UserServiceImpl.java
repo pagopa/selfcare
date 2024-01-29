@@ -5,7 +5,6 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
-import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
@@ -15,7 +14,6 @@ import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.mapper.OnboardedProductMapper;
 import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
 import it.pagopa.selfcare.user.util.UserUtils;
-import it.pagopa.selfcare.user.util.QueryUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
@@ -149,10 +147,7 @@ public class UserServiceImpl implements UserService {
                 .status(relationshipStates)
                 .build();
 
-
-        Map<String, Object> queryParameter = retrieveMapForFilter(userInstitutionFilter.constructMap(), onboardedProductFilter.constructMap());
-
-        return userInstitutionService.retrieveFilteredUserInstitution(queryParameter)
+        return userInstitutionService.retrieveFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilter.constructMap(), onboardedProductFilter.constructMap()))
                 .map((list) -> {
                     if(list == null || list.isEmpty()) {
                         throw new ResourceNotFoundException("");
