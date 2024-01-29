@@ -7,14 +7,20 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.mongodb.MongoTestResource;
+import io.smallrye.common.constraint.Assert;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.inject.Inject;
 import org.apache.http.HttpStatus;
 import org.bson.types.ObjectId;
@@ -35,9 +41,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static it.pagopa.selfcare.user.constant.CustomError.STATUS_IS_MANDATORY;
+import static it.pagopa.selfcare.user.constant.CustomError.USER_TO_UPDATE_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @QuarkusTest
@@ -53,6 +62,9 @@ class UserServiceTest {
     @RestClient
     @InjectMock
     private UserApi userRegistryApi;
+
+    @InjectMock
+    private UserUtils userUtils;
 
     private static UserResource userResource;
     private static UserInstitution userInstitution;
@@ -80,7 +92,7 @@ class UserServiceTest {
         product.setProductId("test");
         userInstitution.setProducts(List.of(product));
     }
-
+    
     @Test
     void getUsersEmailsTest() {
 
@@ -193,5 +205,81 @@ class UserServiceTest {
                 .withSubscriber(UniAssertSubscriber.create());
 
         subscriber.assertFailedWith(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void updateUserStatusWithOptionalFilter(){
+        doNothing().when(userUtils).checkProductRole("prod-pagopa", PartyRole.MANAGER, null);
+        when(userInstitutionService
+                .updateUserStatusWithOptionalFilterByInstitutionAndProduct("userId", "institutionId", "prod-pagopa", PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)).thenReturn(Uni.createFrom().item(1L));
+
+        UniAssertSubscriber<Void> subscriber = userService
+                .updateUserStatusWithOptionalFilter("userId", "institutionId", "prod-pagopa", PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertCompleted();
+    }
+
+    @Test
+    void updateUserStatusWithOptionalFilterUserNotFound(){
+        doNothing().when(userUtils).checkProductRole("prod-pagopa", PartyRole.MANAGER, null);
+        when(userInstitutionService
+                .updateUserStatusWithOptionalFilterByInstitutionAndProduct("userId", "institutionId", "prod-pagopa", PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)).thenReturn(Uni.createFrom().item(0L));
+
+        UniAssertSubscriber<Void> subscriber = userService
+                .updateUserStatusWithOptionalFilter("userId", "institutionId", "prod-pagopa", PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(ResourceNotFoundException.class, USER_TO_UPDATE_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    void updateUserStatusWithOptionalFilterInvalidRequest(){
+        UniAssertSubscriber<Void> subscriber = userService
+                .updateUserStatusWithOptionalFilter("userId", "institutionId", null, PartyRole.MANAGER, null, null)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(InvalidRequestException.class, STATUS_IS_MANDATORY.getMessage());
+    }
+
+    @Test
+    void retrieveUsersTest() {
+        when(userInstitutionService.findAllWithFilter(any())).thenReturn(Multi.createFrom().item(userInstitution));
+        AssertSubscriber<UserInstitutionResponse> subscriber = userService
+                .findAllUserInstitutions("institutionId", "userId", null, null, null, null)
+                .subscribe()
+                .withSubscriber(AssertSubscriber.create(10));
+
+        List<UserInstitutionResponse> actual = subscriber.assertCompleted().getItems();
+        Assert.assertNotNull(actual);
+        assertEquals(1, actual.size());
+        assertEquals(userInstitution.getUserId(), actual.get(0).getUserId());
+    }
+
+    @Test
+    void deleteUserInstitutionProductFound(){
+        when(userInstitutionService.deleteUserInstitutionProduct("userId", "institutionId", "productId")).thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<Void> subscriber = userService
+                .deleteUserInstitutionProduct("userId", "institutionId", "productId")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertCompleted();
+
+
+    }
+
+    @Test
+    void deleteUserInstitutionProductNotFound(){
+        when(userInstitutionService.deleteUserInstitutionProduct("userId", "institutionId", "productId")).thenReturn(Uni.createFrom().item(0L));
+        UniAssertSubscriber<Void> subscriber = userService
+                .deleteUserInstitutionProduct("userId", "institutionId", "productId")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(ResourceNotFoundException.class, USER_TO_UPDATE_NOT_FOUND.getMessage());
     }
 }

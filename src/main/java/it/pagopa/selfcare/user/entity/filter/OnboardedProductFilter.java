@@ -61,7 +61,8 @@ public class OnboardedProductFilter {
         map.put(CREATED_AT.getChild(), createdAt);
         map.put(UPDATED_AT.getChild(), updatedAt);
 
-        map.values().removeIf(Objects::isNull);
+        map.entrySet().removeIf(e -> Objects.isNull(e.getValue()) ||
+                (e.getValue() instanceof Collection && ((Collection) e.getValue()).isEmpty()));
 
         return map;
     }

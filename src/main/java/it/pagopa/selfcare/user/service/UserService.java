@@ -2,8 +2,12 @@ package it.pagopa.selfcare.user.service;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
+
 
 import java.util.List;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -14,4 +18,8 @@ public interface UserService {
     Multi<UserProductResponse> getUserProductsByInstitution(String institutionId);
     Uni<UserResource> retrievePerson(String userId, String productId, String institutionId);
     Uni<List<UserInstitution>> retrieveBindings(String institutionId, String userId, String[] states);
+    Uni<Void> updateUserStatusWithOptionalFilter(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status);
+    Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId, String userId, List<String> roles, List<String> states, List<String> products, List<String> productRoles);
+    Uni<Void> deleteUserInstitutionProduct(String userId, String institutionId, String productId);
+
 }

@@ -2,6 +2,8 @@ package it.pagopa.selfcare.user.controller;
 
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserResponse;
 import it.pagopa.selfcare.user.controller.response.product.UserProductsResponse;
 import it.pagopa.selfcare.user.mapper.UserMapper;
@@ -12,6 +14,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 
 import java.util.List;
@@ -66,6 +69,52 @@ public class UserController {
                                                          @QueryParam(value = "states") String[] states) {
         return userService.retrieveBindings(institutionId, userId, states)
                 .map(userMapper::toUserProductsResponse);
+    }
+
+    /**
+     * The deleteProducts function is used to delete logically the association institution and product.
+     *
+     * @param userId String
+     * @param institutionId String
+     * @param productId String
+     *
+     * @return A uni&lt;void&gt;
+     */
+    @Operation(summary = "Delete logically the association institution and product")
+    @DELETE
+    @Path(value = "/{userId}/institutions/{institutionId}/products/{productId}")
+    public Uni<Void> deleteProducts(@PathParam(value = "userId") String userId,
+                                    @PathParam(value = "institutionId") String institutionId,
+                                    @PathParam(value = "productId") String productId) {
+        return userService.deleteUserInstitutionProduct(userId, institutionId, productId);
+    }
+
+    /**
+     * The updateUserStatus function updates the status of a user's product.
+     *
+     * @param userId        String
+     * @param institutionId String
+     * @param productId     String
+     * @param role          PartyRole
+     * @param productRole   String
+     * @param status        OnboardedProductState
+     * @return A uni&lt;response&gt;
+     */
+    @Operation(summary = "Update user status with optional filter for institution, product, role and productRole")
+    @PUT
+    @Path(value = "/{id}/status")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> updateUserStatus(@PathParam(value = "id") String userId,
+                                          @QueryParam(value = "institutionId") String institutionId,
+                                          @QueryParam(value = "productId") String productId,
+                                          @QueryParam(value = "role") PartyRole role,
+                                          @QueryParam(value = "productRole") String productRole,
+                                          @QueryParam(value = "status") OnboardedProductState status) {
+        log.debug("updateProductStatus - userId: {}", userId);
+        return userService.updateUserStatusWithOptionalFilter(userId, institutionId, productId, role, productRole, status)
+                .map(ignore -> Response
+                        .status(HttpStatus.SC_NO_CONTENT)
+                        .build());
     }
 }
 
