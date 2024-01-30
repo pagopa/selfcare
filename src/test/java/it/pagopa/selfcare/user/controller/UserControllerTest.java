@@ -7,11 +7,15 @@ import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.response.UserNotificationResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.user.mapper.UserMapper;
+import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import it.pagopa.selfcare.user.service.UserService;
 import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfLocalDate;
@@ -247,6 +251,39 @@ class UserControllerTest {
                 .then()
                 .statusCode(HttpStatus.SC_OK);
 
+    }
+
+    @Test
+    void testGetUsersNotAuthorized() {
+        var productId = "productId";
+
+        given().when()
+                .contentType(ContentType.JSON)
+                .queryParam("page", 0)
+                .queryParam("size", 100)
+                .queryParam(productId, "productId")
+                .get("")
+                .then()
+                .statusCode(401);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testGetUsers() {
+        Mockito.when(userService.findPaginatedUserNotificationToSend(0, 100, "productId"))
+                .thenReturn(Uni.createFrom().item( List.of(new UserNotificationToSend())));
+
+        var productId = "productId";
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .queryParam("page", 0)
+                .queryParam("size", 100)
+                .queryParam(productId, "productId")
+                .get("")
+                .then()
+                .statusCode(200);
     }
 
 }

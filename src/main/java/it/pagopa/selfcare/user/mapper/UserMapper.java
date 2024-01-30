@@ -1,6 +1,8 @@
 package it.pagopa.selfcare.user.mapper;
 
+import it.pagopa.selfcare.user.controller.response.UserNotificationResponse;
 import it.pagopa.selfcare.user.controller.response.UserResponse;
+import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -12,6 +14,9 @@ import java.util.Map;
 
 @Mapper(componentModel = "cdi")
 public interface UserMapper {
+
+    UserNotificationResponse toUserNotification(UserNotificationToSend user);
+
     @Mapping(source = "userResource.fiscalCode", target = "taxCode")
     @Mapping(source = "userResource.familyName", target = "surname")
     @Mapping(target = "email", expression = "java(retrieveMailFromWorkContacts(userResource.getWorkContacts(), institutionId))")
