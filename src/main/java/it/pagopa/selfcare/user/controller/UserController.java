@@ -4,6 +4,7 @@ import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserResponse;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.service.UserEventService;
@@ -18,6 +19,8 @@ import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 
 import java.util.List;
+
+import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
 
 @Authenticated
 @Path("/users")
@@ -37,15 +40,14 @@ public class UserController {
                                                                   @NotNull @QueryParam(value = "productId") String productId) {
         return userService.getUsersEmails(institutionId, productId);
     }
+
     /**
      * The getUserInfo function retrieves a user's information given the userId and optional ProductId.
      *
-     * @param userId String
+     * @param userId        String
      * @param institutionId String
-     * @param productId String
-     *
+     * @param productId     String
      * @return A uni&amp;lt;userresponse&amp;gt;
-     *
      */
     @Operation(summary = "Retrieves user given userId and optional ProductId")
     @GET
@@ -104,5 +106,21 @@ public class UserController {
                         .status(HttpStatus.SC_NO_CONTENT)
                         .build());
     }
+
+    /**
+     * Retreive all the users given a list of userIds
+     * @param userIds   List<String></String>
+     * @return
+     */
+    @Operation(
+            summary = "Retrieve all users given their userIds"
+    )
+    @GET
+    @Path("/ids")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<List<UserInstitutionResponse>> findAllByIds(@QueryParam(value = "userIds") List<String> userIds) {
+        return userService.findAllByIds(formatQueryParameterList(userIds));
+    }
+
 }
 

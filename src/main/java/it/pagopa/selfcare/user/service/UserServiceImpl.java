@@ -23,9 +23,13 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.user.constant.CustomError.*;
+import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
 
 @RequiredArgsConstructor
 @ApplicationScoped
@@ -116,8 +120,8 @@ public class UserServiceImpl implements UserService {
     public Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId, String userId, List<String> roles, List<String> states, List<String> products, List<String> productRoles) {
         var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
         var productFilters = OnboardedProductFilter.builder().productId(products).status(states).role(roles).productRole(productRoles).build().constructMap();
-        Multi<UserInstitution> userInstitutions =  userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters));
-        return userInstitutions.onItem().transform(userInstitutionMapper::toResponse);
+        return userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters))
+                .onItem().transform(userInstitutionMapper::toResponse);
     }
 
     @Override
@@ -130,5 +134,13 @@ public class UserServiceImpl implements UserService {
                     return Uni.createFrom().nullItem();
                 });
     }
+        @Override
+        public Uni<List<UserInstitutionResponse>> findAllByIds (List < String > userIds) {
+            var userInstitutionFilters = UserInstitutionFilter.builder().userId(formatQueryParameterList(userIds)).build().constructMap();
+            return userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters))
+                    .collect()
+                    .asList().onItem().transform(userInstitutions -> userInstitutions.stream().map(userInstitutionMapper::toResponse).collect(Collectors.toList()));
+        }
 
-}
+    }
+

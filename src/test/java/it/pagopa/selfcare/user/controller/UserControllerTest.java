@@ -7,6 +7,7 @@ import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.service.UserService;
@@ -228,6 +229,24 @@ class UserControllerTest {
                 .delete(PATH_DELETE_PRODUCT)
                 .then()
                 .statusCode(HttpStatus.SC_NO_CONTENT);
+    }
+
+
+    @Test
+
+    @TestSecurity(user = "userJwt")
+    void findByIds(){
+        String PATH_RETRIEVE_ALL_USERS_BY_IDS = "/ids";
+        List<String> userIds = List.of("user1");
+        Mockito.when(userService.findAllByIds(any())).thenReturn(
+                Uni.createFrom().item(List.of(new UserInstitutionResponse())));
+        given()
+                .when()
+                .queryParam("userIds", userIds)
+                .get(PATH_RETRIEVE_ALL_USERS_BY_IDS)
+                .then()
+                .statusCode(HttpStatus.SC_OK);
+
     }
 
 }

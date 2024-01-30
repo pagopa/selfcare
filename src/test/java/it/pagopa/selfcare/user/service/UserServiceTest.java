@@ -41,9 +41,8 @@ import java.util.UUID;
 
 import static it.pagopa.selfcare.user.constant.CustomError.STATUS_IS_MANDATORY;
 import static it.pagopa.selfcare.user.constant.CustomError.USER_TO_UPDATE_NOT_FOUND;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
@@ -248,5 +247,21 @@ class UserServiceTest {
                 .withSubscriber(UniAssertSubscriber.create());
 
         subscriber.assertFailedWith(ResourceNotFoundException.class, USER_TO_UPDATE_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    void findAllByIds(){
+        //given
+        List<String> userIds = List.of("userId");
+        when(userInstitutionService.findAllWithFilter(any()))
+                .thenReturn(Multi.createFrom().item(userInstitution));
+        //when
+        UniAssertSubscriber<List<UserInstitutionResponse>> subscriber = userService.findAllByIds(userIds)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());;
+        //then
+        List<UserInstitutionResponse> users=subscriber.assertCompleted().getItem();
+        assertFalse(users.isEmpty());
+        assertEquals(1, users.size());
     }
 }
