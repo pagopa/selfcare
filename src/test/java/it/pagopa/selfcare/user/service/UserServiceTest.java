@@ -13,13 +13,17 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
+import it.pagopa.selfcare.user.controller.response.UserNotificationResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.user.mapper.UserMapper;
+import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.inject.Inject;
 import org.apache.http.HttpStatus;
@@ -36,16 +40,25 @@ import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import static it.pagopa.selfcare.user.constant.CustomError.*;
+import static it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER;
+import static it.pagopa.selfcare.user.constant.CustomError.STATUS_IS_MANDATORY;
+import static it.pagopa.selfcare.user.constant.CustomError.USER_TO_UPDATE_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
 
 @QuarkusTest
 @QuarkusTestResource(MongoTestResource.class)
@@ -62,7 +75,10 @@ class UserServiceTest {
     private UserApi userRegistryApi;
 
     @InjectMock
-    private UserUtils userUtils;
+    private UserMapper userMapper;
+
+    @InjectMock
+    private ProductService productService;
 
     private static UserResource userResource;
     private static UserInstitution userInstitution;
@@ -176,12 +192,11 @@ class UserServiceTest {
 
     @Test
     void updateUserStatusWithOptionalFilter(){
-        doNothing().when(userUtils).checkProductRole("prod-pagopa", PartyRole.MANAGER, null);
         when(userInstitutionService
-                .updateUserStatusWithOptionalFilterByInstitutionAndProduct("userId", "institutionId", "prod-pagopa", PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)).thenReturn(Uni.createFrom().item(1L));
+                .updateUserStatusWithOptionalFilterByInstitutionAndProduct("userId", "institutionId", "prod-pagopa", MANAGER, null, OnboardedProductState.ACTIVE)).thenReturn(Uni.createFrom().item(1L));
 
         UniAssertSubscriber<Void> subscriber = userService
-                .updateUserStatusWithOptionalFilter("userId", "institutionId", "prod-pagopa", PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)
+                .updateUserStatusWithOptionalFilter("userId", "institutionId", "prod-pagopa", MANAGER, null, OnboardedProductState.ACTIVE)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -190,12 +205,11 @@ class UserServiceTest {
 
     @Test
     void updateUserStatusWithOptionalFilterUserNotFound(){
-        doNothing().when(userUtils).checkProductRole("prod-pagopa", PartyRole.MANAGER, null);
         when(userInstitutionService
-                .updateUserStatusWithOptionalFilterByInstitutionAndProduct("userId", "institutionId", "prod-pagopa", PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)).thenReturn(Uni.createFrom().item(0L));
+                .updateUserStatusWithOptionalFilterByInstitutionAndProduct("userId", "institutionId", "prod-pagopa", MANAGER, null, OnboardedProductState.ACTIVE)).thenReturn(Uni.createFrom().item(0L));
 
         UniAssertSubscriber<Void> subscriber = userService
-                .updateUserStatusWithOptionalFilter("userId", "institutionId", "prod-pagopa", PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)
+                .updateUserStatusWithOptionalFilter("userId", "institutionId", "prod-pagopa", MANAGER, null, OnboardedProductState.ACTIVE)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -205,7 +219,7 @@ class UserServiceTest {
     @Test
     void updateUserStatusWithOptionalFilterInvalidRequest(){
         UniAssertSubscriber<Void> subscriber = userService
-                .updateUserStatusWithOptionalFilter("userId", "institutionId", null, PartyRole.MANAGER, null, null)
+                .updateUserStatusWithOptionalFilter("userId", "institutionId", null, MANAGER, null, null)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -292,7 +306,42 @@ class UserServiceTest {
                 .updateUserProductCreatedAt("institutionId", List.of("userId"), "productId", LocalDateTime.now())
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
-
         subscriber.assertCompleted();
+    }
+
+    @Test
+    void findPaginatedUserNotificationToSend() {
+        when(userInstitutionService.paginatedFindAllWithFilter(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(Collections.singletonList(userInstitution)));
+        UserResource userResource = mock(UserResource.class);
+        when(userRegistryApi.findByIdUsingGET(any(), any()))
+                .thenReturn(Uni.createFrom().item(userResource));
+        UserNotificationResponse userNotificationResponse = mock(UserNotificationResponse.class);
+        when(userMapper.toUserNotification(any()))
+                .thenReturn(userNotificationResponse);
+
+        UniAssertSubscriber<List<UserNotificationToSend>> subscriber = userService
+                .findPaginatedUserNotificationToSend(10, 0, "productId")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
+    }
+
+
+    @Test
+    void findPaginatedUserNotificationToSendQueryWithoutProductId() {
+        when(userInstitutionService.paginatedFindAllWithFilter(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(Collections.singletonList(userInstitution)));
+        UserResource userResource = mock(UserResource.class);
+        when(userRegistryApi.findByIdUsingGET(any(), any()))
+                .thenReturn(Uni.createFrom().item(userResource));
+        UserNotificationResponse userNotificationResponse = mock(UserNotificationResponse.class);
+        when(userMapper.toUserNotification(any()))
+                .thenReturn(userNotificationResponse);
+
+        UniAssertSubscriber<List<UserNotificationToSend>> subscriber = userService
+                .findPaginatedUserNotificationToSend(10, 0, null)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
     }
 }
