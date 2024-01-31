@@ -20,7 +20,6 @@ import java.util.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.*;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -78,15 +77,17 @@ public class UserUtils {
      * remove that product from the list.
      */
     public UserInstitution filterProduct(UserInstitution userInstitution, String[] states) {
-        List<OnboardedProductState> relationshipStates = Optional.ofNullable(states)
-                .map(this::convertStatesToRelationshipsState)
+        List<OnboardedProductState> onboardedProductStates = Optional.ofNullable(states)
+                .map(this::convertStatesToOnboardedProductStates)
                 .orElse(null);
 
-        userInstitution.getProducts().removeIf(onboardedProduct -> !Objects.isNull(relationshipStates) && !relationshipStates.contains(onboardedProduct.getStatus()));
+        if(Objects.nonNull(userInstitution.getProducts())) {
+            userInstitution.getProducts().removeIf(onboardedProduct -> !Objects.isNull(onboardedProductStates) && !onboardedProductStates.contains(onboardedProduct.getStatus()));
+        }
         return userInstitution;
     }
 
-    public List<OnboardedProductState> convertStatesToRelationshipsState(String[] states) {
+    public List<OnboardedProductState> convertStatesToOnboardedProductStates(String[] states) {
         return Arrays.stream(states)
                 .map(OnboardedProductState::valueOf)
                 .collect(Collectors.toList());

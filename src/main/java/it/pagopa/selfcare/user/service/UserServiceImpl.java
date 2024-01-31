@@ -24,10 +24,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.user.constant.CustomError.*;
@@ -175,7 +172,7 @@ public class UserServiceImpl implements UserService {
     public Uni<List<UserInstitution>> retrieveBindings(String institutionId, String userId, String[] states) {
         String[] finalStates = states != null && states.length > 0 ? states : null;
         List<OnboardedProductState> relationshipStates = Optional.ofNullable(finalStates)
-                .map(userUtils::convertStatesToRelationshipsState)
+                .map(userUtils::convertStatesToOnboardedProductStates)
                 .orElse(null);
 
         UserInstitutionFilter userInstitutionFilter = UserInstitutionFilter.builder()
@@ -189,15 +186,13 @@ public class UserServiceImpl implements UserService {
 
         return userInstitutionService.retrieveFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilter.constructMap(), onboardedProductFilter.constructMap()))
                 .map((list) -> {
-                    if(list == null || list.isEmpty()) {
+                    if (list == null || list.isEmpty()) {
                         throw new ResourceNotFoundException("");
                     }
                     return list;
                 })
-                .onItem().transformToMulti(Multi.createFrom()::iterable)
-                .map(userInstitution -> userUtils.filterProduct(userInstitution, finalStates))
-                .collect()
-                .asList();
+                .map(userInstitutionList -> userInstitutionList.stream()
+                        .map(userInstitution -> userUtils.filterProduct(userInstitution, finalStates))
+                        .toList());
     }
 }
-

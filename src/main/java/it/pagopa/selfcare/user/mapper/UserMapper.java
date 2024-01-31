@@ -1,13 +1,13 @@
 package it.pagopa.selfcare.user.mapper;
 
+import it.pagopa.selfcare.user.controller.response.OnboardedProductResponse;
 import it.pagopa.selfcare.user.controller.response.UserNotificationResponse;
 import it.pagopa.selfcare.user.controller.response.UserResponse;
-import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import it.pagopa.selfcare.user.controller.response.product.InstitutionProducts;
-import it.pagopa.selfcare.user.controller.response.product.Product;
 import it.pagopa.selfcare.user.controller.response.product.UserProductsResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -15,10 +15,8 @@ import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfst
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
-import java.util.Map;
-import org.mapstruct.Mapping;
-
 import java.util.List;
+import java.util.Map;
 
 @Mapper(componentModel = "cdi")
 public interface UserMapper {
@@ -60,6 +58,6 @@ public interface UserMapper {
         return response;
     }
 
-    List<Product> toProducts(List<OnboardedProduct> products);
+    List<OnboardedProductResponse> toProducts(List<OnboardedProduct> products);
 
 }

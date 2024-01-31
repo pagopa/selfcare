@@ -12,7 +12,6 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
-import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
@@ -50,12 +49,9 @@ import static it.pagopa.selfcare.user.constant.CustomError.STATUS_IS_MANDATORY;
 import static it.pagopa.selfcare.user.constant.CustomError.USER_TO_UPDATE_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.mock;
 
 @QuarkusTest
@@ -74,6 +70,9 @@ class UserServiceTest {
 
     @InjectMock
     private UserMapper userMapper;
+
+    @InjectMock
+    private UserUtils userUtils;
 
     @InjectMock
     private ProductService productService;
@@ -299,7 +298,7 @@ class UserServiceTest {
         //when
         UniAssertSubscriber<List<UserInstitutionResponse>> subscriber = userService.findAllByIds(userIds)
                 .subscribe()
-                .withSubscriber(UniAssertSubscriber.create());;
+                .withSubscriber(UniAssertSubscriber.create());
         //then
         List<UserInstitutionResponse> users=subscriber.assertCompleted().getItem();
         assertFalse(users.isEmpty());
