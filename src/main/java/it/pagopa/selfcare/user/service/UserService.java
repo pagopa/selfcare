@@ -8,6 +8,7 @@ import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -19,4 +20,5 @@ public interface UserService {
     Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId, String userId, List<String> roles, List<String> states, List<String> products, List<String> productRoles);
     Uni<Void> deleteUserInstitutionProduct(String userId, String institutionId, String productId);
     Uni<List<UserInstitutionResponse>> findAllByIds(List<String> userIds);
+    Uni<Void> updateUserProductCreatedAt(String institutionId, List<String> userIds, String productId, LocalDateTime createdAt);
 }

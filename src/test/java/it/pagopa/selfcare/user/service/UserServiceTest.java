@@ -35,14 +35,15 @@ import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static it.pagopa.selfcare.user.constant.CustomError.STATUS_IS_MANDATORY;
-import static it.pagopa.selfcare.user.constant.CustomError.USER_TO_UPDATE_NOT_FOUND;
+import static it.pagopa.selfcare.user.constant.CustomError.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
@@ -235,7 +236,6 @@ class UserServiceTest {
 
         subscriber.assertCompleted();
 
-
     }
 
     @Test
@@ -263,5 +263,36 @@ class UserServiceTest {
         List<UserInstitutionResponse> users=subscriber.assertCompleted().getItem();
         assertFalse(users.isEmpty());
         assertEquals(1, users.size());
+    }
+
+    @Test
+    void updateUserCreatedAtUserNotFound(){
+        final String productId = "productId";
+        final String userId = "userId";
+        final String institutionId = "institutionId";
+        final LocalDateTime now = LocalDateTime.now();
+        when(userInstitutionService
+                .updateUserCreatedAtByInstitutionAndProduct(institutionId, List.of(userId), productId, now)).thenReturn(Uni.createFrom().item(0L));
+
+        UniAssertSubscriber<Void> subscriber = userService
+                .updateUserProductCreatedAt(institutionId, List.of(userId), productId, now)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(ResourceNotFoundException.class, USERS_TO_UPDATE_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    void updateUserProductCreatedAt(){
+        when(userInstitutionService
+                .updateUserCreatedAtByInstitutionAndProduct(anyString(), any(), anyString(), any()))
+                .thenReturn(Uni.createFrom().item(1L));
+
+        UniAssertSubscriber<Void> subscriber = userService
+                .updateUserProductCreatedAt("institutionId", List.of("userId"), "productId", LocalDateTime.now())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertCompleted();
     }
 }

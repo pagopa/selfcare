@@ -6,12 +6,15 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
+import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
@@ -94,6 +97,71 @@ class InstitutionControllerTest {
                 .get("/{institutionId}/user-institutions?products=1,2")
                 .then()
                 .statusCode(200);
+    }
+
+    /**
+     * Method under test: {@link InstitutionController#updateUserProductCreatedAt(String, String, List, LocalDateTime)}
+     */
+    @Test
+    @TestSecurity(user = "userJwt")
+    void updateUserProductCreatedAt() {
+
+        var institutionId = "institutionId";
+        var productId = "productId";
+        var now = LocalDateTime.now();
+        Mockito.when(userService.updateUserProductCreatedAt(institutionId, List.of("userId"), productId, now))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("institutionId", institutionId)
+                .pathParam("productId", productId)
+                .put("/{institutionId}/products/{productId}/createdAt?userIds=userId&createdAt=" + now)
+                .then()
+                .statusCode(204);
+    }
+
+    /**
+     * Method under test: {@link InstitutionController#updateUserProductCreatedAt(String, String, List, LocalDateTime)}
+     */
+    @Test
+    void updateUserProductCreatedAt_NotAuthorized() {
+
+        var institutionId = "institutionId";
+        var productId = "productId";
+        var now = LocalDateTime.now();
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("institutionId", institutionId)
+                .pathParam("productId", productId)
+                .put("/{institutionId}/products/{productId}/createdAt?createdAt=" + now)
+                .then()
+                .statusCode(401);
+    }
+
+    /**
+     * Method under test: {@link InstitutionController#updateUserProductCreatedAt(String, String, List, LocalDateTime)}
+     */
+    @Test
+    @TestSecurity(user = "userJwt")
+    void updateUserProductCreatedAt_UserNotFound() {
+        final LocalDateTime now = LocalDateTime.now();
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        final String userId = "userId";
+        Mockito.when(userService.updateUserProductCreatedAt(institutionId, List.of(userId), productId, now))
+                .thenThrow(new ResourceNotFoundException("user non trovato"));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("institutionId", institutionId)
+                .pathParam("productId", productId)
+                .put("/{institutionId}/products/{productId}/createdAt?userIds=" + userId + "&createdAt=" + now)
+                .then()
+                .statusCode(404);
     }
 
 }

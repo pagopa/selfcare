@@ -23,6 +23,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -142,5 +143,16 @@ public class UserServiceImpl implements UserService {
                     .asList().onItem().transform(userInstitutions -> userInstitutions.stream().map(userInstitutionMapper::toResponse).collect(Collectors.toList()));
         }
 
+    @Override
+    public Uni<Void> updateUserProductCreatedAt(String institutionId, List<String> userIds, String productId, LocalDateTime createdAt) {
+        return userInstitutionService.updateUserCreatedAtByInstitutionAndProduct(institutionId, userIds, productId, createdAt)
+                .onItem().transformToUni(aLong -> {
+                    if (aLong < 1) {
+                        return Uni.createFrom().failure(new ResourceNotFoundException(USERS_TO_UPDATE_NOT_FOUND.getMessage()));
+                    }
+                    return Uni.createFrom().nullItem();
+                });
     }
+
+}
 

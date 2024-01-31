@@ -11,6 +11,7 @@ import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
+import it.pagopa.selfcare.user.util.GeneralUtils;
 import it.pagopa.selfcare.user.util.QueryUtils;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -26,6 +27,7 @@ import java.util.Map;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.USER_INSTITUTION_COLLECTION;
 import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductEnum.*;
+import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
 
 @Slf4j
 @ApplicationScoped
@@ -83,6 +85,17 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
         Map<String, Object> filterMap = userUtils.retrieveMapForFilter(onboardedProductFilterMap, userInstitutionFilterMap);
         return updateUserStatusDao(filterMap, status);
+    }
+
+    @Override
+    public Uni<Long> updateUserCreatedAtByInstitutionAndProduct(String institutionId, List<String> userIds, String productId, LocalDateTime createdAt) {
+        Map<String, Object> onboardedProductFilterMap = OnboardedProductFilter.builder().productId(productId).build().constructMap();
+        Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder().userId(formatQueryParameterList(userIds)).institutionId(institutionId).build().constructMap();
+        Map<String, Object> filterMap = userUtils.retrieveMapForFilter(onboardedProductFilterMap, userInstitutionFilterMap);
+        Map<String, Object> fieldToUpdateMap = Map.of(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.createdAt.name(), createdAt,
+                                                      UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
+        return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
+                .where(queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION));
     }
 
     @Override
