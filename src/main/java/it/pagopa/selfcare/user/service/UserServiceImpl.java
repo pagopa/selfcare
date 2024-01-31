@@ -4,9 +4,9 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
-import it.pagopa.selfcare.user.controller.response.UserInfoResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
+import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
@@ -138,13 +138,14 @@ public class UserServiceImpl implements UserService {
                     return Uni.createFrom().nullItem();
                 });
     }
-        @Override
-        public Uni<List<UserInstitutionResponse>> findAllByIds (List < String > userIds) {
-            var userInstitutionFilters = UserInstitutionFilter.builder().userId(formatQueryParameterList(userIds)).build().constructMap();
-            return userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters))
-                    .collect()
-                    .asList().onItem().transform(userInstitutions -> userInstitutions.stream().map(userInstitutionMapper::toResponse).collect(Collectors.toList()));
-        }
+
+    @Override
+    public Uni<List<UserInstitutionResponse>> findAllByIds(List<String> userIds) {
+        var userInstitutionFilters = UserInstitutionFilter.builder().userId(formatQueryParameterList(userIds)).build().constructMap();
+        return userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters))
+                .collect()
+                .asList().onItem().transform(userInstitutions -> userInstitutions.stream().map(userInstitutionMapper::toResponse).collect(Collectors.toList()));
+    }
 
     @Override
     public Uni<List<UserNotificationToSend>> findPaginatedUserNotificationToSend(Integer size, Integer page, String productId) {
@@ -163,7 +164,7 @@ public class UserServiceImpl implements UserService {
                 .onItem().transformToUniAndMerge(userInstitution -> userRegistryApi
                         .findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId())
                         .map(userResource -> buildUsersNotificationResponse(userInstitution, userResource, productId)))
-                        .collect().in(ArrayList::new, List::addAll);
+                .collect().in(ArrayList::new, List::addAll);
     }
 
     private List<UserNotificationToSend> buildUsersNotificationResponse(UserInstitution userInstitution, UserResource userResource, String productId) {
@@ -171,16 +172,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Uni<UserInfoResponse> retrieveBindings(String institutionId, String userId, String[] states) {
+    public Uni<UserInfo> retrieveBindings(String institutionId, String userId, String[] states) {
         String[] finalStates = states != null && states.length > 0 ? states : null;
-        return userInfoService.findById(userId)
-                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(""))
-                .map(userInfo -> {
-                    UserInfoResponse filteredUserInfo = userUtils.filterInstitutionRoles(userInfo, finalStates, institutionId);
-                    if (filteredUserInfo.getInstitutions() == null || filteredUserInfo.getInstitutions().isEmpty()) {
-                        throw new ResourceNotFoundException("");
-                    }
-                    return filteredUserInfo;
-                });
+        return UserInfo.findByIdOptional(userId)
+                .map(opt -> opt.map(UserInfo.class::cast)
+                        .map(userInfo -> {
+                            UserInfo filteredUserInfo = userUtils.filterInstitutionRoles(userInfo, finalStates, institutionId);
+                            if (filteredUserInfo.getInstitutions() == null || filteredUserInfo.getInstitutions().isEmpty()) {
+                                throw new ResourceNotFoundException("");
+                            }
+                            return filteredUserInfo;
+                        })
+                        .orElseThrow(() -> new ResourceNotFoundException(""))
+                );
     }
 }

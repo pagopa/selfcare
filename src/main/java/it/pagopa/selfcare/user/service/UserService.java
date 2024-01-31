@@ -4,9 +4,9 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
-import it.pagopa.selfcare.user.controller.response.UserInfoResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
+import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
@@ -20,7 +20,7 @@ public interface UserService {
 
     Uni<UserResource> retrievePerson(String userId, String productId, String institutionId);
 
-    Uni<UserInfoResponse> retrieveBindings(String institutionId, String userId, String[] states);
+    Uni<UserInfo> retrieveBindings(String institutionId, String userId, String[] states);
 
     Uni<Void> updateUserStatusWithOptionalFilter(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status);
 

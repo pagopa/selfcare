@@ -3,7 +3,7 @@ package it.pagopa.selfcare.user.util;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
-import it.pagopa.selfcare.user.controller.response.UserInfoResponse;
+import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.mapper.NotificationMapper;
@@ -94,7 +94,7 @@ public class UserUtils {
                 .collect(Collectors.toList());
     }
 
-    public UserInfoResponse filterInstitutionRoles(UserInfoResponse userInfo, String[] states, String institutionId) {
+    public UserInfo filterInstitutionRoles(UserInfo userInfo, String[] states, String institutionId) {
         List<OnboardedProductState> onboardedProductStates = Optional.ofNullable(states)
                 .map(this::convertStatesToOnboardedProductStates)
                 .orElse(null);

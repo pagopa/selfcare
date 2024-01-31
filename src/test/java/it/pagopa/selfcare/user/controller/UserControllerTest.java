@@ -7,9 +7,9 @@ import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
-import it.pagopa.selfcare.user.controller.response.UserInfoResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
-import it.pagopa.selfcare.user.controller.response.UserInstitutionRoleResponse;
+import it.pagopa.selfcare.user.entity.UserInfo;
+import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
@@ -238,14 +238,14 @@ class UserControllerTest {
     @Test
     @TestSecurity(user = "userJwt")
     void testGetUserProductsInfoOk() {
-        UserInfoResponse userInfoResponse = new UserInfoResponse();
+        UserInfo userInfoResponse = new UserInfo();
         userInfoResponse.setUserId("test-user");
 
-        UserInstitutionRoleResponse userInstitution = new UserInstitutionRoleResponse();
+        UserInstitutionRole userInstitution = new UserInstitutionRole();
         userInstitution.setInstitutionName("test-institutionId");
         userInstitution.setStatus(OnboardedProductState.ACTIVE);
 
-        List<UserInstitutionRoleResponse> userInstitutionRoleResponses = new ArrayList<>();
+        List<UserInstitutionRole> userInstitutionRoleResponses = new ArrayList<>();
         userInstitutionRoleResponses.add(userInstitution);
         userInfoResponse.setInstitutions(userInstitutionRoleResponses);
 

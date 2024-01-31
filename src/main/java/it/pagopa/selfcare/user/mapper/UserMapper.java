@@ -3,6 +3,7 @@ package it.pagopa.selfcare.user.mapper;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.InstitutionProducts;
 import it.pagopa.selfcare.user.controller.response.product.UserProductsResponse;
+import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -36,7 +37,7 @@ public interface UserMapper {
     }
     @Mapping(target = "id", source = "userId")
     @Mapping(target = "bindings", expression = "java(userInstitutionToBindings(userInstitution))")
-    default UserProductsResponse toUserProductsResponse(UserInfoResponse userInfoResponse) {
+    default UserProductsResponse toUserProductsResponse(UserInfo userInfoResponse) {
         UserProductsResponse response = new UserProductsResponse();
         if(userInfoResponse != null && !userInfoResponse.getInstitutions().isEmpty()) {
             response.setId(userInfoResponse.getUserId());
