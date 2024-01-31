@@ -116,6 +116,12 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
                 .where(queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION));
     }
 
+    @Override
+    public Uni<List<UserInstitution>> retrieveFilteredUserInstitution(Map<String, Object> queryParameter) {
+        Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
+        return runUserInstitutionFindQuery(query, null).list();
+    }
+
     private boolean productFilterIsEmpty(Map<String, Object> filterMap) {
         return !filterMap.containsKey(PRODUCT_ID.getChild())
                 && !filterMap.containsKey(PRODUCT_ROLE.getChild())

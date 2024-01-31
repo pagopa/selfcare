@@ -7,6 +7,7 @@ import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserResponse;
 import it.pagopa.selfcare.user.controller.response.UsersNotificationResponse;
+import it.pagopa.selfcare.user.controller.response.product.UserProductsResponse;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.service.UserEventService;
 import it.pagopa.selfcare.user.service.UserService;
@@ -60,6 +61,18 @@ public class UserController {
                                          @QueryParam(value = "productId") String productId) {
         return userService.retrievePerson(userId, productId, institutionId)
                 .map(user -> userMapper.toUserResponse(user, institutionId));
+    }
+
+    @Operation(summary = "Retrieves products info and role which the user is enabled")
+    @GET
+    @Path("/{userId}/products")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<UserProductsResponse> getUserProductsInfo(@PathParam(value = "userId") String userId,
+                                                         @QueryParam(value = "institutionId") String institutionId,
+                                                         @QueryParam(value = "states") String[] states) {
+        return userService.retrieveBindings(institutionId, userId, states)
+                .map(userMapper::toUserProductsResponse);
     }
 
     /**

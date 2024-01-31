@@ -20,6 +20,7 @@ import java.util.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -67,4 +68,28 @@ public class UserUtils {
                 .toList();
     }
 
+    /**
+     * The filterProduct function takes in a UserInstitution object and an array of states.
+     * It then creates a list of OnboardedProductState objects from the array of strings, if the array is not null.
+     * If it is null, it sets relationshipStates to be null as well.
+     * Then, for each product in userInstitution's products list:
+     * if relationshipStates is not null and does not contain that product's status (which should be an OnboardedProductState),
+     * remove that product from the list.
+     */
+    public UserInstitution filterProduct(UserInstitution userInstitution, String[] states) {
+        List<OnboardedProductState> onboardedProductStates = Optional.ofNullable(states)
+                .map(this::convertStatesToOnboardedProductStates)
+                .orElse(null);
+
+        if(Objects.nonNull(userInstitution.getProducts())) {
+            userInstitution.getProducts().removeIf(onboardedProduct -> !Objects.isNull(onboardedProductStates) && !onboardedProductStates.contains(onboardedProduct.getStatus()));
+        }
+        return userInstitution;
+    }
+
+    public List<OnboardedProductState> convertStatesToOnboardedProductStates(String[] states) {
+        return Arrays.stream(states)
+                .map(OnboardedProductState::valueOf)
+                .collect(Collectors.toList());
+    }
 }

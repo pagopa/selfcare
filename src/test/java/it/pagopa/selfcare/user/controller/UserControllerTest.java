@@ -7,15 +7,13 @@ import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
-import it.pagopa.selfcare.user.controller.response.UserNotificationResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
+import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
-import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import it.pagopa.selfcare.user.service.UserService;
 import org.apache.http.HttpStatus;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfLocalDate;
@@ -233,6 +231,41 @@ class UserControllerTest {
                 .delete(PATH_DELETE_PRODUCT)
                 .then()
                 .statusCode(HttpStatus.SC_NO_CONTENT);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testGetUserProductsInfoOk() {
+
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setUserId("test-user");
+
+        Mockito.when(userService.retrieveBindings(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(List.of(userInstitution)));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("userId", "test-user-id")
+                .get("/{userId}/products")
+                .then()
+                .statusCode(200);
+
+        Mockito.verify(userService).retrieveBindings(any(), any(), any());
+    }
+
+    @Test
+    void testGetUserProductsInfoNotAuthorized() {
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("userId", "test-user-id")
+                .get("/{userId}/products")
+                .then()
+                .statusCode(401);
+
+        Mockito.verify(userService, Mockito.never()).retrieveBindings(any(), any(), any());
     }
 
 

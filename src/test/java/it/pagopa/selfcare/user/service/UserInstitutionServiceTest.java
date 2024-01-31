@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -129,6 +130,25 @@ class UserInstitutionServiceTest {
         List<UserInstitution> actual = subscriber.assertCompleted().getItems();
         assertNotNull(actual);
         assertEquals(1, actual.size());
+    }
+
+    @Test
+    void retrieveFilteredUserInstitution() {
+        Map<String, Object> parameterMap = new HashMap<>();
+        parameterMap.put("institutionId", "institutionId");
+        List<UserInstitution> userInstitutionList = new ArrayList<>();
+        UserInstitution userInstitution = createDummyUserInstitution();
+        userInstitutionList.add(userInstitution);
+        PanacheMock.mock(UserInstitution.class);
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitutionList));
+        when(UserInstitution.find((Document) any(), any()))
+                .thenReturn(query);
+        when(query.page(anyInt(), anyInt())).thenReturn(query);
+        when(query.list()).thenReturn(Uni.createFrom().item(userInstitutionList));
+        UniAssertSubscriber<List<UserInstitution>> subscriber =  userInstitutionService.retrieveFilteredUserInstitution(parameterMap)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted().assertItem(userInstitutionList);
     }
 
     @Test

@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.user.constant.CustomError.*;
@@ -182,5 +183,32 @@ public class UserServiceImpl implements UserService {
     private List<UserNotificationToSend> buildUsersNotificationResponse(UserInstitution userInstitution, UserResource userResource, String productId) {
         return userUtils.constructUserNotificationToSend(userInstitution, userResource, productId);
     }
-}
 
+    @Override
+    public Uni<List<UserInstitution>> retrieveBindings(String institutionId, String userId, String[] states) {
+        String[] finalStates = states != null && states.length > 0 ? states : null;
+        List<OnboardedProductState> relationshipStates = Optional.ofNullable(finalStates)
+                .map(userUtils::convertStatesToOnboardedProductStates)
+                .orElse(null);
+
+        UserInstitutionFilter userInstitutionFilter = UserInstitutionFilter.builder()
+                .userId(userId)
+                .institutionId(institutionId)
+                .build();
+
+        OnboardedProductFilter onboardedProductFilter = OnboardedProductFilter.builder()
+                .status(relationshipStates)
+                .build();
+
+        return userInstitutionService.retrieveFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilter.constructMap(), onboardedProductFilter.constructMap()))
+                .map((list) -> {
+                    if (list == null || list.isEmpty()) {
+                        throw new ResourceNotFoundException("");
+                    }
+                    return list;
+                })
+                .map(userInstitutionList -> userInstitutionList.stream()
+                        .map(userInstitution -> userUtils.filterProduct(userInstitution, finalStates))
+                        .toList());
+    }
+}
