@@ -24,16 +24,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static it.pagopa.selfcare.user.constant.CollectionUtil.USER_INSTITUTION_COLLECTION;
+import static it.pagopa.selfcare.user.constant.CollectionUtil.*;
 import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductEnum.*;
 
 @Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor
 public class UserInstitutionServiceDefault implements UserInstitutionService {
-
-    private static final String CURRENT = ".$.";
-    private static final String CURRENT_ANY = ".$[].";
 
     private final UserInstitutionMapper userInstitutionMapper;
     private final QueryUtils queryUtils;
