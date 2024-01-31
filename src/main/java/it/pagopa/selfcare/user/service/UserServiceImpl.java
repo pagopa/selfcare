@@ -4,6 +4,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.response.UserInfoResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -44,6 +45,7 @@ public class UserServiceImpl implements UserService {
     private final OnboardedProductMapper onboardedProductMapper;
     private final UserUtils userUtils;
     private final UserInstitutionService userInstitutionService;
+    private final UserInfoService userInfoService;
     private final UserInstitutionMapper userInstitutionMapper;
 
     private static final String WORK_CONTACTS = "workContacts";
@@ -169,30 +171,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Uni<List<UserInstitution>> retrieveBindings(String institutionId, String userId, String[] states) {
+    public Uni<UserInfoResponse> retrieveBindings(String institutionId, String userId, String[] states) {
         String[] finalStates = states != null && states.length > 0 ? states : null;
-        List<OnboardedProductState> relationshipStates = Optional.ofNullable(finalStates)
-                .map(userUtils::convertStatesToOnboardedProductStates)
-                .orElse(null);
-
-        UserInstitutionFilter userInstitutionFilter = UserInstitutionFilter.builder()
-                .userId(userId)
-                .institutionId(institutionId)
-                .build();
-
-        OnboardedProductFilter onboardedProductFilter = OnboardedProductFilter.builder()
-                .status(relationshipStates)
-                .build();
-
-        return userInstitutionService.retrieveFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilter.constructMap(), onboardedProductFilter.constructMap()))
-                .map((list) -> {
-                    if (list == null || list.isEmpty()) {
+        return userInfoService.findById(userId)
+                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(""))
+                .map(userInfo -> {
+                    UserInfoResponse filteredUserInfo = userUtils.filterInstitutionRoles(userInfo, finalStates, institutionId);
+                    if (filteredUserInfo.getInstitutions() == null || filteredUserInfo.getInstitutions().isEmpty()) {
                         throw new ResourceNotFoundException("");
                     }
-                    return list;
-                })
-                .map(userInstitutionList -> userInstitutionList.stream()
-                        .map(userInstitution -> userUtils.filterProduct(userInstitution, finalStates))
-                        .toList());
+                    return filteredUserInfo;
+                });
     }
 }

@@ -1,12 +1,8 @@
 package it.pagopa.selfcare.user.mapper;
 
-import it.pagopa.selfcare.user.controller.response.OnboardedProductResponse;
-import it.pagopa.selfcare.user.controller.response.UserNotificationResponse;
-import it.pagopa.selfcare.user.controller.response.UserResponse;
+import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.InstitutionProducts;
 import it.pagopa.selfcare.user.controller.response.product.UserProductsResponse;
-import it.pagopa.selfcare.user.entity.OnboardedProduct;
-import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -40,16 +36,22 @@ public interface UserMapper {
     }
     @Mapping(target = "id", source = "userId")
     @Mapping(target = "bindings", expression = "java(userInstitutionToBindings(userInstitution))")
-    default UserProductsResponse toUserProductsResponse(List<UserInstitution> userInstitutions) {
+    default UserProductsResponse toUserProductsResponse(UserInfoResponse userInfoResponse) {
         UserProductsResponse response = new UserProductsResponse();
-        if(userInstitutions != null && !userInstitutions.isEmpty()) {
-            response.setId(userInstitutions.get(0).getUserId());
+        if(userInfoResponse != null && !userInfoResponse.getInstitutions().isEmpty()) {
+            response.setId(userInfoResponse.getUserId());
 
-            List<InstitutionProducts> institutionProducts = userInstitutions.stream().map(userInstitution -> {
+            List<InstitutionProducts> institutionProducts = userInfoResponse.getInstitutions().stream().map(userInstitution -> {
                 InstitutionProducts institutionProduct = new InstitutionProducts();
                 institutionProduct.setInstitutionId(userInstitution.getInstitutionId());
-                institutionProduct.setInstitutionName(userInstitution.getInstitutionDescription());
-                institutionProduct.setProducts(toProducts(userInstitution.getProducts()));
+                institutionProduct.setInstitutionName(userInstitution.getInstitutionName());
+                institutionProduct.setInstitutionRootName(userInstitution.getInstitutionRootName());
+
+                OnboardedProductResponse product = new OnboardedProductResponse();
+                product.setRole(userInstitution.getRole());
+                product.setStatus(userInstitution.getStatus());
+
+                institutionProduct.setProducts(List.of(product));
                 return institutionProduct;
             }).toList();
             response.setBindings(institutionProducts);
@@ -57,7 +59,5 @@ public interface UserMapper {
 
         return response;
     }
-
-    List<OnboardedProductResponse> toProducts(List<OnboardedProduct> products);
 
 }

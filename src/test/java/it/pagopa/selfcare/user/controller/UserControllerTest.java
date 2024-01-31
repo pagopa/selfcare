@@ -7,8 +7,9 @@ import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.response.UserInfoResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
-import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.controller.response.UserInstitutionRoleResponse;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
@@ -21,6 +22,7 @@ import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfst
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -236,12 +238,19 @@ class UserControllerTest {
     @Test
     @TestSecurity(user = "userJwt")
     void testGetUserProductsInfoOk() {
+        UserInfoResponse userInfoResponse = new UserInfoResponse();
+        userInfoResponse.setUserId("test-user");
 
-        UserInstitution userInstitution = new UserInstitution();
-        userInstitution.setUserId("test-user");
+        UserInstitutionRoleResponse userInstitution = new UserInstitutionRoleResponse();
+        userInstitution.setInstitutionName("test-institutionId");
+        userInstitution.setStatus(OnboardedProductState.ACTIVE);
+
+        List<UserInstitutionRoleResponse> userInstitutionRoleResponses = new ArrayList<>();
+        userInstitutionRoleResponses.add(userInstitution);
+        userInfoResponse.setInstitutions(userInstitutionRoleResponses);
 
         Mockito.when(userService.retrieveBindings(any(), any(), any()))
-                .thenReturn(Uni.createFrom().item(List.of(userInstitution)));
+                .thenReturn(Uni.createFrom().item(userInfoResponse));
 
         given()
                 .when()
@@ -252,6 +261,7 @@ class UserControllerTest {
                 .statusCode(200);
 
         Mockito.verify(userService).retrieveBindings(any(), any(), any());
+
     }
 
     @Test

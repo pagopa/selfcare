@@ -14,9 +14,7 @@ import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
-import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
-import it.pagopa.selfcare.user.controller.response.UserNotificationResponse;
-import it.pagopa.selfcare.user.controller.response.UserProductResponse;
+import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
@@ -63,6 +61,9 @@ class UserServiceTest {
 
     @InjectMock
     private UserInstitutionService userInstitutionService;
+
+    @InjectMock
+    private UserInfoService userInfoService;
 
     @RestClient
     @InjectMock
@@ -189,30 +190,39 @@ class UserServiceTest {
 
     @Test
     void testRetrieveBindingsOk() {
-        List<UserInstitution> userInstitutions = new ArrayList<>();
-        userInstitutions.add(userInstitution);
+        UserInfoResponse userInfoResponse = new UserInfoResponse();
+        userInfoResponse.setUserId("test-user");
 
-        when(userInstitutionService.retrieveFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(userInstitutions));
-        when(userUtils.filterProduct(any(), any())).thenReturn(userInstitution);
+        UserInstitutionRoleResponse userInstitution = new UserInstitutionRoleResponse();
+        userInstitution.setInstitutionName("test-institutionId");
+        userInstitution.setStatus(OnboardedProductState.ACTIVE);
 
-        UniAssertSubscriber<List<UserInstitution>> subscriber = userService
+        List<UserInstitutionRoleResponse> userInstitutionRoleResponses = new ArrayList<>();
+        userInstitutionRoleResponses.add(userInstitution);
+        userInfoResponse.setInstitutions(userInstitutionRoleResponses);
+
+        when(userInfoService.findById(any())).thenReturn(Uni.createFrom().item(userInfoResponse));
+        when(userUtils.filterInstitutionRoles(any(), any(), any())).thenReturn(userInfoResponse);
+
+        UniAssertSubscriber<UserInfoResponse> subscriber = userService
                 .retrieveBindings("test-institutionId", "test-user", null)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
-        subscriber.assertItem(userInstitutions);
+        subscriber.assertItem(userInfoResponse);
     }
 
     @Test
     void testRetrieveBindingsFails() {
         when(userInstitutionService.retrieveFilteredUserInstitution(any())).thenReturn(Uni.createFrom().nullItem());
 
-        UniAssertSubscriber<List<UserInstitution>>  subscriber = userService
+        UniAssertSubscriber<UserInfoResponse> subscriber = userService
                 .retrieveBindings("test-institutionId", "test-user", null)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
         subscriber.assertFailedWith(ResourceNotFoundException.class);
+
     }
 
     @Test
