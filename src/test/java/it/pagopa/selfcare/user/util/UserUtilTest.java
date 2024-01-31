@@ -7,12 +7,12 @@ import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
 import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.user.controller.response.UserInfoResponse;
+import it.pagopa.selfcare.user.controller.response.UserInstitutionRoleResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
-import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
-import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -106,6 +106,30 @@ class UserUtilTest {
         String[] states = {"ACTIVE"};
         UserInstitution filteredUserInstitution = userUtils.filterProduct(userInstitution, states);
         Assertions.assertEquals(1, filteredUserInstitution.getProducts().size());
+    }
+
+    @Test
+    void testFilterInstitutionRolesWorks() {
+
+        UserInstitutionRoleResponse userInstitution = new UserInstitutionRoleResponse();
+        userInstitution.setInstitutionName("test-institutionId");
+        userInstitution.setStatus(OnboardedProductState.ACTIVE);
+        UserInstitutionRoleResponse userInstitution2 = new UserInstitutionRoleResponse();
+        userInstitution2.setInstitutionName("test-institutionId-2");
+        userInstitution2.setStatus(OnboardedProductState.PENDING);
+
+        List<UserInstitutionRoleResponse> userInstitutionsRole = new ArrayList<>();
+        userInstitutionsRole.add(userInstitution);
+        userInstitutionsRole.add(userInstitution2);
+
+        UserInfoResponse userInfoResponse = new UserInfoResponse();
+        userInfoResponse.setUserId("test-user");
+        userInfoResponse.setInstitutions(userInstitutionsRole);
+
+        String[] states = {"ACTIVE"};
+
+        UserInfoResponse filteredUserInfo = userUtils.filterInstitutionRoles(userInfoResponse, states, null);
+        Assertions.assertEquals(1, filteredUserInfo.getInstitutions().size());
     }
 
 }
