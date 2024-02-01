@@ -6,18 +6,16 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.reactive.messaging.MutinyEmitter;
 import it.pagopa.selfcare.user.constant.QueueEvent;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
+import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
+import it.pagopa.selfcare.user.model.notification.UserToNotify;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
-import it.pagopa.selfcare.user.model.notification.UserToNotify;
 import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Message;
 
-import java.time.OffsetDateTime;
-import java.util.concurrent.CompletableFuture;
+import java.time.LocalDateTime;
 
 
 @ApplicationScoped
@@ -47,7 +45,7 @@ public class UserEventServiceImpl implements UserEventService {
         UserNotificationToSend notification = new UserNotificationToSend();
         String id = userToNotify.getUserId().concat(institutionId);
         notification.setId(id);
-        notification.setUpdatedAt(OffsetDateTime.now());
+        notification.setUpdatedAt(LocalDateTime.now());
         notification.setInstitutionId(institutionId);
         notification.setEventType(QueueEvent.UPDATE);
         notification.setUser(userToNotify);
