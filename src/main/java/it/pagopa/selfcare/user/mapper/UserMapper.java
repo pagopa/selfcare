@@ -1,6 +1,10 @@
 package it.pagopa.selfcare.user.mapper;
 
-import it.pagopa.selfcare.user.controller.response.UserResponse;
+import it.pagopa.selfcare.user.controller.response.*;
+import it.pagopa.selfcare.user.controller.response.product.InstitutionProducts;
+import it.pagopa.selfcare.user.controller.response.product.UserProductsResponse;
+import it.pagopa.selfcare.user.entity.UserInfo;
+import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -8,10 +12,14 @@ import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfst
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
+import java.util.List;
 import java.util.Map;
 
 @Mapper(componentModel = "cdi")
 public interface UserMapper {
+
+    UserNotificationResponse toUserNotification(UserNotificationToSend user);
+
     @Mapping(source = "userResource.fiscalCode", target = "taxCode")
     @Mapping(source = "userResource.familyName", target = "surname")
     @Mapping(target = "email", expression = "java(retrieveMailFromWorkContacts(userResource.getWorkContacts(), institutionId))")
@@ -27,4 +35,30 @@ public interface UserMapper {
         }
         return null;
     }
+    @Mapping(target = "id", source = "userId")
+    @Mapping(target = "bindings", expression = "java(userInstitutionToBindings(userInstitution))")
+    default UserProductsResponse toUserProductsResponse(UserInfo userInfoResponse) {
+        UserProductsResponse response = new UserProductsResponse();
+        if(userInfoResponse != null && !userInfoResponse.getInstitutions().isEmpty()) {
+            response.setId(userInfoResponse.getUserId());
+
+            List<InstitutionProducts> institutionProducts = userInfoResponse.getInstitutions().stream().map(userInstitution -> {
+                InstitutionProducts institutionProduct = new InstitutionProducts();
+                institutionProduct.setInstitutionId(userInstitution.getInstitutionId());
+                institutionProduct.setInstitutionName(userInstitution.getInstitutionName());
+                institutionProduct.setInstitutionRootName(userInstitution.getInstitutionRootName());
+
+                OnboardedProductResponse product = new OnboardedProductResponse();
+                product.setRole(userInstitution.getRole());
+                product.setStatus(userInstitution.getStatus());
+
+                institutionProduct.setProducts(List.of(product));
+                return institutionProduct;
+            }).toList();
+            response.setBindings(institutionProducts);
+        }
+
+        return response;
+    }
+
 }

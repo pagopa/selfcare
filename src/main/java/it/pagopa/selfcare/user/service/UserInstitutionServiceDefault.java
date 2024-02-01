@@ -3,12 +3,17 @@ package it.pagopa.selfcare.user.service;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
+import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
+import it.pagopa.selfcare.user.util.GeneralUtils;
 import it.pagopa.selfcare.user.util.QueryUtils;
+import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,19 +25,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static it.pagopa.selfcare.user.constant.CollectionUtil.USER_INSTITUTION_COLLECTION;
+import static it.pagopa.selfcare.user.constant.CollectionUtil.*;
 import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductEnum.*;
+import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
 
 @Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor
 public class UserInstitutionServiceDefault implements UserInstitutionService {
 
-    private static final String CURRENT = ".$.";
-    private static final String CURRENT_ANY = ".$[].";
-
     private final UserInstitutionMapper userInstitutionMapper;
     private final QueryUtils queryUtils;
+    private final UserUtils userUtils;
 
     @Override
     public Uni<UserInstitutionResponse> findById(String id) {
@@ -65,6 +69,33 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     }
 
     @Override
+    public Uni<Long> deleteUserInstitutionProduct(String userId, String institutionId, String productId) {
+        OnboardedProductFilter onboardedProductFilter = OnboardedProductFilter.builder().productId(productId).build();
+        UserInstitutionFilter userInstitutionFilter = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build();
+        Map<String, Object> filterMap = userUtils.retrieveMapForFilter(onboardedProductFilter.constructMap(), userInstitutionFilter.constructMap());
+        return updateUserStatusDao(filterMap, OnboardedProductState.DELETED);
+    }
+
+    @Override
+    public Uni<Long> updateUserStatusWithOptionalFilterByInstitutionAndProduct(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status) {
+        Map<String, Object> onboardedProductFilterMap = OnboardedProductFilter.builder().productId(productId).role(role).productRole(productRole).build().constructMap();
+        Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
+        Map<String, Object> filterMap = userUtils.retrieveMapForFilter(onboardedProductFilterMap, userInstitutionFilterMap);
+        return updateUserStatusDao(filterMap, status);
+    }
+
+    @Override
+    public Uni<Long> updateUserCreatedAtByInstitutionAndProduct(String institutionId, List<String> userIds, String productId, LocalDateTime createdAt) {
+        Map<String, Object> onboardedProductFilterMap = OnboardedProductFilter.builder().productId(productId).build().constructMap();
+        Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder().userId(formatQueryParameterList(userIds)).institutionId(institutionId).build().constructMap();
+        Map<String, Object> filterMap = userUtils.retrieveMapForFilter(onboardedProductFilterMap, userInstitutionFilterMap);
+        Map<String, Object> fieldToUpdateMap = Map.of(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.createdAt.name(), createdAt,
+                                                      UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
+        return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
+                .where(queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION));
+    }
+
+    @Override
     public Multi<UserInstitution> findAllWithFilter(Map<String, Object> queryParameter) {
         Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
         log.debug("Query: {}", query);
@@ -83,6 +114,12 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         }
         return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
                 .where(queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION));
+    }
+
+    @Override
+    public Uni<List<UserInstitution>> retrieveFilteredUserInstitution(Map<String, Object> queryParameter) {
+        Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
+        return runUserInstitutionFindQuery(query, null).list();
     }
 
     private boolean productFilterIsEmpty(Map<String, Object> filterMap) {

@@ -10,7 +10,6 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
-import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -21,15 +20,14 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static io.smallrye.common.constraint.Assert.assertNotNull;
-import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductEnum.PRODUCT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter.UserInstitutionFilterEnum.INSTITUTION_ID;
-import static it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter.UserInstitutionFilterEnum.USER_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
@@ -132,6 +130,83 @@ class UserInstitutionServiceTest {
         List<UserInstitution> actual = subscriber.assertCompleted().getItems();
         assertNotNull(actual);
         assertEquals(1, actual.size());
+    }
+
+    @Test
+    void retrieveFilteredUserInstitution() {
+        Map<String, Object> parameterMap = new HashMap<>();
+        parameterMap.put("institutionId", "institutionId");
+        List<UserInstitution> userInstitutionList = new ArrayList<>();
+        UserInstitution userInstitution = createDummyUserInstitution();
+        userInstitutionList.add(userInstitution);
+        PanacheMock.mock(UserInstitution.class);
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitutionList));
+        when(UserInstitution.find((Document) any(), any()))
+                .thenReturn(query);
+        when(query.page(anyInt(), anyInt())).thenReturn(query);
+        when(query.list()).thenReturn(Uni.createFrom().item(userInstitutionList));
+        UniAssertSubscriber<List<UserInstitution>> subscriber =  userInstitutionService.retrieveFilteredUserInstitution(parameterMap)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted().assertItem(userInstitutionList);
+    }
+
+    @Test
+    void updateUserStatusWithInstitutionAndOnboardedFilter() {
+        final String userId = "userId";
+        String institutionId = "institutionId";
+        String productId = "productId";
+        PanacheMock.mock(UserInstitution.class);
+        ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+        when(UserInstitution.update(any(Document.class)))
+                .thenReturn(update);
+        when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userId, institutionId, productId, null, null, OnboardedProductState.ACTIVE)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted().assertItem(1L);
+    }
+
+    @Test
+    void updateUserStatusWithInstitutionFilter() {
+        final String userId = "userId";
+        String institutionId = "institutionId";
+        PanacheMock.mock(UserInstitution.class);
+        ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+        when(UserInstitution.update(any(Document.class)))
+                .thenReturn(update);
+        when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userId, institutionId, null, null, null, OnboardedProductState.ACTIVE)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted().assertItem(1L);
+    }
+
+    @Test
+    void deleteUserInstitutionProduct(){
+        final String userId = "userId";
+        String institutionId = "institutionId";
+        PanacheMock.mock(UserInstitution.class);
+        ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+        when(UserInstitution.update(any(Document.class)))
+                .thenReturn(update);
+        when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<Long> subscriber = userInstitutionService.deleteUserInstitutionProduct(userId, institutionId, "productID")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted().assertItem(1L);
+    }
+
+    @Test
+    void updateUserProductCreatedAt() {
+        final String userId = "userId";
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        PanacheMock.mock(UserInstitution.class);
+        ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+        when(UserInstitution.update(any(Document.class)))
+                .thenReturn(update);
+        when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserCreatedAtByInstitutionAndProduct(institutionId, List.of(userId), productId, LocalDateTime.now())
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted().assertItem(1L);
     }
 
     private UserInstitution createDummyUserInstitution() {

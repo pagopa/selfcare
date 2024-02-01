@@ -6,9 +6,16 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
+import it.pagopa.selfcare.user.entity.UserInfo;
+import it.pagopa.selfcare.user.entity.UserInstitutionRole;
+import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import it.pagopa.selfcare.user.service.UserEventService;
 import it.pagopa.selfcare.user.service.UserService;
+import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfLocalDate;
@@ -16,6 +23,7 @@ import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfst
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,7 +33,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 
 @QuarkusTest
 @TestHTTPEndpoint(UserController.class)
-public class UserControllerTest {
+class UserControllerTest {
 
     @InjectMock
     private UserService userService;
@@ -134,6 +142,194 @@ public class UserControllerTest {
                 .get("/test_user_id")
                 .then()
                 .statusCode(404);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void updateUserStatus() {
+
+        Mockito.when(userService.updateUserStatusWithOptionalFilter("userId", null, "prod-pagopa", null, null, OnboardedProductState.ACTIVE))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("id", "userId")
+                .queryParam("productId", "prod-pagopa")
+                .queryParam("status", OnboardedProductState.ACTIVE)
+                .put("/{id}/status")
+                .then()
+                .statusCode(204);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void updateUserStatusError() {
+
+        Mockito.when(userService.updateUserStatusWithOptionalFilter("userId", null, "prod-pagopa", null, null, OnboardedProductState.ACTIVE))
+                .thenThrow(new ResourceNotFoundException("user non trovato"));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("id", "userId")
+                .queryParam("productId", "prod-pagopa")
+                .queryParam("status", OnboardedProductState.ACTIVE)
+                .put("/{id}/status")
+                .then()
+                .statusCode(404);
+    }
+
+    /**
+     * Method under test:
+     * {@link UserController#deleteProducts(String, String, String)}
+     */
+    @Test
+    @TestSecurity(user = "userJwt")
+    void deleteDeleteProductsErrorTest() {
+        String PATH_USER_ID = "userId";
+        String PATH_INSTITUTION_ID = "institutionId";
+        String PATH_PRODUCT_ID = "productId";
+        String PATH_DELETE_PRODUCT = "{userId}/institutions/{institutionId}/products/{productId}";
+
+        var user = "user1";
+        var institution = "institution1";
+        var product = "product1";
+        Mockito.when(userService.deleteUserInstitutionProduct("user1","institution1", "product1"))
+                .thenThrow(InvalidRequestException.class);
+
+        given()
+                .when()
+                .pathParam(PATH_USER_ID, user)
+                .pathParam(PATH_INSTITUTION_ID, institution)
+                .pathParam(PATH_PRODUCT_ID, product)
+                .delete(PATH_DELETE_PRODUCT)
+                .then()
+                .statusCode(HttpStatus.SC_BAD_REQUEST);
+    }
+
+    /**
+     * Method under test:
+     * {@link UserController#deleteProducts(String, String, String)}
+     */
+    @Test
+    @TestSecurity(user = "userJwt")
+    void deleteDeleteProductsOKTest() {
+
+        String PATH_USER_ID = "userId";
+        String PATH_INSTITUTION_ID = "institutionId";
+        String PATH_PRODUCT_ID = "productId";
+        String PATH_DELETE_PRODUCT = "{userId}/institutions/{institutionId}/products/{productId}";
+
+        var user = "user123";
+        var institution = "institution123";
+        var product = "prod-pagopa";
+
+        Mockito.when(userService.deleteUserInstitutionProduct("user123", "institution123", "prod-pagopa"))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        given()
+                .when()
+                .pathParam(PATH_USER_ID, user)
+                .pathParam(PATH_INSTITUTION_ID, institution)
+                .pathParam(PATH_PRODUCT_ID, product)
+                .delete(PATH_DELETE_PRODUCT)
+                .then()
+                .statusCode(HttpStatus.SC_NO_CONTENT);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testGetUserProductsInfoOk() {
+        UserInfo userInfoResponse = new UserInfo();
+        userInfoResponse.setUserId("test-user");
+
+        UserInstitutionRole userInstitution = new UserInstitutionRole();
+        userInstitution.setInstitutionName("test-institutionId");
+        userInstitution.setStatus(OnboardedProductState.ACTIVE);
+
+        List<UserInstitutionRole> userInstitutionRoleResponses = new ArrayList<>();
+        userInstitutionRoleResponses.add(userInstitution);
+        userInfoResponse.setInstitutions(userInstitutionRoleResponses);
+
+        Mockito.when(userService.retrieveBindings(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(userInfoResponse));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("userId", "test-user-id")
+                .get("/{userId}/products")
+                .then()
+                .statusCode(200);
+
+        Mockito.verify(userService).retrieveBindings(any(), any(), any());
+
+    }
+
+    @Test
+    void testGetUserProductsInfoNotAuthorized() {
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("userId", "test-user-id")
+                .get("/{userId}/products")
+                .then()
+                .statusCode(401);
+
+        Mockito.verify(userService, Mockito.never()).retrieveBindings(any(), any(), any());
+    }
+
+
+    @Test
+
+    @TestSecurity(user = "userJwt")
+    void findByIds(){
+        String PATH_RETRIEVE_ALL_USERS_BY_IDS = "/ids";
+        List<String> userIds = List.of("user1");
+        Mockito.when(userService.findAllByIds(any())).thenReturn(
+                Uni.createFrom().item(List.of(new UserInstitutionResponse())));
+        given()
+                .when()
+                .queryParam("userIds", userIds)
+                .get(PATH_RETRIEVE_ALL_USERS_BY_IDS)
+                .then()
+                .statusCode(HttpStatus.SC_OK);
+
+    }
+
+    @Test
+    void testGetUsersNotAuthorized() {
+        var productId = "productId";
+
+        given().when()
+                .contentType(ContentType.JSON)
+                .queryParam("page", 0)
+                .queryParam("size", 100)
+                .queryParam(productId, "productId")
+                .get("")
+                .then()
+                .statusCode(401);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testGetUsers() {
+        Mockito.when(userService.findPaginatedUserNotificationToSend(0, 100, "productId"))
+                .thenReturn(Uni.createFrom().item( List.of(new UserNotificationToSend())));
+
+        var productId = "productId";
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .queryParam("page", 0)
+                .queryParam("size", 100)
+                .queryParam(productId, "productId")
+                .get("")
+                .then()
+                .statusCode(200);
     }
 
     @Test

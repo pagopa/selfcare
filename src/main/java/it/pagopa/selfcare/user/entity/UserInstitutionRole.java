@@ -11,6 +11,7 @@ public class UserInstitutionRole {
 
     private String institutionId;
     private String institutionName;
+    private String institutionRootName;
     private PartyRole role;
     private OnboardedProductState status;
 
