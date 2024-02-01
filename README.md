@@ -10,9 +10,10 @@ on the main microservices.
 Before running you must set these properties as environment variables.
 
 
-| **Property**                                           | **Environment Variable**                 | **Default** | **Required** |
-|--------------------------------------------------------|------------------------------------------|-------------|:------------:|
-| quarkus.mongodb.connection-string<br/>                 | MONGODB-CONNECTION-STRING                |             |     yes      |
+| **Property**                                      | **Environment Variable**                 | **Default** | **Required** |
+|---------------------------------------------------|------------------------------------------|-------------|:------------:|
+| quarkus.mongodb.connection-string                 | MONGODB-CONNECTION-STRING                |             |     yes      |
+| user-cdc.app-insights.connection-string           | USER-CDC-APPINSIGHTS-CONNECTION-STRING   |             |     yes      |
 
 
 > **_NOTE:_**  properties that contains secret must have the same name of its secret as uppercase.
