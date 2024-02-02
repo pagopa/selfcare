@@ -9,7 +9,7 @@ import it.pagopa.selfcare.user.controller.response.UserResponse;
 import it.pagopa.selfcare.user.controller.response.UsersNotificationResponse;
 import it.pagopa.selfcare.user.controller.response.product.UserProductsResponse;
 import it.pagopa.selfcare.user.mapper.UserMapper;
-import it.pagopa.selfcare.user.service.UserEventService;
+import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.*;
@@ -34,7 +34,7 @@ public class UserController {
 
     private final UserService userService;
     private final UserMapper userMapper;
-    private final UserEventService userEventService;
+    private final UserRegistryService userRegistryService;
 
     @Operation(summary = "The API retrieves Users' emails using institution id and product id")
     @GET
@@ -157,7 +157,7 @@ public class UserController {
 
 
     /**
-     * The sendUpdateUserNotificationToQueue function is a service that sends notification when user data get's updated.
+     * The updateUserRegistryAndSendNotification function is a service that sends notification when user data get's updated.
      *
      * @param userId String
      * @param institutionId String
@@ -165,16 +165,16 @@ public class UserController {
      * @return Uni&lt;response&gt;
      *
      */
-    @Operation(summary = "Service to send notification when user data gets updated")
+    @Operation(summary = "Service to update user in user-registry and send notification when user data gets updated")
     @ResponseStatus(HttpStatus.SC_NO_CONTENT)
     @POST
-    @Path("/{id}/update")
+    @Path("/{id}/user-registry")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Void> sendUpdateUserNotificationToQueue(@PathParam(value = "id") String userId,
+    public Uni<Void> updateUserRegistryAndSendNotification(@PathParam(value = "id") String userId,
                                                        @QueryParam(value = "institutionId") String institutionId,
                                                        MutableUserFieldsDto userDto) {
-        return userEventService.sendUpdateUserNotificationToQueue(userDto, userId, institutionId);
+        return userRegistryService.updateUserRegistryAndSendNotificationToQueue(userDto, userId, institutionId);
     }
 }
 

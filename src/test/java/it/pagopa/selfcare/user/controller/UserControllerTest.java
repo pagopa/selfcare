@@ -13,7 +13,7 @@ import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
-import it.pagopa.selfcare.user.service.UserEventService;
+import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
@@ -39,7 +39,7 @@ class UserControllerTest {
     @InjectMock
     private UserService userService;
     @InjectMock
-    private UserEventService userEventService;
+    private UserRegistryService userRegistryService;
 
     /**
      * Method under test: {@link UserController#getUsersEmailByInstitutionAndProduct(String, String)}}
@@ -334,23 +334,25 @@ class UserControllerTest {
     }
 
     @Test
-    void testSendUpdateUserNotificationToQueueUnauthorized() {
+    void testUpdateUserRegistryAndSendNotificationToQueueUnauthorized() {
         given()
                 .when()
                 .contentType(ContentType.JSON)
-                .post("/test_user_id/update?institutionId=institutionIdTest")
+                .post("/test_user_id/user-registry?institutionId=institutionIdTest")
                 .then()
                 .statusCode(401);
     }
 
     @Test
     @TestSecurity(user = "userJwt")
-    void testSendUpdateUserNotificationToQueueSuccess() {
-        Mockito.when(userEventService.sendUpdateUserNotificationToQueue(new MutableUserFieldsDto(), "test_user_id", "institutionIdTest")).thenReturn(Uni.createFrom().nullItem());
+    void testUpdateUserRegistryAndSendNotificationToQueue() {
+        MutableUserFieldsDto mutableUserFieldsDto = new MutableUserFieldsDto();
+        Mockito.when(userRegistryService.updateUserRegistryAndSendNotificationToQueue(mutableUserFieldsDto, "test_user_id", "institutionIdTest")).thenReturn(Uni.createFrom().nullItem());
         given()
                 .when()
                 .contentType(ContentType.JSON)
-                .post("/test_user_id/update?institutionId=institutionIdTest")
+                .body(mutableUserFieldsDto)
+                .post("/test_user_id/user-registry?institutionId=institutionIdTest")
                 .then()
                 .statusCode(204);
     }

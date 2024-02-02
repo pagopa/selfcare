@@ -26,7 +26,7 @@ import org.openapi.quarkus.user_registry_json.api.UserApi;
 @ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
-public class UserEventServiceImpl implements UserEventService {
+public class UserRegistryServiceImpl implements UserRegistryService {
     public static final String ERROR_DURING_SEND_DATA_LAKE_NOTIFICATION_FOR_USER = "error during send dataLake notification for user {}";
     private static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
 
@@ -44,7 +44,7 @@ public class UserEventServiceImpl implements UserEventService {
     private MutinyEmitter<String> usersEmitter;
 
     @Override
-    public Uni<Void> sendUpdateUserNotificationToQueue(MutableUserFieldsDto userDto, String userId, String institutionId) {
+    public Uni<Void> updateUserRegistryAndSendNotificationToQueue(MutableUserFieldsDto userDto, String userId, String institutionId) {
         log.trace("sendUpdateUserNotification start");
         log.debug("sendUpdateUserNotification userId = {}, institutionId = {}", userId, institutionId);
         UserInstitutionFilter userInstitutionFilter;

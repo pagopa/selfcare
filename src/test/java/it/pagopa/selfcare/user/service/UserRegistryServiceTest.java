@@ -32,12 +32,12 @@ import static org.mockito.Mockito.when;
 
 @QuarkusTest
 @QuarkusTestResource(MongoTestResource.class)
-public class UserEventServiceTest {
+public class UserRegistryServiceTest {
     @Inject
     @Any
     InMemoryConnector connector;
     @Inject
-    UserEventService userEventService;
+    UserRegistryService userRegistryService;
 
     @InjectMock
     private UserInstitutionService userInstitutionService;
@@ -87,7 +87,7 @@ public class UserEventServiceTest {
         when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(userInstitution));
         when(userRegistryApi.updateUsingPATCH("userId", mutableUserFieldsDto)).thenReturn(Uni.createFrom().item(Response.accepted().build()));
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, "userId")).thenReturn(Uni.createFrom().item(userResource));
-        UniAssertSubscriber<Void> subscriber = userEventService.sendUpdateUserNotificationToQueue(mutableUserFieldsDto, "userId", "institutionId")
+        UniAssertSubscriber<Void> subscriber = userRegistryService.updateUserRegistryAndSendNotificationToQueue(mutableUserFieldsDto, "userId", "institutionId")
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted();
 
