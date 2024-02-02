@@ -134,6 +134,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Multi<UserInstitutionResponse> findPaginatedUserInstitutions(String institutionId, String userId, List<PartyRole> roles, List<String> states, List<String> products, List<String> productRoles, Integer page, Integer size) {
+        var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
+        var productFilters = OnboardedProductFilter.builder().productId(products).status(states).role(roles).productRole(productRoles).build().constructMap();
+        return userInstitutionService.paginatedFindAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters), page, size)
+                .onItem().transform(userInstitutionMapper::toResponse);
+    }
+
+    @Override
     public Uni<Void> deleteUserInstitutionProduct(String userId, String institutionId, String productId) {
         return userInstitutionService.deleteUserInstitutionProduct(userId, institutionId, productId)
                 .onItem().transformToUni(aLong -> {
@@ -172,11 +180,6 @@ public class UserServiceImpl implements UserService {
             queryParameter = OnboardedProductFilter.builder().status(VALID_USER_PRODUCT_STATES_FOR_NOTIFICATION).build().constructMap();
         }
         return userInstitutionService.paginatedFindAllWithFilter(queryParameter, page, size)
-                .map(userInstitutions -> {
-                    log.info("size: {}", userInstitutions.size());
-                    return userInstitutions;
-                })
-                .onItem().transformToMulti(Multi.createFrom()::iterable)
                 .onItem().transformToUniAndMerge(userInstitution -> userRegistryApi
                         .findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId())
                         .map(userResource -> buildUsersNotificationResponse(userInstitution, userResource, productId)))

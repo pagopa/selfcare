@@ -19,7 +19,7 @@ public interface UserInstitutionService {
 
     Multi<UserInstitutionResponse> findByUserId(String userId);
 
-    Uni<List<UserInstitution>> paginatedFindAllWithFilter(Map<String, Object> queryParameter, Integer page, Integer size);
+    Multi<UserInstitution> paginatedFindAllWithFilter(Map<String, Object> queryParameter, Integer page, Integer size);
 
     Multi<UserInstitution> findAllWithFilter(Map<String, Object> queryParameter);
 

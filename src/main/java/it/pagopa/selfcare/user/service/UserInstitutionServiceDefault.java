@@ -57,9 +57,9 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     }
 
     @Override
-    public Uni<List<UserInstitution>> paginatedFindAllWithFilter(Map<String, Object> queryParameter, Integer page, Integer size) {
+    public Multi<UserInstitution> paginatedFindAllWithFilter(Map<String, Object> queryParameter, Integer page, Integer size) {
         Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
-        return runUserInstitutionFindQuery(query, null).page(page, size).list();
+        return runUserInstitutionFindQuery(query, null).page(page, size).stream();
     }
 
     @Override

@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.user.controller;
 
 import io.quarkus.security.Authenticated;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
@@ -78,10 +79,9 @@ public class UserController {
     /**
      * The deleteProducts function is used to delete logically the association institution and product.
      *
-     * @param userId String
+     * @param userId        String
      * @param institutionId String
-     * @param productId String
-     *
+     * @param productId     String
      * @return A uni&lt;void&gt;
      */
     @Operation(summary = "Delete logically the association institution and product")
@@ -123,7 +123,8 @@ public class UserController {
 
     /**
      * Retreive all the users given a list of userIds
-     * @param userIds   List<String></String>
+     *
+     * @param userIds List<String></String>
      * @return
      */
     @Operation(
@@ -138,6 +139,7 @@ public class UserController {
 
     @Operation(summary = "Retrieve all users according to optional params in input")
     @GET
+    @Path(value = "/notification")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<UsersNotificationResponse> getUsers(@QueryParam(value = "page") @DefaultValue("0") Integer page,
@@ -151,6 +153,21 @@ public class UserController {
                             .toList());
                     return usersNotificationResponse;
                 });
+    }
+
+    @Operation(summary = "The API retrieves paged users with optional filters in input as query params")
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Multi<UserInstitutionResponse> retrievePaginatedAndFilteredUser(@QueryParam(value = "institutionId") String institutionId,
+                                                                       @QueryParam(value = "userId") String userId,
+                                                                       @QueryParam(value = "roles") List<PartyRole> roles,
+                                                                       @QueryParam(value = "states") List<String> states,
+                                                                       @QueryParam(value = "products") List<String> products,
+                                                                       @QueryParam(value = "productRoles") List<String> productRoles,
+                                                                       @QueryParam(value = "page") @DefaultValue("0") Integer page,
+                                                                       @QueryParam(value = "size") @DefaultValue("100") Integer size) {
+        return userService.findPaginatedUserInstitutions(institutionId, userId, roles, states, products, productRoles, page, size);
     }
 
 }

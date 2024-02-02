@@ -87,10 +87,11 @@ class UserInstitutionServiceTest {
         when(UserInstitution.find((Document) any(), any()))
                 .thenReturn(query);
         when(query.page(anyInt(), anyInt())).thenReturn(query);
-        when(query.list()).thenReturn(Uni.createFrom().item(List.of(userInstitution)));
-        UniAssertSubscriber<List<UserInstitution>> subscriber =  userInstitutionService.paginatedFindAllWithFilter(parameterMap, 0, 1)
-                .subscribe().withSubscriber(UniAssertSubscriber.create());
-        subscriber.assertCompleted().assertItem(List.of(userInstitution));
+        when(query.stream()).thenReturn(Multi.createFrom().item(userInstitution));
+        AssertSubscriber<UserInstitution> subscriber =  userInstitutionService.paginatedFindAllWithFilter(parameterMap, 0, 100)
+                .subscribe().withSubscriber(AssertSubscriber.create(10));
+        List<UserInstitution> response = subscriber.assertCompleted().getItems();
+        Assertions.assertEquals(1, response.size());
     }
 
 

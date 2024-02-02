@@ -38,7 +38,6 @@ import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -50,8 +49,7 @@ import static it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER;
 import static it.pagopa.selfcare.user.constant.CustomError.STATUS_IS_MANDATORY;
 import static it.pagopa.selfcare.user.constant.CustomError.USER_TO_UPDATE_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -307,6 +305,21 @@ class UserServiceTest {
         assertEquals(userInstitution.getUserId(), actual.get(0).getUserId());
     }
 
+
+    @Test
+    void findAllUserInstitutionsPaged() {
+        when(userInstitutionService.paginatedFindAllWithFilter(anyMap(), anyInt(), anyInt())).thenReturn(Multi.createFrom().item(userInstitution));
+        AssertSubscriber<UserInstitutionResponse> subscriber = userService
+                .findPaginatedUserInstitutions("institutionId", "userId", null, null, null, null, 0, 100)
+                .subscribe()
+                .withSubscriber(AssertSubscriber.create(10));
+
+        List<UserInstitutionResponse> actual = subscriber.assertCompleted().getItems();
+        Assert.assertNotNull(actual);
+        assertEquals(1, actual.size());
+        assertEquals(userInstitution.getUserId(), actual.get(0).getUserId());
+    }
+
     @Test
     void deleteUserInstitutionProductFound(){
         when(userInstitutionService.deleteUserInstitutionProduct("userId", "institutionId", "productId")).thenReturn(Uni.createFrom().item(1L));
@@ -379,7 +392,7 @@ class UserServiceTest {
     @Test
     void findPaginatedUserNotificationToSend() {
         when(userInstitutionService.paginatedFindAllWithFilter(any(), any(), any()))
-                .thenReturn(Uni.createFrom().item(Collections.singletonList(userInstitution)));
+                .thenReturn(Multi.createFrom().item(userInstitution));
         UserResource userResource = mock(UserResource.class);
         when(userRegistryApi.findByIdUsingGET(any(), any()))
                 .thenReturn(Uni.createFrom().item(userResource));
@@ -398,7 +411,7 @@ class UserServiceTest {
     @Test
     void findPaginatedUserNotificationToSendQueryWithoutProductId() {
         when(userInstitutionService.paginatedFindAllWithFilter(any(), any(), any()))
-                .thenReturn(Uni.createFrom().item(Collections.singletonList(userInstitution)));
+                .thenReturn(Multi.createFrom().item(userInstitution));
         UserResource userResource = mock(UserResource.class);
         when(userRegistryApi.findByIdUsingGET(any(), any()))
                 .thenReturn(Uni.createFrom().item(userResource));
