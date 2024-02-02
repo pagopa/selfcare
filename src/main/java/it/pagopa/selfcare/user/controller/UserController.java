@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.jboss.resteasy.reactive.ResponseStatus;
+import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
 
 import java.util.List;
 
@@ -171,8 +172,9 @@ public class UserController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Void> sendUpdateUserNotificationToQueue(@PathParam(value = "id") String userId,
-                                                       @QueryParam(value = "institutionId") String institutionId) {
-        return userEventService.sendUpdateUserNotificationToQueue(userId, institutionId);
+                                                       @QueryParam(value = "institutionId") String institutionId,
+                                                       MutableUserFieldsDto userDto) {
+        return userEventService.sendUpdateUserNotificationToQueue(userDto, userId, institutionId);
     }
 }
 

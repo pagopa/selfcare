@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfLocalDate;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
+import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import java.time.LocalDate;
@@ -345,7 +346,7 @@ class UserControllerTest {
     @Test
     @TestSecurity(user = "userJwt")
     void testSendUpdateUserNotificationToQueueSuccess() {
-        Mockito.when(userEventService.sendUpdateUserNotificationToQueue(any(), any())).thenReturn(Uni.createFrom().nullItem());
+        Mockito.when(userEventService.sendUpdateUserNotificationToQueue(new MutableUserFieldsDto(), "test_user_id", "institutionIdTest")).thenReturn(Uni.createFrom().nullItem());
         given()
                 .when()
                 .contentType(ContentType.JSON)

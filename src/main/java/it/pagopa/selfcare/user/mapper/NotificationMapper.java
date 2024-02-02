@@ -14,6 +14,7 @@ public interface NotificationMapper {
 
     @Mapping(source = "onboardedProduct.tokenId", target = "onboardingTokenId")
     @Mapping(source = "onboardedProduct.productId", target = "productId")
+    @Mapping(target = "updatedAt", expression = "java((null == onboardedProduct.getUpdatedAt()) ? onboardedProduct.getCreatedAt() : onboardedProduct.getUpdatedAt())")
     UserNotificationToSend setNotificationDetailsFromOnboardedProduct(UserToNotify user, OnboardedProduct onboardedProduct, String institutionId);
 
 

@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.*;
 import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.user.constant.CustomError.*;
@@ -50,7 +49,6 @@ public class UserServiceImpl implements UserService {
     private final OnboardedProductMapper onboardedProductMapper;
     private final UserUtils userUtils;
     private final UserInstitutionService userInstitutionService;
-    private final UserInfoService userInfoService;
     private final UserInstitutionMapper userInstitutionMapper;
 
     private static final String WORK_CONTACTS = "workContacts";
@@ -179,12 +177,8 @@ public class UserServiceImpl implements UserService {
                 .onItem().transformToMulti(Multi.createFrom()::iterable)
                 .onItem().transformToUniAndMerge(userInstitution -> userRegistryApi
                         .findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId())
-                        .map(userResource -> buildUsersNotificationResponse(userInstitution, userResource, productId)))
+                        .map(userResource -> userUtils.buildUsersNotificationResponse(userInstitution, userResource, productId)))
                 .collect().in(ArrayList::new, List::addAll);
-    }
-
-    private List<UserNotificationToSend> buildUsersNotificationResponse(UserInstitution userInstitution, UserResource userResource, String productId) {
-        return userUtils.constructUserNotificationToSend(userInstitution, userResource, productId);
     }
 
     @Override

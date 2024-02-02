@@ -3,6 +3,8 @@ package it.pagopa.selfcare.user.util;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.constant.QueueEvent;
+import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
@@ -15,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
+import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import java.util.*;
 
@@ -57,16 +60,36 @@ public class UserUtils {
         return false;
     }
 
-    public List<UserNotificationToSend> constructUserNotificationToSend(UserInstitution userInstitution, org.openapi.quarkus.user_registry_json.model.UserResource userResource, String productId) {
+    public List<UserNotificationToSend> buildUsersNotificationResponse(UserInstitution userInstitution, UserResource userResource, QueueEvent eventType) {
+        return userInstitution.getProducts().stream()
+                .map(onboardedProduct -> {
+                    UserNotificationToSend userNotificationToSend = constructUserNotificationToSend(userInstitution, userResource, onboardedProduct);
+                    userNotificationToSend.setId(idBuilder(userInstitution.getUserId(), userInstitution.getInstitutionId(), onboardedProduct.getProductId(), onboardedProduct.getProductRole()));
+                    userNotificationToSend.setEventType(eventType);
+                    return userNotificationToSend;
+                })
+                .toList();
+    }
+
+    private String idBuilder(String userId, String institutionId, String productId, String productRole){
+        return String.format("%s_%s_%s_%s", userId, institutionId, productId, productRole);
+    }
+
+    public List<UserNotificationToSend> buildUsersNotificationResponse(UserInstitution userInstitution, UserResource userResource, String productId) {
         return userInstitution.getProducts().stream()
                 .map(onboardedProduct -> {
                     if (StringUtils.isBlank(productId) ||  productId.equals(onboardedProduct.getProductId()) && VALID_USER_PRODUCT_STATES_FOR_NOTIFICATION.contains(onboardedProduct.getStatus().name())) {
-                        UserToNotify userToNotify = notificationMapper.toUserNotify(userResource, onboardedProduct, userInstitution.getUserId());
-                        return notificationMapper.setNotificationDetailsFromOnboardedProduct(userToNotify, onboardedProduct, userInstitution.getInstitutionId());
+                        return constructUserNotificationToSend(userInstitution, userResource, onboardedProduct);
                     }
                     return null;
                 })
+                .filter(Objects::nonNull)
                 .toList();
+    }
+
+    private UserNotificationToSend constructUserNotificationToSend(UserInstitution userInstitution, UserResource userResource, OnboardedProduct onboardedProduct) {
+         UserToNotify userToNotify = notificationMapper.toUserNotify(userResource, onboardedProduct, userInstitution.getUserId());
+         return notificationMapper.setNotificationDetailsFromOnboardedProduct(userToNotify, onboardedProduct, userInstitution.getInstitutionId());
     }
 
     /**
