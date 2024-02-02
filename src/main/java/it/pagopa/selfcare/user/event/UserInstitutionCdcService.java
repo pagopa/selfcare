@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bson.conversions.Bson;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import java.time.Duration;
 import java.util.*;
 
 import static com.mongodb.client.model.Projections.fields;
@@ -43,13 +44,24 @@ public class UserInstitutionCdcService {
     private final ReactiveMongoClient mongoClient;
     private final UserInstitutionRepository userInstitutionRepository;
 
+    private final Integer retryMinBackOff;
+    private final Integer retryMaxBackOff;
+    private final Integer maxRetry;
+
+
     public UserInstitutionCdcService(ReactiveMongoClient mongoClient,
                                      @ConfigProperty(name = "quarkus.mongodb.database") String mongodbDatabase,
+                                     @ConfigProperty(name = "user-cdc.retry.min-backoff") Integer retryMinBackOff,
+                                     @ConfigProperty(name = "user-cdc.retry.max-backoff") Integer retryMaxBackOff,
+                                     @ConfigProperty(name = "user-cdc.retry") Integer maxRetry,
                                      UserInstitutionRepository userInstitutionRepository,
                                      TelemetryClientConfig telemetryClientConfig) {
         this.mongoClient = mongoClient;
         this.mongodbDatabase = mongodbDatabase;
         this.userInstitutionRepository = userInstitutionRepository;
+        this.maxRetry = maxRetry;
+        this.retryMaxBackOff = retryMaxBackOff;
+        this.retryMinBackOff = retryMinBackOff;
         this.telemetryClient = telemetryClientConfig.telemetryClient();
         telemetryClient.getContext().getOperation().setName(OPERATION_NAME);
         initOrderStream();
@@ -79,6 +91,7 @@ public class UserInstitutionCdcService {
         assert document.getDocumentKey() != null;
 
         userInstitutionRepository.updateUser(document.getFullDocument())
+                .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofHours(retryMaxBackOff)).atMost(maxRetry)
                 .subscribe().with(
                         result -> {
                             constructMapAndTrackEvent(document.getDocumentKey().toJson(), "TRUE", USERINSTITUTION_SUCCESS_MECTRICS, USERINSTITUTION_COUNT_MECTRICS);
