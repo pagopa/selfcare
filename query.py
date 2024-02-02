@@ -25,11 +25,27 @@ def user_institution_from_user_query(page, size):
                 'path': '$bindings'
             }
         }, {
+            '$lookup': {
+                'from': 'Institution',
+                'localField': 'bindings.institutionId',
+                'foreignField': '_id',
+                'as': 'institution'
+            }
+        }, {
+            '$set': {
+                'institution': {
+                    '$arrayElemAt': [
+                        '$institution', 0
+                    ]
+                }
+            }
+        }, {
             '$project': {
                 '_id': 0,
                 'userId': '$_id',
                 'institutionId': '$bindings.institutionId',
-                'institutionDescription': '$bindings.institutionName',
+                'institutionDescription': '$institution.description',
+                'institutionRootName': '$institution.parentDescription',
                 'products': {
                     '$map': {
                         'input': '$bindings.products',
@@ -103,6 +119,7 @@ def user_info_from_user_institution_query(db, collection):
                             'in': {
                                 'institutionId': '$institutionId',
                                 'institutionName': '$institutionDescription',
+                                'institutionRootName': '$institutionRootName',
                                 'status': '$$status',
                                 'role': {
                                     '$let': {

@@ -16,7 +16,7 @@ USERS_DB = 'selcUser'
 USER_INSTITUTION_COLLECTION = 'userInstitutions'
 USER_INFO_COLLECTION = 'userInfo'
 
-BATCH_SIZE = 10
+BATCH_SIZE = 100
 START_PAGE = 0
 
 
@@ -33,10 +33,18 @@ def migrate_user_institution(client):
         )
 
         for user in result:
+            institution_desc = user.get('institutionDescription')
+            root_name = user.get('institutionRootName')
+            set_dict = {"products": user.get('products')}
+            if institution_desc is not None:
+                set_dict["institutionDescription"] = institution_desc
+            if root_name is not None:
+                set_dict["institutionRootName"] = root_name
+
             client[USERS_DB][USER_INSTITUTION_COLLECTION].update_one(
                 {"userId": user.get('userId'), "institutionId": user.get('institutionId')},
-                {"$set": {"products": user.get('products'),
-                          "institutionDescription": user.get('institutionDescription')}}, True)
+                {"$set": set_dict},
+                True)
 
         print("End page " + str(page) + "/" + str(pages))
 
@@ -48,7 +56,8 @@ def generate_user_info(client):
     # client[USERS_DB][USER_INFO_COLLECTION].delete_many({})
 
     for user_info in result_info:
-        user_info['institutions'] = [institution for institution in user_info.get('institutions') if institution.get('status') is not None]
+        user_info['institutions'] = [institution for institution in user_info.get('institutions') if
+                                     institution.get('status') is not None]
         if len(user_info.get('institutions')) != 0:
             client[USERS_DB][USER_INFO_COLLECTION].update_one(
                 {"_id": user_info.get('_id')},
