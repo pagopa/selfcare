@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.user.controller;
 
 import io.quarkus.security.Authenticated;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.jboss.resteasy.reactive.ResponseStatus;
 import org.jboss.resteasy.reactive.ResponseStatus;
 import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
 
@@ -80,10 +82,9 @@ public class UserController {
     /**
      * The deleteProducts function is used to delete logically the association institution and product.
      *
-     * @param userId String
+     * @param userId        String
      * @param institutionId String
-     * @param productId String
-     *
+     * @param productId     String
      * @return A uni&lt;void&gt;
      */
     @Operation(summary = "Delete logically the association institution and product")
@@ -125,7 +126,8 @@ public class UserController {
 
     /**
      * Retreive all the users given a list of userIds
-     * @param userIds   List<String></String>
+     *
+     * @param userIds List<String></String>
      * @return
      */
     @Operation(
@@ -138,8 +140,9 @@ public class UserController {
         return userService.findAllByIds(formatQueryParameterList(userIds));
     }
 
-    @Operation(summary = "Retrieve all users according to optional params in input")
+    @Operation(summary = "Retrieve all SC-User for DataLake filtered by optional productId")
     @GET
+    @Path(value = "/notification")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<UsersNotificationResponse> getUsers(@QueryParam(value = "page") @DefaultValue("0") Integer page,
@@ -155,6 +158,20 @@ public class UserController {
                 });
     }
 
+    @Operation(summary = "The API retrieves paged users with optional filters in input as query params")
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Multi<UserInstitutionResponse> retrievePaginatedAndFilteredUser(@QueryParam(value = "institutionId") String institutionId,
+                                                                       @QueryParam(value = "userId") String userId,
+                                                                       @QueryParam(value = "roles") List<PartyRole> roles,
+                                                                       @QueryParam(value = "states") List<String> states,
+                                                                       @QueryParam(value = "products") List<String> products,
+                                                                       @QueryParam(value = "productRoles") List<String> productRoles,
+                                                                       @QueryParam(value = "page") @DefaultValue("0") Integer page,
+                                                                       @QueryParam(value = "size") @DefaultValue("100") Integer size) {
+        return userService.findPaginatedUserInstitutions(institutionId, userId, roles, states, products, productRoles, page, size);
+    }
 
     /**
      * The updateUserRegistryAndSendNotification function is a service that sends notification when user data get's updated.
@@ -172,12 +189,13 @@ public class UserController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> updateUserRegistryAndSendNotification(@PathParam(value = "id") String userId,
-                                                       @QueryParam(value = "institutionId") String institutionId,
-                                                       MutableUserFieldsDto userDto) {
+                                                               @QueryParam(value = "institutionId") String institutionId,
+                                                               org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto userDto) {
         return userRegistryService.updateUserRegistryAndSendNotificationToQueue(userDto, userId, institutionId)
                 .map(ignore -> Response
                         .status(HttpStatus.SC_NO_CONTENT)
                         .build());
     }
+
 }
 

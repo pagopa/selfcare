@@ -5,6 +5,7 @@ import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
@@ -24,13 +25,10 @@ import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static io.restassured.RestAssured.given;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 
 @QuarkusTest
 @TestHTTPEndpoint(UserController.class)
@@ -309,7 +307,7 @@ class UserControllerTest {
                 .queryParam("page", 0)
                 .queryParam("size", 100)
                 .queryParam(productId, "productId")
-                .get("")
+                .get("/notification")
                 .then()
                 .statusCode(401);
     }
@@ -328,6 +326,41 @@ class UserControllerTest {
                 .queryParam("page", 0)
                 .queryParam("size", 100)
                 .queryParam(productId, "productId")
+                .get("/notification")
+                .then()
+                .statusCode(200);
+    }
+
+
+    /**
+     * Method under test: {@link InstitutionController#retrieveUsers(String, String, List, List, List, List))}
+     */
+    @Test
+    void testGetUserInstitutionsNotAuthorized() {
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .get()
+                .then()
+                .statusCode(401);
+    }
+
+    /**
+     * Method under test: {@link InstitutionController#retrieveUsers(String, String, List, List, List, List))}
+     */
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testGetUserInstitutions() {
+        Map<String, Object> queryParam = new HashMap<>();
+        queryParam.put("institutionId", "Id");
+        queryParam.put("userId", "userId");
+        Mockito.when(userService.findPaginatedUserInstitutions("Id",  "userId", null, null, null, null, 0 , 100))
+                .thenReturn(Multi.createFrom().items(new UserInstitutionResponse()));
+
+        given()
+                .when()
+                .queryParams(queryParam)
+                .contentType(ContentType.JSON)
                 .get("")
                 .then()
                 .statusCode(200);
