@@ -100,6 +100,7 @@ class UserServiceTest {
         userInstitution.setId(ObjectId.get());
         userInstitution.setUserId("userId");
         userInstitution.setInstitutionId("institutionId");
+        userInstitution.setInstitutionRootName("institutionRootName");
         OnboardedProduct product = new OnboardedProduct();
         product.setProductId("test");
         userInstitution.setProducts(List.of(product));

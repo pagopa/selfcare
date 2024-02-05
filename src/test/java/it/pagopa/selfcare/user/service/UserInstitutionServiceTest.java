@@ -215,6 +215,7 @@ class UserInstitutionServiceTest {
         userInstitution.setId(ObjectId.get());
         userInstitution.setUserId("userId");
         userInstitution.setInstitutionId("institutionId");
+        userInstitution.setInstitutionRootName("institutionRootName");
         return userInstitution;
     }
 
