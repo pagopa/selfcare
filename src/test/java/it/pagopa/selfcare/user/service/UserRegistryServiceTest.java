@@ -11,6 +11,7 @@ import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import io.smallrye.reactive.messaging.memory.InMemorySink;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import jakarta.enterprise.inject.Any;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
@@ -87,7 +88,7 @@ public class UserRegistryServiceTest {
         when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(userInstitution));
         when(userRegistryApi.updateUsingPATCH("userId", mutableUserFieldsDto)).thenReturn(Uni.createFrom().item(Response.accepted().build()));
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, "userId")).thenReturn(Uni.createFrom().item(userResource));
-        UniAssertSubscriber<Void> subscriber = userRegistryService.updateUserRegistryAndSendNotificationToQueue(mutableUserFieldsDto, "userId", "institutionId")
+        UniAssertSubscriber<List<UserNotificationToSend>> subscriber = userRegistryService.updateUserRegistryAndSendNotificationToQueue(mutableUserFieldsDto, "userId", "institutionId")
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted();
 

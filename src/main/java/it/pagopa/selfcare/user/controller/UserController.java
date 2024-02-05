@@ -167,14 +167,17 @@ public class UserController {
      */
     @Operation(summary = "Service to update user in user-registry and send notification when user data gets updated")
     @ResponseStatus(HttpStatus.SC_NO_CONTENT)
-    @POST
+    @PUT
     @Path("/{id}/user-registry")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Void> updateUserRegistryAndSendNotification(@PathParam(value = "id") String userId,
+    public Uni<Response> updateUserRegistryAndSendNotification(@PathParam(value = "id") String userId,
                                                        @QueryParam(value = "institutionId") String institutionId,
                                                        MutableUserFieldsDto userDto) {
-        return userRegistryService.updateUserRegistryAndSendNotificationToQueue(userDto, userId, institutionId);
+        return userRegistryService.updateUserRegistryAndSendNotificationToQueue(userDto, userId, institutionId)
+                .map(ignore -> Response
+                        .status(HttpStatus.SC_NO_CONTENT)
+                        .build());
     }
 }
 

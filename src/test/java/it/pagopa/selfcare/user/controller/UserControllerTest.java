@@ -338,7 +338,7 @@ class UserControllerTest {
         given()
                 .when()
                 .contentType(ContentType.JSON)
-                .post("/test_user_id/user-registry?institutionId=institutionIdTest")
+                .put("/test_user_id/user-registry?institutionId=institutionIdTest")
                 .then()
                 .statusCode(401);
     }
@@ -352,7 +352,7 @@ class UserControllerTest {
                 .when()
                 .contentType(ContentType.JSON)
                 .body(mutableUserFieldsDto)
-                .post("/test_user_id/user-registry?institutionId=institutionIdTest")
+                .put("/test_user_id/user-registry?institutionId=institutionIdTest")
                 .then()
                 .statusCode(204);
     }

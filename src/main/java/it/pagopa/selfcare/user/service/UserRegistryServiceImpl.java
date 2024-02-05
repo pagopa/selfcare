@@ -20,6 +20,8 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
 import java.util.ArrayList;
+import java.util.List;
+
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 
 
@@ -44,24 +46,19 @@ public class UserRegistryServiceImpl implements UserRegistryService {
     private MutinyEmitter<String> usersEmitter;
 
     @Override
-    public Uni<Void> updateUserRegistryAndSendNotificationToQueue(MutableUserFieldsDto userDto, String userId, String institutionId) {
+    public Uni<List<UserNotificationToSend>> updateUserRegistryAndSendNotificationToQueue(MutableUserFieldsDto userDto, String userId, String institutionId) {
         log.trace("sendUpdateUserNotification start");
         log.debug("sendUpdateUserNotification userId = {}, institutionId = {}", userId, institutionId);
-        UserInstitutionFilter userInstitutionFilter;
-        if (StringUtils.isNotBlank(institutionId)) {
-            userInstitutionFilter = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build();
-        } else {
-            userInstitutionFilter = UserInstitutionFilter.builder().userId(userId).build();
-        }
+
+        UserInstitutionFilter userInstitutionFilter = UserInstitutionFilter.builder()
+                .userId(userId)
+                .institutionId(StringUtils.isNotBlank(institutionId) ? institutionId : null).build();
         return userRegistryApi.updateUsingPATCH(userId, userDto)
                 .onItem().transformToMulti(response -> userInstitutionService.findAllWithFilter(userInstitutionFilter.constructMap()))
-                .onItem().transformToUniAndMerge(userInstitution -> userRegistryApi
-                        .findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId())
-                        .map(userResource -> userUtils.buildUsersNotificationResponse(userInstitution, userResource, QueueEvent.UPDATE)))
-                .collect().in(() -> new ArrayList<UserNotificationToSend>(), ArrayList::addAll)
-                .onItem().transformToMulti(messages -> Multi.createFrom().iterable(messages))
-                .onItem().transformToUni(notification -> sendUserNotification(notification, userId))
-                .merge().toUni();
+                .onItem().transformToMultiAndMerge(userInstitution -> userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId())
+                        .onItem().transformToMulti(userResource -> Multi.createFrom().iterable(userUtils.buildUsersNotificationResponse(userInstitution, userResource, QueueEvent.UPDATE))))
+                .onItem().transformToUniAndMerge(notification -> sendUserNotification(notification, userId))
+                .collect().asList();
     }
 
 
@@ -74,10 +71,11 @@ public class UserRegistryServiceImpl implements UserRegistryService {
         }
     }
 
-    private Uni<Void> sendUserNotification(UserNotificationToSend userNotificationToSend, String userId) {
+    private Uni<UserNotificationToSend> sendUserNotification(UserNotificationToSend userNotificationToSend, String userId) {
         String message = convertNotificationToJson(userNotificationToSend);
         return usersEmitter.sendMessage(Message.of(message))
                 .onItem().invoke(() -> log.info("sent dataLake notification for user : {}", userId))
-                .onFailure().invoke((throwable) -> log.warn("error during send dataLake notification for user {}: {} ", userId, throwable.getMessage(), throwable));
+                .onFailure().invoke(throwable -> log.warn("error during send dataLake notification for user {}: {} ", userId, throwable.getMessage(), throwable))
+                .replaceWith(userNotificationToSend);
     }
 }
