@@ -137,7 +137,7 @@ public class UserController {
         return userService.findAllByIds(formatQueryParameterList(userIds));
     }
 
-    @Operation(summary = "Retrieve all users according to optional params in input")
+    @Operation(summary = "Retrieve all SC-User for DataLake filtered by optional productId")
     @GET
     @Path(value = "/notification")
     @Consumes(MediaType.APPLICATION_JSON)
