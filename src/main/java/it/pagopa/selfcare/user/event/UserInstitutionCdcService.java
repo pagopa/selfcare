@@ -11,7 +11,6 @@ import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.quarkus.runtime.Startup;
 import io.smallrye.mutiny.Multi;
-import it.pagopa.selfcare.user.event.config.TelemetryClientConfig;
 import it.pagopa.selfcare.user.event.entity.UserInstitution;
 import it.pagopa.selfcare.user.event.repository.UserInstitutionRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -35,9 +34,8 @@ public class UserInstitutionCdcService {
     private static final String COLLECTION_NAME = "userInstitutions";
     private static final String OPERATION_NAME = "USER-CDC-UserInfoUpdate";
     private static final String EVENT_NAME = "USER-CDC";
-    private static final String USERINSTITUTION_FAILURE_MECTRICS = "UserInfoUpdate failures";
-    private static final String USERINSTITUTION_SUCCESS_MECTRICS = "UserInfoUpdate successes";
-    private static final String USERINSTITUTION_COUNT_MECTRICS = "UserInfoUpdate count";
+    private static final String USERINSTITUTION_FAILURE_MECTRICS = "UserInfoUpdate_failures";
+    private static final String USERINSTITUTION_SUCCESS_MECTRICS = "UserInfoUpdate_successes";
 
     private final TelemetryClient telemetryClient;
     private final String mongodbDatabase;
@@ -55,14 +53,14 @@ public class UserInstitutionCdcService {
                                      @ConfigProperty(name = "user-cdc.retry.max-backoff") Integer retryMaxBackOff,
                                      @ConfigProperty(name = "user-cdc.retry") Integer maxRetry,
                                      UserInstitutionRepository userInstitutionRepository,
-                                     TelemetryClientConfig telemetryClientConfig) {
+                                     TelemetryClient telemetryClient) {
         this.mongoClient = mongoClient;
         this.mongodbDatabase = mongodbDatabase;
         this.userInstitutionRepository = userInstitutionRepository;
         this.maxRetry = maxRetry;
         this.retryMaxBackOff = retryMaxBackOff;
         this.retryMinBackOff = retryMinBackOff;
-        this.telemetryClient = telemetryClientConfig.telemetryClient();
+        this.telemetryClient = telemetryClient;
         telemetryClient.getContext().getOperation().setName(OPERATION_NAME);
         initOrderStream();
     }
@@ -94,11 +92,11 @@ public class UserInstitutionCdcService {
                 .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofHours(retryMaxBackOff)).atMost(maxRetry)
                 .subscribe().with(
                         result -> {
-                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), "TRUE", USERINSTITUTION_SUCCESS_MECTRICS, USERINSTITUTION_COUNT_MECTRICS);
+                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), "TRUE", USERINSTITUTION_SUCCESS_MECTRICS);
                             log.info("UserInfo collection successfully updated from UserInstitution document having id: {}", document.getDocumentKey().toJson());
                         },
                         failure -> {
-                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), "FALSE", USERINSTITUTION_FAILURE_MECTRICS, USERINSTITUTION_COUNT_MECTRICS);
+                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), "FALSE", USERINSTITUTION_FAILURE_MECTRICS);
                             log.error("Error during UserInfo collection updating, from UserInstitution document having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
                         });
     }

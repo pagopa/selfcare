@@ -8,11 +8,8 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 @ApplicationScoped
 public class TelemetryClientConfig {
 
-    @ConfigProperty(name = "user-cdc.appinsights.connection-string")
-    String appInsightsConnectionString;
-
     @ApplicationScoped
-    public TelemetryClient telemetryClient() {
+    public TelemetryClient telemetryClient(@ConfigProperty(name = "user-cdc.appinsights.connection-string") String appInsightsConnectionString) {
         TelemetryConfiguration telemetryConfiguration = TelemetryConfiguration.createDefault();
         telemetryConfiguration.setConnectionString(appInsightsConnectionString);
         return new TelemetryClient(telemetryConfiguration);
