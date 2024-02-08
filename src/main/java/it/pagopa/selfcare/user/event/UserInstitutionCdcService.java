@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.user.event;
 
+import com.microsoft.applicationinsights.TelemetryClient;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
@@ -10,15 +11,14 @@ import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.quarkus.runtime.Startup;
 import io.smallrye.mutiny.Multi;
-import it.pagopa.selfcare.user.event.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.event.entity.UserInstitution;
-import it.pagopa.selfcare.user.event.mapper.UserMapper;
 import it.pagopa.selfcare.user.event.repository.UserInstitutionRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.conversions.Bson;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import java.time.Duration;
 import java.util.*;
 
 import static com.mongodb.client.model.Projections.fields;
@@ -30,22 +30,38 @@ import static java.util.Arrays.asList;
 @ApplicationScoped
 @IfBuildProperty(name = "user-cdc.mongodb.watch.enabled", stringValue = "true")
 public class UserInstitutionCdcService {
-    private static final String COLLECTION_NAME = "userInstitutions";
-    private static final List<OnboardedProductState> VALID_PRODUCT_STATE = List.of(OnboardedProductState.ACTIVE, OnboardedProductState.PENDING, OnboardedProductState.TOBEVALIDATED);
 
+    private static final String COLLECTION_NAME = "userInstitutions";
+    private static final String OPERATION_NAME = "USER-CDC-UserInfoUpdate";
+    private static final String EVENT_NAME = "USER-CDC";
+    private static final String USERINSTITUTION_FAILURE_MECTRICS = "UserInfoUpdate_failures";
+    private static final String USERINSTITUTION_SUCCESS_MECTRICS = "UserInfoUpdate_successes";
+
+    private final TelemetryClient telemetryClient;
     private final String mongodbDatabase;
     private final ReactiveMongoClient mongoClient;
-    private final UserMapper userMapper;
     private final UserInstitutionRepository userInstitutionRepository;
+
+    private final Integer retryMinBackOff;
+    private final Integer retryMaxBackOff;
+    private final Integer maxRetry;
+
 
     public UserInstitutionCdcService(ReactiveMongoClient mongoClient,
                                      @ConfigProperty(name = "quarkus.mongodb.database") String mongodbDatabase,
-                                     UserMapper userMapper,
-                                     UserInstitutionRepository userInstitutionRepository) {
+                                     @ConfigProperty(name = "user-cdc.retry.min-backoff") Integer retryMinBackOff,
+                                     @ConfigProperty(name = "user-cdc.retry.max-backoff") Integer retryMaxBackOff,
+                                     @ConfigProperty(name = "user-cdc.retry") Integer maxRetry,
+                                     UserInstitutionRepository userInstitutionRepository,
+                                     TelemetryClient telemetryClient) {
         this.mongoClient = mongoClient;
         this.mongodbDatabase = mongodbDatabase;
-        this.userMapper = userMapper;
         this.userInstitutionRepository = userInstitutionRepository;
+        this.maxRetry = maxRetry;
+        this.retryMaxBackOff = retryMaxBackOff;
+        this.retryMinBackOff = retryMinBackOff;
+        this.telemetryClient = telemetryClient;
+        telemetryClient.getContext().getOperation().setName(OPERATION_NAME);
         initOrderStream();
     }
 
@@ -68,11 +84,31 @@ public class UserInstitutionCdcService {
     }
 
     protected void consumerUserInstitutionRepositoryEvent(ChangeStreamDocument<UserInstitution> document) {
-        assert document.getFullDocument() != null;
-        userInstitutionRepository.updateUser(document.getFullDocument())
-                .subscribe().with(
-                        result -> log.info("UserInfo collection successfully updated"),
-                        failure -> log.error("Error during UserInfo collection updating, message:" + failure.getMessage()));
 
+        assert document.getFullDocument() != null;
+        assert document.getDocumentKey() != null;
+
+        userInstitutionRepository.updateUser(document.getFullDocument())
+                .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofHours(retryMaxBackOff)).atMost(maxRetry)
+                .subscribe().with(
+                        result -> {
+                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), "TRUE", USERINSTITUTION_SUCCESS_MECTRICS);
+                            log.info("UserInfo collection successfully updated from UserInstitution document having id: {}", document.getDocumentKey().toJson());
+                        },
+                        failure -> {
+                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), "FALSE", USERINSTITUTION_FAILURE_MECTRICS);
+                            log.error("Error during UserInfo collection updating, from UserInstitution document having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
+                        });
+    }
+
+    private void constructMapAndTrackEvent(String documentKey, String success, String... metrics) {
+        Map<String, String> propertiesMap = new HashMap<>();
+        propertiesMap.put("documentKey", documentKey);
+        propertiesMap.put("success", success);
+
+        Map<String, Double> metricsMap = new HashMap<>();
+        Arrays.stream(metrics).forEach(metricName -> metricsMap.put(metricName, 1D));
+
+        telemetryClient.trackEvent(EVENT_NAME, propertiesMap, metricsMap);
     }
 }
