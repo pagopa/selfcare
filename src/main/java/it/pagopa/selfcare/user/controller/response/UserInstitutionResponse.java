@@ -12,6 +12,7 @@ public class UserInstitutionResponse {
     private String institutionId;
     private String institutionDescription;
     private String institutionRootName;
+    private String userMailUuid;
     private List<OnboardedProductResponse> products;
 
 }

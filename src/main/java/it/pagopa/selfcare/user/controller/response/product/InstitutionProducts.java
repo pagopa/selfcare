@@ -11,5 +11,6 @@ public class InstitutionProducts {
     private String institutionId;
     private String institutionName;
     private String institutionRootName;
+    private String userMailUuid;
     private List<OnboardedProductResponse> products;
 }

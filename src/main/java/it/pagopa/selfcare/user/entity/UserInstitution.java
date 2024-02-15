@@ -21,5 +21,6 @@ public class UserInstitution extends ReactivePanacheMongoEntity {
     private String institutionDescription;
     private String institutionRootName;
     private List<OnboardedProduct> products;
+    private String userMailUuid;
 
 }
