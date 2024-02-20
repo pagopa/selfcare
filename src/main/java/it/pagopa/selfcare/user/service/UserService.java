@@ -6,9 +6,9 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
+import it.pagopa.selfcare.user.controller.response.UserResponse;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
-import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,7 +19,7 @@ public interface UserService {
 
     Multi<UserProductResponse> getUserProductsByInstitution(String institutionId);
 
-    Uni<UserResource> retrievePerson(String userId, String productId, String institutionId);
+    Uni<UserResponse> retrievePerson(String userId, String productId, String institutionId);
 
     Uni<UserInfo> retrieveBindings(String institutionId, String userId, String[] states);
 

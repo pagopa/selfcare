@@ -1,6 +1,8 @@
 package it.pagopa.selfcare.user.mapper;
 
-import it.pagopa.selfcare.user.controller.response.*;
+import it.pagopa.selfcare.user.controller.response.OnboardedProductResponse;
+import it.pagopa.selfcare.user.controller.response.UserNotificationResponse;
+import it.pagopa.selfcare.user.controller.response.UserResponse;
 import it.pagopa.selfcare.user.controller.response.product.InstitutionProducts;
 import it.pagopa.selfcare.user.controller.response.product.UserProductsResponse;
 import it.pagopa.selfcare.user.entity.UserInfo;
@@ -22,16 +24,16 @@ public interface UserMapper {
 
     @Mapping(source = "userResource.fiscalCode", target = "taxCode")
     @Mapping(source = "userResource.familyName", target = "surname")
-    @Mapping(target = "email", expression = "java(retrieveMailFromWorkContacts(userResource.getWorkContacts(), institutionId))")
-    UserResponse toUserResponse(UserResource userResource, String institutionId);
+    @Mapping(target = "email", expression = "java(retrieveMailFromWorkContacts(userResource.getWorkContacts(), userMailUuid))")
+    UserResponse toUserResponse(UserResource userResource, String userMailUuid);
     default String fromCertifiabletoString(CertifiableFieldResourceOfstring certifiableFieldResourceOfstring) {
         return certifiableFieldResourceOfstring.getValue();
     }
 
     @Named("retrieveMailFromWorkContacts")
-    default String retrieveMailFromWorkContacts(Map<String, WorkContactResource> map, String institutionId){
-        if(map!=null && !map.isEmpty() && map.containsKey(institutionId)){
-            return map.get(institutionId).getEmail().getValue();
+    default String retrieveMailFromWorkContacts(Map<String, WorkContactResource> map, String userMailUuid){
+        if(map!=null && !map.isEmpty() && map.containsKey(userMailUuid)){
+            return map.get(userMailUuid).getEmail().getValue();
         }
         return null;
     }

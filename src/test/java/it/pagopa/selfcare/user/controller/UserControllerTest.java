@@ -9,6 +9,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
+import it.pagopa.selfcare.user.controller.response.UserResponse;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
@@ -19,16 +20,13 @@ import it.pagopa.selfcare.user.service.UserService;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfLocalDate;
-import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
-import org.openapi.quarkus.user_registry_json.model.UserResource;
 
-import java.time.LocalDate;
 import java.util.*;
 
 import static io.restassured.RestAssured.given;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 
 @QuarkusTest
 @TestHTTPEndpoint(UserController.class)
@@ -97,13 +95,12 @@ class UserControllerTest {
     @Test
     @TestSecurity(user = "userJwt")
     void testGetUserInfoOk() {
-        UserResource userResource = new UserResource();
-        userResource.setId(UUID.randomUUID());
-        userResource.setFiscalCode("test");
-        userResource.setBirthDate(CertifiableFieldResourceOfLocalDate.builder().value(LocalDate.now()).build());
-        userResource.setEmail(CertifiableFieldResourceOfstring.builder().value("test@test.com").build());
-        userResource.setName(CertifiableFieldResourceOfstring.builder().value("testName").build());
-        userResource.setFamilyName(CertifiableFieldResourceOfstring.builder().value("testFamilyName").build());
+        UserResponse userResource = new UserResponse();
+        userResource.setId(UUID.randomUUID().toString());
+        userResource.setTaxCode("test");
+        userResource.setEmail("email");
+        userResource.setName("name");
+        userResource.setSurname("testFamilyName");
 
         Mockito.when(userService.retrievePerson(any(), any(), any()))
                 .thenReturn(Uni.createFrom().item(userResource));

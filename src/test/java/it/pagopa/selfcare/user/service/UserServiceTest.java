@@ -14,7 +14,9 @@ import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
-import it.pagopa.selfcare.user.controller.response.*;
+import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
+import it.pagopa.selfcare.user.controller.response.UserProductResponse;
+import it.pagopa.selfcare.user.controller.response.UserResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -22,6 +24,7 @@ import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.mapper.UserMapper;
+import it.pagopa.selfcare.user.mapper.UserMapperImpl;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import jakarta.inject.Inject;
 import org.apache.http.HttpStatus;
@@ -30,6 +33,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfLocalDate;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
@@ -38,22 +42,14 @@ import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import java.util.*;
 
-import static it.pagopa.selfcare.user.constant.CustomError.*;
 import static it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER;
-import static it.pagopa.selfcare.user.constant.CustomError.STATUS_IS_MANDATORY;
-import static it.pagopa.selfcare.user.constant.CustomError.USER_TO_UPDATE_NOT_FOUND;
+import static it.pagopa.selfcare.user.constant.CustomError.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 @QuarkusTestResource(MongoTestResource.class)
@@ -72,8 +68,9 @@ class UserServiceTest {
     @InjectMock
     private UserApi userRegistryApi;
 
-    @InjectMock
-    private UserMapper userMapper;
+
+    @Spy
+    private UserMapper userMapper = new UserMapperImpl();
 
     @InjectMock
     private ProductService productService;
@@ -94,12 +91,13 @@ class UserServiceTest {
         WorkContactResource workContactResource = new WorkContactResource();
         workContactResource.setEmail(certifiedEmail);
         userResource.setEmail(certifiedEmail);
-        userResource.setWorkContacts(Map.of("institutionId", workContactResource));
+        userResource.setWorkContacts(Map.of("userMailUuid", workContactResource));
 
         userInstitution = new UserInstitution();
         userInstitution.setId(ObjectId.get());
         userInstitution.setUserId("userId");
         userInstitution.setInstitutionId("institutionId");
+        userInstitution.setUserMailUuid("userMailUuid");
         userInstitution.setInstitutionRootName("institutionRootName");
         OnboardedProduct product = new OnboardedProduct();
         product.setProductId("test");
@@ -149,6 +147,8 @@ class UserServiceTest {
     void testRetrievePerson() {
         UserInstitution userInstitution = new UserInstitution();
         userInstitution.setUserId("test-user");
+        String userMailUuId = UUID.randomUUID().toString();
+        userInstitution.setUserMailUuid(userMailUuId);
 
         UserResource userResource = new UserResource();
         userResource.setId(UUID.randomUUID());
@@ -157,19 +157,22 @@ class UserServiceTest {
         userResource.setEmail(CertifiableFieldResourceOfstring.builder().value("test@test.com").build());
         userResource.setName(CertifiableFieldResourceOfstring.builder().value("testName").build());
         userResource.setFamilyName(CertifiableFieldResourceOfstring.builder().value("testFamilyName").build());
+        WorkContactResource workContactResource = new WorkContactResource();
+        workContactResource.setEmail(CertifiableFieldResourceOfstring.builder().value("userMail").build());
+        userResource.setWorkContacts(Map.of(userMailUuId, workContactResource));
 
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(userInstitution));
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
 
-        UniAssertSubscriber<UserResource> subscriber = userService.retrievePerson("test-user", "test-product", "test-institutionId").subscribe().withSubscriber(UniAssertSubscriber.create());
-        subscriber.assertItem(userResource);
+        UniAssertSubscriber<UserResponse> subscriber = userService.retrievePerson("test-user", "test-product", "test-institutionId").subscribe().withSubscriber(UniAssertSubscriber.create());
+        assertEquals("userMail", subscriber.getItem().getEmail());
     }
 
     @Test
     void testRetrievePersonFailsWhenUserIsNotPresent() {
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().nullItem());
 
-        UniAssertSubscriber<UserResource> subscriber = userService
+        UniAssertSubscriber<UserResponse> subscriber = userService
                 .retrievePerson("test-user", "test-product", "test-institutionId")
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
@@ -184,7 +187,7 @@ class UserServiceTest {
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(userInstitution));
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().failure(new WebClientApplicationException(HttpStatus.SC_NOT_FOUND)));
 
-        UniAssertSubscriber<UserResource> subscriber = userService.retrievePerson("test-user", "test-product", "test-institutionId").subscribe().withSubscriber(UniAssertSubscriber.create());
+        UniAssertSubscriber<UserResponse> subscriber = userService.retrievePerson("test-user", "test-product", "test-institutionId").subscribe().withSubscriber(UniAssertSubscriber.create());
 
         subscriber.assertFailedWith(ResourceNotFoundException.class);
     }
@@ -397,9 +400,6 @@ class UserServiceTest {
         UserResource userResource = mock(UserResource.class);
         when(userRegistryApi.findByIdUsingGET(any(), any()))
                 .thenReturn(Uni.createFrom().item(userResource));
-        UserNotificationResponse userNotificationResponse = mock(UserNotificationResponse.class);
-        when(userMapper.toUserNotification(any()))
-                .thenReturn(userNotificationResponse);
 
         UniAssertSubscriber<List<UserNotificationToSend>> subscriber = userService
                 .findPaginatedUserNotificationToSend(10, 0, "productId")
@@ -416,9 +416,6 @@ class UserServiceTest {
         UserResource userResource = mock(UserResource.class);
         when(userRegistryApi.findByIdUsingGET(any(), any()))
                 .thenReturn(Uni.createFrom().item(userResource));
-        UserNotificationResponse userNotificationResponse = mock(UserNotificationResponse.class);
-        when(userMapper.toUserNotification(any()))
-                .thenReturn(userNotificationResponse);
 
         UniAssertSubscriber<List<UserNotificationToSend>> subscriber = userService
                 .findPaginatedUserNotificationToSend(10, 0, null)
