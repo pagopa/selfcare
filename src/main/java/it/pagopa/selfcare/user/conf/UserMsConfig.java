@@ -19,6 +19,12 @@ public class UserMsConfig {
     @ConfigProperty(name = "user-ms.blob-storage.connection-string-product")
     String connectionStringProduct;
 
+    @ConfigProperty(name = "user-ms.blob-storage.connection-string-templates")
+    String connectionStringTemplates;
+
+    @ConfigProperty(name = "user-ms.blob-storage.container-templates")
+    String containerTemplates;
+
     @ApplicationScoped
     public ProductService productService(){
         AzureBlobClient azureBlobClient = new AzureBlobClientDefault(connectionStringProduct, containerProduct);
@@ -27,5 +33,10 @@ public class UserMsConfig {
         } catch(IllegalArgumentException e){
             throw new IllegalArgumentException("Found an issue when trying to serialize product json string!!");
         }
+    }
+
+    @ApplicationScoped
+    public AzureBlobClient azureBobClientContract(){
+        return new AzureBlobClientDefault(connectionStringTemplates, containerTemplates);
     }
 }
