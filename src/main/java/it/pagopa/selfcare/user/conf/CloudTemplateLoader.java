@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.user.conf;
 
+import com.azure.storage.blob.models.BlobProperties;
 import freemarker.cache.TemplateLoader;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -58,6 +59,10 @@ public class CloudTemplateLoader implements TemplateLoader {
 
     public LocalDateTime getLastModified(String templateName) {
         String path = this.filePath + templateName;
-        return azureBlobClient.getProperties(path).getLastModified().toLocalDateTime();
+        BlobProperties blobProperties = azureBlobClient.getProperties(path);
+        if (blobProperties != null){
+            return blobProperties.getLastModified().toLocalDateTime();
+        }
+        return LocalDateTime.now();
     }
 }
