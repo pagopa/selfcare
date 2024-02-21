@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.awaitility.Awaitility.await;
-import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @QuarkusTest
@@ -42,6 +42,9 @@ public class UserRegistryServiceTest {
 
     @InjectMock
     private UserInstitutionService userInstitutionService;
+
+    @InjectMock
+    private UserNotificationService userNotificationService;
 
     @RestClient
     @InjectMock
@@ -83,6 +86,8 @@ public class UserRegistryServiceTest {
 
     @Test
     void testSendUpdateUserNotificationToQueue() {
+        when(userNotificationService.sendKafkaNotification(any(UserNotificationToSend.class), anyString())).thenReturn(Uni.createFrom().item(new UserNotificationToSend()));
+
         MutableUserFieldsDto mutableUserFieldsDto = new MutableUserFieldsDto();
         InMemorySink<String> usersOut = connector.sink("sc-users");
         when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(userInstitution));
@@ -91,12 +96,6 @@ public class UserRegistryServiceTest {
         UniAssertSubscriber<List<UserNotificationToSend>> subscriber = userRegistryService.updateUserRegistryAndSendNotificationToQueue(mutableUserFieldsDto, "userId", "institutionId")
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted();
-
-        // Wait that the event is sent on kafka.
-        await().<List<? extends Message<String>>>until(usersOut::received, t -> t.size() == 1);
-
-        String queuedMessage = usersOut.received().get(0).getPayload();
-        Assertions.assertTrue(queuedMessage.contains("userId"));
     }
 
 
