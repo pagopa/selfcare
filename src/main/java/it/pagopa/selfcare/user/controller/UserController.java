@@ -9,6 +9,7 @@ import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserResponse;
 import it.pagopa.selfcare.user.controller.response.UsersNotificationResponse;
+import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.controller.response.product.UserProductsResponse;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.service.UserRegistryService;
@@ -21,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.jboss.resteasy.reactive.ResponseStatus;
 import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
 
@@ -83,12 +85,21 @@ public class UserController {
      * @param userId String
      * @return A uni UserDetailResponse
      */
-    @Operation(summary = "Retrieves user's information from pdv")
+    @Operation(summary = "Retrieves user's information from pdv: name, familyName, email, fiscalCode and workContacts")
     @GET
     @Path("/{id}/details")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<UserDetailResponse> getUserDetailsById(@PathParam(value = "id") String userId) {
         return userService.getUserById(userId).onItem().transform(userMapper::toUserResponse);
+    }
+
+    @Operation(summary = "Search user by fiscalCode")
+    @POST
+    @Path("/search")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<UserDetailResponse> searchUserByFiscalCode(@RequestBody SearchUserDto dto){
+        return userService.searchUserByFiscalCode(dto.getFiscalCode()).onItem().transform(userMapper::toUserResponse);
     }
 
     /**

@@ -232,6 +232,20 @@ class UserServiceTest {
     }
 
     @Test
+    void searchUserByFiscalCode(){
+        when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().item(userResource));
+        UniAssertSubscriber<UserResource> subscriber = userService
+                .searchUserByFiscalCode("userId")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        UserResource actual = subscriber.assertCompleted().awaitItem().getItem();
+        assertNotNull(actual);
+        assertEquals(userResource.getId(), actual.getId());
+
+    }
+
+    @Test
     void testRetrieveBindingsFails() {
         PanacheMock.mock(UserInfo.class);
         when(UserInfo.findByIdOptional(any()))

@@ -38,4 +38,6 @@ public interface UserService {
     Uni<Void> updateUserProductCreatedAt(String institutionId, List<String> userIds, String productId, LocalDateTime createdAt);
 
     Uni<UserResource> getUserById(String userId);
+
+    Uni<UserResource> searchUserByFiscalCode(String fiscalCode);
 }
