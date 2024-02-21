@@ -1,6 +1,8 @@
 package it.pagopa.selfcare.user.controller;
 
 import io.quarkus.security.Authenticated;
+import io.quarkus.security.identity.CurrentIdentityAssociation;
+import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
@@ -12,12 +14,16 @@ import it.pagopa.selfcare.user.controller.response.UsersNotificationResponse;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.controller.response.product.UserProductsResponse;
 import it.pagopa.selfcare.user.mapper.UserMapper;
+import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
+import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
@@ -35,6 +41,8 @@ import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList
 @RequiredArgsConstructor
 @Slf4j
 public class UserController {
+    @Inject
+    CurrentIdentityAssociation currentIdentityAssociation;
 
     private final UserService userService;
     private final UserMapper userMapper;
@@ -151,7 +159,6 @@ public class UserController {
      * Retreive all the users given a list of userIds
      *
      * @param userIds List<String></String>
-     * @return
      */
     @Operation(
             summary = "Retrieve all users given their userIds"
@@ -218,5 +225,51 @@ public class UserController {
                         .build());
     }
 
+    /**
+     * The updateUserProductStatus function is a service to update user product status.
+     *
+     * @param userId        String
+     * @param institutionId String
+     * @param productId     String
+     * @param status        OnboardedProductState
+     * @return Uni&lt;void&gt;
+     */
+    @Operation(summary = "Service to update user product status")
+    @ResponseStatus(HttpStatus.SC_NO_CONTENT)
+    @PUT
+    @Path("/{id}/institution/{institutionId}/product/{productId}/status")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Void> updateUserProductStatus(@PathParam("id") String userId,
+                                             @PathParam("institutionId") String institutionId,
+                                             @PathParam("productId") String productId,
+                                             @NotNull @QueryParam("status") OnboardedProductState status,
+                                             @Context SecurityContext ctx) {
+        return readUserIdFromToken(ctx)
+                .onItem().transformToUni(loggedUser -> userService.updateUserProductStatus(userId, institutionId, productId, status, loggedUser));
+    }
+
+    private Uni<LoggedUser> readUserIdFromToken(SecurityContext ctx) {
+        return currentIdentityAssociation.getDeferredIdentity()
+                .onItem().transformToUni(identity -> {
+                    if (ctx.getUserPrincipal() == null || !ctx.getUserPrincipal().getName().equals(identity.getPrincipal().getName())) {
+                        return Uni.createFrom().failure(new InternalServerErrorException("Principal and JsonWebToken names do not match"));
+                    }
+
+                    if (identity.getPrincipal() instanceof DefaultJWTCallerPrincipal jwtCallerPrincipal) {
+                        String uid = jwtCallerPrincipal.getClaim("uid");
+                        String familyName = jwtCallerPrincipal.getClaim("family_name");
+                        String name = jwtCallerPrincipal.getClaim("name");
+                        return Uni.createFrom().item(
+                                LoggedUser.builder()
+                                        .uid(uid)
+                                        .familyName(familyName)
+                                        .name(name)
+                                        .build()
+                        );
+                    }
+                    return Uni.createFrom().nullItem();
+                });
+    }
 }
 

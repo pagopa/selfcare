@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 public class OnboardedProductResponse {
 
     private String productId;
-    private String relationshipId;
     private String tokenId;
     private OnboardedProductState status;
     private String productRole;

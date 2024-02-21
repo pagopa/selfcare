@@ -14,7 +14,6 @@ import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.Onboa
 public class OnboardedProductFilter {
 
     private final Object productId;
-    private final Object relationshipId;
     private final Object tokenId;
     private final Object status;
     private final Object productRole;
@@ -28,7 +27,6 @@ public class OnboardedProductFilter {
     @AllArgsConstructor
     public enum OnboardedProductEnum {
         PRODUCT_ID(UserInstitution.Fields.products.name(), OnboardedProduct.Fields.productId.name()),
-        RELATIONSHIP_ID(UserInstitution.Fields.products.name(), OnboardedProduct.Fields.relationshipId.name()),
         TOKEN_ID(UserInstitution.Fields.products.name(), OnboardedProduct.Fields.tokenId.name()),
         STATUS(UserInstitution.Fields.products.name(), OnboardedProduct.Fields.status.name()),
         PRODUCT_ROLE(UserInstitution.Fields.products.name(), OnboardedProduct.Fields.productRole.name()),
@@ -52,7 +50,6 @@ public class OnboardedProductFilter {
         Map<String, Object> map = new HashMap<>();
 
         map.put(PRODUCT_ID.getChild(), productId);
-        map.put(RELATIONSHIP_ID.getChild(), relationshipId);
         map.put(TOKEN_ID.getChild(), tokenId);
         map.put(STATUS.getChild(), status);
         map.put(PRODUCT_ROLE.getChild(), productRole);

@@ -17,14 +17,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
+import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import java.util.*;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -71,6 +67,47 @@ public class UserUtils {
                 .toList();
     }
 
+    public UserNotificationToSend buildUserNotificationToSend(UserInstitution userInstitution, UserResource userResource, String productId, OnboardedProductState status) {
+        UserToNotify userToNotify = buildUserToNotify(userResource, userInstitution, status);
+        UserNotificationToSend userNotificationToSend = buildUserNotificationToSend(userInstitution, productId);
+
+        userInstitution.getProducts().stream()
+                .filter(p -> org.apache.commons.lang3.StringUtils.equals(p.getProductId(), productId))
+                .findFirst()
+                .ifPresent(onboardedProductResponse -> {
+                    userToNotify.setRole(onboardedProductResponse.getRole());
+                    userToNotify.setProductRole(onboardedProductResponse.getProductRole());
+
+                    userNotificationToSend.setUser(userToNotify);
+                    userNotificationToSend.setOnboardingTokenId(onboardedProductResponse.getTokenId());
+                    userNotificationToSend.setCreatedAt(onboardedProductResponse.getCreatedAt());
+                    userNotificationToSend.setUpdatedAt(onboardedProductResponse.getUpdatedAt());
+                });
+
+        return userNotificationToSend;
+    }
+
+    private UserNotificationToSend buildUserNotificationToSend(UserInstitution institution, String productId) {
+        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
+        userNotificationToSend.setId(institution.getUserId());
+        userNotificationToSend.setInstitutionId(institution.getInstitutionId());
+        userNotificationToSend.setProductId(productId);
+        userNotificationToSend.setEventType(QueueEvent.UPDATE);
+        return userNotificationToSend;
+
+    }
+
+    private UserToNotify buildUserToNotify(UserResource user, UserInstitution institution, OnboardedProductState status) {
+        UserToNotify userToNotify = new UserToNotify();
+        userToNotify.setUserId(institution.getUserId());
+        userToNotify.setName(Optional.ofNullable(user.getName()).map(CertifiableFieldResourceOfstring::getValue).orElse(null));
+        userToNotify.setFamilyName(Optional.ofNullable(user.getFamilyName()).map(CertifiableFieldResourceOfstring::getValue).orElse(null));
+        userToNotify.setEmail(Optional.ofNullable(user.getEmail()).map(CertifiableFieldResourceOfstring::getValue).orElse(null));
+        userToNotify.setRelationshipStatus(status);
+        return userToNotify;
+
+    }
+
     private String idBuilder(String userId, String institutionId, String productId, String productRole){
         return String.format("%s_%s_%s_%s", userId, institutionId, productId, productRole);
     }
@@ -114,7 +151,7 @@ public class UserUtils {
     public List<OnboardedProductState> convertStatesToOnboardedProductStates(String[] states) {
         return Arrays.stream(states)
                 .map(OnboardedProductState::valueOf)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public UserInfo filterInstitutionRoles(UserInfo userInfo, String[] states, String institutionId) {
