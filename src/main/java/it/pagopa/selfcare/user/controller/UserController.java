@@ -5,6 +5,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserResponse;
 import it.pagopa.selfcare.user.controller.response.UsersNotificationResponse;
@@ -75,6 +76,19 @@ public class UserController {
                                                          @QueryParam(value = "states") String[] states) {
         return userService.retrieveBindings(institutionId, userId, states)
                 .map(userMapper::toUserProductsResponse);
+    }
+
+    /**
+     * getUserById function returns all the information of a user retrieved from pdv given the userId
+     * @param userId String
+     * @return A uni UserDetailResponse
+     */
+    @Operation(summary = "Retrieves user's information from pdv")
+    @GET
+    @Path("/{id}/details")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<UserDetailResponse> getUserDetailsById(@PathParam(value = "id") String userId) {
+        return userService.getUserById(userId).onItem().transform(userMapper::toUserResponse);
     }
 
     /**
@@ -161,24 +175,22 @@ public class UserController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Multi<UserInstitutionResponse> retrievePaginatedAndFilteredUser(@QueryParam(value = "institutionId") String institutionId,
-                                                                       @QueryParam(value = "userId") String userId,
-                                                                       @QueryParam(value = "roles") List<PartyRole> roles,
-                                                                       @QueryParam(value = "states") List<String> states,
-                                                                       @QueryParam(value = "products") List<String> products,
-                                                                       @QueryParam(value = "productRoles") List<String> productRoles,
-                                                                       @QueryParam(value = "page") @DefaultValue("0") Integer page,
-                                                                       @QueryParam(value = "size") @DefaultValue("100") Integer size) {
+                                                                           @QueryParam(value = "userId") String userId,
+                                                                           @QueryParam(value = "roles") List<PartyRole> roles,
+                                                                           @QueryParam(value = "states") List<String> states,
+                                                                           @QueryParam(value = "products") List<String> products,
+                                                                           @QueryParam(value = "productRoles") List<String> productRoles,
+                                                                           @QueryParam(value = "page") @DefaultValue("0") Integer page,
+                                                                           @QueryParam(value = "size") @DefaultValue("100") Integer size) {
         return userService.findPaginatedUserInstitutions(institutionId, userId, roles, states, products, productRoles, page, size);
     }
 
     /**
      * The updateUserRegistryAndSendNotification function is a service that sends notification when user data get's updated.
      *
-     * @param userId String
+     * @param userId        String
      * @param institutionId String
-     *
      * @return Uni&lt;response&gt;
-     *
      */
     @Operation(summary = "Service to update user in user-registry and send notification when user data gets updated")
     @ResponseStatus(HttpStatus.SC_NO_CONTENT)

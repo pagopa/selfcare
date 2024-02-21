@@ -20,7 +20,10 @@ import it.pagopa.selfcare.user.service.UserService;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
+import org.openapi.quarkus.user_registry_json.model.UserResource;
+import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.util.*;
 
@@ -156,6 +159,26 @@ class UserControllerTest {
                 .put("/{id}/status")
                 .then()
                 .statusCode(204);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void getUserDetailsById(){
+        UserResource userResource = new UserResource();
+        userResource.setEmail(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email"));
+        userResource.setName(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "name"));
+        userResource.setFamilyName(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "familyName"));
+        userResource.setFiscalCode("fiscalCode");
+        userResource.setWorkContacts(Map.of("userMailUuid", new WorkContactResource(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email"))));
+
+        Mockito.when(userService.getUserById(any())).thenReturn(Uni.createFrom().item(userResource));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .get("/test_user_id/details")
+                .then()
+                .statusCode(200);
     }
 
     @Test

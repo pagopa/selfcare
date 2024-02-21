@@ -122,6 +122,20 @@ class UserServiceTest {
         assertEquals("test@test.it", actual.get(0));
     }
 
+    @Test
+    void getUserById(){
+        when(userRegistryApi.findByIdUsingGET(any(), any()))
+                .thenReturn(Uni.createFrom().item(userResource));
+        UniAssertSubscriber<UserResource> subscriber = userService
+                .getUserById("userId")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        UserResource actual = subscriber.assertCompleted().awaitItem().getItem();
+        assertNotNull(actual);
+        assertEquals(userResource.getId(), actual.getId());
+    }
+
 
     @Test
     void getUserProductsByInstitutionTest() {

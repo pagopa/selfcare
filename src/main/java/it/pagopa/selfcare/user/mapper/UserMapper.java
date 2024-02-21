@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.user.mapper;
 
 import it.pagopa.selfcare.user.controller.response.OnboardedProductResponse;
+import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
 import it.pagopa.selfcare.user.controller.response.UserNotificationResponse;
 import it.pagopa.selfcare.user.controller.response.UserResponse;
 import it.pagopa.selfcare.user.controller.response.product.InstitutionProducts;
@@ -29,6 +30,8 @@ public interface UserMapper {
     default String fromCertifiabletoString(CertifiableFieldResourceOfstring certifiableFieldResourceOfstring) {
         return certifiableFieldResourceOfstring.getValue();
     }
+
+    UserDetailResponse toUserResponse(UserResource userResource);
 
     @Named("retrieveMailFromWorkContacts")
     default String retrieveMailFromWorkContacts(Map<String, WorkContactResource> map, String userMailUuid){
