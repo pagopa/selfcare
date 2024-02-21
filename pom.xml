@@ -162,6 +162,15 @@
       <artifactId>quarkus-freemarker</artifactId>
       <version>1.0.0</version>
     </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-mailer</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>ses</artifactId>
+      <version>2.20.88</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
