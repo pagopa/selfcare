@@ -11,7 +11,6 @@ import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
-import it.pagopa.selfcare.user.util.GeneralUtils;
 import it.pagopa.selfcare.user.util.QueryUtils;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -121,6 +120,19 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
         return runUserInstitutionFindQuery(query, null).list();
     }
+
+    @Override
+    public Uni<UserInstitution> findByUserIdAndInstitutionId(String userId, String institutionId) {
+        Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
+        Document query = queryUtils.buildQueryDocument(userInstitutionFilterMap, USER_INSTITUTION_COLLECTION);
+        return runUserInstitutionFindQuery(query, null).firstResult();
+    }
+
+    @Override
+    public Uni<Void> persistOrUpdate(UserInstitution... userInstitution) {
+        return UserInstitution.persistOrUpdate(userInstitution);
+    }
+
 
     private boolean productFilterIsEmpty(Map<String, Object> filterMap) {
         return !filterMap.containsKey(PRODUCT_ID.getChild())

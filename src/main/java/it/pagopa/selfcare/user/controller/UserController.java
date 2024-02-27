@@ -7,6 +7,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserResponse;
@@ -18,6 +19,7 @@ import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
 import jakarta.inject.Inject;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -73,7 +75,8 @@ public class UserController {
     public Uni<UserResponse> getUserInfo(@PathParam(value = "id") String userId,
                                          @QueryParam(value = "institutionId") String institutionId,
                                          @QueryParam(value = "productId") String productId) {
-        return userService.retrievePerson(userId, productId, institutionId);
+        return userService.retrievePerson(userId, productId, institutionId)
+                .map(user -> userMapper.toUserResponse(user, institutionId));
     }
 
     @Operation(summary = "Retrieves products info and role which the user is enabled")
@@ -247,6 +250,16 @@ public class UserController {
                                              @Context SecurityContext ctx) {
         return readUserIdFromToken(ctx)
                 .onItem().transformToUni(loggedUser -> userService.updateUserProductStatus(userId, institutionId, productId, status, loggedUser));
+    }
+
+    @Operation(summary = "Create or Update user")
+    @ResponseStatus(HttpStatus.SC_NO_CONTENT)
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> createOrUpdate(@Valid CreateUserDto userDto) {
+        return userService.createOrUpdateUser(userDto)
+                .map(ignore -> Response.status(HttpStatus.SC_NO_CONTENT).build());
     }
 
     private Uni<LoggedUser> readUserIdFromToken(SecurityContext ctx) {

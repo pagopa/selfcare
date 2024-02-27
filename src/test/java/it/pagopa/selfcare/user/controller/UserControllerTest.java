@@ -8,8 +8,8 @@ import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
-import it.pagopa.selfcare.user.controller.response.UserResponse;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitutionRole;
@@ -41,7 +41,7 @@ class UserControllerTest {
     @InjectMock
     private UserRegistryService userRegistryService;
 
-    private static UserResource userResource;
+    private static final UserResource userResource;
 
     static {
         userResource = new UserResource();
@@ -111,12 +111,9 @@ class UserControllerTest {
     @Test
     @TestSecurity(user = "userJwt")
     void testGetUserInfoOk() {
-        UserResponse userResource = new UserResponse();
-        userResource.setId(UUID.randomUUID().toString());
-        userResource.setTaxCode("test");
-        userResource.setEmail("email");
-        userResource.setName("name");
-        userResource.setSurname("testFamilyName");
+        UserResource userResource = new UserResource();
+        userResource.setId(UUID.randomUUID());
+        userResource.setFiscalCode("test");
 
         when(userService.retrievePerson(any(), any(), any()))
                 .thenReturn(Uni.createFrom().item(userResource));
@@ -236,7 +233,7 @@ class UserControllerTest {
         var user = "user1";
         var institution = "institution1";
         var product = "product1";
-        when(userService.deleteUserInstitutionProduct("user1","institution1", "product1"))
+        when(userService.deleteUserInstitutionProduct("user1", "institution1", "product1"))
                 .thenThrow(InvalidRequestException.class);
 
         given()
@@ -488,5 +485,82 @@ class UserControllerTest {
                 .statusCode(HttpStatus.SC_NO_CONTENT);
     }
 
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testCreateOrUpdateUser() {
+        // Prepare test data
+        CreateUserDto userDto = buildCreateUserDto();
 
+
+        // Mock the userService.createOrUpdateUser method
+        when(userService.createOrUpdateUser(any(CreateUserDto.class)))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        // Perform the API call
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .body(userDto)
+                .post("/")
+                .then()
+                .statusCode(204);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testCreateOrUpdateUserWithInvalidBody() {
+        // Prepare test data
+        CreateUserDto userDto = new CreateUserDto();
+        // Set userDto properties
+
+        // Mock the userService.createOrUpdateUser method
+        when(userService.createOrUpdateUser(any(CreateUserDto.class)))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        // Perform the API call
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .body(userDto)
+                .post("/")
+                .then()
+                .statusCode(400);
+    }
+
+    @Test
+    void testCreateOrUpdateUserNotAuthorized() {
+        // Prepare test data
+        CreateUserDto userDto = new CreateUserDto();
+        // Set userDto properties
+
+        // Perform the API call
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .body(userDto)
+                .post("/")
+                .then()
+                .statusCode(401);
+    }
+
+    private CreateUserDto buildCreateUserDto() {
+        CreateUserDto userDto = new CreateUserDto();
+        userDto.setInstitutionId("institutionId");
+        userDto.setInstitutionDescription("institutionDescription");
+        userDto.setInstitutionRootName("institutionRootName");
+        CreateUserDto.User user = new CreateUserDto.User();
+        user.setBirthDate("birthDate");
+        user.setFamilyName("familyName");
+        user.setFiscalCode("fiscalCode");
+        user.setName("name");
+        user.setInstitutionEmail("institutionEmail");
+        userDto.setUser(user);
+        CreateUserDto.Product product = new CreateUserDto.Product();
+        product.setProductId("productId");
+        product.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER);
+        product.setTokenId("tokenId");
+        product.setProductRole("productRole");
+        userDto.setProduct(product);
+        return userDto;
+    }
 }

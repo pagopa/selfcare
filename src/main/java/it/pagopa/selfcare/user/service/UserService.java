@@ -4,10 +4,10 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
-import it.pagopa.selfcare.user.controller.response.UserResponse;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
@@ -21,7 +21,7 @@ public interface UserService {
 
     Multi<UserProductResponse> getUserProductsByInstitution(String institutionId);
 
-    Uni<UserResponse> retrievePerson(String userId, String productId, String institutionId);
+    Uni<UserResource> retrievePerson(String userId, String productId, String institutionId);
 
     Uni<UserInfo> retrieveBindings(String institutionId, String userId, String[] states);
 
@@ -36,6 +36,7 @@ public interface UserService {
     Uni<List<UserNotificationToSend>> findPaginatedUserNotificationToSend(Integer size, Integer page, String productId);
 
     Uni<List<UserInstitutionResponse>> findAllByIds(List<String> userIds);
+
     Uni<Void> updateUserProductCreatedAt(String institutionId, List<String> userIds, String productId, LocalDateTime createdAt);
 
     Uni<UserResource> getUserById(String userId);
@@ -44,4 +45,5 @@ public interface UserService {
 
     Uni<Void> updateUserProductStatus(String userId, String institutionId, String productId, OnboardedProductState status, LoggedUser loggedUser);
 
+    Uni<Void> createOrUpdateUser(CreateUserDto userDto);
 }

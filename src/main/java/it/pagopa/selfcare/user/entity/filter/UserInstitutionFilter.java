@@ -15,12 +15,14 @@ public class UserInstitutionFilter {
 
     private final Object userId;
     private final Object institutionId;
+    private final Object userMailUuid;
     private final Object institutionDescription;
 
     @Getter
     @AllArgsConstructor
     public enum UserInstitutionFilterEnum{
         USER_ID(UserInstitution.Fields.userId.name()),
+        USER_MAIL_ID(UserInstitution.Fields.userMailUuid.name()),
         INSTITUTION_ID(UserInstitution.Fields.institutionId.name()),
         INSTITUTION_DESCRIPTION(UserInstitution.Fields.institutionDescription.name());
 
@@ -31,6 +33,7 @@ public class UserInstitutionFilter {
         Map<String, Object> map = new HashMap<>();
 
         map.put(USER_ID.getDescription(), userId);
+        map.put(USER_MAIL_ID.getDescription(), userMailUuid);
         map.put(INSTITUTION_ID.getDescription(), institutionId);
         map.put(INSTITUTION_DESCRIPTION.getDescription(), institutionDescription);
 

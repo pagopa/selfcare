@@ -7,22 +7,28 @@ import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
 import it.pagopa.selfcare.product.service.ProductService;
-import it.pagopa.selfcare.user.entity.UserInfo;
-import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
+import it.pagopa.selfcare.user.entity.UserInfo;
+import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
+import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @QuarkusTest
@@ -144,4 +150,79 @@ class UserUtilTest {
         Assertions.assertNull(filteredUserInfo.getInstitutions());
     }
 
+    // Start test generated with Copilot
+
+    @Test
+    void testBuildWorkContact() {
+        String mail = "test@example.com";
+        WorkContactResource workContact = UserUtils.buildWorkContact(mail);
+
+        assertNotNull(workContact);
+        assertEquals(mail, workContact.getEmail().getValue());
+        assertEquals(CertifiableFieldResourceOfstring.CertificationEnum.NONE, workContact.getEmail().getCertification());
+    }
+
+    @Test
+    void testIsUserNotFoundExceptionOnUserRegistry() {
+        // Prepare
+        WebApplicationException webApplicationException = Mockito.mock(WebApplicationException.class);
+        Response response = mock(Response.class);
+        Mockito.when(webApplicationException.getResponse()).thenReturn(response);
+        Mockito.when(response.getStatus()).thenReturn(HttpStatus.SC_NOT_FOUND);
+
+        // Execute
+        boolean result = UserUtils.isUserNotFoundExceptionOnUserRegistry(webApplicationException);
+
+        // Verify
+        Assertions.assertTrue(result);
+    }
+
+    @Test
+    void testIsUserNotFoundExceptionOnUserRegistry_NotFoundStatus() {
+        // Prepare
+        WebApplicationException webApplicationException = Mockito.mock(WebApplicationException.class);
+        Response response = mock(Response.class);
+        Mockito.when(webApplicationException.getResponse()).thenReturn(response);
+        Mockito.when(response.getStatus()).thenReturn(HttpStatus.SC_BAD_REQUEST);
+
+        // Execute
+        boolean result = UserUtils.isUserNotFoundExceptionOnUserRegistry(webApplicationException);
+
+        // Verify
+        Assertions.assertFalse(result);
+    }
+
+    @Test
+    void testIsUserNotFoundExceptionOnUserRegistry_NotWebApplicationException() {
+        // Prepare
+        Throwable throwable = new Throwable();
+
+        // Execute
+        boolean result = UserUtils.isUserNotFoundExceptionOnUserRegistry(throwable);
+
+        // Verify
+        Assertions.assertFalse(result);
+    }
+
+    @Test
+    void testGetMailUuidFromMail() {
+        // Prepare test data
+        String email = "test@example.com";
+        Map<String, WorkContactResource> workContacts = new HashMap<>();
+        WorkContactResource workContact1 = new WorkContactResource();
+        workContact1.setEmail(new CertifiableFieldResourceOfstring());
+        workContact1.getEmail().setValue(email);
+        workContacts.put(MAIL_ID_PREFIX + "mail1", workContact1);
+        WorkContactResource workContact2 = new WorkContactResource();
+        workContact2.setEmail(new CertifiableFieldResourceOfstring());
+        workContact2.getEmail().setValue("another@example.com");
+        workContacts.put("mail2", workContact2);
+
+        // Execute the method
+        Optional<String> result = userUtils.getMailUuidFromMail(workContacts, email);
+
+        // Verify the result
+        assertTrue(result.isPresent());
+        assertEquals(MAIL_ID_PREFIX + "mail1", result.get());
+    }
 }

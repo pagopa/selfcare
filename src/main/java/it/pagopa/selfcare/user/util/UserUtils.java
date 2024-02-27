@@ -12,6 +12,7 @@ import it.pagopa.selfcare.user.mapper.NotificationMapper;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.notification.UserToNotify;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.WebApplicationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
@@ -19,8 +20,15 @@ import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
+import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.util.*;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -39,17 +47,17 @@ public class UserUtils {
     }
 
     public void checkProductRole(String productId, PartyRole role, String productRole) {
-        if(StringUtils.isNotBlank(productRole) && StringUtils.isNotBlank(productId)) {
+        if (StringUtils.isNotBlank(productRole) && StringUtils.isNotBlank(productId)) {
             try {
                 productService.validateProductRole(productId, productRole, role);
-            }catch (IllegalArgumentException e){
+            } catch (IllegalArgumentException e) {
                 throw new InvalidRequestException(e.getMessage());
             }
         }
     }
 
     public static boolean checkIfNotFoundException(Throwable throwable) {
-        if(throwable instanceof WebClientApplicationException wex) {
+        if (throwable instanceof WebClientApplicationException wex) {
             return wex.getResponse().getStatus() == HttpStatus.SC_NOT_FOUND;
         }
 
@@ -108,14 +116,15 @@ public class UserUtils {
 
     }
 
-    private String idBuilder(String userId, String institutionId, String productId, String productRole){
+    private String idBuilder(String userId, String institutionId, String productId, String productRole) {
         return String.format("%s_%s_%s_%s", userId, institutionId, productId, productRole);
     }
 
     public List<UserNotificationToSend> buildUsersNotificationResponse(UserInstitution userInstitution, UserResource userResource, String productId) {
         return userInstitution.getProducts().stream()
+                .filter(Objects::nonNull)
                 .map(onboardedProduct -> {
-                    if (StringUtils.isBlank(productId) ||  productId.equals(onboardedProduct.getProductId()) && VALID_USER_PRODUCT_STATES_FOR_NOTIFICATION.contains(onboardedProduct.getStatus().name())) {
+                    if (StringUtils.isBlank(productId) || productId.equals(onboardedProduct.getProductId()) && VALID_USER_PRODUCT_STATES_FOR_NOTIFICATION.contains(onboardedProduct.getStatus().name())) {
                         return constructUserNotificationToSend(userInstitution, userResource, onboardedProduct);
                     }
                     return null;
@@ -125,8 +134,8 @@ public class UserUtils {
     }
 
     private UserNotificationToSend constructUserNotificationToSend(UserInstitution userInstitution, UserResource userResource, OnboardedProduct onboardedProduct) {
-         UserToNotify userToNotify = notificationMapper.toUserNotify(userResource, onboardedProduct, userInstitution.getUserId());
-         return notificationMapper.setNotificationDetailsFromOnboardedProduct(userToNotify, onboardedProduct, userInstitution.getInstitutionId());
+        UserToNotify userToNotify = notificationMapper.toUserNotify(userResource, onboardedProduct, userInstitution.getUserId());
+        return notificationMapper.setNotificationDetailsFromOnboardedProduct(userToNotify, onboardedProduct, userInstitution.getInstitutionId());
     }
 
     /**
@@ -142,9 +151,8 @@ public class UserUtils {
                 .map(this::convertStatesToOnboardedProductStates)
                 .orElse(null);
 
-        if(Objects.nonNull(userInstitution.getProducts())) {
-            userInstitution.getProducts().removeIf(onboardedProduct -> !Objects.isNull(onboardedProductStates) && !onboardedProductStates.contains(onboardedProduct.getStatus()));
-        }
+        userInstitution.getProducts().removeIf(onboardedProduct -> !Objects.isNull(onboardedProductStates) && !onboardedProductStates.contains(onboardedProduct.getStatus()));
+
         return userInstitution;
     }
 
@@ -165,5 +173,25 @@ public class UserUtils {
             );
         }
         return userInfo;
+    }
+
+    public static WorkContactResource buildWorkContact(String mail) {
+        return WorkContactResource.builder()
+                .email(new CertifiableFieldResourceOfstring(
+                        CertifiableFieldResourceOfstring.CertificationEnum.NONE,
+                        mail)
+                ).build();
+    }
+
+    public static boolean isUserNotFoundExceptionOnUserRegistry(Throwable fail) {
+        return fail instanceof WebApplicationException webApplicationException && webApplicationException.getResponse().getStatus() == HttpStatus.SC_NOT_FOUND;
+    }
+
+    public Optional<String> getMailUuidFromMail(Map<String, WorkContactResource> workContacts, String email) {
+        return workContacts.entrySet().stream()
+                .filter(entry -> entry.getKey().startsWith(MAIL_ID_PREFIX) && entry.getValue().getEmail() != null
+                        && org.apache.commons.lang3.StringUtils.equals(entry.getValue().getEmail().getValue(), email))
+                .map(Map.Entry::getKey)
+                .findFirst();
     }
 }

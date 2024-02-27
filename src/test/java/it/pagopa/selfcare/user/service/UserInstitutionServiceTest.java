@@ -28,8 +28,7 @@ import java.util.Map;
 
 import static io.smallrye.common.constraint.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @QuarkusTest
@@ -120,7 +119,7 @@ class UserInstitutionServiceTest {
         PanacheMock.mock(UserInstitution.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
         when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitution));
-        when(UserInstitution.find((Document) any(), any()))
+        when(UserInstitution.find(any(Document.class), eq(null)))
                 .thenReturn(query);
         when(query.page(anyInt(), anyInt())).thenReturn(query);
         when(query.stream()).thenReturn(Multi.createFrom().item(userInstitution));
@@ -208,6 +207,37 @@ class UserInstitutionServiceTest {
         UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserCreatedAtByInstitutionAndProduct(institutionId, List.of(userId), productId, LocalDateTime.now())
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted().assertItem(1L);
+    }
+
+    @Test
+    void findByUserIdAndInstitutionId() {
+        final String userId = "userId";
+        final String institutionId = "institutionId";
+        UserInstitution userInstitution = createDummyUserInstitution();
+        PanacheMock.mock(UserInstitution.class);
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitution));
+        when(UserInstitution.find(any(Document.class), eq(null)))
+                .thenReturn(query);
+        UniAssertSubscriber<UserInstitution> subscriber = userInstitutionService.findByUserIdAndInstitutionId(userId, institutionId)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        UserInstitution actual = subscriber.assertCompleted().awaitItem().getItem();
+        Assertions.assertNotNull(actual);
+    }
+
+    @Test
+    void findByUserIdAndInstitutionId_WithNoResult() {
+        final String userId = "userId";
+        final String institutionId = "institutionId";
+        PanacheMock.mock(UserInstitution.class);
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(query.firstResult()).thenReturn(Uni.createFrom().nullItem());
+        when(UserInstitution.find(any(Document.class), eq(null)))
+                .thenReturn(query);
+        UniAssertSubscriber<UserInstitution> subscriber = userInstitutionService.findByUserIdAndInstitutionId(userId, institutionId)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        UserInstitution actual = subscriber.assertCompleted().awaitItem().getItem();
+        Assertions.assertNull(actual);
     }
 
     private UserInstitution createDummyUserInstitution() {
