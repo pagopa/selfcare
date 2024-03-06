@@ -1,8 +1,5 @@
 package it.pagopa.selfcare.user.service;
 
-import io.quarkus.mailer.Mail;
-import io.quarkus.mailer.Mailer;
-import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
@@ -16,11 +13,11 @@ import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.SendEmailRequest;
 import software.amazon.awssdk.services.ses.model.SendEmailResponse;
 
-
 import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 @TestProfile(AwsMailServiceImplTest.AwsProfile.class)
@@ -52,9 +49,11 @@ class AwsMailServiceImplTest {
         when(sesClient.sendEmail(any(SendEmailRequest.class)))
                 .thenReturn(SendEmailResponse.builder().build());
 
-        awsMailService.sendMail("email", "content", "subject")
+        UniAssertSubscriber<Void> subscriber = awsMailService.sendMail("email", "content", "subject")
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.awaitItem();
 
         ArgumentCaptor<SendEmailRequest> mailArgumentCaptor = ArgumentCaptor.forClass(SendEmailRequest.class);
         Mockito.verify(sesClient, Mockito.times(1))

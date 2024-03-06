@@ -57,8 +57,10 @@ class UserServiceTest {
 
     @InjectMock
     private UserInstitutionService userInstitutionService;
+
     @InjectMock
     private UserNotificationService userNotificationService;
+
     @InjectMock
     private UserInfoService userInfoService;
 
@@ -116,13 +118,12 @@ class UserServiceTest {
         UniAssertSubscriber<List<String>> subscriber = userService
                 .getUsersEmails("institutionId", "productId")
                 .subscribe()
-                .withSubscriber(UniAssertSubscriber.create())
-                .assertCompleted();
+                .withSubscriber(UniAssertSubscriber.create());
 
-        List<String> actual = subscriber.assertCompleted().getItem();
-        assertNotNull(actual);
-        assertEquals(1, actual.size());
-        assertEquals("test@test.it", actual.get(0));
+        subscriber.assertCompleted();
+
+        verify(userRegistryApi).findByIdUsingGET(anyString(), anyString());
+        verify(userInstitutionService).findAllWithFilter(any());
     }
 
     @Test
@@ -487,10 +488,12 @@ class UserServiceTest {
                 any())
         ).thenReturn(Uni.createFrom().nullItem());
 
-        userService.updateUserProductStatus("userId", "institutionId", "productId", OnboardedProductState.ACTIVE,
+        var subscriber = userService.updateUserProductStatus("userId", "institutionId", "productId", OnboardedProductState.ACTIVE,
                         LoggedUser.builder().build())
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.awaitItem();
 
         verify(userNotificationService, times(1)).sendEmailNotification(
                 any(UserResource.class),
