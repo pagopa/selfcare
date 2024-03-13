@@ -1,5 +1,8 @@
 package it.pagopa.selfcare.user.util;
 
+import io.quarkus.security.identity.CurrentIdentityAssociation;
+import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
+import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
@@ -9,10 +12,14 @@ import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.mapper.NotificationMapper;
+import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.notification.UserToNotify;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.SecurityContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
@@ -34,6 +41,9 @@ import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
 @RequiredArgsConstructor
 @Slf4j
 public class UserUtils {
+
+    @Inject
+    CurrentIdentityAssociation currentIdentityAssociation;
 
     private final ProductService productService;
     private final NotificationMapper notificationMapper;
@@ -194,4 +204,28 @@ public class UserUtils {
                 .map(Map.Entry::getKey)
                 .findFirst();
     }
+
+    public Uni<LoggedUser> readUserIdFromToken(SecurityContext ctx) {
+        return currentIdentityAssociation.getDeferredIdentity()
+                .onItem().transformToUni(identity -> {
+                    if (ctx.getUserPrincipal() == null || !ctx.getUserPrincipal().getName().equals(identity.getPrincipal().getName())) {
+                        return Uni.createFrom().failure(new InternalServerErrorException("Principal and JsonWebToken names do not match"));
+                    }
+
+                    if (identity.getPrincipal() instanceof DefaultJWTCallerPrincipal jwtCallerPrincipal) {
+                        String uid = jwtCallerPrincipal.getClaim("uid");
+                        String familyName = jwtCallerPrincipal.getClaim("family_name");
+                        String name = jwtCallerPrincipal.getClaim("name");
+                        return Uni.createFrom().item(
+                                LoggedUser.builder()
+                                        .uid(uid)
+                                        .familyName(familyName)
+                                        .name(name)
+                                        .build()
+                        );
+                    }
+                    return Uni.createFrom().nullItem();
+                });
+    }
+
 }
