@@ -7,6 +7,7 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
+import it.pagopa.selfcare.user.controller.response.UserDataResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.UserInfo;
@@ -35,9 +36,12 @@ import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Stream;
 
-import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
+import static it.pagopa.selfcare.user.constant.CollectionUtil.*;
 import static it.pagopa.selfcare.user.constant.CustomError.*;
+import static it.pagopa.selfcare.user.constant.OnboardedProductState.ACTIVE;
+import static it.pagopa.selfcare.user.constant.OnboardedProductState.PENDING;
 import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
 import static it.pagopa.selfcare.user.util.UserUtils.VALID_USER_PRODUCT_STATES_FOR_NOTIFICATION;
 
@@ -355,5 +359,43 @@ public class UserServiceImpl implements UserService {
         userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));
 
         return userInstitution;
+    }
+
+    /**
+     * The retrieveUsers function is used to retrieve a list of users from the database and userRegistry.
+     * The function takes in an userId, institutionId, personId, roles, states, products and productRoles as parameters.
+     * It then calls the retrieveAdminUserInstitution function with these parameters which retrieves an UserInstitution document associated with an logged user (admin)
+     * If this userInstitution object is not null it transform the item into either the personId or if this is null into just the uuid of that particular user (userUuid).
+     * After this, the retrieveFilteredUserInstitutions method retrieves user institutions based on a variety of filters, including the previously retrieved
+     * user ID, institution ID, roles, states, products, and product roles.
+     * The function then retrieves the users by ID from userRegistry and maps for each element the userInstitution and userResource to a UserDataResponse object.
+     */
+    @Override
+    public Multi<UserDataResponse> retrieveUsersData(String institutionId, String personId, List<String> roles, List<String> states, List<String> products, List<String> productRoles, String userUuid) {
+        return retrieveAdminUserInstitution(institutionId, userUuid)
+                .onItem().ifNotNull().invoke(userInstitution -> log.info("admin userInstitution found: {}", userInstitution))
+                .onItem().transform(userInstitution -> userInstitution == null ? userUuid : personId)
+                .onItem().invoke(userId -> log.info("userId to retrieve: {}", userId))
+                .onItem().transformToMulti(user -> retrieveFilteredUserInstitutions(user, institutionId, roles, states, products, productRoles))
+                .onItem().invoke(userInstitution -> log.info("userInstitution found: {}", userInstitution))
+                .onItem().transformToUniAndMerge(userInstitution ->
+                        this.getUserById(userInstitution.getUserId())
+                                .map(userResource -> userMapper.toUserDataResponse(userInstitution, userResource)));
+    }
+
+    private Multi<UserInstitution> retrieveFilteredUserInstitutions(String user, String institutionId, List<String> roles, List<String> states, List<String> products, List<String> productRoles) {
+        var institutionFilters = UserInstitutionFilter.builder().userId(user).institutionId(institutionId).build().constructMap();
+        var prodFilter = OnboardedProductFilter.builder().role(roles).status(states).productRole(productRoles).productId(products).build().constructMap();
+        var queryParam = userUtils.retrieveMapForFilter(institutionFilters, prodFilter);
+        return userInstitutionService.findAllWithFilter(queryParam);
+    }
+
+    private Uni<UserInstitution> retrieveAdminUserInstitution(String institutionId, String userUuid) {
+        List<String> adminPartyRole = Arrays.stream(PartyRole.values()).filter(role -> role != PartyRole.OPERATOR).map(Enum::name).toList();
+        List<String> validStates = Stream.of(ACTIVE, PENDING).map(Enum::name).toList();
+        var userInstitutionFilters = UserInstitutionFilter.builder().userId(userUuid).institutionId(institutionId).build().constructMap();
+        var productFilters = OnboardedProductFilter.builder().role(adminPartyRole).status(validStates).build().constructMap();
+        Map<String, Object> queryParameter = userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters);
+        return userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter);
     }
 }

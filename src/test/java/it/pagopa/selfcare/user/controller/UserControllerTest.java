@@ -9,6 +9,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
+import it.pagopa.selfcare.user.controller.response.UserDataResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.entity.UserInfo;
@@ -542,6 +543,21 @@ class UserControllerTest {
                 .then()
                 .statusCode(401);
     }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void retrieveUsers() {
+        when(userService.retrieveUsersData("test_institutionId",  null, null, null, null, null, "test_userId"))
+                .thenReturn(Multi.createFrom().items(new UserDataResponse()));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .get("/test_userId/institution/test_institutionId")
+                .then()
+                .statusCode(200);
+    }
+
 
     private CreateUserDto buildCreateUserDto() {
         CreateUserDto userDto = new CreateUserDto();

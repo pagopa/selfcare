@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
+import java.util.Map;
 
 @Data
 @Valid
@@ -24,4 +25,5 @@ public class UserResponse {
     @NotBlank
     private String surname;
     private String email;
+    private Map<String, String> workContacts;
 }
