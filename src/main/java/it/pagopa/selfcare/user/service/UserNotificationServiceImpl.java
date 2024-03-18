@@ -6,9 +6,9 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.unchecked.Unchecked;
-import io.smallrye.reactive.messaging.MutinyEmitter;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
+import it.pagopa.selfcare.user.client.eventhub.EventHubRestClient;
 import it.pagopa.selfcare.user.conf.CloudTemplateLoader;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
@@ -19,8 +19,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Message;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.openapi.quarkus.user_registry_json.model.UserResource;
+import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -29,9 +30,6 @@ import java.util.Optional;
 
 import static it.pagopa.selfcare.user.constant.TemplateMailConstant.*;
 
-import org.openapi.quarkus.user_registry_json.model.UserResource;
-import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
-
 
 @Slf4j
 @ApplicationScoped
@@ -39,10 +37,9 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
     public static final String ERROR_DURING_SEND_DATA_LAKE_NOTIFICATION_FOR_USER = "error during send dataLake notification for user {}";
 
+    @RestClient
     @Inject
-    @Channel("sc-users")
-    MutinyEmitter<String> usersEmitter;
-
+    private EventHubRestClient eventHubRestClient;
     private final ObjectMapper objectMapper;
 
     private final MailService mailService;
@@ -67,8 +64,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
     @Override
     public Uni<UserNotificationToSend> sendKafkaNotification(UserNotificationToSend userNotificationToSend, String userId) {
-        String message = convertNotificationToJson(userNotificationToSend);
-        return usersEmitter.sendMessage(Message.of(message))
+        return eventHubRestClient.sendMessage(userNotificationToSend)
                 .onItem().invoke(() -> log.info("sent dataLake notification for user : {}", userId))
                 .onFailure().invoke(throwable -> log.warn("error during send dataLake notification for user {}: {} ", userId, throwable.getMessage(), throwable))
                 .replaceWith(userNotificationToSend);

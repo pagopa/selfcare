@@ -5,23 +5,20 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
-import io.smallrye.reactive.messaging.memory.InMemoryConnector;
-import io.smallrye.reactive.messaging.memory.InMemorySink;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
+import it.pagopa.selfcare.user.client.eventhub.EventHubRestClient;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
-import org.eclipse.microprofile.reactive.messaging.Message;
-import org.junit.jupiter.api.Assertions;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
@@ -32,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -44,9 +40,9 @@ class UserNotificationServiceImplTest {
     @InjectMock
     private MailService mailService;
 
-    @Inject
-    @Any
-    InMemoryConnector connector;
+    @RestClient
+    @InjectMock
+    private EventHubRestClient eventHubRestClient;
 
     private static final UserResource userResource;
     private static final UserInstitution userInstitution;
@@ -155,19 +151,17 @@ class UserNotificationServiceImplTest {
 
     @Test
     void testSendKafkaNotification(){
-        InMemorySink<String> usersOut = connector.sink("sc-users");
         UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
         userNotificationToSend.setId("userId");
+
+        when(eventHubRestClient.sendMessage(any())).thenReturn(Uni.createFrom().voidItem());
 
         UniAssertSubscriber<UserNotificationToSend> subscriber = userNotificationService.sendKafkaNotification(
                 userNotificationToSend,
                 "userId"
         ).subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted();
+        verify(eventHubRestClient, times(1)).sendMessage(userNotificationToSend);
 
-        await().<List<? extends Message<String>>>until(usersOut::received, t -> t.size() == 1);
-
-        String queuedMessage = usersOut.received().get(0).getPayload();
-        Assertions.assertTrue(queuedMessage.contains("userId"));
     }
 }
