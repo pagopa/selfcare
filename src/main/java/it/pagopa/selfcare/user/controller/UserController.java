@@ -78,14 +78,14 @@ public class UserController {
 
     @Operation(summary = "Retrieves products info and role which the user is enabled")
     @GET
-    @Path("/{userId}/products")
+    @Path("/{userId}/institutions")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<UserProductsResponse> getUserProductsInfo(@PathParam(value = "userId") String userId,
+    public Uni<UserInfoResponse> getUserProductsInfo(@PathParam(value = "userId") String userId,
                                                          @QueryParam(value = "institutionId") String institutionId,
                                                          @QueryParam(value = "states") String[] states) {
         return userService.retrieveBindings(institutionId, userId, states)
-                .map(userMapper::toUserProductsResponse);
+                .map(userMapper::toUserInfoResponse);
     }
 
     /**

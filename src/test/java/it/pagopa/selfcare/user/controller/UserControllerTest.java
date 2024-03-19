@@ -298,7 +298,7 @@ class UserControllerTest {
                 .when()
                 .contentType(ContentType.JSON)
                 .pathParam("userId", "test-user-id")
-                .get("/{userId}/products")
+                .get("/{userId}/institutions")
                 .then()
                 .statusCode(200);
 
@@ -313,7 +313,7 @@ class UserControllerTest {
                 .when()
                 .contentType(ContentType.JSON)
                 .pathParam("userId", "test-user-id")
-                .get("/{userId}/products")
+                .get("/{userId}/institutions")
                 .then()
                 .statusCode(401);
 

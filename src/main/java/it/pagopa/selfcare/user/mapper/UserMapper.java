@@ -55,31 +55,6 @@ public interface UserMapper {
         }
         return null;
     }
-    @Mapping(target = "id", source = "userId")
-    @Mapping(target = "bindings", expression = "java(userInstitutionToBindings(userInstitution))")
-    default UserProductsResponse toUserProductsResponse(UserInfo userInfoResponse) {
-        UserProductsResponse response = new UserProductsResponse();
-        if(userInfoResponse != null && !userInfoResponse.getInstitutions().isEmpty()) {
-            response.setId(userInfoResponse.getUserId());
-
-            List<InstitutionProducts> institutionProducts = userInfoResponse.getInstitutions().stream().map(userInstitution -> {
-                InstitutionProducts institutionProduct = new InstitutionProducts();
-                institutionProduct.setInstitutionId(userInstitution.getInstitutionId());
-                institutionProduct.setInstitutionName(userInstitution.getInstitutionName());
-                institutionProduct.setInstitutionRootName(userInstitution.getInstitutionRootName());
-
-                OnboardedProductResponse product = new OnboardedProductResponse();
-                product.setRole(userInstitution.getRole());
-                product.setStatus(userInstitution.getStatus());
-
-                institutionProduct.setProducts(List.of(product));
-                return institutionProduct;
-            }).toList();
-            response.setBindings(institutionProducts);
-        }
-
-        return response;
-    }
 
     MutableUserFieldsDto toMutableUserFieldsDto(UserResource userResource);
 
@@ -125,4 +100,6 @@ public interface UserMapper {
         List<PartyRole> partyRoleList = onboardedProductList.stream().map(OnboardedProduct::getRole).toList();
         return Collections.min(partyRoleList).name();
     }
+
+    UserInfoResponse toUserInfoResponse(UserInfo userInfo);
 }
