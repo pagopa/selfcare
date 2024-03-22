@@ -8,6 +8,7 @@ import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.UserDataResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
@@ -488,13 +489,13 @@ class UserControllerTest {
 
     @Test
     @TestSecurity(user = "userJwt")
-    void testCreateOrUpdateUser() {
+    void testCreateOrUpdateUserByFiscalCode() {
         // Prepare test data
         CreateUserDto userDto = buildCreateUserDto();
 
 
         // Mock the userService.createOrUpdateUser method
-        when(userService.createOrUpdateUser(any(CreateUserDto.class)))
+        when(userService.createOrUpdateUserByFiscalCode(any(CreateUserDto.class)))
                 .thenReturn(Uni.createFrom().nullItem());
 
         // Perform the API call
@@ -504,18 +505,18 @@ class UserControllerTest {
                 .body(userDto)
                 .post("/")
                 .then()
-                .statusCode(204);
+                .statusCode(200);
     }
 
     @Test
     @TestSecurity(user = "userJwt")
-    void testCreateOrUpdateUserWithInvalidBody() {
+    void testCreateOrUpdateUserWithInvalidBodyByFiscalCode() {
         // Prepare test data
         CreateUserDto userDto = new CreateUserDto();
         // Set userDto properties
 
         // Mock the userService.createOrUpdateUser method
-        when(userService.createOrUpdateUser(any(CreateUserDto.class)))
+        when(userService.createOrUpdateUserByFiscalCode(any(CreateUserDto.class)))
                 .thenReturn(Uni.createFrom().nullItem());
 
         // Perform the API call
@@ -529,19 +530,45 @@ class UserControllerTest {
     }
 
     @Test
-    void testCreateOrUpdateUserNotAuthorized() {
+    @TestSecurity(user = "userJwt")
+    void testCreateOrUpdateUserByUserId() {
         // Prepare test data
-        CreateUserDto userDto = new CreateUserDto();
-        // Set userDto properties
+        CreateUserDto userDto = buildCreateUserDto();
+
+
+        // Mock the userService.createOrUpdateUser method
+        when(userService.createOrUpdateUserByUserId(any(AddUserRoleDto.class), anyString()))
+                .thenReturn(Uni.createFrom().nullItem());
 
         // Perform the API call
         given()
                 .when()
                 .contentType(ContentType.JSON)
                 .body(userDto)
-                .post("/")
+                .post("/userId")
                 .then()
-                .statusCode(401);
+                .statusCode(204);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testCreateOrUpdateUserWithInvalidBodyByUserId() {
+        // Prepare test data
+        CreateUserDto userDto = new CreateUserDto();
+        // Set userDto properties
+
+        // Mock the userService.createOrUpdateUser method
+        when(userService.createOrUpdateUserByUserId(any(AddUserRoleDto.class), anyString()))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        // Perform the API call
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .body(userDto)
+                .post("/userId")
+                .then()
+                .statusCode(400);
     }
 
     @Test

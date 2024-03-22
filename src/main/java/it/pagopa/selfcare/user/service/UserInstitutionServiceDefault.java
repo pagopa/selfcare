@@ -129,8 +129,9 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     }
 
     @Override
-    public Uni<Void> persistOrUpdate(UserInstitution... userInstitution) {
-        return UserInstitution.persistOrUpdate(userInstitution);
+    public Uni<UserInstitution> persistOrUpdate(UserInstitution userInstitution) {
+        return UserInstitution.persistOrUpdate(userInstitution)
+                .replaceWith(userInstitution);
     }
 
 

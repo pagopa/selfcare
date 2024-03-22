@@ -35,5 +35,5 @@ public interface UserInstitutionService {
 
     Uni<UserInstitution> findByUserIdAndInstitutionId(String userId, String institutionId);
 
-    Uni<Void> persistOrUpdate(UserInstitution... userInstitution);
+    Uni<UserInstitution> persistOrUpdate(UserInstitution userInstitution);
 }

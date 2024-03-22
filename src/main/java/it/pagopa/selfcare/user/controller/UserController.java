@@ -7,10 +7,10 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
-import it.pagopa.selfcare.user.controller.response.product.UserProductsResponse;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.service.UserRegistryService;
@@ -249,14 +249,42 @@ public class UserController {
                 .onItem().transformToUni(loggedUser -> userService.updateUserProductStatus(userId, institutionId, productId, status, loggedUser));
     }
 
-    @Operation(summary = "Create or Update user")
+
+
+    /**
+     * The createOrUpdateByUserId function is used to update existing user adding userRole.
+     *
+     * @param userId Sting
+     * @param userDto CreateUserDto
+     */
+    @Operation(summary = "The createOrUpdateByUserId function is used to update existing user adding userRole.")
     @ResponseStatus(HttpStatus.SC_NO_CONTENT)
+    @POST
+    @Path("/{userId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> createOrUpdateByUserId(@PathParam("userId") String userId,
+                                                @Valid AddUserRoleDto userDto) {
+        return userService.createOrUpdateUserByUserId(userDto, userId)
+                .map(ignore -> Response.status(HttpStatus.SC_NO_CONTENT).build());
+    }
+
+    /**
+     * The createOrUpdateByFiscalCode function is used to create a new user or update an existing one.
+     * The function takes in a CreateUserDto object, which contains the following fields:
+     * - fiscalCode (String): The tax code of the user. This field is required and must be unique for each user.
+     * - email (String): The email address of the user. This field is optional and can be null or empty string if not provided by caller.
+     * - phoneNumber (String): The phone number of the user, including country code prefix (+39). This field is optional and can be null or empty string if not provided by
+     *
+     * @param userDto CreateUserDto
+     */
+    @Operation(summary = "The createOrUpdateByFiscalCode function is used to create a new user or update an existing one.")
+    @ResponseStatus(HttpStatus.SC_OK)
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Response> createOrUpdate(@Valid CreateUserDto userDto) {
-        return userService.createOrUpdateUser(userDto)
-                .map(ignore -> Response.status(HttpStatus.SC_NO_CONTENT).build());
+    public Uni<String> createOrUpdateByFiscalCode(@Valid CreateUserDto userDto) {
+        return userService.createOrUpdateUserByFiscalCode(userDto);
     }
 
     /**

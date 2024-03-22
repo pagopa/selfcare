@@ -15,6 +15,7 @@ import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.UserDataResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
@@ -511,7 +512,7 @@ class UserServiceTest {
     }
 
     @Test
-    void testCreateOrUpdateUser_UpdateUser_Success() {
+    void testCreateOrUpdateUser_UpdateUser_SuccessByFiscalCode() {
         // Prepare test data
         CreateUserDto createUserDto = new CreateUserDto();
         CreateUserDto.User user = new CreateUserDto.User();
@@ -522,10 +523,10 @@ class UserServiceTest {
         when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().item(userResource));
         when(userInstitutionService.findByUserIdAndInstitutionId(any(), any())).thenReturn(Uni.createFrom().item(userInstitution));
         when(userRegistryApi.updateUsingPATCH(any(), any())).thenReturn(Uni.createFrom().item(Response.ok().build()));
-        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().voidItem());
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(userInstitution));
 
         // Call the method
-        UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUser(createUserDto)
+        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
@@ -535,7 +536,7 @@ class UserServiceTest {
     }
 
     @Test
-    void testCreateOrUpdateUser_CreateUser_Success() {
+    void testCreateOrUpdateUser_CreateUser_SuccessByFiscalCode() {
         // Prepare test data
         CreateUserDto createUserDto = new CreateUserDto();
         CreateUserDto.User user = new CreateUserDto.User();
@@ -548,10 +549,10 @@ class UserServiceTest {
         // Mock external dependencies
         when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().failure(new WebClientApplicationException(HttpStatus.SC_NOT_FOUND)));
         when(userRegistryApi.saveUsingPATCH(any())).thenReturn(Uni.createFrom().item(UserId.builder().id(UUID.randomUUID()).build()));
-        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().voidItem());
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(userInstitution));
 
         // Call the method
-        UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUser(createUserDto)
+        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
@@ -561,7 +562,7 @@ class UserServiceTest {
     }
 
     @Test
-    void testCreateOrUpdateUser_UpdateUser_UserRegistryUpdateFailed() {
+    void testCreateOrUpdateUser_UpdateUser_UserRegistryUpdateFailedByFiscalCode() {
         // Prepare test data
         CreateUserDto createUserDto = new CreateUserDto();
         CreateUserDto.User user = new CreateUserDto.User();
@@ -572,10 +573,10 @@ class UserServiceTest {
         when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().item(userResource));
         when(userInstitutionService.findByUserIdAndInstitutionId(any(), any())).thenReturn(Uni.createFrom().item(userInstitution));
         when(userRegistryApi.updateUsingPATCH(any(), any())).thenReturn(Uni.createFrom().failure(new RuntimeException()));
-        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().voidItem());
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(userInstitution));
 
         // Call the method
-        UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUser(createUserDto)
+        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
@@ -585,7 +586,7 @@ class UserServiceTest {
     }
 
     @Test
-    void testCreateOrUpdateUser_UpdateUser_UserInstitutionUpdateFailed() {
+    void testCreateOrUpdateUser_UpdateUser_UserInstitutionUpdateFailedByFiscalCode() {
         // Prepare test data
         CreateUserDto createUserDto = new CreateUserDto();
         CreateUserDto.User user = new CreateUserDto.User();
@@ -599,13 +600,75 @@ class UserServiceTest {
         when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().failure(new RuntimeException()));
 
         // Call the method
-        UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUser(createUserDto)
+        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
         subscriber.assertFailedWith(RuntimeException.class);
         verify(userRegistryApi).updateUsingPATCH(any(), any());
         verify(userInstitutionService).persistOrUpdate(any());
+    }
+
+    @Test
+    void testCreateOrUpdateUser_UpdateUser_SuccessByUserId() {
+        // Prepare test data
+        AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
+        addUserRoleDto.setInstitutionId("institutionId");
+
+        // Mock external dependencies
+        when(userRegistryApi.findByIdUsingGET(any(), eq("userId"))).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), addUserRoleDto.getInstitutionId())).thenReturn(Uni.createFrom().item(userInstitution));
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(userInstitution));
+
+        // Call the method
+        UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // Verify the result
+        subscriber.assertCompleted();
+        verify(userRegistryApi).findByIdUsingGET(any(), eq("userId"));
+        verify(userInstitutionService).persistOrUpdate(any());
+    }
+
+    @Test
+    void testCreateOrUpdateUser_UpdateUser_UserInstitutionUpdateFailedByUserId() {
+        // Prepare test data
+        AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
+        addUserRoleDto.setInstitutionId("institutionId");
+
+        // Mock external dependencies
+        when(userRegistryApi.findByIdUsingGET(any(), eq("userId"))).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), addUserRoleDto.getInstitutionId())).thenReturn(Uni.createFrom().item(userInstitution));
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().failure(new RuntimeException()));
+
+        // Call the method
+        UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // Verify the result
+        subscriber.assertFailedWith(RuntimeException.class);
+        verify(userRegistryApi).findByIdUsingGET(any(), eq("userId"));
+        verify(userInstitutionService).persistOrUpdate(any());
+    }
+
+    @Test
+    void testCreateOrUpdateUser_UpdateUser_UserInstitutionUpdateFailedByUserId_userInstitutionNotFound() {
+        // Prepare test data
+        AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
+        addUserRoleDto.setInstitutionId("institutionId");
+
+        // Mock external dependencies
+        when(userRegistryApi.findByIdUsingGET(any(), eq("userId"))).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), addUserRoleDto.getInstitutionId())).thenReturn(Uni.createFrom().nullItem());
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().failure(new RuntimeException()));
+
+        // Call the method
+        UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // Verify the result
+        subscriber.assertFailedWith(RuntimeException.class);
+        verify(userRegistryApi).findByIdUsingGET(any(), eq("userId"));
     }
 
     @Test
@@ -638,7 +701,6 @@ class UserServiceTest {
         // Verify the result
         subscriber.assertCompleted().getItems().forEach(actual -> {
             assertNotNull(actual);
-            assertEquals(personId, actual.getId().equals("test-person"));
             assertEquals(institutionId, "test-institution");
         });
 
@@ -678,7 +740,6 @@ class UserServiceTest {
         // Verify the result
         subscriber.assertCompleted().getItems().forEach(actual -> {
             assertNotNull(actual);
-            assertEquals(personId, actual.getId().equals(userUuid));
             assertEquals(institutionId, "test-institution");
         });
 

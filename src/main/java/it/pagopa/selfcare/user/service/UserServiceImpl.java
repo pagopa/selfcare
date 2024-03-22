@@ -6,6 +6,7 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.UserDataResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
@@ -36,6 +37,7 @@ import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.*;
@@ -63,6 +65,8 @@ public class UserServiceImpl implements UserService {
     private final ProductService productService;
     private final UserInstitutionService userInstitutionService;
     private final UserNotificationService userNotificationService;
+
+    Supplier<String> randomMailId = () -> (MAIL_ID_PREFIX + UUID.randomUUID());
 
     private static final String WORK_CONTACTS = "workContacts";
 
@@ -276,7 +280,7 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * The createOrUpdateUser method is a method that either creates a new user or updates an existing one based on the provided CreateUserDto object.
+     * The createOrUpdateUserByFiscalCode method is a method that either creates a new user or updates an existing one based on the provided CreateUserDto object.
      * The method starts by calling the searchUsingPOST method on the userRegistryApi object, this is an asynchronous operation that searches for a user in the user registry.
      * If the search operation fails with a UserNotFoundException, it recovers by returning a Uni that fails with a ResourceNotFoundException.
      * This is a way of transforming one type of exception into another.
@@ -285,11 +289,11 @@ public class UserServiceImpl implements UserService {
      * collection.
      * Finally, if any operation fails, it logs an error message and returns a Uni that emits a failure.
      */
-     @Override
-    public Uni<Void> createOrUpdateUser(CreateUserDto userDto) {
+    @Override
+    public Uni<String> createOrUpdateUserByFiscalCode(CreateUserDto userDto) {
         return searchUserByFiscalCode(userDto.getUser().getFiscalCode())
                 .onFailure(UserUtils::isUserNotFoundExceptionOnUserRegistry).recoverWithUni(throwable -> Uni.createFrom().failure(new ResourceNotFoundException(throwable.getMessage())))
-                .onItem().transformToUni(userResource -> updateUserOnUserRegistryAndUserInstitution(userResource, userDto))
+                .onItem().transformToUni(userResource -> updateUserOnUserRegistryAndUserInstitutionByFiscalCode(userResource, userDto))
                 .onFailure(ResourceNotFoundException.class).recoverWithUni(throwable -> createUserOnUserRegistryAndUserInstitution(userDto))
                 .onFailure().invoke(exception -> log.error("Error during retrieve user from userRegistry: {} ", exception.getMessage(), exception));
     }
@@ -303,10 +307,10 @@ public class UserServiceImpl implements UserService {
      * Once the userInstitution model is updated or created, attempts to persist the user institution.
      * If any of the operations fail, the method logs an error message and returns a Uni that emits a failure.
      */
-    private Uni<Void> updateUserOnUserRegistryAndUserInstitution(UserResource userResource, CreateUserDto userDto) {
+    private Uni<String> updateUserOnUserRegistryAndUserInstitutionByFiscalCode(UserResource userResource, CreateUserDto userDto) {
         log.info("Updating user on userRegistry and userInstitution");
         String mailUuid = userUtils.getMailUuidFromMail(userResource.getWorkContacts(), userDto.getUser().getInstitutionEmail())
-                .orElse(MAIL_ID_PREFIX + UUID.randomUUID());
+                .orElse(randomMailId.get());
 
         var workContact = UserUtils.buildWorkContact(userDto.getUser().getInstitutionEmail());
         userResource.getWorkContacts().put(mailUuid, workContact);
@@ -317,7 +321,8 @@ public class UserServiceImpl implements UserService {
                 .onItem().transformToUni(response -> userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), userDto.getInstitutionId()))
                 .onItem().transform(userInstitution -> updateOrCreateUserInstitution(userDto, mailUuid, userInstitution, userResource.getId().toString()))
                 .onItem().invoke(userInstitution -> log.info("start persist userInstititon: {}", userInstitution))
-                .onItem().transformToUni(userInstitution -> userInstitutionService.persistOrUpdate(userInstitution))
+                .onItem().transformToUni(userInstitutionService::persistOrUpdate)
+                .replaceWith(userResource.getId().toString())
                 .onItem().invoke(() -> log.info("UserInstitution persisted"))
                 .onFailure().invoke(exception -> log.error("Error during persist user on UserInstitution: {} ", exception.getMessage(), exception));
     }
@@ -331,9 +336,9 @@ public class UserServiceImpl implements UserService {
      * It then updates or creates the userinstitution model and it attempts to persist the user institution.
      * If any of the operations fail, the method logs an error message and returns a Uni that emits a failure.
      */
-    private Uni<Void> createUserOnUserRegistryAndUserInstitution(CreateUserDto userDto) {
+    private Uni<String> createUserOnUserRegistryAndUserInstitution(CreateUserDto userDto) {
         log.info("Creating user on userRegistry and userInstitution");
-        String mailUuid = MAIL_ID_PREFIX + UUID.randomUUID();
+        String mailUuid = randomMailId.get();
         Map<String, WorkContactResource> workContacts = new HashMap<>();
         workContacts.put(mailUuid, UserUtils.buildWorkContact(userDto.getUser().getInstitutionEmail()));
 
@@ -343,7 +348,8 @@ public class UserServiceImpl implements UserService {
                 .onItem().transform(userId -> userId.getId().toString())
                 .onItem().transform(userId -> updateOrCreateUserInstitution(userDto, mailUuid, null, userId))
                 .onItem().invoke(userInstitution -> log.info("start persist userInstititon: {}", userInstitution))
-                .onItem().transformToUni(userInstitution -> userInstitutionService.persistOrUpdate(userInstitution))
+                .onItem().transformToUni(userInstitutionService::persistOrUpdate)
+                .map(UserInstitution::getUserId)
                 .onItem().invoke(() -> log.info("UserInstitution persisted"))
                 .onFailure().invoke(exception -> log.error("Error during persist user on UserInstitution: {} ", exception.getMessage(), exception));
     }
@@ -358,6 +364,41 @@ public class UserServiceImpl implements UserService {
         userInstitution.setUserMailUuid(mailUuid);
         userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));
 
+        return userInstitution;
+    }
+
+    /**
+     * The createOrUpdateUserByUserId method is a method that either add to existingUser a new user Role.
+     * The method starts by calling the findByIdUsingGET method on the userRegistryApi object,
+     * If the search operation fails with a UserNotFoundException, it recovers by returning a Uni that fails with a ResourceNotFoundException.
+     * If the search operation is successful, it call method to Update user on UserInstitution collection.
+     * Finally, if any operation fails, it logs an error message and returns a Uni that emits a failure.
+     */
+    @Override
+    public Uni<Void> createOrUpdateUserByUserId(AddUserRoleDto userDto, String userId) {
+        return userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)
+                .onFailure(UserUtils::isUserNotFoundExceptionOnUserRegistry).recoverWithUni(throwable -> Uni.createFrom().failure(new ResourceNotFoundException(throwable.getMessage())))
+                .onItem().transformToUni(userResource -> updateUserInstitutionByUserId(userResource, userDto))
+                .onFailure().invoke(exception -> log.error("Error during retrieve user from userRegistry: {} ", exception.getMessage(), exception));
+    }
+
+    private Uni<Void> updateUserInstitutionByUserId(UserResource userResource, AddUserRoleDto userDto) {
+        return userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), userDto.getInstitutionId())
+                .onItem().transform(userInstitution -> updateUserInstitution(userDto, userInstitution, userResource.getId().toString()))
+                .onItem().invoke(userInstitution -> log.info("start persist userInstititon: {}", userInstitution))
+                .onItem().transformToUni(userInstitutionService::persistOrUpdate)
+                .onItem().invoke(() -> log.info("UserInstitution persisted"))
+                .replaceWith(Uni.createFrom().voidItem())
+                .onFailure().invoke(exception -> log.error("Error during persist user on UserInstitution: {} ", exception.getMessage(), exception));
+    }
+
+    private UserInstitution updateUserInstitution(AddUserRoleDto userDto, UserInstitution userInstitution, String userId) {
+        if (userInstitution == null) {
+            log.info("UserInstitution with userId: {} and institutionId: {} not found", userId, userDto.getInstitutionId());
+            throw new ResourceNotFoundException(String.format(USER_INSTITUTION_NOT_FOUND_ERROR.getMessage(), userId, userDto.getInstitutionId()), USER_INSTITUTION_NOT_FOUND_ERROR.getCode());
+        }
+        log.info("UserInstitution with userId: {} and institutionId: {} found", userId, userDto.getInstitutionId());
+        userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));
         return userInstitution;
     }
 
