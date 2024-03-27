@@ -4,8 +4,6 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.*;
-import it.pagopa.selfcare.user.controller.response.product.InstitutionProducts;
-import it.pagopa.selfcare.user.controller.response.product.UserProductsResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -31,6 +29,8 @@ public interface UserMapper {
     @Mapping(target = "email", expression = "java(retrieveMailFromWorkContacts(userResource.getWorkContacts(), userMailUuid))")
     @Mapping(target = "workContacts", expression = "java(toWorkContacts(userResource.getWorkContacts()))")
     UserResponse toUserResponse(UserResource userResource, String userMailUuid);
+    @Mapping(target = "email", expression = "java(retrieveCertifiedMailFromWorkContacts(userResource, userMailUuid))")
+    UserDetailResponse toUserDetailResponse(UserResource userResource, String userMailUuid);
 
     default Map<String, String> toWorkContacts(Map<String, WorkContactResource> workContactResourceMap) {
         if (workContactResourceMap == null){
@@ -40,6 +40,7 @@ public interface UserMapper {
                 .filter(entry -> entry.getValue().getEmail() != null && entry.getValue().getEmail().getValue() != null)
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getEmail().getValue()));
     }
+
 
     @Named("fromCertifiableString")
     default String fromCertifiableString(CertifiableFieldResourceOfstring certifiableFieldResourceOfstring) {
@@ -52,6 +53,17 @@ public interface UserMapper {
     default String retrieveMailFromWorkContacts(Map<String, WorkContactResource> map, String userMailUuid){
         if(map!=null && !map.isEmpty() && map.containsKey(userMailUuid)){
             return map.get(userMailUuid).getEmail().getValue();
+        }
+        return null;
+    }
+
+
+    @Named("retrieveCertifiedMailFromWorkContacts")
+    default CertifiableFieldResponse<String> retrieveCertifiedMailFromWorkContacts(UserResource userResource, String userMailUuid){
+        if(userResource.getWorkContacts()!=null && !userResource.getWorkContacts().isEmpty() && userResource.getWorkContacts().containsKey(userMailUuid)){
+            return new CertifiableFieldResponse<>(userResource.getWorkContacts().get(userMailUuid).getEmail().getValue(), userResource.getWorkContacts().get(userMailUuid).getEmail().getCertification());
+        } else if (Objects.nonNull(userResource.getEmail())) {
+            return new CertifiableFieldResponse<>(userResource.getEmail().getValue(), userResource.getEmail().getCertification());
         }
         return null;
     }

@@ -18,6 +18,7 @@ import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.UserDataResponse;
+import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
@@ -78,10 +79,11 @@ class UserServiceTest {
 
     private static final UserResource userResource;
     private static final UserInstitution userInstitution;
+    private static final UUID userId = UUID.randomUUID();
 
     static {
         userResource = new UserResource();
-        userResource.setId(UUID.randomUUID());
+        userResource.setId(userId);
         CertifiableFieldResourceOfstring certifiedName = new CertifiableFieldResourceOfstring();
         certifiedName.setValue("name");
         userResource.setName(certifiedName);
@@ -99,7 +101,7 @@ class UserServiceTest {
 
         userInstitution = new UserInstitution();
         userInstitution.setId(ObjectId.get());
-        userInstitution.setUserId("userId");
+        userInstitution.setUserId(userId.toString());
         userInstitution.setInstitutionId("institutionId");
         userInstitution.setUserMailUuid("userMailUuid");
         userInstitution.setInstitutionRootName("institutionRootName");
@@ -130,16 +132,28 @@ class UserServiceTest {
 
     @Test
     void getUserById() {
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(any()))
+                .thenReturn(Uni.createFrom().item(userInstitution));
         when(userRegistryApi.findByIdUsingGET(any(), any()))
                 .thenReturn(Uni.createFrom().item(userResource));
-        UniAssertSubscriber<UserResource> subscriber = userService
-                .getUserById("userId")
+
+        UniAssertSubscriber<UserDetailResponse> subscriber = userService
+                .getUserById(userId.toString(), "institutionId", null)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
-        UserResource actual = subscriber.assertCompleted().awaitItem().getItem();
-        assertNotNull(actual);
-        assertEquals(userResource.getId(), actual.getId());
+        subscriber.assertCompleted();
+
+    }
+    @Test
+    void getUserByIdNotFound(){
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().nullItem());
+        UniAssertSubscriber<UserDetailResponse> subscriber = userService
+                .getUserById(userId.toString(), "institutionId", null)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertFailedWith(ResourceNotFoundException.class);
+
     }
 
 
@@ -239,15 +253,16 @@ class UserServiceTest {
 
     @Test
     void searchUserByFiscalCode(){
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(userInstitution));
+
         when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().item(userResource));
-        UniAssertSubscriber<UserResource> subscriber = userService
-                .searchUserByFiscalCode("userId")
+        final String institutionId = "institutionId";
+        UniAssertSubscriber<UserDetailResponse> subscriber = userService
+                .searchUserByFiscalCode("userId", institutionId)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
-        UserResource actual = subscriber.assertCompleted().awaitItem().getItem();
-        assertNotNull(actual);
-        assertEquals(userResource.getId(), actual.getId());
+        subscriber.assertCompleted();
 
     }
 
@@ -509,6 +524,26 @@ class UserServiceTest {
                 any(UserNotificationToSend.class),
                 any()
         );
+    }
+
+    @Test
+    void updateUserProductStatusNotFound(){
+        UserResource userResource = mock(UserResource.class);
+        when(userRegistryApi.findByIdUsingGET(any(), any()))
+                .thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService
+                .updateUserStatusWithOptionalFilterByInstitutionAndProduct(
+                        "userId", "institutionId", "productId", null, null, OnboardedProductState.ACTIVE))
+                .thenReturn(Uni.createFrom().item(1L));
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("not found")));
+
+        var subscriber = userService.updateUserProductStatus("userId", "institutionId", "productId", OnboardedProductState.ACTIVE,
+                        LoggedUser.builder().build())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(ResourceNotFoundException.class);
+
     }
 
     @Test
