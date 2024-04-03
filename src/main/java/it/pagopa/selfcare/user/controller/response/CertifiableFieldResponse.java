@@ -10,9 +10,5 @@ import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfst
 @AllArgsConstructor
 public class CertifiableFieldResponse<T> {
     private T value;
-    private boolean certified;
-    public CertifiableFieldResponse(T value, CertifiableFieldResourceOfstring.CertificationEnum certificationEnum){
-        this.value = value;
-        this.certified = certificationEnum != null && !certificationEnum.NONE.equals(certificationEnum);
-    }
+    private CertifiableFieldResourceOfstring.CertificationEnum certified;
 }

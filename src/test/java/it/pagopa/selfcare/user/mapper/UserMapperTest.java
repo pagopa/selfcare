@@ -2,6 +2,7 @@ package it.pagopa.selfcare.user.mapper;
 
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.user.controller.response.CertifiableFieldResponse;
+import it.pagopa.selfcare.user.controller.response.WorkContactResponse;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
@@ -27,7 +28,7 @@ public class UserMapperTest {
 
         CertifiableFieldResponse<String> certifiedMail = userMapper.retrieveCertifiedMailFromWorkContacts(userResource, "email");
 
-        assertFalse(certifiedMail.isCertified());
+        assertEquals(CertifiableFieldResourceOfstring.CertificationEnum.NONE,certifiedMail.getCertified());
         assertEquals("email", certifiedMail.getValue());
     }
 
@@ -53,16 +54,6 @@ public class UserMapperTest {
 
     }
 
-    @Test
-    void retrieveCertifiedEmailFromWorkContacts_userEmail(){
-        final UserResource userResource = new UserResource();
-        final CertifiableFieldResourceOfstring email = new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email");
-        userResource.setEmail(email);
-        CertifiableFieldResponse<String> certifiedMail = userMapper.retrieveCertifiedMailFromWorkContacts(userResource, null);
-
-        assertFalse(certifiedMail.isCertified());
-        assertEquals("email", certifiedMail.getValue());
-    }
 
     @Test
     void retrieveMailFromWorkContacts(){
@@ -102,5 +93,32 @@ public class UserMapperTest {
         String mailFromWorkContact = userMapper.retrieveMailFromWorkContacts(workContactResourceMap, "notPresent");
 
         assertNull(mailFromWorkContact);
+    }
+
+    @Test
+    void toWorkContactResponseMap(){
+        final Map<String, WorkContactResource> workContactResourceMap = new HashMap<>();
+        final WorkContactResource workContactResource = new WorkContactResource();
+        final CertifiableFieldResourceOfstring email = new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email");
+        workContactResource.setEmail(email);
+        workContactResourceMap.put("email", workContactResource);
+        Map<String, WorkContactResponse> responseMap = userMapper.toWorkContactResponse(workContactResourceMap);
+
+        assertEquals(email.getValue(), responseMap.get("email").getEmail().getValue());
+    }
+
+    @Test
+    void toWorkContactResponseMap_nullMap(){
+        Map<String, WorkContactResponse> responseMap = userMapper.toWorkContactResponse(null);
+        assertTrue(responseMap.isEmpty());
+    }
+
+    @Test
+    void toWorkContactResponseMap_empty(){
+        final Map<String, WorkContactResource> workContactResourceMap = new HashMap<>();
+
+        Map<String, WorkContactResponse> responseMap = userMapper.toWorkContactResponse(workContactResourceMap);
+        assertTrue(responseMap.isEmpty());
+
     }
 }

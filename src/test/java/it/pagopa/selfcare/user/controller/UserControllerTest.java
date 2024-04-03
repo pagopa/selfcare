@@ -56,11 +56,11 @@ class UserControllerTest {
 
         userDetailResponse = new UserDetailResponse();
         userDetailResponse.setId(UUID.randomUUID().toString());
-        userDetailResponse.setEmail(new CertifiableFieldResponse<>("email", false));
-        userDetailResponse.setName(new CertifiableFieldResponse<>( "name", false));
-        userDetailResponse.setFamilyName(new CertifiableFieldResponse<>("familyName", false));
+        userDetailResponse.setEmail(new CertifiableFieldResponse<>("email", CertifiableFieldResourceOfstring.CertificationEnum.NONE));
+        userDetailResponse.setName(new CertifiableFieldResponse<>("name", CertifiableFieldResourceOfstring.CertificationEnum.NONE));
+        userDetailResponse.setFamilyName(new CertifiableFieldResponse<>("familyName", CertifiableFieldResourceOfstring.CertificationEnum.NONE));
         userDetailResponse.setFiscalCode("fiscalCode");
-        userDetailResponse.setWorkContacts(Map.of("userMailUuid", new WorkContactResponse(new CertifiableFieldResponse<>("email", false))));
+        userDetailResponse.setWorkContacts(Map.of("userMailUuid", new WorkContactResponse(new CertifiableFieldResponse<String>("email", CertifiableFieldResourceOfstring.CertificationEnum.NONE))));
     }
 
     /**

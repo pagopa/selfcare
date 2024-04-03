@@ -152,7 +152,7 @@ class UserServiceTest {
                 .getUserById(userId.toString(), "institutionId", null)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
-        subscriber.assertFailedWith(ResourceNotFoundException.class);
+        subscriber.assertCompleted();
 
     }
 
@@ -254,6 +254,20 @@ class UserServiceTest {
     @Test
     void searchUserByFiscalCode(){
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(userInstitution));
+
+        when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().item(userResource));
+        final String institutionId = "institutionId";
+        UniAssertSubscriber<UserDetailResponse> subscriber = userService
+                .searchUserByFiscalCode("userId", institutionId)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertCompleted();
+
+    }
+    @Test
+    void searchUserByFiscalCode_notFound(){
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().nullItem());
 
         when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().item(userResource));
         final String institutionId = "institutionId";
