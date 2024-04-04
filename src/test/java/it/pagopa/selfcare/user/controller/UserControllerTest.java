@@ -16,6 +16,7 @@ import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
@@ -503,9 +504,8 @@ class UserControllerTest {
         // Prepare test data
         CreateUserDto userDto = buildCreateUserDto();
 
-
         // Mock the userService.createOrUpdateUser method
-        when(userService.createOrUpdateUserByFiscalCode(any(CreateUserDto.class)))
+        when(userService.createOrUpdateUserByFiscalCode(any(CreateUserDto.class), any(LoggedUser.class)))
                 .thenReturn(Uni.createFrom().nullItem());
 
         // Perform the API call
@@ -526,7 +526,7 @@ class UserControllerTest {
         // Set userDto properties
 
         // Mock the userService.createOrUpdateUser method
-        when(userService.createOrUpdateUserByFiscalCode(any(CreateUserDto.class)))
+        when(userService.createOrUpdateUserByFiscalCode(any(CreateUserDto.class), any(LoggedUser.class)))
                 .thenReturn(Uni.createFrom().nullItem());
 
         // Perform the API call
@@ -547,7 +547,7 @@ class UserControllerTest {
 
 
         // Mock the userService.createOrUpdateUser method
-        when(userService.createOrUpdateUserByUserId(any(AddUserRoleDto.class), anyString()))
+        when(userService.createOrUpdateUserByUserId(any(AddUserRoleDto.class), anyString(), any(LoggedUser.class)))
                 .thenReturn(Uni.createFrom().nullItem());
 
         // Perform the API call
@@ -568,7 +568,7 @@ class UserControllerTest {
         // Set userDto properties
 
         // Mock the userService.createOrUpdateUser method
-        when(userService.createOrUpdateUserByUserId(any(AddUserRoleDto.class), anyString()))
+        when(userService.createOrUpdateUserByUserId(any(AddUserRoleDto.class), anyString(), any(LoggedUser.class)))
                 .thenReturn(Uni.createFrom().nullItem());
 
         // Perform the API call
@@ -612,7 +612,7 @@ class UserControllerTest {
         product.setProductId("productId");
         product.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER);
         product.setTokenId("tokenId");
-        product.setProductRole("productRole");
+        product.setProductRoles(Collections.singletonList("productRole"));
         userDto.setProduct(product);
         return userDto;
     }

@@ -4,10 +4,16 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
+import java.util.List;
+
 public interface UserNotificationService {
     Uni<UserNotificationToSend> sendKafkaNotification(UserNotificationToSend userNotificationToSend, String userId);
+
     Uni<Void> sendEmailNotification(UserResource user, UserInstitution institution, Product product, OnboardedProductState status, String loggedUserName, String loggedUserSurname);
+
+    Uni<Void> sendCreateUserNotification(String institutionDescription, List<String> roleLabels, UserResource userResource, UserInstitution userInstitution, Product product, LoggedUser loggedUser);
 }

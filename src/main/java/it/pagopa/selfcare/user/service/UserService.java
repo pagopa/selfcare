@@ -48,9 +48,9 @@ public interface UserService {
 
     Uni<Void> updateUserProductStatus(String userId, String institutionId, String productId, OnboardedProductState status, LoggedUser loggedUser);
 
-    Uni<String> createOrUpdateUserByFiscalCode(CreateUserDto userDto);
+    Uni<String> createOrUpdateUserByFiscalCode(CreateUserDto userDto, LoggedUser loggedUser);
 
-    Uni<Void> createOrUpdateUserByUserId(AddUserRoleDto userDto, String userId);
+    Uni<Void> createOrUpdateUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser);
 
     Multi<UserDataResponse> retrieveUsersData(String institutionId, String personId, List<String> roles, List<String> states, List<String> products, List<String> productRoles, String userId);
 }

@@ -82,14 +82,15 @@ public class UserController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<UserInfoResponse> getUserProductsInfo(@PathParam(value = "userId") String userId,
-                                                         @QueryParam(value = "institutionId") String institutionId,
-                                                         @QueryParam(value = "states") String[] states) {
+                                                     @QueryParam(value = "institutionId") String institutionId,
+                                                     @QueryParam(value = "states") String[] states) {
         return userService.retrieveBindings(institutionId, userId, states)
                 .map(userMapper::toUserInfoResponse);
     }
 
     /**
      * getUserById function returns all the information of a user retrieved from pdv given the userId
+     *
      * @param userId String
      * @return A uni UserDetailResponse
      */
@@ -110,7 +111,7 @@ public class UserController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<UserDetailResponse> searchUserByFiscalCode(@RequestBody SearchUserDto dto,
-                                                          @QueryParam(value = "institutionId")String institutionId){
+                                                          @QueryParam(value = "institutionId") String institutionId) {
         return userService.searchUserByFiscalCode(dto.getFiscalCode(), institutionId);
     }
 
@@ -254,11 +255,10 @@ public class UserController {
     }
 
 
-
     /**
      * The createOrUpdateByUserId function is used to update existing user adding userRole.
      *
-     * @param userId Sting
+     * @param userId  Sting
      * @param userDto CreateUserDto
      */
     @Operation(summary = "The createOrUpdateByUserId function is used to update existing user adding userRole.")
@@ -268,9 +268,12 @@ public class UserController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> createOrUpdateByUserId(@PathParam("userId") String userId,
-                                                @Valid AddUserRoleDto userDto) {
-        return userService.createOrUpdateUserByUserId(userDto, userId)
+                                                @Valid AddUserRoleDto userDto,
+                                                @Context SecurityContext ctx) {
+        return readUserIdFromToken(ctx)
+                .onItem().transformToUni(loggedUser -> userService.createOrUpdateUserByUserId(userDto, userId, loggedUser))
                 .map(ignore -> Response.status(HttpStatus.SC_NO_CONTENT).build());
+
     }
 
     /**
@@ -287,8 +290,10 @@ public class UserController {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<String> createOrUpdateByFiscalCode(@Valid CreateUserDto userDto) {
-        return userService.createOrUpdateUserByFiscalCode(userDto);
+    public Uni<String> createOrUpdateByFiscalCode(@Valid CreateUserDto userDto,
+                                                  @Context SecurityContext ctx) {
+        return readUserIdFromToken(ctx)
+                .onItem().transformToUni(loggedUser -> userService.createOrUpdateUserByFiscalCode(userDto, loggedUser));
     }
 
     /**

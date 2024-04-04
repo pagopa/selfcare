@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.user.model.notification;
 
 import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.user.constant.QueueEvent;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,4 +13,5 @@ public class PrepareNotificationData {
     private UserInstitution userInstitution;
     private UserResource userResource;
     private Product product;
+    private QueueEvent queueEvent;
 }

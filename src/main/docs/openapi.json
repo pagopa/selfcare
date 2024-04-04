@@ -1029,6 +1029,9 @@
           },
           "institutionRootName" : {
             "type" : "string"
+          },
+          "hasToSendEmail" : {
+            "type" : "boolean"
           }
         }
       },
@@ -1092,6 +1095,9 @@
           },
           "institutionRootName" : {
             "type" : "string"
+          },
+          "hasToSendEmail" : {
+            "type" : "boolean"
           }
         }
       },
@@ -1187,8 +1193,11 @@
           "tokenId" : {
             "type" : "string"
           },
-          "productRole" : {
-            "type" : "string"
+          "productRoles" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }
       },
@@ -1206,8 +1215,11 @@
           "tokenId" : {
             "type" : "string"
           },
-          "productRole" : {
-            "type" : "string"
+          "productRoles" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }
       },

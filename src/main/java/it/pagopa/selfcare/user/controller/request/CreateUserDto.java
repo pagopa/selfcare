@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class CreateUserDto {
 
@@ -19,19 +21,17 @@ public class CreateUserDto {
 
     private String institutionDescription;
     private String institutionRootName;
+    private Boolean hasToSendEmail = Boolean.TRUE;
 
     @Data
     public static class User {
         private String birthDate;
 
-        @NotEmpty(message = "email is required")
         private String familyName;
+        private String name;
 
         @NotEmpty(message = "fiscalCode is required")
         private String fiscalCode;
-
-        @NotEmpty(message = "name is required")
-        private String name;
 
         @NotEmpty(message = "email is required")
         private String institutionEmail;
@@ -47,6 +47,6 @@ public class CreateUserDto {
         private PartyRole role;
 
         private String tokenId;
-        private String productRole;
+        private List<String> productRoles;
     }
 }
