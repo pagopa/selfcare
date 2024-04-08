@@ -53,8 +53,6 @@ public interface UserMapper {
         return Optional.ofNullable(certifiableFieldResourceOfstring).map(CertifiableFieldResourceOfstring::getValue).orElse(null);
     }
 
-    UserDetailResponse toUserResponse(UserResource userResource);
-
     @Named("toWorkContactResponse")
     default Map<String, WorkContactResponse> toWorkContactResponse(Map<String, WorkContactResource> workContactResourceMap){
         Map<String, WorkContactResponse> resourceMap = new HashMap<>();
@@ -124,10 +122,13 @@ public interface UserMapper {
 
     @Named("toCertifiableString")
     default CertifiableFieldResourceOfstring toCertString(String value) {
-        var certifiableFieldResourceOfstring = new CertifiableFieldResourceOfstring();
-        certifiableFieldResourceOfstring.setValue(value);
-        certifiableFieldResourceOfstring.setCertification(CertifiableFieldResourceOfstring.CertificationEnum.NONE);
-        return certifiableFieldResourceOfstring;
+        if (StringUtils.isNotBlank(value)){
+            var certifiableFieldResourceOfstring = new CertifiableFieldResourceOfstring();
+            certifiableFieldResourceOfstring.setValue(value);
+            certifiableFieldResourceOfstring.setCertification(CertifiableFieldResourceOfstring.CertificationEnum.NONE);
+            return certifiableFieldResourceOfstring;
+        }
+        return null;
     }
 
     OnboardedProductMapper productMapper = Mappers.getMapper(OnboardedProductMapper.class);
