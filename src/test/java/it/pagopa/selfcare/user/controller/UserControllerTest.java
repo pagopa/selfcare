@@ -17,6 +17,7 @@ import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.model.LoggedUser;
+import it.pagopa.selfcare.user.model.UpdateUserRequest;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
@@ -431,12 +432,12 @@ class UserControllerTest {
     @Test
     @TestSecurity(user = "userJwt")
     void testUpdateUserRegistryAndSendNotificationToQueue() {
-        MutableUserFieldsDto mutableUserFieldsDto = new MutableUserFieldsDto();
-        when(userRegistryService.updateUserRegistryAndSendNotificationToQueue(mutableUserFieldsDto, "test_user_id", "institutionIdTest")).thenReturn(Uni.createFrom().nullItem());
+        UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+        when(userRegistryService.updateUserRegistryAndSendNotificationToQueue(updateUserRequest, "test_user_id", "institutionIdTest")).thenReturn(Uni.createFrom().nullItem());
         given()
                 .when()
                 .contentType(ContentType.JSON)
-                .body(mutableUserFieldsDto)
+                .body(updateUserRequest)
                 .put("/test_user_id/user-registry?institutionId=institutionIdTest")
                 .then()
                 .statusCode(204);

@@ -535,7 +535,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MutableUserFieldsDto'
+              $ref: '#/components/schemas/UpdateUserRequest'
       responses:
         "200":
           description: OK
@@ -722,20 +722,6 @@ components:
           type: string
         hasToSendEmail:
           type: boolean
-    CertifiableFieldResourceOfLocalDate:
-      type: object
-      properties:
-        certification:
-          $ref: '#/components/schemas/CertificationEnum1'
-        value:
-          $ref: '#/components/schemas/LocalDate'
-    CertifiableFieldResourceOfstring:
-      type: object
-      properties:
-        certification:
-          $ref: '#/components/schemas/CertificationEnum'
-        value:
-          type: string
     CertifiableFieldResponseString:
       type: object
       properties:
@@ -744,11 +730,6 @@ components:
         certified:
           $ref: '#/components/schemas/CertificationEnum'
     CertificationEnum:
-      enum:
-      - NONE
-      - SPID
-      type: string
-    CertificationEnum1:
       enum:
       - NONE
       - SPID
@@ -780,29 +761,10 @@ components:
       - COLL
       - PROD
       type: string
-    LocalDate:
-      format: date
-      type: string
-      example: 2022-03-10
     LocalDateTime:
       format: date-time
       type: string
       example: 2022-03-10T12:15:50
-    MutableUserFieldsDto:
-      type: object
-      properties:
-        birthDate:
-          $ref: '#/components/schemas/CertifiableFieldResourceOfLocalDate'
-        email:
-          $ref: '#/components/schemas/CertifiableFieldResourceOfstring'
-        familyName:
-          $ref: '#/components/schemas/CertifiableFieldResourceOfstring'
-        name:
-          $ref: '#/components/schemas/CertifiableFieldResourceOfstring'
-        workContacts:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/WorkContactResource'
     OnboardedProductResponse:
       type: object
       properties:
@@ -890,23 +852,28 @@ components:
         fiscalCode:
           pattern: \S
           type: string
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        familyName:
+          type: string
+        email:
+          type: string
     User:
       required:
-      - familyName
       - fiscalCode
-      - name
       - institutionEmail
       type: object
       properties:
         birthDate:
           type: string
         familyName:
-          minLength: 1
-          type: string
-        fiscalCode:
-          minLength: 1
           type: string
         name:
+          type: string
+        fiscalCode:
           minLength: 1
           type: string
         institutionEmail:
@@ -1079,11 +1046,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UserNotificationResponse'
-    WorkContactResource:
-      type: object
-      properties:
-        email:
-          $ref: '#/components/schemas/CertifiableFieldResourceOfstring'
     WorkContactResponse:
       type: object
       properties:

@@ -7,7 +7,9 @@ import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.model.UpdateUserRequest;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
+import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -89,6 +91,13 @@ public interface UserMapper {
     }
     MutableUserFieldsDto toMutableUserFieldsDto(UserResource userResource);
 
+    @Mapping(source = "updateUserRequest.familyName", target = "familyName",  qualifiedByName = "toCertifiableString")
+    @Mapping(source = "updateUserRequest.name", target = "name",  qualifiedByName = "toCertifiableString")
+    @Mapping(target = "workContacts",  expression = "java(toWorkContact(updateUserRequest.getEmail(), idMail))")
+    @Mapping(target = "email", ignore = true)
+    @Mapping(target = "birthDate", ignore = true)
+    MutableUserFieldsDto toMutableUserFieldsDto(UpdateUserRequest updateUserRequest, String idMail);
+
     @Mapping(source = "user.birthDate", target = "birthDate", qualifiedByName = "toCertifiableLocalDate")
     @Mapping(source = "user.familyName", target = "familyName",  qualifiedByName = "toCertifiableString")
     @Mapping(source = "user.name", target = "name",  qualifiedByName = "toCertifiableString")
@@ -96,6 +105,15 @@ public interface UserMapper {
     @Mapping(source = "workContactResource", target = "workContacts")
     SaveUserDto toSaveUserDto(CreateUserDto.User user, Map<String, WorkContactResource> workContactResource);
 
+    @Named("toWorkContact")
+    default Map<String, WorkContactResource> toWorkContact(String email, String idMail){
+        if (StringUtils.isNotBlank(idMail) && StringUtils.isNotBlank(email)){
+            WorkContactResource workContactResource = new WorkContactResource();
+            workContactResource.setEmail(toCertString(email));
+            return Map.of(idMail, workContactResource);
+        }
+        return null;
+    }
     @Named("toCertifiableLocalDate")
     default CertifiableFieldResourceOfLocalDate toLocalTime(String time) {
         var certifiableFieldResourceOfLocalDate = new CertifiableFieldResourceOfLocalDate();

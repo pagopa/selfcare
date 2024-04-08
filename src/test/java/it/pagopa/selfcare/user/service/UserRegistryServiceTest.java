@@ -10,6 +10,7 @@ import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.model.UpdateUserRequest;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
@@ -59,7 +60,7 @@ public class UserRegistryServiceTest {
         org.openapi.quarkus.user_registry_json.model.WorkContactResource workContactResource = new org.openapi.quarkus.user_registry_json.model.WorkContactResource();
         workContactResource.setEmail(certifiedEmail);
         userResource.setEmail(certifiedEmail);
-        userResource.setWorkContacts(Map.of("institutionId", workContactResource));
+        userResource.setWorkContacts(Map.of("ID_MAIL#123455", workContactResource));
 
         userInstitution = new UserInstitution();
         userInstitution.setId(ObjectId.get());
@@ -80,14 +81,29 @@ public class UserRegistryServiceTest {
     void testSendUpdateUserNotificationToQueue() {
         when(userNotificationService.sendKafkaNotification(any(UserNotificationToSend.class), anyString())).thenReturn(Uni.createFrom().item(new UserNotificationToSend()));
 
-        MutableUserFieldsDto mutableUserFieldsDto = new MutableUserFieldsDto();
+        UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+        updateUserRequest.setEmail("test2@test.it");
         when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(userInstitution));
-        when(userRegistryApi.updateUsingPATCH("userId", mutableUserFieldsDto)).thenReturn(Uni.createFrom().item(Response.accepted().build()));
+        when(userInstitutionService.persistOrUpdate(any(UserInstitution.class))).thenReturn(Uni.createFrom().item(userInstitution));
+        when(userRegistryApi.updateUsingPATCH(eq("userId"), any(MutableUserFieldsDto.class))).thenReturn(Uni.createFrom().item(Response.accepted().build()));
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, "userId")).thenReturn(Uni.createFrom().item(userResource));
-        UniAssertSubscriber<List<UserNotificationToSend>> subscriber = userRegistryService.updateUserRegistryAndSendNotificationToQueue(mutableUserFieldsDto, "userId", "institutionId")
+        UniAssertSubscriber<List<UserNotificationToSend>> subscriber = userRegistryService.updateUserRegistryAndSendNotificationToQueue(updateUserRequest, "userId", "institutionId")
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted();
     }
 
+    @Test
+    void testSendUpdateUserNotificationToQueue2() {
+        when(userNotificationService.sendKafkaNotification(any(UserNotificationToSend.class), anyString())).thenReturn(Uni.createFrom().item(new UserNotificationToSend()));
 
+        UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+        updateUserRequest.setEmail("test@test.it");
+        when(userInstitutionService.persistOrUpdate(any(UserInstitution.class))).thenReturn(Uni.createFrom().item(userInstitution));
+        when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(userInstitution));
+        when(userRegistryApi.updateUsingPATCH(eq("userId"), any(MutableUserFieldsDto.class))).thenReturn(Uni.createFrom().item(Response.accepted().build()));
+        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, "userId")).thenReturn(Uni.createFrom().item(userResource));
+        UniAssertSubscriber<List<UserNotificationToSend>> subscriber = userRegistryService.updateUserRegistryAndSendNotificationToQueue(updateUserRequest, "userId", "institutionId")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
+    }
 }

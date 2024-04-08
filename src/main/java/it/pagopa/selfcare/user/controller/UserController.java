@@ -13,6 +13,7 @@ import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
+import it.pagopa.selfcare.user.model.UpdateUserRequest;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
 import jakarta.inject.Inject;
@@ -223,8 +224,8 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> updateUserRegistryAndSendNotification(@PathParam(value = "id") String userId,
                                                                @QueryParam(value = "institutionId") String institutionId,
-                                                               MutableUserFieldsDto userDto) {
-        return userRegistryService.updateUserRegistryAndSendNotificationToQueue(userDto, userId, institutionId)
+                                                               UpdateUserRequest updateUserRequest) {
+        return userRegistryService.updateUserRegistryAndSendNotificationToQueue(updateUserRequest, userId, institutionId)
                 .map(ignore -> Response
                         .status(HttpStatus.SC_NO_CONTENT)
                         .build());
