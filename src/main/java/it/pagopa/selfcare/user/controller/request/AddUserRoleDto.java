@@ -18,6 +18,7 @@ public class AddUserRoleDto {
 
     private String institutionDescription;
     private String institutionRootName;
+    private String userMailUuid;
     private boolean hasToSendEmail;
 
     @Data

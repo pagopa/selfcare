@@ -751,6 +751,45 @@ class UserServiceTest {
     }
 
     @Test
+    void testCreateOrUpdateUser_UpdateUser_SuccessByUserId2() {
+        // Prepare test data
+        AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
+        addUserRoleDto.setInstitutionId("institutionId");
+        AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
+        addUserRoleProduct.setProductId("productId");
+        addUserRoleDto.setProduct(addUserRoleProduct);
+        LoggedUser loggedUser = LoggedUser.builder().build();
+
+        Product product = new Product();
+        product.setDescription("description");
+
+        UserToNotify userToNotify = new UserToNotify();
+        userToNotify.setUserId(userId.toString());
+
+        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
+        userNotificationToSend.setUser(userToNotify);
+
+        // Mock external dependencies
+        when(userRegistryApi.findByIdUsingGET(any(), eq("userId"))).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), addUserRoleDto.getInstitutionId())).thenReturn(Uni.createFrom().nullItem());
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(userInstitution));
+        when(productService.getProduct(any())).thenReturn(product);
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
+        when(userUtils.buildUsersNotificationResponse(any(), any(), (QueueEvent) any())).thenReturn(List.of(userNotificationToSend));
+        when(userNotificationService.sendKafkaNotification(any(), any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
+
+
+        // Call the method
+        UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // Verify the result
+        subscriber.awaitItem().assertCompleted();
+        verify(userRegistryApi).findByIdUsingGET(any(), eq("userId"));
+        verify(userInstitutionService).persistOrUpdate(any());
+    }
+
+    @Test
     void testCreateOrUpdateUser_UpdateUser_UserInstitutionUpdateFailedByUserId() {
         // Prepare test data
         AddUserRoleDto addUserRoleDto = new AddUserRoleDto();

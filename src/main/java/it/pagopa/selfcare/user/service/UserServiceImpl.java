@@ -419,7 +419,7 @@ public class UserServiceImpl implements UserService {
 
     private Uni<Void> updateUserInstitutionByUserId(UserResource userResource, AddUserRoleDto userDto, LoggedUser loggedUser) {
         return userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), userDto.getInstitutionId())
-                .onItem().transform(userInstitution -> updateUserInstitution(userDto, userInstitution, userResource.getId().toString()))
+                .onItem().transform(userInstitution -> updateOrCreateUserInstitution(userDto, userInstitution, userResource.getId().toString()))
                 .onItem().invoke(userInstitution -> log.info("start persist userInstititon: {}", userInstitution))
                 .onItem().transformToUni(userInstitutionService::persistOrUpdate)
                 .onItem().invoke(() -> log.info("UserInstitution persisted"))
@@ -434,10 +434,10 @@ public class UserServiceImpl implements UserService {
 
     }
 
-    private UserInstitution updateUserInstitution(AddUserRoleDto userDto, UserInstitution userInstitution, String userId) {
+    private UserInstitution updateOrCreateUserInstitution(AddUserRoleDto userDto, UserInstitution userInstitution, String userId) {
         if (userInstitution == null) {
             log.info("UserInstitution with userId: {} and institutionId: {} not found", userId, userDto.getInstitutionId());
-            throw new ResourceNotFoundException(String.format(USER_INSTITUTION_NOT_FOUND_ERROR.getMessage(), userId, userDto.getInstitutionId()), USER_INSTITUTION_NOT_FOUND_ERROR.getCode());
+            return userInstitutionMapper.toNewEntity(userDto, userId);
         }
         log.info("UserInstitution with userId: {} and institutionId: {} found", userId, userDto.getInstitutionId());
         userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));

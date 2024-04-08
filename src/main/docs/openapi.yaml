@@ -720,6 +720,8 @@ components:
           type: string
         institutionRootName:
           type: string
+        userMailUuid:
+          type: string
         hasToSendEmail:
           type: boolean
     CertifiableFieldResponseString:
