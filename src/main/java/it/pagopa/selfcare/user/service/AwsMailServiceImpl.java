@@ -1,6 +1,5 @@
 package it.pagopa.selfcare.user.service;
 
-import io.quarkus.arc.properties.IfBuildProperty;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -11,7 +10,6 @@ import software.amazon.awssdk.services.ses.model.*;
 
 @Slf4j
 @ApplicationScoped
-@IfBuildProperty(name = "user-ms.mail.connector.type", stringValue = "aws")
 public class AwsMailServiceImpl implements MailService {
 
     private final SesClient sesClient;
