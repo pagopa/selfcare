@@ -460,10 +460,16 @@ public class UserServiceImpl implements UserService {
                 .onItem().transform(userInstitution -> userInstitution == null ? userUuid : personId)
                 .onItem().invoke(userId -> log.info("userId to retrieve: {}", userId))
                 .onItem().transformToMulti(user -> retrieveFilteredUserInstitutions(user, institutionId, roles, states, products, productRoles))
+                .onItem().invoke(userInstitution -> removeProductsWithoutGivenState(userInstitution, states))
                 .onItem().invoke(userInstitution -> log.info("userInstitution found: {}", userInstitution))
                 .onItem().transformToUniAndMerge(userInstitution ->
                         userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
                                 .map(userResource -> userMapper.toUserDataResponse(userInstitution, userResource)));
+    }
+
+    private void removeProductsWithoutGivenState(UserInstitution userInstitution, List<String> states) {
+        //remove product from list in userInstitution if product.getStatus is not contained in states
+        userInstitution.getProducts().removeIf(product -> !states.contains(product.getStatus().name()));
     }
 
     private Multi<UserInstitution> retrieveFilteredUserInstitutions(String user, String institutionId, List<String> roles, List<String> states, List<String> products, List<String> productRoles) {
