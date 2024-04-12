@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.bson.types.ObjectId;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
@@ -19,6 +20,8 @@ public class UserInstitution extends ReactivePanacheMongoEntity {
     private String userId;
     private String institutionId;
     private String institutionDescription;
-    private List<OnboardedProduct> products;
+    private String institutionRootName;
+    private List<OnboardedProduct> products = new ArrayList<>();
+    private String userMailUuid;
 
 }
