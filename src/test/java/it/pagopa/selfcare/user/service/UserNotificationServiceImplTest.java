@@ -109,7 +109,7 @@ class UserNotificationServiceImplTest {
         when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
         when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
 
-        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, new ObjectMapper(), mailService);
+        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true);
         when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
 
         userNotificationServiceImpl.sendEmailNotification(
@@ -188,7 +188,7 @@ class UserNotificationServiceImplTest {
         when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
         when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
 
-        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, new ObjectMapper(), mailService);
+        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true);
 
         when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
         List<String> roleLabels = List.of("label");

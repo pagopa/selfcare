@@ -20,6 +20,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
@@ -38,40 +39,31 @@ import static it.pagopa.selfcare.user.constant.TemplateMailConstant.*;
 @ApplicationScoped
 public class UserNotificationServiceImpl implements UserNotificationService {
 
-    public static final String ERROR_DURING_SEND_DATA_LAKE_NOTIFICATION_FOR_USER = "error during send dataLake notification for user {}";
-
     @RestClient
     @Inject
-    private EventHubRestClient eventHubRestClient;
-    private final ObjectMapper objectMapper;
+    EventHubRestClient eventHubRestClient;
 
     private final MailService mailService;
-
     private final Configuration freemarkerConfig;
+    private final boolean eventHubUsersEnabled;
 
 
-    public UserNotificationServiceImpl(Configuration freemarkerConfig, CloudTemplateLoader cloudTemplateLoader, ObjectMapper objectMapper, MailService mailService) {
+    public UserNotificationServiceImpl(Configuration freemarkerConfig, CloudTemplateLoader cloudTemplateLoader, MailService mailService,
+                                       @ConfigProperty(name = "user-ms.eventhub.users.enabled") boolean eventHubUsersEnabled) {
         this.mailService = mailService;
         this.freemarkerConfig = freemarkerConfig;
         freemarkerConfig.setTemplateLoader(cloudTemplateLoader);
-        this.objectMapper = objectMapper;
-    }
-
-    private String convertNotificationToJson(UserNotificationToSend userNotificationToSend) {
-        try {
-            return objectMapper.writeValueAsString(userNotificationToSend);
-        } catch (JsonProcessingException e) {
-            log.warn(ERROR_DURING_SEND_DATA_LAKE_NOTIFICATION_FOR_USER, userNotificationToSend.getUser().getUserId());
-            throw new InvalidRequestException(ERROR_DURING_SEND_DATA_LAKE_NOTIFICATION_FOR_USER);
-        }
+        this.eventHubUsersEnabled = eventHubUsersEnabled;
     }
 
     @Override
     public Uni<UserNotificationToSend> sendKafkaNotification(UserNotificationToSend userNotificationToSend, String userId) {
-        return eventHubRestClient.sendMessage(userNotificationToSend)
+        return eventHubUsersEnabled
+            ? eventHubRestClient.sendMessage(userNotificationToSend)
                 .onItem().invoke(() -> log.info("sent dataLake notification for user : {}", userId))
                 .onFailure().invoke(throwable -> log.warn("error during send dataLake notification for user {}: {} ", userId, throwable.getMessage(), throwable))
-                .replaceWith(userNotificationToSend);
+                .replaceWith(userNotificationToSend)
+            : Uni.createFrom().item(userNotificationToSend);
     }
 
     @Override
