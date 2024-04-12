@@ -36,6 +36,7 @@ import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -460,16 +461,22 @@ public class UserServiceImpl implements UserService {
                 .onItem().transform(userInstitution -> userInstitution == null ? userUuid : personId)
                 .onItem().invoke(userId -> log.info("userId to retrieve: {}", userId))
                 .onItem().transformToMulti(user -> retrieveFilteredUserInstitutions(user, institutionId, roles, states, products, productRoles))
-                .onItem().invoke(userInstitution -> removeProductsWithoutGivenState(userInstitution, states))
+                .onItem().invoke(userInstitution -> applyFiltersToRemoveProducts(userInstitution, states, products, roles, productRoles))
                 .onItem().invoke(userInstitution -> log.info("userInstitution found: {}", userInstitution))
                 .onItem().transformToUniAndMerge(userInstitution ->
                         userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
                                 .map(userResource -> userMapper.toUserDataResponse(userInstitution, userResource)));
     }
 
-    private void removeProductsWithoutGivenState(UserInstitution userInstitution, List<String> states) {
-        //remove product from list in userInstitution if product.getStatus is not contained in states
-        userInstitution.getProducts().removeIf(product -> !states.contains(product.getStatus().name()));
+    private void applyFiltersToRemoveProducts(UserInstitution userInstitution, List<String> states, List<String> products, List<String> roles, List<String> productRoles) {
+        if(!CollectionUtils.isNullOrEmpty(userInstitution.getProducts())) {
+            userInstitution.getProducts().removeIf(product ->
+                    (!CollectionUtils.isNullOrEmpty(states) && !states.contains(product.getStatus().name())) ||
+                    (!CollectionUtils.isNullOrEmpty(products) && !products.contains(product.getProductId())) ||
+                    (!CollectionUtils.isNullOrEmpty(roles) && !roles.contains(product.getRole().name())) ||
+                    (!CollectionUtils.isNullOrEmpty(productRoles) && !productRoles.contains(product.getProductRole()))
+            );
+        }
     }
 
     private Multi<UserInstitution> retrieveFilteredUserInstitutions(String user, String institutionId, List<String> roles, List<String> states, List<String> products, List<String> productRoles) {
