@@ -5,7 +5,6 @@ import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
-import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.mongodb.ChangeStreamOptions;
 import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
@@ -19,7 +18,10 @@ import org.bson.conversions.Bson;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
@@ -28,7 +30,6 @@ import static java.util.Arrays.asList;
 @Startup
 @Slf4j
 @ApplicationScoped
-@IfBuildProperty(name = "user-cdc.mongodb.watch.enabled", stringValue = "true")
 public class UserInstitutionCdcService {
 
     private static final String COLLECTION_NAME = "userInstitutions";
@@ -66,6 +67,7 @@ public class UserInstitutionCdcService {
     }
 
     private void initOrderStream() {
+        log.info("Starting initOrderStream ... ");
         ReactiveMongoCollection<UserInstitution> dataCollection = getCollection();
         ChangeStreamOptions options = new ChangeStreamOptions().fullDocument(FullDocument.UPDATE_LOOKUP);
 
@@ -74,7 +76,10 @@ public class UserInstitutionCdcService {
         List<Bson> pipeline = Arrays.asList(match, project);
 
         Multi<ChangeStreamDocument<UserInstitution>> publisher = dataCollection.watch(pipeline, UserInstitution.class, options);
-        publisher.subscribe().with(this::consumerUserInstitutionRepositoryEvent);
+        publisher
+                .subscribe().with(this::consumerUserInstitutionRepositoryEvent);
+
+        log.info("Completed initOrderStream ... ");
     }
 
     private ReactiveMongoCollection<UserInstitution> getCollection() {
@@ -88,16 +93,18 @@ public class UserInstitutionCdcService {
         assert document.getFullDocument() != null;
         assert document.getDocumentKey() != null;
 
+        log.info("Starting consumerUserInstitutionRepositoryEvent ... ");
+
         userInstitutionRepository.updateUser(document.getFullDocument())
                 .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofHours(retryMaxBackOff)).atMost(maxRetry)
                 .subscribe().with(
                         result -> {
-                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), "TRUE", USERINSTITUTION_SUCCESS_MECTRICS);
                             log.info("UserInfo collection successfully updated from UserInstitution document having id: {}", document.getDocumentKey().toJson());
+                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), "TRUE", USERINSTITUTION_SUCCESS_MECTRICS);
                         },
                         failure -> {
-                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), "FALSE", USERINSTITUTION_FAILURE_MECTRICS);
                             log.error("Error during UserInfo collection updating, from UserInstitution document having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
+                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), "FALSE", USERINSTITUTION_FAILURE_MECTRICS);
                         });
     }
 
