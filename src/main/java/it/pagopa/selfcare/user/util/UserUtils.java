@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
+import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
@@ -67,7 +68,7 @@ public class UserUtils {
     }
 
     public static boolean checkIfNotFoundException(Throwable throwable) {
-        if (throwable instanceof WebClientApplicationException wex) {
+        if (throwable instanceof ClientWebApplicationException wex) {
             return wex.getResponse().getStatus() == HttpStatus.SC_NOT_FOUND;
         }
 

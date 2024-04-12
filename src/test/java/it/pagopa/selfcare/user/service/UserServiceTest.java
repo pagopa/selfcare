@@ -38,6 +38,7 @@ import jakarta.ws.rs.core.Response;
 import org.apache.http.HttpStatus;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -226,7 +227,7 @@ class UserServiceTest {
         UserInstitution userInstitution = new UserInstitution();
         userInstitution.setUserId("test-user");
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(userInstitution));
-        when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().failure(new WebClientApplicationException(HttpStatus.SC_NOT_FOUND)));
+        when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().failure(new ClientWebApplicationException(HttpStatus.SC_NOT_FOUND)));
 
         UniAssertSubscriber<UserResource> subscriber = userService.retrievePerson("test-user", "test-product", "test-institutionId").subscribe().withSubscriber(UniAssertSubscriber.create());
 
