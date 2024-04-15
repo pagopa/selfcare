@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.*;
+import static it.pagopa.selfcare.user.constant.OnboardedProductState.ACTIVE;
+import static it.pagopa.selfcare.user.constant.OnboardedProductState.SUSPENDED;
 import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductEnum.*;
 import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
 
@@ -69,7 +71,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
     @Override
     public Uni<Long> deleteUserInstitutionProduct(String userId, String institutionId, String productId) {
-        OnboardedProductFilter onboardedProductFilter = OnboardedProductFilter.builder().productId(productId).build();
+        OnboardedProductFilter onboardedProductFilter = OnboardedProductFilter.builder().productId(productId).status(ACTIVE.name()).build();
         UserInstitutionFilter userInstitutionFilter = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build();
         Map<String, Object> filterMap = userUtils.retrieveMapForFilter(onboardedProductFilter.constructMap(), userInstitutionFilter.constructMap());
         return updateUserStatusDao(filterMap, OnboardedProductState.DELETED);
@@ -77,7 +79,14 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
     @Override
     public Uni<Long> updateUserStatusWithOptionalFilterByInstitutionAndProduct(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status) {
-        Map<String, Object> onboardedProductFilterMap = OnboardedProductFilter.builder().productId(productId).role(role).productRole(productRole).build().constructMap();
+        Map<String, Object> onboardedProductFilterMap;
+        if(status.equals(OnboardedProductState.ACTIVE)) {
+            onboardedProductFilterMap = OnboardedProductFilter.builder().productId(productId).role(role).productRole(productRole).status(SUSPENDED.name()).build().constructMap();
+        }else if(status.equals(SUSPENDED)) {
+            onboardedProductFilterMap = OnboardedProductFilter.builder().productId(productId).role(role).productRole(productRole).status(ACTIVE.name()).build().constructMap();
+        }else {
+            onboardedProductFilterMap = OnboardedProductFilter.builder().productId(productId).role(role).productRole(productRole).build().constructMap();
+        }
         Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
         Map<String, Object> filterMap = userUtils.retrieveMapForFilter(onboardedProductFilterMap, userInstitutionFilterMap);
         return updateUserStatusDao(filterMap, status);

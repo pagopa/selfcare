@@ -13,6 +13,7 @@ import it.pagopa.selfcare.user.controller.response.UserDataResponse;
 import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
+import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
@@ -76,6 +77,9 @@ public class UserServiceImpl implements UserService {
     private static final String USERS_WORKS_FIELD_LIST = "fiscalCode,familyName,email,name,workContacts";
 
     private static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
+
+    private static final String USER_INSTITUTION_FOUNDED = "UserInstitution with userId: {} and institutionId: {} founded";
+    private static final String USER_INSTITUTION_NOT_FOUND = "UserInstitution with userId: {} and institutionId: {} not found";
 
     /**
      * The updateUserStatus function updates the status of a user's onboarded product.
@@ -390,19 +394,6 @@ public class UserServiceImpl implements UserService {
                 .onFailure().invoke(exception -> log.error("Error during persist user on UserInstitution: {} ", exception.getMessage(), exception));
     }
 
-    private UserInstitution updateOrCreateUserInstitution(CreateUserDto userDto, String mailUuid, UserInstitution userInstitution, String userId) {
-        if (userInstitution == null) {
-            log.info("UserInstitution with userId: {} and institutionId: {} not found", userId, userDto.getInstitutionId());
-            return userInstitutionMapper.toNewEntity(userDto, userId, mailUuid);
-        }
-
-        log.info("UserInstitution with userId: {} and institutionId: {} found", userId, userDto.getInstitutionId());
-        userInstitution.setUserMailUuid(mailUuid);
-        userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));
-
-        return userInstitution;
-    }
-
     /**
      * The createOrUpdateUserByUserId method is a method that either add to existingUser a new user Role.
      * The method starts by calling the findByIdUsingGET method on the userRegistryApi object,
@@ -437,13 +428,56 @@ public class UserServiceImpl implements UserService {
 
     private UserInstitution updateOrCreateUserInstitution(AddUserRoleDto userDto, UserInstitution userInstitution, String userId) {
         if (userInstitution == null) {
-            log.info("UserInstitution with userId: {} and institutionId: {} not found", userId, userDto.getInstitutionId());
+            log.info(USER_INSTITUTION_NOT_FOUND, userId, userDto.getInstitutionId());
             return userInstitutionMapper.toNewEntity(userDto, userId);
         }
-        log.info("UserInstitution with userId: {} and institutionId: {} found", userId, userDto.getInstitutionId());
+
+        log.info(USER_INSTITUTION_FOUNDED, userId, userDto.getInstitutionId());
+
+        List<String> productRoleToAdd = checkAlreadyOnboardedProdcutRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution);
+        userDto.getProduct().setProductRoles(productRoleToAdd);
+
         userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));
         return userInstitution;
     }
+
+    private UserInstitution updateOrCreateUserInstitution(CreateUserDto userDto, String mailUuid, UserInstitution userInstitution, String userId) {
+        if (userInstitution == null) {
+            log.info(USER_INSTITUTION_NOT_FOUND, userId, userDto.getInstitutionId());
+            return userInstitutionMapper.toNewEntity(userDto, userId, mailUuid);
+        }
+
+        log.info(USER_INSTITUTION_FOUNDED, userId, userDto.getInstitutionId());
+
+        List<String> productRoleToAdd = checkAlreadyOnboardedProdcutRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution);
+        userDto.getProduct().setProductRoles(productRoleToAdd);
+
+        userInstitution.setUserMailUuid(mailUuid);
+        userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));
+
+        return userInstitution;
+    }
+
+    private List<String> checkAlreadyOnboardedProdcutRole(String productId, List<String> productRole,  UserInstitution userInstitution) {
+        List<String> productRoleAlreadyOnboarded = Optional.ofNullable(userInstitution.getProducts())
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(onboardedProduct -> onboardedProduct.getProductId().equals(productId))
+                .filter(onboardedProduct -> productRole.contains(onboardedProduct.getProductRole()))
+                .filter(onboardedProduct -> onboardedProduct.getStatus().equals(ACTIVE))
+                .map(OnboardedProduct::getProductRole)
+                .toList();
+
+
+        List<String> productRoleToAdd = new ArrayList<>(productRole);
+        productRoleToAdd.removeAll(productRoleAlreadyOnboarded);
+
+        if (productRoleToAdd.isEmpty()) {
+            throw new InvalidRequestException(String.format("User already has this roles on Product %s", productId));
+        }
+        return productRoleToAdd;
+    }
+
 
     /**
      * The retrieveUsers function is used to retrieve a list of users from the database and userRegistry.
