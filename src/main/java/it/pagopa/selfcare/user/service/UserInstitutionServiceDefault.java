@@ -79,14 +79,14 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
     @Override
     public Uni<Long> updateUserStatusWithOptionalFilterByInstitutionAndProduct(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status) {
-        Map<String, Object> onboardedProductFilterMap;
-        if(status.equals(OnboardedProductState.ACTIVE)) {
-            onboardedProductFilterMap = OnboardedProductFilter.builder().productId(productId).role(role).productRole(productRole).status(SUSPENDED.name()).build().constructMap();
-        }else if(status.equals(SUSPENDED)) {
-            onboardedProductFilterMap = OnboardedProductFilter.builder().productId(productId).role(role).productRole(productRole).status(ACTIVE.name()).build().constructMap();
-        }else {
-            onboardedProductFilterMap = OnboardedProductFilter.builder().productId(productId).role(role).productRole(productRole).build().constructMap();
-        }
+        Map<String, Object> onboardedProductFilterMap = switch (status) {
+            case ACTIVE ->
+                    OnboardedProductFilter.builder().productId(productId).role(role).productRole(productRole).status(SUSPENDED.name()).build().constructMap();
+            case SUSPENDED, DELETED ->
+                    OnboardedProductFilter.builder().productId(productId).role(role).productRole(productRole).status(ACTIVE.name()).build().constructMap();
+            default ->
+                    OnboardedProductFilter.builder().productId(productId).role(role).productRole(productRole).build().constructMap();
+        };
         Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
         Map<String, Object> filterMap = userUtils.retrieveMapForFilter(onboardedProductFilterMap, userInstitutionFilterMap);
         return updateUserStatusDao(filterMap, status);
