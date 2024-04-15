@@ -114,6 +114,7 @@ public interface UserMapper {
     }
     @Named("toCertifiableLocalDate")
     default CertifiableFieldResourceOfLocalDate toLocalTime(String time) {
+        if(Objects.isNull(time)) return null;
         var certifiableFieldResourceOfLocalDate = new CertifiableFieldResourceOfLocalDate();
         certifiableFieldResourceOfLocalDate.setValue(LocalDate.parse(time));
         certifiableFieldResourceOfLocalDate.setCertification(CertifiableFieldResourceOfLocalDate.CertificationEnum.NONE);

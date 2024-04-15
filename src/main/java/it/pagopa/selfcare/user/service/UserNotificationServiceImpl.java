@@ -89,7 +89,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         String templateName = roleLabels.size() > 1 ? CREATE_TEMPLATE_MULTIPLE_ROLE : CREATE_TEMPLATE_SINGLE_ROLE;
         Map<String, String> dataModel = buildCreateEmailDataModel(loggedUser, product, institutionDescription, roleLabels);
 
-        return this.sendEmailNotification(email, templateName, CREATE_SUBJECT, dataModel)
+        return this.sendEmailNotification(templateName, CREATE_SUBJECT, email, dataModel)
                 .onItem().invoke(() -> log.debug("sendCreateNotification end"));
     }
 
