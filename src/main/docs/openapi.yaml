@@ -811,6 +811,7 @@ components:
       required:
       - productId
       - role
+      - productRoles
       type: object
       properties:
         productId:
@@ -828,6 +829,7 @@ components:
       required:
       - productId
       - role
+      - productRoles
       type: object
       properties:
         productId:

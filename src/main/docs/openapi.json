@@ -1129,7 +1129,7 @@
         "type" : "string"
       },
       "Product" : {
-        "required" : [ "productId", "role" ],
+        "required" : [ "productId", "role", "productRoles" ],
         "type" : "object",
         "properties" : {
           "productId" : {
@@ -1151,7 +1151,7 @@
         }
       },
       "Product1" : {
-        "required" : [ "productId", "role" ],
+        "required" : [ "productId", "role", "productRoles" ],
         "type" : "object",
         "properties" : {
           "productId" : {

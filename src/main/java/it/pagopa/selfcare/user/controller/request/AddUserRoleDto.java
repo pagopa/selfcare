@@ -31,6 +31,7 @@ public class AddUserRoleDto {
         private PartyRole role;
 
         private String tokenId;
+        @NotNull(message = "productRoles is required")
         private List<String> productRoles;
     }
 }
