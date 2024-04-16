@@ -85,7 +85,7 @@ public class UserInstitutionRepository {
                     .findFirst()
                     .ifPresentOrElse(userInstitutionRole -> {
                                 userInstitutionRole.setRole(role);
-                                userInstitutionRole.setState(state);
+                                userInstitutionRole.setStatus(state);
                             },
                             () -> {
                                 List<UserInstitutionRole> roleList = new ArrayList<>(userInfo.getInstitutions());

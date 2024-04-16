@@ -12,6 +12,6 @@ public interface UserMapper {
 
     @Mapping(target = "institutionName", source = "userInstitution.institutionDescription")
     @Mapping(target = "role", source = "role")
-    @Mapping(target = "state", source = "state")
-    UserInstitutionRole toUserInstitutionRole(UserInstitution userInstitution, PartyRole role, OnboardedProductState state);
+    @Mapping(target = "status", source = "status")
+    UserInstitutionRole toUserInstitutionRole(UserInstitution userInstitution, PartyRole role, OnboardedProductState status);
 }
