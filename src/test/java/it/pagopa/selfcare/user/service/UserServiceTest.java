@@ -40,6 +40,7 @@ import org.bson.types.ObjectId;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
@@ -617,6 +618,53 @@ class UserServiceTest {
         UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
+        // Verify the result
+        subscriber.awaitItem().assertItem(userId.toString());
+        verify(userRegistryApi).updateUsingPATCH(any(), any());
+        verify(userInstitutionService).persistOrUpdate(any());
+        verify(userInstitutionService).findByUserIdAndInstitutionId(any(), any());
+        verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(),any());
+        verify(userNotificationService).sendKafkaNotification(any(), any());
+    }
+
+    @Test
+    void testCreateOrUpdateUser_UpdateUser_SuccessByFiscalCode_with2role() {
+        UserInstitution userInstitution = createUserInstitution();
+        // Prepare test data
+        CreateUserDto createUserDto = new CreateUserDto();
+        CreateUserDto.User user = new CreateUserDto.User();
+        user.setFiscalCode("fiscalCode");
+        CreateUserDto.Product createUserProduct = new  CreateUserDto.Product();
+        createUserProduct.setProductId("prod-io");
+        createUserProduct.setProductRoles(List.of("admin2","admin3"));
+        createUserDto.setUser(user);
+        createUserDto.setProduct(createUserProduct);
+        LoggedUser loggedUser = LoggedUser.builder().build();
+
+        Product product = new Product();
+        product.setDescription("description");
+
+        UserToNotify userToNotify = new UserToNotify();
+        userToNotify.setUserId(userId.toString());
+
+        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
+        userNotificationToSend.setUser(userToNotify);
+
+        // Mock external dependencies
+        when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.findByUserIdAndInstitutionId(any(), any())).thenReturn(Uni.createFrom().item(userInstitution));
+        when(userRegistryApi.updateUsingPATCH(any(), any())).thenReturn(Uni.createFrom().item(Response.ok().build()));
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(userInstitution));
+        when(productService.getProduct(any())).thenReturn(product);
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
+        when(userUtils.buildUsersNotificationResponse(any(), any(), (QueueEvent) any())).thenReturn(List.of(userNotificationToSend));
+        when(userNotificationService.sendKafkaNotification(any(), any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
+
+        // Call the method
+        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        Assertions.assertEquals(3, userInstitution.getProducts().size());
         // Verify the result
         subscriber.awaitItem().assertItem(userId.toString());
         verify(userRegistryApi).updateUsingPATCH(any(), any());

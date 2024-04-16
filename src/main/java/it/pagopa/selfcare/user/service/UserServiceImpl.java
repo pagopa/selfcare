@@ -437,7 +437,7 @@ public class UserServiceImpl implements UserService {
         List<String> productRoleToAdd = checkAlreadyOnboardedProdcutRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution);
         userDto.getProduct().setProductRoles(productRoleToAdd);
 
-        userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));
+        productRoleToAdd.forEach(productRole -> userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct(), productRole)));
         return userInstitution;
     }
 
@@ -453,7 +453,7 @@ public class UserServiceImpl implements UserService {
         userDto.getProduct().setProductRoles(productRoleToAdd);
 
         userInstitution.setUserMailUuid(mailUuid);
-        userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));
+        productRoleToAdd.forEach(productRole -> userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct(), productRole)));
 
         return userInstitution;
     }

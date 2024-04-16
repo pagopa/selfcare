@@ -72,9 +72,9 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         return switch (status) {
             case ACTIVE ->
                     buildDataModelAndSendEmail(user, institution, product, ACTIVATE_TEMPLATE, ACTIVATE_SUBJECT, loggedUserName, loggedUserSurname);
-            case SUSPENDED ->
-                    buildDataModelAndSendEmail(user, institution, product, DELETE_TEMPLATE, DELETE_SUBJECT, loggedUserName, loggedUserSurname);
             case DELETED ->
+                    buildDataModelAndSendEmail(user, institution, product, DELETE_TEMPLATE, DELETE_SUBJECT, loggedUserName, loggedUserSurname);
+            case SUSPENDED ->
                     buildDataModelAndSendEmail(user, institution, product, SUSPEND_TEMPLATE, SUSPEND_SUBJECT, loggedUserName, loggedUserSurname);
             case PENDING, TOBEVALIDATED, REJECTED -> Uni.createFrom().voidItem();
         };
