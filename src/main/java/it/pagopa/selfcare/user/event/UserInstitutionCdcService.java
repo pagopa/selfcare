@@ -1,5 +1,8 @@
 package it.pagopa.selfcare.user.event;
 
+import com.azure.data.tables.TableClient;
+import com.azure.data.tables.models.TableEntity;
+import com.azure.data.tables.models.TableServiceException;
 import com.microsoft.applicationinsights.TelemetryClient;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
@@ -8,16 +11,20 @@ import com.mongodb.client.model.changestream.FullDocument;
 import io.quarkus.mongodb.ChangeStreamOptions;
 import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
+import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.Startup;
 import io.smallrye.mutiny.Multi;
 import it.pagopa.selfcare.user.event.entity.UserInstitution;
 import it.pagopa.selfcare.user.event.repository.UserInstitutionRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.BsonTimestamp;
 import org.bson.conversions.Bson;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +32,7 @@ import java.util.Map;
 
 import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
+import static it.pagopa.selfcare.user.event.constant.CdcStartAtConstant.*;
 import static java.util.Arrays.asList;
 
 @Startup
@@ -39,6 +47,8 @@ public class UserInstitutionCdcService {
     private static final String USERINSTITUTION_SUCCESS_MECTRICS = "UserInfoUpdate_successes";
 
     private final TelemetryClient telemetryClient;
+
+    private final TableClient tableClient;
     private final String mongodbDatabase;
     private final ReactiveMongoClient mongoClient;
     private final UserInstitutionRepository userInstitutionRepository;
@@ -54,7 +64,8 @@ public class UserInstitutionCdcService {
                                      @ConfigProperty(name = "user-cdc.retry.max-backoff") Integer retryMaxBackOff,
                                      @ConfigProperty(name = "user-cdc.retry") Integer maxRetry,
                                      UserInstitutionRepository userInstitutionRepository,
-                                     TelemetryClient telemetryClient) {
+                                     TelemetryClient telemetryClient,
+                                     TableClient tableClient) {
         this.mongoClient = mongoClient;
         this.mongodbDatabase = mongodbDatabase;
         this.userInstitutionRepository = userInstitutionRepository;
@@ -62,22 +73,41 @@ public class UserInstitutionCdcService {
         this.retryMaxBackOff = retryMaxBackOff;
         this.retryMinBackOff = retryMinBackOff;
         this.telemetryClient = telemetryClient;
+        this.tableClient = tableClient;
         telemetryClient.getContext().getOperation().setName(OPERATION_NAME);
         initOrderStream();
     }
 
     private void initOrderStream() {
         log.info("Starting initOrderStream ... ");
+
+        //Handling startAtOperationTime for watching collection at specific time
+        long startAtLong = LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        try {
+            TableEntity cdcStartAtEntity = tableClient.getEntity(CDC_START_AT_PARTITION_KEY, CDC_START_AT_ROW_KEY);
+            if(cdcStartAtEntity == null)
+                startAtLong = (Long) cdcStartAtEntity.getProperty(CDC_START_AT_PROPERTY);
+        } catch (TableServiceException e) {
+            log.error("Table StarAt not found, it is starting from now ...");
+        }
+
         ReactiveMongoCollection<UserInstitution> dataCollection = getCollection();
-        ChangeStreamOptions options = new ChangeStreamOptions().fullDocument(FullDocument.UPDATE_LOOKUP);
+        ChangeStreamOptions options = new ChangeStreamOptions()
+                .fullDocument(FullDocument.UPDATE_LOOKUP)
+                .startAtOperationTime(new BsonTimestamp(startAtLong));
 
         Bson match = Aggregates.match(Filters.in("operationType", asList("update", "replace", "insert")));
         Bson project = Aggregates.project(fields(include("_id", "ns", "documentKey", "fullDocument")));
         List<Bson> pipeline = Arrays.asList(match, project);
 
         Multi<ChangeStreamDocument<UserInstitution>> publisher = dataCollection.watch(pipeline, UserInstitution.class, options);
-        publisher
-                .subscribe().with(this::consumerUserInstitutionRepositoryEvent);
+        publisher.subscribe().with(
+                this::consumerUserInstitutionRepositoryEvent,
+                failure -> {
+                    log.error("Error during subscribe collection, exception: {} , message: {}", failure.toString(), failure.getMessage());
+                    constructMapAndTrackEvent(failure.getClass().toString(), "FALSE", USERINSTITUTION_FAILURE_MECTRICS);
+                    Quarkus.asyncExit();
+                });
 
         log.info("Completed initOrderStream ... ");
     }

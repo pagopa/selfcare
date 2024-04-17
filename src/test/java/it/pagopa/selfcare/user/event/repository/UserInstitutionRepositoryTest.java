@@ -176,7 +176,11 @@ class UserInstitutionRepositoryTest {
         role1.setInstitutionId("institutionId3");
         role1.setInstitutionName("institutionName");
         role1.setRole(PartyRole.DELEGATE);
-        userInfo.setInstitutions(List.of(role, role1));
+
+        List<UserInstitutionRole> userInstitutionRoles = new ArrayList<>();
+        userInstitutionRoles.add(role);
+        userInstitutionRoles.add(role1);
+        userInfo.setInstitutions(userInstitutionRoles);
         return userInfo;
     }
 
