@@ -18,6 +18,7 @@ import it.pagopa.selfcare.user.event.entity.UserInstitution;
 import it.pagopa.selfcare.user.event.repository.UserInstitutionRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
 import org.bson.conversions.Bson;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -25,10 +26,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
@@ -81,20 +79,22 @@ public class UserInstitutionCdcService {
     private void initOrderStream() {
         log.info("Starting initOrderStream ... ");
 
-        //Handling startAtOperationTime for watching collection at specific time
-        long startAtLong = LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        //Retrieve last resumeToken for watching collection at specific operation
+        String resumeToken = null;
         try {
             TableEntity cdcStartAtEntity = tableClient.getEntity(CDC_START_AT_PARTITION_KEY, CDC_START_AT_ROW_KEY);
-            if(cdcStartAtEntity == null)
-                startAtLong = (Long) cdcStartAtEntity.getProperty(CDC_START_AT_PROPERTY);
+            if(Objects.nonNull(cdcStartAtEntity))
+                resumeToken = (String) cdcStartAtEntity.getProperty(CDC_START_AT_PROPERTY);
         } catch (TableServiceException e) {
             log.error("Table StarAt not found, it is starting from now ...");
         }
 
+        // Initialize watching collection
         ReactiveMongoCollection<UserInstitution> dataCollection = getCollection();
         ChangeStreamOptions options = new ChangeStreamOptions()
-                .fullDocument(FullDocument.UPDATE_LOOKUP)
-                .startAtOperationTime(new BsonTimestamp(startAtLong));
+                .fullDocument(FullDocument.UPDATE_LOOKUP);
+        if(Objects.nonNull(resumeToken))
+            options = options.resumeAfter(BsonDocument.parse(resumeToken));
 
         Bson match = Aggregates.match(Filters.in("operationType", asList("update", "replace", "insert")));
         Bson project = Aggregates.project(fields(include("_id", "ns", "documentKey", "fullDocument")));
@@ -130,12 +130,24 @@ public class UserInstitutionCdcService {
                 .subscribe().with(
                         result -> {
                             log.info("UserInfo collection successfully updated from UserInstitution document having id: {}", document.getDocumentKey().toJson());
+                            updateLastResumeToken(document.getResumeToken());
                             constructMapAndTrackEvent(document.getDocumentKey().toJson(), "TRUE", USERINSTITUTION_SUCCESS_MECTRICS);
                         },
                         failure -> {
                             log.error("Error during UserInfo collection updating, from UserInstitution document having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
                             constructMapAndTrackEvent(document.getDocumentKey().toJson(), "FALSE", USERINSTITUTION_FAILURE_MECTRICS);
                         });
+    }
+
+    private void updateLastResumeToken(BsonDocument resumeToken) {
+        // Table CdCStartAt will be updated with the last resume token
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(CDC_START_AT_PROPERTY, resumeToken.toJson());
+
+        TableEntity tableEntity = new TableEntity(CDC_START_AT_PARTITION_KEY, CDC_START_AT_ROW_KEY)
+                .setProperties(properties);
+        tableClient.upsertEntity(tableEntity);
+
     }
 
     private void constructMapAndTrackEvent(String documentKey, String success, String... metrics) {
@@ -145,7 +157,6 @@ public class UserInstitutionCdcService {
 
         Map<String, Double> metricsMap = new HashMap<>();
         Arrays.stream(metrics).forEach(metricName -> metricsMap.put(metricName, 1D));
-
         telemetryClient.trackEvent(EVENT_NAME, propertiesMap, metricsMap);
     }
 }

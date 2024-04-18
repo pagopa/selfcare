@@ -36,21 +36,4 @@ public class CdcLifecycle {
                 .buildClient();
         tableServiceClient.createTableIfNotExists(tableName);
     }
-
-    void onStop(@Observes ShutdownEvent ev) {
-        log.info("The application is stopping...");
-
-        // Table CdCStartAt will be updated with the time of shutdown
-        Map<String, Object> properties = new HashMap<>();
-        properties.put(CDC_START_AT_PROPERTY, LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
-
-        TableEntity newEmployee = new TableEntity(CDC_START_AT_PARTITION_KEY, CDC_START_AT_ROW_KEY)
-                .setProperties(properties);
-
-        TableClient tableClient = new TableClientBuilder()
-                .connectionString(storageConnectionString)
-                .tableName(tableName)
-                .buildClient();
-        tableClient.upsertEntity(newEmployee);
-    }
 }
