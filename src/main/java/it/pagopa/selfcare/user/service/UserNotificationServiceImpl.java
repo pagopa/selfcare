@@ -98,8 +98,8 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         dataModel.put("requesterName", loggedUser.getName());
         dataModel.put("requesterSurname", loggedUser.getFamilyName());
 
-        dataModel.put("productName", product.getTitle());
-        dataModel.put("institutionName", institutionDescription);
+        dataModel.put("productName", Optional.ofNullable(product.getTitle()).orElse(""));
+        dataModel.put("institutionName", Optional.ofNullable(institutionDescription).orElse(""));
         if (roleLabels.size() > 1) {
             String roleLabel = roleLabels.stream()
                     .limit(roleLabels.size() - 1L)
@@ -126,9 +126,9 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         }
 
         Map<String, String> dataModel = new HashMap<>();
-        dataModel.put("productName", product.getTitle());
+        dataModel.put("productName", Optional.ofNullable(product.getTitle()).orElse(""));
         dataModel.put("productRole", roleLabel.orElse("no_role_found"));
-        dataModel.put("institutionName", institution.getInstitutionDescription());
+        dataModel.put("institutionName", Optional.ofNullable(institution.getInstitutionDescription()).orElse(""));
         dataModel.put("requesterName", loggedUserName);
         dataModel.put("requesterSurname", loggedUserSurname);
         return dataModel;
