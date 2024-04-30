@@ -95,8 +95,8 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
     private Map<String, String> buildCreateEmailDataModel(LoggedUser loggedUser, Product product, String institutionDescription, List<String> roleLabels) {
         Map<String, String> dataModel = new HashMap<>();
-        dataModel.put("requesterName", loggedUser.getName());
-        dataModel.put("requesterSurname", loggedUser.getFamilyName());
+        dataModel.put("requesterName", Optional.ofNullable(loggedUser.getName()).orElse(""));
+        dataModel.put("requesterSurname", Optional.ofNullable(loggedUser.getFamilyName()).orElse(""));
 
         dataModel.put("productName", Optional.ofNullable(product.getTitle()).orElse(""));
         dataModel.put("institutionName", Optional.ofNullable(institutionDescription).orElse(""));
@@ -129,8 +129,8 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         dataModel.put("productName", Optional.ofNullable(product.getTitle()).orElse(""));
         dataModel.put("productRole", roleLabel.orElse("no_role_found"));
         dataModel.put("institutionName", Optional.ofNullable(institution.getInstitutionDescription()).orElse(""));
-        dataModel.put("requesterName", loggedUserName);
-        dataModel.put("requesterSurname", loggedUserSurname);
+        dataModel.put("requesterName", Optional.ofNullable(loggedUserName).orElse(""));
+        dataModel.put("requesterSurname", Optional.ofNullable(loggedUserSurname).orElse(""));
         return dataModel;
     }
 
