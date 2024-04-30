@@ -7,6 +7,7 @@ import com.azure.data.tables.TableServiceClientBuilder;
 import com.azure.data.tables.models.TableEntity;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
+import io.quarkus.runtime.configuration.ConfigUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.user.event.constant.CdcStartAtConstant.*;
 
@@ -28,6 +30,12 @@ public class CdcLifecycle {
 
 
     void onStart(@Observes StartupEvent ev) {
+
+        if(ConfigUtils.getProfiles().contains("test")) {
+            //Not perform any action when testing
+            return;
+        }
+
         log.info("The application is starting...");
 
         // Table CdCStartAt will be created
