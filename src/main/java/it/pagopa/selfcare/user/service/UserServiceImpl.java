@@ -350,7 +350,11 @@ public class UserServiceImpl implements UserService {
                 .orElse(randomMailId.get());
 
         var workContact = UserUtils.buildWorkContact(userDto.getUser().getInstitutionEmail());
-        userResource.getWorkContacts().put(mailUuid, workContact);
+
+        // when update workContract on userRegistry we must create an empty map with only key that we want persist
+        Map<String, WorkContactResource> workContactToSave = new HashMap<>();
+        workContactToSave.put(mailUuid, workContact);
+        userResource.setWorkContacts(workContactToSave);
 
         return userRegistryApi.updateUsingPATCH(userResource.getId().toString(), userMapper.toMutableUserFieldsDto(userResource))
                 .onFailure().invoke(exception -> log.error("Error during update user on userRegistry: {} ", exception.getMessage(), exception))
