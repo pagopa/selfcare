@@ -74,7 +74,7 @@ public class UserServiceImpl implements UserService {
 
     private static final String WORK_CONTACTS = "workContacts";
 
-    private static final String USERS_WORKS_FIELD_LIST = "fiscalCode,familyName,email,name,workContacts";
+    static final String USERS_WORKS_FIELD_LIST = "fiscalCode,familyName,email,name,workContacts";
 
     private static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
 
@@ -128,6 +128,7 @@ public class UserServiceImpl implements UserService {
                                 .surname(userResource.getFamilyName().getValue())
                                 .taxCode(userResource.getFiscalCode())
                                 .products(onboardedProductMapper.toList(userInstitution.getProducts()))
+                                .email(UserUtils.getMailByMailUuid(userResource.getWorkContacts(), userInstitution.getUserMailUuid()).orElse(null))
                                 .build()))
                 .merge();
     }

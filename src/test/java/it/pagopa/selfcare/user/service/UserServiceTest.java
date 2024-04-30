@@ -52,6 +52,7 @@ import java.util.*;
 
 import static it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER;
 import static it.pagopa.selfcare.user.constant.CustomError.*;
+import static it.pagopa.selfcare.user.service.UserServiceImpl.USERS_WORKS_FIELD_LIST;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -87,6 +88,7 @@ class UserServiceTest {
 
     private static final UserResource userResource;
     private static final UUID userId = UUID.randomUUID();
+    private static final String workContractsKey = "userMailUuid";
 
     static {
         userResource = new UserResource();
@@ -103,7 +105,7 @@ class UserServiceTest {
         userResource.setEmail(certifiedEmail);
 
         Map<String, WorkContactResource> map = new HashMap<>();
-        map.put("userMailUuid", workContactResource);
+        map.put(workContractsKey, workContactResource);
         userResource.setWorkContacts(map);
 
 
@@ -114,7 +116,7 @@ class UserServiceTest {
         userInstitution.setId(ObjectId.get());
         userInstitution.setUserId(userId.toString());
         userInstitution.setInstitutionId("institutionId");
-        userInstitution.setUserMailUuid("userMailUuid");
+        userInstitution.setUserMailUuid(workContractsKey);
         userInstitution.setInstitutionRootName("institutionRootName");
         OnboardedProduct product = new OnboardedProduct();
         product.setProductId("test");
@@ -174,22 +176,36 @@ class UserServiceTest {
 
     @Test
     void getUserProductsByInstitutionTest() {
+        final UserInstitution userInstitution = createUserInstitution();
+        final UserInstitution userInstitutionWithoutMail = createUserInstitution();
+        userInstitutionWithoutMail.setUserMailUuid(null);
+
         PanacheMock.mock(UserInstitution.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
-        when(query.stream()).thenReturn(Multi.createFrom().item(createUserInstitution()));
+        when(query.stream()).thenReturn(Multi.createFrom().items(userInstitution,userInstitutionWithoutMail));
         when(UserInstitution.find(any(), (Object) any()))
                 .thenReturn(query);
-        when(userRegistryApi.findByIdUsingGET(any(), any()))
+        when(userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId()))
+                .thenReturn(Uni.createFrom().item(userResource));
+        when(userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitutionWithoutMail.getUserId()))
                 .thenReturn(Uni.createFrom().item(userResource));
 
         AssertSubscriber<UserProductResponse> subscriber = userService
-                .getUserProductsByInstitution("institutionId")
+                .getUserProductsByInstitution(userInstitution.getInstitutionId())
                 .subscribe()
                 .withSubscriber(AssertSubscriber.create(10));
 
         List<UserProductResponse> actual = subscriber.assertCompleted().getItems();
         assertNotNull(actual);
-        assertEquals(1, actual.size());
+        assertEquals(2, actual.size());
+
+        UserProductResponse actualUser = actual.get(0);
+        assertEquals(userResource.getWorkContacts().get(workContractsKey).getEmail().getValue(), actualUser.getEmail());
+        assertEquals(userResource.getName().getValue(), actualUser.getName());
+        assertEquals(userResource.getFiscalCode(), actualUser.getTaxCode());
+
+        UserProductResponse actualUserWithoutMail = actual.get(1);
+        assertNull(actualUserWithoutMail.getEmail());
     }
 
     @Test

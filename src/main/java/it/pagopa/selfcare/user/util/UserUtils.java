@@ -206,6 +206,20 @@ public class UserUtils {
                 .findFirst();
     }
 
+    public static Optional<String> getMailByMailUuid(Map<String, WorkContactResource> workContacts, String mailUid) {
+        if(Objects.isNull(workContacts) || workContacts.isEmpty() || Objects.isNull(mailUid)) return Optional.empty();
+
+        return workContacts.entrySet().stream()
+                .filter(entry -> entry.getKey().equals(mailUid))
+                .map(Map.Entry::getValue)
+                .filter(Objects::nonNull)
+                .map(WorkContactResource::getEmail)
+                .filter(Objects::nonNull)
+                .map(CertifiableFieldResourceOfstring::getValue)
+                .filter(Objects::nonNull)
+                .findFirst();
+    }
+
     public Uni<LoggedUser> readUserIdFromToken(SecurityContext ctx) {
         return currentIdentityAssociation.getDeferredIdentity()
                 .onItem().transformToUni(identity -> {
