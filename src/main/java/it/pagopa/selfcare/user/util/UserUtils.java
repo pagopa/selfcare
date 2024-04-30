@@ -199,6 +199,8 @@ public class UserUtils {
     }
 
     public Optional<String> getMailUuidFromMail(Map<String, WorkContactResource> workContacts, String email) {
+        if(Objects.isNull(workContacts) || workContacts.isEmpty()) return Optional.empty();
+
         return workContacts.entrySet().stream()
                 .filter(entry -> entry.getKey().startsWith(MAIL_ID_PREFIX) && entry.getValue().getEmail() != null
                         && org.apache.commons.lang3.StringUtils.equals(entry.getValue().getEmail().getValue(), email))
