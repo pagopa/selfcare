@@ -89,12 +89,12 @@ public interface UserMapper {
     }
     MutableUserFieldsDto toMutableUserFieldsDto(UserResource userResource);
 
-    @Mapping(source = "updateUserRequest.familyName", target = "familyName",  qualifiedByName = "toCertifiableString")
-    @Mapping(source = "updateUserRequest.name", target = "name",  qualifiedByName = "toCertifiableString")
+    @Mapping(target = "familyName",  expression = "java(toCertifiableStringNotEquals(userResource.getFamilyName(), updateUserRequest.getFamilyName()))")
+    @Mapping(target = "name",  expression = "java(toCertifiableStringNotEquals(userResource.getName(), updateUserRequest.getName()))")
     @Mapping(target = "workContacts",  expression = "java(toWorkContact(updateUserRequest.getEmail(), idMail))")
     @Mapping(target = "email", ignore = true)
     @Mapping(target = "birthDate", ignore = true)
-    MutableUserFieldsDto toMutableUserFieldsDto(UpdateUserRequest updateUserRequest, String idMail);
+    MutableUserFieldsDto toMutableUserFieldsDto(UpdateUserRequest updateUserRequest, UserResource userResource, String idMail);
 
     @Mapping(source = "user.birthDate", target = "birthDate", qualifiedByName = "toCertifiableLocalDate")
     @Mapping(source = "user.familyName", target = "familyName",  qualifiedByName = "toCertifiableString")
@@ -124,6 +124,22 @@ public interface UserMapper {
     @Named("toCertifiableString")
     default CertifiableFieldResourceOfstring toCertString(String value) {
         if (StringUtils.isNotBlank(value)){
+            var certifiableFieldResourceOfstring = new CertifiableFieldResourceOfstring();
+            certifiableFieldResourceOfstring.setValue(value);
+            certifiableFieldResourceOfstring.setCertification(CertifiableFieldResourceOfstring.CertificationEnum.NONE);
+            return certifiableFieldResourceOfstring;
+        }
+        return null;
+    }
+
+    @Named("toCertifiableStringNotEquals")
+    default CertifiableFieldResourceOfstring toCertifiableStringNotEquals(CertifiableFieldResourceOfstring certifiableString, String value) {
+        if(StringUtils.isBlank(value) ||
+                Objects.nonNull(certifiableString) && CertifiableFieldResourceOfstring.CertificationEnum.SPID.equals(certifiableString.getCertification())){
+            return null;
+        }
+
+        if(Objects.isNull(certifiableString) || !value.equals(certifiableString.getValue())){
             var certifiableFieldResourceOfstring = new CertifiableFieldResourceOfstring();
             certifiableFieldResourceOfstring.setValue(value);
             certifiableFieldResourceOfstring.setCertification(CertifiableFieldResourceOfstring.CertificationEnum.NONE);
