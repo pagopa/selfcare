@@ -464,23 +464,19 @@ public class UserServiceImpl implements UserService {
     }
 
     private List<String> checkAlreadyOnboardedProdcutRole(String productId, List<String> productRole,  UserInstitution userInstitution) {
-        List<String> productRoleAlreadyOnboarded = Optional.ofNullable(userInstitution.getProducts())
+        List<String> productAlreadyOnboarded = Optional.ofNullable(userInstitution.getProducts())
                 .orElse(Collections.emptyList())
                 .stream()
                 .filter(onboardedProduct -> onboardedProduct.getProductId().equals(productId))
-                .filter(onboardedProduct -> productRole.contains(onboardedProduct.getProductRole()))
+                //.filter(onboardedProduct -> productRole.contains(onboardedProduct.getProductRole()))
                 .filter(onboardedProduct -> onboardedProduct.getStatus().equals(ACTIVE))
                 .map(OnboardedProduct::getProductRole)
                 .toList();
 
-
-        List<String> productRoleToAdd = new ArrayList<>(productRole);
-        productRoleToAdd.removeAll(productRoleAlreadyOnboarded);
-
-        if (productRoleToAdd.isEmpty()) {
-            throw new InvalidRequestException(String.format("User already has this roles on Product %s", productId));
+        if (!productAlreadyOnboarded.isEmpty()) {
+            throw new InvalidRequestException(String.format("User already has roles on Product %s", productId));
         }
-        return productRoleToAdd;
+        return productRole;
     }
 
 

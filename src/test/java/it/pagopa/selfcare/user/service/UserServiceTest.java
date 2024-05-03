@@ -819,7 +819,7 @@ class UserServiceTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
-        subscriber.assertFailedWith(InvalidRequestException.class, "User already has this roles on Product test");
+        subscriber.assertFailedWith(InvalidRequestException.class, "User already has roles on Product test");
     }
 
     @Test
@@ -836,30 +836,17 @@ class UserServiceTest {
         Product product = new Product();
         product.setDescription("description");
 
-        UserToNotify userToNotify = new UserToNotify();
-        userToNotify.setUserId(userId.toString());
-
-        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
-        userNotificationToSend.setUser(userToNotify);
-
-
         when(userRegistryApi.findByIdUsingGET(any(), eq("userId"))).thenReturn(Uni.createFrom().item(userResource));
         when(userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), addUserRoleDto.getInstitutionId())).thenReturn(Uni.createFrom().item(createUserInstitution()));
-        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(createUserInstitution()));
         when(productService.getProduct(any())).thenReturn(product);
-        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
-        when(userUtils.buildUsersNotificationResponse(any(), any(), (QueueEvent) any())).thenReturn(List.of(userNotificationToSend));
-        when(userNotificationService.sendKafkaNotification(any(), any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
-
 
         // Call the method
         UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
-        subscriber.awaitItem().assertCompleted();
+        subscriber.assertFailedWith(InvalidRequestException.class);
         verify(userRegistryApi).findByIdUsingGET(any(), eq("userId"));
-        verify(userInstitutionService).persistOrUpdate(any());
     }
 
     @Test
