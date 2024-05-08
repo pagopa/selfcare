@@ -105,12 +105,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public Uni<List<String>> getUsersEmails(String institutionId, String productId) {
         var userInstitutionFilters = UserInstitutionFilter.builder().institutionId(institutionId).build().constructMap();
-        var productFilters = OnboardedProductFilter.builder().productId(productId).build().constructMap();
+        var productFilters = OnboardedProductFilter.builder().productId(productId).status(ACTIVE).build().constructMap();
         Multi<UserInstitution> userInstitutions = userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters));
-        return userInstitutions.onItem()
-                .transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(WORK_CONTACTS, userInstitution.getUserId())
+        return userInstitutions
+                .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(WORK_CONTACTS, userInstitution.getUserId())
                         .map(userResource -> Objects.nonNull(userResource.getWorkContacts()) && userResource.getWorkContacts().containsKey(userInstitution.getUserMailUuid())
-                                ? userResource.getWorkContacts().get(userInstitution.getUserMailUuid()) : null)).merge()
+                                ? userResource.getWorkContacts().get(userInstitution.getUserMailUuid()) : null))
+                .merge()
                 .filter(workContactResource -> Objects.nonNull(workContactResource) && StringUtils.isNotBlank(workContactResource.getEmail().getValue()))
                 .map(workContactResource -> workContactResource.getEmail().getValue())
                 .collect().asList();
