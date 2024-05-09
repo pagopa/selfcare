@@ -12,6 +12,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
@@ -118,12 +119,20 @@ class UserServiceTest {
         userInstitution.setInstitutionId("institutionId");
         userInstitution.setUserMailUuid(workContractsKey);
         userInstitution.setInstitutionRootName("institutionRootName");
+
         OnboardedProduct product = new OnboardedProduct();
         product.setProductId("test");
         product.setProductRole("admin");
+        product.setRole(MANAGER);
         product.setStatus(OnboardedProductState.ACTIVE);
+
+        OnboardedProduct productTest = new OnboardedProduct();
+        productTest.setProductId("prod-test");
+        productTest.setProductRole("operator");
+        productTest.setStatus(OnboardedProductState.DELETED);
         List<OnboardedProduct> products = new ArrayList<>();
         products.add(product);
+        products.add(productTest);
         userInstitution.setProducts(products);
         return userInstitution;
     }
@@ -409,11 +418,13 @@ class UserServiceTest {
 
 
     @Test
-    void findAllUserInstitutionsPaged() {
+    void findAllUserInstitutionsPaged_whenFilterProductIdAndProductRole() {
         UserInstitution userInstitution = createUserInstitution();
+        final String productId = userInstitution.getProducts().get(0).getProductId();
+        final String productRole = userInstitution.getProducts().get(0).getProductRole();
         when(userInstitutionService.paginatedFindAllWithFilter(anyMap(), anyInt(), anyInt())).thenReturn(Multi.createFrom().item(userInstitution));
         AssertSubscriber<UserInstitutionResponse> subscriber = userService
-                .findPaginatedUserInstitutions("institutionId", "userId", null, null, null, null, 0, 100)
+                .findPaginatedUserInstitutions("institutionId", "userId", null, null, List.of(productId), List.of(productRole), 0, 100)
                 .subscribe()
                 .withSubscriber(AssertSubscriber.create(10));
 
@@ -421,6 +432,41 @@ class UserServiceTest {
         Assert.assertNotNull(actual);
         assertEquals(1, actual.size());
         assertEquals(userInstitution.getUserId(), actual.get(0).getUserId());
+        assertEquals(productId, actual.get(0).getProducts().get(0).getProductId());
+    }
+
+
+    @Test
+    void findAllUserInstitutionsPaged_whenFilterStatus() {
+        UserInstitution userInstitution = createUserInstitution();
+        when(userInstitutionService.paginatedFindAllWithFilter(anyMap(), anyInt(), anyInt())).thenReturn(Multi.createFrom().item(userInstitution));
+        AssertSubscriber<UserInstitutionResponse> subscriber = userService
+                .findPaginatedUserInstitutions("institutionId", "userId", null, List.of(OnboardedProductState.ACTIVE.name()), null, null, 0, 100)
+                .subscribe()
+                .withSubscriber(AssertSubscriber.create(10));
+
+        List<UserInstitutionResponse> actual = subscriber.assertCompleted().getItems();
+        Assert.assertNotNull(actual);
+        assertEquals(1, actual.size());
+        assertEquals(userInstitution.getUserId(), actual.get(0).getUserId());
+        assertEquals(OnboardedProductState.ACTIVE, actual.get(0).getProducts().get(0).getStatus());
+    }
+
+
+    @Test
+    void findAllUserInstitutionsPaged_whenFilterRole() {
+        UserInstitution userInstitution = createUserInstitution();
+        when(userInstitutionService.paginatedFindAllWithFilter(anyMap(), anyInt(), anyInt())).thenReturn(Multi.createFrom().item(userInstitution));
+        AssertSubscriber<UserInstitutionResponse> subscriber = userService
+                .findPaginatedUserInstitutions("institutionId", "userId", List.of(MANAGER), null, null, null, 0, 100)
+                .subscribe()
+                .withSubscriber(AssertSubscriber.create(10));
+
+        List<UserInstitutionResponse> actual = subscriber.assertCompleted().getItems();
+        Assert.assertNotNull(actual);
+        assertEquals(1, actual.size());
+        assertEquals(userInstitution.getUserId(), actual.get(0).getUserId());
+        assertEquals(MANAGER, actual.get(0).getProducts().get(0).getRole());
     }
 
     @Test
@@ -680,7 +726,7 @@ class UserServiceTest {
         UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
-        Assertions.assertEquals(3, userInstitution.getProducts().size());
+        Assertions.assertEquals(4, userInstitution.getProducts().size());
         // Verify the result
         subscriber.awaitItem().assertItem(userId.toString());
         verify(userRegistryApi).updateUsingPATCH(any(), any());

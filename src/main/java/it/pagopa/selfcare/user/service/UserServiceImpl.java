@@ -41,6 +41,7 @@ import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -153,6 +154,7 @@ public class UserServiceImpl implements UserService {
         var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
         var productFilters = OnboardedProductFilter.builder().productId(products).status(states).role(roles).productRole(productRoles).build().constructMap();
         return userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters))
+                .onItem().transform(filterAndSetProducts(roles, states, products, productRoles))
                 .onItem().transform(userInstitutionMapper::toResponse);
     }
 
@@ -160,8 +162,23 @@ public class UserServiceImpl implements UserService {
     public Multi<UserInstitutionResponse> findPaginatedUserInstitutions(String institutionId, String userId, List<PartyRole> roles, List<String> states, List<String> products, List<String> productRoles, Integer page, Integer size) {
         var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
         var productFilters = OnboardedProductFilter.builder().productId(products).status(states).role(roles).productRole(productRoles).build().constructMap();
+        var rolesString = Optional.ofNullable(roles).map(items -> items.stream().map(PartyRole::name).toList()).orElse(null);
         return userInstitutionService.paginatedFindAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters), page, size)
+                .onItem().transform(filterAndSetProducts(rolesString, states, products, productRoles))
                 .onItem().transform(userInstitutionMapper::toResponse);
+    }
+
+    private static Function<UserInstitution, UserInstitution> filterAndSetProducts(List<String> roles, List<String> states, List<String> products, List<String> productRoles) {
+
+        return userInstitution -> {
+            userInstitution.setProducts(userInstitution.getProducts().stream()
+                    .filter(product -> CollectionUtils.isNullOrEmpty(products) || products.contains(product.getProductId()))
+                    .filter(product -> CollectionUtils.isNullOrEmpty(states) || states.contains(Optional.ofNullable(product.getStatus()).map(OnboardedProductState::name).orElse(null)))
+                    .filter(product -> CollectionUtils.isNullOrEmpty(roles) || roles.contains(Optional.ofNullable(product.getRole()).map(PartyRole::name).orElse(null)))
+                    .filter(product -> CollectionUtils.isNullOrEmpty(productRoles) || productRoles.contains(product.getProductRole()))
+                    .toList());
+            return userInstitution;
+        };
     }
 
     @Override
