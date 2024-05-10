@@ -454,7 +454,7 @@ class UserControllerTest {
         var user = "user1";
         var institution = "institution1";
         var product = "product1";
-        Mockito.when(userService.updateUserProductStatus("user1","institution1", "product1", OnboardedProductState.ACTIVE,null))
+        Mockito.when(userService.updateUserProductStatus(eq(user), eq(institution), eq(product),  eq(OnboardedProductState.ACTIVE), eq(null), any()))
                 .thenThrow(InvalidRequestException.class);
 
         given()
@@ -468,10 +468,6 @@ class UserControllerTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
     }
 
-    /**
-     * Method under test:
-     * {@link UserController#deleteProducts(String, String, String)}
-     */
     @Test
     @TestSecurity(user = "userJwt")
     void updateUserProductsOKTest() {
@@ -485,7 +481,7 @@ class UserControllerTest {
         var institution = "institution123";
         var product = "prod-pagopa";
 
-        Mockito.when(userService.updateUserProductStatus(eq("user123"),eq("institution123"), eq("prod-pagopa"), eq(OnboardedProductState.ACTIVE), any()))
+        Mockito.when(userService.updateUserProductStatus(eq("user123"),eq("institution123"), eq("prod-pagopa"), eq(OnboardedProductState.ACTIVE), any(), any()))
                 .thenReturn(Uni.createFrom().voidItem());
 
         given()
@@ -498,6 +494,37 @@ class UserControllerTest {
                 .then()
                 .statusCode(HttpStatus.SC_NO_CONTENT);
     }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void updateUserProductsWithProdcutRoleOKTest() {
+
+        String PATH_USER_ID = "id";
+        String PATH_INSTITUTION_ID = "institutionId";
+        String PATH_PRODUCT_ID = "productId";
+        String PATH_UPDATE_PRODUCT = "{id}/institution/{institutionId}/product/{productId}/status";
+
+        var user = "user123";
+        var institution = "institution123";
+        var product = "prod-pagopa";
+        var productRole = "admin";
+
+        Mockito.when(userService.updateUserProductStatus(eq("user123"),eq("institution123"), eq("prod-pagopa"), eq(OnboardedProductState.ACTIVE), eq(productRole), any()))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        given()
+                .when()
+                .pathParam(PATH_USER_ID, user)
+                .pathParam(PATH_INSTITUTION_ID, institution)
+                .pathParam(PATH_PRODUCT_ID, product)
+                .queryParam("status", OnboardedProductState.ACTIVE)
+                .put(PATH_UPDATE_PRODUCT)
+                .then()
+                .statusCode(HttpStatus.SC_NO_CONTENT);
+    }
+
+
+
 
     @Test
     @TestSecurity(user = "userJwt")

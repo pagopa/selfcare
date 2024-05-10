@@ -46,7 +46,7 @@ public interface UserService {
 
     Uni<UserDetailResponse> searchUserByFiscalCode(String fiscalCode, String institutionId);
 
-    Uni<Void> updateUserProductStatus(String userId, String institutionId, String productId, OnboardedProductState status, LoggedUser loggedUser);
+    Uni<Void> updateUserProductStatus(String userId, String institutionId, String productId, OnboardedProductState status, String productRole, LoggedUser loggedUser);
 
     Uni<String> createOrUpdateUserByFiscalCode(CreateUserDto userDto, LoggedUser loggedUser);
 

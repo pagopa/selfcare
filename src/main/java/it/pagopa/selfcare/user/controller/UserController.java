@@ -249,10 +249,11 @@ public class UserController {
     public Uni<Void> updateUserProductStatus(@PathParam("id") String userId,
                                              @PathParam("institutionId") String institutionId,
                                              @PathParam("productId") String productId,
+                                             @QueryParam("productRole") String productRole,
                                              @NotNull @QueryParam("status") OnboardedProductState status,
                                              @Context SecurityContext ctx) {
         return readUserIdFromToken(ctx)
-                .onItem().transformToUni(loggedUser -> userService.updateUserProductStatus(userId, institutionId, productId, status, loggedUser));
+                .onItem().transformToUni(loggedUser -> userService.updateUserProductStatus(userId, institutionId, productId, status, productRole, loggedUser));
     }
 
 

@@ -8,11 +8,13 @@ import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.constant.QueueEvent;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
+import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -21,7 +23,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
+import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import org.wildfly.common.Assert;
 
 import java.util.*;
 
@@ -224,5 +228,90 @@ class UserUtilTest {
         // Verify the result
         assertTrue(result.isPresent());
         assertEquals(MAIL_ID_PREFIX + "mail1", result.get());
+    }
+
+    @Test
+    void buildUserNotificationToSendTest(){
+        UUID uuid = UUID.randomUUID();
+        final String userId = uuid.toString();
+        String institutionId = "institutionId";
+        String productId = "productId";
+        String productRole = "admin2";
+        UserResource userResource = getUserResource(uuid);
+        UserInstitution userInstitution = getUserInstitution(userId, institutionId, productId);
+        UserNotificationToSend userNotificationToSend =
+                userUtils.buildUserNotificationToSend(userInstitution, userResource, productId, productRole, OnboardedProductState.ACTIVE);
+        Assertions.assertEquals(userId, userNotificationToSend.getId());
+        Assertions.assertEquals(institutionId, userNotificationToSend.getInstitutionId());
+        Assertions.assertNotNull(userNotificationToSend.getUser());
+    }
+
+    private static UserResource getUserResource(UUID uuid) {
+        Map<String, WorkContactResource> map = new HashMap<>();
+        WorkContactResource workContactResource = new WorkContactResource();
+        workContactResource.setEmail(CertifiableFieldResourceOfstring.builder().value("test@test.it").build());
+        map.put("MAIL_ID#123", workContactResource);
+        return UserResource.builder()
+                .id(uuid)
+                .name(CertifiableFieldResourceOfstring.builder().value("name").build())
+                .familyName(CertifiableFieldResourceOfstring.builder().value("familyName").build())
+                .workContacts(map)
+                .build();
+    }
+
+    @Test
+    void buildUsersNotificationResponseTest(){
+        UUID uuid = UUID.randomUUID();
+        final String userId = uuid.toString();
+        String institutionId = "institutionId";
+        String productId = "productId";
+        UserResource userResource = getUserResource(uuid);
+        UserInstitution userInstitution = getUserInstitution(userId, institutionId, productId);
+        List<UserNotificationToSend> response = userUtils.buildUsersNotificationResponse(userInstitution, userResource, productId);
+        Assertions.assertEquals(2, response.size());
+        Assertions.assertEquals(userId, response.get(0).getUser().getUserId());
+        Assertions.assertEquals(institutionId, response.get(0).getInstitutionId());
+        Assertions.assertEquals(productId, response.get(0).getProductId());
+        Assertions.assertNotNull(response.get(0).getUser());
+
+    }
+
+    @Test
+    void buildUsersNotificationResponseWithEventTest(){
+        UUID uuid = UUID.randomUUID();
+        final String userId = uuid.toString();
+        String institutionId = "institutionId";
+        String productId = "productId";
+        UserResource userResource = getUserResource(uuid);
+        UserInstitution userInstitution = getUserInstitution(userId, institutionId, productId);
+        List<UserNotificationToSend> response = userUtils.buildUsersNotificationResponse(userInstitution, userResource, QueueEvent.UPDATE);
+        Assertions.assertEquals(2, response.size());
+        Assertions.assertEquals(userId, response.get(0).getUser().getUserId());
+        Assertions.assertEquals(institutionId, response.get(0).getInstitutionId());
+        Assertions.assertEquals(productId, response.get(0).getProductId());
+        Assertions.assertNotNull(response.get(0).getUser());
+
+    }
+
+    private static UserInstitution getUserInstitution(String userId, String institutionId, String productId) {
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setUserId(userId);
+        userInstitution.setInstitutionId(institutionId);
+        userInstitution.setUserMailUuid("MAIL_ID#123");
+
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setProductId(productId);
+        onboardedProduct.setStatus(OnboardedProductState.ACTIVE);
+        onboardedProduct.setRole(PartyRole.OPERATOR);
+        onboardedProduct.setProductRole("admin2");
+
+        OnboardedProduct onboardedProduct2 = new OnboardedProduct();
+        onboardedProduct2.setProductId(productId);
+        onboardedProduct2.setStatus(OnboardedProductState.SUSPENDED);
+        onboardedProduct2.setRole(PartyRole.OPERATOR);
+        onboardedProduct2.setProductRole("admin2");
+
+        userInstitution.setProducts(List.of(onboardedProduct2, onboardedProduct));
+        return userInstitution;
     }
 }

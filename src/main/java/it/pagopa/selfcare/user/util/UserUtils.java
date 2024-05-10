@@ -25,16 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.reactive.ClientWebApplicationException;
-import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.util.*;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
 
@@ -57,7 +52,7 @@ public class UserUtils {
         return map;
     }
 
-    public void checkProductRole(String productId, PartyRole role, String productRole) {
+    public Uni<Void> checkProductRole(String productId, PartyRole role, String productRole) {
         if (StringUtils.isNotBlank(productRole) && StringUtils.isNotBlank(productId)) {
             try {
                 productService.validateProductRole(productId, productRole, role);
@@ -65,6 +60,7 @@ public class UserUtils {
                 throw new InvalidRequestException(e.getMessage());
             }
         }
+        return Uni.createFrom().voidItem();
     }
 
     public static boolean checkIfNotFoundException(Throwable throwable) {
@@ -86,12 +82,13 @@ public class UserUtils {
                 .toList();
     }
 
-    public UserNotificationToSend buildUserNotificationToSend(UserInstitution userInstitution, UserResource userResource, String productId, OnboardedProductState status) {
+    public UserNotificationToSend buildUserNotificationToSend(UserInstitution userInstitution, UserResource userResource, String productId, String productRole, OnboardedProductState status) {
         UserToNotify userToNotify = buildUserToNotify(userResource, userInstitution, status);
         UserNotificationToSend userNotificationToSend = buildUserNotificationToSend(userInstitution, productId);
 
         userInstitution.getProducts().stream()
-                .filter(p -> org.apache.commons.lang3.StringUtils.equals(p.getProductId(), productId))
+                .filter(p -> StringUtils.equals(p.getProductId(), productId)
+                 && (StringUtils.isBlank(productRole) || StringUtils.equals(p.getProductRole(), productRole)))
                 .findFirst()
                 .ifPresent(onboardedProductResponse -> {
                     userToNotify.setRole(onboardedProductResponse.getRole());

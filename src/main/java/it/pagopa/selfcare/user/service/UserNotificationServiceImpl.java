@@ -67,15 +67,15 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     }
 
     @Override
-    public Uni<Void> sendEmailNotification(UserResource user, UserInstitution institution, Product product, OnboardedProductState status, String loggedUserName, String loggedUserSurname) {
+    public Uni<Void> sendEmailNotification(UserResource user, UserInstitution institution, Product product, OnboardedProductState status, String productRole, String loggedUserName, String loggedUserSurname) {
         log.info("sendMailNotification {}", status.name());
         return switch (status) {
             case ACTIVE ->
-                    buildDataModelAndSendEmail(user, institution, product, ACTIVATE_TEMPLATE, ACTIVATE_SUBJECT, loggedUserName, loggedUserSurname);
+                    buildDataModelAndSendEmail(user, institution, product, ACTIVATE_TEMPLATE, ACTIVATE_SUBJECT, productRole, loggedUserName, loggedUserSurname);
             case DELETED ->
-                    buildDataModelAndSendEmail(user, institution, product, DELETE_TEMPLATE, DELETE_SUBJECT, loggedUserName, loggedUserSurname);
+                    buildDataModelAndSendEmail(user, institution, product, DELETE_TEMPLATE, DELETE_SUBJECT, productRole, loggedUserName, loggedUserSurname);
             case SUSPENDED ->
-                    buildDataModelAndSendEmail(user, institution, product, SUSPEND_TEMPLATE, SUSPEND_SUBJECT, loggedUserName, loggedUserSurname);
+                    buildDataModelAndSendEmail(user, institution, product, SUSPEND_TEMPLATE, SUSPEND_SUBJECT, productRole, loggedUserName, loggedUserSurname);
             case PENDING, TOBEVALIDATED, REJECTED -> Uni.createFrom().voidItem();
         };
     }
@@ -114,8 +114,9 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
         return dataModel;
     }
-    private Map<String, String> buildEmailDataModel(UserInstitution institution, Product product, String loggedUserName, String loggedUserSurname) {
-        Optional<OnboardedProduct> productDb = institution.getProducts().stream().filter(p -> StringUtils.equals(p.getProductId(), product.getId())).findFirst();
+    private Map<String, String> buildEmailDataModel(UserInstitution institution, Product product, String givenProductRole, String loggedUserName, String loggedUserSurname) {
+        Optional<OnboardedProduct> productDb = institution.getProducts().stream().filter(p -> StringUtils.equals(p.getProductId(), product.getId())
+        && (StringUtils.isBlank(givenProductRole) || StringUtils.equals(p.getProductRole(), givenProductRole))).findFirst();
 
         Optional<String> roleLabel = Optional.empty();
         if (productDb.isPresent()) {
@@ -134,9 +135,9 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         return dataModel;
     }
 
-    private Uni<Void> buildDataModelAndSendEmail(org.openapi.quarkus.user_registry_json.model.UserResource user, UserInstitution institution, Product product, String templateName, String subject, String loggedUserName, String loggedUserSurname) {
+    private Uni<Void> buildDataModelAndSendEmail(org.openapi.quarkus.user_registry_json.model.UserResource user, UserInstitution institution, Product product, String templateName, String subject, String productRole, String loggedUserName, String loggedUserSurname) {
         String email = retrieveMail(user, institution);
-        Map<String, String> dataModel = buildEmailDataModel(institution, product, loggedUserName, loggedUserSurname);
+        Map<String, String> dataModel = buildEmailDataModel(institution, product, productRole, loggedUserName, loggedUserSurname);
         return this.sendEmailNotification(templateName, subject, email, dataModel);
     }
 

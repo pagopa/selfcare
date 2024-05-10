@@ -100,7 +100,7 @@ class UserNotificationServiceImplTest {
     }
 
     @Test
-    void testSendMailNotification() throws IOException {
+    void testSendMailNotificationForActivateUserProduct() throws IOException {
         String loggedUserName = "loggedUserName";
         String loggedUserSurname = "loggedUserSurname";
 
@@ -117,47 +117,103 @@ class UserNotificationServiceImplTest {
                         userInstitution,
                         product,
                         OnboardedProductState.ACTIVE,
+                        "admin",
                         loggedUserName,
                         loggedUserSurname
                 )
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
+        verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
+
+    }
+
+    @Test
+    void testSendMailNotificationForDeleteUserProduct() throws IOException {
+        String loggedUserName = "loggedUserName";
+        String loggedUserSurname = "loggedUserSurname";
+
+        Configuration freemarkerConfig = mock(Configuration.class);
+        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
+        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
+        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
+
+        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true);
+        when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
+
         userNotificationServiceImpl.sendEmailNotification(
                         userResource,
                         userInstitution,
                         product,
                         OnboardedProductState.DELETED,
+                        "admin",
                         loggedUserName,
                         loggedUserSurname
                 )
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
+        verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
+
+    }
+
+
+    @Test
+    void testSendMailNotificationForSuspendUserProduct() throws IOException {
+        String loggedUserName = "loggedUserName";
+        String loggedUserSurname = "loggedUserSurname";
+
+        Configuration freemarkerConfig = mock(Configuration.class);
+        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
+        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
+        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
+
+        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true);
+        when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
+
         userNotificationServiceImpl.sendEmailNotification(
                         userResource,
                         userInstitution,
                         product,
                         OnboardedProductState.SUSPENDED,
+                        "admin",
                         loggedUserName,
                         loggedUserSurname
                 )
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
+        verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
+    }
+
+
+    @Test
+    void testSendMailNotificationForRejectUserProduct() throws IOException {
+        String loggedUserName = "loggedUserName";
+        String loggedUserSurname = "loggedUserSurname";
+
+        Configuration freemarkerConfig = mock(Configuration.class);
+        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
+        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
+        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
+
+        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true);
+
         userNotificationServiceImpl.sendEmailNotification(
                         userResource,
                         userInstitution,
                         product,
-                        OnboardedProductState.PENDING,
+                        OnboardedProductState.REJECTED,
+                        "admin",
                         loggedUserName,
                         loggedUserSurname
                 )
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, times(3)).sendMail(anyString(), anyString(), anyString());
+        verify(mailService, times(0)).sendMail(anyString(), anyString(), anyString());
     }
+
 
     @Test
     void testSendMailNotificationWithNullInstitutionDescription() throws IOException {
@@ -177,6 +233,7 @@ class UserNotificationServiceImplTest {
                         userInstitution,
                         product,
                         OnboardedProductState.ACTIVE,
+                        "admin",
                         loggedUserName,
                         loggedUserSurname
                 )
@@ -188,6 +245,7 @@ class UserNotificationServiceImplTest {
                         userInstitution,
                         product,
                         OnboardedProductState.DELETED,
+                        "admin",
                         loggedUserName,
                         loggedUserSurname
                 )
@@ -199,6 +257,7 @@ class UserNotificationServiceImplTest {
                         userInstitution,
                         product,
                         OnboardedProductState.SUSPENDED,
+                        "admin",
                         loggedUserName,
                         loggedUserSurname
                 )
@@ -210,6 +269,7 @@ class UserNotificationServiceImplTest {
                         userInstitution,
                         product,
                         OnboardedProductState.PENDING,
+                        "admin",
                         loggedUserName,
                         loggedUserSurname
                 )
