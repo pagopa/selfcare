@@ -139,6 +139,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         Map<String, Object> filterMap = userUtils.retrieveMapForFilter(onboardedProductFilterMap, userInstitutionFilterMap);
         Map<String, Object> fieldToUpdateMap = Map.of(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.createdAt.name(), createdAt,
                                                       UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
+        log.info("Update user institution with filter: {} and field to update: {}", filterMap, fieldToUpdateMap);
         return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
                 .where(queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION));
     }

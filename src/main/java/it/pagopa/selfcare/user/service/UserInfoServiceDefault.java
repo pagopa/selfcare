@@ -18,7 +18,9 @@ public class UserInfoServiceDefault implements UserInfoService {
     @Override
     public Uni<UserInfoResponse> findById(String userId) {
         Uni<UserInfo> userInfo = UserInfo.findById(userId);
-        return userInfo.onItem().transform(userInfoMapper::toResponse);
+        return userInfo
+                .onItem().invoke(user -> log.info("Founded userInfo for userId: {}", userId))
+                .onItem().transform(userInfoMapper::toResponse);
     }
 
 }

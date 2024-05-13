@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
@@ -167,6 +168,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         } else {
             email = certEmail.getEmail().getValue();
         }
+        log.debug("retrieved Mail for user with id: {}", user.getId());
         return email;
     }
 }
