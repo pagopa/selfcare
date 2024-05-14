@@ -13,19 +13,17 @@ import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.Startup;
+import io.quarkus.runtime.configuration.ConfigUtils;
 import io.smallrye.mutiny.Multi;
 import it.pagopa.selfcare.user.event.entity.UserInstitution;
 import it.pagopa.selfcare.user.event.repository.UserInstitutionRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.BsonDocument;
-import org.bson.BsonTimestamp;
 import org.bson.conversions.Bson;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.*;
 
 import static com.mongodb.client.model.Projections.fields;
@@ -81,12 +79,15 @@ public class UserInstitutionCdcService {
 
         //Retrieve last resumeToken for watching collection at specific operation
         String resumeToken = null;
-        try {
-            TableEntity cdcStartAtEntity = tableClient.getEntity(CDC_START_AT_PARTITION_KEY, CDC_START_AT_ROW_KEY);
-            if(Objects.nonNull(cdcStartAtEntity))
-                resumeToken = (String) cdcStartAtEntity.getProperty(CDC_START_AT_PROPERTY);
-        } catch (TableServiceException e) {
-            log.error("Table StarAt not found, it is starting from now ...");
+
+        if(!ConfigUtils.getProfiles().contains("test")) {
+            try {
+                TableEntity cdcStartAtEntity = tableClient.getEntity(CDC_START_AT_PARTITION_KEY, CDC_START_AT_ROW_KEY);
+                if (Objects.nonNull(cdcStartAtEntity))
+                    resumeToken = (String) cdcStartAtEntity.getProperty(CDC_START_AT_PROPERTY);
+            } catch (TableServiceException e) {
+                log.warn("Table StarAt not found, it is starting from now ...");
+            }
         }
 
         // Initialize watching collection
