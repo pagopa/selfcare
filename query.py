@@ -17,6 +17,17 @@ def paging(page, size):
     }
 
 
+def get_institutions(page, size):
+    return [
+        *paging(page, size)
+    ]
+
+def get_institution(institutionId):
+    return {
+               '_id': institutionId
+           }
+
+
 def user_institution_from_user_query(page, size):
     return [
         *paging(page, size),
