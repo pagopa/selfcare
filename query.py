@@ -83,8 +83,17 @@ def user_institution_from_user_query(page, size):
     ]
 
 
-def user_info_from_user_institution_query(db, collection):
-    return [
+def user_info_from_user_institution_query(db, collection, userId):
+    pipeline = []
+
+    if userId is not None:
+        pipeline.append({
+            '$match': {
+                'userId': userId
+            }
+        })
+
+    pipeline.extend([
         {
             '$group': {
                 '_id': '$userId',
@@ -172,4 +181,6 @@ def user_info_from_user_institution_query(db, collection):
                 }
             }
         }
-    ]
+    ])
+
+    return pipeline
