@@ -22,11 +22,54 @@ def get_institutions(page, size):
         *paging(page, size)
     ]
 
-def get_institution(institutionId):
+
+def get_institutions_from_onboardings(page, size):
+    return [
+        {
+            '$match': {
+                'status': 'COMPLETED'
+            }
+        }, {
+            '$group': {
+                '_id': '$institution.taxCode',
+                'description': {
+                    '$first': '$institution.description'
+                }
+            }
+        },
+        *paging(page, size)
+    ]
+
+
+def count_institutions_from_onboardings():
+    return [
+        {
+            '$match': {
+                'status': 'COMPLETED'
+            }
+        }, {
+            '$group': {
+                '_id': '$institution.taxCode',
+                'description': {
+                    '$first': '$institution.description'
+                }
+            }
+        },
+        {
+            '$count': 'count'
+        }
+    ]
+
+def get_institution(taxCode):
     return {
-               '_id': institutionId
+               'taxCode': taxCode
            }
 
+def get_onboarding(taxCode):
+    return {
+        "institution.taxCode": taxCode,
+        "status": "COMPLETED"
+    }
 
 def user_institution_from_user_query(page, size):
     return [
