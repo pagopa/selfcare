@@ -22,6 +22,7 @@ import it.pagopa.selfcare.user.event.repository.UserInstitutionRepository;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
@@ -73,7 +75,7 @@ class UserInstitutionRepositoryTest {
     @Test
     @RunOnVertxContext
     void initOrderStreamWithFoundedUserIdAndInstitutionId(UniAsserter asserter){
-        UserInstitution userInstitution = constructUserInstitution();
+        UserInstitution userInstitution = constructUserInstitution("productId");
         mockRetrieveUserInfoFounded(asserter);
         mockPersistUserInfo(asserter);
         PanacheMock.mock(UserInfo.class);
@@ -90,7 +92,7 @@ class UserInstitutionRepositoryTest {
     @Test
     @RunOnVertxContext
     void initOrderStreamWithFoundedUserId(UniAsserter asserter){
-        UserInstitution userInstitution = constructUserInstitution();
+        UserInstitution userInstitution = constructUserInstitution("productId");
         userInstitution.setInstitutionId("institutionId2");
         PanacheMock.mock(UserInfo.class);
         when(UserInfo.findByIdOptional(any()))
@@ -107,7 +109,7 @@ class UserInstitutionRepositoryTest {
     @Test
     @RunOnVertxContext
     void initOrderStreamWithFoundedUserIdAndInstitutionEmpty(UniAsserter asserter){
-        UserInstitution userInstitution = constructUserInstitution();
+        UserInstitution userInstitution = constructUserInstitution("productId");
         userInstitution.setInstitutionId("institutionId2");
         PanacheMock.mock(UserInfo.class);
         UserInfo userInfo = new UserInfo();
@@ -127,7 +129,7 @@ class UserInstitutionRepositoryTest {
     @Test
     @RunOnVertxContext
     void initOrderStreamWithNotFoundUserId(UniAsserter asserter){
-        UserInstitution userInstitution = constructUserInstitution();
+        UserInstitution userInstitution = constructUserInstitution("productId");
         PanacheMock.mock(UserInfo.class);
         when(UserInfo.findByIdOptional(anyString()))
                 .thenReturn(Uni.createFrom().item(Optional.empty()));
@@ -135,14 +137,39 @@ class UserInstitutionRepositoryTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create()).assertCompleted();
 
         asserter.execute(() -> {
-            PanacheMock.verify(UserInfo.class, Mockito.atLeastOnce()).persistOrUpdate(Mockito.<UserInfo> any(), any());
+            ArgumentCaptor<UserInfo> argumentCaptor = ArgumentCaptor.forClass(UserInfo.class);
+            PanacheMock.verify(UserInfo.class, Mockito.atLeastOnce()).persistOrUpdate(argumentCaptor.capture(), any());
+            assertEquals(1, argumentCaptor.getValue().getInstitutions().size());
+        });
+    }
+
+    @Test
+    @RunOnVertxContext
+    void initOrderStreamWithNotFoundUserIdAndMoreProduct(UniAsserter asserter){
+        UserInstitution userInstitution = constructUserInstitution("productId");
+        List<OnboardedProduct> onboardedProducts = new ArrayList<>();
+        onboardedProducts.add(dummyOnboardedProduct("product-example", PartyRole.OPERATOR));
+        onboardedProducts.add(dummyOnboardedProduct("product-id", PartyRole.MANAGER));
+        userInstitution.setProducts(onboardedProducts);
+
+        PanacheMock.mock(UserInfo.class);
+        when(UserInfo.findByIdOptional(anyString()))
+                .thenReturn(Uni.createFrom().item(Optional.empty()));
+        userInstitutionRepository.updateUser(userInstitution)
+                .subscribe().withSubscriber(UniAssertSubscriber.create()).assertCompleted();
+
+        asserter.execute(() -> {
+            ArgumentCaptor<UserInfo> argumentCaptor = ArgumentCaptor.forClass(UserInfo.class);
+            PanacheMock.verify(UserInfo.class, Mockito.atLeastOnce()).persistOrUpdate(argumentCaptor.capture(), any());
+            assertEquals(1, argumentCaptor.getValue().getInstitutions().size());
+            assertEquals(PartyRole.MANAGER, argumentCaptor.getValue().getInstitutions().get(0).getRole());
         });
     }
 
     @Test
     @RunOnVertxContext
     void initOrderStreamWithNotFoundValidState(UniAsserter asserter){
-        UserInstitution userInstitution = constructUserInstitution();
+        UserInstitution userInstitution = constructUserInstitution("productId");
         userInstitution.getProducts().get(0).setStatus(OnboardedProductState.SUSPENDED);
 
         PanacheMock.mock(UserInfo.class);
@@ -165,7 +192,7 @@ class UserInstitutionRepositoryTest {
     @Test
     @RunOnVertxContext
     void initOrderStreamWithNotFoundValidStateAndInstitutionId(UniAsserter asserter){
-        UserInstitution userInstitution = constructUserInstitution();
+        UserInstitution userInstitution = constructUserInstitution("productId");
         userInstitution.setInstitutionId("institutionId2");
         userInstitution.getProducts().get(0).setStatus(OnboardedProductState.SUSPENDED);
         PanacheMock.mock(UserInfo.class);
@@ -185,7 +212,7 @@ class UserInstitutionRepositoryTest {
     @Test
     @RunOnVertxContext
     void initOrderStreamWithNotFoundValidStateButMultipleInstitutionInUserInfo(UniAsserter asserter){
-        UserInstitution userInstitution = constructUserInstitution();
+        UserInstitution userInstitution = constructUserInstitution("productId");
         userInstitution.setInstitutionId("institutionId2");
         userInstitution.getProducts().get(0).setStatus(OnboardedProductState.SUSPENDED);
         PanacheMock.mock(UserInfo.class);
@@ -206,7 +233,7 @@ class UserInstitutionRepositoryTest {
     @Test
     @RunOnVertxContext
     void initOrderStreamWithNotFoundValidStateButMoreInstitutions(UniAsserter asserter){
-        UserInstitution userInstitution = constructUserInstitution();
+        UserInstitution userInstitution = constructUserInstitution("productId");
         userInstitution.getProducts().get(0).setStatus(OnboardedProductState.SUSPENDED);
         PanacheMock.mock(UserInfo.class);
         UserInfo userInfo = retrieveUserInfo();
@@ -243,16 +270,20 @@ class UserInstitutionRepositoryTest {
         return userInfo;
     }
 
-    private UserInstitution constructUserInstitution() {
+    private UserInstitution constructUserInstitution(String productId) {
         UserInstitution userInstitution = new UserInstitution();
         userInstitution.setUserId("userId");
         userInstitution.setInstitutionId(INSTITUTION_ID);
-        OnboardedProduct onboardedProduct = new OnboardedProduct();
-        onboardedProduct.setRole(PartyRole.MANAGER);
-        onboardedProduct.setProductId("productId");
-        onboardedProduct.setStatus(OnboardedProductState.ACTIVE);
-        userInstitution.setProducts(List.of(onboardedProduct));
+        userInstitution.setProducts(List.of(dummyOnboardedProduct(productId, PartyRole.MANAGER)));
         return userInstitution;
+    }
+
+    private OnboardedProduct dummyOnboardedProduct(String productId, PartyRole partyRole) {
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setRole(partyRole);
+        onboardedProduct.setProductId(productId);
+        onboardedProduct.setStatus(OnboardedProductState.ACTIVE);
+        return onboardedProduct;
     }
 
 

@@ -30,8 +30,10 @@ public class UserInstitutionRepository {
         return UserInfo.findByIdOptional(userInstitution.getUserId())
                 .onItem().transformToUni(opt -> opt.map(entityBase -> {
                             if (VALID_PRODUCT_STATE.contains(state)) {
-                                PartyRole role = retrieveRoleForGivenInstitution(userInstitution.getProducts());
-                                return updateOrCreateNewUserInfo(opt.get(), userInstitution, role, state);
+                                Optional<PartyRole> optRole = retrieveRoleForGivenInstitution(userInstitution.getProducts());
+                                return optRole.isPresent()
+                                    ? updateOrCreateNewUserInfo(opt.get(), userInstitution, optRole.get(), state)
+                                    : Uni.createFrom().voidItem();
                             } else {
                                 return deleteInstitutionOrAllUserInfo(opt.get(), userInstitution);
                             }
@@ -44,19 +46,24 @@ public class UserInstitutionRepository {
             return Uni.createFrom().voidItem();
         }
 
-        List<UserInstitutionRole> institutionRoles = userInstitution.getProducts().stream()
-                .filter(product -> VALID_PRODUCT_STATE.contains(product.getStatus()))
-                .map(product -> userMapper.toUserInstitutionRole(userInstitution, product.getRole(), product.getStatus()))
-                .toList();
+        Optional<PartyRole> maxRole = retrieveRoleForGivenInstitution(userInstitution.getProducts());
+        if(maxRole.isEmpty()){
+            return Uni.createFrom().voidItem();
+        }
 
-        if(CollectionUtils.isEmpty(institutionRoles)){
+        UserInstitutionRole institutionRole = userInstitution.getProducts().stream()
+                .filter(product -> VALID_PRODUCT_STATE.contains(product.getStatus()))
+                .filter(product -> maxRole.get().equals(product.getRole()))
+                .map(product -> userMapper.toUserInstitutionRole(userInstitution, product.getRole(), product.getStatus()))
+                .findAny().orElse(null);
+
+        if(Objects.isNull(institutionRole)){
             return Uni.createFrom().voidItem();
         }
 
         UserInfo userInfo = new UserInfo();
         userInfo.setUserId(userInstitution.getUserId());
-        userInfo.setInstitutions(new ArrayList<>());
-        userInfo.setInstitutions(institutionRoles);
+        userInfo.setInstitutions(List.of(institutionRole));
 
         return UserInfo.persistOrUpdate(userInfo)
                 .invoke(() -> log.info(String.format("createNewUserInfo for userId %s and institution %s",
@@ -116,12 +123,12 @@ public class UserInstitutionRepository {
         return userInfo;
     }
 
-    private PartyRole retrieveRoleForGivenInstitution(List<OnboardedProduct> products) {
+    private Optional<PartyRole> retrieveRoleForGivenInstitution(List<OnboardedProduct> products) {
         List<PartyRole> list = products.stream()
                 .filter(onboardedProduct -> VALID_PRODUCT_STATE.contains(onboardedProduct.getStatus()))
                 .map(OnboardedProduct::getRole)
                 .toList();
-        return Collections.min(list);
+        return list.isEmpty() ? Optional.empty() : Optional.of(Collections.min(list));
 
     }
 
