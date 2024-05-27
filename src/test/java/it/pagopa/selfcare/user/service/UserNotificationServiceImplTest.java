@@ -81,7 +81,7 @@ class UserNotificationServiceImplTest {
         userInstitution.setInstitutionRootName("institutionRootName");
         OnboardedProduct onboardedProduct = new OnboardedProduct();
         onboardedProduct.setProductId("test");
-        onboardedProduct.setProductRole("code");
+        onboardedProduct.setProductRole("admin");
         userInstitution.setProducts(List.of(onboardedProduct));
 
 
@@ -92,10 +92,22 @@ class UserNotificationServiceImplTest {
         productRole.setLabel("label");
         productRoleInfo.setRoles(List.of(productRole));
 
+        ProductRoleInfo productRoleInfo2 = new ProductRoleInfo();
+        var productRole2 = new ProductRole();
+        productRole2.setCode("code2");
+        productRole2.setDescription("description");
+        productRole2.setLabel("label2");
+        var productRole3 = new ProductRole();
+        productRole3.setCode("code3");
+        productRole3.setDescription("description");
+        productRole3.setLabel("label3");
+        productRoleInfo2.setRoles(List.of(productRole2, productRole3));
+
         product = new Product();
         product.setId("test");
         product.setRoleMappings(new HashMap<>() {{
             put(PartyRole.MANAGER, productRoleInfo);
+            put(PartyRole.OPERATOR, productRoleInfo2);
         }});
     }
 
@@ -312,7 +324,71 @@ class UserNotificationServiceImplTest {
         UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true);
 
         when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
-        List<String> roleLabels = List.of("label");
+        List<String> roleLabels = List.of("code2", "code3");
+        userNotificationServiceImpl.sendCreateUserNotification(
+                        userInstitution.getInstitutionDescription(),
+                        roleLabels,
+                        userResource,
+                        userInstitution,
+                        product,
+                        loggedUser
+                )
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .awaitItem().assertCompleted();
+        verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void testSendCreateUserNotificationWith2RoleLabel() throws IOException {
+        String loggedUserName = "loggedUserName";
+        String loggedUserSurname = "loggedUserSurname";
+        LoggedUser loggedUser = LoggedUser.builder()
+                .name(loggedUserName)
+                .familyName(loggedUserSurname)
+                .build();
+
+        Configuration freemarkerConfig = mock(Configuration.class);
+        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
+        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
+        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
+
+        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true);
+
+        when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
+        List<String> roleLabels = List.of("code2", "code3");
+        userNotificationServiceImpl.sendCreateUserNotification(
+                        userInstitution.getInstitutionDescription(),
+                        roleLabels,
+                        userResource,
+                        userInstitution,
+                        product,
+                        loggedUser
+                )
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .awaitItem().assertCompleted();
+        verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void testSendCreateUserNotificationWithRoleNotFound() throws IOException {
+        String loggedUserName = "loggedUserName";
+        String loggedUserSurname = "loggedUserSurname";
+        LoggedUser loggedUser = LoggedUser.builder()
+                .name(loggedUserName)
+                .familyName(loggedUserSurname)
+                .build();
+
+        Configuration freemarkerConfig = mock(Configuration.class);
+        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
+        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
+        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
+
+        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true);
+
+        when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
+        List<String> roleLabels = List.of("code5","code6");
         userNotificationServiceImpl.sendCreateUserNotification(
                         userInstitution.getInstitutionDescription(),
                         roleLabels,

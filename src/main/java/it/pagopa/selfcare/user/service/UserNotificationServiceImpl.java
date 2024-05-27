@@ -25,12 +25,10 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.user.constant.TemplateMailConstant.*;
@@ -60,11 +58,11 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     @Override
     public Uni<UserNotificationToSend> sendKafkaNotification(UserNotificationToSend userNotificationToSend, String userId) {
         return eventHubUsersEnabled
-            ? eventHubRestClient.sendMessage(userNotificationToSend)
+                ? eventHubRestClient.sendMessage(userNotificationToSend)
                 .onItem().invoke(() -> log.info("sent dataLake notification for user : {}", userId))
                 .onFailure().invoke(throwable -> log.warn("error during send dataLake notification for user {}: {} ", userId, throwable.getMessage(), throwable))
                 .replaceWith(userNotificationToSend)
-            : Uni.createFrom().item(userNotificationToSend);
+                : Uni.createFrom().item(userNotificationToSend);
     }
 
     @Override
@@ -102,26 +100,51 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         dataModel.put("productName", Optional.ofNullable(product.getTitle()).orElse(""));
         dataModel.put("institutionName", Optional.ofNullable(institutionDescription).orElse(""));
         if (roleLabels.size() > 1) {
-            String roleLabel = roleLabels.stream()
-                    .limit(roleLabels.size() - 1L)
-                    .collect(Collectors.joining(", "));
+            List<String> roleLabel = new ArrayList<>();
 
-            dataModel.put("productRoles", roleLabel);
-            dataModel.put("lastProductRole", roleLabels.get(roleLabels.size() - 1));
+            if (CollectionUtils.isNotEmpty(product.getRoleMappings())) {
+                roleLabel = product.getRoleMappings().values().stream()
+                        .filter(productRoleInfo -> !CollectionUtils.isNullOrEmpty(productRoleInfo.getRoles()))
+                        .flatMap(productRoleInfo -> productRoleInfo.getRoles().stream()
+                                .filter(productRole -> roleLabels.contains(productRole.getCode())))
+                        .map(ProductRole::getLabel)
+                        .toList();
+            }
+
+            if(CollectionUtils.isNullOrEmpty(roleLabel)) {
+                roleLabel = List.of("no_role_found");
+            }
+
+            dataModel.put("productRoles", roleLabel.stream().limit(roleLabels.size() - 1L)
+                    .collect(Collectors.joining(", ")));
+            if(roleLabel.size() > 1) {
+                dataModel.put("lastProductRole", roleLabel.get(roleLabel.size() - 1));
+            }
+
         } else {
-            String roleLabel = roleLabels.get(0);
+            String roleLabel = "no_role_found";
+            if (CollectionUtils.isNotEmpty(product.getRoleMappings())) {
+                roleLabel = product.getRoleMappings().values().stream()
+                        .flatMap(productRoleInfo -> productRoleInfo.getRoles().stream())
+                        .filter(productRole -> productRole.getCode().equals(roleLabels.get(0)))
+                        .map(ProductRole::getLabel)
+                        .findAny()
+                        .orElse("no_role_found");
+            }
             dataModel.put("productRole", roleLabel);
         }
 
         return dataModel;
     }
+
     private Map<String, String> buildEmailDataModel(UserInstitution institution, Product product, String givenProductRole, String loggedUserName, String loggedUserSurname) {
         Optional<OnboardedProduct> productDb = institution.getProducts().stream().filter(p -> StringUtils.equals(p.getProductId(), product.getId())
-        && (StringUtils.isBlank(givenProductRole) || StringUtils.equals(p.getProductRole(), givenProductRole))).findFirst();
+                && (StringUtils.isBlank(givenProductRole) || StringUtils.equals(p.getProductRole(), givenProductRole))).findFirst();
 
         Optional<String> roleLabel = Optional.empty();
-        if (productDb.isPresent()) {
+        if (productDb.isPresent() && CollectionUtils.isNotEmpty(product.getRoleMappings())) {
             roleLabel = product.getRoleMappings().values().stream()
+                    .filter(productRoleInfo -> !CollectionUtils.isNullOrEmpty(productRoleInfo.getRoles()))
                     .flatMap(productRoleInfo -> productRoleInfo.getRoles().stream())
                     .filter(productRole -> productRole.getCode().equals(productDb.get().getProductRole()))
                     .map(ProductRole::getLabel).findAny();
