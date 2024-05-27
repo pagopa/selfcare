@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <parent>
+        <groupId>it.pagopa.selfcare</groupId>
+        <artifactId>selc-starter-parent</artifactId>
+        <version>0.0.3-SNAPSHOT</version>
+        <relativePath/>
+        <!-- lookup parent from repository -->
+    </parent>
+
+    <artifactId>user-group-ms</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0.0-SNAPSHOT</version>
+    <name>user-group-ms</name>
+    <description>Microservice to manage Self Care User Group</description>
+
+    <properties>
+        <selc-commons.version>2.5.1</selc-commons.version>
+        <sonar.host.url>https://sonarcloud.io/</sonar.host.url>
+        <sonar.skip>true</sonar.skip>
+    </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>it.pagopa.selfcare</groupId>
+                <artifactId>user-group-ms-connector-api</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+
+            <dependency>
+                <groupId>it.pagopa.selfcare</groupId>
+                <artifactId>user-group-ms-connector-api</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+                <type>test-jar</type>
+            </dependency>
+
+            <dependency>
+                <groupId>it.pagopa.selfcare</groupId>
+                <artifactId>user-group-ms-core</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+
+            <dependency>
+                <groupId>it.pagopa.selfcare</groupId>
+                <artifactId>user-group-ms-web</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+
+            <dependency>
+                <groupId>it.pagopa.selfcare</groupId>
+                <artifactId>selc-commons-base</artifactId>
+                <version>${selc-commons.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>it.pagopa.selfcare</groupId>
+                <artifactId>selc-commons-base</artifactId>
+                <version>${selc-commons.version}</version>
+                <type>test-jar</type>
+            </dependency>
+
+            <dependency>
+                <groupId>it.pagopa.selfcare</groupId>
+                <artifactId>selc-commons-web</artifactId>
+                <version>${selc-commons.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>it.pagopa.selfcare</groupId>
+                <artifactId>selc-commons-web</artifactId>
+                <version>${selc-commons.version}</version>
+                <type>test-jar</type>
+            </dependency>
+
+            <dependency>
+                <groupId>it.pagopa.selfcare</groupId>
+                <artifactId>user-group-ms-connector-dao</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selc-commons-base</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.owasp.encoder</groupId>
+            <artifactId>encoder</artifactId>
+            <version>1.2.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selc-commons-base</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <modules>
+        <module>core</module>
+        <module>web</module>
+        <module>app</module>
+        <module>connector-api</module>
+        <module>connector</module>
+    </modules>
+
+
+
+    <build>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.8.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>3.10.0.2594</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.8.11</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <configuration>
+                            <append>true</append>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+
+    </build>
+
+    <repositories>
+        <repository>
+            <id>selfcare-platform</id>
+            <url>
+                https://pkgs.dev.azure.com/pagopaspa/selfcare-platform-app-projects/_packaging/selfcare-platform/maven/v1
+            </url>
+        </repository>
+    </repositories>
+</project>
