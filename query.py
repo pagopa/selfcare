@@ -30,6 +30,28 @@ def get_institutions(page, size):
     ]
 
 
+def get_delegations(page, size):
+    return [
+        {
+            '$match': {
+                '$or': [
+                    {
+                        'toTaxCode': {
+                            '$exists': False
+                        }
+                    }, {
+                        'fromTaxCode': {
+                            '$exists': False
+                        }
+                    }
+                ]
+            }
+
+        },
+        *paging(page, size)
+    ]
+
+
 def get_institutions_from_onboardings(page, size):
     return [
             {
@@ -41,6 +63,23 @@ def get_institutions_from_onboardings(page, size):
                 }
             },
             *paging(page, size)
+    ]
+
+def count_delegations():
+    return [
+        {
+            '$match': {
+                'toTaxCode': {
+                    '$exists': False
+                },
+                'fromTaxCode': {
+                    '$exists': False
+                }
+            }
+        },
+        {
+            '$count': 'count'
+        }
     ]
 
 
