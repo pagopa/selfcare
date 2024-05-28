@@ -35,10 +35,9 @@ public class UserPermissionController {
      */
     @Operation(summary = "Get permission for a user in an institution")
     @GET
-    @Path("/{institutionId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Boolean> getPermission(
-            @NotEmpty(message = "institutionId is required") @PathParam("institutionId") String institutionId,
+            @QueryParam("institutionId") String institutionId,
             @QueryParam("productId") String productId,
             @NotNull(message = "Permission type is required") @QueryParam("permission") PermissionTypeEnum permission,
             @Context SecurityContext ctx) {

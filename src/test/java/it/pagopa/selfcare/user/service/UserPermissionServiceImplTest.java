@@ -36,11 +36,32 @@ public class UserPermissionServiceImplTest {
     public void testHasPermissionWithAnyPermission() {
         // Arrange
         UserInstitution userInstitution = new UserInstitution();
-        userInstitution.setProducts(Collections.emptyList());
-        Mockito.when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap())).thenReturn(Uni.createFrom().item(userInstitution));
-
+        OnboardedProduct product = new OnboardedProduct();
+        product.setRole(PartyRole.OPERATOR);
+        product.setProductId(productId);
+        userInstitution.setProducts(Collections.singletonList(product));
+        Mockito.when(userInstitutionService.existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ANY))
+                .thenReturn(Uni.createFrom().item(true));
         // Act
         Uni<Boolean> result = userPermissionService.hasPermission(institutionId, productId, PermissionTypeEnum.ANY, userId);
+        UniAssertSubscriber<Boolean> subscriber = result.subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // Assert
+        subscriber.assertCompleted().assertItem(true);
+    }
+
+    @Test
+    public void testHasPermissionWithADminPermissionOnlyWithProductId() {
+        // Arrange
+        UserInstitution userInstitution = new UserInstitution();
+        OnboardedProduct product = new OnboardedProduct();
+        product.setRole(PartyRole.OPERATOR);
+        product.setProductId(productId);
+        userInstitution.setProducts(Collections.singletonList(product));
+        Mockito.when(userInstitutionService.existsValidUserProduct(userId, null, productId, PermissionTypeEnum.ANY))
+                .thenReturn(Uni.createFrom().item(true));
+        // Act
+        Uni<Boolean> result = userPermissionService.hasPermission(null, productId, PermissionTypeEnum.ANY, userId);
         UniAssertSubscriber<Boolean> subscriber = result.subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Assert
@@ -55,8 +76,8 @@ public class UserPermissionServiceImplTest {
         product.setRole(PartyRole.MANAGER);
         product.setProductId(productId);
         userInstitution.setProducts(Collections.singletonList(product));
-        Mockito.when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap())).thenReturn(Uni.createFrom().item(userInstitution));
-
+        Mockito.when(userInstitutionService.existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ADMIN))
+                .thenReturn(Uni.createFrom().item(true));
         // Act
         Uni<Boolean> result = userPermissionService.hasPermission(institutionId, productId, PermissionTypeEnum.ADMIN, userId);
         UniAssertSubscriber<Boolean> subscriber = result.subscribe().withSubscriber(UniAssertSubscriber.create());
@@ -73,8 +94,8 @@ public class UserPermissionServiceImplTest {
         product.setRole(PartyRole.OPERATOR);
         product.setProductId(productId);
         userInstitution.setProducts(Collections.singletonList(product));
-        Mockito.when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap())).thenReturn(Uni.createFrom().item(userInstitution));
-
+        Mockito.when(userInstitutionService.existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ADMIN))
+                .thenReturn(Uni.createFrom().item(false));
         // Act
         Uni<Boolean> result = userPermissionService.hasPermission(institutionId, productId, PermissionTypeEnum.ADMIN, userId);
         UniAssertSubscriber<Boolean> subscriber = result.subscribe().withSubscriber(UniAssertSubscriber.create());
@@ -86,8 +107,8 @@ public class UserPermissionServiceImplTest {
     @Test
     public void testHasPermissionWithUserNotFound() {
         // Arrange
-        Mockito.when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap())).thenReturn(Uni.createFrom().nullItem());
-
+        Mockito.when(userInstitutionService.existsValidUserProduct(eq(null), anyString(), anyString(), any(PermissionTypeEnum.class)))
+                .thenReturn(Uni.createFrom().item(false));
         // Act
         Uni<Boolean> result = userPermissionService.hasPermission(institutionId, productId, PermissionTypeEnum.ANY, userId);
         UniAssertSubscriber<Boolean> assertSubscriber = result.subscribe().withSubscriber(UniAssertSubscriber.create());

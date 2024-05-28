@@ -4,6 +4,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 
@@ -36,4 +37,6 @@ public interface UserInstitutionService {
     Uni<UserInstitution> findByUserIdAndInstitutionId(String userId, String institutionId);
 
     Uni<UserInstitution> persistOrUpdate(UserInstitution userInstitution);
+
+    Uni<Boolean> existsValidUserProduct(String userId, String institutionId, String productId, PermissionTypeEnum permission);
 }

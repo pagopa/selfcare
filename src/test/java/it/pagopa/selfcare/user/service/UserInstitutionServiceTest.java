@@ -4,7 +4,6 @@ import io.quarkus.mongodb.panache.common.reactive.ReactivePanacheUpdate;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.quarkus.panache.mock.PanacheMock;
 import io.quarkus.test.InjectMock;
-import io.quarkus.test.Mock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.mongodb.MongoTestResource;
@@ -16,6 +15,7 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -24,19 +24,16 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static io.smallrye.common.constraint.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @QuarkusTest
 @QuarkusTestResource(MongoTestResource.class)
@@ -57,6 +54,213 @@ class UserInstitutionServiceTest {
                 .thenReturn(Uni.createFrom().item(userInstitution));
         Uni<UserInstitutionResponse> response = userInstitutionService.findById(id);
         Assertions.assertNotNull(response);
+    }
+
+    @Test
+    public void checkExistsValidUserProductAnyWithoutProductId() {
+        String userId = "userId";
+        String institutionId = "institutionId";
+        PanacheMock.mock(UserInstitution.class);
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
+        when(UserInstitution.count(embeddedCaptor.capture()))
+                .thenReturn(Uni.createFrom().item(0L));
+        UniAssertSubscriber<Boolean> subscriber = userInstitutionService
+                .existsValidUserProduct(userId, institutionId, null, PermissionTypeEnum.ANY)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("institutionId"));
+        Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("productId"));
+        Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("role"));
+        subscriber.assertCompleted().assertItem(false);
+    }
+
+    @Test
+    public void checkExistProductIdByRoleAdminWithoutProductId() {
+        String userId = "userId";
+        String institutionId = "institutionId";
+        PanacheMock.mock(UserInstitution.class);
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
+        when(UserInstitution.count(embeddedCaptor.capture()))
+                .thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<Boolean> subscriber = userInstitutionService
+                .existsValidUserProduct(userId, institutionId, null, PermissionTypeEnum.ADMIN)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("institutionId"));
+        Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("productId"));
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("role"));
+        subscriber.assertCompleted().assertItem(true);    }
+
+    @Test
+    public void checkExistProductIdByRoleAnyWithoutProductId() {
+        String institutionId = "institutionId";
+        String userId = "userId";
+        PanacheMock.mock(UserInstitution.class);
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
+        when(UserInstitution.count(embeddedCaptor.capture()))
+                .thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<Boolean> subscriber = userInstitutionService
+                .existsValidUserProduct(userId, institutionId, null, PermissionTypeEnum.ANY)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("institutionId"));
+        Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("productId"));
+        Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("role"));
+        subscriber.assertCompleted().assertItem(true);
+    }
+
+    @Test
+    public void checkExistsValidUserProductAdminWithoutProductId() {
+        String institutionId = "institutionId";
+        String userId = "userId";
+        PanacheMock.mock(UserInstitution.class);
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
+        when(UserInstitution.count(embeddedCaptor.capture()))
+                .thenReturn(Uni.createFrom().item(0L));
+        UniAssertSubscriber<Boolean> subscriber = userInstitutionService
+                .existsValidUserProduct(userId, institutionId, null, PermissionTypeEnum.ADMIN)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("institutionId"));
+        Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("productId"));
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("role"));
+        subscriber.assertCompleted().assertItem(false);
+    }
+
+    @Test
+    public void checkExistsValidUserProductAdminWithoutInstitutionId() {
+        String userId = "userId";
+        String productId = "productId";
+        PanacheMock.mock(UserInstitution.class);
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
+        when(UserInstitution.count(embeddedCaptor.capture()))
+                .thenReturn(Uni.createFrom().item(0L));
+        UniAssertSubscriber<Boolean> subscriber = userInstitutionService
+                .existsValidUserProduct(userId, null, productId, PermissionTypeEnum.ADMIN)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("institutionId"));
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("productId"));
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("role"));
+        subscriber.assertCompleted().assertItem(false);
+    }
+
+    @Test
+    public void checkExistsValidUserProductAnyWithoutInstitutionId() {
+        String userId = "userId";
+        String productId = "productId";
+        PanacheMock.mock(UserInstitution.class);
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
+        when(UserInstitution.count(embeddedCaptor.capture()))
+                .thenReturn(Uni.createFrom().item(0L));
+        UniAssertSubscriber<Boolean> subscriber = userInstitutionService
+                .existsValidUserProduct(userId, null, productId, PermissionTypeEnum.ANY)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("institutionId"));
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("productId"));
+        Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("role"));
+        subscriber.assertCompleted().assertItem(false);
+    }
+
+    @Test
+    public void checkExistProductIdByRoleAdminWithoutInstitutionId() {
+        String userId = "userId";
+        String productId = "productId";
+        PanacheMock.mock(UserInstitution.class);
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
+        when(UserInstitution.count(embeddedCaptor.capture()))
+                .thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<Boolean> subscriber = userInstitutionService
+                .existsValidUserProduct(userId, null, productId, PermissionTypeEnum.ADMIN)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("institutionId"));
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("productId"));
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("role"));
+        subscriber.assertCompleted().assertItem(true);    }
+
+    @Test
+    public void checkExistProductIdByRoleAnyWithoutInstitutionId() {
+        String userId = "userId";
+        String productId = "productId";
+        PanacheMock.mock(UserInstitution.class);
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
+        when(UserInstitution.count(embeddedCaptor.capture()))
+                .thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<Boolean> subscriber = userInstitutionService
+                .existsValidUserProduct(userId, null, productId, PermissionTypeEnum.ANY)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("institutionId"));
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("productId"));
+        Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("role"));
+        subscriber.assertCompleted().assertItem(true);
+    }
+
+    @Test
+    public void checkExistsValidUserProductAdminWithInstitutionIdAndProductId() {
+        String userId = "userId";
+        String productId = "productId";
+        String institutionId = "institutionId";
+        PanacheMock.mock(UserInstitution.class);
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
+        when(UserInstitution.count(embeddedCaptor.capture()))
+                .thenReturn(Uni.createFrom().item(0L));
+        UniAssertSubscriber<Boolean> subscriber = userInstitutionService
+                .existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ADMIN)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("institutionId"));
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("productId"));
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("role"));
+        subscriber.assertCompleted().assertItem(false);
+    }
+
+    @Test
+    public void checkExistsValidUserProductAnyWithInstitutionIdAndProductId() {
+        String userId = "userId";
+        String productId = "productId";
+        String institutionId = "institutionId";
+        PanacheMock.mock(UserInstitution.class);
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
+        when(UserInstitution.count(embeddedCaptor.capture()))
+                .thenReturn(Uni.createFrom().item(0L));
+        UniAssertSubscriber<Boolean> subscriber = userInstitutionService
+                .existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ANY)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("institutionId"));
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("productId"));
+        Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("role"));
+        subscriber.assertCompleted().assertItem(false);
+    }
+
+    @Test
+    public void checkExistProductIdByRoleAdminWithInstitutionIdAndProductId() {
+        String userId = "userId";
+        String productId = "productId";
+        String institutionId = "institutionId";
+        PanacheMock.mock(UserInstitution.class);
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
+        when(UserInstitution.count(embeddedCaptor.capture()))
+                .thenReturn(Uni.createFrom().item(1L));
+
+        UniAssertSubscriber<Boolean> subscriber = userInstitutionService
+                .existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ADMIN)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("institutionId"));
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("productId"));
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("role"));
+        subscriber.assertCompleted().assertItem(true);    }
+
+    @Test
+    public void checkExistProductIdByRoleAnyWithInstitutionIdAndProductId() {
+        String userId = "userId";
+        String productId = "productId";
+        String institutionId = "institutionId";
+        PanacheMock.mock(UserInstitution.class);
+
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
+        when(UserInstitution.count(embeddedCaptor.capture()))
+                .thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<Boolean> subscriber = userInstitutionService
+                .existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ANY)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("institutionId"));
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("productId"));
+        subscriber.assertCompleted().assertItem(true);
     }
 
     @Test
@@ -97,7 +301,7 @@ class UserInstitutionServiceTest {
                 .thenReturn(query);
         when(query.page(anyInt(), anyInt())).thenReturn(query);
         when(query.stream()).thenReturn(Multi.createFrom().item(userInstitution));
-        AssertSubscriber<UserInstitution> subscriber =  userInstitutionService.paginatedFindAllWithFilter(parameterMap, 0, 100)
+        AssertSubscriber<UserInstitution> subscriber = userInstitutionService.paginatedFindAllWithFilter(parameterMap, 0, 100)
                 .subscribe().withSubscriber(AssertSubscriber.create(10));
         List<UserInstitution> response = subscriber.assertCompleted().getItems();
         Assertions.assertEquals(1, response.size());
@@ -116,7 +320,7 @@ class UserInstitutionServiceTest {
                 .thenReturn(query);
         when(query.page(anyInt(), anyInt())).thenReturn(query);
         when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitution));
-        UniAssertSubscriber<UserInstitution> subscriber =  userInstitutionService.retrieveFirstFilteredUserInstitution(parameterMap)
+        UniAssertSubscriber<UserInstitution> subscriber = userInstitutionService.retrieveFirstFilteredUserInstitution(parameterMap)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted().assertItem(userInstitution);
     }
@@ -134,7 +338,7 @@ class UserInstitutionServiceTest {
         when(query.page(anyInt(), anyInt())).thenReturn(query);
         when(query.stream()).thenReturn(Multi.createFrom().item(userInstitution));
 
-        AssertSubscriber<UserInstitution> subscriber =  userInstitutionService.findAllWithFilter(parameterMap)
+        AssertSubscriber<UserInstitution> subscriber = userInstitutionService.findAllWithFilter(parameterMap)
                 .subscribe().withSubscriber(AssertSubscriber.create(10));
 
         List<UserInstitution> actual = subscriber.assertCompleted().getItems();
@@ -156,7 +360,7 @@ class UserInstitutionServiceTest {
                 .thenReturn(query);
         when(query.page(anyInt(), anyInt())).thenReturn(query);
         when(query.list()).thenReturn(Uni.createFrom().item(userInstitutionList));
-        UniAssertSubscriber<List<UserInstitution>> subscriber =  userInstitutionService.retrieveFilteredUserInstitution(parameterMap)
+        UniAssertSubscriber<List<UserInstitution>> subscriber = userInstitutionService.retrieveFilteredUserInstitution(parameterMap)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted().assertItem(userInstitutionList);
     }
@@ -286,7 +490,7 @@ class UserInstitutionServiceTest {
     }
 
     @Test
-    void deleteUserInstitutionProduct(){
+    void deleteUserInstitutionProduct() {
         final String userId = "userId";
         String institutionId = "institutionId";
         PanacheMock.mock(UserInstitution.class);

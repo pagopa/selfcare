@@ -5,6 +5,8 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
+import it.pagopa.selfcare.user.constant.SelfCareRole;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -23,7 +25,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.*;
-import static it.pagopa.selfcare.user.constant.OnboardedProductState.ACTIVE;
+import static it.pagopa.selfcare.user.constant.OnboardedProductState.*;
 import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductEnum.*;
 import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
 
@@ -184,6 +186,21 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
                 .replaceWith(userInstitution);
     }
 
+    @Override
+    public Uni<Boolean> existsValidUserProduct(String userId, String institutionId, String productId, PermissionTypeEnum permission) {
+
+        Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
+        OnboardedProductFilter.OnboardedProductFilterBuilder builder = OnboardedProductFilter.builder().productId(productId).status(List.of(ACTIVE, PENDING, TOBEVALIDATED));
+        if (permission.equals(PermissionTypeEnum.ADMIN)) {
+            builder.role(SelfCareRole.fromSelfCareAuthority(permission.name()));
+        }
+        Map<String, Object> onboardedProductFilterMap = builder.build().constructMap();
+        Map<String, Object> filterMap = userUtils.retrieveMapForFilter(userInstitutionFilterMap, onboardedProductFilterMap);
+        Document query = queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION);
+
+        return runUserInstitutionCountQuery(query);
+    }
+
 
     private boolean productFilterIsEmpty(Map<String, Object> filterMap) {
         return !filterMap.containsKey(PRODUCT_ID.getChild())
@@ -193,5 +210,10 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
     public ReactivePanacheQuery<UserInstitution> runUserInstitutionFindQuery(Document query, Document sort) {
         return UserInstitution.find(query, sort);
+    }
+
+    public Uni<Boolean> runUserInstitutionCountQuery(Document query) {
+        Uni<Long> count = UserInstitution.count(query);
+        return count.onItem().transform(c -> c > 0);
     }
 }

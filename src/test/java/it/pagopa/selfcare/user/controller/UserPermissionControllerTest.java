@@ -42,10 +42,10 @@ class UserPermissionControllerTest {
 
         // Perform the API call without providing the permission query parameter
         given()
-                .pathParam(institutionIdField, institutionId)
+                .queryParam(institutionIdField, institutionId)
                 .queryParam(productIdField, productId)
                 .when()
-                .get("/{institutionId}")
+                .get("/")
                 .then()
                 .statusCode(401);
 
@@ -70,16 +70,45 @@ class UserPermissionControllerTest {
 
         // Perform the API call
         given()
-                .pathParam(institutionIdField, institutionId)
+                .queryParam(institutionIdField, institutionId)
                 .queryParam(productIdField, productId)
                 .queryParam("permission", permission)
                 .when()
-                .get("/{institutionId}")
+                .get("/")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .contentType(MediaType.APPLICATION_JSON);
 
         // Verify that the methods were called with the expected parameters
         verify(userPermissionService).hasPermission(institutionId, productId, permission, userId);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testGetPermissionWithoutProductId() {
+        // Mock input parameters
+        PermissionTypeEnum permission = ADMIN;
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getUserPrincipal()).thenReturn(() -> "userJwt");
+
+        // Mock userUtils.readUserIdFromToken() method
+        when(userUtils.readUserIdFromToken(any())).thenReturn(Uni.createFrom().item(LoggedUser.builder().uid(userId).build()));
+
+        // Mock userPermissionService.hasPermission() method
+        when(userPermissionService.hasPermission(null, productId, permission,userId)).thenReturn(Uni.createFrom().item(Boolean.TRUE));
+
+        // Perform the API call
+        given()
+                .queryParam(productIdField, productId)
+                .queryParam("permission", permission)
+                .when()
+                .get("/")
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode())
+                .contentType(MediaType.APPLICATION_JSON);
+
+        // Verify that the methods were called with the expected parameters
+        verify(userPermissionService).hasPermission(null, productId, permission, userId);
     }
 }
