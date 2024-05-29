@@ -3,9 +3,11 @@ package it.pagopa.selfcare.user.controller;
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.service.UserService;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -59,4 +61,15 @@ public class InstitutionController {
                         .build());
     }
 
+    @Operation(summary = "The API updates the description in all occurrences of userInstitution, given a certain institutionId.")
+    @PUT
+    @Path(value = "/{institutionId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> updateInstitutionDescription(@PathParam(value = "institutionId") String institutionId,
+                                                      @Valid UpdateDescriptionDto descriptionDto) {
+        return userService.updateInstitutionDescription(institutionId, descriptionDto)
+                .map(ignore -> Response
+                        .status(HttpStatus.SC_NO_CONTENT)
+                        .build());
+    }
 }

@@ -59,6 +59,46 @@
         } ]
       }
     },
+    "/institutions/{institutionId}" : {
+      "put" : {
+        "tags" : [ "Institution Controller" ],
+        "summary" : "The API updates the description in all occurrences of userInstitution, given a certain institutionId.",
+        "parameters" : [ {
+          "name" : "institutionId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateDescriptionDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/institutions/{institutionId}/products/{productId}/createdAt" : {
       "put" : {
         "tags" : [ "Institution Controller" ],
@@ -1185,6 +1225,19 @@
         "type" : "object",
         "properties" : {
           "fiscalCode" : {
+            "type" : "string"
+          }
+        }
+      },
+      "UpdateDescriptionDto" : {
+        "required" : [ "institutionDescription" ],
+        "type" : "object",
+        "properties" : {
+          "institutionDescription" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "institutionRootName" : {
             "type" : "string"
           }
         }

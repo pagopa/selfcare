@@ -7,6 +7,7 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.constant.SelfCareRole;
+import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -22,7 +23,10 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.*;
 import static it.pagopa.selfcare.user.constant.OnboardedProductState.*;
@@ -199,6 +203,23 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         Document query = queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION);
 
         return runUserInstitutionCountQuery(query);
+    }
+
+    @Override
+    public Uni<Long> updateInstitutionDescription(String institutionId, UpdateDescriptionDto descriptionDto) {
+
+        Map<String, Object> fieldToUpdateMap = new HashMap<>();
+        fieldToUpdateMap.put(UserInstitution.Fields.institutionDescription.name() , descriptionDto.getInstitutionDescription());
+
+        if(Objects.nonNull(descriptionDto.getInstitutionRootName())) {
+            fieldToUpdateMap.put(UserInstitution.Fields.institutionRootName.name(), descriptionDto.getInstitutionRootName());
+        }
+
+        Map<String, Object> filterMap = Map.of(UserInstitution.Fields.institutionId.name(), institutionId);
+
+        return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
+                .where(queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION));
+
     }
 
 

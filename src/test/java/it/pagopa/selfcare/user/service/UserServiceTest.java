@@ -12,13 +12,13 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
-import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.constant.QueueEvent;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
+import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.UserDataResponse;
 import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
@@ -1262,5 +1262,30 @@ class UserServiceTest {
         verify(userInstitutionService).retrieveFirstFilteredUserInstitution(anyMap());
         verify(userInstitutionService).findAllWithFilter(any());
         verify(userRegistryApi).findByIdUsingGET(any(), any());
+    }
+
+    @Test
+    void updateInstitutionDescription() {
+        // Prepare test data
+        String institutionId = "institutionId";
+        UpdateDescriptionDto descriptionDto = new UpdateDescriptionDto();
+        descriptionDto.setInstitutionDescription("description");
+        descriptionDto.setInstitutionRootName("rootName");
+
+        // Mock external dependencies
+        when(userInstitutionService.updateInstitutionDescription(any(), any())).thenReturn(Uni.createFrom().item(1L));
+
+        // Call the method
+        UniAssertSubscriber<Void> subscriber = userService
+                .updateInstitutionDescription(institutionId, descriptionDto)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        // Verify the result
+        subscriber.assertCompleted();
+
+        // Verify the interactions
+        verify(userInstitutionService).updateInstitutionDescription(institutionId, descriptionDto);
+
     }
 }

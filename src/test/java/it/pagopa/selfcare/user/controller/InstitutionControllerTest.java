@@ -7,6 +7,7 @@ import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
@@ -162,6 +163,47 @@ class InstitutionControllerTest {
                 .put("/{institutionId}/products/{productId}/createdAt?userIds=" + userId + "&createdAt=" + now)
                 .then()
                 .statusCode(404);
+    }
+
+    /**
+     * Method under test: {@link InstitutionController#updateInstitutionDescription(String, UpdateDescriptionDto)}
+     */
+    @Test
+    @TestSecurity(user = "userJwt")
+    void updateInstitutionDescription() {
+
+        var institutionId = "institutionId";
+        UpdateDescriptionDto updateDescriptionDto = new UpdateDescriptionDto();
+        updateDescriptionDto.setInstitutionDescription("description");
+
+        Mockito.when(userService.updateInstitutionDescription(institutionId, updateDescriptionDto))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .body(updateDescriptionDto)
+                .pathParam("institutionId", institutionId)
+                .put("/{institutionId}")
+                .then()
+                .statusCode(204);
+    }
+
+    @Test
+    void updateInstitutionDescription_NotAuthorized() {
+
+        var institutionId = "institutionId";
+        UpdateDescriptionDto updateDescriptionDto = new UpdateDescriptionDto();
+        updateDescriptionDto.setInstitutionDescription("description");
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .body(updateDescriptionDto)
+                .pathParam("institutionId", institutionId)
+                .put("/{institutionId}")
+                .then()
+                .statusCode(401);
     }
 
 }

@@ -9,6 +9,7 @@ import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.constant.QueueEvent;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
+import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.UserDataResponse;
 import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
@@ -37,6 +38,7 @@ import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import org.owasp.encoder.Encode;
 import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.time.LocalDateTime;
@@ -517,6 +519,14 @@ public class UserServiceImpl implements UserService {
                 .onItem().transformToUniAndMerge(userInstitution ->
                         userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
                                 .map(userResource -> userMapper.toUserDataResponse(userInstitution, userResource)));
+    }
+
+    @Override
+    public Uni<Void> updateInstitutionDescription(String institutionId, UpdateDescriptionDto updateDescriptionDto) {
+        return userInstitutionService.updateInstitutionDescription(institutionId, updateDescriptionDto)
+                .onFailure().invoke(exception -> log.error("Error during update institution description with id {} on UserInstitution: {} ",
+                        Encode.forJava(institutionId) , exception.getMessage(), exception))
+                .replaceWithVoid();
     }
 
     private void applyFiltersToRemoveProducts(UserInstitution userInstitution, List<String> states, List<String> products, List<String> roles, List<String> productRoles) {
