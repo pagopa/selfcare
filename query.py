@@ -43,6 +43,15 @@ def get_delegations(page, size):
                         'fromTaxCode': {
                             '$exists': False
                         }
+                    },
+                    {
+                        'toType': {
+                            '$exists': False
+                        }
+                    }, {
+                        'fromType': {
+                            '$exists': False
+                        }
                     }
                 ]
             }

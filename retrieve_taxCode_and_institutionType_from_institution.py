@@ -59,16 +59,20 @@ def retrieve_institution_taxcode_and_update_delegation(client, delegation, from_
 
     if from_institution is not None:
         from_tax_code = from_institution.get('taxCode')
+        from_type = from_institution.get('institutionType')
         client[CORE_DB][DELEGATION_COLLECTION].update_one(
             {"_id": delegation['_id']},
-            {"$set": {"fromTaxCode": from_tax_code}}
+            {"$set": {"fromTaxCode": from_tax_code, "fromType": from_type}},
+            False
         )
 
     if to_institution is not None:
         to_tax_code = to_institution.get('taxCode')
+        to_type = to_institution.get('institutionType')
         client[CORE_DB][DELEGATION_COLLECTION].update_one(
             {"_id": delegation['_id']},
-            {"$set": {"toTaxCode": to_tax_code}}
+            {"$set": {"toTaxCode": to_tax_code, "toType": to_type}},
+            False
         )
 
 
