@@ -109,6 +109,9 @@ public class UserInstitutionRepository {
                 .ifPresentOrElse(userInstitutionRole -> {
                             userInstitutionRole.setRole(role);
                             userInstitutionRole.setStatus(state);
+                            userInstitutionRole.setInstitutionName(userInstitution.getInstitutionDescription());
+                            userInstitutionRole.setInstitutionRootName(userInstitution.getInstitutionRootName());
+                            userInstitutionRole.setUserMailUuid(userInstitution.getUserMailUuid());
                             log.info(String.format("replaceOrAddInstitution execution setting role for userId: %s, institutionId: %s, role: %s",
                                     userInstitution.getUserId(), userInstitution.getInstitutionId(), role.name()));
                         },
