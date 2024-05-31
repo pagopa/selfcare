@@ -19,7 +19,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
+import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.util.List;
 import java.util.Map;
@@ -76,6 +76,43 @@ public class UserRegistryServiceTest {
         userInstitution.setProducts(List.of(product));
     }
 
+    @Test
+    public void shouldReturnUserResourceWhenFindByIdUsingGETIsCalled() {
+        when(userRegistryApi.findByIdUsingGET("fl", "id")).thenReturn(Uni.createFrom().item(new UserResource()));
+        UniAssertSubscriber<UserResource> subscriber = userRegistryService.findByIdUsingGET("fl", "id")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
+        verify(userRegistryApi, times(1)).findByIdUsingGET("fl", "id");
+    }
+
+    @Test
+    public void shouldReturnUserIdWhenSaveUsingPATCHIsCalled() {
+        when(userRegistryApi.saveUsingPATCH(any(SaveUserDto.class))).thenReturn(Uni.createFrom().item(new UserId()));
+        UniAssertSubscriber<UserId> subscriber = userRegistryService.saveUsingPATCH(new SaveUserDto())
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
+        verify(userRegistryApi, times(1)).saveUsingPATCH(any(SaveUserDto.class));
+    }
+
+    @Test
+    public void shouldReturnUserResourceWhenSearchUsingPOSTIsCalled() {
+        UserSearchDto userSearchDto = new UserSearchDto();
+        when(userRegistryApi.searchUsingPOST("workContact", userSearchDto)).thenReturn(Uni.createFrom().item(new UserResource()));
+        UniAssertSubscriber<UserResource> subscriber = userRegistryService.searchUsingPOST("workContact", userSearchDto)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
+        verify(userRegistryApi, times(1)).searchUsingPOST("workContact", userSearchDto);
+    }
+
+    @Test
+    public void shouldReturnResponseWhenUpdateUsingPATCHIsCalled() {
+        MutableUserFieldsDto mutableUserFieldsDto = new MutableUserFieldsDto();
+        when(userRegistryApi.updateUsingPATCH("id", mutableUserFieldsDto)).thenReturn(Uni.createFrom().item(Response.accepted().build()));
+        UniAssertSubscriber<Response> subscriber = userRegistryService.updateUsingPATCH("id", mutableUserFieldsDto)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
+        verify(userRegistryApi, times(1)).updateUsingPATCH("id", mutableUserFieldsDto);
+    }
 
     @BeforeAll
     public static void switchMyChannels() {

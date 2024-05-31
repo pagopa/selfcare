@@ -59,9 +59,7 @@ import static it.pagopa.selfcare.user.util.UserUtils.VALID_USER_PRODUCT_STATES_F
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    @RestClient
-    @Inject
-    private UserApi userRegistryApi;
+    private final UserRegistryService userRegistryService;
 
     private final UserMapper userMapper;
     private final UserInstitutionMapper userInstitutionMapper;
@@ -109,7 +107,7 @@ public class UserServiceImpl implements UserService {
         var productFilters = OnboardedProductFilter.builder().productId(productId).status(ACTIVE).build().constructMap();
         Multi<UserInstitution> userInstitutions = userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters));
         return userInstitutions
-                .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(WORK_CONTACTS, userInstitution.getUserId())
+                .onItem().transformToUni(userInstitution -> userRegistryService.findByIdUsingGET(WORK_CONTACTS, userInstitution.getUserId())
                         .map(userResource -> Objects.nonNull(userResource.getWorkContacts()) && userResource.getWorkContacts().containsKey(userInstitution.getUserMailUuid())
                                 ? userResource.getWorkContacts().get(userInstitution.getUserMailUuid()) : null))
                 .merge()
@@ -123,7 +121,7 @@ public class UserServiceImpl implements UserService {
     public Multi<UserProductResponse> getUserProductsByInstitution(String institutionId) {
         Multi<UserInstitution> userInstitutions = UserInstitution.find(UserInstitution.Fields.institutionId.name(), institutionId).stream();
         return userInstitutions.onItem()
-                .transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
+                .transformToUni(userInstitution -> userRegistryService.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
                         .map(userResource -> UserProductResponse.builder()
                                 .id(userResource.getId().toString())
                                 .name(userResource.getName().getValue())
@@ -145,7 +143,7 @@ public class UserServiceImpl implements UserService {
                     log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId));
                     return new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode());
                 })
-                .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId()))
+                .onItem().transformToUni(userInstitution -> userRegistryService.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId()))
                 .onFailure(UserUtils::checkIfNotFoundException).transform(t -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode()));
     }
 
@@ -220,14 +218,14 @@ public class UserServiceImpl implements UserService {
                     log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId));
                     return new UserInstitution();
                 })
-                .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(fields, userId)
+                .onItem().transformToUni(userInstitution -> userRegistryService.findByIdUsingGET(fields, userId)
                         .map(userResource -> userMapper.toUserDetailResponse(userResource, Optional.ofNullable(institutionId).map(ignored -> userInstitution.getUserMailUuid()).orElse(null))))
                 .onFailure(UserUtils::checkIfNotFoundException).transform(t -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode()));
     }
 
     @Override
     public Uni<UserDetailResponse> searchUserByFiscalCode(String fiscalCode, String institutionId) {
-        Uni<UserResource> userResourceUni = userRegistryApi.searchUsingPOST(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, new UserSearchDto(fiscalCode))
+        Uni<UserResource> userResourceUni = userRegistryService.searchUsingPOST(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, new UserSearchDto(fiscalCode))
                 .onFailure(UserUtils::checkIfNotFoundException).transform(t -> new ResourceNotFoundException("User not found", USER_NOT_FOUND_ERROR.getCode()));
 
         return userResourceUni
@@ -294,7 +292,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private Uni<PrepareNotificationData.PrepareNotificationDataBuilder> retrieveUserFromUserRegistryAndAddToPrepareNotificationData(PrepareNotificationData.PrepareNotificationDataBuilder prepareNotificationDataBuilder, String userId) {
-        return userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userId)
+        return userRegistryService.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userId)
                 .onItem().transform(prepareNotificationDataBuilder::userResource);
     }
 
@@ -307,7 +305,7 @@ public class UserServiceImpl implements UserService {
             queryParameter = OnboardedProductFilter.builder().status(VALID_USER_PRODUCT_STATES_FOR_NOTIFICATION).build().constructMap();
         }
         return userInstitutionService.paginatedFindAllWithFilter(queryParameter, page, size)
-                .onItem().transformToUniAndMerge(userInstitution -> userRegistryApi
+                .onItem().transformToUniAndMerge(userInstitution -> userRegistryService
                         .findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId())
                         .map(userResource -> userUtils.buildUsersNotificationResponse(userInstitution, userResource, productId)))
                 .collect().in(ArrayList::new, List::addAll);
@@ -331,7 +329,7 @@ public class UserServiceImpl implements UserService {
 
     /**
      * The createOrUpdateUserByFiscalCode method is a method that either creates a new user or updates an existing one based on the provided CreateUserDto object.
-     * The method starts by calling the searchUsingPOST method on the userRegistryApi object, this is an asynchronous operation that searches for a user in the user registry.
+     * The method starts by calling the searchUsingPOST method on the userRegistryService object, this is an asynchronous operation that searches for a user in the user registry.
      * If the search operation fails with a UserNotFoundException, it recovers by returning a Uni that fails with a ResourceNotFoundException.
      * This is a way of transforming one type of exception into another.
      * If the search operation is successful, it call method to Update user on userRegistry and UserInstitution collection.
@@ -342,7 +340,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public Uni<String> createOrUpdateUserByFiscalCode(CreateUserDto userDto, LoggedUser loggedUser) {
-        return userRegistryApi.searchUsingPOST(USERS_WORKS_FIELD_LIST, new UserSearchDto(userDto.getUser().getFiscalCode()))
+        return userRegistryService.searchUsingPOST(USERS_WORKS_FIELD_LIST, new UserSearchDto(userDto.getUser().getFiscalCode()))
                 .onFailure(UserUtils::isUserNotFoundExceptionOnUserRegistry).recoverWithUni(throwable -> Uni.createFrom().failure(new ResourceNotFoundException(throwable.getMessage())))
                 .onItem().transformToUni(userResource -> updateUserOnUserRegistryAndUserInstitutionByFiscalCode(userResource, userDto))
                 .onFailure(ResourceNotFoundException.class).recoverWithUni(throwable -> createUserOnUserRegistryAndUserInstitution(userDto))
@@ -374,7 +372,7 @@ public class UserServiceImpl implements UserService {
         workContactToSave.put(mailUuid, workContact);
         userResource.setWorkContacts(workContactToSave);
 
-        return userRegistryApi.updateUsingPATCH(userResource.getId().toString(), userMapper.toMutableUserFieldsDto(userResource))
+        return userRegistryService.updateUsingPATCH(userResource.getId().toString(), userMapper.toMutableUserFieldsDto(userResource))
                 .onFailure().invoke(exception -> log.error("Error during update user on userRegistry: {} ", exception.getMessage(), exception))
                 .onItem().invoke(response -> log.info("User with id {} updated on userRegistry", userResource.getId()))
                 .onItem().transformToUni(response -> userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), userDto.getInstitutionId()))
@@ -402,14 +400,14 @@ public class UserServiceImpl implements UserService {
         String mailUuid = randomMailId.get();
         Map<String, WorkContactResource> workContacts = new HashMap<>();
         workContacts.put(mailUuid, UserUtils.buildWorkContact(userDto.getUser().getInstitutionEmail()));
-        return userRegistryApi.saveUsingPATCH(userMapper.toSaveUserDto(userDto.getUser(), workContacts))
+        return userRegistryService.saveUsingPATCH(userMapper.toSaveUserDto(userDto.getUser(), workContacts))
                 .onFailure().invoke(exception -> log.error("Error during create user on userRegistry: {} ", exception.getMessage(), exception))
                 .onItem().invoke(userResource -> log.info("User created with id {}", userResource.getId()))
                 .onItem().transform(userResource -> userResource.getId().toString())
                 .onItem().transform(userId -> updateOrCreateUserInstitution(userDto, mailUuid, null, userId))
                 .onItem().invoke(userInstitution -> log.info("start persist userInstititon: {}", userInstitution))
                 .onItem().transformToUni(userInstitutionService::persistOrUpdate)
-                .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
+                .onItem().transformToUni(userInstitution -> userRegistryService.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
                     .map(resource -> PrepareNotificationData.builder().userResource(resource).userInstitution(userInstitution).queueEvent(QueueEvent.ADD)))
                 .onItem().transformToUni(prepareNotificationDataBuilder -> retrieveProductAndAddToPrepareNotificationData(prepareNotificationDataBuilder, userDto.getProduct().getProductId()))
                 .map(PrepareNotificationData.PrepareNotificationDataBuilder::build)
@@ -419,14 +417,14 @@ public class UserServiceImpl implements UserService {
 
     /**
      * The createOrUpdateUserByUserId method is a method that either add to existingUser a new user Role.
-     * The method starts by calling the findByIdUsingGET method on the userRegistryApi object,
+     * The method starts by calling the findByIdUsingGET method on the userRegistryService object,
      * If the search operation fails with a UserNotFoundException, it recovers by returning a Uni that fails with a ResourceNotFoundException.
      * If the search operation is successful, it call method to Update user on UserInstitution collection.
      * Finally, if any operation fails, it logs an error message and returns a Uni that emits a failure.
      */
     @Override
     public Uni<Void> createOrUpdateUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser) {
-        return userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)
+        return userRegistryService.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)
                 .onFailure(UserUtils::isUserNotFoundExceptionOnUserRegistry).recoverWithUni(throwable -> Uni.createFrom().failure(new ResourceNotFoundException(throwable.getMessage())))
                 .onItem().transformToUni(userResource -> updateUserInstitutionByUserId(userResource, userDto, loggedUser))
                 .onFailure().invoke(exception -> log.error("Error during retrieve user from userRegistry: {} ", exception.getMessage(), exception));
@@ -517,7 +515,7 @@ public class UserServiceImpl implements UserService {
                 .onItem().invoke(userInstitution -> applyFiltersToRemoveProducts(userInstitution, states, products, roles, productRoles))
                 .onItem().invoke(userInstitution -> log.info("userInstitution found: {}", userInstitution))
                 .onItem().transformToUniAndMerge(userInstitution ->
-                        userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
+                        userRegistryService.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
                                 .map(userResource -> userMapper.toUserDataResponse(userInstitution, userResource)));
     }
 

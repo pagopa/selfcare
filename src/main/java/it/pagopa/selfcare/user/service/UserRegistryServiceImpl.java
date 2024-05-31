@@ -11,15 +11,20 @@ import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 
+import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 
 import org.openapi.quarkus.user_registry_json.api.UserApi;
-import org.openapi.quarkus.user_registry_json.model.UserResource;
+import org.openapi.quarkus.user_registry_json.model.*;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
 
@@ -35,10 +40,53 @@ public class UserRegistryServiceImpl implements UserRegistryService {
     private final UserNotificationService userNotificationService;
     private final UserMapper userMapper;
 
+    @ConfigProperty(name = "user-ms.retry.min-backoff")
+    private Integer retryMinBackOff;
+
+    @ConfigProperty(name = "user-ms.retry.max-backoff")
+    private Integer retryMaxBackOff;
+
+    @ConfigProperty(name = "user-ms.retry")
+    private Integer maxRetry;
+
 
     @RestClient
     @Inject
     private UserApi userRegistryApi;
+
+    @Override
+    public Uni<UserResource> findByIdUsingGET(String fl, String id) {
+        return userRegistryApi.findByIdUsingGET(fl, id)
+                .onFailure(this::checkIfIsRetryableException)
+                    .retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry);
+
+    }
+
+    @Override
+    public Uni<UserId> saveUsingPATCH(SaveUserDto saveUserDto) {
+        return userRegistryApi.saveUsingPATCH(saveUserDto)
+                .onFailure(this::checkIfIsRetryableException)
+                .retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry);
+    }
+
+    @Override
+    public Uni<UserResource> searchUsingPOST(String fl, UserSearchDto userSearchDto) {
+        return userRegistryApi.searchUsingPOST(fl, userSearchDto)
+                .onFailure(this::checkIfIsRetryableException)
+                .retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry);
+    }
+
+    @Override
+    public Uni<Response> updateUsingPATCH(String id, MutableUserFieldsDto mutableUserFieldsDto) {
+        return userRegistryApi.updateUsingPATCH(id, mutableUserFieldsDto)
+                .onFailure(this::checkIfIsRetryableException)
+                .retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry);
+    }
+
+    private boolean checkIfIsRetryableException(Throwable throwable) {
+        return throwable instanceof TimeoutException ||
+                (throwable instanceof WebApplicationException webApplicationException && webApplicationException.getResponse().getStatus() == 429);
+    }
 
 
     @Override
@@ -91,7 +139,7 @@ public class UserRegistryServiceImpl implements UserRegistryService {
                     .map(Map.Entry::getKey);
         }
 
-        return userRegistryApi.updateUsingPATCH(userResource.getId().toString(),
+        return updateUsingPATCH(userResource.getId().toString(),
                 userMapper.toMutableUserFieldsDto(userDto, userResource, mailAlreadyPresent.isPresent() ? null : idMail))
             .replaceWith(mailAlreadyPresent.orElse(idMail));
     }
