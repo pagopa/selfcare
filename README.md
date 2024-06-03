@@ -61,3 +61,41 @@ Easily start your Reactive RESTful Web Services
 Rest client are generated using a quarkus' extension.
 
 [Related guide section...](hhttps://github.com/quarkiverse/quarkus-openapi-generator)
+
+## Environment Variables
+
+| **Environment Variable**                | **Default** | **Required** |
+|-----------------------------------------|-------------|:------------:|
+| JWT-PUBLIC-KEY                          |             |     yes      |
+| EVENT_HUB_BASE_PATH                     |             |     yes      |
+| SHARED_ACCESS_KEY_NAME                  |             |     yes      |
+| EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC    |             |     yes      |
+| USER_MS_EVENTHUB_USERS_ENABLED          |             |     yes      |
+| MONGODB-CONNECTION-STRING               |             |     yes      |
+| STORAGE_CONTAINER_PRODUCT               |             |     yes      |
+| BLOB-STORAGE-PRODUCT-CONNECTION-STRING  |             |     yes      |
+| STORAGE_CONTAINER_TEMPLATES             |             |     yes      |
+| SUSER-REGISTRY-API-KEY                  |             |     yes      |
+| USER_REGISTRY_URL                       |             |     yes      |
+| MAIL_SUBJECT_PREFIX                     |             |     yes      |
+| ENV_TARGET                              |             |     yes      |
+| NO_REPLY_MAIL                           |             |     yes      |
+| AWS_SES_ACCESS_KEY_ID                   |             |     yes      |
+| AWS_SES_SECRET_ACCESS_KEY               |             |     yes      |
+| AWS_SES_REGION                          |             |     yes      |
+| NO_REPLY_MAIL                           |             |     yes      |
+| USER_MS_RETRY_MIN_BACKOFF               | 5           |     yes      |
+| USER_MS_RETRY_MAX_BACKOFF               | 60          |     yes      |
+| USER_MS_RETRY                           | 3           |     yes      |
+
+## EventHub messages
+
+Messages via EventHub are sent in the following cases:
+- Creation of a new user or assignment of a new role to an already registered user
+- Modification of data for an already registered user (first name, last name, email)
+- Update of the status of a product associated with the user
+
+To perform local tests of functionalities that involve sending messages to the SC-User topic, the following environment variables must be set with the values corresponding to the environment to which you want to send the messages:
+- EVENT_HUB_BASE_PATH
+- SHARED_ACCESS_KEY_NAME
+- EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC
