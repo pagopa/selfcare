@@ -74,6 +74,40 @@ def get_institutions_from_onboardings(page, size):
             *paging(page, size)
     ]
 
+
+def get_institutions_whithout_description(page, size):
+    return [
+            {
+                '$match': {
+                    'onboarding': {
+                        '$exists': True
+                    },
+                    'description': {
+                        '$exists': False
+                    }
+                }
+            },
+            *paging(page, size)
+    ]
+
+
+def count_institutions_whithout_description():
+    return [
+        {
+            '$match': {
+                'onboarding': {
+                    '$exists': True
+                },
+                'description': {
+                    '$exists': False
+                }
+            }
+        },
+        {
+            '$count': 'count'
+        }
+    ]
+
 def count_delegations():
     return [
         {
