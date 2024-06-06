@@ -23,7 +23,7 @@ paths:
         in: query
         required: true
         schema:
-          $ref: '#/components/schemas/PermissionTypeEnum'
+          $ref: "#/components/schemas/PermissionTypeEnum"
       - name: productId
         in: query
         schema:
@@ -35,10 +35,10 @@ paths:
             application/json:
               schema:
                 type: boolean
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /institutions/{institutionId}:
@@ -57,16 +57,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateDescriptionDto'
+              $ref: "#/components/schemas/UpdateDescriptionDto"
       responses:
         "200":
           description: OK
           content:
             application/json: {}
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /institutions/{institutionId}/products/{productId}/createdAt:
@@ -89,7 +89,7 @@ paths:
         in: query
         required: true
         schema:
-          $ref: '#/components/schemas/LocalDateTime'
+          $ref: "#/components/schemas/LocalDateTime"
       - name: userIds
         in: query
         required: true
@@ -102,10 +102,10 @@ paths:
           description: OK
           content:
             application/json: {}
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /institutions/{institutionId}/user-institutions:
@@ -155,11 +155,11 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UserInstitutionResponse'
-        "403":
-          description: Not Allowed
+                  $ref: "#/components/schemas/UserInstitutionResponse"
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /institutions/{institutionId}/users:
@@ -181,11 +181,11 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UserProductResponse'
-        "403":
-          description: Not Allowed
+                  $ref: "#/components/schemas/UserProductResponse"
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users:
@@ -222,7 +222,7 @@ paths:
         schema:
           type: array
           items:
-            $ref: '#/components/schemas/PartyRole'
+            $ref: "#/components/schemas/PartyRole"
       - name: size
         in: query
         schema:
@@ -247,11 +247,11 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UserInstitutionResponse'
-        "403":
-          description: Not Allowed
+                  $ref: "#/components/schemas/UserInstitutionResponse"
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
     post:
@@ -263,7 +263,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateUserDto'
+              $ref: "#/components/schemas/CreateUserDto"
       responses:
         "200":
           description: OK
@@ -271,10 +271,10 @@ paths:
             application/json:
               schema:
                 type: string
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/emails:
@@ -302,10 +302,10 @@ paths:
                 type: array
                 items:
                   type: string
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/ids:
@@ -328,11 +328,11 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UserInstitutionResponse'
-        "403":
-          description: Not Allowed
+                  $ref: "#/components/schemas/UserInstitutionResponse"
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/notification:
@@ -363,11 +363,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UsersNotificationResponse'
-        "403":
-          description: Not Allowed
+                $ref: "#/components/schemas/UsersNotificationResponse"
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/search:
@@ -384,18 +384,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SearchUserDto'
+              $ref: "#/components/schemas/SearchUserDto"
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserDetailResponse'
-        "403":
-          description: Not Allowed
+                $ref: "#/components/schemas/UserDetailResponse"
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/{id}:
@@ -423,11 +423,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserResponse'
-        "403":
-          description: Not Allowed
+                $ref: "#/components/schemas/UserResponse"
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/{id}/details:
@@ -456,11 +456,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserDetailResponse'
-        "403":
-          description: Not Allowed
+                $ref: "#/components/schemas/UserDetailResponse"
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/{id}/institution/{institutionId}/product/{productId}/status:
@@ -492,14 +492,14 @@ paths:
         in: query
         required: true
         schema:
-          $ref: '#/components/schemas/OnboardedProductState'
+          $ref: "#/components/schemas/OnboardedProductState"
       responses:
         "204":
           description: No Content
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/{id}/status:
@@ -529,20 +529,20 @@ paths:
       - name: role
         in: query
         schema:
-          $ref: '#/components/schemas/PartyRole'
+          $ref: "#/components/schemas/PartyRole"
       - name: status
         in: query
         schema:
-          $ref: '#/components/schemas/OnboardedProductState'
+          $ref: "#/components/schemas/OnboardedProductState"
       responses:
         "200":
           description: OK
           content:
             application/json: {}
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/{id}/user-registry:
@@ -565,16 +565,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateUserRequest'
+              $ref: "#/components/schemas/UpdateUserRequest"
       responses:
         "200":
           description: OK
           content:
             application/json: {}
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/{userId}:
@@ -593,16 +593,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AddUserRoleDto'
+              $ref: "#/components/schemas/AddUserRoleDto"
       responses:
         "200":
           description: OK
           content:
             application/json: {}
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/{userId}/institution/{institutionId}:
@@ -662,11 +662,11 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UserDataResponse'
-        "403":
-          description: Not Allowed
+                  $ref: "#/components/schemas/UserDataResponse"
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/{userId}/institutions:
@@ -696,11 +696,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserInfoResponse'
-        "403":
-          description: Not Allowed
+                $ref: "#/components/schemas/UserInfoResponse"
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/{userId}/institutions/{institutionId}/products/{productId}:
@@ -727,10 +727,10 @@ paths:
       responses:
         "204":
           description: No Content
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
 components:
@@ -745,7 +745,7 @@ components:
           minLength: 1
           type: string
         product:
-          $ref: '#/components/schemas/Product'
+          $ref: "#/components/schemas/Product"
         institutionDescription:
           type: string
         institutionRootName:
@@ -760,7 +760,7 @@ components:
         value:
           type: string
         certified:
-          $ref: '#/components/schemas/CertificationEnum'
+          $ref: "#/components/schemas/CertificationEnum"
     CertificationEnum:
       enum:
       - NONE
@@ -777,9 +777,9 @@ components:
           minLength: 1
           type: string
         user:
-          $ref: '#/components/schemas/User'
+          $ref: "#/components/schemas/User"
         product:
-          $ref: '#/components/schemas/Product1'
+          $ref: "#/components/schemas/Product1"
         institutionDescription:
           type: string
         institutionRootName:
@@ -805,17 +805,17 @@ components:
         tokenId:
           type: string
         status:
-          $ref: '#/components/schemas/OnboardedProductState'
+          $ref: "#/components/schemas/OnboardedProductState"
         productRole:
           type: string
         role:
-          $ref: '#/components/schemas/PartyRole'
+          $ref: "#/components/schemas/PartyRole"
         env:
-          $ref: '#/components/schemas/Env'
+          $ref: "#/components/schemas/Env"
         createdAt:
-          $ref: '#/components/schemas/LocalDateTime'
+          $ref: "#/components/schemas/LocalDateTime"
         updatedAt:
-          $ref: '#/components/schemas/LocalDateTime'
+          $ref: "#/components/schemas/LocalDateTime"
     OnboardedProductState:
       enum:
       - ACTIVE
@@ -848,7 +848,7 @@ components:
           minLength: 1
           type: string
         role:
-          $ref: '#/components/schemas/PartyRole'
+          $ref: "#/components/schemas/PartyRole"
         tokenId:
           type: string
         productRoles:
@@ -866,7 +866,7 @@ components:
           minLength: 1
           type: string
         role:
-          $ref: '#/components/schemas/PartyRole'
+          $ref: "#/components/schemas/PartyRole"
         tokenId:
           type: string
         productRoles:
@@ -946,9 +946,9 @@ components:
         products:
           type: array
           items:
-            $ref: '#/components/schemas/OnboardedProductResponse'
+            $ref: "#/components/schemas/OnboardedProductResponse"
         userResponse:
-          $ref: '#/components/schemas/UserResponse'
+          $ref: "#/components/schemas/UserResponse"
     UserDetailResponse:
       type: object
       properties:
@@ -957,15 +957,15 @@ components:
         fiscalCode:
           type: string
         name:
-          $ref: '#/components/schemas/CertifiableFieldResponseString'
+          $ref: "#/components/schemas/CertifiableFieldResponseString"
         familyName:
-          $ref: '#/components/schemas/CertifiableFieldResponseString'
+          $ref: "#/components/schemas/CertifiableFieldResponseString"
         email:
-          $ref: '#/components/schemas/CertifiableFieldResponseString'
+          $ref: "#/components/schemas/CertifiableFieldResponseString"
         workContacts:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/WorkContactResponse'
+            $ref: "#/components/schemas/WorkContactResponse"
     UserInfoResponse:
       type: object
       properties:
@@ -974,7 +974,7 @@ components:
         institutions:
           type: array
           items:
-            $ref: '#/components/schemas/UserInstitutionRoleResponse'
+            $ref: "#/components/schemas/UserInstitutionRoleResponse"
     UserInstitutionResponse:
       type: object
       properties:
@@ -993,7 +993,7 @@ components:
         products:
           type: array
           items:
-            $ref: '#/components/schemas/OnboardedProductResponse'
+            $ref: "#/components/schemas/OnboardedProductResponse"
     UserInstitutionRoleResponse:
       type: object
       properties:
@@ -1004,9 +1004,9 @@ components:
         institutionRootName:
           type: string
         role:
-          $ref: '#/components/schemas/PartyRole'
+          $ref: "#/components/schemas/PartyRole"
         status:
-          $ref: '#/components/schemas/OnboardedProductState'
+          $ref: "#/components/schemas/OnboardedProductState"
     UserNotificationResponse:
       type: object
       properties:
@@ -1019,13 +1019,13 @@ components:
         onboardingTokenId:
           type: string
         createdAt:
-          $ref: '#/components/schemas/LocalDateTime'
+          $ref: "#/components/schemas/LocalDateTime"
         updatedAt:
-          $ref: '#/components/schemas/LocalDateTime'
+          $ref: "#/components/schemas/LocalDateTime"
         eventType:
-          $ref: '#/components/schemas/QueueEvent'
+          $ref: "#/components/schemas/QueueEvent"
         user:
-          $ref: '#/components/schemas/UserToNotify'
+          $ref: "#/components/schemas/UserToNotify"
     UserProductResponse:
       type: object
       properties:
@@ -1042,7 +1042,7 @@ components:
         products:
           type: array
           items:
-            $ref: '#/components/schemas/OnboardedProductResponse'
+            $ref: "#/components/schemas/OnboardedProductResponse"
     UserResponse:
       required:
       - id
@@ -1079,23 +1079,23 @@ components:
         email:
           type: string
         role:
-          $ref: '#/components/schemas/PartyRole'
+          $ref: "#/components/schemas/PartyRole"
         productRole:
           type: string
         relationshipStatus:
-          $ref: '#/components/schemas/OnboardedProductState'
+          $ref: "#/components/schemas/OnboardedProductState"
     UsersNotificationResponse:
       type: object
       properties:
         users:
           type: array
           items:
-            $ref: '#/components/schemas/UserNotificationResponse'
+            $ref: "#/components/schemas/UserNotificationResponse"
     WorkContactResponse:
       type: object
       properties:
         email:
-          $ref: '#/components/schemas/CertifiableFieldResponseString'
+          $ref: "#/components/schemas/CertifiableFieldResponseString"
   securitySchemes:
     SecurityScheme:
       type: http
