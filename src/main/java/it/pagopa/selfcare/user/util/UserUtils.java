@@ -92,7 +92,7 @@ public class UserUtils {
                  && (StringUtils.isBlank(productRole) || StringUtils.equals(p.getProductRole(), productRole)))
                 .findFirst()
                 .ifPresent(onboardedProductResponse -> {
-                    userToNotify.setRole(onboardedProductResponse.getRole());
+                    userToNotify.setRole(onboardedProductResponse.getRole().name());
                     userToNotify.setProductRole(onboardedProductResponse.getProductRole());
 
                     userNotificationToSend.setUser(userToNotify);

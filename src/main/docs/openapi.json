@@ -1147,7 +1147,8 @@
             "type" : "string"
           },
           "role" : {
-            "$ref" : "#/components/schemas/PartyRole"
+            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
+            "type" : "string"
           },
           "env" : {
             "$ref" : "#/components/schemas/Env"
@@ -1165,7 +1166,7 @@
         "type" : "string"
       },
       "PartyRole" : {
-        "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR" ],
+        "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR", "ADMIN_EA" ],
         "type" : "string"
       },
       "PermissionTypeEnum" : {
@@ -1191,6 +1192,9 @@
             "items" : {
               "type" : "string"
             }
+          },
+          "delegationId" : {
+            "type" : "string"
           }
         }
       },
@@ -1400,7 +1404,8 @@
             "type" : "string"
           },
           "role" : {
-            "$ref" : "#/components/schemas/PartyRole"
+            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
+            "type" : "string"
           },
           "status" : {
             "$ref" : "#/components/schemas/OnboardedProductState"
@@ -1508,7 +1513,8 @@
             "type" : "string"
           },
           "role" : {
-            "$ref" : "#/components/schemas/PartyRole"
+            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
+            "type" : "string"
           },
           "productRole" : {
             "type" : "string"

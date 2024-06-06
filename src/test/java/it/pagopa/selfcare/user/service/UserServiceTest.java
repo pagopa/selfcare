@@ -38,13 +38,11 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import org.apache.http.HttpStatus;
 import org.bson.types.ObjectId;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.time.LocalDate;
@@ -486,7 +484,7 @@ class UserServiceTest {
         Assert.assertNotNull(actual);
         assertEquals(1, actual.size());
         assertEquals(userInstitution.getUserId(), actual.get(0).getUserId());
-        assertEquals(MANAGER, actual.get(0).getProducts().get(0).getRole());
+        assertEquals(MANAGER.name(), actual.get(0).getProducts().get(0).getRole());
     }
 
     @Test
@@ -864,6 +862,7 @@ class UserServiceTest {
         addUserRoleDto.setInstitutionId("institutionId");
         AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
         addUserRoleProduct.setProductId("test");
+        addUserRoleProduct.setDelegationId("delegationId");
         addUserRoleDto.setProduct(addUserRoleProduct);
         addUserRoleProduct.setProductRoles(List.of("admin"));
         LoggedUser loggedUser = LoggedUser.builder().build();
@@ -925,6 +924,7 @@ class UserServiceTest {
         AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
         addUserRoleProduct.setProductId("prod-io-premium");
         addUserRoleProduct.setProductRoles(List.of("admin2"));
+        addUserRoleProduct.setDelegationId("delegationId");
         addUserRoleDto.setProduct(addUserRoleProduct);
         LoggedUser loggedUser = LoggedUser.builder().build();
 

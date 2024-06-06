@@ -809,7 +809,9 @@ components:
         productRole:
           type: string
         role:
-          $ref: "#/components/schemas/PartyRole"
+          description: "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR,\
+            \ ADMIN_EA"
+          type: string
         env:
           $ref: "#/components/schemas/Env"
         createdAt:
@@ -831,6 +833,7 @@ components:
       - DELEGATE
       - SUB_DELEGATE
       - OPERATOR
+      - ADMIN_EA
       type: string
     PermissionTypeEnum:
       enum:
@@ -855,6 +858,8 @@ components:
           type: array
           items:
             type: string
+        delegationId:
+          type: string
     Product1:
       required:
       - productId
@@ -1004,7 +1009,9 @@ components:
         institutionRootName:
           type: string
         role:
-          $ref: "#/components/schemas/PartyRole"
+          description: "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR,\
+            \ ADMIN_EA"
+          type: string
         status:
           $ref: "#/components/schemas/OnboardedProductState"
     UserNotificationResponse:
@@ -1079,7 +1086,9 @@ components:
         email:
           type: string
         role:
-          $ref: "#/components/schemas/PartyRole"
+          description: "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR,\
+            \ ADMIN_EA"
+          type: string
         productRole:
           type: string
         relationshipStatus:

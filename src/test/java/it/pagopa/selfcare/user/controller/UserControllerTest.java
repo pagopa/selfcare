@@ -25,7 +25,6 @@ import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
-import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
@@ -571,7 +570,7 @@ class UserControllerTest {
     @TestSecurity(user = "userJwt")
     void testCreateOrUpdateUserByUserId() {
         // Prepare test data
-        CreateUserDto userDto = buildCreateUserDto();
+        AddUserRoleDto userDto = buildAddUserRoleDto();
 
 
         // Mock the userService.createOrUpdateUser method
@@ -641,6 +640,27 @@ class UserControllerTest {
         product.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER);
         product.setTokenId("tokenId");
         product.setProductRoles(Collections.singletonList("productRole"));
+        userDto.setProduct(product);
+        return userDto;
+    }
+
+    private AddUserRoleDto buildAddUserRoleDto() {
+        AddUserRoleDto userDto = new AddUserRoleDto();
+        userDto.setInstitutionId("institutionId");
+        userDto.setInstitutionDescription("institutionDescription");
+        userDto.setInstitutionRootName("institutionRootName");
+        CreateUserDto.User user = new CreateUserDto.User();
+        user.setBirthDate("birthDate");
+        user.setFamilyName("familyName");
+        user.setFiscalCode("fiscalCode");
+        user.setName("name");
+        user.setInstitutionEmail("institutionEmail");
+        AddUserRoleDto.Product product = new AddUserRoleDto.Product();
+        product.setProductId("productId");
+        product.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER);
+        product.setTokenId("tokenId");
+        product.setProductRoles(Collections.singletonList("productRole"));
+        product.setDelegationId("delegationId");
         userDto.setProduct(product);
         return userDto;
     }
