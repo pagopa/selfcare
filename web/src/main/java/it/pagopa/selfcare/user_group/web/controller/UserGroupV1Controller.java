@@ -33,22 +33,21 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "/user-groups/v1", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/v1/user-groups", produces = MediaType.APPLICATION_JSON_VALUE)
 @Api(tags = "UserGroup")
-@Deprecated
-public class UserGroupController {
+public class UserGroupV1Controller {
 
     private final UserGroupService groupService;
     private final UserGroupMapper userGroupMapper;
 
     @Autowired
-    public UserGroupController(UserGroupService groupService,
-                               UserGroupMapper userGroupMapper) {
+    public UserGroupV1Controller(UserGroupService groupService,
+                                 UserGroupMapper userGroupMapper) {
         this.groupService = groupService;
         this.userGroupMapper = userGroupMapper;
     }
-
-    @PostMapping(value = "/", consumes = MediaType.APPLICATION_JSON_VALUE)
+    
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     @ApiOperation(value = "", notes = "${swagger.user-group.groups.api.createUserGroup}")
     @ApiResponse(responseCode = "409",
@@ -166,7 +165,9 @@ public class UserGroupController {
         return groupResource;
     }
 
-    @GetMapping(value = "/")
+
+    @Tags({@Tag(name = "support"), @Tag(name = "external-v2")})
+    @GetMapping()
     @ResponseStatus(HttpStatus.OK)
     @ApiOperation(value = "", notes = "${swagger.user-group.groups.api.getUserGroups}")
     public Page<UserGroupResource> getUserGroups(@ApiParam("${swagger.user-group.model.institutionId}")

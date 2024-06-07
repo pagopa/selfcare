@@ -62,7 +62,7 @@ class SwaggerConfig {
                         .version(environment.getProperty("swagger.version", environment.getProperty("spring.application.version")))
                         .build())
                 .select().apis(RequestHandlerSelectors.basePackage("it.pagopa.selfcare.user_group.web.controller")).build()
-                .tags(new Tag("user-group", environment.getProperty("swagger.user-group.api.description")))
+                .tags(new Tag("UserGroup", environment.getProperty("swagger.user-group.api.description")))
                 .directModelSubstitute(LocalTime.class, String.class)
                 .ignoredParameterTypes(Pageable.class)
                 .forCodeGeneration(true)
