@@ -904,7 +904,7 @@
         } ]
       },
       "post" : {
-        "tags" : [ "external-v2" ],
+        "tags" : [ "UserGroup" ],
         "summary" : "createGroup",
         "description" : "Service that allows the insert of a new occurrence for the UserGroup entity",
         "operationId" : "createGroupUsingPOST_1",
