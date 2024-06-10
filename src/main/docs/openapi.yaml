@@ -8,6 +8,9 @@ servers:
   description: Auto generated value
 - url: http://0.0.0.0:8080
   description: Auto generated value
+tags:
+- name: User
+- name: external-v2
 paths:
   /authorize:
     get:
@@ -191,7 +194,7 @@ paths:
   /users:
     get:
       tags:
-      - User Controller
+      - User
       summary: The API retrieves paged users with optional filters in input as query
         params
       parameters:
@@ -256,7 +259,7 @@ paths:
       - SecurityScheme: []
     post:
       tags:
-      - User Controller
+      - User
       summary: The createOrUpdateByFiscalCode function is used to create a new user
         or update an existing one.
       requestBody:
@@ -280,7 +283,7 @@ paths:
   /users/emails:
     get:
       tags:
-      - User Controller
+      - User
       summary: The API retrieves Users' emails using institution id and product id
       parameters:
       - name: institutionId
@@ -311,7 +314,7 @@ paths:
   /users/ids:
     get:
       tags:
-      - User Controller
+      - User
       summary: Retrieve all users given their userIds
       parameters:
       - name: userIds
@@ -338,7 +341,7 @@ paths:
   /users/notification:
     get:
       tags:
-      - User Controller
+      - User
       summary: Retrieve all SC-User for DataLake filtered by optional productId
       parameters:
       - name: page
@@ -373,7 +376,7 @@ paths:
   /users/search:
     post:
       tags:
-      - User Controller
+      - User
       summary: Search user by fiscalCode
       parameters:
       - name: institutionId
@@ -401,7 +404,8 @@ paths:
   /users/{id}:
     get:
       tags:
-      - User Controller
+      - User
+      - external-v2
       summary: Retrieves user given userId and optional ProductId
       parameters:
       - name: id
@@ -433,7 +437,7 @@ paths:
   /users/{id}/details:
     get:
       tags:
-      - User Controller
+      - User
       summary: "Retrieves user's information from pdv: name, familyName, email, fiscalCode\
         \ and workContacts"
       parameters:
@@ -466,7 +470,7 @@ paths:
   /users/{id}/institution/{institutionId}/product/{productId}/status:
     put:
       tags:
-      - User Controller
+      - User
       summary: Service to update user product status
       parameters:
       - name: id
@@ -505,7 +509,7 @@ paths:
   /users/{id}/status:
     put:
       tags:
-      - User Controller
+      - User
       summary: "Update user status with optional filter for institution, product,\
         \ role and productRole"
       parameters:
@@ -548,7 +552,7 @@ paths:
   /users/{id}/user-registry:
     put:
       tags:
-      - User Controller
+      - User
       summary: Service to update user in user-registry and send notification when
         user data gets updated
       parameters:
@@ -580,7 +584,7 @@ paths:
   /users/{userId}:
     post:
       tags:
-      - User Controller
+      - User
       summary: The createOrUpdateByUserId function is used to update existing user
         adding userRole.
       parameters:
@@ -608,7 +612,7 @@ paths:
   /users/{userId}/institution/{institutionId}:
     get:
       tags:
-      - User Controller
+      - User
       summary: |-
         The retrieveUsers function is used to retrieve a list of users from the UserInstitution collection and userRegistry.
         At first it try to retrieve a UserInstitution document associated with a logged user (admin)
@@ -672,7 +676,7 @@ paths:
   /users/{userId}/institutions:
     get:
       tags:
-      - User Controller
+      - User
       summary: Retrieves products info and role which the user is enabled
       parameters:
       - name: userId
@@ -706,7 +710,7 @@ paths:
   /users/{userId}/institutions/{institutionId}/products/{productId}:
     delete:
       tags:
-      - User Controller
+      - User
       summary: Delete logically the association institution and product
       parameters:
       - name: institutionId

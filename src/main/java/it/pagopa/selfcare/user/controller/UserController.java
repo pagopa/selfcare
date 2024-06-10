@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.ResponseStatus;
 import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
 
@@ -37,6 +38,7 @@ import java.util.List;
 import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
 
 @Authenticated
+@Tag(name = "User")
 @Path("/users")
 @RequiredArgsConstructor
 @Slf4j
@@ -70,6 +72,8 @@ public class UserController {
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Tag(name = "User")
+    @Tag(name = "external-v2")
     public Uni<UserResponse> getUserInfo(@PathParam(value = "id") String userId,
                                          @QueryParam(value = "institutionId") String institutionId,
                                          @QueryParam(value = "productId") String productId) {

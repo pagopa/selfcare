@@ -11,6 +11,11 @@
     "url" : "http://0.0.0.0:8080",
     "description" : "Auto generated value"
   } ],
+  "tags" : [ {
+    "name" : "User"
+  }, {
+    "name" : "external-v2"
+  } ],
   "paths" : {
     "/authorize" : {
       "get" : {
@@ -274,7 +279,7 @@
     },
     "/users" : {
       "get" : {
-        "tags" : [ "User Controller" ],
+        "tags" : [ "User" ],
         "summary" : "The API retrieves paged users with optional filters in input as query params",
         "parameters" : [ {
           "name" : "institutionId",
@@ -367,7 +372,7 @@
         } ]
       },
       "post" : {
-        "tags" : [ "User Controller" ],
+        "tags" : [ "User" ],
         "summary" : "The createOrUpdateByFiscalCode function is used to create a new user or update an existing one.",
         "requestBody" : {
           "content" : {
@@ -403,7 +408,7 @@
     },
     "/users/emails" : {
       "get" : {
-        "tags" : [ "User Controller" ],
+        "tags" : [ "User" ],
         "summary" : "The API retrieves Users' emails using institution id and product id",
         "parameters" : [ {
           "name" : "institutionId",
@@ -448,7 +453,7 @@
     },
     "/users/ids" : {
       "get" : {
-        "tags" : [ "User Controller" ],
+        "tags" : [ "User" ],
         "summary" : "Retrieve all users given their userIds",
         "parameters" : [ {
           "name" : "userIds",
@@ -488,7 +493,7 @@
     },
     "/users/notification" : {
       "get" : {
-        "tags" : [ "User Controller" ],
+        "tags" : [ "User" ],
         "summary" : "Retrieve all SC-User for DataLake filtered by optional productId",
         "parameters" : [ {
           "name" : "page",
@@ -538,7 +543,7 @@
     },
     "/users/search" : {
       "post" : {
-        "tags" : [ "User Controller" ],
+        "tags" : [ "User" ],
         "summary" : "Search user by fiscalCode",
         "parameters" : [ {
           "name" : "institutionId",
@@ -581,7 +586,7 @@
     },
     "/users/{id}" : {
       "get" : {
-        "tags" : [ "User Controller" ],
+        "tags" : [ "User", "external-v2" ],
         "summary" : "Retrieves user given userId and optional ProductId",
         "parameters" : [ {
           "name" : "id",
@@ -628,7 +633,7 @@
     },
     "/users/{id}/details" : {
       "get" : {
-        "tags" : [ "User Controller" ],
+        "tags" : [ "User" ],
         "summary" : "Retrieves user's information from pdv: name, familyName, email, fiscalCode and workContacts",
         "parameters" : [ {
           "name" : "id",
@@ -675,7 +680,7 @@
     },
     "/users/{id}/institution/{institutionId}/product/{productId}/status" : {
       "put" : {
-        "tags" : [ "User Controller" ],
+        "tags" : [ "User" ],
         "summary" : "Service to update user product status",
         "parameters" : [ {
           "name" : "id",
@@ -730,7 +735,7 @@
     },
     "/users/{id}/status" : {
       "put" : {
-        "tags" : [ "User Controller" ],
+        "tags" : [ "User" ],
         "summary" : "Update user status with optional filter for institution, product, role and productRole",
         "parameters" : [ {
           "name" : "id",
@@ -791,7 +796,7 @@
     },
     "/users/{id}/user-registry" : {
       "put" : {
-        "tags" : [ "User Controller" ],
+        "tags" : [ "User" ],
         "summary" : "Service to update user in user-registry and send notification when user data gets updated",
         "parameters" : [ {
           "name" : "id",
@@ -837,7 +842,7 @@
     },
     "/users/{userId}" : {
       "post" : {
-        "tags" : [ "User Controller" ],
+        "tags" : [ "User" ],
         "summary" : "The createOrUpdateByUserId function is used to update existing user adding userRole.",
         "parameters" : [ {
           "name" : "userId",
@@ -877,7 +882,7 @@
     },
     "/users/{userId}/institution/{institutionId}" : {
       "get" : {
-        "tags" : [ "User Controller" ],
+        "tags" : [ "User" ],
         "summary" : "The retrieveUsers function is used to retrieve a list of users from the UserInstitution collection and userRegistry.\nAt first it try to retrieve a UserInstitution document associated with a logged user (admin)\nIf this userInstitution object is not null, so user has AdminRole, it try to retriew the userInstitutions filtered by given institutionId, roles, states, products and productRoles\nand optional given personId, otherwise it do the same query using the logged user id instead of personId.\nAfter that it retrieve personal user data, foreach userId retrieved, from userRegistry and return a stream of UserDataResponse objects containing the requested user data.",
         "parameters" : [ {
           "name" : "institutionId",
@@ -964,7 +969,7 @@
     },
     "/users/{userId}/institutions" : {
       "get" : {
-        "tags" : [ "User Controller" ],
+        "tags" : [ "User" ],
         "summary" : "Retrieves products info and role which the user is enabled",
         "parameters" : [ {
           "name" : "userId",
@@ -1014,7 +1019,7 @@
     },
     "/users/{userId}/institutions/{institutionId}/products/{productId}" : {
       "delete" : {
-        "tags" : [ "User Controller" ],
+        "tags" : [ "User" ],
         "summary" : "Delete logically the association institution and product",
         "parameters" : [ {
           "name" : "institutionId",
