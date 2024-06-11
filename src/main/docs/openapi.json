@@ -12,9 +12,13 @@
     "description" : "Auto generated value"
   } ],
   "tags" : [ {
+    "name" : "Institution"
+  }, {
     "name" : "User"
   }, {
     "name" : "external-v2"
+  }, {
+    "name" : "support"
   } ],
   "paths" : {
     "/authorize" : {
@@ -66,7 +70,7 @@
     },
     "/institutions/{institutionId}" : {
       "put" : {
-        "tags" : [ "Institution Controller" ],
+        "tags" : [ "Institution" ],
         "summary" : "The API updates the description in all occurrences of userInstitution, given a certain institutionId.",
         "parameters" : [ {
           "name" : "institutionId",
@@ -106,7 +110,7 @@
     },
     "/institutions/{institutionId}/products/{productId}/createdAt" : {
       "put" : {
-        "tags" : [ "Institution Controller" ],
+        "tags" : [ "Institution" ],
         "summary" : "The API updates user's onboarded product with createdAt passed in input",
         "parameters" : [ {
           "name" : "institutionId",
@@ -161,7 +165,7 @@
     },
     "/institutions/{institutionId}/user-institutions" : {
       "get" : {
-        "tags" : [ "Institution Controller" ],
+        "tags" : [ "Institution" ],
         "summary" : "The API retrieves users with optional filters in input as query params",
         "parameters" : [ {
           "name" : "institutionId",
@@ -241,7 +245,7 @@
     },
     "/institutions/{institutionId}/users" : {
       "get" : {
-        "tags" : [ "Institution Controller" ],
+        "tags" : [ "support", "Institution" ],
         "summary" : "The API retrieves user's info including details of roles on products",
         "parameters" : [ {
           "name" : "institutionId",
@@ -586,7 +590,7 @@
     },
     "/users/{id}" : {
       "get" : {
-        "tags" : [ "User", "external-v2" ],
+        "tags" : [ "User", "external-v2", "support" ],
         "summary" : "Retrieves user given userId and optional ProductId",
         "parameters" : [ {
           "name" : "id",

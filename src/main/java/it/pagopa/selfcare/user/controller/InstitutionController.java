@@ -14,6 +14,7 @@ import jakarta.ws.rs.core.Response;
 import lombok.AllArgsConstructor;
 import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
@@ -21,6 +22,7 @@ import java.util.List;
 
 @Authenticated
 @Path("/institutions")
+@Tag(name = "Institution")
 @AllArgsConstructor
 public class InstitutionController {
 
@@ -29,6 +31,8 @@ public class InstitutionController {
     @Operation(summary = "The API retrieves user's info including details of roles on products")
     @GET
     @Path(value = "/{institutionId}/users")
+    @Tag(name = "support")
+    @Tag(name = "Institution")
     @Produces(MediaType.APPLICATION_JSON)
     public Multi<UserProductResponse> getInstitutionUsers(@PathParam(value = "institutionId") String institutionId) {
         return userService.getUserProductsByInstitution(institutionId);

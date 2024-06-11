@@ -31,7 +31,6 @@ import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.ResponseStatus;
-import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
 
 import java.util.List;
 
@@ -74,6 +73,7 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     @Tag(name = "User")
     @Tag(name = "external-v2")
+    @Tag(name = "support")
     public Uni<UserResponse> getUserInfo(@PathParam(value = "id") String userId,
                                          @QueryParam(value = "institutionId") String institutionId,
                                          @QueryParam(value = "productId") String productId) {
