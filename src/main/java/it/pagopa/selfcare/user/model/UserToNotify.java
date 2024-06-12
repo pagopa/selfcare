@@ -1,10 +1,10 @@
 package it.pagopa.selfcare.user.model;
 
-import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 @Data
 @AllArgsConstructor
@@ -15,7 +15,8 @@ public class UserToNotify {
     private String name;
     private String familyName;
     private String email;
-    private PartyRole role;
+    @Schema(description = "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA")
+    private String role;
     private String productRole;
     private OnboardedProductState relationshipStatus;
 

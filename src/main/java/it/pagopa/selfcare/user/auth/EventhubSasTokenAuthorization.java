@@ -1,7 +1,9 @@
 package it.pagopa.selfcare.user.auth;
 
+import jakarta.inject.Inject;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -12,20 +14,20 @@ import java.net.URLEncoder;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
-
 public class EventhubSasTokenAuthorization implements ClientRequestFilter {
 
-    private final URI resourceUri;
-    private final String keyName;
-    private final String key;
+    @Inject
+    @ConfigProperty(name = "rest-client.event-hub.uri")
+    URI resourceUri;
 
-    public EventhubSasTokenAuthorization(URI resourceUri,
-                                         String keyName,
-                                         String key) {
-        this.resourceUri = resourceUri;
-        this.keyName = keyName;
-        this.key = key;
-    }
+    @Inject
+    @ConfigProperty(name = "eventhub.rest-client.keyName")
+    String keyName;
+
+    @Inject
+    @ConfigProperty(name = "eventhub.rest-client.key")
+    String key;
+
     @Override
     public void filter(ClientRequestContext clientRequestContext) throws IOException {
         clientRequestContext.getHeaders().add("Authorization", getSASToken(resourceUri.toString(), keyName, key));
