@@ -6,7 +6,6 @@ import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.*;
@@ -14,6 +13,7 @@ import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.UpdateUserRequest;
+import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
 import jakarta.inject.Inject;
@@ -229,7 +229,7 @@ public class UserController {
     public Uni<Response> updateUserRegistryAndSendNotification(@PathParam(value = "id") String userId,
                                                                @QueryParam(value = "institutionId") String institutionId,
                                                                UpdateUserRequest updateUserRequest) {
-        return userRegistryService.updateUserRegistryAndSendNotificationToQueue(updateUserRequest, userId, institutionId)
+        return userRegistryService.updateUserRegistry(updateUserRequest, userId, institutionId)
                 .map(ignore -> Response
                         .status(HttpStatus.SC_NO_CONTENT)
                         .build());

@@ -5,8 +5,6 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.service.ProductService;
-import it.pagopa.selfcare.user.constant.OnboardedProductState;
-import it.pagopa.selfcare.user.constant.QueueEvent;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
@@ -25,16 +23,15 @@ import it.pagopa.selfcare.user.mapper.OnboardedProductMapper;
 import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
+import it.pagopa.selfcare.user.model.UserNotificationToSend;
+import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
+import it.pagopa.selfcare.user.model.constants.QueueEvent;
 import it.pagopa.selfcare.user.model.notification.PrepareNotificationData;
-import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
@@ -49,8 +46,8 @@ import java.util.stream.Stream;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
 import static it.pagopa.selfcare.user.constant.CustomError.*;
-import static it.pagopa.selfcare.user.constant.OnboardedProductState.ACTIVE;
-import static it.pagopa.selfcare.user.constant.OnboardedProductState.PENDING;
+import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.ACTIVE;
+import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.PENDING;
 import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
 import static it.pagopa.selfcare.user.util.UserUtils.VALID_USER_PRODUCT_STATES_FOR_NOTIFICATION;
 
@@ -265,7 +262,6 @@ public class UserServiceImpl implements UserService {
                         .onFailure().recoverWithNull()
                         .replaceWith(prepareNotificationData))
                 .onItem().transform(prepareNotificationData -> userUtils.buildUserNotificationToSend(prepareNotificationData.getUserInstitution(), prepareNotificationData.getUserResource(), productId, productRole, status))
-                .onItem().call(userNotificationToSend -> userNotificationService.sendKafkaNotification(userNotificationToSend, userId))
                 .onFailure().invoke(throwable -> log.error("Error during update user status for userId: {}, institutionId: {}, productId:{} -> exception: {}", userId, institutionId, productId, throwable.getMessage(), throwable))
                 .replaceWithVoid();
     }
@@ -346,9 +342,7 @@ public class UserServiceImpl implements UserService {
                 .onFailure(ResourceNotFoundException.class).recoverWithUni(throwable -> createUserOnUserRegistryAndUserInstitution(userDto))
                 .onFailure().invoke(exception -> log.error("Error during retrieve user from userRegistry: {} ", exception.getMessage(), exception))
                 .onItem().transformToUni(prepareNotificationData -> sendNotificationsAndReturnData(userDto.getInstitutionDescription(), userDto.getProduct().getProductRoles(), userDto.getHasToSendEmail(), loggedUser, prepareNotificationData))
-                .onItem().transformToMulti(this::buildAndSendKafkaNotifications)
-                .collect().first()
-                .map(userNotificationSent -> userNotificationSent.getUser().getUserId());
+                .map(prepareNotificationData -> prepareNotificationData.getUserResource().getId().toString());
     }
 
     /**
@@ -441,8 +435,6 @@ public class UserServiceImpl implements UserService {
                 .onItem().transformToUni(prepareNotificationDataBuilder -> retrieveProductAndAddToPrepareNotificationData(prepareNotificationDataBuilder, userDto.getProduct().getProductId()))
                 .map(PrepareNotificationData.PrepareNotificationDataBuilder::build)
                 .onItem().transformToUni(prepareNotificationData -> sendNotificationsAndReturnData(userDto.getInstitutionDescription(), userDto.getProduct().getProductRoles(), userDto.isHasToSendEmail(), loggedUser, prepareNotificationData))
-                .onItem().transformToMulti(this::buildAndSendKafkaNotifications)
-                .collect().first()
                 .replaceWithVoid();
 
     }

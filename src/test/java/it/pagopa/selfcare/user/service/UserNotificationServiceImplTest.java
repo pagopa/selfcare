@@ -1,6 +1,5 @@
 package it.pagopa.selfcare.user.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import freemarker.template.Configuration;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
@@ -10,13 +9,13 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
-import it.pagopa.selfcare.user.client.eventhub.EventHubRestClient;
+import it.pagopa.selfcare.user.client.EventHubRestClient;
 import it.pagopa.selfcare.user.conf.CloudTemplateLoader;
-import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.model.LoggedUser;
-import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
+import it.pagopa.selfcare.user.model.UserNotificationToSend;
+import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
@@ -44,8 +43,8 @@ class UserNotificationServiceImplTest {
     @InjectMock
     private MailService mailService;
 
-    @RestClient
     @InjectMock
+    @RestClient
     private EventHubRestClient eventHubRestClient;
 
     private static final UserResource userResource;

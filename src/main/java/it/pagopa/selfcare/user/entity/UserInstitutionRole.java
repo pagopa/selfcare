@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.user.entity;
 
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 

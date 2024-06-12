@@ -14,8 +14,6 @@ import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
-import it.pagopa.selfcare.user.constant.OnboardedProductState;
-import it.pagopa.selfcare.user.constant.QueueEvent;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
@@ -31,8 +29,10 @@ import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
-import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
-import it.pagopa.selfcare.user.model.notification.UserToNotify;
+import it.pagopa.selfcare.user.model.UserNotificationToSend;
+import it.pagopa.selfcare.user.model.UserToNotify;
+import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
+import it.pagopa.selfcare.user.model.constants.QueueEvent;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
@@ -615,10 +615,6 @@ class UserServiceTest {
                 anyString())
         ).thenReturn(Uni.createFrom().voidItem());
 
-        when(userNotificationService.sendKafkaNotification(
-                any(UserNotificationToSend.class),
-                any())
-        ).thenReturn(Uni.createFrom().nullItem());
 
         when(userUtils.buildUserNotificationToSend(userInstitutionResponse, userResource, "productId", "productRole",  OnboardedProductState.ACTIVE)).thenReturn(new UserNotificationToSend());
 
@@ -637,10 +633,6 @@ class UserServiceTest {
                 any(),
                 eq(null),
                 eq(null)
-        );
-        verify(userNotificationService, times(1)).sendKafkaNotification(
-                any(UserNotificationToSend.class),
-                any()
         );
     }
 
@@ -694,7 +686,6 @@ class UserServiceTest {
         when(productService.getProduct(any())).thenReturn(product);
         when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any(), (QueueEvent) any())).thenReturn(List.of(userNotificationToSend));
-        when(userNotificationService.sendKafkaNotification(any(), any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
 
         // Call the method
         UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
@@ -706,7 +697,6 @@ class UserServiceTest {
         verify(userInstitutionService).persistOrUpdate(any());
         verify(userInstitutionService).findByUserIdAndInstitutionId(any(), any());
         verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(),any());
-        verify(userNotificationService).sendKafkaNotification(any(), any());
     }
 
     @Test
@@ -740,7 +730,6 @@ class UserServiceTest {
         when(productService.getProduct(any())).thenReturn(product);
         when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any(), (QueueEvent) any())).thenReturn(List.of(userNotificationToSend));
-        when(userNotificationService.sendKafkaNotification(any(), any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
 
         // Call the method
         UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
@@ -753,7 +742,6 @@ class UserServiceTest {
         verify(userInstitutionService).persistOrUpdate(any());
         verify(userInstitutionService).findByUserIdAndInstitutionId(any(), any());
         verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(),any());
-        verify(userNotificationService).sendKafkaNotification(any(), any());
     }
 
     @Test
@@ -786,7 +774,6 @@ class UserServiceTest {
         when(productService.getProduct(any())).thenReturn(product);
         when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any(), (QueueEvent) any())).thenReturn(List.of(userNotificationToSend));
-        when(userNotificationService.sendKafkaNotification(any(), any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
 
         // Call the method
         UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
@@ -798,7 +785,6 @@ class UserServiceTest {
         verify(userRegistryApi).findByIdUsingGET(any(), any());
         verify(userInstitutionService).persistOrUpdate(any());
         verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(),any());
-        verify(userNotificationService).sendKafkaNotification(any(), any());
     }
 
     @Test

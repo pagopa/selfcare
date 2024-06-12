@@ -4,7 +4,6 @@ import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.constant.SelfCareRole;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
@@ -14,6 +13,7 @@ import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
+import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.util.QueryUtils;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -29,8 +29,8 @@ import java.util.Map;
 import java.util.Objects;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.*;
-import static it.pagopa.selfcare.user.constant.OnboardedProductState.*;
 import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductEnum.*;
+import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.*;
 import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
 
 @Slf4j

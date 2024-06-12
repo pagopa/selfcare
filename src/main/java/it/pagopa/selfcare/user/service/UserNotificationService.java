@@ -2,10 +2,10 @@ package it.pagopa.selfcare.user.service;
 
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.model.LoggedUser;
-import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
+import it.pagopa.selfcare.user.model.UserNotificationToSend;
+import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import java.util.List;

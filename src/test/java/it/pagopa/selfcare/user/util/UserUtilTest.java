@@ -7,14 +7,14 @@ import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
 import it.pagopa.selfcare.product.service.ProductService;
-import it.pagopa.selfcare.user.constant.OnboardedProductState;
-import it.pagopa.selfcare.user.constant.QueueEvent;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
-import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
+import it.pagopa.selfcare.user.model.UserNotificationToSend;
+import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
+import it.pagopa.selfcare.user.model.constants.QueueEvent;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -25,7 +25,6 @@ import org.mockito.Mockito;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
-import org.wildfly.common.Assert;
 
 import java.util.*;
 

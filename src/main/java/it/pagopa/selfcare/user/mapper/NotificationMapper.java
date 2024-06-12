@@ -1,8 +1,8 @@
 package it.pagopa.selfcare.user.mapper;
 
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
-import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
-import it.pagopa.selfcare.user.model.notification.UserToNotify;
+import it.pagopa.selfcare.user.model.UserNotificationToSend;
+import it.pagopa.selfcare.user.model.UserToNotify;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.openapi.quarkus.user_registry_json.model.UserResource;

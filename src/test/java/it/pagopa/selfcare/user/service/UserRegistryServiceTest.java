@@ -11,7 +11,7 @@ import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.model.UpdateUserRequest;
-import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
+import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import org.bson.types.ObjectId;
@@ -121,7 +121,7 @@ public class UserRegistryServiceTest {
 
     @Test
     void updateUserRegistryAndSendNotificationToQueue_shouldThrowExceptionWhenMailIsNull() {
-        assertThrows(IllegalArgumentException.class, () -> userRegistryService.updateUserRegistryAndSendNotificationToQueue(new UpdateUserRequest(), null, null));
+        assertThrows(IllegalArgumentException.class, () -> userRegistryService.updateUserRegistry(new UpdateUserRequest(), null, null));
     }
 
     @Test
@@ -139,7 +139,7 @@ public class UserRegistryServiceTest {
         when(userRegistryApi.updateUsingPATCH(eq(userId), any(MutableUserFieldsDto.class))).thenReturn(Uni.createFrom().item(Response.accepted().build()));
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)).thenReturn(Uni.createFrom().item(userResource));
 
-        UniAssertSubscriber<List<UserNotificationToSend>> subscriber = userRegistryService.updateUserRegistryAndSendNotificationToQueue(updateUserRequest, userId, institutionId)
+        UniAssertSubscriber<List<UserInstitution>> subscriber = userRegistryService.updateUserRegistry(updateUserRequest, userId, institutionId)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted();
 
@@ -169,7 +169,7 @@ public class UserRegistryServiceTest {
         when(userRegistryApi.updateUsingPATCH(eq(userId), any(MutableUserFieldsDto.class))).thenReturn(Uni.createFrom().item(Response.accepted().build()));
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)).thenReturn(Uni.createFrom().item(userResource));
 
-        UniAssertSubscriber<List<UserNotificationToSend>> subscriber = userRegistryService.updateUserRegistryAndSendNotificationToQueue(updateUserRequest, userId, institutionId)
+        UniAssertSubscriber<List<UserInstitution>> subscriber = userRegistryService.updateUserRegistry(updateUserRequest, userId, institutionId)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted();
 
@@ -203,7 +203,7 @@ public class UserRegistryServiceTest {
         when(userRegistryApi.updateUsingPATCH(eq(userId), any(MutableUserFieldsDto.class))).thenReturn(Uni.createFrom().item(Response.accepted().build()));
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)).thenReturn(Uni.createFrom().item(userResource));
 
-        UniAssertSubscriber<List<UserNotificationToSend>> subscriber = userRegistryService.updateUserRegistryAndSendNotificationToQueue(updateUserRequest, userId, institutionId)
+        UniAssertSubscriber<List<UserInstitution>> subscriber = userRegistryService.updateUserRegistry(updateUserRequest, userId, institutionId)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted();
     }
@@ -218,7 +218,7 @@ public class UserRegistryServiceTest {
         when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(userInstitution));
         when(userRegistryApi.updateUsingPATCH(eq("userId"), any(MutableUserFieldsDto.class))).thenReturn(Uni.createFrom().item(Response.accepted().build()));
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, "userId")).thenReturn(Uni.createFrom().item(userResource));
-        UniAssertSubscriber<List<UserNotificationToSend>> subscriber = userRegistryService.updateUserRegistryAndSendNotificationToQueue(updateUserRequest, "userId", "institutionId")
+        UniAssertSubscriber<List<UserInstitution>> subscriber = userRegistryService.updateUserRegistry(updateUserRequest, "userId", "institutionId")
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted();
     }

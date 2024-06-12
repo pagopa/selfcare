@@ -4,7 +4,9 @@ import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.product.service.ProductServiceCacheable;
+import it.pagopa.selfcare.user.auth.EventhubSasTokenAuthorization;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Produces;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
@@ -39,4 +41,12 @@ public class UserMsConfig {
     public AzureBlobClient azureBobClientContract(){
         return new AzureBlobClientDefault(connectionStringTemplates, containerTemplates);
     }
+
+    @Produces
+    @ApplicationScoped
+    public EventhubSasTokenAuthorization eventhubSasTokenAuthorization(){
+        return new EventhubSasTokenAuthorization();
+
+    }
+
 }

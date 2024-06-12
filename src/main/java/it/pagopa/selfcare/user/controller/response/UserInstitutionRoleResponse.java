@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.user.controller.response;
 
-import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import lombok.Data;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 

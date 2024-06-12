@@ -2,12 +2,12 @@ package it.pagopa.selfcare.user.service;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.user.constant.QueueEvent;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.UpdateUserRequest;
-import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
+import it.pagopa.selfcare.user.model.UserNotificationToSend;
+import it.pagopa.selfcare.user.model.constants.QueueEvent;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -18,13 +18,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
+import org.openapi.quarkus.user_registry_json.api.UserApi;
+import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
-
-import org.openapi.quarkus.user_registry_json.api.UserApi;
-import org.openapi.quarkus.user_registry_json.model.*;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
 
@@ -90,7 +89,7 @@ public class UserRegistryServiceImpl implements UserRegistryService {
 
 
     @Override
-    public Uni<List<UserNotificationToSend>> updateUserRegistryAndSendNotificationToQueue(UpdateUserRequest updateUserRequest, String userId, String institutionId) {
+    public Uni<List<UserInstitution>> updateUserRegistry(UpdateUserRequest updateUserRequest, String userId, String institutionId) {
         log.trace("sendUpdateUserNotification start");
         log.debug("sendUpdateUserNotification userId = {}, institutionId = {}", userId, institutionId);
 
@@ -108,18 +107,18 @@ public class UserRegistryServiceImpl implements UserRegistryService {
                                 .onItem().ifNotNull().invoke(() -> log.debug("UserInstitution founded for userId: {} and institutionId: {}", userId, institutionId)))
                 .asTuple()
                 .onItem().transformToMulti(tuple -> findMailUuidAndUpdateUserRegistry(tuple.getItem1(), updateUserRequest)
-                        .onItem().transformToMulti(uuidMail -> updateUserInstitutionAndSendNotification(tuple.getItem1(), tuple.getItem2(), uuidMail)))
+                        .onItem().transformToMulti(uuidMail -> updateUserInstitution(tuple.getItem1(), tuple.getItem2(), uuidMail)))
                 .collect().asList()
                 .onItem().invoke(items -> log.trace("update {} users on userRegistry", items.size()));
     }
 
-    private Multi<UserNotificationToSend> updateUserInstitutionAndSendNotification(UserResource userResource, List<UserInstitution> userInstitutions, String mailUuid) {
+    private Multi<UserInstitution> updateUserInstitution(UserResource userResource, List<UserInstitution> userInstitutions, String mailUuid) {
         return Multi.createFrom().iterable(userInstitutions.stream()
                         .peek(userInstitution -> userInstitution.setUserMailUuid(mailUuid))
                         .toList())
                 .onItem().transformToUniAndMerge(userInstitutionService::persistOrUpdate)
                 .onItem().invoke(() -> log.debug("UserInstitution updated successfully"))
-                .onItem().transformToMultiAndMerge(userInstitution -> sendKafkaNotification(userResource, userInstitution));
+                .onFailure().invoke(throwable -> log.warn("Something went wrong while updating userInstitution"));
     }
 
     private Multi<UserNotificationToSend> sendKafkaNotification(UserResource userResource, UserInstitution userInstitution) {

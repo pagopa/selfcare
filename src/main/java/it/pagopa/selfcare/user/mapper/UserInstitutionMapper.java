@@ -1,11 +1,11 @@
 package it.pagopa.selfcare.user.mapper;
 
-import it.pagopa.selfcare.user.constant.CollectionUtil;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import org.bson.types.ObjectId;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -81,7 +81,7 @@ public interface UserInstitutionMapper {
     default OnboardedProduct buildOnboardedProduct(){
         LocalDateTime now = java.time.LocalDateTime.now();
         OnboardedProduct onboardedProduct = new OnboardedProduct();
-        onboardedProduct.setStatus(it.pagopa.selfcare.user.constant.OnboardedProductState.ACTIVE);
+        onboardedProduct.setStatus(OnboardedProductState.ACTIVE);
         onboardedProduct.setEnv(it.pagopa.selfcare.onboarding.common.Env.ROOT);
         onboardedProduct.setCreatedAt(now);
         onboardedProduct.setUpdatedAt(now);

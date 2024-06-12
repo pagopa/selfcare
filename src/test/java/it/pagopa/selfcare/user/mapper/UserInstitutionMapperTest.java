@@ -2,17 +2,18 @@ package it.pagopa.selfcare.user.mapper;
 
 import it.pagopa.selfcare.onboarding.common.Env;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
+import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserInstitutionMapperTest {
 

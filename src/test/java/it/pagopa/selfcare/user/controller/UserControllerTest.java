@@ -7,7 +7,6 @@ import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.*;
@@ -18,7 +17,8 @@ import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.UpdateUserRequest;
-import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
+import it.pagopa.selfcare.user.model.UserNotificationToSend;
+import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
 import org.apache.http.HttpStatus;
@@ -432,7 +432,7 @@ class UserControllerTest {
     @TestSecurity(user = "userJwt")
     void testUpdateUserRegistryAndSendNotificationToQueue() {
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
-        when(userRegistryService.updateUserRegistryAndSendNotificationToQueue(updateUserRequest, "test_user_id", "institutionIdTest")).thenReturn(Uni.createFrom().nullItem());
+        when(userRegistryService.updateUserRegistry(updateUserRequest, "test_user_id", "institutionIdTest")).thenReturn(Uni.createFrom().nullItem());
         given()
                 .when()
                 .contentType(ContentType.JSON)

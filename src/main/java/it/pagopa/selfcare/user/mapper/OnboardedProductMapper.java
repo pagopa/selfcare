@@ -16,14 +16,14 @@ public interface OnboardedProductMapper {
 
     List<OnboardedProductResponse> toList(List<OnboardedProduct> onboardedProducts);
 
-    @Mapping(target = "status",  expression = "java(it.pagopa.selfcare.user.constant.OnboardedProductState.ACTIVE)")
+    @Mapping(target = "status",  expression = "java(it.pagopa.selfcare.user.model.constants.OnboardedProductState.ACTIVE)")
     @Mapping(target = "env",  expression = "java(it.pagopa.selfcare.onboarding.common.Env.ROOT)")
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "productRole", source = "productRole")
     OnboardedProduct toNewOnboardedProduct(CreateUserDto.Product product, String productRole);
 
-    @Mapping(target = "status",  expression = "java(it.pagopa.selfcare.user.constant.OnboardedProductState.ACTIVE)")
+    @Mapping(target = "status",  expression = "java(it.pagopa.selfcare.user.model.constants.OnboardedProductState.ACTIVE)")
     @Mapping(target = "env",  expression = "java(it.pagopa.selfcare.onboarding.common.Env.ROOT)")
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
