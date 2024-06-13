@@ -13,6 +13,7 @@ tags:
 - name: User
 - name: external-v2
 - name: support
+- name: support-pnpg
 paths:
   /authorize:
     get:
@@ -171,6 +172,7 @@ paths:
     get:
       tags:
       - support
+      - support-pnpg
       - Institution
       summary: The API retrieves user's info including details of roles on products
       parameters:
