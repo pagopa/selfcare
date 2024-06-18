@@ -17,7 +17,7 @@ import java.util.Base64;
 public class EventhubSasTokenAuthorization implements ClientRequestFilter {
 
     @Inject
-    @ConfigProperty(name = "rest-client.event-hub.uri")
+    @ConfigProperty(name = "quarkus.rest-client.event-hub.url")
     URI resourceUri;
 
     @Inject
