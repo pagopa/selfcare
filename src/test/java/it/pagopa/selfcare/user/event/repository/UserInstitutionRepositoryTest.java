@@ -1,9 +1,6 @@
 package it.pagopa.selfcare.user.event.repository;
 
-import com.azure.data.tables.TableClient;
 import io.quarkus.panache.mock.PanacheMock;
-import io.quarkus.test.InjectMock;
-import io.quarkus.test.Mock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.mongodb.MongoTestResource;
@@ -12,15 +9,12 @@ import io.quarkus.test.vertx.UniAsserter;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.user.event.UserInstitutionCdcService;
-import it.pagopa.selfcare.user.event.constant.OnboardedProductState;
-import it.pagopa.selfcare.user.event.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.event.entity.UserInfo;
 import it.pagopa.selfcare.user.event.entity.UserInstitution;
 import it.pagopa.selfcare.user.event.entity.UserInstitutionRole;
-import it.pagopa.selfcare.user.event.repository.UserInstitutionRepository;
+import it.pagopa.selfcare.user.model.OnboardedProduct;
+import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import jakarta.inject.Inject;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;

@@ -1,9 +1,9 @@
 package it.pagopa.selfcare.user.event.mapper;
 
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.user.event.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.event.entity.UserInstitution;
 import it.pagopa.selfcare.user.event.entity.UserInstitutionRole;
+import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
