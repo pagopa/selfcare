@@ -23,4 +23,5 @@ public class OnboardedProduct {
     private Env env = ROOT;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String delegationId;
 }
