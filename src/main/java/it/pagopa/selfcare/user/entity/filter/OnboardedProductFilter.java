@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.user.entity.filter;
 
-import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.model.OnboardedProduct;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

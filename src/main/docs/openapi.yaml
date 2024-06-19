@@ -9,6 +9,7 @@ servers:
 - url: http://0.0.0.0:8080
   description: Auto generated value
 tags:
+- name: Events
 - name: Institution
 - name: User
 - name: external-v2
@@ -41,6 +42,35 @@ paths:
             application/json:
               schema:
                 type: boolean
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /events/sc-users:
+    post:
+      tags:
+      - Events
+      summary: The API resend all the users's given an institutionId and a userId
+        after the given fromDate
+      parameters:
+      - name: fromDate
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/LocalDateTime"
+      - name: institutionId
+        in: query
+        schema:
+          type: string
+      - name: userId
+        in: query
+        schema:
+          type: string
+      responses:
+        "201":
+          description: Created
         "401":
           description: Not Authorized
         "403":

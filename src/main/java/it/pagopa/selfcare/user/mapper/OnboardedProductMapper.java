@@ -3,7 +3,7 @@ package it.pagopa.selfcare.user.mapper;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.OnboardedProductResponse;
-import it.pagopa.selfcare.user.entity.OnboardedProduct;
+import it.pagopa.selfcare.user.model.OnboardedProduct;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

@@ -121,11 +121,6 @@ public class UserRegistryServiceImpl implements UserRegistryService {
                 .onFailure().invoke(throwable -> log.warn("Something went wrong while updating userInstitution"));
     }
 
-    private Multi<UserNotificationToSend> sendKafkaNotification(UserResource userResource, UserInstitution userInstitution) {
-        return Multi.createFrom().iterable(userUtils.buildUsersNotificationResponse(userInstitution, userResource, QueueEvent.UPDATE))
-                .onItem().transformToUniAndMerge(userNotificationToSend -> userNotificationService.sendKafkaNotification(userNotificationToSend, userResource.getId().toString()));
-    }
-
     private Uni<String> findMailUuidAndUpdateUserRegistry(UserResource userResource, UpdateUserRequest userDto) {
         Optional<String> mailAlreadyPresent = Optional.empty();
         String idMail = MAIL_ID_PREFIX + UUID.randomUUID();

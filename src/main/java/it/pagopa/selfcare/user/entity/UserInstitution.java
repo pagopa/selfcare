@@ -2,6 +2,7 @@ package it.pagopa.selfcare.user.entity;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntity;
+import it.pagopa.selfcare.user.model.OnboardedProduct;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;

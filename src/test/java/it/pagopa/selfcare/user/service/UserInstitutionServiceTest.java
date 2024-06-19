@@ -17,8 +17,8 @@ import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
-import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import jakarta.inject.Inject;
 import org.bson.Document;
@@ -351,6 +351,68 @@ class UserInstitutionServiceTest {
     }
 
     @Test
+    void findAllAfterDate(){
+        Map<String, Object> parameterMap = new HashMap<>();
+        parameterMap.put("institutionId", "institutionId");
+        LocalDateTime fromDate = LocalDateTime.now();
+        UserInstitution userInstitution = createDummyUserInstitution();
+        OnboardedProduct onboardedProduct = createDummyOnboardedProduct();
+        onboardedProduct.setCreatedAt(fromDate.plusDays(1));  // Ensure the product is created after the fromDate
+        userInstitution.setProducts(List.of(onboardedProduct));
+
+        PanacheMock.mock(UserInstitution.class); // Ensure PanacheMock is used to mock static methods
+
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(UserInstitution.find(any(Document.class), eq(null))).thenReturn(query);  // Correct matcher usage
+        when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitution));
+        when(query.page(anyInt(), anyInt())).thenReturn(query);
+        when(query.stream()).thenReturn(Multi.createFrom().item(userInstitution));
+
+        // Test the service method
+        AssertSubscriber<UserInstitution> subscriber = userInstitutionService
+                .findUserInstitutionsAfterDateWithFilter(parameterMap, fromDate)
+                .subscribe().withSubscriber(AssertSubscriber.create(10));
+
+        List<UserInstitution> actual = subscriber.assertCompleted().getItems();
+        assertNotNull(actual);
+        assertEquals(1, actual.size());
+        assertEquals(userInstitution, actual.get(0));
+
+        PanacheMock.verify(UserInstitution.class).find(any(Document.class), eq(null));
+    }
+
+    @Test
+    void findAllAfterDate_noFilters(){
+        Map<String, Object> parameterMap = new HashMap<>();
+        LocalDateTime fromDate = LocalDateTime.now();
+        UserInstitution userInstitution = createDummyUserInstitution();
+        OnboardedProduct onboardedProduct = createDummyOnboardedProduct();
+        onboardedProduct.setCreatedAt(fromDate.plusDays(1));  // Ensure the product is created after the fromDate
+        userInstitution.setProducts(List.of(onboardedProduct));
+
+        PanacheMock.mock(UserInstitution.class); // Ensure PanacheMock is used to mock static methods
+
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(UserInstitution.find(any(Document.class), eq(null))).thenReturn(query);  // Correct matcher usage
+        when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitution));
+        when(query.page(anyInt(), anyInt())).thenReturn(query);
+        when(query.stream()).thenReturn(Multi.createFrom().item(userInstitution));
+
+        // Test the service method
+        AssertSubscriber<UserInstitution> subscriber = userInstitutionService
+                .findUserInstitutionsAfterDateWithFilter(parameterMap, fromDate)
+                .subscribe().withSubscriber(AssertSubscriber.create(10));
+
+        List<UserInstitution> actual = subscriber.assertCompleted().getItems();
+        assertNotNull(actual);
+        assertEquals(1, actual.size());
+        assertEquals(userInstitution, actual.get(0));
+
+        PanacheMock.verify(UserInstitution.class).find(any(Document.class), eq(null));
+
+    }
+
+    @Test
     void retrieveFilteredUserInstitution() {
         Map<String, Object> parameterMap = new HashMap<>();
         parameterMap.put("institutionId", "institutionId");
@@ -592,6 +654,11 @@ class UserInstitutionServiceTest {
         userInstitution.setInstitutionId("institutionId");
         userInstitution.setInstitutionRootName("institutionRootName");
         return userInstitution;
+    }
+    private OnboardedProduct createDummyOnboardedProduct(){
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setProductId("onboardedProductId");
+        return onboardedProduct;
     }
 
 

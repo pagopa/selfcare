@@ -8,10 +8,10 @@ import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.user.client.EventHubRestClient;
 import it.pagopa.selfcare.user.conf.CloudTemplateLoader;
-import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.model.LoggedUser;
+import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -34,9 +34,6 @@ import static it.pagopa.selfcare.user.constant.TemplateMailConstant.*;
 @Slf4j
 @ApplicationScoped
 public class UserNotificationServiceImpl implements UserNotificationService {
-
-//    @Inject
-//    EventhubService eventHubRestClient;
 
     @Inject
     @RestClient

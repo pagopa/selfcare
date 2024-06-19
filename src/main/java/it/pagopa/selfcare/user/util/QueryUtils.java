@@ -5,10 +5,10 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.Updates;
 import it.pagopa.selfcare.user.constant.SortEnum;
-import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionRoleFilter;
+import it.pagopa.selfcare.user.model.OnboardedProduct;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,11 @@ import org.bson.codecs.DecoderContext;
 import org.bson.codecs.DocumentCodec;
 import org.bson.conversions.Bson;
 
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.USER_INSTITUTION_COLLECTION;
@@ -56,6 +60,10 @@ public class QueryUtils {
         } else {
             return new Document();
         }
+    }
+    public Document buildQueryDocumentByDate(Map<String, Object> parameters, String collection, LocalDateTime fromDate) {
+            return bsonToDocument(Filters.and(constructBsonWithDateFilter(parameters, collection, fromDate)));
+
     }
 
     /**
@@ -115,10 +123,29 @@ public class QueryUtils {
         }
 
         bsonList.addAll(addEqAndInFilters(parameters));
-
         return bsonList;
     }
 
+    private List<Bson> constructBsonWithDateFilter(Map<String, Object> parameters, String collection, LocalDateTime fromDate){
+        List<Bson> bsonList = new ArrayList<>();
+        if (!parameters.isEmpty()) {
+            Map<String, Object> mapForElemMatch = retrieveArrayFilterIfPresent(parameters, collection);
+
+            if (!mapForElemMatch.isEmpty()) {
+                addElemMatchOperator(mapForElemMatch, collection, bsonList);
+                parameters = parameters.entrySet().stream()
+                        .filter(entry -> !mapForElemMatch.containsKey(entry.getKey()))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            }
+
+            bsonList.addAll(addEqAndInFilters(parameters));
+        }
+        if (fromDate != null) {
+            bsonList.add(Filters.elemMatch("products", Filters.gt("createdAt", fromDate)));
+        }
+
+        return bsonList;
+    }
     /**
      * The addElemMatchOperator function is used to add the $elemMatch operator to the query.
      * The function takes in a mapForElemMatch map, parameters map, collection name and bsonList as arguments.

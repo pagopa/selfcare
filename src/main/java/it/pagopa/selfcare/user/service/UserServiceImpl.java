@@ -12,7 +12,6 @@ import it.pagopa.selfcare.user.controller.response.UserDataResponse;
 import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
-import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
@@ -23,6 +22,7 @@ import it.pagopa.selfcare.user.mapper.OnboardedProductMapper;
 import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
+import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.model.constants.QueueEvent;
@@ -261,7 +261,6 @@ public class UserServiceImpl implements UserService {
                 .onItem().transformToUni(prepareNotificationData -> userNotificationService.sendEmailNotification(prepareNotificationData.getUserResource(), prepareNotificationData.getUserInstitution(), prepareNotificationData.getProduct(), status, productRole, loggedUser.getName(), loggedUser.getFamilyName())
                         .onFailure().recoverWithNull()
                         .replaceWith(prepareNotificationData))
-                .onItem().transform(prepareNotificationData -> userUtils.buildUserNotificationToSend(prepareNotificationData.getUserInstitution(), prepareNotificationData.getUserResource(), productId, productRole, status))
                 .onFailure().invoke(throwable -> log.error("Error during update user status for userId: {}, institutionId: {}, productId:{} -> exception: {}", userId, institutionId, productId, throwable.getMessage(), throwable))
                 .replaceWithVoid();
     }
@@ -519,6 +518,25 @@ public class UserServiceImpl implements UserService {
                 .replaceWithVoid();
     }
 
+    @Override
+    public Uni<Void> sendEventsByDateAndUserIdAndInstitutionId(LocalDateTime fromDate, String institutionId, String userId) {
+        Multi<UserInstitution> userInstitutions = retrieveFilteredUserInstitutionsByDate(userId, institutionId, fromDate);
+        return userInstitutions
+                .onItem().transformToUniAndMerge(userInstitution -> {
+                    String userIdToUse = userId != null ? userId : userInstitution.getUserId();
+                    Uni<UserResource> userResourceUni = userRegistryService.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userIdToUse);
+
+                    return userResourceUni
+                            .onItem().transformToUni(userResource -> buildAndSendKafkaNotifications(userInstitution, userResource)
+                                    .collect().asList()
+                                    .replaceWithVoid())
+                            .onFailure().invoke(exception -> log.error("Failed to retrieve UserResource", exception)).replaceWithNull();
+                })
+                .collect().asList()
+                .replaceWithVoid()
+                .onFailure().invoke(exception -> log.error("Failed to process sendOldData", exception)).replaceWithVoid();
+    }
+
     private void applyFiltersToRemoveProducts(UserInstitution userInstitution, List<String> states, List<String> products, List<String> roles, List<String> productRoles) {
         if(!CollectionUtils.isNullOrEmpty(userInstitution.getProducts())) {
             userInstitution.getProducts().removeIf(product ->
@@ -535,6 +553,13 @@ public class UserServiceImpl implements UserService {
         var prodFilter = OnboardedProductFilter.builder().role(roles).status(states).productRole(productRoles).productId(products).build().constructMap();
         var queryParam = userUtils.retrieveMapForFilter(institutionFilters, prodFilter);
         return userInstitutionService.findAllWithFilter(queryParam);
+    }
+
+    private Multi<UserInstitution> retrieveFilteredUserInstitutionsByDate(String userId, String institutionId, LocalDateTime fromDate){
+        var institutionFilters = UserInstitutionFilter.builder().institutionId(institutionId).userId(userId).build().constructMap();
+        var productFilter = OnboardedProductFilter.builder().build().constructMap();
+        var queryParam = userUtils.retrieveMapForFilter(institutionFilters, productFilter);
+        return userInstitutionService.findUserInstitutionsAfterDateWithFilter(queryParam, fromDate);
     }
 
     private Uni<UserInstitution> retrieveAdminUserInstitution(String institutionId, String userUuid) {
@@ -555,8 +580,9 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private Multi<UserNotificationToSend> buildAndSendKafkaNotifications(PrepareNotificationData prepareNotificationData) {
-        return Multi.createFrom().iterable(userUtils.buildUsersNotificationResponse(prepareNotificationData.getUserInstitution(), prepareNotificationData.getUserResource(), prepareNotificationData.getQueueEvent()))
+    private Multi<UserNotificationToSend> buildAndSendKafkaNotifications(UserInstitution userInstitution, UserResource userResource){
+        return Multi.createFrom().iterable(userUtils.buildUsersNotificationResponse(userInstitution, userResource))
                 .onItem().transformToUniAndMerge(notification -> userNotificationService.sendKafkaNotification(notification, notification.getUser().getUserId()));
     }
+
 }
