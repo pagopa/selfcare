@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.user.service;
 
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
+import io.quarkus.panache.common.Page;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
@@ -38,6 +39,7 @@ import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList
 @RequiredArgsConstructor
 public class UserInstitutionServiceDefault implements UserInstitutionService {
 
+    public static final Page PAGE_SIZE_FIND_USER_INSTITUTION = Page.ofSize(1000);
     private final UserInstitutionMapper userInstitutionMapper;
     private final QueryUtils queryUtils;
     private final UserUtils userUtils;
@@ -161,8 +163,20 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     public Multi<UserInstitution> findUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, LocalDateTime fromDate) {
         Document query = queryUtils.buildQueryDocumentByDate(queryParameter, USER_INSTITUTION_COLLECTION, fromDate);
         return runUserInstitutionFindQuery(query, null).stream();
-
     }
+
+    @Override
+    public Multi<UserInstitution> findUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, LocalDateTime fromDate, Integer page) {
+        Document query = queryUtils.buildQueryDocumentByDate(queryParameter, USER_INSTITUTION_COLLECTION, fromDate);
+        return runUserInstitutionFindQuery(query, null).page(PAGE_SIZE_FIND_USER_INSTITUTION.index(page)).stream();
+    }
+
+    @Override
+    public Uni<Integer> pageCountUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, LocalDateTime fromDate) {
+        Document query = queryUtils.buildQueryDocumentByDate(queryParameter, USER_INSTITUTION_COLLECTION, fromDate);
+        return runUserInstitutionFindQuery(query, null).page(PAGE_SIZE_FIND_USER_INSTITUTION).pageCount();
+    }
+
     private Uni<Long> updateUserStatusDao(Map<String, Object> filterMap, OnboardedProductState status) {
 
         Map<String, Object> fieldToUpdateMap = new HashMap<>();

@@ -50,7 +50,7 @@ public class UserRegistryServiceTest {
     private static final org.openapi.quarkus.user_registry_json.model.UserResource userResource;
     private static final String userMailDefault = "test@test.it";
     private static final String userMailUuidDefault = "ID_MAIL#123455";
-    private static UserInstitution userInstitution;
+    private static final UserInstitution userInstitution;
 
     static {
         userResource = new org.openapi.quarkus.user_registry_json.model.UserResource();
@@ -128,7 +128,7 @@ public class UserRegistryServiceTest {
     void updateUserRegistryAndSendNotificationToQueue_whenUserRegistryNothingToUpdate() {
         final String userId = userResource.getId().toString();
         final String institutionId = "institutionId";
-        when(userNotificationService.sendKafkaNotification(any(UserNotificationToSend.class), anyString())).thenReturn(Uni.createFrom().item(new UserNotificationToSend()));
+        when(userNotificationService.sendKafkaNotification(any(UserNotificationToSend.class))).thenReturn(Uni.createFrom().item(new UserNotificationToSend()));
 
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setName(userResource.getName().getValue());
@@ -158,7 +158,7 @@ public class UserRegistryServiceTest {
     void updateUserRegistryAndSendNotificationToQueue_whenUserRegistryMustUpdate() {
         final String userId = userResource.getId().toString();
         final String institutionId = "institutionId";
-        when(userNotificationService.sendKafkaNotification(any(UserNotificationToSend.class), anyString())).thenReturn(Uni.createFrom().item(new UserNotificationToSend()));
+        when(userNotificationService.sendKafkaNotification(any(UserNotificationToSend.class))).thenReturn(Uni.createFrom().item(new UserNotificationToSend()));
 
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setName("example");
@@ -194,7 +194,7 @@ public class UserRegistryServiceTest {
     void testSendUpdateUserNotificationToQueue() {
         final String userId = userResource.getId().toString();
         final String institutionId = "institutionId";
-        when(userNotificationService.sendKafkaNotification(any(UserNotificationToSend.class), anyString())).thenReturn(Uni.createFrom().item(new UserNotificationToSend()));
+        when(userNotificationService.sendKafkaNotification(any(UserNotificationToSend.class))).thenReturn(Uni.createFrom().item(new UserNotificationToSend()));
 
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setEmail("test2@test.it");
@@ -210,7 +210,7 @@ public class UserRegistryServiceTest {
 
     @Test
     void testSendUpdateUserNotificationToQueue2() {
-        when(userNotificationService.sendKafkaNotification(any(UserNotificationToSend.class), anyString())).thenReturn(Uni.createFrom().item(new UserNotificationToSend()));
+        when(userNotificationService.sendKafkaNotification(any(UserNotificationToSend.class))).thenReturn(Uni.createFrom().item(new UserNotificationToSend()));
 
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setEmail("test@test.it");

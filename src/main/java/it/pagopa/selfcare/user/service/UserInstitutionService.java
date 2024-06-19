@@ -35,6 +35,10 @@ public interface UserInstitutionService {
 
     Uni<Long> updateUserCreatedAtByInstitutionAndProduct(String institutionId, List<String> userIds, String productId, LocalDateTime createdAt);
 
+    Multi<UserInstitution> findUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, LocalDateTime fromDate, Integer page);
+
+    Uni<Integer> pageCountUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, LocalDateTime fromDate);
+
     Uni<List<UserInstitution>> retrieveFilteredUserInstitution(Map<String, Object> queryParameter);
 
     Uni<UserInstitution> findByUserIdAndInstitutionId(String userId, String institutionId);

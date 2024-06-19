@@ -11,7 +11,7 @@ import org.openapi.quarkus.user_registry_json.model.UserResource;
 import java.util.List;
 
 public interface UserNotificationService {
-    Uni<UserNotificationToSend> sendKafkaNotification(UserNotificationToSend userNotificationToSend, String userId);
+    Uni<UserNotificationToSend> sendKafkaNotification(UserNotificationToSend userNotificationToSend);
 
     Uni<Void> sendEmailNotification(UserResource user, UserInstitution institution, Product product, OnboardedProductState status, String productRole, String loggedUserName, String loggedUserSurname);
 

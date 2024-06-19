@@ -32,6 +32,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
@@ -42,6 +43,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
@@ -55,6 +57,9 @@ import static it.pagopa.selfcare.user.util.UserUtils.VALID_USER_PRODUCT_STATES_F
 @ApplicationScoped
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
+
+    @ConfigProperty(name = "user-ms.eventhub.users.concurrency-level")
+    Integer eventhubUsersConcurrencyLevel;
 
     private final UserRegistryService userRegistryService;
 
@@ -74,7 +79,7 @@ public class UserServiceImpl implements UserService {
 
     static final String USERS_WORKS_FIELD_LIST = "fiscalCode,familyName,email,name,workContacts";
 
-    private static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
+    public static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
 
     private static final String USER_INSTITUTION_FOUNDED = "UserInstitution with userId: {} and institutionId: {} founded";
     private static final String USER_INSTITUTION_NOT_FOUND = "UserInstitution with userId: {} and institutionId: {} not found";
@@ -518,11 +523,34 @@ public class UserServiceImpl implements UserService {
                 .replaceWithVoid();
     }
 
+    /**
+     * Retrieves a list of filtered user institutions by date and page count,
+     * and sends events concurrently for each page.
+     *
+     * @param userId The ID of the user for whom to retrieve institutions.
+     * @param institutionId The ID of the institution.
+     * @param fromDate The starting date from which to filter the institutions.
+     * @return A Uni representing the result of sending events for each page.
+     */
     @Override
     public Uni<Void> sendEventsByDateAndUserIdAndInstitutionId(LocalDateTime fromDate, String institutionId, String userId) {
-        Multi<UserInstitution> userInstitutions = retrieveFilteredUserInstitutionsByDate(userId, institutionId, fromDate);
+
+        return retrieveFilteredUserInstitutionsByDatePageCount(userId,institutionId,fromDate)
+                .onItem().transformToUni(pageCount -> pageCount > 0
+                        ? Uni.combine().all().unis(
+                                IntStream.range(0, pageCount).boxed()
+                                .map(index -> sendEventsByDateAndUserIdAndInstitutionId(fromDate,institutionId,userId,index))
+                                .toList())
+                            .usingConcurrencyOf(eventhubUsersConcurrencyLevel)
+                            .discardItems()
+                        : Uni.createFrom().voidItem());
+    }
+
+
+    public Uni<Void> sendEventsByDateAndUserIdAndInstitutionId(LocalDateTime fromDate, String institutionId, String userId, Integer page) {
+        Multi<UserInstitution> userInstitutions = retrieveFilteredUserInstitutionsByDate(userId, institutionId, fromDate, page);
         return userInstitutions
-                .onItem().transformToUniAndMerge(userInstitution -> {
+                .onItem().transformToUni(userInstitution -> {
                     String userIdToUse = userId != null ? userId : userInstitution.getUserId();
                     Uni<UserResource> userResourceUni = userRegistryService.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userIdToUse);
 
@@ -530,11 +558,10 @@ public class UserServiceImpl implements UserService {
                             .onItem().transformToUni(userResource -> buildAndSendKafkaNotifications(userInstitution, userResource)
                                     .collect().asList()
                                     .replaceWithVoid())
-                            .onFailure().invoke(exception -> log.error("Failed to retrieve UserResource", exception)).replaceWithNull();
+                            .onFailure().invoke(exception -> log.error("Failed to retrieve UserResource userId:{}", userIdToUse, exception)).replaceWithNull();
                 })
-                .collect().asList()
-                .replaceWithVoid()
-                .onFailure().invoke(exception -> log.error("Failed to process sendOldData", exception)).replaceWithVoid();
+                .merge().toUni()
+                .onFailure().invoke(exception -> log.error("Failed to send Events for page: {}, message: {}", page, exception.getMessage()));
     }
 
     private void applyFiltersToRemoveProducts(UserInstitution userInstitution, List<String> states, List<String> products, List<String> roles, List<String> productRoles) {
@@ -556,10 +583,24 @@ public class UserServiceImpl implements UserService {
     }
 
     private Multi<UserInstitution> retrieveFilteredUserInstitutionsByDate(String userId, String institutionId, LocalDateTime fromDate){
+        var queryParam = retrieveFilteredUserInstitutionsByDateQueryParam(userId,institutionId,fromDate);
+        return userInstitutionService.findUserInstitutionsAfterDateWithFilter(queryParam, fromDate);
+    }
+
+    private Multi<UserInstitution> retrieveFilteredUserInstitutionsByDate(String userId, String institutionId, LocalDateTime fromDate, Integer page){
+        var queryParam = retrieveFilteredUserInstitutionsByDateQueryParam(userId,institutionId,fromDate);
+        return userInstitutionService.findUserInstitutionsAfterDateWithFilter(queryParam, fromDate, page);
+    }
+
+    private Uni<Integer> retrieveFilteredUserInstitutionsByDatePageCount(String userId, String institutionId, LocalDateTime fromDate){
+        var queryParam = retrieveFilteredUserInstitutionsByDateQueryParam(userId,institutionId,fromDate);
+        return userInstitutionService.pageCountUserInstitutionsAfterDateWithFilter(queryParam, fromDate);
+    }
+
+    private Map<String, Object> retrieveFilteredUserInstitutionsByDateQueryParam(String userId, String institutionId, LocalDateTime fromDate) {
         var institutionFilters = UserInstitutionFilter.builder().institutionId(institutionId).userId(userId).build().constructMap();
         var productFilter = OnboardedProductFilter.builder().build().constructMap();
-        var queryParam = userUtils.retrieveMapForFilter(institutionFilters, productFilter);
-        return userInstitutionService.findUserInstitutionsAfterDateWithFilter(queryParam, fromDate);
+        return userUtils.retrieveMapForFilter(institutionFilters, productFilter);
     }
 
     private Uni<UserInstitution> retrieveAdminUserInstitution(String institutionId, String userUuid) {
@@ -582,7 +623,7 @@ public class UserServiceImpl implements UserService {
 
     private Multi<UserNotificationToSend> buildAndSendKafkaNotifications(UserInstitution userInstitution, UserResource userResource){
         return Multi.createFrom().iterable(userUtils.buildUsersNotificationResponse(userInstitution, userResource))
-                .onItem().transformToUniAndMerge(notification -> userNotificationService.sendKafkaNotification(notification, notification.getUser().getUserId()));
+                .onItem().transformToUniAndMerge(userNotificationService::sendKafkaNotification);
     }
 
 }

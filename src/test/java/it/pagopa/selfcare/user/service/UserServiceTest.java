@@ -50,6 +50,7 @@ import java.util.*;
 
 import static it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER;
 import static it.pagopa.selfcare.user.constant.CustomError.*;
+import static it.pagopa.selfcare.user.service.UserServiceImpl.USERS_FIELD_LIST_WITHOUT_FISCAL_CODE;
 import static it.pagopa.selfcare.user.service.UserServiceImpl.USERS_WORKS_FIELD_LIST;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -200,7 +201,8 @@ class UserServiceTest {
     }
 
     @Test
-    void sendOldData(){
+    void sendEventsByDateAndUserIdAndInstitutionId(){
+        final Integer page = 1;
         final String institutionId = "institutionId";
         final String userId = "userId";
         final LocalDateTime fromDate = LocalDateTime.now();
@@ -209,16 +211,22 @@ class UserServiceTest {
         UserResource userResource = new UserResource();
         userResource.setId(UUID.randomUUID());
 
-        when(userInstitutionService.findUserInstitutionsAfterDateWithFilter(anyMap(), any())).thenReturn(Multi.createFrom().item(userInstitution));
+        when(userInstitutionService.pageCountUserInstitutionsAfterDateWithFilter(anyMap(), any()))
+                .thenReturn(Uni.createFrom().item(page));
+        when(userInstitutionService.findUserInstitutionsAfterDateWithFilter(anyMap(), any(), eq(0)))
+                .thenReturn(Multi.createFrom().item(userInstitution));
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
 
-        UniAssertSubscriber<Void> subscriber = userService
+        userService
                 .sendEventsByDateAndUserIdAndInstitutionId(fromDate, institutionId, userId)
                 .subscribe()
-                .withSubscriber(UniAssertSubscriber.create());
+                .withSubscriber(UniAssertSubscriber.create()).assertCompleted();
 
         // Verify the result
-        subscriber.assertCompleted();
+        verify(userInstitutionService, times(1))
+                .findUserInstitutionsAfterDateWithFilter(anyMap(), any(), eq(0));
+        verify(userRegistryApi, times(1))
+                .findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId);
     }
 
     @Test
@@ -968,7 +976,7 @@ class UserServiceTest {
         when(productService.getProduct(any())).thenReturn(product);
         when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
-        when(userNotificationService.sendKafkaNotification(any(), any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
+        when(userNotificationService.sendKafkaNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
 
 
         // Call the method
@@ -1007,7 +1015,7 @@ class UserServiceTest {
         when(productService.getProduct(any())).thenReturn(product);
         when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
-        when(userNotificationService.sendKafkaNotification(any(), any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
+        when(userNotificationService.sendKafkaNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
 
 
         // Call the method

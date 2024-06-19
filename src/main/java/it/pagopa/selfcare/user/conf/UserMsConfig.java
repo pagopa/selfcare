@@ -1,5 +1,7 @@
 package it.pagopa.selfcare.user.conf;
 
+import com.microsoft.applicationinsights.TelemetryClient;
+import com.microsoft.applicationinsights.TelemetryConfiguration;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.product.service.ProductService;
@@ -47,6 +49,13 @@ public class UserMsConfig {
     public EventhubSasTokenAuthorization eventhubSasTokenAuthorization(){
         return new EventhubSasTokenAuthorization();
 
+    }
+
+    @ApplicationScoped
+    public TelemetryClient telemetryClient(@ConfigProperty(name = "user-ms.appinsights.connection-string") String appInsightsConnectionString) {
+        TelemetryConfiguration telemetryConfiguration = TelemetryConfiguration.createDefault();
+        telemetryConfiguration.setConnectionString(appInsightsConnectionString);
+        return new TelemetryClient(telemetryConfiguration);
     }
 
 }

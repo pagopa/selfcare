@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.user.service;
 
+import com.microsoft.applicationinsights.TelemetryClient;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import io.smallrye.mutiny.Uni;
@@ -42,23 +43,32 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     private final MailService mailService;
     private final Configuration freemarkerConfig;
     private final boolean eventHubUsersEnabled;
+    private final TelemetryClient telemetryClient;
+
+
+    private static final String EVENT_NAME = "USER-MS";
+    private static final String SEND_EVENTS_FAILURE_METRICS = "SendEvents_failures";
+    private static final String SEND_EVENTS_SUCCESS_METRICS = "SendEvents_successes";
 
 
     public UserNotificationServiceImpl(Configuration freemarkerConfig, CloudTemplateLoader cloudTemplateLoader, MailService mailService,
-                                       @ConfigProperty(name = "user-ms.eventhub.users.enabled") boolean eventHubUsersEnabled) {
+                                       @ConfigProperty(name = "user-ms.eventhub.users.enabled") boolean eventHubUsersEnabled, TelemetryClient telemetryClient) {
         this.mailService = mailService;
         this.freemarkerConfig = freemarkerConfig;
+        this.telemetryClient = telemetryClient;
         freemarkerConfig.setTemplateLoader(cloudTemplateLoader);
         this.eventHubUsersEnabled = eventHubUsersEnabled;
     }
 
     @Override
-    public Uni<UserNotificationToSend> sendKafkaNotification(UserNotificationToSend userNotificationToSend, String userId) {
+    public Uni<UserNotificationToSend> sendKafkaNotification(UserNotificationToSend userNotificationToSend) {
         return eventHubUsersEnabled
                 ? eventHubRestClient.sendMessage(userNotificationToSend)
-                .onItem().invoke(() -> log.info("sent dataLake notification for user : {}", userId))
-                .onFailure().invoke(throwable -> log.warn("error during send dataLake notification for user {}: {} ", userId, throwable.getMessage(), throwable))
-                .replaceWith(userNotificationToSend)
+                    .onItem().invoke(() -> log.info("sent dataLake notification for id : {}", userNotificationToSend.getId()))
+                    .onItem().invoke(() -> telemetryClient.trackEvent(EVENT_NAME, Map.of(), Map.of(SEND_EVENTS_SUCCESS_METRICS, 1D)))
+                    .onFailure().invoke(throwable -> log.warn("error during send dataLake notification for id {}: {} ", userNotificationToSend.getId(), throwable.getMessage(), throwable))
+                    .onFailure().invoke(() -> telemetryClient.trackEvent(EVENT_NAME, Map.of(), Map.of(SEND_EVENTS_FAILURE_METRICS, 1D)))
+                    .replaceWith(userNotificationToSend)
                 : Uni.createFrom().item(userNotificationToSend);
     }
 
