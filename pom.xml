@@ -131,10 +131,9 @@
             <artifactId>quarkus-openapi-generator</artifactId>
             <version>${quarkus-openapi-generator.version}</version>
         </dependency>
-
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>user-sdk-model</artifactId>
+            <artifactId>user-sdk-event</artifactId>
             <version>0.0.1</version>
         </dependency>
     </dependencies>
