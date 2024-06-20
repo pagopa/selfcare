@@ -23,6 +23,7 @@ import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
@@ -33,6 +34,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS;
+import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_NAME;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -307,6 +311,9 @@ class UserNotificationServiceImplTest {
         ).subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted();
         verify(eventHubRestClient, times(1)).sendMessage(userNotificationToSend);
+        ArgumentCaptor<Map<String, Double>> metricsName = ArgumentCaptor.forClass(Map.class);
+        verify(telemetryClient, times(1)).trackEvent(eq(EVENT_USER_MS_NAME), any(), metricsName.capture());
+        assertEquals(EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS, metricsName.getValue().keySet().stream().findFirst().orElse(null));
 
     }
     @Test

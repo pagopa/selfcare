@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.user.service;
 
+import com.microsoft.applicationinsights.TelemetryClient;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
@@ -46,8 +47,12 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static it.pagopa.selfcare.user.UserUtils.mapPropsForTrackEvent;
 import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
 import static it.pagopa.selfcare.user.constant.CustomError.*;
+import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_FAILURE;
+import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_SUCCESS;
+import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_NAME;
 import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.ACTIVE;
 import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.PENDING;
 import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
@@ -72,6 +77,7 @@ public class UserServiceImpl implements UserService {
     private final ProductService productService;
     private final UserInstitutionService userInstitutionService;
     private final UserNotificationService userNotificationService;
+    private final TelemetryClient telemetryClient;
 
     Supplier<String> randomMailId = () -> (MAIL_ID_PREFIX + UUID.randomUUID());
 
@@ -558,10 +564,17 @@ public class UserServiceImpl implements UserService {
                             .onItem().transformToUni(userResource -> buildAndSendKafkaNotifications(userInstitution, userResource)
                                     .collect().asList()
                                     .replaceWithVoid())
-                            .onFailure().invoke(exception -> log.error("Failed to retrieve UserResource userId:{}", userIdToUse, exception)).replaceWithNull();
+                            .onItem().invoke(trackTelemetryEvent(userInstitution, userIdToUse, EVENTS_USER_INSTITUTION_SUCCESS))
+                            .onFailure().invoke(exception -> log.error("Failed to retrieve UserResource userId:{}", userIdToUse, exception))
+                            .onFailure().invoke(trackTelemetryEvent(userInstitution, userIdToUse, EVENTS_USER_INSTITUTION_FAILURE))
+                            .onFailure().recoverWithNull();
                 })
                 .merge().toUni()
                 .onFailure().invoke(exception -> log.error("Failed to send Events for page: {}, message: {}", page, exception.getMessage()));
+    }
+
+    private Runnable trackTelemetryEvent(UserInstitution userInstitution, String userIdToUse, String metricsName) {
+        return () -> telemetryClient.trackEvent(EVENT_USER_MS_NAME, mapPropsForTrackEvent(userInstitution.getId().toHexString(), userIdToUse, null), Map.of(metricsName, 1D));
     }
 
     private void applyFiltersToRemoveProducts(UserInstitution userInstitution, List<String> states, List<String> products, List<String> roles, List<String> productRoles) {

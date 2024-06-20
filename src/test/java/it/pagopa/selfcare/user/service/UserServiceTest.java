@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.user.service;
 
 
+import com.microsoft.applicationinsights.TelemetryClient;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.quarkus.panache.mock.PanacheMock;
 import io.quarkus.test.InjectMock;
@@ -41,6 +42,7 @@ import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.openapi.quarkus.user_registry_json.model.*;
 
@@ -50,6 +52,8 @@ import java.util.*;
 
 import static it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER;
 import static it.pagopa.selfcare.user.constant.CustomError.*;
+import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_SUCCESS;
+import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_NAME;
 import static it.pagopa.selfcare.user.service.UserServiceImpl.USERS_FIELD_LIST_WITHOUT_FISCAL_CODE;
 import static it.pagopa.selfcare.user.service.UserServiceImpl.USERS_WORKS_FIELD_LIST;
 import static org.junit.jupiter.api.Assertions.*;
@@ -83,6 +87,9 @@ class UserServiceTest {
 
     @InjectMock
     private UserUtils userUtils;
+
+    @InjectMock
+    private TelemetryClient telemetryClient;
 
     private static final UserResource userResource;
     private static final UUID userId = UUID.randomUUID();
@@ -227,6 +234,9 @@ class UserServiceTest {
                 .findUserInstitutionsAfterDateWithFilter(anyMap(), any(), eq(0));
         verify(userRegistryApi, times(1))
                 .findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId);
+        ArgumentCaptor<Map<String, Double>> metricsName = ArgumentCaptor.forClass(Map.class);
+        verify(telemetryClient, times(1)).trackEvent(eq(EVENT_USER_MS_NAME), any(), metricsName.capture());
+        assertEquals(EVENTS_USER_INSTITUTION_SUCCESS, metricsName.getValue().keySet().stream().findFirst().orElse(null));
     }
 
     @Test
