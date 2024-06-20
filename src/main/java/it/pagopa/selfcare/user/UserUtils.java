@@ -53,4 +53,12 @@ public class UserUtils {
 
         return onboardedProductMap.values();
     }
+
+    public static Map<String, String> mapPropsForTrackEvent(String documentKey, String userId, String productId) {
+        Map<String, String> propertiesMap = new HashMap<>();
+        Optional.ofNullable(documentKey).ifPresent(value -> propertiesMap.put("documentKey", value));
+        Optional.ofNullable(userId).ifPresent(value -> propertiesMap.put("userId", value));
+        Optional.ofNullable(productId).ifPresent(value -> propertiesMap.put("productId", value));
+        return propertiesMap;
+    }
 }
