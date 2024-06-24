@@ -227,7 +227,7 @@ class UserServiceTest {
         userService
                 .sendEventsByDateAndUserIdAndInstitutionId(fromDate, institutionId, userId)
                 .subscribe()
-                .withSubscriber(UniAssertSubscriber.create()).assertCompleted();
+                .withSubscriber(UniAssertSubscriber.create()).awaitItem();
 
         // Verify the result
         verify(userInstitutionService, times(1))

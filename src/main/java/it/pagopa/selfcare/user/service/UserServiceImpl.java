@@ -24,6 +24,7 @@ import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
+import it.pagopa.selfcare.user.model.TrackEventInput;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.model.constants.QueueEvent;
@@ -40,6 +41,7 @@ import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 import org.owasp.encoder.Encode;
 import software.amazon.awssdk.utils.CollectionUtils;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
@@ -545,7 +547,8 @@ public class UserServiceImpl implements UserService {
                 .onItem().transformToUni(pageCount -> pageCount > 0
                         ? Uni.combine().all().unis(
                                 IntStream.range(0, pageCount).boxed()
-                                .map(index -> sendEventsByDateAndUserIdAndInstitutionId(fromDate,institutionId,userId,index))
+                                .map(index -> sendEventsByDateAndUserIdAndInstitutionId(fromDate,institutionId,userId,index)
+                                        .onItem().delayIt().by(Duration.ofSeconds(5)))
                                 .toList())
                             .usingConcurrencyOf(eventhubUsersConcurrencyLevel)
                             .discardItems()
@@ -559,22 +562,27 @@ public class UserServiceImpl implements UserService {
                 .onItem().transformToUni(userInstitution -> {
                     String userIdToUse = userId != null ? userId : userInstitution.getUserId();
                     Uni<UserResource> userResourceUni = userRegistryService.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userIdToUse);
+                    TrackEventInput trackEventInput = TrackEventInput.builder()
+                            .documentKey(userInstitution.getInstitutionId())
+                            .userId(userIdToUse)
+                            .institutionId(userInstitution.getInstitutionId())
+                            .build();
 
                     return userResourceUni
                             .onItem().transformToUni(userResource -> buildAndSendKafkaNotifications(userInstitution, userResource)
                                     .collect().asList()
                                     .replaceWithVoid())
-                            .onItem().invoke(trackTelemetryEvent(userInstitution, userIdToUse, EVENTS_USER_INSTITUTION_SUCCESS))
+                            .onItem().invoke(() -> trackTelemetryEvent(trackEventInput, EVENTS_USER_INSTITUTION_SUCCESS))
                             .onFailure().invoke(exception -> log.error("Failed to retrieve UserResource userId:{}", userIdToUse, exception))
-                            .onFailure().invoke(trackTelemetryEvent(userInstitution, userIdToUse, EVENTS_USER_INSTITUTION_FAILURE))
+                            .onFailure().invoke(exception -> trackTelemetryEvent(trackEventInput.toBuilder().exception(exception.getMessage()).build(), EVENTS_USER_INSTITUTION_FAILURE))
                             .onFailure().recoverWithNull();
                 })
                 .merge().toUni()
                 .onFailure().invoke(exception -> log.error("Failed to send Events for page: {}, message: {}", page, exception.getMessage()));
     }
 
-    private Runnable trackTelemetryEvent(UserInstitution userInstitution, String userIdToUse, String metricsName) {
-        return () -> telemetryClient.trackEvent(EVENT_USER_MS_NAME, mapPropsForTrackEvent(userInstitution.getId().toHexString(), userIdToUse, null), Map.of(metricsName, 1D));
+    private void trackTelemetryEvent(TrackEventInput trackEventInput, String metricsName) {
+        telemetryClient.trackEvent(EVENT_USER_MS_NAME, mapPropsForTrackEvent(trackEventInput), Map.of(metricsName, 1D));
     }
 
     private void applyFiltersToRemoveProducts(UserInstitution userInstitution, List<String> states, List<String> products, List<String> roles, List<String> productRoles) {

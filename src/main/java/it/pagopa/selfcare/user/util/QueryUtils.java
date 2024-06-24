@@ -141,7 +141,11 @@ public class QueryUtils {
             bsonList.addAll(addEqAndInFilters(parameters));
         }
         if (fromDate != null) {
-            bsonList.add(Filters.elemMatch("products", Filters.gt("createdAt", fromDate)));
+            bsonList.add(
+            Filters.or(
+                    Filters.elemMatch("products", Filters.gt("createdAt", fromDate)),
+                    Filters.elemMatch("products", Filters.gt("updatedAt", fromDate))
+            ));
         }
 
         return bsonList;

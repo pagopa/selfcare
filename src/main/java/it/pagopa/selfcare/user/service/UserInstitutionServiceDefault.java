@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -39,7 +40,9 @@ import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList
 @RequiredArgsConstructor
 public class UserInstitutionServiceDefault implements UserInstitutionService {
 
-    public static final Page PAGE_SIZE_FIND_USER_INSTITUTION = Page.ofSize(1000);
+    @ConfigProperty(name = "user-ms.eventhub.users.page-size")
+    Integer pageSizeFindUserInstitutions;
+
     private final UserInstitutionMapper userInstitutionMapper;
     private final QueryUtils queryUtils;
     private final UserUtils userUtils;
@@ -168,13 +171,13 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     @Override
     public Multi<UserInstitution> findUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, LocalDateTime fromDate, Integer page) {
         Document query = queryUtils.buildQueryDocumentByDate(queryParameter, USER_INSTITUTION_COLLECTION, fromDate);
-        return runUserInstitutionFindQuery(query, null).page(PAGE_SIZE_FIND_USER_INSTITUTION.index(page)).stream();
+        return runUserInstitutionFindQuery(query, null).page(Page.ofSize(pageSizeFindUserInstitutions).index(page)).stream();
     }
 
     @Override
     public Uni<Integer> pageCountUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, LocalDateTime fromDate) {
         Document query = queryUtils.buildQueryDocumentByDate(queryParameter, USER_INSTITUTION_COLLECTION, fromDate);
-        return runUserInstitutionFindQuery(query, null).page(PAGE_SIZE_FIND_USER_INSTITUTION).pageCount();
+        return runUserInstitutionFindQuery(query, null).page(Page.ofSize(pageSizeFindUserInstitutions)).pageCount();
     }
 
     private Uni<Long> updateUserStatusDao(Map<String, Object> filterMap, OnboardedProductState status) {
