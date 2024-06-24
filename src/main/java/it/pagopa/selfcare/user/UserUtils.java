@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.user;
 
 import it.pagopa.selfcare.user.model.OnboardedProduct;
+import it.pagopa.selfcare.user.model.TrackEventInput;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 
 import java.util.*;
@@ -54,11 +55,13 @@ public class UserUtils {
         return onboardedProductMap.values();
     }
 
-    public static Map<String, String> mapPropsForTrackEvent(String documentKey, String userId, String productId) {
+    public static Map<String, String> mapPropsForTrackEvent(TrackEventInput trackEventInput) {
         Map<String, String> propertiesMap = new HashMap<>();
-        Optional.ofNullable(documentKey).ifPresent(value -> propertiesMap.put("documentKey", value));
-        Optional.ofNullable(userId).ifPresent(value -> propertiesMap.put("userId", value));
-        Optional.ofNullable(productId).ifPresent(value -> propertiesMap.put("productId", value));
+        Optional.ofNullable(trackEventInput.getDocumentKey()).ifPresent(value -> propertiesMap.put("documentKey", value));
+        Optional.ofNullable(trackEventInput.getUserId()).ifPresent(value -> propertiesMap.put("userId", value));
+        Optional.ofNullable(trackEventInput.getProductId()).ifPresent(value -> propertiesMap.put("productId", value));
+        Optional.ofNullable(trackEventInput.getInstitutionId()).ifPresent(value -> propertiesMap.put("institutionId", value));
+        Optional.ofNullable(trackEventInput.getException()).ifPresent(value -> propertiesMap.put("exec", value));
         return propertiesMap;
     }
 }

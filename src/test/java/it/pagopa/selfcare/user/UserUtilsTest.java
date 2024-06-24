@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.user;
 
-import it.pagopa.selfcare.user.UserUtils;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
+import it.pagopa.selfcare.user.model.TrackEventInput;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import org.junit.jupiter.api.Test;
 
@@ -9,9 +9,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class UserUtilsTest {
 
@@ -57,6 +57,23 @@ public class UserUtilsTest {
 
         Collection<OnboardedProduct> actuals = UserUtils.groupingProductAndReturnMinStateProduct(products);
         assertEquals(2, actuals.size());
+    }
+
+    @Test
+    void mapPropsForTrackEvent() {
+
+        TrackEventInput trackEventInput = TrackEventInput.builder()
+                .documentKey("documentKey")
+                .userId("userId")
+                .productId("productId")
+                .institutionId("institutionId")
+                .build();
+
+        Map<String, String> maps = UserUtils.mapPropsForTrackEvent(trackEventInput);
+        assertTrue(maps.containsKey("documentKey"));
+        assertTrue(maps.containsKey("userId"));
+        assertTrue(maps.containsKey("institutionId"));
+        assertTrue(maps.containsKey("productId"));
     }
 
     OnboardedProduct dummyOnboardedProduct(String productRole, OnboardedProductState state, int day) {
