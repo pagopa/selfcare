@@ -20,6 +20,7 @@ import it.pagopa.selfcare.user.client.EventHubRestClient;
 import it.pagopa.selfcare.user.event.entity.UserInstitution;
 import it.pagopa.selfcare.user.event.mapper.NotificationMapper;
 import it.pagopa.selfcare.user.event.repository.UserInstitutionRepository;
+import it.pagopa.selfcare.user.model.TrackEventInput;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
@@ -127,7 +128,7 @@ public class UserInstitutionCdcService {
                 this::consumerUserInstitutionRepositoryEvent,
                 failure -> {
                     log.error("Error during subscribe collection, exception: {} , message: {}", failure.toString(), failure.getMessage());
-                    telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(failure.getClass().toString(), null,null),  Map.of(USER_INFO_UPDATE_FAILURE, 1D));
+                    telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(TrackEventInput.builder().exception(failure.getClass().toString()).build()),  Map.of(USER_INFO_UPDATE_FAILURE, 1D));
                     Quarkus.asyncExit();
                 });
 
@@ -136,7 +137,7 @@ public class UserInstitutionCdcService {
                     this::consumerToSendScUserEvent,
                     failure -> {
                         log.error("Error during subscribe collection, exception: {} , message: {}", failure.toString(), failure.getMessage());
-                        telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(failure.getClass().toString(), null,null), Map.of(EVENTS_USER_INSTITUTION_FAILURE, 1D));
+                        telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(TrackEventInput.builder().exception(failure.getClass().toString()).build()), Map.of(EVENTS_USER_INSTITUTION_FAILURE, 1D));
                         Quarkus.asyncExit();
                     });
         }
@@ -165,11 +166,11 @@ public class UserInstitutionCdcService {
                         result -> {
                             log.info("UserInfo collection successfully updated from UserInstitution document having id: {}", userInstitutionId);
                             updateLastResumeToken(document.getResumeToken());
-                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(userInstitutionId, userInstitutionChanged.getUserId(), null), Map.of(USER_INFO_UPDATE_SUCCESS, 1D));
+                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userInstitutionChanged, null)), Map.of(USER_INFO_UPDATE_SUCCESS, 1D));
                         },
                         failure -> {
                             log.error("Error during UserInfo collection updating, from UserInstitution document having id: {} , message: {}", userInstitutionId, failure.getMessage());
-                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(userInstitutionId, userInstitutionChanged.getUserId(), null), Map.of(USER_INFO_UPDATE_FAILURE, 1D));
+                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userInstitutionChanged, null)), Map.of(USER_INFO_UPDATE_FAILURE, 1D));
                         });
     }
 
@@ -198,23 +199,32 @@ public class UserInstitutionCdcService {
                 .onItem().transformToUni(userResource -> Multi.createFrom().iterable(UserUtils.groupingProductAndReturnMinStateProduct(userInstitutionChanged.getProducts()))
                         .map(onboardedProduct -> notificationMapper.toUserNotificationToSend(userInstitutionChanged, onboardedProduct, userResource))
                         .onItem().transformToUniAndMerge(userNotificationToSend -> eventHubRestClient.sendMessage(userNotificationToSend)
-                            .onItem().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(userInstitutionChanged.getId().toHexString(), userInstitutionChanged.getUserId(), userNotificationToSend.getProductId()),  Map.of(EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS, 1D)))
-                            .onFailure().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(userInstitutionChanged.getId().toHexString(), userInstitutionChanged.getUserId(), userNotificationToSend.getProductId()),  Map.of(EVENTS_USER_INSTITUTION_PRODUCT_FAILURE, 1D))))
+                            .onItem().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userInstitutionChanged, userNotificationToSend.getProductId())),  Map.of(EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS, 1D)))
+                            .onFailure().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userInstitutionChanged, userNotificationToSend.getProductId())),  Map.of(EVENTS_USER_INSTITUTION_PRODUCT_FAILURE, 1D))))
                         .toUni()
                 )
                 .subscribe().with(
                         result -> {
                             log.info("SendEvents successfully performed from UserInstitution document having id: {}", document.getDocumentKey().toJson());
-                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(userInstitutionChanged.getId().toHexString(), userInstitutionChanged.getUserId(), null), Map.of(EVENTS_USER_INSTITUTION_SUCCESS, 1D));
+                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userInstitutionChanged, null)), Map.of(EVENTS_USER_INSTITUTION_SUCCESS, 1D));
                         },
                         failure -> {
                             log.error("Error during SendEvents from UserInstitution document having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
-                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(userInstitutionChanged.getId().toHexString(), userInstitutionChanged.getUserId(), null), Map.of(EVENTS_USER_INSTITUTION_FAILURE, 1D));
+                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userInstitutionChanged, null)), Map.of(EVENTS_USER_INSTITUTION_FAILURE, 1D));
                         });
     }
 
     private boolean checkIfIsRetryableException(Throwable throwable) {
         return throwable instanceof TimeoutException ||
                 (throwable instanceof WebApplicationException webApplicationException && webApplicationException.getResponse().getStatus() == 429);
+    }
+
+    private TrackEventInput toTrackEventInput(UserInstitution userInstitution, String productId) {
+        return TrackEventInput.builder()
+                .documentKey(userInstitution.getInstitutionId())
+                .userId(userInstitution.getUserId())
+                .institutionId(userInstitution.getInstitutionId())
+                .productId(productId)
+                .build();
     }
 }
