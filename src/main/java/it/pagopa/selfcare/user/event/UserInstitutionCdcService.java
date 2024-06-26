@@ -39,6 +39,7 @@ import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
 import static it.pagopa.selfcare.user.UserUtils.mapPropsForTrackEvent;
 import static it.pagopa.selfcare.user.event.constant.CdcStartAtConstant.*;
+import static it.pagopa.selfcare.user.model.TrackEventInput.toTrackEventInput;
 import static it.pagopa.selfcare.user.model.constants.EventsMetric.*;
 import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_CDC_NAME;
 import static java.util.Arrays.asList;
@@ -166,11 +167,11 @@ public class UserInstitutionCdcService {
                         result -> {
                             log.info("UserInfo collection successfully updated from UserInstitution document having id: {}", userInstitutionId);
                             updateLastResumeToken(document.getResumeToken());
-                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userInstitutionChanged, null)), Map.of(USER_INFO_UPDATE_SUCCESS, 1D));
+                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInputByUserInstitution(userInstitutionChanged)), Map.of(USER_INFO_UPDATE_SUCCESS, 1D));
                         },
                         failure -> {
                             log.error("Error during UserInfo collection updating, from UserInstitution document having id: {} , message: {}", userInstitutionId, failure.getMessage());
-                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userInstitutionChanged, null)), Map.of(USER_INFO_UPDATE_FAILURE, 1D));
+                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInputByUserInstitution(userInstitutionChanged)), Map.of(USER_INFO_UPDATE_FAILURE, 1D));
                         });
     }
 
@@ -191,7 +192,7 @@ public class UserInstitutionCdcService {
         assert document.getDocumentKey() != null;
         UserInstitution userInstitutionChanged = document.getFullDocument();
 
-        log.info("Starting consumerUserInstitutionRepositoryEvent ... ");
+        log.info("Starting consumerToSendScUserEvent ... ");
 
         userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitutionChanged.getUserId())
                 .onFailure(this::checkIfIsRetryableException)
@@ -199,18 +200,19 @@ public class UserInstitutionCdcService {
                 .onItem().transformToUni(userResource -> Multi.createFrom().iterable(UserUtils.groupingProductAndReturnMinStateProduct(userInstitutionChanged.getProducts()))
                         .map(onboardedProduct -> notificationMapper.toUserNotificationToSend(userInstitutionChanged, onboardedProduct, userResource))
                         .onItem().transformToUniAndMerge(userNotificationToSend -> eventHubRestClient.sendMessage(userNotificationToSend)
-                            .onItem().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userInstitutionChanged, userNotificationToSend.getProductId())),  Map.of(EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS, 1D)))
-                            .onFailure().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userInstitutionChanged, userNotificationToSend.getProductId())),  Map.of(EVENTS_USER_INSTITUTION_PRODUCT_FAILURE, 1D))))
+                            .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
+                            .onItem().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userNotificationToSend)),  Map.of(EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS, 1D)))
+                            .onFailure().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userNotificationToSend)),  Map.of(EVENTS_USER_INSTITUTION_PRODUCT_FAILURE, 1D))))
                         .toUni()
                 )
                 .subscribe().with(
                         result -> {
                             log.info("SendEvents successfully performed from UserInstitution document having id: {}", document.getDocumentKey().toJson());
-                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userInstitutionChanged, null)), Map.of(EVENTS_USER_INSTITUTION_SUCCESS, 1D));
+                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInputByUserInstitution(userInstitutionChanged)), Map.of(EVENTS_USER_INSTITUTION_SUCCESS, 1D));
                         },
                         failure -> {
                             log.error("Error during SendEvents from UserInstitution document having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
-                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userInstitutionChanged, null)), Map.of(EVENTS_USER_INSTITUTION_FAILURE, 1D));
+                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInputByUserInstitution(userInstitutionChanged)), Map.of(EVENTS_USER_INSTITUTION_FAILURE, 1D));
                         });
     }
 
@@ -219,12 +221,11 @@ public class UserInstitutionCdcService {
                 (throwable instanceof WebApplicationException webApplicationException && webApplicationException.getResponse().getStatus() == 429);
     }
 
-    private TrackEventInput toTrackEventInput(UserInstitution userInstitution, String productId) {
+    private TrackEventInput toTrackEventInputByUserInstitution(UserInstitution userInstitution) {
         return TrackEventInput.builder()
-                .documentKey(userInstitution.getInstitutionId())
+                .documentKey(userInstitution.getId().toHexString())
                 .userId(userInstitution.getUserId())
                 .institutionId(userInstitution.getInstitutionId())
-                .productId(productId)
                 .build();
     }
 }
