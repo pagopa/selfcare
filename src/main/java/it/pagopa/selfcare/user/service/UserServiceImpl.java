@@ -563,7 +563,7 @@ public class UserServiceImpl implements UserService {
                     String userIdToUse = userId != null ? userId : userInstitution.getUserId();
                     Uni<UserResource> userResourceUni = userRegistryService.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userIdToUse);
                     TrackEventInput trackEventInput = TrackEventInput.builder()
-                            .documentKey(userInstitution.getInstitutionId())
+                            .documentKey(userInstitution.getId().toHexString())
                             .userId(userIdToUse)
                             .institutionId(userInstitution.getInstitutionId())
                             .build();

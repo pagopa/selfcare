@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.user.UserUtils.mapPropsForTrackEvent;
 import static it.pagopa.selfcare.user.constant.TemplateMailConstant.*;
+import static it.pagopa.selfcare.user.model.TrackEventInput.toTrackEventInput;
 import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_PRODUCT_FAILURE;
 import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS;
 import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_NAME;
@@ -69,13 +70,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     }
 
     private Runnable trackTelemetryEvent(UserNotificationToSend userNotificationToSend, String metricsName) {
-        TrackEventInput trackEventInput = TrackEventInput.builder()
-                .documentKey(userNotificationToSend.getInstitutionId())
-                .userId(Optional.ofNullable(userNotificationToSend.getUser()).map(UserToNotify::getUserId).orElse(null))
-                .institutionId(userNotificationToSend.getInstitutionId())
-                .productId(userNotificationToSend.getProductId())
-                .build();
-        return () -> telemetryClient.trackEvent(EVENT_USER_MS_NAME, mapPropsForTrackEvent(trackEventInput), Map.of(metricsName, 1D));
+        return () -> telemetryClient.trackEvent(EVENT_USER_MS_NAME, mapPropsForTrackEvent(toTrackEventInput(userNotificationToSend)), Map.of(metricsName, 1D));
     }
 
     @Override
