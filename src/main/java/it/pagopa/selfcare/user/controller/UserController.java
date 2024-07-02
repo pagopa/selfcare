@@ -16,6 +16,7 @@ import it.pagopa.selfcare.user.model.UpdateUserRequest;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
+import it.pagopa.selfcare.user.service.utils.OPERATION_TYPE;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -29,6 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.ResponseStatus;
 
@@ -268,7 +271,10 @@ public class UserController {
      * @param userDto CreateUserDto
      */
     @Operation(summary = "The createOrUpdateByUserId function is used to update existing user adding userRole.")
-    @ResponseStatus(HttpStatus.SC_NO_CONTENT)
+    @APIResponses({
+            @APIResponse(responseCode = "200", description = "User created or updated!"),
+            @APIResponse(responseCode = "201", description = "User already has the active role for that product!"),
+    })
     @POST
     @Path("/{userId}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -278,7 +284,8 @@ public class UserController {
                                                 @Context SecurityContext ctx) {
         return readUserIdFromToken(ctx)
                 .onItem().transformToUni(loggedUser -> userService.createOrUpdateUserByUserId(userDto, userId, loggedUser))
-                .map(ignore -> Response.status(HttpStatus.SC_NO_CONTENT).build());
+                .onItem().ifNotNull().transform(ignore -> Response.status(HttpStatus.SC_CREATED).build())
+                .onItem().ifNull().continueWith(Response.status(HttpStatus.SC_OK).build());
 
     }
 
@@ -291,15 +298,21 @@ public class UserController {
      *
      * @param userDto CreateUserDto
      */
+    @APIResponses({
+            @APIResponse(responseCode = "200", description = "User created or updated!"),
+            @APIResponse(responseCode = "201", description = "User already has the active role for that product!"),
+    })
     @Operation(summary = "The createOrUpdateByFiscalCode function is used to create a new user or update an existing one.")
-    @ResponseStatus(HttpStatus.SC_OK)
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<String> createOrUpdateByFiscalCode(@Valid CreateUserDto userDto,
+    public Uni<Response> createOrUpdateByFiscalCode(@Valid CreateUserDto userDto,
                                                   @Context SecurityContext ctx) {
         return readUserIdFromToken(ctx)
-                .onItem().transformToUni(loggedUser -> userService.createOrUpdateUserByFiscalCode(userDto, loggedUser));
+                .onItem().transformToUni(loggedUser -> userService.createOrUpdateUserByFiscalCode(userDto, loggedUser))
+                .map(response -> Response
+                        .status(OPERATION_TYPE.CREATED_OR_UPDATED.equals(response.getOperationType()) ? HttpStatus.SC_CREATED : HttpStatus.SC_OK)
+                        .entity(response.getUserId()).build());
     }
 
     /**

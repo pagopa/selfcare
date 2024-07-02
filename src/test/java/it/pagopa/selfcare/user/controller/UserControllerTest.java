@@ -21,6 +21,7 @@ import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
+import it.pagopa.selfcare.user.service.utils.CreateOrUpdateUserByFiscalCodeResponse;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -532,8 +533,8 @@ class UserControllerTest {
         CreateUserDto userDto = buildCreateUserDto();
 
         // Mock the userService.createOrUpdateUser method
-        when(userService.createOrUpdateUserByFiscalCode(any(CreateUserDto.class), any(LoggedUser.class)))
-                .thenReturn(Uni.createFrom().nullItem());
+        when(userService.createOrUpdateUserByFiscalCode(any(CreateUserDto.class), any()))
+                .thenReturn(Uni.createFrom().item(CreateOrUpdateUserByFiscalCodeResponse.builder().build()));
 
         // Perform the API call
         given()
@@ -561,7 +562,7 @@ class UserControllerTest {
                 .when()
                 .contentType(ContentType.JSON)
                 .body(userDto)
-                .post("/")
+                .post()
                 .then()
                 .statusCode(400);
     }
@@ -574,8 +575,8 @@ class UserControllerTest {
 
 
         // Mock the userService.createOrUpdateUser method
-        when(userService.createOrUpdateUserByUserId(any(AddUserRoleDto.class), anyString(), any(LoggedUser.class)))
-                .thenReturn(Uni.createFrom().nullItem());
+        when(userService.createOrUpdateUserByUserId(any(AddUserRoleDto.class), anyString(), any()))
+                .thenReturn(Uni.createFrom().item("example"));
 
         // Perform the API call
         given()
@@ -584,7 +585,7 @@ class UserControllerTest {
                 .body(userDto)
                 .post("/userId")
                 .then()
-                .statusCode(204);
+                .statusCode(201);
     }
 
     @Test

@@ -14,6 +14,7 @@ import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
+import it.pagopa.selfcare.user.service.utils.CreateOrUpdateUserByFiscalCodeResponse;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import java.time.LocalDateTime;
@@ -49,9 +50,9 @@ public interface UserService {
 
     Uni<Void> updateUserProductStatus(String userId, String institutionId, String productId, OnboardedProductState status, String productRole, LoggedUser loggedUser);
 
-    Uni<String> createOrUpdateUserByFiscalCode(CreateUserDto userDto, LoggedUser loggedUser);
+    Uni<CreateOrUpdateUserByFiscalCodeResponse> createOrUpdateUserByFiscalCode(CreateUserDto userDto, LoggedUser loggedUser);
 
-    Uni<Void> createOrUpdateUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser);
+    Uni<String> createOrUpdateUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser);
 
     Multi<UserDataResponse> retrieveUsersData(String institutionId, String personId, List<String> roles, List<String> states, List<String> products, List<String> productRoles, String userId);
 

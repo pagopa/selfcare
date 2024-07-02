@@ -433,14 +433,13 @@
         },
         "responses" : {
           "200" : {
-            "description" : "OK",
+            "description" : "User created or updated!",
             "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "string"
-                }
-              }
+              "application/json" : { }
             }
+          },
+          "201" : {
+            "description" : "User already has the active role for that product!"
           },
           "401" : {
             "description" : "Not Authorized"
@@ -911,10 +910,13 @@
         },
         "responses" : {
           "200" : {
-            "description" : "OK",
+            "description" : "User created or updated!",
             "content" : {
               "application/json" : { }
             }
+          },
+          "201" : {
+            "description" : "User already has the active role for that product!"
           },
           "401" : {
             "description" : "Not Authorized"

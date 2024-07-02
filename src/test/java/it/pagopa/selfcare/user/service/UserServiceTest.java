@@ -33,6 +33,7 @@ import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.UserToNotify;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
+import it.pagopa.selfcare.user.service.utils.CreateOrUpdateUserByFiscalCodeResponse;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
@@ -744,11 +745,14 @@ class UserServiceTest {
         when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
 
         // Call the method
-        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
+        UniAssertSubscriber<CreateOrUpdateUserByFiscalCodeResponse> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
-        subscriber.awaitItem().assertItem(userId.toString());
+
+        CreateOrUpdateUserByFiscalCodeResponse response = subscriber.awaitItem().getItem();
+
+        assertEquals(userId.toString(),response.getUserId());
         verify(userRegistryApi).updateUsingPATCH(any(), any());
         verify(userInstitutionService).persistOrUpdate(any());
         verify(userInstitutionService).findByUserIdAndInstitutionId(any(), any());
@@ -788,12 +792,15 @@ class UserServiceTest {
         when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
 
         // Call the method
-        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
+        UniAssertSubscriber<CreateOrUpdateUserByFiscalCodeResponse> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         Assertions.assertEquals(4, userInstitution.getProducts().size());
         // Verify the result
-        subscriber.awaitItem().assertItem(userId.toString());
+
+        CreateOrUpdateUserByFiscalCodeResponse response = subscriber.awaitItem().getItem();
+
+        assertEquals(userId.toString(),response.getUserId());
         verify(userRegistryApi).updateUsingPATCH(any(), any());
         verify(userInstitutionService).persistOrUpdate(any());
         verify(userInstitutionService).findByUserIdAndInstitutionId(any(), any());
@@ -824,21 +831,28 @@ class UserServiceTest {
 
         // Mock external dependencies
         when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().failure(new WebClientApplicationException(HttpStatus.SC_NOT_FOUND)));
-        when(userRegistryApi.saveUsingPATCH(any())).thenReturn(Uni.createFrom().item(UserId.builder().id(UUID.randomUUID()).build()));
-        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(createUserInstitution()));
+        when(userRegistryApi.saveUsingPATCH(any())).thenReturn(Uni.createFrom().item(UserId.builder().id(UUID.fromString(userId.toString())).build()));
+        when(userInstitutionService.persistOrUpdate(any())).thenAnswer(awr -> {
+            UserInstitution saved = (UserInstitution) awr.getArguments()[0];
+            saved.setId(ObjectId.get());
+            return Uni.createFrom().item(saved);
+        });
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
         when(productService.getProduct(any())).thenReturn(product);
         when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
 
         // Call the method
-        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
+        UniAssertSubscriber<CreateOrUpdateUserByFiscalCodeResponse> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
-        subscriber.awaitItem().assertItem(userId.toString());
+
+        CreateOrUpdateUserByFiscalCodeResponse response = subscriber.awaitItem().getItem();
+
+        assertEquals(userId.toString(), response.getUserId());
         verify(userRegistryApi).saveUsingPATCH(any());
-        verify(userRegistryApi).findByIdUsingGET(any(), any());
+        verify(userRegistryApi).findByIdUsingGET(any(), eq(userId.toString()));
         verify(userInstitutionService).persistOrUpdate(any());
         verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(),any());
     }
@@ -859,7 +873,7 @@ class UserServiceTest {
         when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(createUserInstitution()));
 
         // Call the method
-        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
+        UniAssertSubscriber<CreateOrUpdateUserByFiscalCodeResponse> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
@@ -888,7 +902,7 @@ class UserServiceTest {
         when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().failure(new RuntimeException()));
 
         // Call the method
-        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
+        UniAssertSubscriber<CreateOrUpdateUserByFiscalCodeResponse> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
@@ -909,26 +923,16 @@ class UserServiceTest {
         addUserRoleProduct.setProductRoles(List.of("admin"));
         LoggedUser loggedUser = LoggedUser.builder().build();
 
-        Product product = new Product();
-        product.setDescription("description");
-
-        UserToNotify userToNotify = new UserToNotify();
-        userToNotify.setUserId(userId.toString());
-
-        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
-        userNotificationToSend.setUser(userToNotify);
-
-
         when(userRegistryApi.findByIdUsingGET(any(), eq("userId"))).thenReturn(Uni.createFrom().item(userResource));
         when(userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), addUserRoleDto.getInstitutionId())).thenReturn(Uni.createFrom().item(createUserInstitution()));
 
 
         // Call the method
-        UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
+        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
-        subscriber.assertFailedWith(InvalidRequestException.class, "User already has roles on Product test");
+        assertNull(subscriber.awaitItem().getItem());
     }
 
     @Test
@@ -950,11 +954,11 @@ class UserServiceTest {
         when(productService.getProduct(any())).thenReturn(product);
 
         // Call the method
-        UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
+        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
-        subscriber.assertFailedWith(InvalidRequestException.class);
+        assertNull(subscriber.awaitItem().getItem());
         verify(userRegistryApi).findByIdUsingGET(any(), eq("userId"));
     }
 
@@ -990,7 +994,7 @@ class UserServiceTest {
 
 
         // Call the method
-        UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
+        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
@@ -1029,7 +1033,7 @@ class UserServiceTest {
 
 
         // Call the method
-        UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
+        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
@@ -1051,7 +1055,7 @@ class UserServiceTest {
         when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().failure(new RuntimeException()));
 
         // Call the method
-        UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
+        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
