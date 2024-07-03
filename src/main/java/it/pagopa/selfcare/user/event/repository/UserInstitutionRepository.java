@@ -16,6 +16,8 @@ import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;
 
+import static java.util.function.Predicate.not;
+
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,13 +28,13 @@ public class UserInstitutionRepository {
     private final UserMapper userMapper;
 
     public Uni<Void> updateUser(UserInstitution userInstitution) {
-        OnboardedProductState state = retrieveStatusForGivenInstitution(userInstitution.getProducts());
+        Optional<OnboardedProductState> optState = retrieveStatusForGivenInstitution(userInstitution.getProducts());
         return UserInfo.findByIdOptional(userInstitution.getUserId())
                 .onItem().transformToUni(opt -> opt.map(entityBase -> {
-                            if (VALID_PRODUCT_STATE.contains(state)) {
+                            if (optState.isPresent() && VALID_PRODUCT_STATE.contains(optState.get())) {
                                 Optional<PartyRole> optRole = retrieveRoleForGivenInstitution(userInstitution.getProducts());
                                 return optRole.isPresent()
-                                    ? updateOrCreateNewUserInfo(opt.get(), userInstitution, optRole.get(), state)
+                                    ? updateOrCreateNewUserInfo(opt.get(), userInstitution, optRole.get(), optState.get())
                                     : Uni.createFrom().voidItem();
                             } else {
                                 return deleteInstitutionOrAllUserInfo(opt.get(), userInstitution);
@@ -135,11 +137,13 @@ public class UserInstitutionRepository {
 
     }
 
-    private OnboardedProductState retrieveStatusForGivenInstitution(List<OnboardedProduct> products) {
-        List<OnboardedProductState> list = products.stream()
-                .map(OnboardedProduct::getStatus)
-                .toList();
-        return Collections.min(list);
+    private Optional<OnboardedProductState> retrieveStatusForGivenInstitution(List<OnboardedProduct> products) {
+        return Optional.ofNullable(products)
+                .map(productsList -> productsList.stream()
+                    .map(OnboardedProduct::getStatus)
+                    .toList())
+                .filter(not(List::isEmpty))
+                .map(Collections::min);
     }
 }
 

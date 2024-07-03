@@ -185,6 +185,29 @@ class UserInstitutionRepositoryTest {
 
     @Test
     @RunOnVertxContext
+    void initOrderStreamWithNotFoundState(UniAsserter asserter){
+        UserInstitution userInstitution = constructUserInstitution("productId");
+        userInstitution.setProducts(null);
+
+        PanacheMock.mock(UserInfo.class);
+        UserInfo userInfo = retrieveUserInfo();
+        List<UserInstitutionRole> userInstitutionRoles = new ArrayList<>(userInfo.getInstitutions());
+        userInstitutionRoles.removeIf(userInstitutionRole -> userInstitutionRole.getInstitutionId().equalsIgnoreCase("institutionId3"));
+        userInfo.setInstitutions(userInstitutionRoles);
+        when(UserInfo.findByIdOptional(any()))
+                .thenReturn(Uni.createFrom().item(Optional.of(userInfo)));
+        mockPersistUserInfo(asserter);
+
+        userInstitutionRepository.updateUser(userInstitution)
+                .subscribe().withSubscriber(UniAssertSubscriber.create()).assertCompleted();
+
+        asserter.execute(() -> {
+            PanacheMock.verify(UserInfo.class, Mockito.atLeastOnce()).deleteById(userInfo.getUserId());
+        });
+    }
+
+    @Test
+    @RunOnVertxContext
     void initOrderStreamWithNotFoundValidStateAndInstitutionId(UniAsserter asserter){
         UserInstitution userInstitution = constructUserInstitution("productId");
         userInstitution.setInstitutionId("institutionId2");
