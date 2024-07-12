@@ -169,6 +169,7 @@ public class UserGroupV1Controller {
     @Tag(name = "external-v2")
     @Tag(name = "UserGroup")
     @Tag(name = "support-pnpg")
+    @Tag(name = "external-pnpg")
     @GetMapping()
     @ResponseStatus(HttpStatus.OK)
     @ApiOperation(value = "", notes = "${swagger.user-group.groups.api.getUserGroups}")
