@@ -23,12 +23,12 @@ import it.pagopa.selfcare.user.event.repository.UserInstitutionRepository;
 import it.pagopa.selfcare.user.model.TrackEventInput;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.BsonDocument;
 import org.bson.conversions.Bson;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 
 import java.time.Duration;
@@ -218,7 +218,7 @@ public class UserInstitutionCdcService {
 
     private boolean checkIfIsRetryableException(Throwable throwable) {
         return throwable instanceof TimeoutException ||
-                (throwable instanceof WebApplicationException webApplicationException && webApplicationException.getResponse().getStatus() == 429);
+                (throwable instanceof ClientWebApplicationException webApplicationException && webApplicationException.getResponse().getStatus() == 429);
     }
 
     private TrackEventInput toTrackEventInputByUserInstitution(UserInstitution userInstitution) {
