@@ -1,0 +1,25 @@
+{
+  "MANAGER": [
+    "Selc:UploadLogo",
+    "Selc:ViewBilling",
+    "Selc:RequestProductAccess"
+  ],
+  "DELEGATE": [
+    "Selc:UploadLogo",
+    "Selc:ViewBilling",
+    "Selc:RequestProductAccess"
+  ],
+  "SUB_DELEGATE": [
+    "Selc:UploadLogo",
+    "Selc:ViewBilling",
+    "Selc:RequestProductAccess"
+  ],
+  "ADMIN_EA": [
+    "Selc:UploadLogo",
+    "Selc:ViewBilling",
+    "Selc:RequestProductAccess"
+  ],
+  "OPERATOR": [
+    "Selc:ViewBilling"
+  ]
+}

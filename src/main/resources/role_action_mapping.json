@@ -9,7 +9,10 @@
     "Selc:ViewManagedInstitutions",
     "Selc:ViewDelegations",
     "Selc:ManageProductUsers",
-    "Selc:ManageProductGroups"
+    "Selc:ManageProductGroups",
+    "Selc:CreateDelegation",
+    "Selc:ViewInstitutionData",
+    "Selc:UpdateInstitutionData"
   ],
   "DELEGATE": [
     "Selc:UploadLogo",
@@ -21,7 +24,10 @@
     "Selc:ViewManagedInstitutions",
     "Selc:ViewDelegations",
     "Selc:ManageProductUsers",
-    "Selc:ManageProductGroups"
+    "Selc:ManageProductGroups",
+    "Selc:CreateDelegation",
+    "Selc:ViewInstitutionData",
+    "Selc:UpdateInstitutionData"
   ],
   "SUB_DELEGATE": [
     "Selc:UploadLogo",
@@ -33,7 +39,10 @@
     "Selc:ViewManagedInstitutions",
     "Selc:ViewDelegations",
     "Selc:ManageProductUsers",
-    "Selc:ManageProductGroups"
+    "Selc:ManageProductGroups",
+    "Selc:CreateDelegation",
+    "Selc:ViewInstitutionData",
+    "Selc:UpdateInstitutionData"
   ],
   "ADMIN_EA": [
     "Selc:UploadLogo",
@@ -44,10 +53,14 @@
     "Selc:ViewManagedInstitutions",
     "Selc:ViewDelegations",
     "Selc:ManageProductUsers",
-    "Selc:ManageProductGroups"
+    "Selc:ManageProductGroups",
+    "Selc:CreateDelegation",
+    "Selc:ViewInstitutionData",
+    "Selc:UpdateInstitutionData"
   ],
   "OPERATOR": [
     "Selc:ViewBilling",
-    "Selc:AccessProductBackoffice"
+    "Selc:AccessProductBackoffice",
+    "Selc:ViewInstitutionData"
   ]
 }

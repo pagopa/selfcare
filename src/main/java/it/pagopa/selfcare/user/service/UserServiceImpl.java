@@ -9,10 +9,8 @@ import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
-import it.pagopa.selfcare.user.controller.response.UserDataResponse;
-import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
-import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
-import it.pagopa.selfcare.user.controller.response.UserProductResponse;
+import it.pagopa.selfcare.user.controller.response.*;
+import it.pagopa.selfcare.user.controller.response.product.OnboardedProductWithActions;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
@@ -31,8 +29,10 @@ import it.pagopa.selfcare.user.model.constants.QueueEvent;
 import it.pagopa.selfcare.user.model.notification.PrepareNotificationData;
 import it.pagopa.selfcare.user.service.utils.CreateOrUpdateUserByFiscalCodeResponse;
 import it.pagopa.selfcare.user.service.utils.OPERATION_TYPE;
+import it.pagopa.selfcare.user.util.ActionMapRetriever;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -82,6 +82,9 @@ public class UserServiceImpl implements UserService {
     private final UserInstitutionService userInstitutionService;
     private final UserNotificationService userNotificationService;
     private final TelemetryClient telemetryClient;
+
+    @Inject
+    private final ActionMapRetriever actionMapRetriever;
 
     Supplier<String> randomMailId = () -> (MAIL_ID_PREFIX + UUID.randomUUID());
 
@@ -698,6 +701,37 @@ public class UserServiceImpl implements UserService {
     private Multi<UserNotificationToSend> buildAndSendKafkaNotifications(UserInstitution userInstitution, UserResource userResource){
         return Multi.createFrom().iterable(userUtils.buildUsersNotificationResponse(userInstitution, userResource))
                 .onItem().transformToUniAndMerge(userNotificationService::sendKafkaNotification);
+    }
+
+
+    @Override
+    public Uni<UserInstitutionWithActions> getUserInstitutionWithPermission(String userId, String institutionId, String productId) {
+        Map<String, Object> queryParameter;
+        var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
+        if (StringUtils.isNotEmpty(productId)) {
+            var productFilters = OnboardedProductFilter.builder().productId(productId).status(ACTIVE).build().constructMap();
+            queryParameter = userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters);
+        } else {
+            queryParameter = userInstitutionFilters;
+        }
+        return userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter)
+                .onItem().ifNull().failWith(new ResourceNotFoundException(String.format(USER_INSTITUTION_NOT_FOUND_ERROR.getMessage(), userId, institutionId), USER_INSTITUTION_NOT_FOUND_ERROR.getCode()))
+                .onItem().transformToUni(item ->  mapToUserInstitutionPermission(item, productId))
+                .onFailure().invoke(() -> log.error(String.format(USER_INSTITUTION_NOT_FOUND_ERROR.getMessage(), userId, institutionId)));
+    }
+
+    private Uni<UserInstitutionWithActions> mapToUserInstitutionPermission(it.pagopa.selfcare.user.entity.UserInstitution userInstitution, String productId) {
+        return Uni.createFrom().item(userInstitutionMapper.toUserInstitutionPermission(userInstitution))
+                .onItem().invoke(userInstitutionWithPermission ->
+                        userInstitutionWithPermission.setProducts(filterProductAndAddActions(userInstitutionWithPermission, productId)));
+    }
+
+    private List<OnboardedProductWithActions> filterProductAndAddActions(UserInstitutionWithActions userInstitutionWithActions, String productId) {
+        return userInstitutionWithActions.getProducts().stream()
+                .filter(onboardedProductWithActions -> ACTIVE.equals(onboardedProductWithActions.getStatus()))
+                .filter(onboardedProductWithActions -> Objects.isNull(productId) || productId.equalsIgnoreCase(onboardedProductWithActions.getProductId()))
+                .peek(onboardedProductWithActions -> onboardedProductWithActions.setUserProductActions(actionMapRetriever.getUserActionsMap().get(onboardedProductWithActions.getRole())))
+                .toList();
     }
 
 }

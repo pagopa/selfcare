@@ -13,6 +13,7 @@ import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.UpdateUserRequest;
+import it.pagopa.selfcare.user.controller.response.UserInstitutionWithActions;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
@@ -344,6 +345,16 @@ public class UserController {
                                                  @QueryParam(value = "productRoles") List<String> productRoles) {
 
         return userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userId);
+    }
+
+    @Operation(summary = "Retrieves userInstitution data with list of actions permitted for each user's product")
+    @GET
+    @Path("/{userId}/institutions/{institutionId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<UserInstitutionWithActions> getUserInstitutionWithPermission(@PathParam(value = "userId") String userId,
+                                                                            @PathParam(value = "institutionId") String institutionId,
+                                                                            @QueryParam(value = "productId") String productId) {
+        return userService.getUserInstitutionWithPermission(userId, institutionId, productId);
     }
 
     private Uni<LoggedUser> readUserIdFromToken(SecurityContext ctx) {

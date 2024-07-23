@@ -12,6 +12,7 @@ import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.model.LoggedUser;
+import it.pagopa.selfcare.user.controller.response.UserInstitutionWithActions;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.utils.CreateOrUpdateUserByFiscalCodeResponse;
@@ -59,4 +60,6 @@ public interface UserService {
     Uni<Void> updateInstitutionDescription(String institutionId, UpdateDescriptionDto descriptionDto);
 
     Uni<Void> sendEventsByDateAndUserIdAndInstitutionId(LocalDateTime fromDate, String institutionId, String userId);
+
+    Uni<UserInstitutionWithActions> getUserInstitutionWithPermission(String userId, String institutionId, String productId);
 }

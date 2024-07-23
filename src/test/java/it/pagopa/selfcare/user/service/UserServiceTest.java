@@ -25,6 +25,8 @@ import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.UserInstitutionRole;
+import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
+import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.mapper.UserMapper;
@@ -55,6 +57,7 @@ import static it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER;
 import static it.pagopa.selfcare.user.constant.CustomError.*;
 import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_SUCCESS;
 import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_NAME;
+import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.ACTIVE;
 import static it.pagopa.selfcare.user.service.UserServiceImpl.USERS_FIELD_LIST_WITHOUT_FISCAL_CODE;
 import static it.pagopa.selfcare.user.service.UserServiceImpl.USERS_WORKS_FIELD_LIST;
 import static org.junit.jupiter.api.Assertions.*;
@@ -1331,6 +1334,62 @@ class UserServiceTest {
 
         // Verify the interactions
         verify(userInstitutionService).updateInstitutionDescription(institutionId, descriptionDto);
+
+    }
+
+    @Test
+    void testGetUserInstitutionWithPermissionQueryNoResult() {
+        String institutionId = "institutionId";
+        String userId = "userId";
+
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap())).thenReturn(Uni.createFrom().nullItem());
+        userService.getUserInstitutionWithPermission(userId, institutionId, null)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create()).assertFailedWith(ResourceNotFoundException.class);
+
+        verify(userInstitutionService).retrieveFirstFilteredUserInstitution(anyMap());
+
+    }
+
+    @Test
+    void testGetUserInstitutionWithPermissionQueryWithoutProductId() {
+        String institutionId = "institutionId";
+        String userId = "userId";
+
+        Map<String, Object> queryParameter;
+        queryParameter = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
+
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter))
+                .thenReturn(Uni.createFrom().item(createUserInstitution()));
+
+        userService.getUserInstitutionWithPermission(userId, institutionId, null)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create()).assertCompleted();
+
+        verify(userInstitutionService).retrieveFirstFilteredUserInstitution(queryParameter);
+
+    }
+
+    @Test
+    void testGetUserInstitutionWithPermissionQueryWithProductId() {
+        String productId = "productId";
+        String institutionId = "institutionId";
+        String userId = "userId";
+
+        Map<String, Object> queryParameter;
+        Map<String, Object> userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
+        Map<String, Object> productFilters = OnboardedProductFilter.builder().productId(productId).status(ACTIVE).build().constructMap();
+        queryParameter = userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters);
+
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter))
+                .thenReturn(Uni.createFrom().item(createUserInstitution()));
+
+
+        userService.getUserInstitutionWithPermission(userId, institutionId, productId)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create()).assertCompleted();
+
+        verify(userInstitutionService).retrieveFirstFilteredUserInstitution(queryParameter);
 
     }
 }

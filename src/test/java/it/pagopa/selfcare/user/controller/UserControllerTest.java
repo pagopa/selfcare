@@ -10,14 +10,13 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.*;
+import it.pagopa.selfcare.user.controller.response.product.OnboardedProductWithActions;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
-import it.pagopa.selfcare.user.model.LoggedUser;
-import it.pagopa.selfcare.user.model.UpdateUserRequest;
-import it.pagopa.selfcare.user.model.UserNotificationToSend;
+import it.pagopa.selfcare.user.model.*;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
@@ -623,6 +622,29 @@ class UserControllerTest {
                 .statusCode(200);
     }
 
+    @Test
+    @TestSecurity(user = "userJwt")
+    void getUserInstitutionTest() {
+        String PATH_USER_ID = "userId";
+        String PATH_INSTITUTION_ID = "institutionId";
+        String PATH_GET_INSTITUTION_ID = "/{userId}/institutions/{institutionId}";
+
+        when(userService.getUserInstitutionWithPermission("userId", "institutionId", "productId"))
+                .thenReturn(Uni.createFrom().item(new UserInstitutionWithActions()));
+
+        Map<String, Object> queryParam = new HashMap<>();
+        queryParam.put("productId", "productId");
+
+        given()
+                .when()
+                .pathParam(PATH_USER_ID, "userId")
+                .pathParam(PATH_INSTITUTION_ID, "institutionId")
+                .queryParams(queryParam)
+                .contentType(ContentType.JSON)
+                .get(PATH_GET_INSTITUTION_ID)
+                .then()
+                .statusCode(200);
+    }
 
     private CreateUserDto buildCreateUserDto() {
         CreateUserDto userDto = new CreateUserDto();

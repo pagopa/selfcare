@@ -1067,6 +1067,54 @@
         } ]
       }
     },
+    "/users/{userId}/institutions/{institutionId}" : {
+      "get" : {
+        "tags" : [ "User" ],
+        "summary" : "Retrieves userInstitution data with list of actions permitted for each user's product",
+        "parameters" : [ {
+          "name" : "institutionId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "userId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productId",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserInstitutionWithActions"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/users/{userId}/institutions/{institutionId}/products/{productId}" : {
       "delete" : {
         "tags" : [ "User" ],
@@ -1219,6 +1267,44 @@
       "OnboardedProductState" : {
         "enum" : [ "ACTIVE", "PENDING", "TOBEVALIDATED", "SUSPENDED", "DELETED", "REJECTED" ],
         "type" : "string"
+      },
+      "OnboardedProductWithActions" : {
+        "type" : "object",
+        "properties" : {
+          "productId" : {
+            "type" : "string"
+          },
+          "tokenId" : {
+            "type" : "string"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/OnboardedProductState"
+          },
+          "productRole" : {
+            "type" : "string"
+          },
+          "role" : {
+            "$ref" : "#/components/schemas/PartyRole"
+          },
+          "env" : {
+            "$ref" : "#/components/schemas/Env"
+          },
+          "createdAt" : {
+            "$ref" : "#/components/schemas/LocalDateTime"
+          },
+          "updatedAt" : {
+            "$ref" : "#/components/schemas/LocalDateTime"
+          },
+          "delegationId" : {
+            "type" : "string"
+          },
+          "userProductActions" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
       },
       "PartyRole" : {
         "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR", "ADMIN_EA" ],
@@ -1464,6 +1550,32 @@
           },
           "status" : {
             "$ref" : "#/components/schemas/OnboardedProductState"
+          }
+        }
+      },
+      "UserInstitutionWithActions" : {
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "type" : "string"
+          },
+          "institutionId" : {
+            "type" : "string"
+          },
+          "institutionDescription" : {
+            "type" : "string"
+          },
+          "institutionRootName" : {
+            "type" : "string"
+          },
+          "products" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OnboardedProductWithActions"
+            }
+          },
+          "userMailUuid" : {
+            "type" : "string"
           }
         }
       },

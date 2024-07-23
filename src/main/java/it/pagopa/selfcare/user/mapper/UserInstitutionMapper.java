@@ -5,6 +5,7 @@ import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
+import it.pagopa.selfcare.user.controller.response.UserInstitutionWithActions;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import org.bson.types.ObjectId;
 import org.mapstruct.Mapper;
@@ -43,6 +44,8 @@ public interface UserInstitutionMapper {
     @Mapping(source = "addUserRoleDto.userMailUuid", target = "userMailUuid")
     @Mapping(target = "products", expression = "java(toNewOnboardedProductFromAddUserRole(addUserRoleDto.getProduct()))")
     UserInstitution toNewEntity(AddUserRoleDto addUserRoleDto, String userId);
+
+    UserInstitutionWithActions toUserInstitutionPermission(it.pagopa.selfcare.user.entity.UserInstitution userInstitution);
 
 
     default List<OnboardedProduct> toNewOnboardedProduct(CreateUserDto.Product product) {
