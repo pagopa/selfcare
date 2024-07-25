@@ -5,7 +5,6 @@ import it.pagopa.selfcare.commons.web.model.mapper.ProblemMapper;
 import it.pagopa.selfcare.user_group.connector.exception.ResourceAlreadyExistsException;
 import it.pagopa.selfcare.user_group.connector.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user_group.connector.exception.ResourceUpdateException;
-import it.pagopa.selfcare.user_group.web.controller.UserGroupController;
 import it.pagopa.selfcare.user_group.web.controller.UserGroupV1Controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import static org.springframework.http.HttpStatus.*;
 
-@ControllerAdvice(assignableTypes = {UserGroupController.class, UserGroupV1Controller.class})
+@ControllerAdvice(assignableTypes = {UserGroupV1Controller.class})
 @Slf4j
 public class UserGroupExceptionHandler {
 
