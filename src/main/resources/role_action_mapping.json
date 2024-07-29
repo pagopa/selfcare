@@ -61,6 +61,7 @@
   "OPERATOR": [
     "Selc:ViewBilling",
     "Selc:AccessProductBackoffice",
-    "Selc:ViewInstitutionData"
+    "Selc:ViewInstitutionData",
+    "Selc:ListActiveProducts"
   ]
 }
