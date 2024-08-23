@@ -156,6 +156,8 @@ public class UserController {
     @PUT
     @Path(value = "/{id}/status")
     @Produces(MediaType.APPLICATION_JSON)
+    @Tag(name = "User")
+    @Tag(name = "internal-v1")
     public Uni<Response> updateUserStatus(@PathParam(value = "id") String userId,
                                           @QueryParam(value = "institutionId") String institutionId,
                                           @QueryParam(value = "productId") String productId,

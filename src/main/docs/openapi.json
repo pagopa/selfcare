@@ -20,6 +20,8 @@
   }, {
     "name" : "external-v2"
   }, {
+    "name" : "internal-v1"
+  }, {
     "name" : "support"
   }, {
     "name" : "support-pnpg"
@@ -782,7 +784,7 @@
     },
     "/users/{id}/status" : {
       "put" : {
-        "tags" : [ "User" ],
+        "tags" : [ "User", "internal-v1" ],
         "summary" : "Update user status with optional filter for institution, product, role and productRole",
         "parameters" : [ {
           "name" : "id",

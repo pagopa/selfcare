@@ -13,6 +13,7 @@ tags:
 - name: Institution
 - name: User
 - name: external-v2
+- name: internal-v1
 - name: support
 - name: support-pnpg
 paths:
@@ -546,6 +547,7 @@ paths:
     put:
       tags:
       - User
+      - internal-v1
       summary: "Update user status with optional filter for institution, product,\
         \ role and productRole"
       parameters:
