@@ -831,7 +831,7 @@
           "400" : {
             "description" : "Bad Request",
             "content" : {
-              "application/json" : {
+              "application/problem+json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/Problem"
                 }
@@ -841,7 +841,7 @@
           "401" : {
             "description" : "Not Authorized",
             "content" : {
-              "application/json" : {
+              "application/problem+json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/Problem"
                 }
@@ -851,7 +851,7 @@
           "403" : {
             "description" : "Forbidden",
             "content" : {
-              "application/json" : {
+              "application/problem+json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/Problem"
                 }
@@ -861,7 +861,7 @@
           "404" : {
             "description" : "Not Found",
             "content" : {
-              "application/json" : {
+              "application/problem+json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/Problem"
                 }
