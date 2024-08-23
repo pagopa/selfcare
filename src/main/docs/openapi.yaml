@@ -577,14 +577,32 @@ paths:
         schema:
           $ref: "#/components/schemas/OnboardedProductState"
       responses:
-        "200":
-          description: OK
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
           content:
-            application/json: {}
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "401":
           description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "403":
-          description: Not Allowed
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
       security:
       - SecurityScheme: []
   /users/{id}/user-registry:
@@ -871,6 +889,13 @@ components:
       - COLL
       - PROD
       type: string
+    InvalidParam:
+      type: object
+      properties:
+        name:
+          type: string
+        reason:
+          type: string
     LocalDateTime:
       format: date-time
       type: string
@@ -943,6 +968,24 @@ components:
       - ADMIN
       - ANY
       type: string
+    Problem:
+      type: object
+      properties:
+        detail:
+          type: string
+        instance:
+          type: string
+        invalidParams:
+          type: array
+          items:
+            $ref: "#/components/schemas/InvalidParam"
+        status:
+          format: int32
+          type: integer
+        title:
+          type: string
+        type:
+          type: string
     Product:
       required:
       - productId

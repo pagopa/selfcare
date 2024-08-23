@@ -2,17 +2,13 @@ package it.pagopa.selfcare.user.exception.handler;
 
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
-import it.pagopa.selfcare.user.model.error.Problem;
-import it.pagopa.selfcare.user.model.error.ProblemError;
 import jakarta.ws.rs.core.Response;
 import org.apache.http.HttpStatus;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
+import org.openapi.quarkus.user_registry_json.model.Problem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 public class ExceptionHandler {
@@ -35,23 +31,7 @@ public class ExceptionHandler {
     @ServerExceptionMapper
     public Response toResponse(ResourceNotFoundException exception) {
         LOGGER.error("{}: {}", SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
-        Problem problem = createProblem(exception.getMessage(), HttpStatus.SC_NOT_FOUND, exception.getCode());
+        Problem problem = new Problem(exception.getMessage(), null, null, HttpStatus.SC_NOT_FOUND, exception.getMessage(), null);
         return Response.status(Response.Status.NOT_FOUND).entity(problem).build();
-    }
-
-    private Problem createProblem(String errorMessage, Integer status, String code) {
-        Problem problem = new Problem();
-        problem.setStatus(status);
-        problem.setErrors(createProblemError(errorMessage,code));
-        return problem;
-    }
-
-    private List<ProblemError> createProblemError(String message, String code) {
-        List<ProblemError> list = new ArrayList<>();
-        list.add(ProblemError.builder()
-                .code(code)
-                .detail(message)
-                .build());
-        return list;
     }
 }

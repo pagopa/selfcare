@@ -13,7 +13,6 @@ import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.UpdateUserRequest;
-import it.pagopa.selfcare.user.controller.response.UserInstitutionWithActions;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
@@ -30,11 +29,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.ResponseStatus;
+import org.openapi.quarkus.user_registry_json.model.Problem;
 
 import java.util.List;
 
@@ -153,6 +155,13 @@ public class UserController {
      * @return A uni&lt;response&gt;
      */
     @Operation(summary = "Update user status with optional filter for institution, product, role and productRole")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "204", description = "No Content"),
+            @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class))),
+            @APIResponse(responseCode = "401", description = "Not Authorized", content = @Content(schema = @Schema(implementation = Problem.class))),
+            @APIResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(implementation = Problem.class))),
+            @APIResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class)))
+    })
     @PUT
     @Path(value = "/{id}/status")
     @Produces(MediaType.APPLICATION_JSON)
