@@ -192,7 +192,9 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     }
 
     private static String retrieveMail(UserResource user, UserInstitution institution) {
-        WorkContactResource certEmail = user.getWorkContacts().getOrDefault(institution.getUserMailUuid(), null);
+        WorkContactResource certEmail = Optional.ofNullable(user.getWorkContacts())
+                .map(wc -> wc.getOrDefault(institution.getUserMailUuid(), null))
+                .orElse(null);
         String email;
         if (certEmail == null || certEmail.getEmail() == null || StringUtils.isBlank(certEmail.getEmail().getValue())) {
             throw new InvalidRequestException("Missing mail for userId: " + user.getId());
