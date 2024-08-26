@@ -34,7 +34,7 @@ public class InstitutionController {
 
     private final UserService userService;
 
-    @Operation(summary = "The API retrieves user's info including details of roles on products")
+    @Operation(summary = "The API retrieves user's info including details of roles on products", operationId = "getInstitutionUsersUsingGET")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UserProductResponse.class, type = SchemaType.ARRAY), mediaType = "application/json")),
             @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),

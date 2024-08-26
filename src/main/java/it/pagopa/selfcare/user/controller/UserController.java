@@ -72,7 +72,7 @@ public class UserController {
      * @param productId     String
      * @return A uni&amp;lt;userresponse&amp;gt;
      */
-    @Operation(summary = "Retrieves user given userId and optional ProductId")
+    @Operation(summary = "Retrieves user given userId and optional ProductId" , operationId = "getUserInfoUsingGET")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UserResponse.class), mediaType = "application/json")),
             @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
@@ -161,7 +161,7 @@ public class UserController {
      * @param status        OnboardedProductState
      * @return A uni&lt;response&gt;
      */
-    @Operation(summary = "Update user status with optional filter for institution, product, role and productRole")
+    @Operation(summary = "Update user status with optional filter for institution, product, role and productRole", operationId = "updateUserStatusUsingPUT")
     @APIResponses(value = {
             @APIResponse(responseCode = "204", description = "No Content"),
             @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),

@@ -293,6 +293,7 @@
       "get" : {
         "tags" : [ "support", "support-pnpg", "Institution" ],
         "summary" : "The API retrieves user's info including details of roles on products",
+        "operationId" : "getInstitutionUsersUsingGET",
         "parameters" : [ {
           "name" : "institutionId",
           "in" : "path",
@@ -671,6 +672,7 @@
       "get" : {
         "tags" : [ "User", "external-v2", "support" ],
         "summary" : "Retrieves user given userId and optional ProductId",
+        "operationId" : "getUserInfoUsingGET",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -854,6 +856,7 @@
       "put" : {
         "tags" : [ "User", "internal-v1" ],
         "summary" : "Update user status with optional filter for institution, product, role and productRole",
+        "operationId" : "updateUserStatusUsingPUT",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
