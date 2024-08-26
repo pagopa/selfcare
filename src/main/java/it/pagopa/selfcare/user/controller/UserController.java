@@ -73,6 +73,13 @@ public class UserController {
      * @return A uni&amp;lt;userresponse&amp;gt;
      */
     @Operation(summary = "Retrieves user given userId and optional ProductId")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UserResponse.class), mediaType = "application/json")),
+            @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "401", description = "Not Authorized", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
+    })
     @GET
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)

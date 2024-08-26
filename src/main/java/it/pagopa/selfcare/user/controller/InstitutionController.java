@@ -14,7 +14,13 @@ import jakarta.ws.rs.core.Response;
 import lombok.AllArgsConstructor;
 import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.openapi.quarkus.user_registry_json.model.Problem;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
@@ -29,6 +35,13 @@ public class InstitutionController {
     private final UserService userService;
 
     @Operation(summary = "The API retrieves user's info including details of roles on products")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UserProductResponse.class, type = SchemaType.ARRAY), mediaType = "application/json")),
+            @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "401", description = "Not Authorized", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
+    })
     @GET
     @Path(value = "/{institutionId}/users")
     @Tag(name = "support")
