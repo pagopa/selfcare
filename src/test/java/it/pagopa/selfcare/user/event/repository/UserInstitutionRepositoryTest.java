@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.user.event.repository;
 
+import io.quarkus.mongodb.panache.common.reactive.ReactivePanacheUpdate;
 import io.quarkus.panache.mock.PanacheMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
@@ -15,6 +16,7 @@ import it.pagopa.selfcare.user.event.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import jakarta.inject.Inject;
+import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -25,8 +27,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 @QuarkusTest
 @QuarkusTestResource(MongoTestResource.class)
@@ -71,15 +74,19 @@ class UserInstitutionRepositoryTest {
     void initOrderStreamWithFoundedUserIdAndInstitutionId(UniAsserter asserter){
         UserInstitution userInstitution = constructUserInstitution("productId");
         mockRetrieveUserInfoFounded(asserter);
-        mockPersistUserInfo(asserter);
+
         PanacheMock.mock(UserInfo.class);
+        ReactivePanacheUpdate updateMock = mock(ReactivePanacheUpdate.class);
+        when(UserInfo.update(any(Document.class))).thenReturn(updateMock);
+        when(updateMock.where(any(Document.class))).thenReturn(Uni.createFrom().item(1L));
+
         when(UserInfo.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(retrieveUserInfo())));
         userInstitutionRepository.updateUser(userInstitution)
                 .subscribe().withSubscriber(UniAssertSubscriber.create()).assertCompleted();
 
         asserter.execute(() -> {
-            PanacheMock.verify(UserInfo.class, Mockito.atLeastOnce()).persistOrUpdate(Mockito.<UserInfo> any(), any());
+            PanacheMock.verify(UserInfo.class, Mockito.atLeastOnce()).update(any(Document.class));
         });
     }
 
@@ -88,15 +95,19 @@ class UserInstitutionRepositoryTest {
     void initOrderStreamWithFoundedUserId(UniAsserter asserter){
         UserInstitution userInstitution = constructUserInstitution("productId");
         userInstitution.setInstitutionId("institutionId2");
+
         PanacheMock.mock(UserInfo.class);
         when(UserInfo.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(retrieveUserInfo())));
-        mockPersistUserInfo(asserter);
+        ReactivePanacheUpdate updateMock = mock(ReactivePanacheUpdate.class);
+        when(UserInfo.update(any(Document.class))).thenReturn(updateMock);
+        when(updateMock.where(any(Document.class))).thenReturn(Uni.createFrom().item(1L));
+
         userInstitutionRepository.updateUser(userInstitution)
                 .subscribe().withSubscriber(UniAssertSubscriber.create()).assertCompleted();
 
         asserter.execute(() -> {
-            PanacheMock.verify(UserInfo.class, Mockito.atLeastOnce()).persistOrUpdate(Mockito.<UserInfo> any(), any());
+            PanacheMock.verify(UserInfo.class, Mockito.atLeastOnce()).update(any(Document.class));
         });
     }
 
@@ -105,17 +116,23 @@ class UserInstitutionRepositoryTest {
     void initOrderStreamWithFoundedUserIdAndInstitutionEmpty(UniAsserter asserter){
         UserInstitution userInstitution = constructUserInstitution("productId");
         userInstitution.setInstitutionId("institutionId2");
+
         PanacheMock.mock(UserInfo.class);
         UserInfo userInfo = new UserInfo();
         userInfo.setInstitutions(List.of());
         when(UserInfo.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(retrieveUserInfo())));
-        mockPersistUserInfo(asserter);
+        ReactivePanacheUpdate updateMock = mock(ReactivePanacheUpdate.class);
+        when(UserInfo.update(any(Document.class))).thenReturn(updateMock);
+        when(updateMock.where(any(Document.class))).thenReturn(Uni.createFrom().item(1L));
+
+
         userInstitutionRepository.updateUser(userInstitution)
                 .subscribe().withSubscriber(UniAssertSubscriber.create()).assertCompleted();
 
         asserter.execute(() -> {
-            PanacheMock.verify(UserInfo.class, Mockito.atLeastOnce()).persistOrUpdate(Mockito.<UserInfo> any(), any());
+            PanacheMock.verify(UserInfo.class, Mockito.atLeastOnce()).update(any(Document.class));
+            verify(updateMock, times(1)).where(any(String.class),any(Object.class));
         });
 
     }
@@ -132,7 +149,7 @@ class UserInstitutionRepositoryTest {
 
         asserter.execute(() -> {
             ArgumentCaptor<UserInfo> argumentCaptor = ArgumentCaptor.forClass(UserInfo.class);
-            PanacheMock.verify(UserInfo.class, Mockito.atLeastOnce()).persistOrUpdate(argumentCaptor.capture(), any());
+            PanacheMock.verify(UserInfo.class, Mockito.atLeastOnce()).persist(argumentCaptor.capture(), any());
             assertEquals(1, argumentCaptor.getValue().getInstitutions().size());
         });
     }
@@ -154,7 +171,7 @@ class UserInstitutionRepositoryTest {
 
         asserter.execute(() -> {
             ArgumentCaptor<UserInfo> argumentCaptor = ArgumentCaptor.forClass(UserInfo.class);
-            PanacheMock.verify(UserInfo.class, Mockito.atLeastOnce()).persistOrUpdate(argumentCaptor.capture(), any());
+            PanacheMock.verify(UserInfo.class, Mockito.atLeastOnce()).persist(argumentCaptor.capture(), any());
             assertEquals(1, argumentCaptor.getValue().getInstitutions().size());
             assertEquals(PartyRole.MANAGER, argumentCaptor.getValue().getInstitutions().get(0).getRole());
         });

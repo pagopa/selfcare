@@ -13,8 +13,12 @@ import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.bson.Document;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 import static java.util.function.Predicate.not;
 
@@ -28,13 +32,16 @@ public class UserInstitutionRepository {
     private final UserMapper userMapper;
 
     public Uni<Void> updateUser(UserInstitution userInstitution) {
-        Optional<OnboardedProductState> optState = retrieveStatusForGivenInstitution(userInstitution.getProducts());
+        Optional<OnboardedProductState> optStateToSet = retrieveStatusForGivenInstitution(userInstitution.getProducts());
         return UserInfo.findByIdOptional(userInstitution.getUserId())
-                .onItem().transformToUni(opt -> opt.map(entityBase -> {
-                            if (optState.isPresent() && VALID_PRODUCT_STATE.contains(optState.get())) {
-                                Optional<PartyRole> optRole = retrieveRoleForGivenInstitution(userInstitution.getProducts());
-                                return optRole.isPresent()
-                                    ? updateOrCreateNewUserInfo(opt.get(), userInstitution, optRole.get(), optState.get())
+                .onItem().transformToUni(opt -> opt
+                        .map(entityBase -> {
+                            // Check if user has a record with valid state and role to enter inside dashboard,
+                            // in case we must add or update institution reference record
+                            if (optStateToSet.isPresent() && VALID_PRODUCT_STATE.contains(optStateToSet.get())) {
+                                Optional<PartyRole> optRoleToSet = retrieveRoleForGivenInstitution(userInstitution.getProducts());
+                                return optRoleToSet.isPresent()
+                                    ? addOrUpdateUserInstitutionRole(opt.get(), userInstitution, optRoleToSet.get(), optStateToSet.get())
                                     : Uni.createFrom().voidItem();
                             } else {
                                 return deleteInstitutionOrAllUserInfo(opt.get(), userInstitution);
@@ -67,8 +74,11 @@ public class UserInstitutionRepository {
         userInfo.setUserId(userInstitution.getUserId());
         userInfo.setInstitutions(List.of(institutionRole));
 
-        return UserInfo.persistOrUpdate(userInfo)
+        // flow of new user must persist userInfo, if already exists it must be failed
+        return UserInfo.persist(userInfo)
                 .invoke(() -> log.info(String.format("createNewUserInfo for userId %s and institution %s",
+                        userInstitution.getUserId(),userInstitution.getInstitutionId())))
+                .onFailure().invoke(() -> log.error(String.format("createNewUserInfo failed for userId %s and institution %s",
                         userInstitution.getUserId(),userInstitution.getInstitutionId())))
                 .replaceWith(Uni.createFrom().voidItem());
     }
@@ -94,38 +104,60 @@ public class UserInstitutionRepository {
                 });
     }
 
-    private Uni<Void> updateOrCreateNewUserInfo(ReactivePanacheMongoEntityBase entityBase, UserInstitution userInstitution, PartyRole role, OnboardedProductState state) {
+    private Uni<Void> addOrUpdateUserInstitutionRole(ReactivePanacheMongoEntityBase entityBase, UserInstitution userInstitution, PartyRole role, OnboardedProductState state) {
         return Uni.createFrom().item((UserInfo) entityBase)
-                .map(userInfo -> replaceOrAddInstitution(userInfo, userInstitution, role, state))
-                .flatMap(userInfo -> UserInfo.persistOrUpdate(userInfo));
+                .onItem().transformToUni(userInfo -> {
+
+                    // If the institution record already exists we must update the record using $set,
+                    // otherwise we must add a new record inside array using $addToSet
+                    Document institutionRoleAsDocument = getUserInstitutionRoleAsDocument(userInstitution, role, state);
+
+                    return userInfo.getInstitutions().stream()
+                            .filter(userInstitutionRole -> userInstitution.getInstitutionId().equalsIgnoreCase(userInstitutionRole.getInstitutionId()))
+                            .findAny()
+                            .map(userInstitutionRole -> updateUserInstitutionRole(userInstitution.getUserId(), userInstitution.getInstitutionId(), institutionRoleAsDocument))
+                            .orElse(addUserInstitutionRole(userInstitution.getUserId(), institutionRoleAsDocument));
+
+                })
+                .onItem().transformToUni(reactiveUpdate -> {
+                    if(reactiveUpdate != 1L) {
+                        log.error(String.format("addOrUpdateUserInstitutionRole failed for userId %s and institution %s",
+                                userInstitution.getUserId(),userInstitution.getInstitutionId()));
+                    }
+                    return Uni.createFrom().voidItem();
+                });
     }
 
-    private UserInfo replaceOrAddInstitution(UserInfo userInfo, UserInstitution userInstitution, PartyRole role, OnboardedProductState state) {
-        if (CollectionUtils.isEmpty(userInfo.getInstitutions())) {
-            userInfo.setInstitutions(new ArrayList<>());
-        }
+    private Uni<Long> updateUserInstitutionRole(String userId, String institutionId, Document institution){
+        Document updateAddToSet = new Document("$set", new Document("institutions.$", institution));
+        Document filter = new Document("_id", userId)
+                .append("institutions.institutionId", institutionId);
 
-        userInfo.getInstitutions().stream()
-                .filter(userInstitutionRole -> userInstitution.getInstitutionId().equalsIgnoreCase(userInstitutionRole.getInstitutionId()))
-                .findFirst()
-                .ifPresentOrElse(userInstitutionRole -> {
-                            userInstitutionRole.setRole(role);
-                            userInstitutionRole.setStatus(state);
-                            userInstitutionRole.setInstitutionName(userInstitution.getInstitutionDescription());
-                            userInstitutionRole.setInstitutionRootName(userInstitution.getInstitutionRootName());
-                            userInstitutionRole.setUserMailUuid(userInstitution.getUserMailUuid());
-                            log.info(String.format("replaceOrAddInstitution execution setting role for userId: %s, institutionId: %s, role: %s",
-                                    userInstitution.getUserId(), userInstitution.getInstitutionId(), role.name()));
-                        },
-                        () -> {
-                            List<UserInstitutionRole> roleList = new ArrayList<>(userInfo.getInstitutions());
-                            roleList.add(userMapper.toUserInstitutionRole(userInstitution, role, state));
-                            userInfo.setInstitutions(roleList);
-                            log.info(String.format("replaceOrAddInstitution execution adding role for userId: %s, institutionId: %s, role: %s",
-                                    userInstitution.getUserId(), userInstitution.getInstitutionId(), role.name()));
-                        });
+        return UserInfo
+                .update(updateAddToSet)
+                .where(filter);
+    }
 
-        return userInfo;
+    private Uni<Long> addUserInstitutionRole(String userId, Document institution){
+        Document updateAddToSet = new Document("$addToSet", new Document("institutions", institution));
+
+        return UserInfo
+                .update(updateAddToSet)
+                .where("_id", userId);
+    }
+
+    private static Document getUserInstitutionRoleAsDocument(UserInstitution userInstitution, PartyRole role, OnboardedProductState state) {
+        Document institution = new Document("institutionId", userInstitution.getInstitutionId())
+                .append("role", role)
+                .append("status", state);
+
+        Optional.ofNullable(userInstitution.getInstitutionDescription())
+                .ifPresent(value -> institution.append("institutionName", value));
+        Optional.ofNullable(userInstitution.getInstitutionRootName())
+                .ifPresent(value -> institution.append("institutionRootName", value));
+        Optional.ofNullable(userInstitution.getUserMailUuid())
+                .ifPresent(value -> institution.append("userMailUuid", value));
+        return institution;
     }
 
     private Optional<PartyRole> retrieveRoleForGivenInstitution(List<OnboardedProduct> products) {
