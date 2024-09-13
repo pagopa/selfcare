@@ -464,6 +464,7 @@ paths:
       - User
       - external-v2
       - support
+      - support-pnpg
       summary: Retrieves user given userId and optional ProductId
       operationId: getUserInfoUsingGET
       parameters:

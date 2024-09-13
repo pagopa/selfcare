@@ -670,7 +670,7 @@
     },
     "/users/{id}" : {
       "get" : {
-        "tags" : [ "User", "external-v2", "support" ],
+        "tags" : [ "User", "external-v2", "support", "support-pnpg" ],
         "summary" : "Retrieves user given userId and optional ProductId",
         "operationId" : "getUserInfoUsingGET",
         "parameters" : [ {
