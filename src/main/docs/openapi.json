@@ -31,6 +31,8 @@
       "get" : {
         "tags" : [ "User Permission Controller" ],
         "summary" : "Get permission for a user in an institution",
+        "description" : "Determines if the authenticated user possesses a specific permission within the given institution and product context.",
+        "operationId" : "getPermission",
         "parameters" : [ {
           "name" : "institutionId",
           "in" : "query",
@@ -77,7 +79,9 @@
     "/events/sc-users" : {
       "post" : {
         "tags" : [ "Events" ],
-        "summary" : "The API resend all the users's given an institutionId and a userId after the given fromDate",
+        "summary" : "Resend all user events based on institutionId, userId, and fromDate",
+        "description" : "Resends all events for a specific user within a given institution starting from the specified date and time. This endpoint allows administrators to trigger the reprocessing or notification of user-related events that occurred after the provided `fromDate`.",
+        "operationId" : "sendUsersEvents",
         "parameters" : [ {
           "name" : "fromDate",
           "in" : "query",
@@ -117,7 +121,9 @@
     "/institutions/{institutionId}" : {
       "put" : {
         "tags" : [ "Institution" ],
-        "summary" : "The API updates the description in all occurrences of userInstitution, given a certain institutionId.",
+        "summary" : "Update institution's description across all userInstitution records",
+        "description" : "Modifies the description field in all occurrences of `userInstitution` entities associated with a given institutionId. This ensures that the institution's descriptive information is consistently updated across all related user records.",
+        "operationId" : "updateInstitutionDescription",
         "parameters" : [ {
           "name" : "institutionId",
           "in" : "path",
@@ -157,7 +163,9 @@
     "/institutions/{institutionId}/products/{productId}/createdAt" : {
       "put" : {
         "tags" : [ "Institution" ],
-        "summary" : "The API updates user's onboarded product with createdAt passed in input",
+        "summary" : "Update user's onboarded product creation date",
+        "description" : "Updates the `createdAt` timestamp for a user's onboarded product based on the provided institutionId, productId, and list of userIds. This is useful for tracking when a user was onboarded to a specific product within an institution.",
+        "operationId" : "updateUserProductCreatedAt",
         "parameters" : [ {
           "name" : "institutionId",
           "in" : "path",
@@ -212,7 +220,9 @@
     "/institutions/{institutionId}/user-institutions" : {
       "get" : {
         "tags" : [ "Institution" ],
-        "summary" : "The API retrieves users with optional filters in input as query params",
+        "summary" : "Retrieve users with optional filters",
+        "description" : "Fetches a list of users associated with a specific institution, applying optional filters such as userId, roles, states, products, and productRoles. This allows for flexible querying based on various user attributes and statuses.",
+        "operationId" : "retrieveUsers",
         "parameters" : [ {
           "name" : "institutionId",
           "in" : "path",
@@ -292,7 +302,8 @@
     "/institutions/{institutionId}/users" : {
       "get" : {
         "tags" : [ "support", "support-pnpg", "Institution" ],
-        "summary" : "The API retrieves user's info including details of roles on products",
+        "summary" : "Retrieve user's information including product role details",
+        "description" : "Fetches detailed information about users associated with a specific institution, including their roles on various products. This endpoint is useful for administrators to obtain comprehensive user-role mappings within an institution.",
         "operationId" : "getInstitutionUsersUsingGET",
         "parameters" : [ {
           "name" : "institutionId",
@@ -365,7 +376,9 @@
     "/users" : {
       "get" : {
         "tags" : [ "User" ],
-        "summary" : "The API retrieves paged users with optional filters in input as query params",
+        "summary" : "Retrieve paged users with optional query filters",
+        "description" : "The API retrieves paged users with optional filters in input as query params",
+        "operationId" : "retrievePaginatedAndFilteredUser",
         "parameters" : [ {
           "name" : "institutionId",
           "in" : "query",
@@ -458,7 +471,9 @@
       },
       "post" : {
         "tags" : [ "User" ],
-        "summary" : "The createOrUpdateByFiscalCode function is used to create a new user or update an existing one.",
+        "summary" : "Create or update a user by fiscal code",
+        "description" : "The createOrUpdateByFiscalCode function is used to create a new user or update an existing one.",
+        "operationId" : "createOrUpdateByFiscalCode",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -493,7 +508,9 @@
     "/users/emails" : {
       "get" : {
         "tags" : [ "User" ],
-        "summary" : "The API retrieves Users' emails using institution id and product id",
+        "summary" : "Retrieve users' emails by institution ID and product ID",
+        "description" : "The API retrieves Users' emails using institution id and product id",
+        "operationId" : "getUsersEmailByInstitutionAndProduct",
         "parameters" : [ {
           "name" : "institutionId",
           "in" : "query",
@@ -538,7 +555,9 @@
     "/users/ids" : {
       "get" : {
         "tags" : [ "User" ],
-        "summary" : "Retrieve all users given their userIds",
+        "summary" : "Retrieve multiple users by their user IDs",
+        "description" : "Retrieve all users given their userIds",
+        "operationId" : "findAllByIds",
         "parameters" : [ {
           "name" : "userIds",
           "in" : "query",
@@ -578,7 +597,9 @@
     "/users/notification" : {
       "get" : {
         "tags" : [ "User" ],
-        "summary" : "Retrieve all SC-User for DataLake filtered by optional productId",
+        "summary" : "Retrieve all SC-Users for DataLake with optional product filter",
+        "description" : "Retrieve all SC-User for DataLake filtered by optional productId",
+        "operationId" : "getUsers",
         "parameters" : [ {
           "name" : "page",
           "in" : "query",
@@ -628,7 +649,9 @@
     "/users/search" : {
       "post" : {
         "tags" : [ "User" ],
-        "summary" : "Search user by fiscalCode",
+        "summary" : "Search for a user using fiscal code",
+        "description" : "Search user by fiscalCode",
+        "operationId" : "searchUserByFiscalCode",
         "parameters" : [ {
           "name" : "institutionId",
           "in" : "query",
@@ -671,7 +694,8 @@
     "/users/{id}" : {
       "get" : {
         "tags" : [ "User", "external-v2", "support", "support-pnpg" ],
-        "summary" : "Retrieves user given userId and optional ProductId",
+        "summary" : "Retrieve user information by userId and optional ProductId",
+        "description" : "Retrieves user given userId and optional ProductId",
         "operationId" : "getUserInfoUsingGET",
         "parameters" : [ {
           "name" : "id",
@@ -753,7 +777,9 @@
     "/users/{id}/details" : {
       "get" : {
         "tags" : [ "User" ],
-        "summary" : "Retrieves user's information from pdv: name, familyName, email, fiscalCode and workContacts",
+        "summary" : "Retrieve detailed user information from PDV by userId",
+        "description" : "Retrieves user's information from pdv: name, familyName, email, fiscalCode and workContacts",
+        "operationId" : "getUserDetailsById",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -800,7 +826,9 @@
     "/users/{id}/institution/{institutionId}/product/{productId}/status" : {
       "put" : {
         "tags" : [ "User" ],
-        "summary" : "Service to update user product status",
+        "summary" : "Update the status of a user's product",
+        "description" : "Service to update user product status",
+        "operationId" : "updateUserProductStatus",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -855,7 +883,8 @@
     "/users/{id}/status" : {
       "put" : {
         "tags" : [ "User", "internal-v1" ],
-        "summary" : "Update user status with optional filter for institution, product, role and productRole",
+        "summary" : "Update a user's product status with optional filters",
+        "description" : "Update user status with optional filter for institution, product, role and productRole",
         "operationId" : "updateUserStatusUsingPUT",
         "parameters" : [ {
           "name" : "id",
@@ -948,7 +977,9 @@
     "/users/{id}/user-registry" : {
       "put" : {
         "tags" : [ "User" ],
-        "summary" : "Service to update user in user-registry and send notification when user data gets updated",
+        "summary" : "Update user registry and send notification upon data update",
+        "description" : "Service to update user in user-registry and send notification when user data gets updated",
+        "operationId" : "updateUserRegistryAndSendNotification",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -994,7 +1025,9 @@
     "/users/{userId}" : {
       "post" : {
         "tags" : [ "User" ],
-        "summary" : "The createOrUpdateByUserId function is used to update existing user adding userRole.",
+        "summary" : "Update or create a user by userId with a new role",
+        "description" : "The createOrUpdateByUserId function is used to update existing user adding userRole.",
+        "operationId" : "createOrUpdateByUserId",
         "parameters" : [ {
           "name" : "userId",
           "in" : "path",
@@ -1037,7 +1070,9 @@
     "/users/{userId}/institution/{institutionId}" : {
       "get" : {
         "tags" : [ "User" ],
-        "summary" : "The retrieveUsers function is used to retrieve a list of users from the UserInstitution collection and userRegistry.\nAt first it try to retrieve a UserInstitution document associated with a logged user (admin)\nIf this userInstitution object is not null, so user has AdminRole, it try to retriew the userInstitutions filtered by given institutionId, roles, states, products and productRoles\nand optional given personId, otherwise it do the same query using the logged user id instead of personId.\nAfter that it retrieve personal user data, foreach userId retrieved, from userRegistry and return a stream of UserDataResponse objects containing the requested user data.",
+        "summary" : "Retrieve a list of users with optional filters and permissions",
+        "description" : "The retrieveUsers function is used to retrieve a list of users from the UserInstitution collection and userRegistry.\nAt first it try to retrieve a UserInstitution document associated with a logged user (admin)\nIf this userInstitution object is not null, so user has AdminRole, it try to retriew the userInstitutions filtered by given institutionId, roles, states, products and productRoles\nand optional given personId, otherwise it do the same query using the logged user id instead of personId.\nAfter that it retrieve personal user data, foreach userId retrieved, from userRegistry and return a stream of UserDataResponse objects containing the requested user data.",
+        "operationId" : "retrieveUsers",
         "parameters" : [ {
           "name" : "institutionId",
           "in" : "path",
@@ -1124,7 +1159,9 @@
     "/users/{userId}/institutions" : {
       "get" : {
         "tags" : [ "User" ],
-        "summary" : "Retrieves products info and role which the user is enabled",
+        "summary" : "Retrieve product information and user roles",
+        "description" : "Retrieves products info and role which the user is enabled",
+        "operationId" : "getUserProductsInfo",
         "parameters" : [ {
           "name" : "userId",
           "in" : "path",
@@ -1174,7 +1211,9 @@
     "/users/{userId}/institutions/{institutionId}" : {
       "get" : {
         "tags" : [ "User" ],
-        "summary" : "Retrieves userInstitution data with list of actions permitted for each user's product",
+        "summary" : "Retrieve userInstitution data with permitted actions for each product",
+        "description" : "Retrieves userInstitution data with list of actions permitted for each user's product",
+        "operationId" : "getUserInstitutionWithPermission",
         "parameters" : [ {
           "name" : "institutionId",
           "in" : "path",
@@ -1222,7 +1261,9 @@
     "/users/{userId}/institutions/{institutionId}/products/{productId}" : {
       "delete" : {
         "tags" : [ "User" ],
-        "summary" : "Delete logically the association institution and product",
+        "summary" : "Logically delete the association between institution and product",
+        "description" : "Delete logically the association institution and product",
+        "operationId" : "deleteProducts",
         "parameters" : [ {
           "name" : "institutionId",
           "in" : "path",

@@ -55,7 +55,8 @@ public class UserController {
     private final UserMapper userMapper;
     private final UserRegistryService userRegistryService;
 
-    @Operation(summary = "The API retrieves Users' emails using institution id and product id")
+    @Operation(description = "The API retrieves Users' emails using institution id and product id",
+            summary = "Retrieve users' emails by institution ID and product ID")
     @GET
     @Path(value = "/emails")
     @Produces(MediaType.APPLICATION_JSON)
@@ -72,7 +73,7 @@ public class UserController {
      * @param productId     String
      * @return A uni&amp;lt;userresponse&amp;gt;
      */
-    @Operation(summary = "Retrieves user given userId and optional ProductId" , operationId = "getUserInfoUsingGET")
+    @Operation(description = "Retrieves user given userId and optional ProductId", summary = "Retrieve user information by userId and optional ProductId", operationId = "getUserInfoUsingGET")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UserResponse.class), mediaType = "application/json")),
             @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
@@ -95,7 +96,7 @@ public class UserController {
                 .map(user -> userMapper.toUserResponse(user, institutionId));
     }
 
-    @Operation(summary = "Retrieves products info and role which the user is enabled")
+    @Operation(description = "Retrieves products info and role which the user is enabled", summary = "Retrieve product information and user roles")
     @GET
     @Path("/{userId}/institutions")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -113,7 +114,7 @@ public class UserController {
      * @param userId String
      * @return A uni UserDetailResponse
      */
-    @Operation(summary = "Retrieves user's information from pdv: name, familyName, email, fiscalCode and workContacts")
+    @Operation(description = "Retrieves user's information from pdv: name, familyName, email, fiscalCode and workContacts", summary = "Retrieve detailed user information from PDV by userId")
     @GET
     @Path("/{id}/details")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -124,7 +125,7 @@ public class UserController {
         return userService.getUserById(userId, institutionId, field);
     }
 
-    @Operation(summary = "Search user by fiscalCode")
+    @Operation(description = "Search user by fiscalCode", summary = "Search for a user using fiscal code")
     @POST
     @Path("/search")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -142,7 +143,7 @@ public class UserController {
      * @param productId     String
      * @return A uni&lt;void&gt;
      */
-    @Operation(summary = "Delete logically the association institution and product")
+    @Operation(description = "Delete logically the association institution and product", summary = "Logically delete the association between institution and product")
     @DELETE
     @Path(value = "/{userId}/institutions/{institutionId}/products/{productId}")
     public Uni<Void> deleteProducts(@PathParam(value = "userId") String userId,
@@ -162,7 +163,7 @@ public class UserController {
      * @param status        OnboardedProductState
      * @return A uni&lt;response&gt;
      */
-    @Operation(summary = "Update user status with optional filter for institution, product, role and productRole", operationId = "updateUserStatusUsingPUT")
+    @Operation(description = "Update user status with optional filter for institution, product, role and productRole", summary = "Update a user's product status with optional filters", operationId = "updateUserStatusUsingPUT")
     @APIResponses(value = {
             @APIResponse(responseCode = "204", description = "No Content"),
             @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
@@ -193,9 +194,7 @@ public class UserController {
      *
      * @param userIds List<String></String>
      */
-    @Operation(
-            summary = "Retrieve all users given their userIds"
-    )
+    @Operation(description = "Retrieve all users given their userIds", summary = "Retrieve multiple users by their user IDs")
     @GET
     @Path("/ids")
     @Produces(MediaType.APPLICATION_JSON)
@@ -203,7 +202,7 @@ public class UserController {
         return userService.findAllByIds(formatQueryParameterList(userIds));
     }
 
-    @Operation(summary = "Retrieve all SC-User for DataLake filtered by optional productId")
+    @Operation(description = "Retrieve all SC-User for DataLake filtered by optional productId", summary = "Retrieve all SC-Users for DataLake with optional product filter")
     @GET
     @Path(value = "/notification")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -221,7 +220,7 @@ public class UserController {
                 });
     }
 
-    @Operation(summary = "The API retrieves paged users with optional filters in input as query params")
+    @Operation(description = "The API retrieves paged users with optional filters in input as query params", summary = "Retrieve paged users with optional query filters")
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -243,7 +242,7 @@ public class UserController {
      * @param institutionId String
      * @return Uni&lt;response&gt;
      */
-    @Operation(summary = "Service to update user in user-registry and send notification when user data gets updated")
+    @Operation(description = "Service to update user in user-registry and send notification when user data gets updated", summary = "Update user registry and send notification upon data update")
     @ResponseStatus(HttpStatus.SC_NO_CONTENT)
     @PUT
     @Path("/{id}/user-registry")
@@ -267,7 +266,7 @@ public class UserController {
      * @param status        OnboardedProductState
      * @return Uni&lt;void&gt;
      */
-    @Operation(summary = "Service to update user product status")
+    @Operation(description = "Service to update user product status", summary = "Update the status of a user's product")
     @ResponseStatus(HttpStatus.SC_NO_CONTENT)
     @PUT
     @Path("/{id}/institution/{institutionId}/product/{productId}/status")
@@ -290,7 +289,7 @@ public class UserController {
      * @param userId  Sting
      * @param userDto CreateUserDto
      */
-    @Operation(summary = "The createOrUpdateByUserId function is used to update existing user adding userRole.")
+    @Operation(description = "The createOrUpdateByUserId function is used to update existing user adding userRole.", summary = "Update or create a user by userId with a new role")
     @APIResponses({
             @APIResponse(responseCode = "200", description = "User created or updated!"),
             @APIResponse(responseCode = "201", description = "User already has the active role for that product!"),
@@ -322,7 +321,7 @@ public class UserController {
             @APIResponse(responseCode = "200", description = "User created or updated!"),
             @APIResponse(responseCode = "201", description = "User already has the active role for that product!"),
     })
-    @Operation(summary = "The createOrUpdateByFiscalCode function is used to create a new user or update an existing one.")
+    @Operation(description = "The createOrUpdateByFiscalCode function is used to create a new user or update an existing one.", summary = "Create or update a user by fiscal code")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -347,11 +346,12 @@ public class UserController {
      * @param productRoles  A list of product roles, passed as a query parameter in the URL.
      * @return A stream of UserDataResponse objects containing the requested user data.
      */
-    @Operation(summary = "The retrieveUsers function is used to retrieve a list of users from the UserInstitution collection and userRegistry.\n" +
+    @Operation(description = "The retrieveUsers function is used to retrieve a list of users from the UserInstitution collection and userRegistry.\n" +
             "At first it try to retrieve a UserInstitution document associated with a logged user (admin)\n" +
             "If this userInstitution object is not null, so user has AdminRole, it try to retriew the userInstitutions filtered by given institutionId, roles, states, products and productRoles\n" +
             "and optional given personId, otherwise it do the same query using the logged user id instead of personId.\n" +
-            "After that it retrieve personal user data, foreach userId retrieved, from userRegistry and return a stream of UserDataResponse objects containing the requested user data.")
+            "After that it retrieve personal user data, foreach userId retrieved, from userRegistry and return a stream of UserDataResponse objects containing the requested user data.",
+            summary = "Retrieve a list of users with optional filters and permissions")
     @GET
     @Path(value = "/{userId}/institution/{institutionId}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -366,7 +366,7 @@ public class UserController {
         return userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userId);
     }
 
-    @Operation(summary = "Retrieves userInstitution data with list of actions permitted for each user's product")
+    @Operation(description = "Retrieves userInstitution data with list of actions permitted for each user's product", summary = "Retrieve userInstitution data with permitted actions for each product")
     @GET
     @Path("/{userId}/institutions/{institutionId}")
     @Produces(MediaType.APPLICATION_JSON)

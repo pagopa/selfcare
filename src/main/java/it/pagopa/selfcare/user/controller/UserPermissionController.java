@@ -5,9 +5,11 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.service.UserPermissionService;
 import it.pagopa.selfcare.user.util.UserUtils;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.SecurityContext;
@@ -33,7 +35,10 @@ public class UserPermissionController {
      * @return A Uni<Boolean> indicating whether the user has the specified
      *         permission.
      */
-    @Operation(summary = "Get permission for a user in an institution")
+    @Operation(
+            description = "Determines if the authenticated user possesses a specific permission within the given institution and product context.",
+            summary = "Get permission for a user in an institution"
+    )
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Boolean> getPermission(

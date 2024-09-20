@@ -22,7 +22,10 @@ import java.time.LocalDateTime;
 public class EventsController {
     private final UserService userService;
 
-    @Operation(summary = "The API resend all the users's given an institutionId and a userId after the given fromDate")
+    @Operation(
+            summary = "Resend all user events based on institutionId, userId, and fromDate",
+            description = "Resends all events for a specific user within a given institution starting from the specified date and time. This endpoint allows administrators to trigger the reprocessing or notification of user-related events that occurred after the provided `fromDate`."
+    )
     @POST
     @Path(value = "/sc-users")
     public Uni<Void> sendUsersEvents(@QueryParam(value = "institutionId") String institutionId,

@@ -34,7 +34,11 @@ public class InstitutionController {
 
     private final UserService userService;
 
-    @Operation(summary = "The API retrieves user's info including details of roles on products", operationId = "getInstitutionUsersUsingGET")
+    @Operation(
+            summary = "Retrieve user's information including product role details",
+            operationId = "getInstitutionUsersUsingGET",
+            description = "Fetches detailed information about users associated with a specific institution, including their roles on various products. This endpoint is useful for administrators to obtain comprehensive user-role mappings within an institution."
+    )
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UserProductResponse.class, type = SchemaType.ARRAY), mediaType = "application/json")),
             @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
@@ -52,7 +56,10 @@ public class InstitutionController {
         return userService.getUserProductsByInstitution(institutionId);
     }
 
-    @Operation(summary = "The API retrieves users with optional filters in input as query params")
+    @Operation(
+            summary = "Retrieve users with optional filters",
+            description = "Fetches a list of users associated with a specific institution, applying optional filters such as userId, roles, states, products, and productRoles. This allows for flexible querying based on various user attributes and statuses."
+    )
     @GET
     @Path(value = "/{institutionId}/user-institutions")
     @Produces(MediaType.APPLICATION_JSON)
@@ -65,7 +72,10 @@ public class InstitutionController {
         return userService.findAllUserInstitutions(institutionId, userId, roles, states, products, productRoles);
     }
 
-    @Operation(summary = "The API updates user's onboarded product with createdAt passed in input")
+    @Operation(
+            summary = "Update user's onboarded product creation date",
+            description = "Updates the `createdAt` timestamp for a user's onboarded product based on the provided institutionId, productId, and list of userIds. This is useful for tracking when a user was onboarded to a specific product within an institution."
+    )
     @PUT
     @Path(value = "/{institutionId}/products/{productId}/createdAt")
     @Produces(MediaType.APPLICATION_JSON)
@@ -79,7 +89,10 @@ public class InstitutionController {
                         .build());
     }
 
-    @Operation(summary = "The API updates the description in all occurrences of userInstitution, given a certain institutionId.")
+    @Operation(
+            summary = "Update institution's description across all userInstitution records",
+            description = "Modifies the description field in all occurrences of `userInstitution` entities associated with a given institutionId. This ensures that the institution's descriptive information is consistently updated across all related user records."
+    )
     @PUT
     @Path(value = "/{institutionId}")
     @Produces(MediaType.APPLICATION_JSON)
