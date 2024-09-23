@@ -15,22 +15,23 @@ public class ExceptionHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandler.class);
     public static final String SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER = "Something has gone wrong in the server";
+    public static final String PREFIX_LOGGER = "{}: {}";
 
     @ServerExceptionMapper
     public RestResponse<String> toResponse(InvalidRequestException exception) {
-        LOGGER.error("{}: {}", SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
+        LOGGER.warn(PREFIX_LOGGER, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
         return RestResponse.status(Response.Status.BAD_REQUEST, exception.getMessage());
     }
 
     @ServerExceptionMapper
     public RestResponse<String> toResponse(Exception exception) {
-        LOGGER.error("{}: {}", SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
+        LOGGER.error(PREFIX_LOGGER, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
         return RestResponse.status(Response.Status.INTERNAL_SERVER_ERROR, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER);
     }
 
     @ServerExceptionMapper
     public Response toResponse(ResourceNotFoundException exception) {
-        LOGGER.error("{}: {}", SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
+        LOGGER.warn(PREFIX_LOGGER, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
         Problem problem = new Problem(exception.getMessage(), null, null, HttpStatus.SC_NOT_FOUND, exception.getMessage(), null);
         return Response.status(Response.Status.NOT_FOUND).entity(problem).build();
     }

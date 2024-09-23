@@ -332,11 +332,11 @@ public class UserServiceImpl implements UserService {
                         .map(userInfo -> {
                             UserInfo filteredUserInfo = userUtils.filterInstitutionRoles(userInfo, finalStates, institutionId);
                             if (filteredUserInfo.getInstitutions() == null || filteredUserInfo.getInstitutions().isEmpty()) {
-                                throw new ResourceNotFoundException("");
+                                throw new ResourceNotFoundException(String.format("User with id %s and institution id %s not found!", userId, institutionId));
                             }
                             return filteredUserInfo;
                         })
-                        .orElseThrow(() -> new ResourceNotFoundException(""))
+                        .orElseThrow(() -> new ResourceNotFoundException(String.format("User with id %s not found!", userId)))
                 );
     }
 
