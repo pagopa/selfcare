@@ -719,9 +719,10 @@ class UserServiceTest {
     @Test
     void testCreateOrUpdateUser_UpdateUser_SuccessByFiscalCode() {
         // Prepare test data
+        final String fiscalCode = "fiscalCode";
         CreateUserDto createUserDto = new CreateUserDto();
         CreateUserDto.User user = new CreateUserDto.User();
-        user.setFiscalCode("fiscalCode");
+        user.setFiscalCode(fiscalCode + " ");
         CreateUserDto.Product createUserProduct = new  CreateUserDto.Product();
         createUserProduct.setProductId("prod-io");
         createUserProduct.setProductRoles(List.of("admin2"));
@@ -752,10 +753,15 @@ class UserServiceTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
-
         CreateOrUpdateUserByFiscalCodeResponse response = subscriber.awaitItem().getItem();
 
         assertEquals(userId.toString(),response.getUserId());
+
+        // Verify fiscalCode trim
+        ArgumentCaptor<UserSearchDto> captorFiscalCode = ArgumentCaptor.forClass(UserSearchDto.class);
+        verify(userRegistryApi).searchUsingPOST(any(), captorFiscalCode.capture());
+        assertEquals(fiscalCode, captorFiscalCode.getValue().getFiscalCode());
+
         verify(userRegistryApi).updateUsingPATCH(any(), any());
         verify(userInstitutionService).persistOrUpdate(any());
         verify(userInstitutionService).findByUserIdAndInstitutionId(any(), any());

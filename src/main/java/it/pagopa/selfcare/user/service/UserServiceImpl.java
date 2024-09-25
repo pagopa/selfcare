@@ -32,7 +32,6 @@ import it.pagopa.selfcare.user.service.utils.OPERATION_TYPE;
 import it.pagopa.selfcare.user.util.ActionMapRetriever;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -82,8 +81,6 @@ public class UserServiceImpl implements UserService {
     private final UserInstitutionService userInstitutionService;
     private final UserNotificationService userNotificationService;
     private final TelemetryClient telemetryClient;
-
-    @Inject
     private final ActionMapRetriever actionMapRetriever;
 
     Supplier<String> randomMailId = () -> (MAIL_ID_PREFIX + UUID.randomUUID());
@@ -353,7 +350,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public Uni<CreateOrUpdateUserByFiscalCodeResponse> createOrUpdateUserByFiscalCode(CreateUserDto userDto, LoggedUser loggedUser) {
-        return userRegistryService.searchUsingPOST(USERS_WORKS_FIELD_LIST, new UserSearchDto(userDto.getUser().getFiscalCode()))
+        return userRegistryService.searchUsingPOST(USERS_WORKS_FIELD_LIST, new UserSearchDto(userDto.getUser().getFiscalCode().trim()))
                 .onFailure(UserUtils::isUserNotFoundExceptionOnUserRegistry).recoverWithUni(throwable -> Uni.createFrom().failure(new ResourceNotFoundException(throwable.getMessage())))
                 .onItem().transformToUni(userResource -> updateUserOnUserRegistryAndUserInstitutionByFiscalCode(userResource, userDto,loggedUser))
                 .onFailure(ResourceNotFoundException.class).recoverWithUni(throwable -> createUserOnUserRegistryAndUserInstitution(userDto,loggedUser))
