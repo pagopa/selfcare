@@ -77,7 +77,7 @@ public class InstitutionController {
             description = "Updates the `createdAt` timestamp for a user's onboarded product based on the provided institutionId, productId, and list of userIds. This is useful for tracking when a user was onboarded to a specific product within an institution."
     )
     @PUT
-    @Path(value = "/{institutionId}/products/{productId}/createdAt")
+    @Path(value = "/{institutionId}/products/{productId}/created-at")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> updateUserProductCreatedAt(@PathParam(value = "institutionId") String institutionId,
                                                     @PathParam(value = "productId") String productId,

@@ -118,7 +118,7 @@ class InstitutionControllerTest {
                 .contentType(ContentType.JSON)
                 .pathParam("institutionId", institutionId)
                 .pathParam("productId", productId)
-                .put("/{institutionId}/products/{productId}/createdAt?userIds=userId&createdAt=" + now)
+                .put("/{institutionId}/products/{productId}/created-at?userIds=userId&createdAt=" + now)
                 .then()
                 .statusCode(204);
     }
@@ -137,7 +137,7 @@ class InstitutionControllerTest {
                 .contentType(ContentType.JSON)
                 .pathParam("institutionId", institutionId)
                 .pathParam("productId", productId)
-                .put("/{institutionId}/products/{productId}/createdAt?createdAt=" + now)
+                .put("/{institutionId}/products/{productId}/created-at?createdAt=" + now)
                 .then()
                 .statusCode(401);
     }
@@ -160,7 +160,7 @@ class InstitutionControllerTest {
                 .contentType(ContentType.JSON)
                 .pathParam("institutionId", institutionId)
                 .pathParam("productId", productId)
-                .put("/{institutionId}/products/{productId}/createdAt?userIds=" + userId + "&createdAt=" + now)
+                .put("/{institutionId}/products/{productId}/created-at?userIds=" + userId + "&createdAt=" + now)
                 .then()
                 .statusCode(404);
     }

@@ -18,6 +18,8 @@
   }, {
     "name" : "User"
   }, {
+    "name" : "external-pnpg"
+  }, {
     "name" : "external-v2"
   }, {
     "name" : "internal-v1"
@@ -160,7 +162,7 @@
         } ]
       }
     },
-    "/institutions/{institutionId}/products/{productId}/createdAt" : {
+    "/institutions/{institutionId}/products/{productId}/created-at" : {
       "put" : {
         "tags" : [ "Institution" ],
         "summary" : "Update user's onboarded product creation date",
@@ -693,7 +695,7 @@
     },
     "/users/{id}" : {
       "get" : {
-        "tags" : [ "User", "external-v2", "support", "support-pnpg" ],
+        "tags" : [ "User", "external-v2", "support", "support-pnpg", "external-pnpg" ],
         "summary" : "Retrieve user information by userId and optional ProductId",
         "description" : "Retrieves user given userId and optional ProductId",
         "operationId" : "getUserInfoUsingGET",

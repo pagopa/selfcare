@@ -12,6 +12,7 @@ tags:
 - name: Events
 - name: Institution
 - name: User
+- name: external-pnpg
 - name: external-v2
 - name: internal-v1
 - name: support
@@ -116,7 +117,7 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
-  /institutions/{institutionId}/products/{productId}/createdAt:
+  /institutions/{institutionId}/products/{productId}/created-at:
     put:
       tags:
       - Institution
@@ -501,6 +502,7 @@ paths:
       - external-v2
       - support
       - support-pnpg
+      - external-pnpg
       summary: Retrieve user information by userId and optional ProductId
       description: Retrieves user given userId and optional ProductId
       operationId: getUserInfoUsingGET

@@ -90,6 +90,7 @@ public class UserController {
     @Tag(name = "external-v2")
     @Tag(name = "support")
     @Tag(name = "support-pnpg")
+    @Tag(name = "external-pnpg")
     public Uni<UserResponse> getUserInfo(@PathParam(value = "id") String userId,
                                          @QueryParam(value = "institutionId") String institutionId,
                                          @QueryParam(value = "productId") String productId) {
