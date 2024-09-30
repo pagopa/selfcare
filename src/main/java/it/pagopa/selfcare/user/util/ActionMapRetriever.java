@@ -19,14 +19,14 @@ import java.util.Map;
 @Startup
 public class ActionMapRetriever {
 
-    private Map<PartyRole, List<String>> userActionsMap;
+    private Map<String, List<String>> userActionsMap;
     private static final String ACTIONS_FILE_PATH = "role_action_mapping.json";
 
     public ActionMapRetriever() {
         this.userActionsMap = retrieveActionsMap();
     }
 
-    private Map<PartyRole, List<String>>  retrieveActionsMap() {
+    private Map<String, List<String>>  retrieveActionsMap() {
         try (InputStream actionsFile = getClass().getClassLoader().getResourceAsStream(ACTIONS_FILE_PATH)) {
             assert actionsFile != null;
             byte[] jsonFile = actionsFile.readAllBytes();

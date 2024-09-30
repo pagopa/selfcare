@@ -18,10 +18,8 @@ import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
-import it.pagopa.selfcare.user.controller.response.UserDataResponse;
-import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
-import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
-import it.pagopa.selfcare.user.controller.response.UserProductResponse;
+import it.pagopa.selfcare.user.controller.response.*;
+import it.pagopa.selfcare.user.controller.response.product.OnboardedProductWithActions;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.UserInstitutionRole;
@@ -1370,10 +1368,40 @@ class UserServiceTest {
 
         userService.getUserInstitutionWithPermission(userId, institutionId, null)
                 .subscribe()
-                .withSubscriber(UniAssertSubscriber.create()).assertCompleted();
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(getUserInstitutionWithAction())
+                .assertCompleted();
 
         verify(userInstitutionService).retrieveFirstFilteredUserInstitution(queryParameter);
 
+    }
+
+    private UserInstitutionWithActions getUserInstitutionWithAction() {
+        UserInstitutionWithActions userInstitutionWithActions = new UserInstitutionWithActions();
+        OnboardedProductWithActions product = new OnboardedProductWithActions();
+        product.setRole(MANAGER.name());
+        product.setProductId("test");
+        product.setProductRole("admin");
+        product.setStatus(ACTIVE);
+        product.setUserProductActions(List.of("Selc:UploadLogo",
+                "Selc:ViewBilling",
+                "Selc:RequestProductAccess",
+                "Selc:ListAvailableProducts",
+                "Selc:ListActiveProducts",
+                "Selc:AccessProductBackoffice",
+                "Selc:ViewManagedInstitutions",
+                "Selc:ViewDelegations",
+                "Selc:ManageProductUsers",
+                "Selc:ManageProductGroups",
+                "Selc:CreateDelegation",
+                "Selc:ViewInstitutionData",
+                "Selc:UpdateInstitutionData"));
+        userInstitutionWithActions.setInstitutionRootName("institutionRootName");
+        userInstitutionWithActions.setUserMailUuid(workContractsKey);
+        userInstitutionWithActions.setInstitutionId("institutionId");
+        userInstitutionWithActions.setUserId(userId.toString());
+        userInstitutionWithActions.setProducts(List.of(product));
+        return userInstitutionWithActions;
     }
 
     @Test

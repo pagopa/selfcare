@@ -15,11 +15,11 @@ public class ActionMapRetrieverTest {
         // Then
         assertNotNull(actionMapRetriever.getUserActionsMap());
         assertEquals(5, actionMapRetriever.getUserActionsMap().size());
-        assertTrue(actionMapRetriever.getUserActionsMap().containsKey(PartyRole.MANAGER));
-        assertTrue(actionMapRetriever.getUserActionsMap().containsKey(PartyRole.DELEGATE));
-        assertTrue(actionMapRetriever.getUserActionsMap().containsKey(PartyRole.ADMIN_EA));
-        assertTrue(actionMapRetriever.getUserActionsMap().containsKey(PartyRole.SUB_DELEGATE));
-        assertTrue(actionMapRetriever.getUserActionsMap().containsKey(PartyRole.OPERATOR));
+        assertTrue(actionMapRetriever.getUserActionsMap().containsKey(PartyRole.MANAGER.name()));
+        assertTrue(actionMapRetriever.getUserActionsMap().containsKey(PartyRole.DELEGATE.name()));
+        assertTrue(actionMapRetriever.getUserActionsMap().containsKey(PartyRole.ADMIN_EA.name()));
+        assertTrue(actionMapRetriever.getUserActionsMap().containsKey(PartyRole.SUB_DELEGATE.name()));
+        assertTrue(actionMapRetriever.getUserActionsMap().containsKey(PartyRole.OPERATOR.name()));
 
     }
 }

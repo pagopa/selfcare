@@ -729,6 +729,7 @@ public class UserServiceImpl implements UserService {
         return userInstitutionWithActions.getProducts().stream()
                 .filter(onboardedProductWithActions -> ACTIVE.equals(onboardedProductWithActions.getStatus()))
                 .filter(onboardedProductWithActions -> Objects.isNull(productId) || productId.equalsIgnoreCase(onboardedProductWithActions.getProductId()))
+                .filter(onboardedProductWithActions -> StringUtils.isNotBlank(onboardedProductWithActions.getRole()))
                 .peek(onboardedProductWithActions -> onboardedProductWithActions.setUserProductActions(actionMapRetriever.getUserActionsMap().get(onboardedProductWithActions.getRole())))
                 .toList();
     }
