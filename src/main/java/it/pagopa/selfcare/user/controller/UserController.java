@@ -10,6 +10,7 @@ import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
+import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.UpdateUserRequest;
@@ -27,6 +28,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
@@ -37,7 +39,9 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.ResponseStatus;
 import org.openapi.quarkus.user_registry_json.model.Problem;
+import software.amazon.awssdk.utils.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
@@ -180,11 +184,12 @@ public class UserController {
     public Uni<Response> updateUserStatus(@PathParam(value = "id") String userId,
                                           @QueryParam(value = "institutionId") String institutionId,
                                           @QueryParam(value = "productId") String productId,
-                                          @QueryParam(value = "role") PartyRole role,
+                                          @Schema(description = "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA") @QueryParam(value = "role") String role,
                                           @QueryParam(value = "productRole") String productRole,
                                           @QueryParam(value = "status") OnboardedProductState status) {
         log.debug("updateProductStatus - userId: {}", userId);
-        return userService.updateUserStatusWithOptionalFilter(userId, institutionId, productId, role, productRole, status)
+        PartyRole partyRole = StringUtils.isNotBlank(role) ? PartyRole.valueOf(role) : null;
+        return userService.updateUserStatusWithOptionalFilter(userId, institutionId, productId, partyRole, productRole, status)
                 .map(ignore -> Response
                         .status(HttpStatus.SC_NO_CONTENT)
                         .build());
@@ -227,13 +232,19 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     public Multi<UserInstitutionResponse> retrievePaginatedAndFilteredUser(@QueryParam(value = "institutionId") String institutionId,
                                                                            @QueryParam(value = "userId") String userId,
-                                                                           @QueryParam(value = "roles") List<PartyRole> roles,
+                                                                           @QueryParam(value = "roles") List<String> roles,
                                                                            @QueryParam(value = "states") List<String> states,
                                                                            @QueryParam(value = "products") List<String> products,
                                                                            @QueryParam(value = "productRoles") List<String> productRoles,
                                                                            @QueryParam(value = "page") @DefaultValue("0") Integer page,
                                                                            @QueryParam(value = "size") @DefaultValue("100") Integer size) {
-        return userService.findPaginatedUserInstitutions(institutionId, userId, roles, states, products, productRoles, page, size);
+
+        List<PartyRole> roleList = null;
+        if(!CollectionUtils.isNullOrEmpty(roles)) {
+            roleList = retrievePartyRoleFromStringList(roles);
+        }
+
+        return userService.findPaginatedUserInstitutions(institutionId, userId, roleList, states, products, productRoles, page, size);
     }
 
     /**
@@ -398,6 +409,19 @@ public class UserController {
                     }
                     return Uni.createFrom().nullItem();
                 });
+    }
+
+    private static List<PartyRole> retrievePartyRoleFromStringList(List<String> roles) {
+        List<PartyRole> roleList = new ArrayList<>();
+        for (String role : roles) {
+            try {
+                roleList.add(PartyRole.valueOf(role));
+            } catch (IllegalArgumentException e) {
+                log.error("Invalid role value: {}", role);
+                throw new InvalidRequestException(String.format("Invalid role value: %s", role));
+            }
+        }
+        return roleList;
     }
 }
 

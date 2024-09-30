@@ -308,7 +308,7 @@ paths:
         schema:
           type: array
           items:
-            $ref: "#/components/schemas/PartyRole"
+            type: string
       - name: size
         in: query
         schema:
@@ -659,7 +659,9 @@ paths:
       - name: role
         in: query
         schema:
-          $ref: "#/components/schemas/PartyRole"
+          description: "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR,\
+            \ ADMIN_EA"
+          type: string
       - name: status
         in: query
         schema:
@@ -1042,7 +1044,9 @@ components:
         productRole:
           type: string
         role:
-          $ref: "#/components/schemas/PartyRole"
+          description: "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR,\
+            \ ADMIN_EA"
+          type: string
         env:
           $ref: "#/components/schemas/Env"
         createdAt:
@@ -1055,14 +1059,6 @@ components:
           type: array
           items:
             type: string
-    PartyRole:
-      enum:
-      - MANAGER
-      - DELEGATE
-      - SUB_DELEGATE
-      - OPERATOR
-      - ADMIN_EA
-      type: string
     PermissionTypeEnum:
       enum:
       - ADMIN
@@ -1097,7 +1093,9 @@ components:
           minLength: 1
           type: string
         role:
-          $ref: "#/components/schemas/PartyRole"
+          description: "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR,\
+            \ ADMIN_EA"
+          type: string
         tokenId:
           type: string
         productRoles:
@@ -1117,7 +1115,9 @@ components:
           minLength: 1
           type: string
         role:
-          $ref: "#/components/schemas/PartyRole"
+          description: "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR,\
+            \ ADMIN_EA"
+          type: string
         tokenId:
           type: string
         productRoles:

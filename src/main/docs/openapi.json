@@ -419,7 +419,7 @@
           "schema" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/PartyRole"
+              "type" : "string"
             }
           }
         }, {
@@ -917,7 +917,8 @@
           "name" : "role",
           "in" : "query",
           "schema" : {
-            "$ref" : "#/components/schemas/PartyRole"
+            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
+            "type" : "string"
           }
         }, {
           "name" : "status",
@@ -1442,7 +1443,8 @@
             "type" : "string"
           },
           "role" : {
-            "$ref" : "#/components/schemas/PartyRole"
+            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
+            "type" : "string"
           },
           "env" : {
             "$ref" : "#/components/schemas/Env"
@@ -1463,10 +1465,6 @@
             }
           }
         }
-      },
-      "PartyRole" : {
-        "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR", "ADMIN_EA" ],
-        "type" : "string"
       },
       "PermissionTypeEnum" : {
         "enum" : [ "ADMIN", "ANY" ],
@@ -1508,7 +1506,8 @@
             "type" : "string"
           },
           "role" : {
-            "$ref" : "#/components/schemas/PartyRole"
+            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
+            "type" : "string"
           },
           "tokenId" : {
             "type" : "string"
@@ -1533,7 +1532,8 @@
             "type" : "string"
           },
           "role" : {
-            "$ref" : "#/components/schemas/PartyRole"
+            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
+            "type" : "string"
           },
           "tokenId" : {
             "type" : "string"

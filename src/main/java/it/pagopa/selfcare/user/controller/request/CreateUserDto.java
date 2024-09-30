@@ -1,9 +1,9 @@
 package it.pagopa.selfcare.user.controller.request;
 
-import it.pagopa.selfcare.onboarding.common.PartyRole;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.List;
 
@@ -44,7 +44,8 @@ public class CreateUserDto {
         private String productId;
 
         @NotNull(message = "role is required")
-        private PartyRole role;
+        @Schema(description = "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA")
+        private String role;
 
         private String tokenId;
 

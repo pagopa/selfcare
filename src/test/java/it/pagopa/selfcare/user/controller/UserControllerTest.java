@@ -7,6 +7,7 @@ import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.*;
@@ -419,6 +420,59 @@ class UserControllerTest {
     }
 
     @Test
+    @TestSecurity(user = "userJwt")
+    void testGetUserInstitutionsWithValidRoles() {
+        Map<String, Object> queryParam = new HashMap<>();
+        queryParam.put("institutionId", "Id");
+        queryParam.put("userId", "userId");
+        queryParam.put("roles",List.of("MANAGER","DELEGATE"));
+        when(userService.findPaginatedUserInstitutions("Id",  "userId", List.of(PartyRole.MANAGER,PartyRole.DELEGATE), null, null, null, 0 , 100))
+                .thenReturn(Multi.createFrom().items(new UserInstitutionResponse()));
+
+        given()
+                .when()
+                .queryParams(queryParam)
+                .contentType(ContentType.JSON)
+                .get("")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testGetUserInstitutionsWithInvalidRole() {
+        Map<String, Object> queryParam = new HashMap<>();
+        queryParam.put("institutionId", "Id");
+        queryParam.put("userId", "userId");
+        queryParam.put("roles","ADMIN");
+
+        given()
+                .when()
+                .queryParams(queryParam)
+                .contentType(ContentType.JSON)
+                .get("")
+                .then()
+                .statusCode(400);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testGetUserInstitutionsWithInvalidRoles() {
+        Map<String, Object> queryParam = new HashMap<>();
+        queryParam.put("institutionId", "Id");
+        queryParam.put("userId", "userId");
+        queryParam.put("roles","MANAGER,ADMIN");
+
+        given()
+                .when()
+                .queryParams(queryParam)
+                .contentType(ContentType.JSON)
+                .get("")
+                .then()
+                .statusCode(400);
+    }
+
+    @Test
     void testUpdateUserRegistryAndSendNotificationToQueueUnauthorized() {
         given()
                 .when()
@@ -660,7 +714,7 @@ class UserControllerTest {
         userDto.setUser(user);
         CreateUserDto.Product product = new CreateUserDto.Product();
         product.setProductId("productId");
-        product.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER);
+        product.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER.name());
         product.setTokenId("tokenId");
         product.setProductRoles(Collections.singletonList("productRole"));
         userDto.setProduct(product);
@@ -680,7 +734,7 @@ class UserControllerTest {
         user.setInstitutionEmail("institutionEmail");
         AddUserRoleDto.Product product = new AddUserRoleDto.Product();
         product.setProductId("productId");
-        product.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER);
+        product.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER.name());
         product.setTokenId("tokenId");
         product.setProductRoles(Collections.singletonList("productRole"));
         product.setDelegationId("delegationId");

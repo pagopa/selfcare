@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.user.mapper;
 
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
@@ -7,6 +8,7 @@ import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionWithActions;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -58,7 +60,9 @@ public interface UserInstitutionMapper {
                     onboardedProduct.setProductId(product.getProductId());
                     onboardedProduct.setTokenId(product.getTokenId());
                     onboardedProduct.setProductRole(role);
-                    onboardedProduct.setRole(product.getRole());
+                    if(StringUtils.isNotBlank(product.getRole())) {
+                        onboardedProduct.setRole(PartyRole.valueOf(product.getRole()));
+                    }
                     return onboardedProduct;
                 })
                 .collect(Collectors.toList());
@@ -75,7 +79,9 @@ public interface UserInstitutionMapper {
                     onboardedProduct.setProductId(product.getProductId());
                     onboardedProduct.setTokenId(product.getTokenId());
                     onboardedProduct.setProductRole(role);
-                    onboardedProduct.setRole(product.getRole());
+                    if(StringUtils.isNotBlank(product.getRole())) {
+                        onboardedProduct.setRole(PartyRole.valueOf(product.getRole()));
+                    }
                     return onboardedProduct;
                 })
                 .collect(Collectors.toList());

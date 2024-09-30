@@ -35,7 +35,7 @@ class UserInstitutionMapperTest {
         product.setProductRoles(Arrays.asList("role1", "role2"));
         product.setProductId("productId");
         product.setTokenId("tokenId");
-        product.setRole(PartyRole.MANAGER);
+        product.setRole(PartyRole.MANAGER.name());
 
         List<OnboardedProduct> result = mapper.toNewOnboardedProduct(product);
 
@@ -55,7 +55,7 @@ class UserInstitutionMapperTest {
         product.setProductRoles(Arrays.asList("role1", "role2"));
         product.setProductId("productId");
         product.setTokenId("tokenId");
-        product.setRole(PartyRole.MANAGER);
+        product.setRole(PartyRole.MANAGER.name());
 
         List<OnboardedProduct> result = mapper.toNewOnboardedProductFromAddUserRole(product);
 

@@ -1,10 +1,10 @@
 package it.pagopa.selfcare.user.controller.response.product;
 
 import it.pagopa.selfcare.onboarding.common.Env;
-import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,7 +20,8 @@ public class OnboardedProductWithActions {
     private String tokenId;
     private OnboardedProductState status;
     private String productRole;
-    private PartyRole role;
+    @Schema(description = "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA")
+    private String role;
     private Env env = ROOT;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
