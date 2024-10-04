@@ -7,6 +7,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
+import it.pagopa.selfcare.product.utils.ProductUtils;
 import it.pagopa.selfcare.user.client.EventHubRestClient;
 import it.pagopa.selfcare.user.conf.CloudTemplateLoader;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -100,22 +101,24 @@ public class UserNotificationServiceImpl implements UserNotificationService {
                 .onItem().invoke(() -> log.debug("sendCreateNotification end"));
     }
 
-    private Map<String, String> buildCreateEmailDataModel(LoggedUser loggedUser, Product product, String institutionDescription, List<String> roleLabels) {
+    private Map<String, String> buildCreateEmailDataModel(LoggedUser loggedUser, Product product, String institutionDescription, List<String> productRoleCodes) {
         Map<String, String> dataModel = new HashMap<>();
         dataModel.put("requesterName", Optional.ofNullable(loggedUser.getName()).orElse(""));
         dataModel.put("requesterSurname", Optional.ofNullable(loggedUser.getFamilyName()).orElse(""));
 
         dataModel.put("productName", Optional.ofNullable(product.getTitle()).orElse(""));
         dataModel.put("institutionName", Optional.ofNullable(institutionDescription).orElse(""));
-        if (roleLabels.size() > 1) {
+        if (productRoleCodes.size() > 1) {
             List<String> roleLabel = new ArrayList<>();
 
-            if (CollectionUtils.isNotEmpty(product.getRoleMappings())) {
-                roleLabel = product.getRoleMappings().values().stream()
+            if (CollectionUtils.isNotEmpty(product.getAllRoleMappings())) {
+                roleLabel = product.getAllRoleMappings().values().stream()
+                        .flatMap(List::stream)
                         .filter(productRoleInfo -> !CollectionUtils.isNullOrEmpty(productRoleInfo.getRoles()))
                         .flatMap(productRoleInfo -> productRoleInfo.getRoles().stream()
-                                .filter(productRole -> roleLabels.contains(productRole.getCode())))
+                                .filter(productRole -> productRoleCodes.contains(productRole.getCode())))
                         .map(ProductRole::getLabel)
+                        .distinct()
                         .toList();
             }
 
@@ -123,7 +126,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
                 roleLabel = List.of("no_role_found");
             }
 
-            dataModel.put("productRoles", roleLabel.stream().limit(roleLabels.size() - 1L)
+            dataModel.put("productRoles", roleLabel.stream().limit(productRoleCodes.size() - 1L)
                     .collect(Collectors.joining(", ")));
             if(roleLabel.size() > 1) {
                 dataModel.put("lastProductRole", roleLabel.get(roleLabel.size() - 1));
@@ -131,10 +134,11 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
         } else {
             String roleLabel = "no_role_found";
-            if (CollectionUtils.isNotEmpty(product.getRoleMappings())) {
-                roleLabel = product.getRoleMappings().values().stream()
+            if (CollectionUtils.isNotEmpty(product.getAllRoleMappings())) {
+                roleLabel = product.getAllRoleMappings().values().stream()
+                        .flatMap(List::stream)
                         .flatMap(productRoleInfo -> productRoleInfo.getRoles().stream())
-                        .filter(productRole -> productRole.getCode().equals(roleLabels.get(0)))
+                        .filter(productRole -> productRole.getCode().equals(productRoleCodes.get(0)))
                         .map(ProductRole::getLabel)
                         .findAny()
                         .orElse("no_role_found");
@@ -150,12 +154,13 @@ public class UserNotificationServiceImpl implements UserNotificationService {
                 && (StringUtils.isBlank(givenProductRole) || StringUtils.equals(p.getProductRole(), givenProductRole))).findFirst();
 
         Optional<String> roleLabel = Optional.empty();
-        if (productDb.isPresent() && CollectionUtils.isNotEmpty(product.getRoleMappings())) {
-            roleLabel = product.getRoleMappings().values().stream()
-                    .filter(productRoleInfo -> !CollectionUtils.isNullOrEmpty(productRoleInfo.getRoles()))
-                    .flatMap(productRoleInfo -> productRoleInfo.getRoles().stream())
-                    .filter(productRole -> productRole.getCode().equals(productDb.get().getProductRole()))
-                    .map(ProductRole::getLabel).findAny();
+        if (productDb.isPresent() ) {
+            try {
+                ProductRole productRole = ProductUtils.getProductRole(productDb.get().getProductRole(),
+                        productDb.get().getRole(),
+                        product);
+                roleLabel = Optional.ofNullable(productRole.getLabel());
+            } catch (IllegalArgumentException ignored) { }
         }
 
         Map<String, String> dataModel = new HashMap<>();

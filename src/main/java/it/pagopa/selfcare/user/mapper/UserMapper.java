@@ -14,7 +14,12 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
-import org.openapi.quarkus.user_registry_json.model.*;
+import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
+import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
+import org.openapi.quarkus.user_registry_json.model.UserResource;
+import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import org.openapi.quarkus.user_registry_json.model.SaveUserDto;
+import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfLocalDate;
 
 import java.time.LocalDate;
 import java.util.*;

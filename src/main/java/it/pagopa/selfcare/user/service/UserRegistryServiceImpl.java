@@ -6,9 +6,6 @@ import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.UpdateUserRequest;
-import it.pagopa.selfcare.user.model.UserNotificationToSend;
-import it.pagopa.selfcare.user.model.constants.QueueEvent;
-import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
@@ -19,7 +16,11 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
-import org.openapi.quarkus.user_registry_json.model.*;
+import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
+import org.openapi.quarkus.user_registry_json.model.SaveUserDto;
+import org.openapi.quarkus.user_registry_json.model.UserId;
+import org.openapi.quarkus.user_registry_json.model.UserResource;
+import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 
 import java.time.Duration;
 import java.util.*;
@@ -35,23 +36,21 @@ public class UserRegistryServiceImpl implements UserRegistryService {
     private static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
 
     private final UserInstitutionService userInstitutionService;
-    private final UserUtils userUtils;
-    private final UserNotificationService userNotificationService;
     private final UserMapper userMapper;
 
     @ConfigProperty(name = "user-ms.retry.min-backoff")
-    private Integer retryMinBackOff;
+    Integer retryMinBackOff;
 
     @ConfigProperty(name = "user-ms.retry.max-backoff")
-    private Integer retryMaxBackOff;
+    Integer retryMaxBackOff;
 
     @ConfigProperty(name = "user-ms.retry")
-    private Integer maxRetry;
+    Integer maxRetry;
 
 
     @RestClient
     @Inject
-    private UserApi userRegistryApi;
+    UserApi userRegistryApi;
 
     @Override
     public Uni<UserResource> findByIdUsingGET(String fl, String id) {
@@ -107,12 +106,12 @@ public class UserRegistryServiceImpl implements UserRegistryService {
                                 .onItem().ifNotNull().invoke(() -> log.debug("UserInstitution founded for userId: {} and institutionId: {}", userId, institutionId)))
                 .asTuple()
                 .onItem().transformToMulti(tuple -> findMailUuidAndUpdateUserRegistry(tuple.getItem1(), updateUserRequest)
-                        .onItem().transformToMulti(uuidMail -> updateUserInstitution(tuple.getItem1(), tuple.getItem2(), uuidMail)))
+                        .onItem().transformToMulti(uuidMail -> updateUserInstitution(tuple.getItem2(), uuidMail)))
                 .collect().asList()
                 .onItem().invoke(items -> log.trace("update {} users on userRegistry", items.size()));
     }
 
-    private Multi<UserInstitution> updateUserInstitution(UserResource userResource, List<UserInstitution> userInstitutions, String mailUuid) {
+    private Multi<UserInstitution> updateUserInstitution(List<UserInstitution> userInstitutions, String mailUuid) {
         return Multi.createFrom().iterable(userInstitutions.stream()
                         .peek(userInstitution -> userInstitution.setUserMailUuid(mailUuid))
                         .toList())

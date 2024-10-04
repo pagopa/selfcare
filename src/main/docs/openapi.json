@@ -224,7 +224,7 @@
         "tags" : [ "Institution" ],
         "summary" : "Retrieve users with optional filters",
         "description" : "Fetches a list of users associated with a specific institution, applying optional filters such as userId, roles, states, products, and productRoles. This allows for flexible querying based on various user attributes and statuses.",
-        "operationId" : "retrieveUsers",
+        "operationId" : "retrieveUserInstitutions",
         "parameters" : [ {
           "name" : "institutionId",
           "in" : "path",

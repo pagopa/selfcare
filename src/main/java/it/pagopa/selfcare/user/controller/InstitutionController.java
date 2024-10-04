@@ -63,7 +63,7 @@ public class InstitutionController {
     @GET
     @Path(value = "/{institutionId}/user-institutions")
     @Produces(MediaType.APPLICATION_JSON)
-    public Multi<UserInstitutionResponse> retrieveUsers(@PathParam(value = "institutionId") String institutionId,
+    public Multi<UserInstitutionResponse> retrieveUserInstitutions(@PathParam(value = "institutionId") String institutionId,
                                                         @QueryParam(value = "userId") String userId,
                                                         @QueryParam(value = "roles") List<String> roles,
                                                         @QueryParam(value = "states") List<String> states,
