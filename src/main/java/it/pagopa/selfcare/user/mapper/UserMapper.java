@@ -48,7 +48,9 @@ public interface UserMapper {
             return Collections.emptyMap();
         }
         return workContactResourceMap.entrySet().stream()
-                .filter(entry -> entry.getValue().getEmail() != null && entry.getValue().getEmail().getValue() != null)
+                .filter(entry -> Objects.nonNull(entry.getValue()))
+                .filter(entry -> Objects.nonNull(entry.getValue().getEmail()))
+                .filter(entry -> Objects.nonNull(entry.getValue().getEmail().getValue()))
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getEmail().getValue()));
     }
 
@@ -73,10 +75,12 @@ public interface UserMapper {
 
     @Named("retrieveMailFromWorkContacts")
     default String retrieveMailFromWorkContacts(Map<String, WorkContactResource> map, String userMailUuid){
-        if(map!=null && !map.isEmpty() && map.containsKey(userMailUuid)){
-            return map.get(userMailUuid).getEmail().getValue();
-        }
-        return null;
+        return Optional.ofNullable(map)
+                .filter(item -> item.containsKey(userMailUuid))
+                .map(item -> map.get(userMailUuid))
+                .filter(workContactResource -> Objects.nonNull(workContactResource.getEmail()))
+                .map(workContactResource -> workContactResource.getEmail().getValue())
+                .orElse(null);
     }
 
 
@@ -164,12 +168,14 @@ public interface UserMapper {
     @Named("getMaxStatus")
     default String getMaxStatus(List<OnboardedProduct> onboardedProductList){
         List<OnboardedProductState> onboardedProductStateList = onboardedProductList.stream().map(OnboardedProduct::getStatus).toList();
+        if(onboardedProductStateList.isEmpty()) return null;
         return Collections.min(onboardedProductStateList).name();
     }
 
     @Named("getMaxRole")
     default String getMaxRole(List<OnboardedProduct> onboardedProductList){
         List<PartyRole> partyRoleList = onboardedProductList.stream().map(OnboardedProduct::getRole).toList();
+        if(partyRoleList.isEmpty()) return null;
         return Collections.min(partyRoleList).name();
     }
 

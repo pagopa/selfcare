@@ -11,13 +11,14 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.*;
-import it.pagopa.selfcare.user.controller.response.product.OnboardedProductWithActions;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
-import it.pagopa.selfcare.user.model.*;
+import it.pagopa.selfcare.user.model.LoggedUser;
+import it.pagopa.selfcare.user.model.UpdateUserRequest;
+import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
@@ -123,9 +124,10 @@ class UserControllerTest {
     @Test
     @TestSecurity(user = "userJwt")
     void testGetUserInfoOk() {
-        UserResource userResource = new UserResource();
-        userResource.setId(UUID.randomUUID());
-        userResource.setFiscalCode("test");
+        UserResponse userResource = new UserResponse();
+        userResource.setId(UUID.randomUUID().toString());
+        userResource.setName("test");
+        userResource.setSurname("surname");
 
         when(userService.retrievePerson(any(), any(), any()))
                 .thenReturn(Uni.createFrom().item(userResource));
@@ -137,6 +139,26 @@ class UserControllerTest {
                 .then()
                 .statusCode(200);
     }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testGetUserInfo_workContractsEmpty() {
+        UserResponse userResource = new UserResponse();
+        userResource.setId(UUID.randomUUID().toString());
+        userResource.setName("test");
+        userResource.setSurname("surname");
+
+        when(userService.retrievePerson(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(userResource));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .get("/test_user_id")
+                .then()
+                .statusCode(200);
+    }
+
 
     @Test
     void testGetUserInfoNotAuthorized() {
@@ -386,7 +408,7 @@ class UserControllerTest {
 
 
     /**
-     * Method under test: {@link InstitutionController#retrieveUsers(String, String, List, List, List, List))}
+     * Method under test: {@link InstitutionController#retrieveUserInstitutions(String, String, List, List, List, List))}
      */
     @Test
     void testGetUserInstitutionsNotAuthorized() {
@@ -399,7 +421,7 @@ class UserControllerTest {
     }
 
     /**
-     * Method under test: {@link InstitutionController#retrieveUsers(String, String, List, List, List, List))}
+     * Method under test: {@link InstitutionController#retrieveUserInstitutions(String, String, List, List, List, List))}
      */
     @Test
     @TestSecurity(user = "userJwt")

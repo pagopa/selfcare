@@ -45,7 +45,12 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.openapi.quarkus.user_registry_json.model.*;
+import org.mockito.Spy;
+import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfLocalDate;
+import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
+import org.openapi.quarkus.user_registry_json.model.UserResource;
+import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
+import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -296,13 +301,7 @@ class UserServiceTest {
         assertNull(actualUserWithoutMail.getEmail());
     }
 
-    @Test
-    void testRetrievePerson() {
-        UserInstitution userInstitution = new UserInstitution();
-        userInstitution.setUserId("test-user");
-        String userMailUuId = UUID.randomUUID().toString();
-        userInstitution.setUserMailUuid(userMailUuId);
-
+    UserResource dummyUserResource() {
         UserResource userResource = new UserResource();
         userResource.setId(UUID.randomUUID());
         userResource.setFiscalCode("test");
@@ -310,6 +309,17 @@ class UserServiceTest {
         userResource.setEmail(CertifiableFieldResourceOfstring.builder().value("test@test.com").build());
         userResource.setName(CertifiableFieldResourceOfstring.builder().value("testName").build());
         userResource.setFamilyName(CertifiableFieldResourceOfstring.builder().value("testFamilyName").build());
+        return userResource;
+    }
+
+    @Test
+    void testRetrievePerson() {
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setUserId("test-user");
+        String userMailUuId = UUID.randomUUID().toString();
+        userInstitution.setUserMailUuid(userMailUuId);
+
+        UserResource userResource = dummyUserResource();
         WorkContactResource workContactResource = new WorkContactResource();
         workContactResource.setEmail(CertifiableFieldResourceOfstring.builder().value("userMail").build());
         userResource.setWorkContacts(Map.of(userMailUuId, workContactResource));
@@ -317,15 +327,37 @@ class UserServiceTest {
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(createUserInstitution()));
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
 
-        UniAssertSubscriber<UserResource> subscriber = userService.retrievePerson("test-user", "test-product", "test-institutionId").subscribe().withSubscriber(UniAssertSubscriber.create());
+        UniAssertSubscriber<UserResponse> subscriber = userService.retrievePerson("test-user", "test-product", "test-institutionId").subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted();
+    }
+
+    //@Test
+    void testRetrievePerson_workContractsIsEmpty() {
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setUserId("test-user");
+        String userMailUuId = UUID.randomUUID().toString();
+        userInstitution.setUserMailUuid(userMailUuId);
+
+        UserResource userResource = dummyUserResource();
+        WorkContactResource workContactResource = new WorkContactResource();
+        userResource.setWorkContacts(Map.of(userMailUuId, workContactResource));
+
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(createUserInstitution()));
+        when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
+
+        UniAssertSubscriber<UserResponse> subscriber = userService.retrievePerson("test-user", "test-product", "test-institutionId")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+        UserResponse actual = subscriber.assertCompleted().getItem();
+        assertNull(actual.getEmail());
+        assertEquals(userResource.getName().getValue(), actual.getName());
     }
 
     @Test
     void testRetrievePersonFailsWhenUserIsNotPresent() {
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().nullItem());
 
-        UniAssertSubscriber<UserResource> subscriber = userService
+        UniAssertSubscriber<UserResponse> subscriber = userService
                 .retrievePerson("test-user", "test-product", "test-institutionId")
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
@@ -340,7 +372,7 @@ class UserServiceTest {
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(createUserInstitution()));
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().failure(new ClientWebApplicationException(HttpStatus.SC_NOT_FOUND)));
 
-        UniAssertSubscriber<UserResource> subscriber = userService.retrievePerson("test-user", "test-product", "test-institutionId").subscribe().withSubscriber(UniAssertSubscriber.create());
+        UniAssertSubscriber<UserResponse> subscriber = userService.retrievePerson("test-user", "test-product", "test-institutionId").subscribe().withSubscriber(UniAssertSubscriber.create());
 
         subscriber.assertFailedWith(ResourceNotFoundException.class);
     }
@@ -838,7 +870,7 @@ class UserServiceTest {
 
         // Mock external dependencies
         when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().failure(new WebClientApplicationException(HttpStatus.SC_NOT_FOUND)));
-        when(userRegistryApi.saveUsingPATCH(any())).thenReturn(Uni.createFrom().item(UserId.builder().id(UUID.fromString(userId.toString())).build()));
+        when(userRegistryApi.saveUsingPATCH(any())).thenReturn(Uni.createFrom().item(org.openapi.quarkus.user_registry_json.model.UserId.builder().id(UUID.fromString(userId.toString())).build()));
         when(userInstitutionService.persistOrUpdate(any())).thenAnswer(awr -> {
             UserInstitution saved = (UserInstitution) awr.getArguments()[0];
             saved.setId(ObjectId.get());

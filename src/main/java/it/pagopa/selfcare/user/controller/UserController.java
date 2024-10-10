@@ -97,8 +97,7 @@ public class UserController {
     public Uni<UserResponse> getUserInfo(@PathParam(value = "id") String userId,
                                          @QueryParam(value = "institutionId") String institutionId,
                                          @QueryParam(value = "productId") String productId) {
-        return userService.retrievePerson(userId, productId, institutionId)
-                .map(user -> userMapper.toUserResponse(user, institutionId));
+        return userService.retrievePerson(userId, productId, institutionId);
     }
 
     @Operation(description = "Retrieves products info and role which the user is enabled", summary = "Retrieve product information and user roles")
