@@ -28,6 +28,7 @@ import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.mapper.UserMapper;
+import it.pagopa.selfcare.user.mapper.UserMapperImpl;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
@@ -86,7 +87,7 @@ class UserServiceTest {
     @InjectMock
     private UserRegistryService userRegistryApi;
 
-    @InjectMock
+    @Spy
     private UserMapper userMapper;
 
     @InjectMock
@@ -331,7 +332,7 @@ class UserServiceTest {
         subscriber.assertCompleted();
     }
 
-    //@Test
+    @Test
     void testRetrievePerson_workContractsIsEmpty() {
         UserInstitution userInstitution = new UserInstitution();
         userInstitution.setUserId("test-user");
@@ -1127,7 +1128,7 @@ class UserServiceTest {
 
         // Call the method
         AssertSubscriber<UserDataResponse> subscriber = userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userUuid)
-                .subscribe().withSubscriber(AssertSubscriber.create());
+                .subscribe().withSubscriber(AssertSubscriber.create(10));
 
         // Verify the result
         subscriber.assertCompleted().getItems().forEach(actual -> {
@@ -1181,13 +1182,12 @@ class UserServiceTest {
 
         // Call the method
         AssertSubscriber<UserDataResponse> subscriber = userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userUuid)
-                .subscribe().withSubscriber(AssertSubscriber.create());
+                .subscribe().withSubscriber(AssertSubscriber.create(10));
 
         // Verify the result
         subscriber.assertCompleted().getItems().forEach(actual -> {
             assertNotNull(actual);
-            assertEquals(1, actual.getProducts().size());
-            assertEquals("prod-io", actual.getProducts().get(0).getProductId());
+            assertEquals(0, actual.getProducts().size());
             assertEquals(institutionId, "test-institution");
         });
 
@@ -1237,13 +1237,13 @@ class UserServiceTest {
 
         // Call the method
         AssertSubscriber<UserDataResponse> subscriber = userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userUuid)
-                .subscribe().withSubscriber(AssertSubscriber.create());
+                .subscribe().withSubscriber(AssertSubscriber.create(10));
 
         // Verify the result
         subscriber.assertCompleted().getItems().forEach(actual -> {
             assertNotNull(actual);
             assertEquals(1, actual.getProducts().size());
-            assertEquals("prod-io", actual.getProducts().get(0).getProductId());
+            assertEquals("test", actual.getProducts().get(0).getProductId());
             assertEquals(institutionId, "test-institution");
         });
 
@@ -1261,7 +1261,7 @@ class UserServiceTest {
         List<String> roles = Collections.emptyList();
         List<String> states = Collections.emptyList();
         List<String> products = Collections.emptyList();
-        List<String> productRoles = Collections.singletonList("test-productRole");
+        List<String> productRoles = Collections.singletonList("admin");
         String userUuid = "test-userUuid";
 
         UserInstitution userInstitution = new UserInstitution();
@@ -1293,13 +1293,13 @@ class UserServiceTest {
 
         // Call the method
         AssertSubscriber<UserDataResponse> subscriber = userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userUuid)
-                .subscribe().withSubscriber(AssertSubscriber.create());
+                .subscribe().withSubscriber(AssertSubscriber.create(10));
 
-        // Verify the result
+       // Verify the result
         subscriber.assertCompleted().getItems().forEach(actual -> {
             assertNotNull(actual);
             assertEquals(1, actual.getProducts().size());
-            assertEquals("prod-io", actual.getProducts().get(0).getProductId());
+            assertEquals("test", actual.getProducts().get(0).getProductId());
             assertEquals(institutionId, "test-institution");
         });
 
@@ -1334,7 +1334,7 @@ class UserServiceTest {
 
         // Call the method
         AssertSubscriber<UserDataResponse> subscriber = userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userUuid)
-                .subscribe().withSubscriber(AssertSubscriber.create());
+                .subscribe().withSubscriber(AssertSubscriber.create(10));
 
         // Verify the result
         subscriber.assertCompleted().getItems().forEach(actual -> {
