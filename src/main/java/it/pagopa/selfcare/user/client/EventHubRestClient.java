@@ -2,6 +2,7 @@ package it.pagopa.selfcare.user.client;
 
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.auth.EventhubSasTokenAuthorization;
+import it.pagopa.selfcare.user.model.UserGroupNotificationToSend;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.POST;
@@ -18,5 +19,9 @@ public interface EventHubRestClient {
     @POST
     @Path("messages")
     Uni<Void> sendMessage(UserNotificationToSend notification);
+
+    @POST
+    @Path("messages")
+    Uni<Void> sendUserGroupMessage(UserGroupNotificationToSend notification);
 
 }
