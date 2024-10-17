@@ -62,6 +62,7 @@ public class UserUtils {
         Optional.ofNullable(trackEventInput.getProductId()).ifPresent(value -> propertiesMap.put("productId", value));
         Optional.ofNullable(trackEventInput.getInstitutionId()).ifPresent(value -> propertiesMap.put("institutionId", value));
         Optional.ofNullable(trackEventInput.getProductRole()).ifPresent(value -> propertiesMap.put("productRole", value));
+        Optional.ofNullable(trackEventInput.getGroupMembers()).ifPresent(value -> propertiesMap.put("groupMembers", String.join(",", value)));
         Optional.ofNullable(trackEventInput.getException()).ifPresent(value -> propertiesMap.put("exec", value));
         return propertiesMap;
     }
