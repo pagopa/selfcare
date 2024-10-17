@@ -15,7 +15,6 @@ import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.Startup;
 import io.quarkus.runtime.configuration.ConfigUtils;
 import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.client.EventHubRestClient;
 import it.pagopa.selfcare.user.event.entity.UserGroupEntity;
 import it.pagopa.selfcare.user.event.mapper.UserGroupNotificationMapper;
@@ -30,16 +29,17 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
 import static it.pagopa.selfcare.user.UserUtils.mapPropsForTrackEvent;
 import static it.pagopa.selfcare.user.event.constant.CdcStartAtConstant.*;
-import static it.pagopa.selfcare.user.model.TrackEventInput.toTrackEventInput;
 import static it.pagopa.selfcare.user.model.TrackEventInput.toTrackEventInputForUserGroup;
 import static it.pagopa.selfcare.user.model.constants.EventsMetric.*;
-import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_CDC_NAME;
 import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_GROUP_CDC_NAME;
 import static java.util.Arrays.asList;
 

@@ -12,6 +12,7 @@ import it.pagopa.selfcare.user.event.mapper.UserGroupNotificationMapper;
 import it.pagopa.selfcare.user.model.UserGroupNotificationToSend;
 import jakarta.inject.Inject;
 import org.bson.BsonDocument;
+import org.bson.types.ObjectId;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -49,7 +50,7 @@ public class UserGroupCdcServiceTest {
         userGroupCdcService.consumerToSendScUserGroupEvent(document);
         verify(eventHubRestClient, times(1)).
                 sendUserGroupMessage(notification.capture());
-        Assertions.assertEquals(userGroupEntity.getId(), notification.getValue().getId());
+        Assertions.assertEquals(userGroupEntity.getId().toString(), notification.getValue().getId());
         Assertions.assertEquals(userGroupEntity.getInstitutionId(), notification.getValue().getInstitutionId());
         Assertions.assertEquals(userGroupEntity.getProductId(), notification.getValue().getProductId());
         Assertions.assertEquals(2, notification.getValue().getMembers().size());
@@ -57,7 +58,7 @@ public class UserGroupCdcServiceTest {
 
     UserGroupEntity dummyUserGroup() {
         UserGroupEntity userGroupEntity = new UserGroupEntity();
-        userGroupEntity.setId("UserGroupId");
+        userGroupEntity.setId(new ObjectId());
         userGroupEntity.setInstitutionId("InstitutionId");
         userGroupEntity.setProductId("ProductId");
         userGroupEntity.setMembers(Set.of("Member1", "Member2"));

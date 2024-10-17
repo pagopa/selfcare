@@ -5,6 +5,7 @@ import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
+import org.bson.types.ObjectId;
 
 import java.time.Instant;
 import java.util.Set;
@@ -15,7 +16,7 @@ import java.util.Set;
 @FieldNameConstants(asEnum = true)
 public class UserGroupEntity extends ReactivePanacheMongoEntity {
 
-    private String id;
+    private ObjectId id;
     private String institutionId;
     private String productId;
     private String name;
