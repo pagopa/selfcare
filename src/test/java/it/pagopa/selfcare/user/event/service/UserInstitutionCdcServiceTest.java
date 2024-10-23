@@ -21,7 +21,10 @@ import org.mockito.Mockito;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import static it.pagopa.selfcare.user.event.UserInstitutionCdcService.USERS_FIELD_LIST_WITHOUT_FISCAL_CODE;
@@ -79,8 +82,8 @@ public class UserInstitutionCdcServiceTest {
         OnboardedProduct onboardedProduct = new OnboardedProduct();
         onboardedProduct.setProductId("productId");
         onboardedProduct.setProductRole(productRole);
-        onboardedProduct.setCreatedAt(LocalDateTime.of(2024,1,day,0,0,0));
-        onboardedProduct.setUpdatedAt(LocalDateTime.of(2024,1,day,0,0,0));
+        onboardedProduct.setCreatedAt(OffsetDateTime.of(2024, 1, day, 0, 0, 0, 0, ZoneOffset.UTC));
+        onboardedProduct.setUpdatedAt(OffsetDateTime.of(2024, 1, day, 0, 0, 0, 0, ZoneOffset.UTC));
         onboardedProduct.setStatus(state);
         return onboardedProduct;
     }
