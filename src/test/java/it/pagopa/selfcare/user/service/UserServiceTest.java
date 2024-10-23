@@ -1424,6 +1424,7 @@ class UserServiceTest {
                 "Selc:ViewManagedInstitutions",
                 "Selc:ViewDelegations",
                 "Selc:ManageProductUsers",
+                "Selc:ListProductUsers",
                 "Selc:ManageProductGroups",
                 "Selc:CreateDelegation",
                 "Selc:ViewInstitutionData",
