@@ -5,7 +5,10 @@ import it.pagopa.selfcare.user.model.TrackEventInput;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -80,8 +83,8 @@ public class UserUtilsTest {
         OnboardedProduct onboardedProduct = new OnboardedProduct();
         onboardedProduct.setProductId("productId");
         onboardedProduct.setProductRole(productRole);
-        onboardedProduct.setCreatedAt(LocalDateTime.of(2024,1,day,0,0,0));
-        onboardedProduct.setUpdatedAt(LocalDateTime.of(2024,1,day,0,0,0));
+        onboardedProduct.setCreatedAt(OffsetDateTime.of(LocalDate.EPOCH, LocalTime.MIN, ZoneOffset.UTC));
+        onboardedProduct.setUpdatedAt(OffsetDateTime.of(LocalDate.EPOCH, LocalTime.MIN, ZoneOffset.UTC));
         onboardedProduct.setStatus(state);
         return onboardedProduct;
     }
