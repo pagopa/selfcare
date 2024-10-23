@@ -15,7 +15,7 @@ import it.pagopa.selfcare.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
@@ -101,7 +101,7 @@ class InstitutionControllerTest {
     }
 
     /**
-     * Method under test: {@link InstitutionController#updateUserProductCreatedAt(String, String, List, LocalDateTime)}
+     * Method under test: {@link InstitutionController#updateUserProductCreatedAt(String, String, List, OffsetDateTime)}
      */
     @Test
     @TestSecurity(user = "userJwt")
@@ -109,7 +109,7 @@ class InstitutionControllerTest {
 
         var institutionId = "institutionId";
         var productId = "productId";
-        var now = LocalDateTime.now();
+        var now = OffsetDateTime.now();
         Mockito.when(userService.updateUserProductCreatedAt(institutionId, List.of("userId"), productId, now))
                 .thenReturn(Uni.createFrom().nullItem());
 
@@ -124,14 +124,14 @@ class InstitutionControllerTest {
     }
 
     /**
-     * Method under test: {@link InstitutionController#updateUserProductCreatedAt(String, String, List, LocalDateTime)}
+     * Method under test: {@link InstitutionController#updateUserProductCreatedAt(String, String, List, OffsetDateTime)}
      */
     @Test
     void updateUserProductCreatedAt_NotAuthorized() {
 
         var institutionId = "institutionId";
         var productId = "productId";
-        var now = LocalDateTime.now();
+        var now = OffsetDateTime.now();
         given()
                 .when()
                 .contentType(ContentType.JSON)
@@ -143,12 +143,12 @@ class InstitutionControllerTest {
     }
 
     /**
-     * Method under test: {@link InstitutionController#updateUserProductCreatedAt(String, String, List, LocalDateTime)}
+     * Method under test: {@link InstitutionController#updateUserProductCreatedAt(String, String, List, OffsetDateTime)}
      */
     @Test
     @TestSecurity(user = "userJwt")
     void updateUserProductCreatedAt_UserNotFound() {
-        final LocalDateTime now = LocalDateTime.now();
+        final OffsetDateTime now = OffsetDateTime.now();
         final String institutionId = "institutionId";
         final String productId = "productId";
         final String userId = "userId";

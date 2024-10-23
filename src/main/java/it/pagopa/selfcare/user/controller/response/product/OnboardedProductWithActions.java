@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static it.pagopa.selfcare.onboarding.common.Env.ROOT;
@@ -23,8 +23,8 @@ public class OnboardedProductWithActions {
     @Schema(description = "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA")
     private String role;
     private Env env = ROOT;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
     private String delegationId;
     private List<String> userProductActions;
 }

@@ -9,7 +9,7 @@ import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +25,7 @@ public interface UserInstitutionService {
 
     Multi<UserInstitution> findAllWithFilter(Map<String, Object> queryParameter);
 
-    Multi<UserInstitution> findUserInstitutionsAfterDateWithFilter(Map<String,Object> queryParameter, LocalDateTime fromDate);
+    Multi<UserInstitution> findUserInstitutionsAfterDateWithFilter(Map<String,Object> queryParameter, OffsetDateTime fromDate);
 
     Uni<UserInstitution> retrieveFirstFilteredUserInstitution(Map<String, Object> queryParameter);
 
@@ -33,11 +33,11 @@ public interface UserInstitutionService {
 
     Uni<Long> updateUserStatusWithOptionalFilterByInstitutionAndProduct(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status);
 
-    Uni<Long> updateUserCreatedAtByInstitutionAndProduct(String institutionId, List<String> userIds, String productId, LocalDateTime createdAt);
+    Uni<Long> updateUserCreatedAtByInstitutionAndProduct(String institutionId, List<String> userIds, String productId, OffsetDateTime createdAt);
 
-    Multi<UserInstitution> findUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, LocalDateTime fromDate, Integer page);
+    Multi<UserInstitution> findUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, OffsetDateTime fromDate, Integer page);
 
-    Uni<Integer> pageCountUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, LocalDateTime fromDate);
+    Uni<Integer> pageCountUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, OffsetDateTime fromDate);
 
     Uni<List<UserInstitution>> retrieveFilteredUserInstitution(Map<String, Object> queryParameter);
 

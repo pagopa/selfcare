@@ -68,7 +68,7 @@ paths:
         in: query
         required: true
         schema:
-          $ref: "#/components/schemas/LocalDateTime"
+          $ref: "#/components/schemas/OffsetDateTime"
       - name: institutionId
         in: query
         schema:
@@ -142,7 +142,7 @@ paths:
         in: query
         required: true
         schema:
-          $ref: "#/components/schemas/LocalDateTime"
+          $ref: "#/components/schemas/OffsetDateTime"
       - name: userIds
         in: query
         required: true
@@ -998,10 +998,10 @@ components:
           type: string
         reason:
           type: string
-    LocalDateTime:
+    OffsetDateTime:
       format: date-time
       type: string
-      example: 2022-03-10T12:15:50
+      example: 2022-03-10T12:15:50-04:00
     OnboardedProductResponse:
       type: object
       properties:
@@ -1020,9 +1020,9 @@ components:
         env:
           $ref: "#/components/schemas/Env"
         createdAt:
-          $ref: "#/components/schemas/LocalDateTime"
+          $ref: "#/components/schemas/OffsetDateTime"
         updatedAt:
-          $ref: "#/components/schemas/LocalDateTime"
+          $ref: "#/components/schemas/OffsetDateTime"
     OnboardedProductState:
       enum:
       - ACTIVE
@@ -1050,9 +1050,9 @@ components:
         env:
           $ref: "#/components/schemas/Env"
         createdAt:
-          $ref: "#/components/schemas/LocalDateTime"
+          $ref: "#/components/schemas/OffsetDateTime"
         updatedAt:
-          $ref: "#/components/schemas/LocalDateTime"
+          $ref: "#/components/schemas/OffsetDateTime"
         delegationId:
           type: string
         userProductActions:
@@ -1289,9 +1289,9 @@ components:
         onboardingTokenId:
           type: string
         createdAt:
-          $ref: "#/components/schemas/LocalDateTime"
+          $ref: "#/components/schemas/OffsetDateTime"
         updatedAt:
-          $ref: "#/components/schemas/LocalDateTime"
+          $ref: "#/components/schemas/OffsetDateTime"
         eventType:
           $ref: "#/components/schemas/QueueEvent"
         user:

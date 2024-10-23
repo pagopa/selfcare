@@ -23,7 +23,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.openapi.quarkus.user_registry_json.model.Problem;
 
 import javax.validation.constraints.NotNull;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Authenticated
@@ -82,7 +82,7 @@ public class InstitutionController {
     public Uni<Response> updateUserProductCreatedAt(@PathParam(value = "institutionId") String institutionId,
                                                     @PathParam(value = "productId") String productId,
                                                     @NotNull @QueryParam(value = "userIds") List<String> userIds,
-                                                    @NotNull @QueryParam(value = "createdAt") LocalDateTime createdAt) {
+                                                    @NotNull @QueryParam(value = "createdAt") OffsetDateTime createdAt) {
         return userService.updateUserProductCreatedAt(institutionId, userIds, productId, createdAt)
                 .map(ignore -> Response
                         .status(HttpStatus.SC_NO_CONTENT)

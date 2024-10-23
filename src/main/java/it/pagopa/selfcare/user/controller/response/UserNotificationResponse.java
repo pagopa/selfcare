@@ -5,7 +5,7 @@ import it.pagopa.selfcare.user.model.UserToNotify;
 import it.pagopa.selfcare.user.model.constants.QueueEvent;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 /**
  * This objects wrap user's info sent on topic sc-users
@@ -17,8 +17,8 @@ public class UserNotificationResponse {
     private String institutionId;
     private String productId;
     private String onboardingTokenId;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
     private QueueEvent eventType;
     private UserToNotify user;
 }

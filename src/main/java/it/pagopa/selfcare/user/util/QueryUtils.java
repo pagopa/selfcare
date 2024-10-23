@@ -19,7 +19,7 @@ import org.bson.codecs.DecoderContext;
 import org.bson.codecs.DocumentCodec;
 import org.bson.conversions.Bson;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -61,7 +61,7 @@ public class QueryUtils {
             return new Document();
         }
     }
-    public Document buildQueryDocumentByDate(Map<String, Object> parameters, String collection, LocalDateTime fromDate) {
+    public Document buildQueryDocumentByDate(Map<String, Object> parameters, String collection, OffsetDateTime fromDate) {
             return bsonToDocument(Filters.and(constructBsonWithDateFilter(parameters, collection, fromDate)));
 
     }
@@ -126,7 +126,7 @@ public class QueryUtils {
         return bsonList;
     }
 
-    private List<Bson> constructBsonWithDateFilter(Map<String, Object> parameters, String collection, LocalDateTime fromDate){
+    private List<Bson> constructBsonWithDateFilter(Map<String, Object> parameters, String collection, OffsetDateTime fromDate){
         List<Bson> bsonList = new ArrayList<>();
         if (!parameters.isEmpty()) {
             Map<String, Object> mapForElemMatch = retrieveArrayFilterIfPresent(parameters, collection);
@@ -143,8 +143,8 @@ public class QueryUtils {
         if (fromDate != null) {
             bsonList.add(
             Filters.or(
-                    Filters.elemMatch("products", Filters.gt("createdAt", fromDate)),
-                    Filters.elemMatch("products", Filters.gt("updatedAt", fromDate))
+                    Filters.elemMatch("products", Filters.gt("createdAt", fromDate.toInstant())),
+                    Filters.elemMatch("products", Filters.gt("updatedAt", fromDate.toInstant()))
             ));
         }
 

@@ -43,7 +43,7 @@ import org.owasp.encoder.Encode;
 import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -213,7 +213,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Uni<Void> updateUserProductCreatedAt(String institutionId, List<String> userIds, String productId, LocalDateTime createdAt) {
+    public Uni<Void> updateUserProductCreatedAt(String institutionId, List<String> userIds, String productId, OffsetDateTime createdAt) {
         return userInstitutionService.updateUserCreatedAtByInstitutionAndProduct(institutionId, userIds, productId, createdAt)
                 .onItem().transformToUni(aLong -> {
                     if (aLong < 1) {
@@ -592,7 +592,7 @@ public class UserServiceImpl implements UserService {
      * @return A Uni representing the result of sending events for each page.
      */
     @Override
-    public Uni<Void> sendEventsByDateAndUserIdAndInstitutionId(LocalDateTime fromDate, String institutionId, String userId) {
+    public Uni<Void> sendEventsByDateAndUserIdAndInstitutionId(OffsetDateTime fromDate, String institutionId, String userId) {
 
         return retrieveFilteredUserInstitutionsByDatePageCount(userId,institutionId,fromDate)
                 .onItem().transformToUni(pageCount -> pageCount > 0
@@ -607,7 +607,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    public Uni<Void> sendEventsByDateAndUserIdAndInstitutionId(LocalDateTime fromDate, String institutionId, String userId, Integer page) {
+    public Uni<Void> sendEventsByDateAndUserIdAndInstitutionId(OffsetDateTime fromDate, String institutionId, String userId, Integer page) {
         Multi<UserInstitution> userInstitutions = retrieveFilteredUserInstitutionsByDate(userId, institutionId, fromDate, page);
         return userInstitutions
                 .onItem().transformToUni(userInstitution -> {
@@ -655,22 +655,22 @@ public class UserServiceImpl implements UserService {
         return userInstitutionService.findAllWithFilter(queryParam);
     }
 
-    private Multi<UserInstitution> retrieveFilteredUserInstitutionsByDate(String userId, String institutionId, LocalDateTime fromDate){
+    private Multi<UserInstitution> retrieveFilteredUserInstitutionsByDate(String userId, String institutionId, OffsetDateTime fromDate){
         var queryParam = retrieveFilteredUserInstitutionsByDateQueryParam(userId,institutionId,fromDate);
         return userInstitutionService.findUserInstitutionsAfterDateWithFilter(queryParam, fromDate);
     }
 
-    private Multi<UserInstitution> retrieveFilteredUserInstitutionsByDate(String userId, String institutionId, LocalDateTime fromDate, Integer page){
+    private Multi<UserInstitution> retrieveFilteredUserInstitutionsByDate(String userId, String institutionId, OffsetDateTime fromDate, Integer page){
         var queryParam = retrieveFilteredUserInstitutionsByDateQueryParam(userId,institutionId,fromDate);
         return userInstitutionService.findUserInstitutionsAfterDateWithFilter(queryParam, fromDate, page);
     }
 
-    private Uni<Integer> retrieveFilteredUserInstitutionsByDatePageCount(String userId, String institutionId, LocalDateTime fromDate){
+    private Uni<Integer> retrieveFilteredUserInstitutionsByDatePageCount(String userId, String institutionId, OffsetDateTime fromDate){
         var queryParam = retrieveFilteredUserInstitutionsByDateQueryParam(userId,institutionId,fromDate);
         return userInstitutionService.pageCountUserInstitutionsAfterDateWithFilter(queryParam, fromDate);
     }
 
-    private Map<String, Object> retrieveFilteredUserInstitutionsByDateQueryParam(String userId, String institutionId, LocalDateTime fromDate) {
+    private Map<String, Object> retrieveFilteredUserInstitutionsByDateQueryParam(String userId, String institutionId, OffsetDateTime fromDate) {
         var institutionFilters = UserInstitutionFilter.builder().institutionId(institutionId).userId(userId).build().constructMap();
         var productFilter = OnboardedProductFilter.builder().build().constructMap();
         return userUtils.retrieveMapForFilter(institutionFilters, productFilter);

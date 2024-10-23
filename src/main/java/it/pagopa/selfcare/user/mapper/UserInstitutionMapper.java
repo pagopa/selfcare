@@ -15,7 +15,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import software.amazon.awssdk.utils.CollectionUtils;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -88,7 +88,7 @@ public interface UserInstitutionMapper {
     }
 
     default OnboardedProduct buildOnboardedProduct(){
-        LocalDateTime now = java.time.LocalDateTime.now();
+        OffsetDateTime now = java.time.OffsetDateTime.now();
         OnboardedProduct onboardedProduct = new OnboardedProduct();
         onboardedProduct.setStatus(OnboardedProductState.ACTIVE);
         onboardedProduct.setEnv(it.pagopa.selfcare.onboarding.common.Env.ROOT);

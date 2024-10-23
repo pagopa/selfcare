@@ -54,7 +54,7 @@ import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 import static it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER;
@@ -220,7 +220,7 @@ class UserServiceTest {
         final Integer page = 1;
         final String institutionId = "institutionId";
         final String userId = "userId";
-        final LocalDateTime fromDate = LocalDateTime.now();
+        final OffsetDateTime fromDate = OffsetDateTime.now();
         final UserInstitution userInstitution = createUserInstitution();
         userInstitution.getProducts().forEach(onboardedProduct -> onboardedProduct.setCreatedAt(fromDate.plusDays(1)));
         UserResource userResource = new UserResource();
@@ -249,7 +249,7 @@ class UserServiceTest {
 
     @Test
     void sendOldData_noFilters(){
-        final LocalDateTime fromDate = LocalDateTime.now();
+        final OffsetDateTime fromDate = OffsetDateTime.now();
         final UserInstitution userInstitution = createUserInstitution();
         userInstitution.getProducts().forEach(onboardedProduct -> onboardedProduct.setCreatedAt(fromDate.plusDays(1)));
         UserResource userResource = new UserResource();
@@ -625,7 +625,7 @@ class UserServiceTest {
         final String productId = "productId";
         final String userId = "userId";
         final String institutionId = "institutionId";
-        final LocalDateTime now = LocalDateTime.now();
+        final OffsetDateTime now = OffsetDateTime.now();
         when(userInstitutionService
                 .updateUserCreatedAtByInstitutionAndProduct(institutionId, List.of(userId), productId, now)).thenReturn(Uni.createFrom().item(0L));
 
@@ -644,7 +644,7 @@ class UserServiceTest {
                 .thenReturn(Uni.createFrom().item(1L));
 
         UniAssertSubscriber<Void> subscriber = userService
-                .updateUserProductCreatedAt("institutionId", List.of("userId"), "productId", LocalDateTime.now())
+                .updateUserProductCreatedAt("institutionId", List.of("userId"), "productId", OffsetDateTime.now())
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted();

@@ -13,7 +13,7 @@ import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.utils.CreateOrUpdateUserByFiscalCodeResponse;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 
@@ -38,7 +38,7 @@ public interface UserService {
 
     Uni<List<UserInstitutionResponse>> findAllByIds(List<String> userIds);
 
-    Uni<Void> updateUserProductCreatedAt(String institutionId, List<String> userIds, String productId, LocalDateTime createdAt);
+    Uni<Void> updateUserProductCreatedAt(String institutionId, List<String> userIds, String productId, OffsetDateTime createdAt);
 
     Uni<UserDetailResponse> getUserById(String userId, String institutionId, String fieldsToRetrieve);
 
@@ -54,7 +54,7 @@ public interface UserService {
 
     Uni<Void> updateInstitutionDescription(String institutionId, UpdateDescriptionDto descriptionDto);
 
-    Uni<Void> sendEventsByDateAndUserIdAndInstitutionId(LocalDateTime fromDate, String institutionId, String userId);
+    Uni<Void> sendEventsByDateAndUserIdAndInstitutionId(OffsetDateTime fromDate, String institutionId, String userId);
 
     Uni<UserInstitutionWithActions> getUserInstitutionWithPermission(String userId, String institutionId, String productId);
 }

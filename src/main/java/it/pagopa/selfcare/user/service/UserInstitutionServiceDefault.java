@@ -24,7 +24,8 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -144,12 +145,12 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     }
 
     @Override
-    public Uni<Long> updateUserCreatedAtByInstitutionAndProduct(String institutionId, List<String> userIds, String productId, LocalDateTime createdAt) {
+    public Uni<Long> updateUserCreatedAtByInstitutionAndProduct(String institutionId, List<String> userIds, String productId, OffsetDateTime createdAt) {
         Map<String, Object> onboardedProductFilterMap = OnboardedProductFilter.builder().productId(productId).build().constructMap();
         Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder().userId(formatQueryParameterList(userIds)).institutionId(institutionId).build().constructMap();
         Map<String, Object> filterMap = userUtils.retrieveMapForFilter(onboardedProductFilterMap, userInstitutionFilterMap);
-        Map<String, Object> fieldToUpdateMap = Map.of(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.createdAt.name(), createdAt,
-                                                      UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
+        Map<String, Object> fieldToUpdateMap = Map.of(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.createdAt.name(), createdAt.toInstant(),
+                                                      UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.updatedAt.name(), Instant.now());
         log.info("Update user institution with filter: {} and field to update: {}", filterMap, fieldToUpdateMap);
         return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
                 .where(queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION));
@@ -163,19 +164,19 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     }
 
     @Override
-    public Multi<UserInstitution> findUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, LocalDateTime fromDate) {
+    public Multi<UserInstitution> findUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, OffsetDateTime fromDate) {
         Document query = queryUtils.buildQueryDocumentByDate(queryParameter, USER_INSTITUTION_COLLECTION, fromDate);
         return runUserInstitutionFindQuery(query, null).stream();
     }
 
     @Override
-    public Multi<UserInstitution> findUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, LocalDateTime fromDate, Integer page) {
+    public Multi<UserInstitution> findUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, OffsetDateTime fromDate, Integer page) {
         Document query = queryUtils.buildQueryDocumentByDate(queryParameter, USER_INSTITUTION_COLLECTION, fromDate);
         return runUserInstitutionFindQuery(query, null).page(Page.ofSize(pageSizeFindUserInstitutions).index(page)).stream();
     }
 
     @Override
-    public Uni<Integer> pageCountUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, LocalDateTime fromDate) {
+    public Uni<Integer> pageCountUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, OffsetDateTime fromDate) {
         Document query = queryUtils.buildQueryDocumentByDate(queryParameter, USER_INSTITUTION_COLLECTION, fromDate);
         return runUserInstitutionFindQuery(query, null).page(Page.ofSize(pageSizeFindUserInstitutions)).pageCount();
     }
@@ -185,10 +186,10 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         Map<String, Object> fieldToUpdateMap = new HashMap<>();
         if(productFilterIsEmpty(filterMap)) {
             fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.status.name(), status);
-            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
+            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.updatedAt.name(), Instant.now());
         }else{
             fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.status.name(), status);
-            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.updatedAt.name(), LocalDateTime.now());
+            fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.updatedAt.name(), Instant.now());
         }
         return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
                 .where(queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION));

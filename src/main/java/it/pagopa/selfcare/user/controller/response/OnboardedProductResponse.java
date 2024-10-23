@@ -5,7 +5,7 @@ import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import lombok.Data;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 public class OnboardedProductResponse {
@@ -17,7 +17,7 @@ public class OnboardedProductResponse {
     @Schema(description = "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA")
     private String role;
     private Env env;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
 
 }

@@ -9,7 +9,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.service.UserService;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import static io.restassured.RestAssured.given;
 import static org.mockito.ArgumentMatchers.any;
@@ -27,7 +27,7 @@ class EventsControllerTest {
     void sendOldUsers(){
         final String institutionId = "institutionId";
         final String userId = "userId";
-        final LocalDateTime fromDate = LocalDateTime.now();
+        final OffsetDateTime fromDate = OffsetDateTime.now();
 
         when(userService.sendEventsByDateAndUserIdAndInstitutionId(any(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
         given()

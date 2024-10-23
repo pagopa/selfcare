@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -354,7 +354,7 @@ class UserInstitutionServiceTest {
     void findAllAfterDate(){
         Map<String, Object> parameterMap = new HashMap<>();
         parameterMap.put("institutionId", "institutionId");
-        LocalDateTime fromDate = LocalDateTime.now();
+        OffsetDateTime fromDate = OffsetDateTime.now();
         UserInstitution userInstitution = createDummyUserInstitution();
         OnboardedProduct onboardedProduct = createDummyOnboardedProduct();
         onboardedProduct.setCreatedAt(fromDate.plusDays(1));  // Ensure the product is created after the fromDate
@@ -384,7 +384,7 @@ class UserInstitutionServiceTest {
     @Test
     void findAllAfterDate_noFilters(){
         Map<String, Object> parameterMap = new HashMap<>();
-        LocalDateTime fromDate = LocalDateTime.now();
+        OffsetDateTime fromDate = OffsetDateTime.now();
         UserInstitution userInstitution = createDummyUserInstitution();
         OnboardedProduct onboardedProduct = createDummyOnboardedProduct();
         onboardedProduct.setCreatedAt(fromDate.plusDays(1));  // Ensure the product is created after the fromDate
@@ -579,7 +579,7 @@ class UserInstitutionServiceTest {
         when(UserInstitution.update(any(Document.class)))
                 .thenReturn(update);
         when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
-        UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserCreatedAtByInstitutionAndProduct(institutionId, List.of(userId), productId, LocalDateTime.now())
+        UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserCreatedAtByInstitutionAndProduct(institutionId, List.of(userId), productId, OffsetDateTime.now())
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted().assertItem(1L);
     }

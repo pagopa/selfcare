@@ -12,7 +12,7 @@ import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import javax.validation.constraints.NotNull;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Authenticated
 @Tag(name = "Events")
@@ -30,7 +30,7 @@ public class EventsController {
     @Path(value = "/sc-users")
     public Uni<Void> sendUsersEvents(@QueryParam(value = "institutionId") String institutionId,
                                   @QueryParam(value = "userId") String userId,
-                                  @NotNull @QueryParam(value = "fromDate") LocalDateTime fromDate){
+                                  @NotNull @QueryParam(value = "fromDate") OffsetDateTime fromDate){
         return userService.sendEventsByDateAndUserIdAndInstitutionId(fromDate, institutionId, userId);
     }
 }
