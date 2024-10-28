@@ -480,21 +480,34 @@ public class UserServiceImpl implements UserService {
         }
 
         log.info(USER_INSTITUTION_FOUNDED, userId, userDto.getInstitutionId());
-        //Verify if productRole already exists
-        if(Optional.ofNullable(userInstitution.getProducts())
-                .orElse(Collections.emptyList())
-                .stream()
-                .filter(onboardedProduct -> onboardedProduct.getStatus().equals(ACTIVE))
-                .filter(onboardedProduct -> userDto.getProduct().getProductId().equals(onboardedProduct.getProductId()))
-                .anyMatch(onboardedProduct -> userDto.getProduct().getProductRoles().contains(onboardedProduct.getProductRole()))){
-            return Uni.createFrom().nullItem();
+
+        if(checkAlreadyOnboardedRole(userDto.getProduct(), userInstitution)){
+            throw new InvalidRequestException(String.format("User already has different role on Product %s", userDto.getProduct().getProductId()));
         }
 
-        List<String> productRoleToAdd = checkAlreadyOnboardedProdcutRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution);
+        List<String> productRoleToAdd = checkAlreadyOnboardedProductRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution);
         userDto.getProduct().setProductRoles(productRoleToAdd);
 
         productRoleToAdd.forEach(productRole -> userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct(), productRole)));
         return Uni.createFrom().item(userInstitution);
+    }
+
+    private boolean checkAlreadyOnboardedRole(AddUserRoleDto.Product product, UserInstitution userInstitution) {
+        return Optional.ofNullable(userInstitution.getProducts())
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(onboardedProduct -> onboardedProduct.getStatus().equals(ACTIVE))
+                .filter(onboardedProduct -> onboardedProduct.getProductId().equalsIgnoreCase(product.getProductId()))
+                .anyMatch(onboardedProduct -> !onboardedProduct.getRole().name().equalsIgnoreCase(product.getRole()));
+    }
+
+    private boolean checkAlreadyOnboardedRole(CreateUserDto.Product product, UserInstitution userInstitution) {
+        return Optional.ofNullable(userInstitution.getProducts())
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(onboardedProduct -> onboardedProduct.getStatus().equals(ACTIVE))
+                .filter(onboardedProduct -> onboardedProduct.getProductId().equalsIgnoreCase(product.getProductId()))
+                .anyMatch(onboardedProduct -> !onboardedProduct.getRole().name().equalsIgnoreCase(product.getRole()));
     }
 
     /**
@@ -514,17 +527,13 @@ public class UserServiceImpl implements UserService {
         }
 
         log.info(USER_INSTITUTION_FOUNDED, userId, userDto.getInstitutionId());
-        //Verify if productRole already exists
-        if(Optional.ofNullable(userInstitution.getProducts())
-                .orElse(Collections.emptyList())
-                .stream()
-                .filter(onboardedProduct -> onboardedProduct.getStatus().equals(ACTIVE))
-                .filter(onboardedProduct -> userDto.getProduct().getProductId().equals(onboardedProduct.getProductId()))
-                .anyMatch(onboardedProduct -> userDto.getProduct().getProductRoles().contains(onboardedProduct.getProductRole()))){
-           return Uni.createFrom().nullItem();
+        log.info(USER_INSTITUTION_FOUNDED, userId, userDto.getInstitutionId());
+
+        if(checkAlreadyOnboardedRole(userDto.getProduct(), userInstitution)){
+            throw new InvalidRequestException(String.format("User already has different role on Product %s", userDto.getProduct().getProductId()));
         }
 
-        List<String> productRoleToAdd = checkAlreadyOnboardedProdcutRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution);
+        List<String> productRoleToAdd = checkAlreadyOnboardedProductRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution);
         userDto.getProduct().setProductRoles(productRoleToAdd);
 
         userInstitution.setUserMailUuid(mailUuid);
@@ -533,20 +542,24 @@ public class UserServiceImpl implements UserService {
         return Uni.createFrom().item(userInstitution);
     }
 
-    private List<String> checkAlreadyOnboardedProdcutRole(String productId, List<String> productRole,  UserInstitution userInstitution) {
-        List<String> productAlreadyOnboarded = Optional.ofNullable(userInstitution.getProducts())
+    private List<String> checkAlreadyOnboardedProductRole(String productId, List<String> productRole, UserInstitution userInstitution) {
+
+        List<String> productAlreadyOnboarded = new ArrayList<>(Optional.ofNullable(userInstitution.getProducts())
                 .orElse(Collections.emptyList())
                 .stream()
                 .filter(onboardedProduct -> onboardedProduct.getProductId().equals(productId))
-                //.filter(onboardedProduct -> productRole.contains(onboardedProduct.getProductRole()))
+                .filter(onboardedProduct -> productRole.contains(onboardedProduct.getProductRole()))
                 .filter(onboardedProduct -> onboardedProduct.getStatus().equals(ACTIVE))
                 .map(OnboardedProduct::getProductRole)
-                .toList();
+                .toList());
 
-        if (!productAlreadyOnboarded.isEmpty()) {
+        List<String> productRoleFinal = new ArrayList<>(productRole);
+        productRoleFinal.removeIf(productAlreadyOnboarded::contains);
+
+        if (!productAlreadyOnboarded.isEmpty() && CollectionUtils.isNullOrEmpty(productRoleFinal)) {
             throw new InvalidRequestException(String.format("User already has roles on Product %s", productId));
         }
-        return productRole;
+        return productRoleFinal;
     }
 
 
