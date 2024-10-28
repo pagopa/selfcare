@@ -334,6 +334,8 @@ public class UserController {
     })
     @Operation(description = "The createOrUpdateByFiscalCode function is used to create a new user or update an existing one.", summary = "Create or update a user by fiscal code")
     @POST
+    @Tag(name = "User")
+    @Tag(name = "internal-pnpg")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> createOrUpdateByFiscalCode(@Valid CreateUserDto userDto,

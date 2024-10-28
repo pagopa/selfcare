@@ -22,6 +22,8 @@
   }, {
     "name" : "external-v2"
   }, {
+    "name" : "internal-pnpg"
+  }, {
     "name" : "internal-v1"
   }, {
     "name" : "support"
@@ -472,7 +474,7 @@
         } ]
       },
       "post" : {
-        "tags" : [ "User" ],
+        "tags" : [ "User", "internal-pnpg" ],
         "summary" : "Create or update a user by fiscal code",
         "description" : "The createOrUpdateByFiscalCode function is used to create a new user or update an existing one.",
         "operationId" : "createOrUpdateByFiscalCode",
