@@ -1873,6 +1873,12 @@
           "productRole" : {
             "type" : "string"
           },
+          "roles" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
           "relationshipStatus" : {
             "$ref" : "#/components/schemas/OnboardedProductState"
           }
