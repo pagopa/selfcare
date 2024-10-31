@@ -3,13 +3,22 @@ package it.pagopa.selfcare.user;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.TrackEventInput;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
+import lombok.extern.slf4j.Slf4j;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Comparator.naturalOrder;
 import static java.util.Comparator.nullsLast;
 
+@Slf4j
 public class UserUtils {
 
     /**
@@ -66,4 +75,52 @@ public class UserUtils {
         Optional.ofNullable(trackEventInput.getException()).ifPresent(value -> propertiesMap.put("exec", value));
         return propertiesMap;
     }
+
+    /**
+     * The retrieveFdProductIfItChanged method is designed to retrieve the most recently updated OnboardedProduct
+     * from a list of products, provided that the product's ID is included in a specified list of product IDs to check.
+     */
+    public static OnboardedProduct retrieveFdProductIfItChanged(List<OnboardedProduct> products, List<String> productIdToCheck) {
+        if (Objects.nonNull(products) && !products.isEmpty()) {
+            return products.stream()
+                    .max(Comparator.comparing(OnboardedProduct::getUpdatedAt, nullsLast(naturalOrder()))
+                            .thenComparing(OnboardedProduct::getCreatedAt, nullsLast(naturalOrder())))
+                    .filter(onboardedProduct -> productIdToCheck.contains(onboardedProduct.getProductId()))
+                    .orElse(null);
+        }
+        return null;
+    }
+
+    public static String getSASToken(String resourceUri, String keyName, String key) {
+        long epoch = System.currentTimeMillis() / 1000L;
+        int week = 60 * 60 * 24 * 7;
+        String expiry = Long.toString(epoch + week);
+
+        String sasToken;
+        String stringToSign = URLEncoder.encode(resourceUri, StandardCharsets.UTF_8) + "\n" + expiry;
+        String signature = getHMAC256(key, stringToSign);
+        sasToken = "SharedAccessSignature sr=" + URLEncoder.encode(resourceUri, StandardCharsets.UTF_8) + "&sig=" +
+                URLEncoder.encode(signature, StandardCharsets.UTF_8) + "&se=" + expiry + "&skn=" + keyName;
+        return sasToken;
+    }
+
+
+    public static String getHMAC256(String key, String input) {
+        Mac sha256HMAC;
+        String hash = null;
+        try {
+            sha256HMAC = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(), "HmacSHA256");
+            sha256HMAC.init(secretKey);
+            Base64.Encoder encoder = Base64.getEncoder();
+
+            hash = new String(encoder.encode(sha256HMAC.doFinal(input.getBytes(StandardCharsets.UTF_8))));
+
+        } catch (InvalidKeyException | NoSuchAlgorithmException | IllegalStateException e) {
+            log.error("Exception: {}", e.getMessage(), e);
+        }
+
+        return hash;
+    }
+
 }

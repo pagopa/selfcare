@@ -29,6 +29,17 @@ public class TrackEventInput {
                 .build();
     }
 
+    public static TrackEventInput toTrackEventInput(FdUserNotificationToSend fdUserNotificationToSend) {
+        return TrackEventInput.builder()
+                .documentKey(fdUserNotificationToSend.getId())
+                .userId(Optional.ofNullable(fdUserNotificationToSend.getUser()).map(UserToNotify::getUserId).orElse(null))
+                .institutionId(fdUserNotificationToSend.getInstitutionId())
+                .productId(fdUserNotificationToSend.getProduct())
+                .productRole(Optional.ofNullable(fdUserNotificationToSend.getUser()).map(UserToNotify::getProductRole).orElse(null))
+                .build();
+    }
+
+
     public static TrackEventInput toTrackEventInputForUserGroup(UserGroupNotificationToSend userGroupEntity) {
         TrackEventInputBuilder trackEventInputBuilder = TrackEventInput.builder()
                 .documentKey(userGroupEntity.getId())

@@ -1,9 +1,6 @@
 package it.pagopa.selfcare.user;
 
-import it.pagopa.selfcare.user.model.TrackEventInput;
-import it.pagopa.selfcare.user.model.UserGroupNotificationToSend;
-import it.pagopa.selfcare.user.model.UserNotificationToSend;
-import it.pagopa.selfcare.user.model.UserToNotify;
+import it.pagopa.selfcare.user.model.*;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -24,6 +21,26 @@ class TrackEventInputTest {
         userNotification.setUser(user);
         userNotification.setInstitutionId("institutionId");
         userNotification.setProductId("productId");
+
+        TrackEventInput result = TrackEventInput.toTrackEventInput(userNotification);
+
+        assertEquals("docKey", result.getDocumentKey());
+        assertEquals("userId", result.getUserId());
+        assertEquals("institutionId", result.getInstitutionId());
+        assertEquals("productId", result.getProductId());
+        assertEquals("productRole", result.getProductRole());
+    }
+
+    @Test
+    void toTrackEventInput_withUserFdNotification() {
+        FdUserNotificationToSend userNotification = new FdUserNotificationToSend();
+        userNotification.setId("docKey");
+        UserToNotify user = new UserToNotify();
+        user.setUserId("userId");
+        user.setProductRole("productRole");
+        userNotification.setUser(user);
+        userNotification.setInstitutionId("institutionId");
+        userNotification.setProduct("productId");
 
         TrackEventInput result = TrackEventInput.toTrackEventInput(userNotification);
 

@@ -10,23 +10,23 @@ import java.net.URI;
 
 import static it.pagopa.selfcare.user.UserUtils.getSASToken;
 
-public class EventhubSasTokenAuthorization implements ClientRequestFilter {
+public class EventhubFdSasTokenAuthorization implements ClientRequestFilter {
 
     @Inject
-    @ConfigProperty(name = "quarkus.rest-client.event-hub.url")
+    @ConfigProperty(name = "quarkus.rest-client.event-hub-fd.url")
     URI resourceUri;
 
     @Inject
-    @ConfigProperty(name = "eventhub.rest-client.keyName")
+    @ConfigProperty(name = "eventhubfd.rest-client.keyName")
     String keyName;
 
     @Inject
-    @ConfigProperty(name = "eventhub.rest-client.key")
+    @ConfigProperty(name = "eventhubfd.rest-client.key")
     String key;
 
     @Override
     public void filter(ClientRequestContext clientRequestContext) throws IOException {
-        clientRequestContext.getHeaders().add("Authorization", getSASToken(resourceUri.toString(), keyName, key));
-
+        clientRequestContext.getHeaders()
+                .add("Authorization", getSASToken(resourceUri.toString(), keyName, key));
     }
 }
