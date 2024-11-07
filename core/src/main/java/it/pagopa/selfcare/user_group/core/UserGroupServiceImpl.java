@@ -3,6 +3,7 @@ package it.pagopa.selfcare.user_group.core;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.user_group.connector.api.UserGroupConnector;
 import it.pagopa.selfcare.user_group.connector.api.UserGroupOperations;
+import it.pagopa.selfcare.user_group.connector.exception.ResourceAlreadyExistsException;
 import it.pagopa.selfcare.user_group.connector.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user_group.connector.exception.ResourceUpdateException;
 import it.pagopa.selfcare.user_group.connector.model.UserGroupFilter;
@@ -31,6 +32,7 @@ class UserGroupServiceImpl implements UserGroupService {
     private static final String USER_GROUP_ID_REQUIRED_MESSAGE = "A user group id is required";
     private static final String TRYING_TO_MODIFY_SUSPENDED_GROUP = "Trying to modify suspended group";
     private static final String MEMBER_ID_REQUIRED = "A member id is required";
+    private static final String GROUP_NAME_ALREADY_EXISTS = "A group with the same name already exists in ACTIVE or SUSPENDED state";
     private final List<String> allowedSortingParams;
 
     @Autowired
@@ -49,12 +51,28 @@ class UserGroupServiceImpl implements UserGroupService {
         Assert.state(authentication.getPrincipal() instanceof SelfCareUser, "Not SelfCareUser principal");
         Assert.notNull(group, "A group is required");
 
+        checkNameUniqueness(group.getId(), group.getName(), group.getProductId(), group.getInstitutionId());
         UserGroupOperations insert = groupConnector.insert(group);
         log.debug("insert = {}", insert);
         log.trace("createGroup end");
         return insert;
     }
 
+    private void checkNameUniqueness(String currentGroupId, String groupName, String productId, String institutionId) {
+        UserGroupFilter filter = new UserGroupFilter();
+        filter.setProductId(productId);
+        filter.setInstitutionId(institutionId);
+        filter.setStatus(Arrays.asList(UserGroupStatus.ACTIVE, UserGroupStatus.SUSPENDED));
+
+        Page<UserGroupOperations> existingGroups = groupConnector.findAll(filter, Pageable.unpaged());
+        boolean isDuplicate = existingGroups.stream()
+                .anyMatch(g -> g.getName().equals(groupName) && !g.getId().equals(currentGroupId));
+
+        if (isDuplicate) {
+            log.warn("Attempted to create/update group with duplicate name: {}", groupName);
+            throw new ResourceAlreadyExistsException(GROUP_NAME_ALREADY_EXISTS);
+        }
+    }
 
     @Override
     public void addMember(String id, UUID memberId) {
@@ -160,6 +178,8 @@ class UserGroupServiceImpl implements UserGroupService {
         if (UserGroupStatus.SUSPENDED.equals(foundGroup.getStatus())) {
             throw new ResourceUpdateException(TRYING_TO_MODIFY_SUSPENDED_GROUP);
         }
+        checkNameUniqueness(id, group.getName(), foundGroup.getProductId(), foundGroup.getInstitutionId());
+
         foundGroup.setMembers(group.getMembers());
         foundGroup.setName(group.getName());
         foundGroup.setDescription(group.getDescription());
