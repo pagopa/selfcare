@@ -248,7 +248,7 @@ public class UserServiceImpl implements UserService {
                     var userInstitutionFilters = UserInstitutionFilter.builder().userId(userResource.getId().toString()).institutionId(institutionId).build().constructMap();
                     Uni<String> userMailUuid = userInstitutionService.retrieveFirstFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilters))
                             .onItem().ifNull().continueWith(() -> {
-                                log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), userResource.getId()));
+                                log.debug(String.format(USER_NOT_FOUND_ERROR.getMessage(), userResource.getId()));
                                 return new UserInstitution();
                             })
                             .map(UserInstitution::getUserMailUuid);
