@@ -8,6 +8,7 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.utils.ProductUtils;
+import it.pagopa.selfcare.user.client.EventHubFdRestClient;
 import it.pagopa.selfcare.user.client.EventHubRestClient;
 import it.pagopa.selfcare.user.conf.CloudTemplateLoader;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -25,15 +26,16 @@ import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.io.StringWriter;
+import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.user.UserUtils.mapPropsForTrackEvent;
 import static it.pagopa.selfcare.user.constant.TemplateMailConstant.*;
 import static it.pagopa.selfcare.user.model.TrackEventInput.toTrackEventInput;
-import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_PRODUCT_FAILURE;
-import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS;
-import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_NAME;
+import static it.pagopa.selfcare.user.model.constants.EventsMetric.*;
+import static it.pagopa.selfcare.user.model.constants.EventsMetric.FD_EVENTS_USER_INSTITUTION_PRODUCT_FAILURE;
+import static it.pagopa.selfcare.user.model.constants.EventsName.*;
 
 
 @Slf4j
@@ -44,16 +46,34 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     @RestClient
     EventHubRestClient eventHubRestClient;
 
+    @Inject
+    @RestClient
+    EventHubFdRestClient eventHubFdRestClient;
+
+    @ConfigProperty(name = "user-ms.retry.min-backoff")
+    Integer retryMinBackOff;
+
+    @ConfigProperty(name = "user-ms.retry.max-backoff")
+    Integer retryMaxBackOff;
+
+    @ConfigProperty(name = "user-ms.retry")
+    Integer maxRetry;
+
+
     private final MailService mailService;
     private final Configuration freemarkerConfig;
     private final boolean eventHubUsersEnabled;
+    private final boolean eventHubSelfcareFdEnabled;
     private final TelemetryClient telemetryClient;
 
 
     public UserNotificationServiceImpl(Configuration freemarkerConfig, CloudTemplateLoader cloudTemplateLoader, MailService mailService,
-                                       @ConfigProperty(name = "user-ms.eventhub.users.enabled") boolean eventHubUsersEnabled, TelemetryClient telemetryClient) {
+                                       @ConfigProperty(name = "user-ms.eventhub.users.enabled") boolean eventHubUsersEnabled,
+                                       @ConfigProperty(name = "user-ms.eventhub.selfcarefd.enabled") boolean eventHubSelfcareFdEnabled,
+                                       TelemetryClient telemetryClient) {
         this.mailService = mailService;
         this.freemarkerConfig = freemarkerConfig;
+        this.eventHubSelfcareFdEnabled = eventHubSelfcareFdEnabled;
         this.telemetryClient = telemetryClient;
         freemarkerConfig.setTemplateLoader(cloudTemplateLoader);
         this.eventHubUsersEnabled = eventHubUsersEnabled;
@@ -99,6 +119,18 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
         return this.sendEmailNotification(templateName, CREATE_SUBJECT, email, dataModel)
                 .onItem().invoke(() -> log.debug("sendCreateNotification end"));
+    }
+
+    @Override
+    public Uni<Void> sendSelfcareFdUserNotification(FdUserNotificationToSend fdUserNotificationToSend, NotificationUserType actionType) {
+        return eventHubSelfcareFdEnabled
+                ? eventHubFdRestClient.sendMessage(fdUserNotificationToSend)
+                .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
+                .onItem().invoke(() -> telemetryClient.trackEvent(FD_EVENT_USER_MS_NAME, mapPropsForTrackEvent(toTrackEventInput(fdUserNotificationToSend)), Map.of(FD_EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS, 1D)))
+                .onFailure().invoke(() -> telemetryClient.trackEvent(FD_EVENT_USER_MS_NAME, mapPropsForTrackEvent(toTrackEventInput(fdUserNotificationToSend)), Map.of(FD_EVENTS_USER_INSTITUTION_PRODUCT_FAILURE, 1D)))
+                .onItem().invoke(() -> log.debug("Selfcare fd user notification sent successfully with actionType: {}", actionType))
+                .onFailure().invoke(throwable -> log.warn("Failed to send selfcare fd user notification with actionType: {}", actionType))
+                : Uni.createFrom().nullItem();
     }
 
     private Map<String, String> buildCreateEmailDataModel(LoggedUser loggedUser, Product product, String institutionDescription, List<String> productRoleCodes) {

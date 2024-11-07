@@ -9,9 +9,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import it.pagopa.selfcare.user.entity.UserInstitution;
-import it.pagopa.selfcare.user.model.OnboardedProduct;
-import it.pagopa.selfcare.user.model.UpdateUserRequest;
-import it.pagopa.selfcare.user.model.UserNotificationToSend;
+import it.pagopa.selfcare.user.model.*;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import org.bson.types.ObjectId;
@@ -19,13 +17,19 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.openapi.quarkus.user_registry_json.model.*;
+import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
+import org.openapi.quarkus.user_registry_json.model.SaveUserDto;
+import org.openapi.quarkus.user_registry_json.model.UserId;
+import org.openapi.quarkus.user_registry_json.model.UserResource;
+import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import static io.smallrye.common.constraint.Assert.assertNotNull;
+import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.ACTIVE;
+import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.DELETED;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -206,6 +210,114 @@ public class UserRegistryServiceTest {
         UniAssertSubscriber<List<UserInstitution>> subscriber = userRegistryService.updateUserRegistry(updateUserRequest, userId, institutionId)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted();
+    }
+
+    @Test
+    void testSendUpdateUserNotificationToFdQueue() {
+        final String userId = userResource.getId().toString();
+        final String institutionId = "institutionId";
+        when(userNotificationService.sendKafkaNotification(any(UserNotificationToSend.class))).thenReturn(Uni.createFrom().item(new UserNotificationToSend()));
+        userInstitution.getProducts().get(0).setProductId("prod-fd");
+        userInstitution.getProducts().get(0).setStatus(ACTIVE);
+
+        UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+        updateUserRequest.setEmail("test2@test.it");
+        when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(userInstitution));
+        when(userInstitutionService.persistOrUpdate(any(UserInstitution.class))).thenReturn(Uni.createFrom().item(userInstitution));
+        when(userRegistryApi.updateUsingPATCH(eq(userId), any(MutableUserFieldsDto.class))).thenReturn(Uni.createFrom().item(Response.accepted().build()));
+        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)).thenReturn(Uni.createFrom().item(userResource));
+
+        UniAssertSubscriber<List<UserInstitution>> subscriber = userRegistryService.updateUserRegistry(updateUserRequest, userId, institutionId)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
+        verify(userNotificationService, times(1)).sendSelfcareFdUserNotification(any(FdUserNotificationToSend.class), eq(NotificationUserType.DELETE_USER));
+        verify(userNotificationService, times(1)).sendSelfcareFdUserNotification(any(FdUserNotificationToSend.class), eq(NotificationUserType.ACTIVE_USER));
+    }
+
+    @Test
+    void testSendUpdateUserNotificationToFdQueue2() {
+        final String userId = userResource.getId().toString();
+        final String institutionId = "institutionId";
+        when(userNotificationService.sendKafkaNotification(any(UserNotificationToSend.class))).thenReturn(Uni.createFrom().item(new UserNotificationToSend()));
+        userInstitution.getProducts().get(0).setProductId("prod-fd-garantito");
+        userInstitution.getProducts().get(0).setStatus(ACTIVE);
+
+        UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+        updateUserRequest.setEmail("test2@test.it");
+        when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(userInstitution));
+        when(userInstitutionService.persistOrUpdate(any(UserInstitution.class))).thenReturn(Uni.createFrom().item(userInstitution));
+        when(userRegistryApi.updateUsingPATCH(eq(userId), any(MutableUserFieldsDto.class))).thenReturn(Uni.createFrom().item(Response.accepted().build()));
+        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)).thenReturn(Uni.createFrom().item(userResource));
+
+        UniAssertSubscriber<List<UserInstitution>> subscriber = userRegistryService.updateUserRegistry(updateUserRequest, userId, institutionId)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
+        verify(userNotificationService, times(1)).sendSelfcareFdUserNotification(any(FdUserNotificationToSend.class), eq(NotificationUserType.DELETE_USER));
+        verify(userNotificationService, times(1)).sendSelfcareFdUserNotification(any(FdUserNotificationToSend.class), eq(NotificationUserType.ACTIVE_USER));
+    }
+
+    @Test
+    void testNotSendUpdateUserNotificationToFdQueue() {
+        final String userId = userResource.getId().toString();
+        final String institutionId = "institutionId";
+        when(userNotificationService.sendKafkaNotification(any(UserNotificationToSend.class))).thenReturn(Uni.createFrom().item(new UserNotificationToSend()));
+        userInstitution.getProducts().get(0).setProductId("prod-fd-garantito");
+        userInstitution.getProducts().get(0).setStatus(DELETED);
+
+        UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+        updateUserRequest.setEmail("test2@test.it");
+        when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(userInstitution));
+        when(userInstitutionService.persistOrUpdate(any(UserInstitution.class))).thenReturn(Uni.createFrom().item(userInstitution));
+        when(userRegistryApi.updateUsingPATCH(eq(userId), any(MutableUserFieldsDto.class))).thenReturn(Uni.createFrom().item(Response.accepted().build()));
+        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)).thenReturn(Uni.createFrom().item(userResource));
+
+        UniAssertSubscriber<List<UserInstitution>> subscriber = userRegistryService.updateUserRegistry(updateUserRequest, userId, institutionId)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
+        verify(userNotificationService, times(0)).sendSelfcareFdUserNotification(any(FdUserNotificationToSend.class), any());
+    }
+
+    @Test
+    void testNotSendUpdateUserNotificationToFdQueueForUnchangedMail() {
+        final String userId = userResource.getId().toString();
+        final String institutionId = "institutionId";
+        when(userNotificationService.sendKafkaNotification(any(UserNotificationToSend.class))).thenReturn(Uni.createFrom().item(new UserNotificationToSend()));
+        userInstitution.getProducts().get(0).setProductId("prod-fd-garantito");
+        userInstitution.getProducts().get(0).setStatus(DELETED);
+        userInstitution.setUserMailUuid(userMailUuidDefault);
+
+        UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+        updateUserRequest.setEmail("test@test.it");
+        when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(userInstitution));
+        when(userInstitutionService.persistOrUpdate(any(UserInstitution.class))).thenReturn(Uni.createFrom().item(userInstitution));
+        when(userRegistryApi.updateUsingPATCH(eq(userId), any(MutableUserFieldsDto.class))).thenReturn(Uni.createFrom().item(Response.accepted().build()));
+        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)).thenReturn(Uni.createFrom().item(userResource));
+
+        UniAssertSubscriber<List<UserInstitution>> subscriber = userRegistryService.updateUserRegistry(updateUserRequest, userId, institutionId)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
+        verify(userNotificationService, times(0)).sendSelfcareFdUserNotification(any(FdUserNotificationToSend.class), any());
+    }
+
+    @Test
+    void testNotSendUpdateUserNotificationToFdQueueForEmptyUserInstitutions() {
+        final String userId = userResource.getId().toString();
+        final String institutionId = "institutionId";
+        when(userNotificationService.sendKafkaNotification(any(UserNotificationToSend.class))).thenReturn(Uni.createFrom().item(new UserNotificationToSend()));
+        userInstitution.getProducts().get(0).setProductId("prod-fd-garantito");
+        userInstitution.getProducts().get(0).setStatus(DELETED);
+        userInstitution.setUserMailUuid(userMailUuidDefault);
+
+        UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+        updateUserRequest.setEmail("test@test.it");
+        when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().empty());
+        when(userRegistryApi.updateUsingPATCH(eq(userId), any(MutableUserFieldsDto.class))).thenReturn(Uni.createFrom().item(Response.accepted().build()));
+        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)).thenReturn(Uni.createFrom().item(userResource));
+
+        UniAssertSubscriber<List<UserInstitution>> subscriber = userRegistryService.updateUserRegistry(updateUserRequest, userId, institutionId)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
+        verify(userNotificationService, times(0)).sendSelfcareFdUserNotification(any(FdUserNotificationToSend.class), any());
     }
 
     @Test

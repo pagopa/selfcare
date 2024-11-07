@@ -2,13 +2,16 @@ package it.pagopa.selfcare.user.mapper;
 
 import it.pagopa.selfcare.user.UserUtils;
 import it.pagopa.selfcare.user.entity.UserInstitution;
-import it.pagopa.selfcare.user.model.OnboardedProduct;
-import it.pagopa.selfcare.user.model.UserNotificationToSend;
+import it.pagopa.selfcare.user.model.*;
+import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Mapper(componentModel = "cdi", imports = UUID.class)
@@ -32,5 +35,23 @@ public interface NotificationMapper {
     @Named("toUniqueIdNotification")
     default String toUniqueIdNotification(UserInstitution userInstitution, OnboardedProduct product) {
         return UserUtils.uniqueIdNotification(userInstitution.getId().toHexString(), product.getProductId(), product.getProductRole());
+    }
+
+    @Mapping(target = "id", expression = "java(toUniqueIdNotification(userInstitutionChanged, product))")
+    @Mapping(target = "onboardingTokenId", source = "product.tokenId")
+    @Mapping(target = "product", source = "product.productId")
+    @Mapping(target = "createdAt", source = "product.createdAt")
+    @Mapping(target = "updatedAt", expression = "java((null == product.getUpdatedAt()) ? product.getCreatedAt() : product.getUpdatedAt())")
+    @Mapping(target = "user", expression = "java(mapUserForFD(userId, product))")
+    @Mapping(target = "type", source = "type")
+    FdUserNotificationToSend toFdUserNotificationToSend(UserInstitution userInstitutionChanged, OnboardedProduct product, String userId, NotificationUserType type);
+
+    @Named("mapUserForFD")
+    default UserToNotify mapUserForFD(String userId, OnboardedProduct onboardedProduct) {
+        UserToNotify userToNotify = new UserToNotify();
+        userToNotify.setUserId(userId);
+        userToNotify.setRoles(StringUtils.isNotBlank(onboardedProduct.getProductRole()) ? List.of(onboardedProduct.getProductRole()) : Collections.emptyList());
+        userToNotify.setRole(Optional.ofNullable(onboardedProduct.getRole()).map(Enum::name).orElse(null));
+        return userToNotify;
     }
 }
