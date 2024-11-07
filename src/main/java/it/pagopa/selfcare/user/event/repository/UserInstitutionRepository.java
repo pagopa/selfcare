@@ -76,11 +76,11 @@ public class UserInstitutionRepository {
 
         // flow of new user must persist userInfo, if already exists it must be failed
         return UserInfo.persist(userInfo)
-                .invoke(() -> log.info(String.format("createNewUserInfo for userId %s and institution %s",
-                        userInstitution.getUserId(),userInstitution.getInstitutionId())))
-                .onFailure().invoke(() -> log.error(String.format("createNewUserInfo failed for userId %s and institution %s",
-                        userInstitution.getUserId(),userInstitution.getInstitutionId())))
-                .replaceWith(Uni.createFrom().voidItem());
+                .invoke(() -> log.info("createNewUserInfo for userId {} and institution {}",
+                        userInstitution.getUserId(),userInstitution.getInstitutionId()))
+                .onFailure().invoke(() -> log.error("createNewUserInfo failed for userId {} and institution {}",
+                        userInstitution.getUserId(),userInstitution.getInstitutionId()))
+                .replaceWithVoid();
     }
 
     private Uni<Void> deleteInstitutionOrAllUserInfo(ReactivePanacheMongoEntityBase entityBase, UserInstitution userInstitution) {
@@ -92,11 +92,11 @@ public class UserInstitutionRepository {
                         userInfo.getInstitutions().removeIf(userInstitutionRole -> userInstitutionRole.getInstitutionId().equalsIgnoreCase(userInstitution.getInstitutionId()));
 
                         if (CollectionUtils.isEmpty(userInfo.getInstitutions())) {
-                            log.info(String.format("deleteInstitutionOrAllUserInfo removing userInfo for userId: %s", userInstitution.getUserId()));
-                            return UserInfo.deleteById(userInstitution.getUserId()).replaceWith(Uni.createFrom().voidItem());
+                            log.info("deleteInstitutionOrAllUserInfo removing userInfo for userId: {}", userInstitution.getUserId());
+                            return UserInfo.deleteById(userInstitution.getUserId()).replaceWithVoid();
                         } else {
-                            log.info(String.format("deleteInstitutionOrAllUserInfo removing institution %s for userId %s",
-                                    userInstitution.getInstitutionId(), userInstitution.getUserId()));
+                            log.info("deleteInstitutionOrAllUserInfo removing institution {} for userId {}",
+                                    userInstitution.getInstitutionId(), userInstitution.getUserId());
                             return UserInfo.persistOrUpdate(userInfo);
                         }
                     }
@@ -119,13 +119,7 @@ public class UserInstitutionRepository {
                             .orElse(addUserInstitutionRole(userInstitution.getUserId(), institutionRoleAsDocument));
 
                 })
-                .onItem().transformToUni(reactiveUpdate -> {
-                    if(reactiveUpdate != 1L) {
-                        log.error(String.format("addOrUpdateUserInstitutionRole failed for userId %s and institution %s",
-                                userInstitution.getUserId(),userInstitution.getInstitutionId()));
-                    }
-                    return Uni.createFrom().voidItem();
-                });
+                .replaceWithVoid();
     }
 
     private Uni<Long> updateUserInstitutionRole(String userId, String institutionId, Document institution){

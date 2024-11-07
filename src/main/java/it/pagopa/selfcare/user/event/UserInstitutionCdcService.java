@@ -184,7 +184,7 @@ public class UserInstitutionCdcService {
         UserInstitution userInstitutionChanged = document.getFullDocument();
         String userInstitutionId = userInstitutionChanged.getId().toHexString();
 
-        log.info("Starting consumerUserInstitutionRepositoryEvent ... ");
+        log.info("Starting consumerUserInstitutionRepositoryEvent from UserInstitution document having id: {}", userInstitutionId);
 
         userInstitutionRepository.updateUser(userInstitutionChanged)
                 .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofHours(retryMaxBackOff)).atMost(maxRetry)
