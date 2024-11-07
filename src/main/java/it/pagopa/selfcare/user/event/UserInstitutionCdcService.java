@@ -41,6 +41,8 @@ import java.util.concurrent.TimeoutException;
 
 import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
+import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_FD;
+import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_FD_GARANTITO;
 import static it.pagopa.selfcare.user.UserUtils.mapPropsForTrackEvent;
 import static it.pagopa.selfcare.user.event.constant.CdcStartAtConstant.*;
 import static it.pagopa.selfcare.user.model.TrackEventInput.toTrackEventInput;
@@ -57,8 +59,6 @@ public class UserInstitutionCdcService {
     private static final String COLLECTION_NAME = "userInstitutions";
     private static final String OPERATION_NAME = "USER-CDC-UserInfoUpdate";
     public static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
-    private static final String PROD_FD = "prod-fd";
-    private static final String PROD_FD_GARANTITO = "prod-fd-garantito";
     public static final String ERROR_DURING_SUBSCRIBE_COLLECTION_EXCEPTION_MESSAGE = "Error during subscribe collection, exception: {} , message: {}";
 
 
@@ -251,7 +251,7 @@ public class UserInstitutionCdcService {
             userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitutionChanged.getUserId())
                     .onFailure(this::checkIfIsRetryableException)
                     .retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
-                    .onItem().transformToUni(userResource -> Uni.createFrom().item(UserUtils.retrieveFdProductIfItChanged(userInstitutionChanged.getProducts(), List.of(PROD_FD, PROD_FD_GARANTITO)))
+                    .onItem().transformToUni(userResource -> Uni.createFrom().item(UserUtils.retrieveFdProductIfItChanged(userInstitutionChanged.getProducts(), List.of(PROD_FD.getValue(), PROD_FD_GARANTITO.getValue())))
                             .onItem().ifNotNull().transform(onboardedProduct -> notificationMapper.toFdUserNotificationToSend(userInstitutionChanged, onboardedProduct, userResource, evaluateType(onboardedProduct)))
                             .onItem().ifNotNull().transformToUni(fdUserNotificationToSend -> {
                                         log.info("Sending message to EventHubFdRestClient ... ");
