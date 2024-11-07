@@ -150,11 +150,11 @@ public class UserGroupCdcService {
                         mapPropsForTrackEvent(toTrackEventInputForUserGroup(userGroupNotificationToSend)), Map.of(EVENTS_USER_GROUP_PRODUCT_FAILURE, 1D)))
                 .subscribe().with(
                         result -> {
-                            log.info("SendEvents successfully performed from UserInstitution document having id: {}", document.getDocumentKey().toJson());
+                            log.info("SendEvents successfully performed from user group document having id: {}", document.getDocumentKey().toJson());
                             telemetryClient.trackEvent(EVENT_USER_GROUP_CDC_NAME, mapPropsForTrackEvent(toTrackEventInputForUserGroup(userGroupNotificationToSend)), Map.of(EVENTS_USER_GROUP_SUCCESS, 1D));
                         },
                         failure -> {
-                            log.error("Error during SendEvents from UserInstitution document having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
+                            log.error("Error during SendEvents from user group document having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
                             telemetryClient.trackEvent(EVENT_USER_GROUP_CDC_NAME, mapPropsForTrackEvent(toTrackEventInputForUserGroup(userGroupNotificationToSend)), Map.of(EVENTS_USER_GROUP_FAILURE, 1D));
                         });
     }
