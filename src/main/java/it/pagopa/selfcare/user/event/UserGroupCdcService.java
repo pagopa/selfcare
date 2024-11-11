@@ -48,7 +48,7 @@ import static java.util.Arrays.asList;
 @ApplicationScoped
 public class UserGroupCdcService {
     private static final String OPERATION_NAME = "USER-GROUP-CDC-sendUserGroupEvent";
-    private static final String COLLECTION_NAME = "userGroups";
+    private static final String COLLECTION_NAME = "UserGroups";
 
     private final TelemetryClient telemetryClient;
     private final Integer retryMinBackOff;

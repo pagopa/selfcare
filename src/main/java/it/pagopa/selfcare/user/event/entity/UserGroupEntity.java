@@ -12,7 +12,7 @@ import java.util.Set;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-@MongoEntity(collection = "userGroups")
+@MongoEntity(collection = "UserGroups")
 @FieldNameConstants(asEnum = true)
 public class UserGroupEntity extends ReactivePanacheMongoEntity {
 
