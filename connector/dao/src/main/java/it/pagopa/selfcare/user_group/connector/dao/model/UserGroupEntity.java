@@ -16,7 +16,7 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(of = "id")
-@Document("userGroups")
+@Document("UserGroups")
 @FieldNameConstants(onlyExplicitlyIncluded = true)
 public class UserGroupEntity implements UserGroupOperations {
 
