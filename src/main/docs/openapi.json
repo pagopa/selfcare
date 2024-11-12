@@ -1306,6 +1306,51 @@
           "SecurityScheme" : [ ]
         } ]
       }
+    },
+    "/users/{userId}/onboarding" : {
+      "post" : {
+        "tags" : [ "User" ],
+        "summary" : "Check if the user is manager or Update/create a user by userId with a new role",
+        "description" : "Checks if the user is already a manager for the specified product and, if not, creates or updates the user with a new role.",
+        "operationId" : "createUserByUserId",
+        "parameters" : [ {
+          "name" : "userId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AddUserRoleDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The user is already a manager for the specified product.",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "201" : {
+            "description" : "The user has been created or updated with a new role."
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
     }
   },
   "components" : {

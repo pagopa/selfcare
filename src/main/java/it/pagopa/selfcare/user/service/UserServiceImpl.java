@@ -17,6 +17,7 @@ import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.user.exception.UserRoleAlreadyPresentException;
 import it.pagopa.selfcare.user.mapper.OnboardedProductMapper;
 import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
 import it.pagopa.selfcare.user.mapper.UserMapper;
@@ -56,8 +57,7 @@ import static it.pagopa.selfcare.user.constant.CustomError.*;
 import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_FAILURE;
 import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_SUCCESS;
 import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_NAME;
-import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.ACTIVE;
-import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.PENDING;
+import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.*;
 import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
 import static it.pagopa.selfcare.user.util.UserUtils.VALID_USER_PRODUCT_STATES_FOR_NOTIFICATION;
 
@@ -451,6 +451,68 @@ public class UserServiceImpl implements UserService {
                 .onFailure(UserUtils::isUserNotFoundExceptionOnUserRegistry).recoverWithUni(throwable -> Uni.createFrom().failure(new ResourceNotFoundException(throwable.getMessage())))
                 .onItem().transformToUni(userResource -> updateUserInstitutionByUserId(userResource, userDto, loggedUser))
                 .onFailure().invoke(exception -> log.error("Error during retrieve user from userRegistry: {} ", exception.getMessage(), exception));
+    }
+
+    public Uni<String> createUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser) {
+        var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(userDto.getInstitutionId()).build().constructMap();
+        var productFilters = OnboardedProductFilter.builder().productId(userDto.getProduct().getProductId()).status(List.of(ACTIVE)).build().constructMap();
+        Map<String, Object> queryParameter = userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters);
+        return userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter)
+                .onItem().transformToUni(userInstitution -> {
+                    if (Objects.nonNull(userInstitution)) {
+                        log.info("User with userId: {} has already onboarded for product {}. Proceeding with check role", userId, userDto.getProduct().getProductId());
+                        PartyRole roleOnProduct = retrieveUserRoleOnProduct(userInstitution, userDto.getProduct().getProductId());
+                        return evaluateRoleAndCreateOrUpdateUserByUserId(userDto, userId, loggedUser, roleOnProduct);
+                    } else {
+                        log.info("User with userId: {} has not onboarded for product {}. Proceeding with create", userId, userDto.getProduct().getProductId());
+                        return createOrUpdateUserByUserId(userDto, userId, loggedUser);
+                    }
+                })
+                .onFailure().invoke(exception -> log.error("Error during createOrUpdateManagerByUserId for userId: {}, institutionId: {}: {}", userId, userDto.getInstitutionId(), exception.getMessage(), exception));
+    }
+
+    /**
+     * The evaluateRoleAndCreateOrUpdateUserByUserId method is designed to evaluate the role of a user for a specific product
+     * and either create or update the user's role based on certain conditions.
+     * First, the method checks if the roleOnProduct is null. If it is, we need to create new role for the user on selected product.
+     * Next, the method compares the role specified in userDto with the existing roleOnProduct.
+     * If the new role is lower than the existing role (es. new role DELEGATE, old role MANAGER), it then calls
+     * we have to delete the old role, and subsequently we create new role for the user on selected product.
+     * If the new role is equals or higher than the existing role, throw a UserRoleAlreadyPresentException to indicate that we need to keep the old role.
+     */
+    private Uni<String> evaluateRoleAndCreateOrUpdateUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser, PartyRole roleOnProduct) {
+        PartyRole newRole;
+        try {
+            newRole = PartyRole.valueOf(userDto.getProduct().getRole());
+        } catch (IllegalArgumentException e) {
+            throw new InvalidRequestException("Invalid role: " + userDto.getProduct().getRole() + ". Allowed value are: " + Arrays.toString(PartyRole.values()));
+        }
+        if (Objects.isNull(roleOnProduct)) {
+            return createOrUpdateUserByUserId(userDto, userId, loggedUser);
+        } else if (newRole.compareTo(roleOnProduct) < 0) {
+            log.info("User {}, for product {}, has role {}, which is lower than {}. The old role will be deleted, and the new role will be created.", userId, userDto.getProduct().getProductId(), roleOnProduct, userDto.getProduct().getRole());
+            return userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userId, userDto.getInstitutionId(), userDto.getProduct().getProductId(), null, null, DELETED)
+                    .onItem().transformToUni(longValue -> createOrUpdateUserByUserId(userDto, userId, loggedUser));
+        } else {
+            log.info("User {}, for product {}, has role {}, which is equals or biggest than {}. The old role is kept.", userId, userDto.getProduct().getProductId(), roleOnProduct, userDto.getProduct().getRole());
+            return Uni.createFrom().failure(new UserRoleAlreadyPresentException(String.format("User already has a role equals or bigger than %s for the product [%s] we cannot create %s role",
+                    roleOnProduct, userDto.getProduct().getProductId(), userDto.getProduct().getRole())));
+        }
+    }
+
+    /**
+     * This method retrieve the user role on a specific product if exists (status = ACTIVE).
+     */
+    private PartyRole retrieveUserRoleOnProduct(UserInstitution userInstitution, String productId) {
+        if (Objects.nonNull(userInstitution.getProducts()) && !userInstitution.getProducts().isEmpty()) {
+            return userInstitution.getProducts().stream()
+                    .filter(onboardedProduct -> productId.equalsIgnoreCase(onboardedProduct.getProductId()))
+                    .filter(onboardedProduct -> ACTIVE.equals(onboardedProduct.getStatus()))
+                    .findFirst()
+                    .map(OnboardedProduct::getRole)
+                    .orElse(null);
+        }
+        return null;
     }
 
     /**

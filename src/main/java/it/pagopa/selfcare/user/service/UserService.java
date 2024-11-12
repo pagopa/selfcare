@@ -50,6 +50,8 @@ public interface UserService {
 
     Uni<String> createOrUpdateUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser);
 
+    Uni<String> createUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser);
+
     Multi<UserDataResponse> retrieveUsersData(String institutionId, String personId, List<String> roles, List<String> states, List<String> products, List<String> productRoles, String userId);
 
     Uni<Void> updateInstitutionDescription(String institutionId, UpdateDescriptionDto descriptionDto);

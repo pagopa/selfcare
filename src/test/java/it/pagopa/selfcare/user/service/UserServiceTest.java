@@ -27,9 +27,9 @@ import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
+import it.pagopa.selfcare.user.exception.UserRoleAlreadyPresentException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.mapper.UserMapper;
-import it.pagopa.selfcare.user.mapper.UserMapperImpl;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
@@ -58,8 +58,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.*;
 
-import static it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER;
-import static it.pagopa.selfcare.onboarding.common.PartyRole.OPERATOR;
+import static it.pagopa.selfcare.onboarding.common.PartyRole.*;
 import static it.pagopa.selfcare.user.constant.CustomError.*;
 import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_SUCCESS;
 import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_NAME;
@@ -1264,6 +1263,234 @@ class UserServiceTest {
         // Verify the result
         subscriber.assertFailedWith(RuntimeException.class);
         verify(userRegistryApi).findByIdUsingGET(any(), eq("userId"));
+    }
+
+    @Test
+    void createUserFromOnboardingByUserIdUserIsAlreadyManager() {
+        AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
+        addUserRoleDto.setInstitutionId("institutionId");
+        AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
+        addUserRoleProduct.setProductId("test");
+        addUserRoleProduct.setRole(MANAGER.name());
+        addUserRoleDto.setProduct(addUserRoleProduct);
+
+        LoggedUser loggedUser = LoggedUser.builder().build();
+        OnboardedProduct product = new OnboardedProduct();
+        product.setProductId("test");
+        product.setProductRole("admin");
+        product.setRole(MANAGER);
+        product.setStatus(OnboardedProductState.ACTIVE);
+
+        UserInstitution userInstitution = new UserInstitution();
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setStatus(OnboardedProductState.ACTIVE);
+        List<OnboardedProduct> products = new ArrayList<>();
+        products.add(product);
+        products.add(onboardedProduct);
+        userInstitution.setProducts(products);
+
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap()))
+                .thenReturn(Uni.createFrom().item(userInstitution));
+
+        userService.createUserByUserId(addUserRoleDto, "userId", loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .assertFailedWith(UserRoleAlreadyPresentException.class, "User already has a role equals or bigger than MANAGER for the product [test] we cannot create MANAGER role");
+    }
+
+    @Test
+    void createUserFromOnboardingByUserIdInvalidRole() {
+        AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
+        addUserRoleDto.setInstitutionId("institutionId");
+        AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
+        addUserRoleProduct.setProductId("test");
+        addUserRoleProduct.setRole("INVALID");
+        addUserRoleDto.setProduct(addUserRoleProduct);
+
+        LoggedUser loggedUser = LoggedUser.builder().build();
+        OnboardedProduct product = new OnboardedProduct();
+        product.setProductId("test");
+        product.setProductRole("admin");
+        product.setRole(MANAGER);
+        product.setStatus(OnboardedProductState.ACTIVE);
+
+        UserInstitution userInstitution = new UserInstitution();
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setStatus(OnboardedProductState.ACTIVE);
+        List<OnboardedProduct> products = new ArrayList<>();
+        products.add(product);
+        products.add(onboardedProduct);
+        userInstitution.setProducts(products);
+
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap()))
+                .thenReturn(Uni.createFrom().item(userInstitution));
+
+        userService.createUserByUserId(addUserRoleDto, "userId", loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .assertFailedWith(InvalidRequestException.class, "Invalid role: INVALID. Allowed value are: [MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA]");
+    }
+
+
+    @Test
+    void createUserFromOnboardingByUserIdUserWithBiggestActiveRoleOnProduct() {
+        AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
+        addUserRoleDto.setInstitutionId("institutionId");
+        AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
+        addUserRoleProduct.setProductId("test");
+        addUserRoleProduct.setRole(SUB_DELEGATE.name());
+        addUserRoleDto.setProduct(addUserRoleProduct);
+
+        LoggedUser loggedUser = LoggedUser.builder().build();
+        OnboardedProduct product = new OnboardedProduct();
+        product.setProductId("test");
+        product.setProductRole("admin");
+        product.setRole(MANAGER);
+        product.setStatus(OnboardedProductState.ACTIVE);
+
+        UserInstitution userInstitution = new UserInstitution();
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setStatus(OnboardedProductState.ACTIVE);
+        List<OnboardedProduct> products = new ArrayList<>();
+        products.add(product);
+        products.add(onboardedProduct);
+        userInstitution.setProducts(products);
+
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap()))
+                .thenReturn(Uni.createFrom().item(userInstitution));
+
+        userService.createUserByUserId(addUserRoleDto, "userId", loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .assertFailedWith(UserRoleAlreadyPresentException.class, "User already has a role equals or bigger than MANAGER for the product [test] we cannot create SUB_DELEGATE role");
+    }
+
+    @Test
+    void createManagerByUserIdUserWithSmallestActiveRoleOnProduct() {
+        AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
+        addUserRoleDto.setInstitutionId("institutionId");
+        AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
+        addUserRoleProduct.setProductId("test");
+        addUserRoleProduct.setRole(MANAGER.name());
+        addUserRoleProduct.setProductRoles(List.of("admin2"));
+        addUserRoleProduct.setDelegationId("delegationId");
+        addUserRoleDto.setProduct(addUserRoleProduct);
+        LoggedUser loggedUser = LoggedUser.builder().build();
+
+        UserInstitution userInstitution = createUserInstitutionWithoutManagerRole();
+
+        Product product = new Product();
+        product.setDescription("description");
+
+        UserToNotify userToNotify = new UserToNotify();
+        userToNotify.setUserId(userId.toString());
+
+        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
+        userNotificationToSend.setUser(userToNotify);
+
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap())).thenReturn(Uni.createFrom().item(userInstitution));
+        when(userRegistryApi.findByIdUsingGET(any(), eq("userId"))).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct("userId", addUserRoleDto.getInstitutionId(),
+                addUserRoleProduct.getProductId(), null, null, DELETED)).thenReturn(Uni.createFrom().item(1L));
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(createUserInstitutionWithoutManagerRole()));
+        when(productService.getProduct(any())).thenReturn(product);
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
+        when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
+        when(userNotificationService.sendKafkaNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
+
+        UniAssertSubscriber<String> subscriber = userService.createUserByUserId(addUserRoleDto, "userId", loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.awaitItem().assertCompleted();
+        verify(userRegistryApi).findByIdUsingGET(any(), eq("userId"));
+        verify(userInstitutionService).persistOrUpdate(any());
+    }
+
+    @Test
+    void createManagerByUserIdUserWithoutRoleOnProduct() {
+        AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
+        addUserRoleDto.setInstitutionId("institutionId");
+        AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
+        addUserRoleProduct.setProductId("test");
+        addUserRoleProduct.setRole(MANAGER.name());
+        addUserRoleProduct.setProductRoles(List.of("admin2"));
+        addUserRoleProduct.setDelegationId("delegationId");
+        addUserRoleDto.setProduct(addUserRoleProduct);
+        LoggedUser loggedUser = LoggedUser.builder().build();
+
+        UserInstitution userInstitution = createUserInstitutionWithoutManagerRole();
+        userInstitution.getProducts().forEach(onboardedProduct -> onboardedProduct.setRole(null));
+
+        Product product = new Product();
+        product.setDescription("description");
+
+        UserToNotify userToNotify = new UserToNotify();
+        userToNotify.setUserId(userId.toString());
+
+        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
+        userNotificationToSend.setUser(userToNotify);
+
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap())).thenReturn(Uni.createFrom().item(userInstitution));
+        when(userRegistryApi.findByIdUsingGET(any(), eq("userId"))).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct("userId", addUserRoleDto.getInstitutionId(),
+                addUserRoleProduct.getProductId(), null, null, DELETED)).thenReturn(Uni.createFrom().item(1L));
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(createUserInstitutionWithoutManagerRole()));
+        when(productService.getProduct(any())).thenReturn(product);
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
+        when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
+        when(userNotificationService.sendKafkaNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
+
+        UniAssertSubscriber<String> subscriber = userService.createUserByUserId(addUserRoleDto, "userId", loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.awaitItem().assertCompleted();
+        verify(userRegistryApi).findByIdUsingGET(any(), eq("userId"));
+        verify(userInstitutionService).persistOrUpdate(any());
+    }
+
+    @Test
+    void  createManagerByUserIdUserInstitutionNotFound() {
+        AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
+        addUserRoleDto.setInstitutionId("institutionId");
+        AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
+        addUserRoleProduct.setProductId("test");
+        addUserRoleProduct.setRole(MANAGER.name());
+        addUserRoleDto.setProduct(addUserRoleProduct);
+        LoggedUser loggedUser = LoggedUser.builder().build();
+
+        Product product = new Product();
+        product.setDescription("description");
+
+        UserToNotify userToNotify = new UserToNotify();
+        userToNotify.setUserId(userId.toString());
+
+        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
+        userNotificationToSend.setUser(userToNotify);
+
+
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap()))
+                .thenReturn(Uni.createFrom().nullItem());
+        when(userRegistryApi.findByIdUsingGET(any(), eq(userResource.getId().toString()))).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userResource.getId().toString(), addUserRoleDto.getInstitutionId(),
+                addUserRoleProduct.getProductId(), null, null, DELETED)).thenReturn(Uni.createFrom().item(1L));
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(createUserInstitutionWithoutManagerRole()));
+        when(productService.getProduct(any())).thenReturn(product);
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
+        when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
+        when(userNotificationService.sendKafkaNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
+
+
+        userService.createUserByUserId(addUserRoleDto, userResource.getId().toString(), loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .assertItem(userResource.getId().toString())
+                .assertCompleted();
+    }
+
+    private UserInstitution createUserInstitutionWithoutManagerRole() {
+        UserInstitution userInstitution = new UserInstitution();
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setProductId("test");
+        onboardedProduct.setRole(OPERATOR);
+        onboardedProduct.setStatus(ACTIVE);
+        userInstitution.setProducts(List.of(onboardedProduct));
+        return userInstitution;
     }
 
     @Test

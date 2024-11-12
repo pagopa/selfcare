@@ -16,6 +16,7 @@ import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.user.exception.UserRoleAlreadyPresentException;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.UpdateUserRequest;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
@@ -686,6 +687,49 @@ class UserControllerTest {
 
     @Test
     @TestSecurity(user = "userJwt")
+    void testCheckRoleOrCreateOrUpdateByUserIdWhenUserIsManager() {
+        AddUserRoleDto userDto = buildAddUserRoleDto();
+        when(userService.createUserByUserId(any(AddUserRoleDto.class), anyString(), any()))
+                .thenReturn(Uni.createFrom().failure(new UserRoleAlreadyPresentException("test")));
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .body(userDto)
+                .post("/userId/onboarding")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testCheckRoleOrCreateOrUpdateByUserIdWhenUserIsNotManager() {
+        AddUserRoleDto userDto = buildAddUserRoleDtoWithOtherRole();
+        when(userService.createUserByUserId(any(AddUserRoleDto.class), anyString(), any()))
+                .thenReturn(Uni.createFrom().nullItem());
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .body(userDto)
+                .post("/userId/onboarding")
+                .then()
+                .statusCode(201);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testCheckRoleOrCreateOrUpdateByUserIdWithInvalidBody() {
+        AddUserRoleDto userDto = new AddUserRoleDto();
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .body(userDto)
+                .post("/userId/onboarding")
+                .then()
+                .statusCode(400);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
     void retrieveUsers() {
         when(userService.retrieveUsersData("test_institutionId",  null, null, null, null, null, "test_userId"))
                 .thenReturn(Multi.createFrom().items(new UserDataResponse()));
@@ -757,6 +801,27 @@ class UserControllerTest {
         AddUserRoleDto.Product product = new AddUserRoleDto.Product();
         product.setProductId("productId");
         product.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER.name());
+        product.setTokenId("tokenId");
+        product.setProductRoles(Collections.singletonList("productRole"));
+        product.setDelegationId("delegationId");
+        userDto.setProduct(product);
+        return userDto;
+    }
+
+    private AddUserRoleDto buildAddUserRoleDtoWithOtherRole() {
+        AddUserRoleDto userDto = new AddUserRoleDto();
+        userDto.setInstitutionId("institutionId");
+        userDto.setInstitutionDescription("institutionDescription");
+        userDto.setInstitutionRootName("institutionRootName");
+        CreateUserDto.User user = new CreateUserDto.User();
+        user.setBirthDate("birthDate");
+        user.setFamilyName("familyName");
+        user.setFiscalCode("fiscalCode");
+        user.setName("name");
+        user.setInstitutionEmail("institutionEmail");
+        AddUserRoleDto.Product product = new AddUserRoleDto.Product();
+        product.setProductId("productId");
+        product.setRole(PartyRole.DELEGATE.name());
         product.setTokenId("tokenId");
         product.setProductRoles(Collections.singletonList("productRole"));
         product.setDelegationId("delegationId");

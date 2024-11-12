@@ -11,6 +11,7 @@ import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
+import it.pagopa.selfcare.user.exception.UserRoleAlreadyPresentException;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.UpdateUserRequest;
@@ -317,6 +318,29 @@ public class UserController {
                 .onItem().ifNotNull().transform(ignore -> Response.status(HttpStatus.SC_CREATED).build())
                 .onItem().ifNull().continueWith(Response.status(HttpStatus.SC_OK).build());
 
+    }
+
+    /**
+     *
+     * @param userId  String
+     * @param userDto AddUserRoleDto
+     */
+    @Operation(description = "Checks if the user is already a manager for the specified product and, if not, creates or updates the user with a new role.", summary = "Check if the user is manager or Update/create a user by userId with a new role")
+    @APIResponses({
+            @APIResponse(responseCode = "200", description = "The user is already a manager for the specified product."),
+            @APIResponse(responseCode = "201", description = "The user has been created or updated with a new role."),
+    })
+    @POST
+    @Path("/{userId}/onboarding")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> createUserByUserId(@PathParam("userId") String userId,
+                                            @Valid AddUserRoleDto userDto,
+                                            @Context SecurityContext ctx) {
+        return readUserIdFromToken(ctx)
+                .onItem().transformToUni(loggedUser -> userService.createUserByUserId(userDto, userId, loggedUser))
+                .onItem().transform(ignore -> Response.status(HttpStatus.SC_CREATED).entity(userId).build())
+                .onFailure(UserRoleAlreadyPresentException.class).recoverWithUni(throwable -> Uni.createFrom().item(Response.status(HttpStatus.SC_OK).entity(userId).build()));
     }
 
     /**
