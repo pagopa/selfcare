@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.bson.types.ObjectId;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,5 +25,5 @@ public class UserInstitution extends ReactivePanacheMongoEntity {
     private String institutionRootName;
     private List<OnboardedProduct> products = new ArrayList<>();
     private String userMailUuid;
-
+    private OffsetDateTime userMailUpdatedAt;
 }
