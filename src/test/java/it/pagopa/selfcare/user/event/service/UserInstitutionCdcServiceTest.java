@@ -5,13 +5,13 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.mongodb.MongoTestResource;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.user.client.EventHubFdRestClient;
 import it.pagopa.selfcare.user.client.EventHubRestClient;
 import it.pagopa.selfcare.user.event.UserInstitutionCdcService;
-import it.pagopa.selfcare.user.event.entity.UserInfo;
 import it.pagopa.selfcare.user.event.entity.UserInstitution;
+import it.pagopa.selfcare.user.event.repository.UserInstitutionRepository;
 import it.pagopa.selfcare.user.model.FdUserNotificationToSend;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
@@ -32,6 +32,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.UUID;
 
 import static it.pagopa.selfcare.user.event.UserInstitutionCdcService.USERS_FIELD_LIST_WITHOUT_FISCAL_CODE;
 import static it.pagopa.selfcare.user.model.NotificationUserType.*;
@@ -55,6 +56,9 @@ public class UserInstitutionCdcServiceTest {
     @RestClient
     @InjectMock
     EventHubFdRestClient eventHubFdRestClient;
+
+    @InjectMock
+    UserInstitutionRepository userInstitutionRepository;
 
 
     @Test
@@ -89,10 +93,32 @@ public class UserInstitutionCdcServiceTest {
         when(eventHubFdRestClient.sendMessage(argumentCaptor.capture()))
                 .thenReturn(Uni.createFrom().nullItem());
 
-        userInstitutionCdcService.consumerToSendUserEventForFD(document);
+        userInstitutionCdcService.consumerToSendUserEventForFD(document, false);
         verify(userRegistryApi, times(1)).
                 findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId());
         verify(eventHubFdRestClient, times(1)).
+                sendMessage(any(FdUserNotificationToSend.class));
+        Assertions.assertEquals(ACTIVE_USER, argumentCaptor.getValue().getType());
+    }
+
+    @Test
+    void consumerToSendUserEventForFDSendACTIVE_USER_mailChanged() {
+        UserInstitution userInstitution = dummyUserInstitution(false, OnboardedProductState.ACTIVE);
+        ChangeStreamDocument<UserInstitution> document = Mockito.mock(ChangeStreamDocument.class);
+        when(document.getFullDocument()).thenReturn(userInstitution);
+        when(document.getDocumentKey()).thenReturn(new BsonDocument());
+
+        UserResource userResource = dummyUserResource();
+        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId()))
+                .thenReturn(Uni.createFrom().item(userResource));
+        ArgumentCaptor<FdUserNotificationToSend> argumentCaptor = ArgumentCaptor.forClass(FdUserNotificationToSend.class);
+        when(eventHubFdRestClient.sendMessage(argumentCaptor.capture()))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        userInstitutionCdcService.consumerToSendUserEventForFD(document, true);
+        verify(userRegistryApi, times(1)).
+                findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId());
+        verify(eventHubFdRestClient, times(2)).
                 sendMessage(any(FdUserNotificationToSend.class));
         Assertions.assertEquals(ACTIVE_USER, argumentCaptor.getValue().getType());
     }
@@ -112,7 +138,7 @@ public class UserInstitutionCdcServiceTest {
         when(eventHubFdRestClient.sendMessage(argumentCaptor.capture()))
                 .thenReturn(Uni.createFrom().nullItem());
 
-        userInstitutionCdcService.consumerToSendUserEventForFD(document);
+        userInstitutionCdcService.consumerToSendUserEventForFD(document, false);
         verify(userRegistryApi, times(1)).
                 findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId());
         verify(eventHubFdRestClient, times(1)).
@@ -134,7 +160,7 @@ public class UserInstitutionCdcServiceTest {
         when(eventHubFdRestClient.sendMessage(argumentCaptor.capture()))
                 .thenReturn(Uni.createFrom().nullItem());
 
-        userInstitutionCdcService.consumerToSendUserEventForFD(document);
+        userInstitutionCdcService.consumerToSendUserEventForFD(document, false);
         verify(userRegistryApi, times(1)).
                 findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId());
         verify(eventHubFdRestClient, times(1)).
@@ -153,7 +179,7 @@ public class UserInstitutionCdcServiceTest {
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId()))
                 .thenReturn(Uni.createFrom().item(userResource));
 
-        userInstitutionCdcService.consumerToSendUserEventForFD(document);
+        userInstitutionCdcService.consumerToSendUserEventForFD(document, false);
         verify(userRegistryApi, times(1)).
                 findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId());
         verify(eventHubFdRestClient, times(0)).
@@ -167,13 +193,14 @@ public class UserInstitutionCdcServiceTest {
         return userResource;
     }
 
-    UserInstitution dummyUserInstitution(boolean sendForFd, OnboardedProductState state){
+    UserInstitution dummyUserInstitution(boolean sendForFd, OnboardedProductState state) {
         UserInstitution userInstitution = new UserInstitution();
         userInstitution.setId(ObjectId.get());
-        if(sendForFd) {
+        userInstitution.setUserMailUpdatedAt(OffsetDateTime.of(2023, 1, 3, 0, 0, 0, 0, ZoneOffset.UTC));
+        if (sendForFd) {
             userInstitution.setProducts(List.of(dummyOnboardedProduct("example-1", state, 2, "prod-fd"),
                     dummyOnboardedProduct("example-2", OnboardedProductState.ACTIVE, 1, "prod-io")));
-        }else {
+        } else {
             userInstitution.setProducts(List.of(dummyOnboardedProduct("example-1", OnboardedProductState.ACTIVE, 2, "prod-io"),
                     dummyOnboardedProduct("example-2", OnboardedProductState.ACTIVE, 1, "prod-fd")));
         }
@@ -191,4 +218,86 @@ public class UserInstitutionCdcServiceTest {
         return onboardedProduct;
     }
 
+
+    @Test
+    void propagateDocumentToConsumers_withChangeUserMailFalse() {
+        ChangeStreamDocument<UserInstitution> document = mock(ChangeStreamDocument.class);
+
+        Multi<ChangeStreamDocument<UserInstitution>> publisher = Multi.createFrom().item(document);
+
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setId(new ObjectId());
+        OnboardedProduct product = new OnboardedProduct();
+        product.setProductId("prod-io");
+        product.setStatus(OnboardedProductState.ACTIVE);
+        userInstitution.setProducts(List.of(product));
+
+        UserResource userResource = dummyUserResource();
+        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId()))
+                .thenReturn(Uni.createFrom().item(userResource));
+
+        when(document.getFullDocument()).thenReturn(userInstitution);
+        when(document.getDocumentKey()).thenReturn(new BsonDocument());
+
+        userInstitutionCdcService.propagateDocumentToConsumers(document, publisher);
+        verify(eventHubFdRestClient, times(0)).sendMessage(any(FdUserNotificationToSend.class));
+        verify(eventHubRestClient, times(1)).sendMessage(any(UserNotificationToSend.class));
+        verify(userInstitutionRepository, times(1)).updateUser(any());
+    }
+
+    @Test
+    void propagateDocumentToConsumers_withChangeUserMailWithFd() {
+        ChangeStreamDocument<UserInstitution> document = mock(ChangeStreamDocument.class);
+
+        Multi<ChangeStreamDocument<UserInstitution>> publisher = Multi.createFrom().item(document);
+
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setId(new ObjectId());
+        OnboardedProduct product = new OnboardedProduct();
+        product.setProductId("prod-fd");
+        product.setStatus(OnboardedProductState.ACTIVE);
+        userInstitution.setProducts(List.of(product));
+        userInstitution.setUserMailUpdatedAt(OffsetDateTime.of(LocalDate.now(), LocalTime.now(), ZoneOffset.UTC));
+
+        UserResource userResource = dummyUserResource();
+        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId()))
+                .thenReturn(Uni.createFrom().item(userResource));
+
+        when(document.getFullDocument()).thenReturn(userInstitution);
+        when(document.getDocumentKey()).thenReturn(new BsonDocument());
+
+        userInstitutionCdcService.propagateDocumentToConsumers(document, publisher);
+        verify(eventHubFdRestClient, times(1)).sendMessage(any(FdUserNotificationToSend.class));
+        verify(eventHubRestClient, times(1)).sendMessage(any(UserNotificationToSend.class));
+        verify(userInstitutionRepository, times(1)).updateUser(any());
+    }
+
+
+    @Test
+    void propagateDocumentToConsumers_withChangeUserMailTrueWithoutFd() {
+
+        ChangeStreamDocument<UserInstitution> document = mock(ChangeStreamDocument.class);
+
+        Multi<ChangeStreamDocument<UserInstitution>> publisher = Multi.createFrom().item(document);
+
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setId(new ObjectId());
+        OnboardedProduct product = new OnboardedProduct();
+        product.setProductId("prod-io");
+        product.setStatus(OnboardedProductState.ACTIVE);
+        userInstitution.setProducts(List.of(product));
+        userInstitution.setUserMailUpdatedAt(OffsetDateTime.of(LocalDate.now(), LocalTime.now(), ZoneOffset.UTC));
+
+        UserResource userResource = dummyUserResource();
+        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId()))
+                .thenReturn(Uni.createFrom().item(userResource));
+
+        when(document.getFullDocument()).thenReturn(userInstitution);
+        when(document.getDocumentKey()).thenReturn(new BsonDocument());
+
+        userInstitutionCdcService.propagateDocumentToConsumers(document, publisher);
+        verify(eventHubFdRestClient, times(0)).sendMessage(any(FdUserNotificationToSend.class));
+        verify(eventHubRestClient, times(1)).sendMessage(any(UserNotificationToSend.class));
+        verify(userInstitutionRepository, times(1)).updateUser(any());
+    }
 }
