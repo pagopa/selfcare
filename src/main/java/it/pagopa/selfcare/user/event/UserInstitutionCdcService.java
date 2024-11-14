@@ -169,40 +169,21 @@ public class UserInstitutionCdcService {
         assert document.getDocumentKey() != null;
         UserInstitution userInstitutionChanged = document.getFullDocument();
 
-        boolean hasActiveFdProduct = userInstitutionChanged.getProducts().stream()
-                .anyMatch(product -> (PROD_FD.getValue().equals(product.getProductId()) || PROD_FD_GARANTITO.getValue().equals(product.getProductId()))
-                        && OnboardedProductState.ACTIVE.equals(product.getStatus()));
+        boolean hasFdProduct = userInstitutionChanged.getProducts().stream()
+                .anyMatch(product -> (PROD_FD.getValue().equals(product.getProductId()) || PROD_FD_GARANTITO.getValue().equals(product.getProductId())));
 
         boolean userMailIsChanged = isUserMailChanged(userInstitutionChanged);
 
         if (Boolean.FALSE.equals(userMailIsChanged)) {
-            publisher.subscribe().with(
-                    this::consumerUserInstitutionRepositoryEvent,
-                    failure -> {
-                        log.error(ERROR_DURING_SUBSCRIBE_COLLECTION_EXCEPTION_MESSAGE, failure.toString(), failure.getMessage());
-                        telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(TrackEventInput.builder().exception(failure.getClass().toString()).build()), Map.of(USER_INFO_UPDATE_FAILURE, 1D));
-                        Quarkus.asyncExit();
-                    });
+            consumerUserInstitutionRepositoryEvent(document);
         }
 
         if (Boolean.TRUE.equals(sendEventsEnabled)) {
-            publisher.subscribe().with(
-                    this::consumerToSendScUserEvent,
-                    failure -> {
-                        log.error(ERROR_DURING_SUBSCRIBE_COLLECTION_EXCEPTION_MESSAGE, failure.toString(), failure.getMessage());
-                        telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(TrackEventInput.builder().exception(failure.getClass().toString()).build()), Map.of(EVENTS_USER_INSTITUTION_FAILURE, 1D));
-                        Quarkus.asyncExit();
-                    });
+            consumerToSendScUserEvent(document);
         }
 
-        if (Boolean.TRUE.equals(sendFdEventsEnabled) && hasActiveFdProduct) {
-            publisher.subscribe().with(
-                    subscription -> consumerToSendUserEventForFD(document, userMailIsChanged),
-                    failure -> {
-                        log.error(ERROR_DURING_SUBSCRIBE_COLLECTION_EXCEPTION_MESSAGE, failure.toString(), failure.getMessage());
-                        telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(TrackEventInput.builder().exception(failure.getClass().toString()).build()), Map.of(EVENTS_USER_INSTITUTION_FAILURE, 1D));
-                        Quarkus.asyncExit();
-                    });
+        if (Boolean.TRUE.equals(sendFdEventsEnabled) && hasFdProduct) {
+            consumerToSendUserEventForFD(document, userMailIsChanged);
         }
     }
 

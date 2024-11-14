@@ -140,10 +140,10 @@ public class UserUtilsTest {
 
         List<String> productIdToCheck = List.of("1", "2");
 
-        List<OnboardedProduct> result = UserUtils.retrieveFdProduct(products, productIdToCheck);
+        List<OnboardedProduct> result = UserUtils.retrieveFdProduct(products, productIdToCheck, false);
 
         assertNotNull(result);
-        assertEquals("1", result.get(0).getProductId());
+        assertEquals("2", result.get(0).getProductId());
     }
 
     @Test
@@ -151,9 +151,22 @@ public class UserUtilsTest {
         List<OnboardedProduct> products = Collections.emptyList();
         List<String> productIdToCheck = List.of("1", "2");
 
-        List<OnboardedProduct> result = UserUtils.retrieveFdProduct(products, productIdToCheck);
+        List<OnboardedProduct> result = UserUtils.retrieveFdProduct(products, productIdToCheck, false);
 
-        assertNull(result);
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    void retrieveFdProduct_mailChanges() {
+        List<OnboardedProduct> products = new ArrayList<>();
+        OnboardedProduct product = dummyOnboardedProduct("example", OnboardedProductState.ACTIVE, 1);
+        product.setProductId("prod-fd");
+        products.add(product);
+        List<String> productIdToCheck = List.of("prod-fd", "2");;
+
+        List<OnboardedProduct> result = UserUtils.retrieveFdProduct(products, productIdToCheck, true);
+
+        assertEquals(1, result.size());
     }
 
     @Test
@@ -173,31 +186,8 @@ public class UserUtilsTest {
 
         List<String> productIdToCheck = List.of("3", "4");
 
-        List<OnboardedProduct> result = UserUtils.retrieveFdProduct(products, productIdToCheck);
+        List<OnboardedProduct> result = UserUtils.retrieveFdProduct(products, productIdToCheck, false);
 
         assertEquals(0, result.size());
-    }
-
-    @Test
-    void retrieveFdProduct_withProductsWithSameUpdatedAt() {
-        List<OnboardedProduct> products = new ArrayList<>();
-        OnboardedProduct product1 = new OnboardedProduct();
-        product1.setProductId("1");
-        product1.setUpdatedAt(OffsetDateTime.now());
-        product1.setCreatedAt(OffsetDateTime.now().minusDays(2));
-        products.add(product1);
-
-        OnboardedProduct product2 = new OnboardedProduct();
-        product2.setProductId("2");
-        product2.setUpdatedAt(OffsetDateTime.now());
-        product2.setCreatedAt(OffsetDateTime.now().minusDays(1));
-        products.add(product2);
-
-        List<String> productIdToCheck = List.of("1", "2");
-
-        List<OnboardedProduct> result = UserUtils.retrieveFdProduct(products, productIdToCheck);
-
-        assertNotNull(result);
-        assertEquals("1", result.get(0).getProductId());
     }
 }

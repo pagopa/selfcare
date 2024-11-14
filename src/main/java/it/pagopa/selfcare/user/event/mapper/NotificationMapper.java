@@ -30,7 +30,7 @@ public interface NotificationMapper {
         return UserUtils.uniqueIdNotification(userInstitution.getId().toHexString(), product.getProductId(), product.getProductRole());
     }
 
-    @Mapping(target = "id", expression = "java(toUniqueIdNotification(userInstitutionChanged, product))")
+    @Mapping(target = "id", expression = "java(java.util.UUID.randomUUID().toString())")
     @Mapping(target = "onboardingTokenId", source = "product.tokenId")
     @Mapping(target = "product", source = "product.productId")
     @Mapping(target = "createdAt", source = "product.createdAt")
