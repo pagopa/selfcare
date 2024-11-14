@@ -80,13 +80,18 @@ public class UserUtils {
      * The retrieveFdProductIfItChanged method is designed to retrieve the most recently updated OnboardedProduct
      * from a list of products, provided that the product's ID is included in a specified list of product IDs to check.
      */
-    public static OnboardedProduct retrieveFdProductIfItChanged(List<OnboardedProduct> products, List<String> productIdToCheck) {
+    public static List<OnboardedProduct> retrieveFdProduct(List<OnboardedProduct> products, List<String> productIdToCheck, boolean isUserMailChanged) {
         if (Objects.nonNull(products) && !products.isEmpty()) {
-            return products.stream()
+            if(isUserMailChanged){
+                return products.stream()
+                        .filter(onboardedProduct -> productIdToCheck.contains(onboardedProduct.getProductId()))
+                        .toList();
+            }
+            return List.of(Objects.requireNonNull(products.stream()
                     .max(Comparator.comparing(OnboardedProduct::getUpdatedAt, nullsLast(naturalOrder()))
                             .thenComparing(OnboardedProduct::getCreatedAt, nullsLast(naturalOrder())))
                     .filter(onboardedProduct -> productIdToCheck.contains(onboardedProduct.getProductId()))
-                    .orElse(null);
+                    .orElse(null)));
         }
         return null;
     }
@@ -123,4 +128,12 @@ public class UserUtils {
         return hash;
     }
 
+    public static List<OnboardedProduct> retrieveFdProduct(List<OnboardedProduct> products, List<String> productIdToCheck) {
+        if (Objects.nonNull(products) && !products.isEmpty()) {
+            return products.stream()
+                    .filter(onboardedProduct -> productIdToCheck.contains(onboardedProduct.getProductId()))
+                    .toList();
+        }
+        return null;
+    }
 }
