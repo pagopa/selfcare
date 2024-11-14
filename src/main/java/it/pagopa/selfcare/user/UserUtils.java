@@ -84,16 +84,20 @@ public class UserUtils {
         if (Objects.nonNull(products) && !products.isEmpty()) {
             if(isUserMailChanged){
                 return products.stream()
-                        .filter(onboardedProduct -> productIdToCheck.contains(onboardedProduct.getProductId()))
+                        .filter(onboardedProduct -> productIdToCheck.contains(onboardedProduct.getProductId()) && OnboardedProductState.ACTIVE.equals(onboardedProduct.getStatus()))
                         .toList();
             }
-            return List.of(Objects.requireNonNull(products.stream()
+            OnboardedProduct onboardedProduct = products.stream()
                     .max(Comparator.comparing(OnboardedProduct::getUpdatedAt, nullsLast(naturalOrder()))
                             .thenComparing(OnboardedProduct::getCreatedAt, nullsLast(naturalOrder())))
-                    .filter(onboardedProduct -> productIdToCheck.contains(onboardedProduct.getProductId()))
-                    .orElse(null)));
+                    .filter(prod -> productIdToCheck.contains(prod.getProductId()))
+                    .orElse(null);
+
+            if(Objects.nonNull(onboardedProduct)) {
+                return List.of(onboardedProduct);
+            }
         }
-        return null;
+        return Collections.emptyList();
     }
 
     public static String getSASToken(String resourceUri, String keyName, String key) {
@@ -126,14 +130,5 @@ public class UserUtils {
         }
 
         return hash;
-    }
-
-    public static List<OnboardedProduct> retrieveFdProduct(List<OnboardedProduct> products, List<String> productIdToCheck) {
-        if (Objects.nonNull(products) && !products.isEmpty()) {
-            return products.stream()
-                    .filter(onboardedProduct -> productIdToCheck.contains(onboardedProduct.getProductId()))
-                    .toList();
-        }
-        return null;
     }
 }
