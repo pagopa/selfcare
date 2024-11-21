@@ -309,7 +309,7 @@
     },
     "/v1/user-groups/{id}" : {
       "get" : {
-        "tags" : [ "UserGroup" ],
+        "tags" : [ "UserGroup", "external-v2" ],
         "summary" : "getUserGroup",
         "description" : "Service to get a specific UserGroup entity",
         "operationId" : "getUserGroupUsingGET",
