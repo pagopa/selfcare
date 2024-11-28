@@ -48,8 +48,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.Spy;
-import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfLocalDate;
-import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
+import org.openapi.quarkus.user_registry_json.model.BirthDateCertifiableSchema;
+import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
+import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
+import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
@@ -108,12 +110,14 @@ class UserServiceTest {
     static {
         userResource = new UserResource();
         userResource.setId(userId);
-        CertifiableFieldResourceOfstring certifiedName = new CertifiableFieldResourceOfstring();
+        NameCertifiableSchema certifiedName = new NameCertifiableSchema();
+        FamilyNameCertifiableSchema certifiedSurname = new FamilyNameCertifiableSchema();
+        certifiedSurname.setValue("surname");
         certifiedName.setValue("name");
         userResource.setName(certifiedName);
-        userResource.setFamilyName(certifiedName);
+        userResource.setFamilyName(certifiedSurname);
         userResource.setFiscalCode("taxCode");
-        CertifiableFieldResourceOfstring certifiedEmail = new CertifiableFieldResourceOfstring();
+        org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema certifiedEmail = new EmailCertifiableSchema();
         certifiedEmail.setValue("test@test.it");
         WorkContactResource workContactResource = new WorkContactResource();
         workContactResource.setEmail(certifiedEmail);
@@ -309,10 +313,10 @@ class UserServiceTest {
         UserResource userResource = new UserResource();
         userResource.setId(UUID.randomUUID());
         userResource.setFiscalCode("test");
-        userResource.setBirthDate(CertifiableFieldResourceOfLocalDate.builder().value(LocalDate.now()).build());
-        userResource.setEmail(CertifiableFieldResourceOfstring.builder().value("test@test.com").build());
-        userResource.setName(CertifiableFieldResourceOfstring.builder().value("testName").build());
-        userResource.setFamilyName(CertifiableFieldResourceOfstring.builder().value("testFamilyName").build());
+        userResource.setBirthDate(BirthDateCertifiableSchema.builder().value(LocalDate.now()).build());
+        userResource.setEmail(EmailCertifiableSchema.builder().value("test@test.com").build());
+        userResource.setName(NameCertifiableSchema.builder().value("testName").build());
+        userResource.setFamilyName(FamilyNameCertifiableSchema.builder().value("testFamilyName").build());
         return userResource;
     }
 
@@ -325,7 +329,7 @@ class UserServiceTest {
 
         UserResource userResource = dummyUserResource();
         WorkContactResource workContactResource = new WorkContactResource();
-        workContactResource.setEmail(CertifiableFieldResourceOfstring.builder().value("userMail").build());
+        workContactResource.setEmail(EmailCertifiableSchema.builder().value("userMail").build());
         userResource.setWorkContacts(Map.of(userMailUuId, workContactResource));
 
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(createUserInstitution()));

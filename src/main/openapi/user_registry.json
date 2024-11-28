@@ -11,6 +11,9 @@
       "basePath" : {
         "default" : "user-registry/v1"
       }
+    },
+    "x-amazon-apigateway-endpoint-configuration" : {
+      "disableExecuteApiEndpoint" : true
     }
   } ],
   "tags" : [ {
@@ -389,73 +392,7 @@
           }
         }
       },
-      "WorkContactResource" : {
-        "title" : "WorkContactResource",
-        "type" : "object",
-        "properties" : {
-          "email" : {
-            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
-          },
-          "mobilePhone" : {
-            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
-          }
-        }
-      },
-      "CertifiableFieldResourceOfstring" : {
-        "title" : "CertifiableFieldResourceOfstring",
-        "required" : [ "certification", "value" ],
-        "type" : "object",
-        "properties" : {
-          "certification" : {
-            "type" : "string",
-            "description" : "Certified source of information",
-            "enum" : [ "NONE", "SPID" ]
-          },
-          "value" : {
-            "type" : "string",
-            "description" : "Field value"
-          }
-        }
-      },
-      "UserId" : {
-        "title" : "UserId",
-        "required" : [ "id" ],
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "description" : "User internal id",
-            "format" : "uuid"
-          }
-        }
-      },
-      "MutableUserFieldsDto" : {
-        "title" : "MutableUserFieldsDto",
-        "type" : "object",
-        "properties" : {
-          "birthDate" : {
-            "$ref" : "#/components/schemas/CertifiableFieldResourceOfLocalDate"
-          },
-          "email" : {
-            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
-          },
-          "familyName" : {
-            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
-          },
-          "name" : {
-            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
-          },
-          "workContacts" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "$ref" : "#/components/schemas/WorkContactResource"
-            },
-            "description" : "User work contacts"
-          }
-        }
-      },
-      "CertifiableFieldResourceOfLocalDate" : {
-        "title" : "CertifiableFieldResourceOfLocalDate",
+      "BirthDateCertifiableSchema" : {
         "required" : [ "certification", "value" ],
         "type" : "object",
         "properties" : {
@@ -469,21 +406,77 @@
             "description" : "Field value",
             "format" : "date"
           }
+        },
+        "description" : "User date of birth"
+      },
+      "WorkContactResource" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "$ref" : "#/components/schemas/EmailCertifiableSchema"
+          },
+          "mobilePhone" : {
+            "$ref" : "#/components/schemas/MobilePhoneCertifiableSchema"
+          },
+          "telephone" : {
+            "$ref" : "#/components/schemas/TelephoneCertifiableSchema"
+          }
+        },
+        "description" : "User work contacts"
+      },
+      "MutableUserFieldsDto" : {
+        "title" : "MutableUserFieldsDto",
+        "type" : "object",
+        "properties" : {
+          "birthDate" : {
+            "$ref" : "#/components/schemas/BirthDateCertifiableSchema"
+          },
+          "email" : {
+            "$ref" : "#/components/schemas/EmailCertifiableSchema"
+          },
+          "familyName" : {
+            "$ref" : "#/components/schemas/FamilyNameCertifiableSchema"
+          },
+          "name" : {
+            "$ref" : "#/components/schemas/NameCertifiableSchema"
+          },
+          "workContacts" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/WorkContactResource"
+            },
+            "description" : "User work contacts"
+          }
         }
       },
+      "NameCertifiableSchema" : {
+        "required" : [ "certification", "value" ],
+        "type" : "object",
+        "properties" : {
+          "certification" : {
+            "type" : "string",
+            "description" : "Certified source of information",
+            "enum" : [ "NONE", "SPID" ]
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "Field value"
+          }
+        },
+        "description" : "User name"
+      },
       "UserResource" : {
-        "title" : "UserResource",
         "required" : [ "id" ],
         "type" : "object",
         "properties" : {
           "birthDate" : {
-            "$ref" : "#/components/schemas/CertifiableFieldResourceOfLocalDate"
+            "$ref" : "#/components/schemas/BirthDateCertifiableSchema"
           },
           "email" : {
-            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
+            "$ref" : "#/components/schemas/EmailCertifiableSchema"
           },
           "familyName" : {
-            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
+            "$ref" : "#/components/schemas/FamilyNameCertifiableSchema"
           },
           "fiscalCode" : {
             "type" : "string",
@@ -495,7 +488,7 @@
             "format" : "uuid"
           },
           "name" : {
-            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
+            "$ref" : "#/components/schemas/NameCertifiableSchema"
           },
           "workContacts" : {
             "type" : "object",
@@ -506,26 +499,84 @@
           }
         }
       },
+      "TelephoneCertifiableSchema" : {
+        "required" : [ "certification", "value" ],
+        "type" : "object",
+        "properties" : {
+          "certification" : {
+            "type" : "string",
+            "description" : "Certified source of information",
+            "enum" : [ "NONE", "SPID" ]
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "Field value"
+          }
+        },
+        "description" : "User work telephone number"
+      },
+      "InvalidParam" : {
+        "title" : "InvalidParam",
+        "required" : [ "name", "reason" ],
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "description" : "Invalid parameter name."
+          },
+          "reason" : {
+            "type" : "string",
+            "description" : "Invalid parameter reason."
+          }
+        }
+      },
+      "EmailCertifiableSchema" : {
+        "required" : [ "certification", "value" ],
+        "type" : "object",
+        "properties" : {
+          "certification" : {
+            "type" : "string",
+            "description" : "Certified source of information",
+            "enum" : [ "NONE", "SPID" ]
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "Field value"
+          }
+        },
+        "description" : "User email"
+      },
+      "UserId" : {
+        "title" : "UserId",
+        "required" : [ "id" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "User internal id",
+            "format" : "uuid"
+          }
+        }
+      },
       "SaveUserDto" : {
-        "title" : "SaveUserDto",
         "required" : [ "fiscalCode" ],
         "type" : "object",
         "properties" : {
           "birthDate" : {
-            "$ref" : "#/components/schemas/CertifiableFieldResourceOfLocalDate"
+            "$ref" : "#/components/schemas/BirthDateCertifiableSchema"
           },
           "email" : {
-            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
+            "$ref" : "#/components/schemas/EmailCertifiableSchema"
           },
           "familyName" : {
-            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
+            "$ref" : "#/components/schemas/FamilyNameCertifiableSchema"
           },
           "fiscalCode" : {
             "type" : "string",
             "description" : "User fiscal code"
           },
           "name" : {
-            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
+            "$ref" : "#/components/schemas/NameCertifiableSchema"
           },
           "workContacts" : {
             "type" : "object",
@@ -572,20 +623,37 @@
         },
         "description" : "A \"problem detail\" as a way to carry machine-readable details of errors (https://datatracker.ietf.org/doc/html/rfc7807)"
       },
-      "InvalidParam" : {
-        "title" : "InvalidParam",
-        "required" : [ "name", "reason" ],
+      "FamilyNameCertifiableSchema" : {
+        "required" : [ "certification", "value" ],
         "type" : "object",
         "properties" : {
-          "name" : {
+          "certification" : {
             "type" : "string",
-            "description" : "Invalid parameter name."
+            "description" : "Certified source of information",
+            "enum" : [ "NONE", "SPID" ]
           },
-          "reason" : {
+          "value" : {
             "type" : "string",
-            "description" : "Invalid parameter reason."
+            "description" : "Field value"
           }
-        }
+        },
+        "description" : "User family name"
+      },
+      "MobilePhoneCertifiableSchema" : {
+        "required" : [ "certification", "value" ],
+        "type" : "object",
+        "properties" : {
+          "certification" : {
+            "type" : "string",
+            "description" : "Certified source of information",
+            "enum" : [ "NONE", "SPID" ]
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "Field value"
+          }
+        },
+        "description" : "User work mobile phone number"
       }
     },
     "securitySchemes" : {

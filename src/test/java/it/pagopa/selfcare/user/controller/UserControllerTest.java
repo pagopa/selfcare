@@ -8,6 +8,7 @@ import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.user.constant.CertificationEnum;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.*;
@@ -27,7 +28,10 @@ import it.pagopa.selfcare.user.service.utils.CreateOrUpdateUserByFiscalCodeRespo
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
+import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
+import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
+import org.openapi.quarkus.user_registry_json.model.MobilePhoneCertifiableSchema;
+import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
@@ -51,23 +55,20 @@ class UserControllerTest {
     private static final UserDetailResponse userDetailResponse;
 
     static {
-        CertifiableFieldResourceOfstring email = new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email");
-        CertifiableFieldResourceOfstring phone = new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "mobilePhone");
-
         userResource = new UserResource();
-        userResource.setEmail(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email"));
-        userResource.setName(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "name"));
-        userResource.setFamilyName(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "familyName"));
+        userResource.setEmail(new EmailCertifiableSchema(EmailCertifiableSchema.CertificationEnum.NONE, "email"));
+        userResource.setName(new NameCertifiableSchema(NameCertifiableSchema.CertificationEnum.NONE, "name"));
+        userResource.setFamilyName(new FamilyNameCertifiableSchema(FamilyNameCertifiableSchema.CertificationEnum.NONE, "familyName"));
         userResource.setFiscalCode("fiscalCode");
-        userResource.setWorkContacts(Map.of("userMailUuid", new WorkContactResource(email, phone)));
+        userResource.setWorkContacts(Map.of("userMailUuid", new WorkContactResource(new EmailCertifiableSchema(EmailCertifiableSchema.CertificationEnum.NONE, "email"), new MobilePhoneCertifiableSchema(MobilePhoneCertifiableSchema.CertificationEnum.NONE, "123456788"), null)));
 
         userDetailResponse = new UserDetailResponse();
         userDetailResponse.setId(UUID.randomUUID().toString());
-        userDetailResponse.setEmail(new CertifiableFieldResponse<>("email", CertifiableFieldResourceOfstring.CertificationEnum.NONE));
-        userDetailResponse.setName(new CertifiableFieldResponse<>("name", CertifiableFieldResourceOfstring.CertificationEnum.NONE));
-        userDetailResponse.setFamilyName(new CertifiableFieldResponse<>("familyName", CertifiableFieldResourceOfstring.CertificationEnum.NONE));
+        userDetailResponse.setEmail(new CertifiableFieldResponse<>("email", CertificationEnum.SPID));
+        userDetailResponse.setName(new CertifiableFieldResponse<>("name", CertificationEnum.SPID));
+        userDetailResponse.setFamilyName(new CertifiableFieldResponse<>("familyName", CertificationEnum.SPID));
         userDetailResponse.setFiscalCode("fiscalCode");
-        userDetailResponse.setWorkContacts(Map.of("userMailUuid", new WorkContactResponse(new CertifiableFieldResponse<String>("email", CertifiableFieldResourceOfstring.CertificationEnum.NONE))));
+        userDetailResponse.setWorkContacts(Map.of("userMailUuid", new WorkContactResponse(new CertifiableFieldResponse<String>("email", CertificationEnum.SPID))));
     }
 
     /**

@@ -22,7 +22,8 @@ import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
+import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
+import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
@@ -162,7 +163,7 @@ class UserUtilTest {
 
         assertNotNull(workContact);
         assertEquals(mail, workContact.getEmail().getValue());
-        assertEquals(CertifiableFieldResourceOfstring.CertificationEnum.NONE, workContact.getEmail().getCertification());
+        assertEquals(EmailCertifiableSchema.CertificationEnum.NONE, workContact.getEmail().getCertification());
     }
 
     @Test
@@ -213,11 +214,11 @@ class UserUtilTest {
         String email = "test@example.com";
         Map<String, WorkContactResource> workContacts = new HashMap<>();
         WorkContactResource workContact1 = new WorkContactResource();
-        workContact1.setEmail(new CertifiableFieldResourceOfstring());
+        workContact1.setEmail(new EmailCertifiableSchema());
         workContact1.getEmail().setValue(email);
         workContacts.put(MAIL_ID_PREFIX + "mail1", workContact1);
         WorkContactResource workContact2 = new WorkContactResource();
-        workContact2.setEmail(new CertifiableFieldResourceOfstring());
+        workContact2.setEmail(new EmailCertifiableSchema());
         workContact2.getEmail().setValue("another@example.com");
         workContacts.put("mail2", workContact2);
 
@@ -232,12 +233,12 @@ class UserUtilTest {
     private static UserResource getUserResource(UUID uuid) {
         Map<String, WorkContactResource> map = new HashMap<>();
         WorkContactResource workContactResource = new WorkContactResource();
-        workContactResource.setEmail(CertifiableFieldResourceOfstring.builder().value("test@test.it").build());
+        workContactResource.setEmail(EmailCertifiableSchema.builder().value("test@test.it").build());
         map.put("MAIL_ID#123", workContactResource);
         return UserResource.builder()
                 .id(uuid)
-                .name(CertifiableFieldResourceOfstring.builder().value("name").build())
-                .familyName(CertifiableFieldResourceOfstring.builder().value("familyName").build())
+                .name(NameCertifiableSchema.builder().value("name").build())
+                .familyName(org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema.builder().value("familyName").build())
                 .workContacts(map)
                 .build();
     }

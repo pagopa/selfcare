@@ -12,4 +12,6 @@ public class CollectionUtil {
     public static final String CURRENT_ANY = ".$[].";
 
     public static final String MAIL_ID_PREFIX = "ID_MAIL#";
+
+    public static final String CONTACTS_ID_PREFIX = "ID_CONTACTS#";
 }

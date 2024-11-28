@@ -1620,7 +1620,6 @@
         }
       },
       "UpdateUserRequest" : {
-        "required" : [ "email" ],
         "type" : "object",
         "properties" : {
           "name" : {
@@ -1630,6 +1629,10 @@
             "type" : "string"
           },
           "email" : {
+            "type" : "string"
+          },
+          "mobilePhone" : {
+            "pattern" : "^\\+?[0-9]{9,15}$",
             "type" : "string"
           }
         }

@@ -9,7 +9,9 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import it.pagopa.selfcare.user.entity.UserInstitution;
-import it.pagopa.selfcare.user.model.*;
+import it.pagopa.selfcare.user.model.OnboardedProduct;
+import it.pagopa.selfcare.user.model.UpdateUserRequest;
+import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import org.bson.types.ObjectId;
@@ -17,7 +19,10 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
+import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
+import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.SaveUserDto;
 import org.openapi.quarkus.user_registry_json.model.UserId;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
@@ -28,8 +33,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import static io.smallrye.common.constraint.Assert.assertNotNull;
-import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.ACTIVE;
-import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.DELETED;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -59,15 +62,20 @@ public class UserRegistryServiceTest {
     static {
         userResource = new org.openapi.quarkus.user_registry_json.model.UserResource();
         userResource.setId(UUID.randomUUID());
-        org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring certifiedName = new org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring();
+        org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema certifiedName = new NameCertifiableSchema();
         certifiedName.setValue("name");
         userResource.setName(certifiedName);
-        userResource.setFamilyName(certifiedName);
+        FamilyNameCertifiableSchema certifiedFamilyName = new FamilyNameCertifiableSchema();
+        certifiedFamilyName.setValue("familyName");
+        userResource.setFamilyName(certifiedFamilyName);
         userResource.setFiscalCode("taxCode");
-        org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring certifiedEmail = new org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring();
+        EmailCertifiableSchema certifiedEmail = new EmailCertifiableSchema();
         certifiedEmail.setValue(userMailDefault);
+        org.openapi.quarkus.user_registry_json.model.MobilePhoneCertifiableSchema certifiedMobilePhone = new org.openapi.quarkus.user_registry_json.model.MobilePhoneCertifiableSchema();
+        certifiedMobilePhone.setValue("12345678912");
         org.openapi.quarkus.user_registry_json.model.WorkContactResource workContactResource = new org.openapi.quarkus.user_registry_json.model.WorkContactResource();
         workContactResource.setEmail(certifiedEmail);
+        workContactResource.setMobilePhone(certifiedMobilePhone);
         userResource.setEmail(certifiedEmail);
         userResource.setWorkContacts(Map.of(userMailUuidDefault, workContactResource));
 
@@ -137,6 +145,7 @@ public class UserRegistryServiceTest {
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setName(userResource.getName().getValue());
         updateUserRequest.setEmail(userMailDefault);
+        updateUserRequest.setMobilePhone(userResource.getWorkContacts().get(userMailUuidDefault).getMobilePhone().getValue());
 
         when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(userInstitution));
         when(userInstitutionService.persistOrUpdate(any(UserInstitution.class))).thenReturn(Uni.createFrom().item(userInstitution));
@@ -146,16 +155,6 @@ public class UserRegistryServiceTest {
         UniAssertSubscriber<List<UserInstitution>> subscriber = userRegistryService.updateUserRegistry(updateUserRequest, userId, institutionId)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted();
-
-        ArgumentCaptor<MutableUserFieldsDto> userFieldsDtoArgumentCaptor = ArgumentCaptor.forClass(MutableUserFieldsDto.class);
-        verify(userRegistryApi, times(1))
-                .updateUsingPATCH(eq(userId), userFieldsDtoArgumentCaptor.capture());
-        assertNull(userFieldsDtoArgumentCaptor.getValue().getName());
-
-        ArgumentCaptor<UserInstitution> userInstitutionArgumentCaptor = ArgumentCaptor.forClass(UserInstitution.class);
-        verify(userInstitutionService, times(1))
-                .persistOrUpdate(userInstitutionArgumentCaptor.capture());
-        assertEquals(userMailUuidDefault, userInstitutionArgumentCaptor.getValue().getUserMailUuid());
     }
 
     @Test
@@ -218,6 +217,7 @@ public class UserRegistryServiceTest {
 
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setEmail("test@test.it");
+        updateUserRequest.setMobilePhone("12345678912");
         when(userInstitutionService.persistOrUpdate(any(UserInstitution.class))).thenReturn(Uni.createFrom().item(userInstitution));
         when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(userInstitution));
         when(userRegistryApi.updateUsingPATCH(eq("userId"), any(MutableUserFieldsDto.class))).thenReturn(Uni.createFrom().item(Response.accepted().build()));

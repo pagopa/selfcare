@@ -24,7 +24,8 @@ import org.bson.types.ObjectId;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
+import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
+import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
@@ -68,12 +69,14 @@ class UserNotificationServiceImplTest {
     static {
         userResource = new UserResource();
         userResource.setId(UUID.randomUUID());
-        CertifiableFieldResourceOfstring certifiedName = new CertifiableFieldResourceOfstring();
+        NameCertifiableSchema certifiedName = new NameCertifiableSchema();
+        org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema certifiedFamilyName = new org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema();
         certifiedName.setValue("name");
+        certifiedFamilyName.setValue("familyName");
         userResource.setName(certifiedName);
-        userResource.setFamilyName(certifiedName);
+        userResource.setFamilyName(certifiedFamilyName);
         userResource.setFiscalCode("taxCode");
-        CertifiableFieldResourceOfstring certifiedEmail = new CertifiableFieldResourceOfstring();
+        EmailCertifiableSchema certifiedEmail = new EmailCertifiableSchema();
         certifiedEmail.setValue("test@test.it");
         WorkContactResource workContactResource = new WorkContactResource();
         workContactResource.setEmail(certifiedEmail);

@@ -262,7 +262,7 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> updateUserRegistryAndSendNotification(@PathParam(value = "id") String userId,
                                                                @QueryParam(value = "institutionId") String institutionId,
-                                                               UpdateUserRequest updateUserRequest) {
+                                                               @Valid UpdateUserRequest updateUserRequest) {
         return userRegistryService.updateUserRegistry(updateUserRequest, userId, institutionId)
                 .map(ignore -> Response
                         .status(HttpStatus.SC_NO_CONTENT)

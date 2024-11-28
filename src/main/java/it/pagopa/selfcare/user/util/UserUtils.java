@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.reactive.ClientWebApplicationException;
-import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
+import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
@@ -129,8 +129,8 @@ public class UserUtils {
 
     public static WorkContactResource buildWorkContact(String mail) {
         return WorkContactResource.builder()
-                .email(new CertifiableFieldResourceOfstring(
-                        CertifiableFieldResourceOfstring.CertificationEnum.NONE,
+                .email(new EmailCertifiableSchema(
+                        EmailCertifiableSchema.CertificationEnum.NONE,
                         mail)
                 ).build();
     }
@@ -158,7 +158,7 @@ public class UserUtils {
                 .filter(Objects::nonNull)
                 .map(WorkContactResource::getEmail)
                 .filter(Objects::nonNull)
-                .map(CertifiableFieldResourceOfstring::getValue)
+                .map(EmailCertifiableSchema::getValue)
                 .filter(Objects::nonNull)
                 .findFirst();
     }
