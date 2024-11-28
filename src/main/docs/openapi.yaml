@@ -1371,6 +1371,8 @@ components:
           type: string
         email:
           type: string
+        mobilePhone:
+          type: string
         workContacts:
           type: object
           additionalProperties:

@@ -16,15 +16,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
-import org.openapi.quarkus.user_registry_json.model.BirthDateCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.MobilePhoneCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
-import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.SaveUserDto;
-import org.openapi.quarkus.user_registry_json.model.UserResource;
-import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -39,6 +31,7 @@ public interface UserMapper {
     @Mapping(source = "userResource.familyName", target = "surname", qualifiedByName = "fromSurnameCertifiableString")
     @Mapping(source = "userResource.name", target = "name", qualifiedByName = "fromNameCertifiableString")
     @Mapping(target = "email", expression = "java(retrieveMailFromWorkContacts(userResource.getWorkContacts(), userMailUuid))")
+    @Mapping(target = "mobilePhone", expression = "java(retrieveMobilePhoneFromWorkContacts(userResource.getWorkContacts(), userMailUuid))")
     @Mapping(target = "workContacts", expression = "java(toWorkContacts(userResource.getWorkContacts()))")
     UserResponse toUserResponse(UserResource userResource, String userMailUuid);
 
@@ -91,6 +84,16 @@ public interface UserMapper {
                 .map(item -> map.get(userMailUuid))
                 .filter(workContactResource -> Objects.nonNull(workContactResource.getEmail()))
                 .map(workContactResource -> workContactResource.getEmail().getValue())
+                .orElse(null);
+    }
+
+    @Named("retrieveMobilePhoneFromWorkContacts")
+    default String retrieveMobilePhoneFromWorkContacts(Map<String, WorkContactResource> map, String userMailUuid){
+        return Optional.ofNullable(map)
+                .filter(item -> item.containsKey(userMailUuid))
+                .map(item -> map.get(userMailUuid))
+                .filter(workContactResource -> Objects.nonNull(workContactResource.getMobilePhone()))
+                .map(workContactResource -> workContactResource.getMobilePhone().getValue())
                 .orElse(null);
     }
 

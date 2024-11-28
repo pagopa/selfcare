@@ -25,5 +25,6 @@ public class UserResponse {
     @NotBlank
     private String surname;
     private String email;
+    private String mobilePhone;
     private Map<String, String> workContacts;
 }
