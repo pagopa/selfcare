@@ -22,14 +22,31 @@ public class UserMapperTest {
     void retrieveCertifiedEmailFromWorkContacts(){
         final UserResource userResource = new UserResource();
         final CertifiableFieldResourceOfstring email = new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email");
-        WorkContactResource workContactResource = new WorkContactResource(email);
-        Map<String, WorkContactResource> workContactResourceMap = Map.of("email", workContactResource);
+        final CertifiableFieldResourceOfstring phone = new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "mobilePhone");
+        WorkContactResource workContactResource = new WorkContactResource(email, phone);
+        Map<String, WorkContactResource> workContactResourceMap = Map.of("contactsUuid", workContactResource);
         userResource.setWorkContacts(workContactResourceMap);
 
-        CertifiableFieldResponse<String> certifiedMail = userMapper.retrieveCertifiedMailFromWorkContacts(userResource, "email");
+        CertifiableFieldResponse<String> certifiedMail = userMapper.retrieveCertifiedMailFromWorkContacts(userResource, "contactsUuid");
 
         assertEquals(CertifiableFieldResourceOfstring.CertificationEnum.NONE,certifiedMail.getCertified());
         assertEquals("email", certifiedMail.getValue());
+    }
+
+    @Test
+    void retrieveCertifiedMobilePhoneFromWorkContacts(){
+        final UserResource userResource = new UserResource();
+        final CertifiableFieldResourceOfstring email = new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email");
+        String mobilePhone = "mobilePhone";
+        final CertifiableFieldResourceOfstring phone = new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, mobilePhone);
+        WorkContactResource workContactResource = new WorkContactResource(email, phone);
+        Map<String, WorkContactResource> workContactResourceMap = Map.of("contactsUuid", workContactResource);
+        userResource.setWorkContacts(workContactResourceMap);
+
+        CertifiableFieldResponse<String> certifiedPhone = userMapper.retrieveCertifiedMobilePhoneFromWorkContacts(userResource, "contactsUuid");
+
+        assertEquals(CertifiableFieldResourceOfstring.CertificationEnum.NONE,certifiedPhone.getCertified());
+        assertEquals(mobilePhone, certifiedPhone.getValue());
     }
 
     @Test
@@ -45,7 +62,8 @@ public class UserMapperTest {
     void retrieveCertifiedEmailFromWorkContacts_notPresent(){
         final UserResource userResource = new UserResource();
         final CertifiableFieldResourceOfstring email = new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email");
-        WorkContactResource workContactResource = new WorkContactResource(email);
+        final CertifiableFieldResourceOfstring phone = new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "mobilePhone");
+        WorkContactResource workContactResource = new WorkContactResource(email, phone);
         Map<String, WorkContactResource> workContactResourceMap = Map.of("email", workContactResource);
         userResource.setWorkContacts(workContactResourceMap);
 
@@ -58,7 +76,8 @@ public class UserMapperTest {
     @Test
     void retrieveMailFromWorkContacts(){
         final CertifiableFieldResourceOfstring email = new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email");
-        WorkContactResource workContactResource = new WorkContactResource(email);
+        final CertifiableFieldResourceOfstring phone = new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "mobilePhone");
+        WorkContactResource workContactResource = new WorkContactResource(email, phone);
         Map<String, WorkContactResource> workContactResourceMap = Map.of("email", workContactResource);
 
         String mailFromWorkContact = userMapper.retrieveMailFromWorkContacts(workContactResourceMap, "email");
@@ -87,7 +106,8 @@ public class UserMapperTest {
     @Test
     void retrieveMailFromWorkContacts_notPresent(){
         final CertifiableFieldResourceOfstring email = new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email");
-        WorkContactResource workContactResource = new WorkContactResource(email);
+        final CertifiableFieldResourceOfstring phone = new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "mobilePhone");
+        WorkContactResource workContactResource = new WorkContactResource(email, phone);
         Map<String, WorkContactResource> workContactResourceMap = Map.of("email", workContactResource);
 
         String mailFromWorkContact = userMapper.retrieveMailFromWorkContacts(workContactResourceMap, "notPresent");

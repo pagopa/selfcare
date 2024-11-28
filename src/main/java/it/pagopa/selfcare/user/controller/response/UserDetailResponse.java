@@ -15,5 +15,6 @@ public class UserDetailResponse {
     private CertifiableFieldResponse<String> name;
     private CertifiableFieldResponse<String> familyName;
     private CertifiableFieldResponse<String> email;
+    private CertifiableFieldResponse<String> mobilePhone;
     private Map<String, WorkContactResponse> workContacts;
 }

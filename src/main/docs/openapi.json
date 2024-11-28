@@ -1713,6 +1713,9 @@
           "email" : {
             "$ref" : "#/components/schemas/CertifiableFieldResponseString"
           },
+          "mobilePhone" : {
+            "$ref" : "#/components/schemas/CertifiableFieldResponseString"
+          },
           "workContacts" : {
             "type" : "object",
             "additionalProperties" : {

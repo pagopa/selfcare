@@ -395,6 +395,9 @@
         "properties" : {
           "email" : {
             "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
+          },
+          "mobilePhone" : {
+            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
           }
         }
       },

@@ -14,12 +14,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
-import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
-import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
-import org.openapi.quarkus.user_registry_json.model.UserResource;
-import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
-import org.openapi.quarkus.user_registry_json.model.SaveUserDto;
-import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfLocalDate;
+import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -38,6 +33,7 @@ public interface UserMapper {
     UserResponse toUserResponse(UserResource userResource, String userMailUuid);
 
     @Mapping(target = "email", expression = "java(retrieveCertifiedMailFromWorkContacts(userResource, userMailUuid))")
+    @Mapping(target = "mobilePhone", expression = "java(retrieveCertifiedMobilePhoneFromWorkContacts(userResource, userMailUuid))")
     @Mapping(source = "userResource.familyName", target = "familyName", qualifiedByName = "toCertifiableFieldResponse")
     @Mapping(source = "userResource.name", target = "name", qualifiedByName = "toCertifiableFieldResponse")
     @Mapping(target = "workContacts", expression = "java(toWorkContactResponse(userResource.getWorkContacts()))")
@@ -85,11 +81,22 @@ public interface UserMapper {
 
 
     @Named("retrieveCertifiedMailFromWorkContacts")
-    default CertifiableFieldResponse<String> retrieveCertifiedMailFromWorkContacts(UserResource userResource, String userMailUuid){
-        if(userResource.getWorkContacts()!=null && !userResource.getWorkContacts().isEmpty() && userResource.getWorkContacts().containsKey(userMailUuid)){
-            return new CertifiableFieldResponse<>(userResource.getWorkContacts().get(userMailUuid).getEmail().getValue(), userResource.getWorkContacts().get(userMailUuid).getEmail().getCertification());
-        }
-        return null;
+    default CertifiableFieldResponse<String> retrieveCertifiedMailFromWorkContacts(UserResource userResource, String userMailUuid) {
+        return Optional.ofNullable(userResource)
+                .map(UserResource::getWorkContacts)
+                .map(workContacts -> workContacts.get(userMailUuid))
+                .map(WorkContactResource::getEmail)
+                .map(email -> new CertifiableFieldResponse<>(email.getValue(), email.getCertification()))
+                .orElse(null);
+    }
+
+    @Named("retrieveCertifiedMobilePhoneFromWorkContacts")
+    default CertifiableFieldResponse<String> retrieveCertifiedMobilePhoneFromWorkContacts(UserResource userResource, String userMailUuid) {
+        return Optional.ofNullable(userResource.getWorkContacts())
+                .map(workContacts -> workContacts.get(userMailUuid))
+                .map(WorkContactResource::getMobilePhone)
+                .map(mobilePhone -> new CertifiableFieldResponse<>(mobilePhone.getValue(), mobilePhone.getCertification()))
+                .orElse(null);
     }
 
     @Named("toCertifiableFieldResponse")

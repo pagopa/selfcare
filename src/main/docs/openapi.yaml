@@ -1248,6 +1248,8 @@ components:
           $ref: "#/components/schemas/CertifiableFieldResponseString"
         email:
           $ref: "#/components/schemas/CertifiableFieldResponseString"
+        mobilePhone:
+          $ref: "#/components/schemas/CertifiableFieldResponseString"
         workContacts:
           type: object
           additionalProperties:
