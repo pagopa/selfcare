@@ -1632,7 +1632,7 @@
             "type" : "string"
           },
           "mobilePhone" : {
-            "pattern" : "^\\+?[0-9]{9,15}$",
+            "pattern" : "^\\+?[0-9]{7,15}$",
             "type" : "string"
           }
         }

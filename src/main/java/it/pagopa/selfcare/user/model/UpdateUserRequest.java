@@ -9,6 +9,6 @@ public class UpdateUserRequest {
     private String name;
     private String familyName;
     private String email;
-    @Pattern(regexp = "^\\+?[0-9]{9,15}$", message = "Il numero di telefono non è valido")
+    @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "Il numero di telefono non è valido")
     private String mobilePhone;
 }

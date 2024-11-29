@@ -139,11 +139,12 @@ public class UserRegistryServiceImpl implements UserRegistryService {
                         .filter(stringWorkContactResourceEntry -> existsWorkContactResourceForPhoneAndMail(stringWorkContactResourceEntry, emailToCompare, mobilePhoneToCompare))
                         .findFirst()
                         .map(Map.Entry::getKey))
-                .orElse(null);
+                .orElse(idContacts);
+
 
         return updateUsingPATCH(userResource.getId().toString(),
-                userMapper.toMutableUserFieldsDto(userDto, userResource, idContacts))
-                .replaceWith(StringUtils.isBlank(existedUserMailUuid) ? idContacts : existedUserMailUuid);
+                userMapper.toMutableUserFieldsDto(userDto, userResource, existedUserMailUuid))
+                .replaceWith(existedUserMailUuid);
     }
 
     private static boolean existsWorkContactResourceForPhoneAndMail(Map.Entry<String, WorkContactResource> stringWorkContactResourceEntry, String emailToCompare, String mobilePhoneToCompare) {
