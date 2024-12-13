@@ -1,85 +1,39 @@
-# Selfcare User
+# selfcare-ms-user-group
+microservice to manage group of users 
 
-This repo structure and build monorepo with Apache Maven for selfcare user domain. 
+## Description
+This Spring Boot-based microservice is designed to handle several key functionalities in the selfcare user-group operations domain and business logic for CRUD groups.
 
-Applications under apps/ depend on shared code under libs/.
-test-coverage/ is used to assess the test coverage of the entire project.
+## Prerequisites
+Before running the microservice, ensure you have installed:
 
+- Java JDK 17 or higher
+- Maven 3.6 or higher
+- Connection to VPN selc-d-vnet
 
+## Configuration
+Look at app/src/main/resources/`application.yml` file to set up environment-specific settings, such as database details.
 
-```
-.
+## Installation and Local Startup
+To run the microservice locally, follow these steps:
 
-├── apps
-│   ├── user-cdc
-│   └── user-ms
-│   └── user-group-ms
-└── test-coverage
-```
-
-Look at single README module for more information.
-
-## Infrastructure
-
-The [`.container_apps/`] sub folder contains terraform files for deploying infrastructure as container apps in Azure.
-
-
-## Continous integration
-
-The [`.github/`] sub folder contains a self-contained ci-stack for building the monorepo with Github Actions.
-
-## Usage
-
-### Prerequisites
-
-    Java version: 17
-    Maven version: 3.9.*
-
-### Setup GitHub Credentials for selfcare-onboarding-sdk
-
-To use the selfcare-onboarding-sdk, you need to configure your Maven settings to include GitHub credentials. This allows Maven to authenticate and download the required dependencies.
-
-1. Open or create the ~/.m2/settings.xml file on your local machine.
-2. Add the following <server> configuration to the <servers> section:
-
-
-
-```xml script
-<servers>
-    <server>
-        <id>selfcare-onboarding</id>
-        <username>**github_username**</username>
-        <password>**ghp_token**</password>
-    </server>
-</servers>
-
-```
-
-## Running the application
+1. **Build the Project**
 
 ```shell script
-mvn clean package install
+mvn clean install
 ```
 
-## Maven basic actions for monorep
+2. **Start the Application**
 
-Maven is really not a monorepo-*native* build tool (e.g. lacks
-trustworthy incremental builds, can only build java code natively, is recursive and
-struggles with partial repo checkouts) but can be made good use of with some tricks
-and usage of a couple of lesser known command line switches.
+```shell script
+mvn spring-boot:run -pl app
+```
 
-| Action                                                                                       | in working directory | with Maven                                                                      |
-|:---------------------------------------------------------------------------------------------|:--------------------:|:--------------------------------------------------------------------------------|
-| Build the world                                                                              |         `.`          | `mvn clean package -DskipTests`                                                 |
-| Run `user-ms`                                                                                |         `.`          | `java -jar apps/user-ms/target/user-ms-1.0.0-SNAPSHOT.jar`                      |
-| Run `user-group-ms`                                                                          |         `.`          | `java -jar apps/user-group-ms/target/user-group-ms-1.0.0-SNAPSHOT.jar`                      |
-| Build and test the world                                                                     |         `.`          | `mvn clean package`                                                             |
-| Build the world                                                                              |   `./apps/user-ms`   | `mvn --file ../.. clean package -DskipTests`                                    |
-| Build `user-ms` and its dependencies                                                         |         `.`          | `mvn --projects :user-ms --also-make clean package -DskipTests`                 |
-| Build `user-ms` and its dependencies                                                         |   `./apps/user-ms`   | `mvn --file ../.. --projects :user-ms --also-make clean package -DskipTests`    |
-| Build `user-group-ms` and its dependencies                                                   |         `.`          | `mvn --projects :user-group-ms --also-make-dependents clean package -DskipTests`                 |
-| Build `user-group-ms` and its dependencies                                                   |         `.`          | `mvn --projects :user-group-ms-app --also-make clean package -DskipTests`                 |
-| Build `user-sdk` and its dependents (aka. reverse dependencies or *rdeps* in Bazel parlance) |         `.`          | `mvn --projects :user-sdk-pom --also-make-dependents clean package -DskipTests` |
-| Print dependencies of `user-sdk`                                                             |   `./apps/user-ms`   | `mvn dependency:list`                                                           |
-| Change version  of `user-sdk`                                                                |         `.`          | `mvn versions:set -DnewVersion=0.1.2 --projects :user-sdk-pom  `                |
-| Persist version  of `user-sdk`                                                               |         `.`          | `mvn versions:commit   `                                                        |
+Remember to set environment-specific settings (look above).
+
+## Usage
+After starting, the microservice will be available at `http://localhost:8080/`.
+
+To use the API, refer to the Swagger UI documentation (if available) at `http://localhost:8080/swagger-ui.html`.
+
+
