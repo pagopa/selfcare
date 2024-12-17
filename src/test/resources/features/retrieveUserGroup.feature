@@ -1,3 +1,4 @@
+@FeatureRetrieve
 Feature: Get User Group
 
   @FirstRetrieveGroupScenario
