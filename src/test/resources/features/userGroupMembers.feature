@@ -1,3 +1,4 @@
+@FeatureMembers
 Feature: User Group Members
 
   @FirstGroupMembersScenario

@@ -1,3 +1,4 @@
+@FeatureUpdate
 Feature: Update User Group
 
   @FirstUpdateScenario
