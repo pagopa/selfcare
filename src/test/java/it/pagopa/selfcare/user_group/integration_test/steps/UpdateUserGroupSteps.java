@@ -11,6 +11,7 @@ import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.specification.RequestSpecification;
 import it.pagopa.selfcare.user_group.model.UserGroupEntity;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 
 import java.io.File;
@@ -105,12 +106,12 @@ public class UpdateUserGroupSteps extends UserGroupSteps {
         }
     }
 
-    @When("I send a DELETE request to {string} with authentication {string}")
-    public void iSendADeleteRequestTo(String url, String isAuthenticated) {
+    @When("I send a DELETE request to {string}")
+    public void iSendADeleteRequestTo(String url) {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(Boolean.parseBoolean(isAuthenticated)){
+        if(StringUtils.isNotBlank(token)){
             requestSpecification.header("Authorization", "Bearer " + token);
         }
 
@@ -167,6 +168,11 @@ public class UpdateUserGroupSteps extends UserGroupSteps {
             Assertions.assertNotNull(updatedUserGroupEntity.getModifiedAt());
             Assertions.assertNotNull(updatedUserGroupEntity.getModifiedBy());
         }
+    }
+
+    @Given("[UPDATE] user login with username {string} and password {string}")
+    public void createUserLoginWithUsernameAndPassword(String user, String pass) {
+        super.login(user, pass);
     }
 
 }

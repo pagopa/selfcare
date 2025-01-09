@@ -1,23 +1,30 @@
 package it.pagopa.selfcare.user_group.integration_test.steps;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.restassured.RestAssured;
-import it.pagopa.selfcare.user_group.model.TestProperties;
-import it.pagopa.selfcare.user_group.model.UserGroupEntityPageable;
 import it.pagopa.selfcare.user_group.dao.UserGroupRepository;
+import it.pagopa.selfcare.user_group.integration_test.KeyGenerator;
+import it.pagopa.selfcare.user_group.model.JwtData;
+import it.pagopa.selfcare.user_group.model.TestProperties;
 import it.pagopa.selfcare.user_group.model.UserGroupEntity;
+import it.pagopa.selfcare.user_group.model.UserGroupEntityPageable;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
+@Slf4j
 public class UserGroupSteps {
 
     @Autowired
@@ -37,7 +44,38 @@ public class UserGroupSteps {
     protected int status;
     protected String errorMessage;
     protected List<String> userGroupsIds = List.of("6759f8df78b6af202b222d29", "6759f8df78b6af202b222d2a", "6759f8df78b6af202b222d2b");
-    protected String token = readDataPopulation().getToken();
+    protected String token;
+
+    protected void login(String user, String pass) {
+        TestProperties testProperties = readDataPopulation();
+        JwtData jwtData = testProperties.getJwtData().stream()
+                .filter(data -> data.getUsername().equals(user) && data.getPassword().equals(pass))
+                .findFirst()
+                .orElse(null);
+        token = generateToken(jwtData);
+    }
+
+    public String generateToken(JwtData jwtData) {
+        if (Objects.nonNull(jwtData)) {
+            try {
+                File file = new File("integration-test-config/key/private-key.pem");
+                Algorithm alg = Algorithm.RSA256(KeyGenerator.getPrivateKey(new String(Files.readAllBytes(file.toPath()))));
+                String jwt = JWT.create()
+                        .withHeader(jwtData.getJwtHeader())
+                        .withPayload(jwtData.getJwtPayload())
+                        .withIssuedAt(Instant.now())
+                        .withExpiresAt(Instant.now().plusSeconds(3600))
+                        .sign(alg);
+                log.info("generated token jwt");
+                return jwt;
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
 
     public TestProperties readDataPopulation() {
         TestProperties testProperties = null;

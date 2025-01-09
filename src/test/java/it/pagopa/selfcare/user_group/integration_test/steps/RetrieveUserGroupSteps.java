@@ -194,5 +194,10 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
     public void iShouldReceiveAResponseWithStatusCode(int expectedStatusCode) {
         Assertions.assertEquals(expectedStatusCode, status);
     }
+
+    @Given("[RETRIEVE] user login with username {string} and password {string}")
+    public void createUserLoginWithUsernameAndPassword(String user, String pass) {
+        super.login(user, pass);
+    }
 }
 

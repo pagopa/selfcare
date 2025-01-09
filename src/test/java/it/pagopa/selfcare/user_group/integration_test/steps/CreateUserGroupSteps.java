@@ -12,6 +12,7 @@ import io.restassured.response.ExtractableResponse;
 import io.restassured.specification.RequestSpecification;
 import it.pagopa.selfcare.user_group.model.UserGroupEntity;
 import it.pagopa.selfcare.user_group.model.UserGroupStatus;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 
 import java.io.IOException;
@@ -61,12 +62,12 @@ public class CreateUserGroupSteps extends UserGroupSteps {
         return userGroupEntity;
     }
 
-    @When("I send a POST request to {string} with the given details, with authentication {string}")
-    public void iSendAPOSTRequestToWithTheGivenDetails(String url, String isAuthenticated) {
+    @When("I send a POST request to {string} with the given details")
+    public void iSendAPOSTRequestToWithTheGivenDetails(String url) {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(Boolean.parseBoolean(isAuthenticated)){
+        if(StringUtils.isNotBlank(token)){
             requestSpecification.header("Authorization", "Bearer " + token);
         }
 
@@ -135,6 +136,11 @@ public class CreateUserGroupSteps extends UserGroupSteps {
     @And("the response should contain the description {string}")
     public void theResponseShouldContainTheDescription(String expectedDescription) {
         Assertions.assertEquals(expectedDescription, userGroupEntityResponse.getDescription());
+    }
+
+    @Given("[CREATE] user login with username {string} and password {string}")
+    public void createUserLoginWithUsernameAndPassword(String user, String pass) {
+        super.login(user, pass);
     }
 }
 

@@ -88,7 +88,7 @@ public class UserGroupMemberSteps extends UserGroupSteps {
         }
     }
 
-    @When("I send a DELETE request to {string}")
+    @When("[MEMBERS] I send a DELETE request to {string}")
     public void iSendADELETERequestTo(String url) {
         ResponseOptions<Response> response = RestAssured.given()
                 .header("Authorization", "Bearer " + token)
@@ -126,5 +126,10 @@ public class UserGroupMemberSteps extends UserGroupSteps {
         if (status != 204) {
             errorMessage = response.body().asString();
         }
+    }
+
+    @Given("[MEMBERS] user login with username {string} and password {string}")
+    public void createUserLoginWithUsernameAndPassword(String user, String pass) {
+        super.login(user, pass);
     }
 }
