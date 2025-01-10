@@ -3,7 +3,7 @@
   "info" : {
     "title" : "selc-starter-parent",
     "description" : "The services described in this section deal with the management of UserGroup entity, providing the necessary  methods for its creation, consultation and activation.",
-    "version" : "0.0.3-SNAPSHOT"
+    "version" : "1.0.0-SNAPSHOT"
   },
   "servers" : [ {
     "url" : "{url}:{port}{basePath}",
