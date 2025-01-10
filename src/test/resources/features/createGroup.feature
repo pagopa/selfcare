@@ -15,7 +15,7 @@ Feature: Create User Group
     And the response should contain the institutionId "inst123"
     And the response should contain the status "ACTIVE"
     And the response should contain 2 members
-    And the response should contain the createdBy "4ba2832d-9c4c-40f3-9126-e1c72905ef14"
+    And the response should contain the createdBy "97a511a7-2acc-47b9-afed-2f3c65753b4a"
     And the response should contain the createdAt notNull
     And the response should contain the modified data null
 
@@ -95,5 +95,5 @@ Feature: Create User Group
     Given the following user group details:
       | name       | description | productId  | institutionId | status | members |
       | Group Name | Test Group  | product123 | inst123       | ACTIVE |         |
-    When I send a POST request to "/v1/user-groups" with the given details, with authentication "false"
+    When I send a POST request to "/v1/user-groups" with the given details
     Then [CREATE] the response status should be 401

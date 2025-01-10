@@ -58,7 +58,7 @@ public class UserGroupSteps {
     public String generateToken(JwtData jwtData) {
         if (Objects.nonNull(jwtData)) {
             try {
-                File file = new File("integration-test-config/key/private-key.pem");
+                File file = new File("src/test/resources/key/private-key.pem");
                 Algorithm alg = Algorithm.RSA256(KeyGenerator.getPrivateKey(new String(Files.readAllBytes(file.toPath()))));
                 String jwt = JWT.create()
                         .withHeader(jwtData.getJwtHeader())

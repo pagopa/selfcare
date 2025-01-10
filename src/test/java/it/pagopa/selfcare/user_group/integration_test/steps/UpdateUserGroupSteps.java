@@ -61,12 +61,12 @@ public class UpdateUserGroupSteps extends UserGroupSteps {
             this.userGroupDetails = userGroupEntityList.get(0);
     }
 
-    @When("I send a POST request to {string} with authentication {string}")
-    public void iSendAPOSTRequestTo(String url, String isAuthenticated) {
+    @When("I send a POST request to {string}")
+    public void iSendAPOSTRequestTo(String url) {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(Boolean.parseBoolean(isAuthenticated)){
+        if(StringUtils.isNotBlank(token)){
             requestSpecification.header("Authorization", "Bearer " + token);
         }
 
@@ -83,12 +83,12 @@ public class UpdateUserGroupSteps extends UserGroupSteps {
         }
     }
 
-    @When("I send a PUT request to {string} with authentication {string}")
-    public void iSendAPUTRequestTo(String url, String isAuthenticated) {
+    @When("I send a PUT request to {string} to update group")
+    public void iSendAPUTRequestTo(String url) {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(Boolean.parseBoolean(isAuthenticated)){
+        if(StringUtils.isNotBlank(token)){
             requestSpecification.header("Authorization", "Bearer " + token);
         }
 

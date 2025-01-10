@@ -50,7 +50,7 @@ Feature: Update User Group
     And I have data to update:
       | name         | description        | members                                                                   |
       | updated Name | updatedDescription | 525db33f-967f-4a82-8984-c606225e714a,a1b7c86b-d195-41d8-8291-7c3467abfd30 |
-    When I send a PUT request to "/v1/user-groups/{groupId}"
+    When I send a PUT request to "/v1/user-groups/{groupId}" to update group
     Then [UPDATE] the response status should be 200
     And the retrieved group should be updated
 
@@ -60,7 +60,7 @@ Feature: Update User Group
     And I have data to update:
       | name       | description | members                                                                   |
       | Group Name | TestGroup   | 525db33f-967f-4a82-8984-c606225e714a,a1b7c86b-d195-41d8-8291-7c3467abfd30 |
-    When I send a PUT request to "/v1/user-groups/{groupId}"
+    When I send a PUT request to "/v1/user-groups/{groupId}" to update group
     Then [UPDATE] the response status should be 404
     And [UPDATE] the response should contain an error message "Not Found"
 
@@ -71,7 +71,7 @@ Feature: Update User Group
     And I have data to update:
       | name       | description | members                                                                   |
       | Group Name | TestGroup   | 525db33f-967f-4a82-8984-c606225e714a,a1b7c86b-d195-41d8-8291-7c3467abfd30 |
-    When I send a PUT request to "/v1/user-groups/{groupId}"
+    When I send a PUT request to "/v1/user-groups/{groupId}" to update group
     Then [UPDATE] the response status should be 400
     And [UPDATE] the response should contain an error message "Trying to modify suspended group"
 

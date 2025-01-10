@@ -1,3 +1,46 @@
 {
-  "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Imp3dF9hMjo3YTo0NjozYjoyYTo2MDo1Njo0MDo4ODphMDo1ZDphNDpmODowMToxZTozZSJ9.eyJmYW1pbHlfbmFtZSI6IkJhbGJvYSIsImZpc2NhbF9udW1iZXIiOiJCTEJSS1k2N0MzMEg1MDFCIiwibmFtZSI6IlJvY2t5Iiwic3BpZF9sZXZlbCI6Imh0dHBzOi8vd3d3LnNwaWQuZ292Lml0L1NwaWRMMiIsImZyb21fYWEiOmZhbHNlLCJ1aWQiOiI0YmEyODMyZC05YzRjLTQwZjMtOTEyNi1lMWM3MjkwNWVmMTQiLCJsZXZlbCI6IkwyIiwiaWF0IjoxNzM0MDc4MzQ3LCJleHAiOjE3MzQxMTA3NDcsImF1ZCI6ImFwaS5kZXYuc2VsZmNhcmUucGFnb3BhLml0IiwiaXNzIjoiU1BJRCIsImp0aSI6Il8yZjYwM2E4YmMzNmIxMjMxYjFhNiJ9.MCSiqjxLAkdLiGE_1MAznFnKe0sfPS3V8nNL6PU07tUH6VStn2QwSENkGFcepeatQ7aNBsh9GFjQXdDfa00nSDmWJRaDeQ-aRwUWWcgf_3WxL6De6k9Ou4e8v8_jdOQ4bqkWMESCNLEgZiD-NuzbWemJnGSv6ysyU9iaL-38eQ3wrMn9xIVXmNkILpkuiAHLMnoPO82BMQ_ldTCfBRM9kfoo3JyAPf9bHqslOD_VRU6lGULV9gzJ_D6ZQVIyZNs_Wvx6KN0j3feDcfViURBQruE_UZ3SvsnYmqcTL7IOk4wLI_GdXOXjN49SmceLMM3tHYN9yfzyzA-yDaYJvg0QIA"
+  "jwtData": [
+    {
+      "username": "j.doe",
+      "password": "test",
+      "jwtHeader": {
+        "alg": "RS256",
+        "typ": "JWT",
+        "kid": "jwt_test_kid"
+      },
+      "jwtPayload": {
+        "family_name": "Doe",
+        "fiscal_number": "PRVTNT80A41H401T",
+        "name": "John",
+        "spid_level": "https://www.spid.gov.it/SpidL2",
+        "from_aa": false,
+        "uid": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+        "level": "L2",
+        "aud": "api.dev.selfcare.pagopa.it",
+        "iss": "SPID",
+        "jti": "_2f603a8bc36b1231b1a6"
+      }
+    },
+    {
+      "username": "r.balboa",
+      "password": "test",
+      "jwtHeader": {
+        "alg": "RS256",
+        "typ": "JWT",
+        "kid": "jwt_test_kid"
+      },
+      "jwtPayload": {
+        "family_name": "Balboa",
+        "fiscal_number": "BLBRKY67C30H501B",
+        "name": "Rocky",
+        "spid_level": "https://www.spid.gov.it/SpidL2",
+        "from_aa": false,
+        "uid": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
+        "level": "L2",
+        "aud": "api.dev.selfcare.pagopa.it",
+        "iss": "SPID",
+        "jti": "_2f603a8bc36b1231b1a6"
+      }
+    }
+  ]
 }
