@@ -164,6 +164,50 @@
         } ]
       }
     },
+    "/institutions/{institutionId}/products/{productId}/adminCount" : {
+      "get" : {
+        "tags" : [ "Institution" ],
+        "summary" : "Get the number of admins for a certain product of an institution",
+        "description" : "Count the number of admins based on the combination of the provided institutionId and productId",
+        "operationId" : "getInstitutionProductAdminCount",
+        "parameters" : [ {
+          "name" : "institutionId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminCountResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/institutions/{institutionId}/products/{productId}/created-at" : {
       "put" : {
         "tags" : [ "Institution" ],
@@ -1377,6 +1421,21 @@
           },
           "hasToSendEmail" : {
             "type" : "boolean"
+          }
+        }
+      },
+      "AdminCountResponse" : {
+        "type" : "object",
+        "properties" : {
+          "institutionId" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "string"
+          },
+          "adminCount" : {
+            "format" : "int64",
+            "type" : "integer"
           }
         }
       },

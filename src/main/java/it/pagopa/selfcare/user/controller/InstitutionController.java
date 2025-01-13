@@ -4,6 +4,7 @@ import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
+import it.pagopa.selfcare.user.controller.response.AdminCountResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.service.UserService;
@@ -70,6 +71,18 @@ public class InstitutionController {
                                                         @QueryParam(value = "products") List<String> products,
                                                         @QueryParam(value = "productRoles") List<String> productRoles) {
         return userService.findAllUserInstitutions(institutionId, userId, roles, states, products, productRoles);
+    }
+
+    @Operation(
+            summary = "Get the number of admins for a certain product of an institution",
+            description = "Count the number of admins based on the combination of the provided institutionId and productId"
+    )
+    @GET
+    @Path(value = "/{institutionId}/products/{productId}/adminCount")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<AdminCountResponse> getInstitutionProductAdminCount(@PathParam(value = "institutionId") String institutionId,
+                                                                   @PathParam(value = "productId") String productId) {
+        return userService.getInstitutionProductAdminCount(institutionId, productId);
     }
 
     @Operation(

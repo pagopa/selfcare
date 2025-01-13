@@ -8,6 +8,7 @@ import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
+import it.pagopa.selfcare.user.controller.response.AdminCountResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
@@ -202,6 +203,40 @@ class InstitutionControllerTest {
                 .body(updateDescriptionDto)
                 .pathParam("institutionId", institutionId)
                 .put("/{institutionId}")
+                .then()
+                .statusCode(401);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void getInstitutionProductAdminCount() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+
+        Mockito.when(userService.getInstitutionProductAdminCount(institutionId, productId))
+                .thenReturn(Uni.createFrom().item(new AdminCountResponse(institutionId, productId, 2L)));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("institutionId", institutionId)
+                .pathParam("productId", productId)
+                .get("/{institutionId}/products/{productId}/adminCount")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
+    void getInstitutionProductAdminCount_NotAuthorized() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("institutionId", institutionId)
+                .pathParam("productId", productId)
+                .get("/{institutionId}/products/{productId}/adminCount")
                 .then()
                 .statusCode(401);
     }

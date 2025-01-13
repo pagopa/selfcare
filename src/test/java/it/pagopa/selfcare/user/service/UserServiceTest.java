@@ -27,8 +27,8 @@ import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
-import it.pagopa.selfcare.user.exception.UserRoleAlreadyPresentException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.user.exception.UserRoleAlreadyPresentException;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
@@ -48,13 +48,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.Spy;
-import org.openapi.quarkus.user_registry_json.model.BirthDateCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.UserResource;
-import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
-import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -1853,4 +1847,21 @@ class UserServiceTest {
         verify(userInstitutionService).retrieveFirstFilteredUserInstitution(queryParameter);
 
     }
+
+    @Test
+    void testGetInstitutionProductAdminCount() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+
+        when(userInstitutionService.countInstitutionProductAdmins(institutionId, productId))
+                .thenReturn(Uni.createFrom().item(2L));
+
+        userService.getInstitutionProductAdminCount(institutionId, productId).subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(new AdminCountResponse("institutionId", "productId", 2L))
+                .assertCompleted();
+
+        verify(userInstitutionService).countInstitutionProductAdmins(institutionId, productId);
+    }
+
 }

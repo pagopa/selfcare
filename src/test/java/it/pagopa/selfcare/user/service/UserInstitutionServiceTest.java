@@ -647,6 +647,27 @@ class UserInstitutionServiceTest {
         subscriber.assertCompleted().assertItem(1L);
     }
 
+    @Test
+    void countInstitutionProductAdmins() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        PanacheMock.mock(UserInstitution.class);
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
+        when(UserInstitution.count(embeddedCaptor.capture()))
+                .thenReturn(Uni.createFrom().item(2L));
+        UniAssertSubscriber<Long> subscriber = userInstitutionService
+                .countInstitutionProductAdmins(institutionId, productId)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        final String docString = embeddedCaptor.getValue().toString();
+        Assertions.assertTrue(docString.contains("institutionId"));
+        Assertions.assertTrue(docString.contains("productId"));
+        Assertions.assertTrue(docString.contains("role"));
+        Assertions.assertTrue(docString.contains("status"));
+        Assertions.assertFalse(docString.contains("userId"));
+        Assertions.assertFalse(docString.contains("productRole"));
+        subscriber.assertCompleted().assertItem(2L);
+    }
+
     private UserInstitution createDummyUserInstitution() {
         UserInstitution userInstitution = new UserInstitution();
         userInstitution.setId(ObjectId.get());
