@@ -78,7 +78,7 @@ public class InstitutionController {
             description = "Count the number of admins based on the combination of the provided institutionId and productId"
     )
     @GET
-    @Path(value = "/{institutionId}/products/{productId}/adminCount")
+    @Path(value = "/{institutionId}/products/{productId}/admin-count")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<AdminCountResponse> getInstitutionProductAdminCount(@PathParam(value = "institutionId") String institutionId,
                                                                    @PathParam(value = "productId") String productId) {

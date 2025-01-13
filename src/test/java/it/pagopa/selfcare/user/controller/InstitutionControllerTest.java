@@ -221,7 +221,7 @@ class InstitutionControllerTest {
                 .contentType(ContentType.JSON)
                 .pathParam("institutionId", institutionId)
                 .pathParam("productId", productId)
-                .get("/{institutionId}/products/{productId}/adminCount")
+                .get("/{institutionId}/products/{productId}/admin-count")
                 .then()
                 .statusCode(200);
     }
@@ -236,7 +236,7 @@ class InstitutionControllerTest {
                 .contentType(ContentType.JSON)
                 .pathParam("institutionId", institutionId)
                 .pathParam("productId", productId)
-                .get("/{institutionId}/products/{productId}/adminCount")
+                .get("/{institutionId}/products/{productId}/admin-count")
                 .then()
                 .statusCode(401);
     }

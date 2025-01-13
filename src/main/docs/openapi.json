@@ -164,7 +164,7 @@
         } ]
       }
     },
-    "/institutions/{institutionId}/products/{productId}/adminCount" : {
+    "/institutions/{institutionId}/products/{productId}/admin-count" : {
       "get" : {
         "tags" : [ "Institution" ],
         "summary" : "Get the number of admins for a certain product of an institution",

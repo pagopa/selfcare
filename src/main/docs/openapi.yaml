@@ -118,7 +118,7 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
-  /institutions/{institutionId}/products/{productId}/adminCount:
+  /institutions/{institutionId}/products/{productId}/admin-count:
     get:
       tags:
       - Institution
