@@ -19,7 +19,7 @@
     <description>Microservice to manage Self Care User Group</description>
 
     <properties>
-        <selc-commons.version>2.5.1</selc-commons.version>
+        <selc-commons.version>2.5.4</selc-commons.version>
         <sonar.host.url>https://sonarcloud.io/</sonar.host.url>
         <sonar.skip>true</sonar.skip>
         <maven.compiler.source>17</maven.compiler.source>
@@ -55,24 +55,26 @@
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selc-commons-base</artifactId>
-            <version>2.5.4</version>
+            <version>${selc-commons.version}</version>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selc-commons-base</artifactId>
-            <version>2.5.4</version>
+            <version>${selc-commons.version}</version>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selc-commons-web</artifactId>
-            <version>2.5.4</version>
+            <version>${selc-commons.version}</version>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selc-commons-web</artifactId>
-            <version>2.5.4</version>
+            <version>${selc-commons.version}</version>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -154,13 +156,6 @@
             <version>4.18.1</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-webmvc</artifactId>
-            <version>5.3.24</version> <!-- Usa la versione appropriata -->
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
 
     <build>
@@ -213,7 +208,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <skip>false</skip>
-                    <finalName>${project.parent.artifactId}-${project.parent.version}-FATJAR</finalName>
+                    <outputDirectory>target</outputDirectory>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
