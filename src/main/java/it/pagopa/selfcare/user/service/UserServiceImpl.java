@@ -458,15 +458,17 @@ public class UserServiceImpl implements UserService {
         var productFilters = OnboardedProductFilter.builder().productId(userDto.getProduct().getProductId()).status(List.of(ACTIVE)).build().constructMap();
         Map<String, Object> queryParameter = userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters);
         return userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter)
-                .onItem().transformToUni(userInstitution -> Optional.ofNullable(userInstitution).map(ui -> {
-                    log.info("User with userId: {} has already onboarded for product {}. Proceeding with check role", userId, userDto.getProduct().getProductId());
-                    PartyRole roleOnProduct = retrieveUserRoleOnProduct(ui, userDto.getProduct().getProductId());
-                    return checkAndUpdateUserMail(ui, userDto.getUserMailUuid())
-                            .onItem().transformToUni(ignore -> evaluateRoleAndCreateOrUpdateUserByUserId(userDto, userId, loggedUser, roleOnProduct));
-                }).orElseGet(() -> {
-                    log.info("User with userId: {} has not onboarded for product {}. Proceeding with create", userId, userDto.getProduct().getProductId());
-                    return createOrUpdateUserByUserId(userDto, userId, loggedUser);
-                }))
+                .onItem().transformToUni(userInstitution -> {
+                    if (Optional.ofNullable(userInstitution).isPresent()) {
+                        log.info("User with userId: {} has already onboarded for product {}. Proceeding with check role", userId, userDto.getProduct().getProductId());
+                        PartyRole roleOnProduct = retrieveUserRoleOnProduct(userInstitution, userDto.getProduct().getProductId());
+                        return checkAndUpdateUserMail(userInstitution, userDto.getUserMailUuid())
+                                .onItem().transformToUni(ignore -> evaluateRoleAndCreateOrUpdateUserByUserId(userDto, userId, loggedUser, roleOnProduct));
+                    } else {
+                        log.info("User with userId: {} has not onboarded for product {}. Proceeding with create", userId, userDto.getProduct().getProductId());
+                        return createOrUpdateUserByUserId(userDto, userId, loggedUser);
+                    }
+                })
                 .onFailure().invoke(exception -> log.error("Error during createOrUpdateManagerByUserId for userId: {}, institutionId: {}: {}", userId, userDto.getInstitutionId(), exception.getMessage(), exception));
     }
 
