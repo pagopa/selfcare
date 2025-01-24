@@ -246,21 +246,6 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
     }
 
-    @Override
-    public Uni<Long> updateUserInstitutionMailId(String institutionId, String userId, String userMailUuid) {
-        final Map<String, Object> fieldToUpdateMap = Map.of(
-                UserInstitution.Fields.userMailUuid.name(), userMailUuid,
-                UserInstitution.Fields.userMailUpdatedAt.name(), OffsetDateTime.now()
-        );
-
-        final Map<String, Object> filterMap = Map.of(
-                UserInstitution.Fields.institutionId.name(), institutionId,
-                UserInstitution.Fields.userId.name(), userId
-        );
-
-        return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
-                .where(queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION));
-    }
 
     private boolean productFilterIsEmpty(Map<String, Object> filterMap) {
         return !filterMap.containsKey(PRODUCT_ID.getChild())
