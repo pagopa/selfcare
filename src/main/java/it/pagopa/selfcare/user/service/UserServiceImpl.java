@@ -459,7 +459,7 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> queryParameter = userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters);
         return userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter)
                 .onItem().transformToUni(userInstitution -> {
-                    if (Objects.nonNull(userInstitution)) {
+                    if (Optional.ofNullable(userInstitution).isPresent()) {
                         log.info("User with userId: {} has already onboarded for product {}. Proceeding with check role", userId, userDto.getProduct().getProductId());
                         PartyRole roleOnProduct = retrieveUserRoleOnProduct(userInstitution, userDto.getProduct().getProductId());
                         return checkAndUpdateUserMail(userInstitution, userDto.getUserMailUuid())
