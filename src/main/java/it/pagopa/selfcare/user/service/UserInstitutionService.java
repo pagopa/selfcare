@@ -49,4 +49,6 @@ public interface UserInstitutionService {
 
     Uni<Long> updateInstitutionDescription(String institutionId, UpdateDescriptionDto updateDescriptionDto);
 
+    Uni<Long> updateUserInstitutionMailId(String institutionId, String userId, String userMailUuid);
+
 }
