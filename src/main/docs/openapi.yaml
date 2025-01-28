@@ -118,38 +118,6 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
-  /institutions/{institutionId}/products/{productId}/admin-count:
-    get:
-      tags:
-      - Institution
-      summary: Get the number of admins for a certain product of an institution
-      description: Count the number of admins based on the combination of the provided
-        institutionId and productId
-      operationId: getInstitutionProductAdminCount
-      parameters:
-      - name: institutionId
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: productId
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AdminCountResponse"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
   /institutions/{institutionId}/products/{productId}/created-at:
     put:
       tags:
@@ -188,6 +156,45 @@ paths:
           description: OK
           content:
             application/json: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /institutions/{institutionId}/products/{productId}/users/count:
+    get:
+      tags:
+      - Institution
+      summary: Get the number of users for a certain product of an institution with
+        a certain role
+      description: "Count the number of users associated with a specific product of\
+        \ an institution, with an optional filter by roles"
+      operationId: getUsersCount
+      parameters:
+      - name: institutionId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: roles
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsersCountResponse"
         "401":
           description: Not Authorized
         "403":
@@ -1019,16 +1026,6 @@ components:
           type: string
         hasToSendEmail:
           type: boolean
-    AdminCountResponse:
-      type: object
-      properties:
-        institutionId:
-          type: string
-        productId:
-          type: string
-        adminCount:
-          format: int64
-          type: integer
     CertifiableFieldResponseString:
       type: object
       properties:
@@ -1442,6 +1439,20 @@ components:
             type: string
         relationshipStatus:
           $ref: "#/components/schemas/OnboardedProductState"
+    UsersCountResponse:
+      type: object
+      properties:
+        institutionId:
+          type: string
+        productId:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+        count:
+          format: int64
+          type: integer
     UsersNotificationResponse:
       type: object
       properties:

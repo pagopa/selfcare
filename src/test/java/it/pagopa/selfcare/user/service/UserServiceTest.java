@@ -1849,19 +1849,20 @@ class UserServiceTest {
     }
 
     @Test
-    void testGetInstitutionProductAdminCount() {
+    void testGetUsersCount() {
         final String institutionId = "institutionId";
         final String productId = "productId";
+        final List<String> roles = List.of("role1", "role2");
 
-        when(userInstitutionService.countInstitutionProductAdmins(institutionId, productId))
+        when(userInstitutionService.countUsers(institutionId, productId, roles))
                 .thenReturn(Uni.createFrom().item(2L));
 
-        userService.getInstitutionProductAdminCount(institutionId, productId).subscribe()
+        userService.getUsersCount(institutionId, productId, roles).subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
-                .assertItem(new AdminCountResponse("institutionId", "productId", 2L))
+                .assertItem(new UsersCountResponse(institutionId, productId, roles, 2L))
                 .assertCompleted();
 
-        verify(userInstitutionService).countInstitutionProductAdmins(institutionId, productId);
+        verify(userInstitutionService).countUsers(institutionId, productId, roles);
     }
 
 }

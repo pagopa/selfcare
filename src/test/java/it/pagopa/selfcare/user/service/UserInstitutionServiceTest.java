@@ -648,24 +648,56 @@ class UserInstitutionServiceTest {
     }
 
     @Test
-    void countInstitutionProductAdmins() {
+    void countUsersWithRoles() {
         final String institutionId = "institutionId";
         final String productId = "productId";
+        final List<String> roles = List.of("role1", "role2");
+
         PanacheMock.mock(UserInstitution.class);
         ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
+
         when(UserInstitution.count(embeddedCaptor.capture()))
                 .thenReturn(Uni.createFrom().item(2L));
         UniAssertSubscriber<Long> subscriber = userInstitutionService
-                .countInstitutionProductAdmins(institutionId, productId)
+                .countUsers(institutionId, productId, roles)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
+
         final String docString = embeddedCaptor.getValue().toString();
         Assertions.assertTrue(docString.contains("institutionId"));
         Assertions.assertTrue(docString.contains("productId"));
         Assertions.assertTrue(docString.contains("role"));
+        Assertions.assertTrue(docString.contains("role1"));
+        Assertions.assertTrue(docString.contains("role2"));
         Assertions.assertTrue(docString.contains("status"));
-        Assertions.assertFalse(docString.contains("userId"));
-        Assertions.assertFalse(docString.contains("productRole"));
+        Assertions.assertTrue(docString.contains("ACTIVE"));
+        Assertions.assertTrue(docString.contains("PENDING"));
+        Assertions.assertTrue(docString.contains("TOBEVALIDATED"));
         subscriber.assertCompleted().assertItem(2L);
+    }
+
+    @Test
+    void countUsersWithoutRoles() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+
+        PanacheMock.mock(UserInstitution.class);
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
+
+        when(UserInstitution.count(embeddedCaptor.capture()))
+                .thenReturn(Uni.createFrom().item(4L));
+        UniAssertSubscriber<Long> subscriber = userInstitutionService
+                .countUsers(institutionId, productId, null)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        final String docString = embeddedCaptor.getValue().toString();
+        Assertions.assertTrue(docString.contains("institutionId"));
+        Assertions.assertTrue(docString.contains("productId"));
+        Assertions.assertTrue(docString.contains("status"));
+        Assertions.assertTrue(docString.contains("ACTIVE"));
+        Assertions.assertTrue(docString.contains("PENDING"));
+        Assertions.assertTrue(docString.contains("TOBEVALIDATED"));
+        Assertions.assertFalse(docString.contains("role"));
+        subscriber.assertCompleted().assertItem(4L);
     }
 
     private UserInstitution createDummyUserInstitution() {

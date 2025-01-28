@@ -4,9 +4,9 @@ import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
-import it.pagopa.selfcare.user.controller.response.AdminCountResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
+import it.pagopa.selfcare.user.controller.response.UsersCountResponse;
 import it.pagopa.selfcare.user.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -74,15 +74,16 @@ public class InstitutionController {
     }
 
     @Operation(
-            summary = "Get the number of admins for a certain product of an institution",
-            description = "Count the number of admins based on the combination of the provided institutionId and productId"
+            summary = "Get the number of users for a certain product of an institution with a certain role",
+            description = "Count the number of users associated with a specific product of an institution, with an optional filter by roles"
     )
     @GET
-    @Path(value = "/{institutionId}/products/{productId}/admin-count")
+    @Path(value = "/{institutionId}/products/{productId}/users/count")
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<AdminCountResponse> getInstitutionProductAdminCount(@PathParam(value = "institutionId") String institutionId,
-                                                                   @PathParam(value = "productId") String productId) {
-        return userService.getInstitutionProductAdminCount(institutionId, productId);
+    public Uni<UsersCountResponse> getUsersCount(@PathParam(value = "institutionId") String institutionId,
+                                                 @PathParam(value = "productId") String productId,
+                                                 @QueryParam(value = "roles") List<String> roles) {
+        return userService.getUsersCount(institutionId, productId, roles);
     }
 
     @Operation(

@@ -814,9 +814,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Uni<AdminCountResponse> getInstitutionProductAdminCount(String institutionId, String productId) {
-        return userInstitutionService.countInstitutionProductAdmins(institutionId, productId)
-                .onItem().transform(adminCount -> new AdminCountResponse(institutionId, productId, adminCount));
+    public Uni<UsersCountResponse> getUsersCount(String institutionId, String productId, List<String> roles) {
+        return userInstitutionService.countUsers(institutionId, productId, roles)
+                .onItem().transform(count -> new UsersCountResponse(institutionId, productId, roles, count));
     }
 
 }

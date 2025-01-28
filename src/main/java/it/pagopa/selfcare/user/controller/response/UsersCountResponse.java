@@ -4,13 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AdminCountResponse {
+public class UsersCountResponse {
 
     private String institutionId;
     private String productId;
-    private Long adminCount;
+    private List<String> roles;
+    private Long count;
 
 }

@@ -263,13 +263,13 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     }
 
     @Override
-    public Uni<Long> countInstitutionProductAdmins(String institutionId, String productId) {
+    public Uni<Long> countUsers(String institutionId, String productId, List<String> roles) {
         final Map<String, Object> userFilter = UserInstitutionFilter.builder()
                 .institutionId(institutionId)
                 .build().constructMap();
         final Map<String, Object> productFilter = OnboardedProductFilter.builder()
                 .productId(productId)
-                .role(SelfCareRole.fromSelfCareAuthority(PermissionTypeEnum.ADMIN.name()))
+                .role(roles)
                 .status(List.of(ACTIVE, PENDING, TOBEVALIDATED))
                 .build().constructMap();
 

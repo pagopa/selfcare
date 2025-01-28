@@ -49,6 +49,6 @@ public interface UserInstitutionService {
 
     Uni<Long> updateInstitutionDescription(String institutionId, UpdateDescriptionDto updateDescriptionDto);
 
-    Uni<Long> countInstitutionProductAdmins(String institutionId, String productId);
+    Uni<Long> countUsers(String institutionId, String productId, List<String> roles);
 
 }

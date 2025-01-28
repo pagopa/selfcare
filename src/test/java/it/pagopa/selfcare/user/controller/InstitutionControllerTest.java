@@ -8,9 +8,9 @@ import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
-import it.pagopa.selfcare.user.controller.response.AdminCountResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
+import it.pagopa.selfcare.user.controller.response.UsersCountResponse;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -209,34 +209,38 @@ class InstitutionControllerTest {
 
     @Test
     @TestSecurity(user = "userJwt")
-    void getInstitutionProductAdminCount() {
+    void getUsersCount() {
         final String institutionId = "institutionId";
         final String productId = "productId";
+        final List<String> roles = List.of("role1", "role2");
 
-        Mockito.when(userService.getInstitutionProductAdminCount(institutionId, productId))
-                .thenReturn(Uni.createFrom().item(new AdminCountResponse(institutionId, productId, 2L)));
+        Mockito.when(userService.getUsersCount(institutionId, productId, roles))
+                .thenReturn(Uni.createFrom().item(new UsersCountResponse(institutionId, productId, roles, 2L)));
 
         given()
                 .when()
                 .contentType(ContentType.JSON)
                 .pathParam("institutionId", institutionId)
                 .pathParam("productId", productId)
-                .get("/{institutionId}/products/{productId}/admin-count")
+                .queryParam("roles", roles)
+                .get("/{institutionId}/products/{productId}/users/count")
                 .then()
                 .statusCode(200);
     }
 
     @Test
-    void getInstitutionProductAdminCount_NotAuthorized() {
+    void getUsersCount_NotAuthorized() {
         final String institutionId = "institutionId";
         final String productId = "productId";
+        final List<String> roles = List.of("role1", "role2");
 
         given()
                 .when()
                 .contentType(ContentType.JSON)
                 .pathParam("institutionId", institutionId)
                 .pathParam("productId", productId)
-                .get("/{institutionId}/products/{productId}/admin-count")
+                .queryParam("roles", roles)
+                .get("/{institutionId}/products/{productId}/users/count")
                 .then()
                 .statusCode(401);
     }
