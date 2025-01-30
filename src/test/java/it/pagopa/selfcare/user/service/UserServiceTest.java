@@ -1853,16 +1853,87 @@ class UserServiceTest {
         final String institutionId = "institutionId";
         final String productId = "productId";
         final List<String> roles = List.of("role1", "role2");
+        final List<String> status = List.of("status1", "status2");
 
-        when(userInstitutionService.countUsers(institutionId, productId, roles))
+        when(userInstitutionService.countUsers(institutionId, productId, roles, status))
                 .thenReturn(Uni.createFrom().item(2L));
 
-        userService.getUsersCount(institutionId, productId, roles).subscribe()
+        userService.getUsersCount(institutionId, productId, roles, status).subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
-                .assertItem(new UsersCountResponse(institutionId, productId, roles, 2L))
+                .assertItem(new UsersCountResponse(institutionId, productId, roles, status, 2L))
                 .assertCompleted();
 
-        verify(userInstitutionService).countUsers(institutionId, productId, roles);
+        verify(userInstitutionService).countUsers(institutionId, productId, roles, status);
+    }
+
+    @Test
+    void testGetUsersCountWithoutRolesAndStatus() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+
+        when(userInstitutionService.countUsers(institutionId, productId, null, List.of(ACTIVE.name())))
+                .thenReturn(Uni.createFrom().item(2L));
+
+        userService.getUsersCount(institutionId, productId, null, null).subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(new UsersCountResponse(institutionId, productId, null, List.of(ACTIVE.name()), 2L))
+                .assertCompleted();
+
+        verify(userInstitutionService).countUsers(institutionId, productId, null, List.of(ACTIVE.name()));
+    }
+
+    @Test
+    void testGetUsersCountWithEmptyRolesAndStatus() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        final List<String> roles = new ArrayList<>();
+        final List<String> status = new ArrayList<>();
+
+        when(userInstitutionService.countUsers(institutionId, productId, null, List.of(ACTIVE.name())))
+                .thenReturn(Uni.createFrom().item(2L));
+
+        userService.getUsersCount(institutionId, productId, roles, status).subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(new UsersCountResponse(institutionId, productId, null, List.of(ACTIVE.name()), 2L))
+                .assertCompleted();
+
+        verify(userInstitutionService).countUsers(institutionId, productId, null, List.of(ACTIVE.name()));
+    }
+
+    @Test
+    void testGetUsersCountWithRolesAndNoStatus() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        final List<String> roles = List.of("role1", "role2");
+        final List<String> status = new ArrayList<>();
+
+        when(userInstitutionService.countUsers(institutionId, productId, roles, List.of(ACTIVE.name())))
+                .thenReturn(Uni.createFrom().item(2L));
+
+        userService.getUsersCount(institutionId, productId, roles, status).subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(new UsersCountResponse(institutionId, productId, roles, List.of(ACTIVE.name()), 2L))
+                .assertCompleted();
+
+        verify(userInstitutionService).countUsers(institutionId, productId, roles, List.of(ACTIVE.name()));
+    }
+
+    @Test
+    void testGetUsersCountWithStatusAndNoRoles() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        final List<String> roles = new ArrayList<>();
+        final List<String> status = List.of("status1", "status2");
+
+        when(userInstitutionService.countUsers(institutionId, productId, null, status))
+                .thenReturn(Uni.createFrom().item(2L));
+
+        userService.getUsersCount(institutionId, productId, roles, status).subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(new UsersCountResponse(institutionId, productId, null, status, 2L))
+                .assertCompleted();
+
+        verify(userInstitutionService).countUsers(institutionId, productId, null, status);
     }
 
 }

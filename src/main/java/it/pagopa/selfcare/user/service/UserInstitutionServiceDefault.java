@@ -263,14 +263,14 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     }
 
     @Override
-    public Uni<Long> countUsers(String institutionId, String productId, List<String> roles) {
+    public Uni<Long> countUsers(String institutionId, String productId, List<String> roles, List<String> status) {
         final Map<String, Object> userFilter = UserInstitutionFilter.builder()
                 .institutionId(institutionId)
                 .build().constructMap();
         final Map<String, Object> productFilter = OnboardedProductFilter.builder()
                 .productId(productId)
                 .role(roles)
-                .status(List.of(ACTIVE, PENDING, TOBEVALIDATED))
+                .status(status)
                 .build().constructMap();
 
         final Document query = queryUtils.buildQueryDocument(userUtils.retrieveMapForFilter(userFilter, productFilter), USER_INSTITUTION_COLLECTION);

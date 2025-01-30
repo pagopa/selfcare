@@ -60,5 +60,5 @@ public interface UserService {
 
     Uni<UserInstitutionWithActions> getUserInstitutionWithPermission(String userId, String institutionId, String productId);
 
-    Uni<UsersCountResponse> getUsersCount(String institutionId, String productId, List<String> roles);
+    Uni<UsersCountResponse> getUsersCount(String institutionId, String productId, List<String> roles, List<String> status);
 }

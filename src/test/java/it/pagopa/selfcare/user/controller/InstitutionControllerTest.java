@@ -213,9 +213,10 @@ class InstitutionControllerTest {
         final String institutionId = "institutionId";
         final String productId = "productId";
         final List<String> roles = List.of("role1", "role2");
+        final List<String> status = List.of("status1", "status2");
 
-        Mockito.when(userService.getUsersCount(institutionId, productId, roles))
-                .thenReturn(Uni.createFrom().item(new UsersCountResponse(institutionId, productId, roles, 2L)));
+        Mockito.when(userService.getUsersCount(institutionId, productId, roles, status))
+                .thenReturn(Uni.createFrom().item(new UsersCountResponse(institutionId, productId, roles, status, 2L)));
 
         given()
                 .when()
@@ -223,6 +224,7 @@ class InstitutionControllerTest {
                 .pathParam("institutionId", institutionId)
                 .pathParam("productId", productId)
                 .queryParam("roles", roles)
+                .queryParam("status", status)
                 .get("/{institutionId}/products/{productId}/users/count")
                 .then()
                 .statusCode(200);
@@ -233,6 +235,7 @@ class InstitutionControllerTest {
         final String institutionId = "institutionId";
         final String productId = "productId";
         final List<String> roles = List.of("role1", "role2");
+        final List<String> status = List.of("status1", "status2");
 
         given()
                 .when()
@@ -240,6 +243,7 @@ class InstitutionControllerTest {
                 .pathParam("institutionId", institutionId)
                 .pathParam("productId", productId)
                 .queryParam("roles", roles)
+                .queryParam("status", status)
                 .get("/{institutionId}/products/{productId}/users/count")
                 .then()
                 .statusCode(401);

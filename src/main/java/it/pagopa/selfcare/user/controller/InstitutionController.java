@@ -74,16 +74,17 @@ public class InstitutionController {
     }
 
     @Operation(
-            summary = "Get the number of users for a certain product of an institution with a certain role",
-            description = "Count the number of users associated with a specific product of an institution, with an optional filter by roles"
+            summary = "Get the number of users for a certain product of an institution with a certain role and status",
+            description = "Count the number of users associated with a specific product of an institution, with an optional filter by roles and status. If no filter is specified count users with any role in status ACTIVE"
     )
     @GET
     @Path(value = "/{institutionId}/products/{productId}/users/count")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<UsersCountResponse> getUsersCount(@PathParam(value = "institutionId") String institutionId,
                                                  @PathParam(value = "productId") String productId,
-                                                 @QueryParam(value = "roles") List<String> roles) {
-        return userService.getUsersCount(institutionId, productId, roles);
+                                                 @QueryParam(value = "roles") List<String> roles,
+                                                 @QueryParam(value = "status") List<String> status) {
+        return userService.getUsersCount(institutionId, productId, roles, status);
     }
 
     @Operation(

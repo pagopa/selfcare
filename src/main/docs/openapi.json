@@ -224,8 +224,8 @@
     "/institutions/{institutionId}/products/{productId}/users/count" : {
       "get" : {
         "tags" : [ "Institution" ],
-        "summary" : "Get the number of users for a certain product of an institution with a certain role",
-        "description" : "Count the number of users associated with a specific product of an institution, with an optional filter by roles",
+        "summary" : "Get the number of users for a certain product of an institution with a certain role and status",
+        "description" : "Count the number of users associated with a specific product of an institution, with an optional filter by roles and status. If no filter is specified count users with any role in status ACTIVE",
         "operationId" : "getUsersCount",
         "parameters" : [ {
           "name" : "institutionId",
@@ -243,6 +243,15 @@
           }
         }, {
           "name" : "roles",
+          "in" : "query",
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }, {
+          "name" : "status",
           "in" : "query",
           "schema" : {
             "type" : "array",
@@ -2001,6 +2010,12 @@
             "type" : "string"
           },
           "roles" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "status" : {
             "type" : "array",
             "items" : {
               "type" : "string"
