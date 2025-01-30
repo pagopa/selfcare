@@ -57,7 +57,6 @@
     "Selc:ViewDelegations",
     "Selc:ListProductUsers",
     "Selc:ManageProductGroups",
-    "Selc:CreateDelegation",
     "Selc:ViewInstitutionData",
     "Selc:UpdateInstitutionData"
   ],
