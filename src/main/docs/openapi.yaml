@@ -1140,6 +1140,14 @@ components:
           type: array
           items:
             type: string
+    PartyRole:
+      enum:
+      - MANAGER
+      - DELEGATE
+      - SUB_DELEGATE
+      - OPERATOR
+      - ADMIN_EA
+      type: string
     PermissionTypeEnum:
       enum:
       - ADMIN
@@ -1456,11 +1464,11 @@ components:
         roles:
           type: array
           items:
-            type: string
+            $ref: "#/components/schemas/PartyRole"
         status:
           type: array
           items:
-            type: string
+            $ref: "#/components/schemas/OnboardedProductState"
         count:
           format: int64
           type: integer

@@ -263,7 +263,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     }
 
     @Override
-    public Uni<Long> countUsers(String institutionId, String productId, List<String> roles, List<String> status) {
+    public Uni<Long> countUsers(String institutionId, String productId, List<PartyRole> roles, List<OnboardedProductState> status) {
         final Map<String, Object> userFilter = UserInstitutionFilter.builder()
                 .institutionId(institutionId)
                 .build().constructMap();

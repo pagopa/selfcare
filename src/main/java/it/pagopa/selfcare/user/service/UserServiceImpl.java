@@ -814,9 +814,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Uni<UsersCountResponse> getUsersCount(String institutionId, String productId, List<String> roles, List<String> status) {
-        final List<String> roleList = Optional.ofNullable(roles).filter(l -> !l.isEmpty()).orElse(null);
-        final List<String> statusList = Optional.ofNullable(status).filter(l -> !l.isEmpty()).orElse(List.of(ACTIVE.name()));
+    public Uni<UsersCountResponse> getUsersCount(String institutionId, String productId, List<PartyRole> roles, List<OnboardedProductState> status) {
+        final List<PartyRole> roleList = Optional.ofNullable(roles).filter(l -> !l.isEmpty()).orElse(List.of(PartyRole.values()));
+        final List<OnboardedProductState> statusList = Optional.ofNullable(status).filter(l -> !l.isEmpty()).orElse(List.of(OnboardedProductState.ACTIVE));
         return userInstitutionService.countUsers(institutionId, productId, roleList, statusList)
                 .onItem().transform(count -> new UsersCountResponse(institutionId, productId, roleList, statusList, count));
     }

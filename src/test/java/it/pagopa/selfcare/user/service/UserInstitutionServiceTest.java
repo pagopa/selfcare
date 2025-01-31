@@ -651,8 +651,8 @@ class UserInstitutionServiceTest {
     void countUsers() {
         final String institutionId = "institutionId";
         final String productId = "productId";
-        final List<String> roles = List.of("role1", "role2");
-        final List<String> status = List.of("status1", "status2");
+        final List<PartyRole> roles = List.of(PartyRole.MANAGER, PartyRole.DELEGATE);
+        final List<OnboardedProductState> status = List.of(OnboardedProductState.ACTIVE, OnboardedProductState.PENDING);
 
         PanacheMock.mock(UserInstitution.class);
         ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
@@ -667,11 +667,11 @@ class UserInstitutionServiceTest {
         Assertions.assertTrue(docString.contains("institutionId"));
         Assertions.assertTrue(docString.contains("productId"));
         Assertions.assertTrue(docString.contains("role"));
-        Assertions.assertTrue(docString.contains("role1"));
-        Assertions.assertTrue(docString.contains("role2"));
+        Assertions.assertTrue(docString.contains("MANAGER"));
+        Assertions.assertTrue(docString.contains("DELEGATE"));
         Assertions.assertTrue(docString.contains("status"));
-        Assertions.assertTrue(docString.contains("status1"));
-        Assertions.assertTrue(docString.contains("status2"));
+        Assertions.assertTrue(docString.contains("ACTIVE"));
+        Assertions.assertTrue(docString.contains("PENDING"));
         subscriber.assertCompleted().assertItem(2L);
     }
 
@@ -701,8 +701,8 @@ class UserInstitutionServiceTest {
     void countUsersWithRolesAndNoStatus() {
         final String institutionId = "institutionId";
         final String productId = "productId";
-        final List<String> roles = List.of("role1", "role2");
-        final List<String> status = new ArrayList<>();
+        final List<PartyRole> roles = List.of(PartyRole.MANAGER, PartyRole.DELEGATE);
+        final List<OnboardedProductState> status = new ArrayList<>();
 
         PanacheMock.mock(UserInstitution.class);
         ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
@@ -717,8 +717,8 @@ class UserInstitutionServiceTest {
         Assertions.assertTrue(docString.contains("institutionId"));
         Assertions.assertTrue(docString.contains("productId"));
         Assertions.assertTrue(docString.contains("role"));
-        Assertions.assertTrue(docString.contains("role1"));
-        Assertions.assertTrue(docString.contains("role2"));
+        Assertions.assertTrue(docString.contains("MANAGER"));
+        Assertions.assertTrue(docString.contains("DELEGATE"));
         Assertions.assertFalse(docString.contains("status"));
         subscriber.assertCompleted().assertItem(8L);
     }
@@ -727,8 +727,8 @@ class UserInstitutionServiceTest {
     void countUsersWithStatusAndNoRoles() {
         final String institutionId = "institutionId";
         final String productId = "productId";
-        final List<String> roles = new ArrayList<>();
-        final List<String> status = List.of("status1", "status2");
+        final List<PartyRole> roles = new ArrayList<>();
+        final List<OnboardedProductState> status = List.of(OnboardedProductState.ACTIVE, OnboardedProductState.PENDING);
 
         PanacheMock.mock(UserInstitution.class);
         ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
@@ -743,8 +743,8 @@ class UserInstitutionServiceTest {
         Assertions.assertTrue(docString.contains("institutionId"));
         Assertions.assertTrue(docString.contains("productId"));
         Assertions.assertTrue(docString.contains("status"));
-        Assertions.assertTrue(docString.contains("status1"));
-        Assertions.assertTrue(docString.contains("status2"));
+        Assertions.assertTrue(docString.contains("ACTIVE"));
+        Assertions.assertTrue(docString.contains("PENDING"));
         Assertions.assertFalse(docString.contains("role"));
         subscriber.assertCompleted().assertItem(16L);
     }
