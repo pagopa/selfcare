@@ -919,7 +919,7 @@
           "name" : "role",
           "in" : "query",
           "schema" : {
-            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
+            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA, ADMIN_EA_IO",
             "type" : "string"
           }
         }, {
@@ -1456,7 +1456,7 @@
             "type" : "string"
           },
           "role" : {
-            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
+            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA, ADMIN_EA_IO",
             "type" : "string"
           },
           "env" : {
@@ -1490,7 +1490,7 @@
             "type" : "string"
           },
           "role" : {
-            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
+            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA, ADMIN_EA_IO",
             "type" : "string"
           },
           "env" : {
@@ -1553,7 +1553,7 @@
             "type" : "string"
           },
           "role" : {
-            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
+            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA, ADMIN_EA_IO",
             "type" : "string"
           },
           "tokenId" : {
@@ -1579,7 +1579,7 @@
             "type" : "string"
           },
           "role" : {
-            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
+            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA, ADMIN_EA_IO",
             "type" : "string"
           },
           "tokenId" : {
@@ -1783,7 +1783,7 @@
             "type" : "string"
           },
           "role" : {
-            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
+            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA, ADMIN_EA_IO",
             "type" : "string"
           },
           "status" : {
@@ -1921,7 +1921,7 @@
             "type" : "string"
           },
           "role" : {
-            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
+            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA, ADMIN_EA_IO",
             "type" : "string"
           },
           "productRole" : {

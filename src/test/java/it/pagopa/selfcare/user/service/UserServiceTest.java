@@ -1324,7 +1324,7 @@ class UserServiceTest {
 
         userService.createUserByUserId(addUserRoleDto, "userId", loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
-                .assertFailedWith(InvalidRequestException.class, "Invalid role: INVALID. Allowed value are: [MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA]");
+                .assertFailedWith(InvalidRequestException.class, "Invalid role: INVALID. Allowed value are: [MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA, ADMIN_EA_IO]");
     }
 
 

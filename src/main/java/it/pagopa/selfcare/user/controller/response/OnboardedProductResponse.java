@@ -14,7 +14,7 @@ public class OnboardedProductResponse {
     private String tokenId;
     private OnboardedProductState status;
     private String productRole;
-    @Schema(description = "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA")
+    @Schema(description = "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA, ADMIN_EA_IO")
     private String role;
     private Env env;
     private OffsetDateTime createdAt;

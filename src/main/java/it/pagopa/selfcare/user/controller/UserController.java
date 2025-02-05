@@ -184,7 +184,7 @@ public class UserController {
     public Uni<Response> updateUserStatus(@PathParam(value = "id") String userId,
                                           @QueryParam(value = "institutionId") String institutionId,
                                           @QueryParam(value = "productId") String productId,
-                                          @Schema(description = "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA") @QueryParam(value = "role") String role,
+                                          @Schema(description = "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA, ADMIN_EA_IO") @QueryParam(value = "role") String role,
                                           @QueryParam(value = "productRole") String productRole,
                                           @QueryParam(value = "status") OnboardedProductState status) {
         log.debug("updateProductStatus - userId: {}", userId);

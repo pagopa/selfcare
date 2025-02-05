@@ -60,6 +60,20 @@
     "Selc:ViewInstitutionData",
     "Selc:UpdateInstitutionData"
   ],
+  "ADMIN_EA_IO": [
+    "Selc:UploadLogo",
+    "Selc:ViewBilling",
+    "Selc:ListActiveProducts",
+    "Selc:AccessProductBackoffice",
+    "Selc:ViewManagedInstitutions",
+    "Selc:ViewDelegations",
+    "Selc:ManageProductUsers",
+    "Selc:ListProductUsers",
+    "Selc:ManageProductGroups",
+    "Selc:CreateDelegation",
+    "Selc:ViewInstitutionData",
+    "Selc:UpdateInstitutionData"
+  ],
   "OPERATOR": [
     "Selc:ViewBilling",
     "Selc:AccessProductBackoffice",

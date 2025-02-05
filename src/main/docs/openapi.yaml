@@ -662,7 +662,7 @@ paths:
         in: query
         schema:
           description: "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR,\
-            \ ADMIN_EA"
+            \ ADMIN_EA, ADMIN_EA_IO"
           type: string
       - name: status
         in: query
@@ -1050,7 +1050,7 @@ components:
           type: string
         role:
           description: "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR,\
-            \ ADMIN_EA"
+            \ ADMIN_EA, ADMIN_EA_IO"
           type: string
         env:
           $ref: "#/components/schemas/Env"
@@ -1080,7 +1080,7 @@ components:
           type: string
         role:
           description: "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR,\
-            \ ADMIN_EA"
+            \ ADMIN_EA, ADMIN_EA_IO"
           type: string
         env:
           $ref: "#/components/schemas/Env"
@@ -1129,7 +1129,7 @@ components:
           type: string
         role:
           description: "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR,\
-            \ ADMIN_EA"
+            \ ADMIN_EA, ADMIN_EA_IO"
           type: string
         tokenId:
           type: string
@@ -1151,7 +1151,7 @@ components:
           type: string
         role:
           description: "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR,\
-            \ ADMIN_EA"
+            \ ADMIN_EA, ADMIN_EA_IO"
           type: string
         tokenId:
           type: string
@@ -1294,7 +1294,7 @@ components:
           type: string
         role:
           description: "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR,\
-            \ ADMIN_EA"
+            \ ADMIN_EA, ADMIN_EA_IO"
           type: string
         status:
           $ref: "#/components/schemas/OnboardedProductState"
@@ -1390,7 +1390,7 @@ components:
           type: string
         role:
           description: "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR,\
-            \ ADMIN_EA"
+            \ ADMIN_EA, ADMIN_EA_IO"
           type: string
         productRole:
           type: string
