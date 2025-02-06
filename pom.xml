@@ -18,7 +18,7 @@
     <description>Microservice to manage Self Care User Group</description>
 
     <properties>
-        <selc-commons.version>2.5.6</selc-commons.version>
+        <selc-commons.version>2.5.1</selc-commons.version>
         <sonar.host.url>https://sonarcloud.io/</sonar.host.url>
         <sonar.skip>true</sonar.skip>
     </properties>
