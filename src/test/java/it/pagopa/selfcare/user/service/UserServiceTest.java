@@ -1960,4 +1960,96 @@ class UserServiceTest {
         verify(userInstitutionService).retrieveFirstFilteredUserInstitution(queryParameter);
 
     }
+
+    @Test
+    void testGetUsersCount() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        final List<PartyRole> roles = List.of(PartyRole.MANAGER, PartyRole.DELEGATE);
+        final List<OnboardedProductState> status = List.of(OnboardedProductState.ACTIVE, OnboardedProductState.PENDING);
+
+        when(userInstitutionService.countUsers(institutionId, productId, roles, status))
+                .thenReturn(Uni.createFrom().item(2L));
+
+        userService.getUsersCount(institutionId, productId, roles, status).subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(new UsersCountResponse(institutionId, productId, roles, status, 2L))
+                .assertCompleted();
+
+        verify(userInstitutionService).countUsers(institutionId, productId, roles, status);
+    }
+
+    @Test
+    void testGetUsersCountWithoutRolesAndStatus() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        final List<PartyRole> fullListOfRoles = List.of(PartyRole.values());
+
+        when(userInstitutionService.countUsers(institutionId, productId, fullListOfRoles, List.of(ACTIVE)))
+                .thenReturn(Uni.createFrom().item(2L));
+
+        userService.getUsersCount(institutionId, productId, null, null).subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(new UsersCountResponse(institutionId, productId, fullListOfRoles, List.of(ACTIVE), 2L))
+                .assertCompleted();
+
+        verify(userInstitutionService).countUsers(institutionId, productId, fullListOfRoles, List.of(ACTIVE));
+    }
+
+    @Test
+    void testGetUsersCountWithEmptyRolesAndStatus() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        final List<PartyRole> roles = new ArrayList<>();
+        final List<OnboardedProductState> status = new ArrayList<>();
+        final List<PartyRole> fullListOfRoles = List.of(PartyRole.values());
+
+        when(userInstitutionService.countUsers(institutionId, productId, fullListOfRoles, List.of(ACTIVE)))
+                .thenReturn(Uni.createFrom().item(2L));
+
+        userService.getUsersCount(institutionId, productId, roles, status).subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(new UsersCountResponse(institutionId, productId, fullListOfRoles, List.of(ACTIVE), 2L))
+                .assertCompleted();
+
+        verify(userInstitutionService).countUsers(institutionId, productId, fullListOfRoles, List.of(ACTIVE));
+    }
+
+    @Test
+    void testGetUsersCountWithRolesAndNoStatus() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        final List<PartyRole> roles = List.of(PartyRole.MANAGER, PartyRole.DELEGATE);
+        final List<OnboardedProductState> status = new ArrayList<>();
+
+        when(userInstitutionService.countUsers(institutionId, productId, roles, List.of(ACTIVE)))
+                .thenReturn(Uni.createFrom().item(2L));
+
+        userService.getUsersCount(institutionId, productId, roles, status).subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(new UsersCountResponse(institutionId, productId, roles, List.of(ACTIVE), 2L))
+                .assertCompleted();
+
+        verify(userInstitutionService).countUsers(institutionId, productId, roles, List.of(ACTIVE));
+    }
+
+    @Test
+    void testGetUsersCountWithStatusAndNoRoles() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        final List<PartyRole> roles = new ArrayList<>();
+        final List<OnboardedProductState> status = List.of(OnboardedProductState.ACTIVE, OnboardedProductState.PENDING);
+        final List<PartyRole> fullListOfRoles = List.of(PartyRole.values());
+
+        when(userInstitutionService.countUsers(institutionId, productId, fullListOfRoles, status))
+                .thenReturn(Uni.createFrom().item(2L));
+
+        userService.getUsersCount(institutionId, productId, roles, status).subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(new UsersCountResponse(institutionId, productId, fullListOfRoles, status, 2L))
+                .assertCompleted();
+
+        verify(userInstitutionService).countUsers(institutionId, productId, fullListOfRoles, status);
+    }
+
 }

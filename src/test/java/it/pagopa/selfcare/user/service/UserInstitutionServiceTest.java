@@ -647,6 +647,108 @@ class UserInstitutionServiceTest {
         subscriber.assertCompleted().assertItem(1L);
     }
 
+    @Test
+    void countUsers() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        final List<PartyRole> roles = List.of(PartyRole.MANAGER, PartyRole.DELEGATE);
+        final List<OnboardedProductState> status = List.of(OnboardedProductState.ACTIVE, OnboardedProductState.PENDING);
+
+        PanacheMock.mock(UserInstitution.class);
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
+
+        when(UserInstitution.count(embeddedCaptor.capture()))
+                .thenReturn(Uni.createFrom().item(2L));
+        UniAssertSubscriber<Long> subscriber = userInstitutionService
+                .countUsers(institutionId, productId, roles, status)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        final String docString = embeddedCaptor.getValue().toString();
+        Assertions.assertTrue(docString.contains("institutionId"));
+        Assertions.assertTrue(docString.contains("productId"));
+        Assertions.assertTrue(docString.contains("role"));
+        Assertions.assertTrue(docString.contains("MANAGER"));
+        Assertions.assertTrue(docString.contains("DELEGATE"));
+        Assertions.assertTrue(docString.contains("status"));
+        Assertions.assertTrue(docString.contains("ACTIVE"));
+        Assertions.assertTrue(docString.contains("PENDING"));
+        subscriber.assertCompleted().assertItem(2L);
+    }
+
+    @Test
+    void countUsersWithoutRolesAndStatus() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+
+        PanacheMock.mock(UserInstitution.class);
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
+
+        when(UserInstitution.count(embeddedCaptor.capture()))
+                .thenReturn(Uni.createFrom().item(4L));
+        UniAssertSubscriber<Long> subscriber = userInstitutionService
+                .countUsers(institutionId, productId, null, null)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        final String docString = embeddedCaptor.getValue().toString();
+        Assertions.assertTrue(docString.contains("institutionId"));
+        Assertions.assertTrue(docString.contains("productId"));
+        Assertions.assertFalse(docString.contains("status"));
+        Assertions.assertFalse(docString.contains("role"));
+        subscriber.assertCompleted().assertItem(4L);
+    }
+
+    @Test
+    void countUsersWithRolesAndNoStatus() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        final List<PartyRole> roles = List.of(PartyRole.MANAGER, PartyRole.DELEGATE);
+        final List<OnboardedProductState> status = new ArrayList<>();
+
+        PanacheMock.mock(UserInstitution.class);
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
+
+        when(UserInstitution.count(embeddedCaptor.capture()))
+                .thenReturn(Uni.createFrom().item(8L));
+        UniAssertSubscriber<Long> subscriber = userInstitutionService
+                .countUsers(institutionId, productId, roles, status)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        final String docString = embeddedCaptor.getValue().toString();
+        Assertions.assertTrue(docString.contains("institutionId"));
+        Assertions.assertTrue(docString.contains("productId"));
+        Assertions.assertTrue(docString.contains("role"));
+        Assertions.assertTrue(docString.contains("MANAGER"));
+        Assertions.assertTrue(docString.contains("DELEGATE"));
+        Assertions.assertFalse(docString.contains("status"));
+        subscriber.assertCompleted().assertItem(8L);
+    }
+
+    @Test
+    void countUsersWithStatusAndNoRoles() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        final List<PartyRole> roles = new ArrayList<>();
+        final List<OnboardedProductState> status = List.of(OnboardedProductState.ACTIVE, OnboardedProductState.PENDING);
+
+        PanacheMock.mock(UserInstitution.class);
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
+
+        when(UserInstitution.count(embeddedCaptor.capture()))
+                .thenReturn(Uni.createFrom().item(16L));
+        UniAssertSubscriber<Long> subscriber = userInstitutionService
+                .countUsers(institutionId, productId, roles, status)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        final String docString = embeddedCaptor.getValue().toString();
+        Assertions.assertTrue(docString.contains("institutionId"));
+        Assertions.assertTrue(docString.contains("productId"));
+        Assertions.assertTrue(docString.contains("status"));
+        Assertions.assertTrue(docString.contains("ACTIVE"));
+        Assertions.assertTrue(docString.contains("PENDING"));
+        Assertions.assertFalse(docString.contains("role"));
+        subscriber.assertCompleted().assertItem(16L);
+    }
+
     private UserInstitution createDummyUserInstitution() {
         UserInstitution userInstitution = new UserInstitution();
         userInstitution.setId(ObjectId.get());

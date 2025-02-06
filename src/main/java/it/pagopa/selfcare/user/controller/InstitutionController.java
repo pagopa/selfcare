@@ -3,10 +3,14 @@ package it.pagopa.selfcare.user.controller;
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
+import it.pagopa.selfcare.user.controller.response.UsersCountResponse;
+import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserService;
+import it.pagopa.selfcare.user.util.GeneralUtils;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -70,6 +74,22 @@ public class InstitutionController {
                                                         @QueryParam(value = "products") List<String> products,
                                                         @QueryParam(value = "productRoles") List<String> productRoles) {
         return userService.findAllUserInstitutions(institutionId, userId, roles, states, products, productRoles);
+    }
+
+    @Operation(
+            summary = "Get the number of users for a certain product of an institution with a certain role and status",
+            description = "Count the number of users associated with a specific product of an institution, with an optional filter by roles and status. If no filter is specified count users with any role in status ACTIVE"
+    )
+    @GET
+    @Path(value = "/{institutionId}/products/{productId}/users/count")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<UsersCountResponse> getUsersCount(@PathParam(value = "institutionId") String institutionId,
+                                                 @PathParam(value = "productId") String productId,
+                                                 @QueryParam(value = "roles") List<String> roles,
+                                                 @QueryParam(value = "status") List<String> status) {
+        final List<PartyRole> roleList = GeneralUtils.parseEnumList(roles, PartyRole.class);
+        final List<OnboardedProductState> statusList = GeneralUtils.parseEnumList(status, OnboardedProductState.class);
+        return userService.getUsersCount(institutionId, productId, roleList, statusList);
     }
 
     @Operation(

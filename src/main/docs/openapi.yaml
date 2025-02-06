@@ -162,6 +162,52 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
+  /institutions/{institutionId}/products/{productId}/users/count:
+    get:
+      tags:
+      - Institution
+      summary: Get the number of users for a certain product of an institution with
+        a certain role and status
+      description: "Count the number of users associated with a specific product of\
+        \ an institution, with an optional filter by roles and status. If no filter\
+        \ is specified count users with any role in status ACTIVE"
+      operationId: getUsersCount
+      parameters:
+      - name: institutionId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: roles
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+      - name: status
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsersCountResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
   /institutions/{institutionId}/user-institutions:
     get:
       tags:
@@ -1094,6 +1140,14 @@ components:
           type: array
           items:
             type: string
+    PartyRole:
+      enum:
+      - MANAGER
+      - DELEGATE
+      - SUB_DELEGATE
+      - OPERATOR
+      - ADMIN_EA
+      type: string
     PermissionTypeEnum:
       enum:
       - ADMIN
@@ -1400,6 +1454,24 @@ components:
             type: string
         relationshipStatus:
           $ref: "#/components/schemas/OnboardedProductState"
+    UsersCountResponse:
+      type: object
+      properties:
+        institutionId:
+          type: string
+        productId:
+          type: string
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/PartyRole"
+        status:
+          type: array
+          items:
+            $ref: "#/components/schemas/OnboardedProductState"
+        count:
+          format: int64
+          type: integer
     UsersNotificationResponse:
       type: object
       properties:

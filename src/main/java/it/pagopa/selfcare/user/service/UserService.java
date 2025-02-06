@@ -59,4 +59,6 @@ public interface UserService {
     Uni<Void> sendEventsByDateAndUserIdAndInstitutionId(OffsetDateTime fromDate, String institutionId, String userId);
 
     Uni<UserInstitutionWithActions> getUserInstitutionWithPermission(String userId, String institutionId, String productId);
+
+    Uni<UsersCountResponse> getUsersCount(String institutionId, String productId, List<PartyRole> roles, List<OnboardedProductState> status);
 }

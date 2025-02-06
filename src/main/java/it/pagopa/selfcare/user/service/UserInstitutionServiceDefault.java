@@ -261,4 +261,22 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         Uni<Long> count = UserInstitution.count(query);
         return count.onItem().transform(c -> c > 0);
     }
+
+    @Override
+    public Uni<Long> countUsers(String institutionId, String productId, List<PartyRole> roles, List<OnboardedProductState> status) {
+        final Map<String, Object> userFilter = UserInstitutionFilter.builder()
+                .institutionId(institutionId)
+                .build().constructMap();
+        final Map<String, Object> productFilter = OnboardedProductFilter.builder()
+                .productId(productId)
+                .role(roles)
+                .status(status)
+                .build().constructMap();
+
+        final Document query = queryUtils.buildQueryDocument(userUtils.retrieveMapForFilter(userFilter, productFilter), USER_INSTITUTION_COLLECTION);
+        log.debug("Query: {}", query);
+
+        return UserInstitution.count(query);
+    }
+
 }

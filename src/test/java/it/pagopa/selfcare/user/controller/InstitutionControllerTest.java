@@ -7,10 +7,13 @@ import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
+import it.pagopa.selfcare.user.controller.response.UsersCountResponse;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -202,6 +205,48 @@ class InstitutionControllerTest {
                 .body(updateDescriptionDto)
                 .pathParam("institutionId", institutionId)
                 .put("/{institutionId}")
+                .then()
+                .statusCode(401);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void getUsersCount() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        final List<PartyRole> roles = List.of(PartyRole.MANAGER, PartyRole.DELEGATE);
+        final List<OnboardedProductState> status = List.of(OnboardedProductState.ACTIVE, OnboardedProductState.PENDING);
+
+        Mockito.when(userService.getUsersCount(institutionId, productId, roles, status))
+                .thenReturn(Uni.createFrom().item(new UsersCountResponse(institutionId, productId, roles, status, 2L)));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("institutionId", institutionId)
+                .pathParam("productId", productId)
+                .queryParam("roles", List.of("MANAGER", "DELEGATE"))
+                .queryParam("status", List.of("ACTIVE", "PENDING"))
+                .get("/{institutionId}/products/{productId}/users/count")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
+    void getUsersCount_NotAuthorized() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        final List<String> roles = List.of("role1", "role2");
+        final List<String> status = List.of("status1", "status2");
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("institutionId", institutionId)
+                .pathParam("productId", productId)
+                .queryParam("roles", roles)
+                .queryParam("status", status)
+                .get("/{institutionId}/products/{productId}/users/count")
                 .then()
                 .statusCode(401);
     }
