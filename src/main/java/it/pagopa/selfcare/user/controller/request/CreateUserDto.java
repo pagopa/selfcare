@@ -44,7 +44,7 @@ public class CreateUserDto {
         private String productId;
 
         @NotNull(message = "role is required")
-        @Schema(description = "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA, ADMIN_EA_IO")
+        @Schema(description = "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA")
         private String role;
 
         private String tokenId;

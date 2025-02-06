@@ -19,10 +19,6 @@
     "Selc:ViewBilling",
     "Selc:RequestProductAccess"
   ],
-  "ADMIN_EA_IO": [
-    "Selc:UploadLogo",
-    "Selc:ViewBilling"
-  ],
   "OPERATOR": [
     "Selc:ViewBilling"
   ]
