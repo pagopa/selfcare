@@ -824,7 +824,11 @@ public class UserServiceImpl implements UserService {
                 .filter(onboardedProductWithActions -> ACTIVE.equals(onboardedProductWithActions.getStatus()))
                 .filter(onboardedProductWithActions -> Objects.isNull(productId) || productId.equalsIgnoreCase(onboardedProductWithActions.getProductId()))
                 .filter(onboardedProductWithActions -> StringUtils.isNotBlank(onboardedProductWithActions.getRole()))
-                .peek(onboardedProductWithActions -> onboardedProductWithActions.setUserProductActions(actionMapRetriever.getUserActionsMap().get(onboardedProductWithActions.getRole())))
+                .peek(onboardedProductWithActions -> {
+                    Map<String, List<String>> roleActions = actionMapRetriever.getUserActionsMap().get(onboardedProductWithActions.getRole());
+                        List<String> productActions = roleActions.getOrDefault(onboardedProductWithActions.getProductId(), roleActions.get("default"));
+                        onboardedProductWithActions.setUserProductActions(productActions);
+                })
                 .toList();
     }
 

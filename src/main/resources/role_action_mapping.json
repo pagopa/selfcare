@@ -1,69 +1,108 @@
 {
-  "MANAGER": [
-    "Selc:UploadLogo",
-    "Selc:ViewBilling",
-    "Selc:RequestProductAccess",
-    "Selc:ListAvailableProducts",
-    "Selc:ListActiveProducts",
-    "Selc:AccessProductBackoffice",
-    "Selc:ViewManagedInstitutions",
-    "Selc:ViewDelegations",
-    "Selc:ManageProductUsers",
-    "Selc:ListProductUsers",
-    "Selc:ManageProductGroups",
-    "Selc:CreateDelegation",
-    "Selc:ViewInstitutionData",
-    "Selc:UpdateInstitutionData"
-  ],
-  "DELEGATE": [
-    "Selc:UploadLogo",
-    "Selc:ViewBilling",
-    "Selc:RequestProductAccess",
-    "Selc:ListAvailableProducts",
-    "Selc:ListActiveProducts",
-    "Selc:AccessProductBackoffice",
-    "Selc:ViewManagedInstitutions",
-    "Selc:ViewDelegations",
-    "Selc:ManageProductUsers",
-    "Selc:ListProductUsers",
-    "Selc:ManageProductGroups",
-    "Selc:CreateDelegation",
-    "Selc:ViewInstitutionData",
-    "Selc:UpdateInstitutionData"
-  ],
-  "SUB_DELEGATE": [
-    "Selc:UploadLogo",
-    "Selc:ViewBilling",
-    "Selc:RequestProductAccess",
-    "Selc:ListAvailableProducts",
-    "Selc:ListActiveProducts",
-    "Selc:AccessProductBackoffice",
-    "Selc:ViewManagedInstitutions",
-    "Selc:ViewDelegations",
-    "Selc:ManageProductUsers",
-    "Selc:ListProductUsers",
-    "Selc:ManageProductGroups",
-    "Selc:CreateDelegation",
-    "Selc:ViewInstitutionData",
-    "Selc:UpdateInstitutionData"
-  ],
-  "ADMIN_EA": [
-    "Selc:UploadLogo",
-    "Selc:ViewBilling",
-    "Selc:RequestProductAccess",
-    "Selc:ListActiveProducts",
-    "Selc:AccessProductBackoffice",
-    "Selc:ViewManagedInstitutions",
-    "Selc:ViewDelegations",
-    "Selc:ListProductUsers",
-    "Selc:ManageProductGroups",
-    "Selc:ViewInstitutionData",
-    "Selc:UpdateInstitutionData"
-  ],
-  "OPERATOR": [
-    "Selc:ViewBilling",
-    "Selc:AccessProductBackoffice",
-    "Selc:ViewInstitutionData",
-    "Selc:ListActiveProducts"
-  ]
+  "MANAGER": {
+    "default": [
+      "Selc:UploadLogo",
+      "Selc:ViewBilling",
+      "Selc:RequestProductAccess",
+      "Selc:ListAvailableProducts",
+      "Selc:ListActiveProducts",
+      "Selc:AccessProductBackoffice",
+      "Selc:ViewManagedInstitutions",
+      "Selc:ViewDelegations",
+      "Selc:ManageProductUsers",
+      "Selc:ListProductUsers",
+      "Selc:ManageProductGroups",
+      "Selc:CreateDelegation",
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateInstitutionData"
+    ]
+  },
+  "DELEGATE": {
+    "default": [
+      "Selc:UploadLogo",
+      "Selc:ViewBilling",
+      "Selc:RequestProductAccess",
+      "Selc:ListAvailableProducts",
+      "Selc:ListActiveProducts",
+      "Selc:AccessProductBackoffice",
+      "Selc:ViewManagedInstitutions",
+      "Selc:ViewDelegations",
+      "Selc:ManageProductUsers",
+      "Selc:ListProductUsers",
+      "Selc:ManageProductGroups",
+      "Selc:CreateDelegation",
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateInstitutionData"
+    ]
+  },
+  "SUB_DELEGATE": {
+    "default": [
+      "Selc:UploadLogo",
+      "Selc:ViewBilling",
+      "Selc:RequestProductAccess",
+      "Selc:ListAvailableProducts",
+      "Selc:ListActiveProducts",
+      "Selc:AccessProductBackoffice",
+      "Selc:ViewManagedInstitutions",
+      "Selc:ViewDelegations",
+      "Selc:ManageProductUsers",
+      "Selc:ListProductUsers",
+      "Selc:ManageProductGroups",
+      "Selc:CreateDelegation",
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateInstitutionData"
+    ]
+  },
+  "ADMIN_EA": {
+    "prod-io": [
+      "Selc:UploadLogo",
+      "Selc:ViewBilling",
+      "Selc:ListActiveProducts",
+      "Selc:AccessProductBackoffice",
+      "Selc:ViewManagedInstitutions",
+      "Selc:ViewDelegations",
+      "Selc:ManageProductUsers",
+      "Selc:ListProductUsers",
+      "Selc:ManageProductGroups",
+      "Selc:CreateDelegation",
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateInstitutionData"
+    ],
+    "prod-pagopa": [
+      "Selc:UploadLogo",
+      "Selc:ViewBilling",
+      "Selc:RequestProductAccess",
+      "Selc:ListAvailableProducts",
+      "Selc:ListActiveProducts",
+      "Selc:AccessProductBackoffice",
+      "Selc:ViewManagedInstitutions",
+      "Selc:ViewDelegations",
+      "Selc:ListProductUsers",
+      "Selc:ManageProductGroups",
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateInstitutionData"
+    ],
+    "default": [
+      "Selc:UploadLogo",
+      "Selc:ViewBilling",
+      "Selc:RequestProductAccess",
+      "Selc:ListAvailableProducts",
+      "Selc:ListActiveProducts",
+      "Selc:AccessProductBackoffice",
+      "Selc:ViewManagedInstitutions",
+      "Selc:ViewDelegations",
+      "Selc:ListProductUsers",
+      "Selc:ManageProductGroups",
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateInstitutionData"
+    ]
+  },
+  "OPERATOR": {
+    "default": [
+      "Selc:ViewBilling",
+      "Selc:AccessProductBackoffice",
+      "Selc:ViewInstitutionData",
+      "Selc:ListActiveProducts"
+    ]
+  }
 }

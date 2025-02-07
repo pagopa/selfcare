@@ -150,6 +150,26 @@ class UserServiceTest {
         return userInstitution;
     }
 
+    private UserInstitution createUserInstitution_ADMIN_EA_IO(){
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setId(ObjectId.get());
+        userInstitution.setUserId(userId.toString());
+        userInstitution.setInstitutionId("institutionId");
+        userInstitution.setUserMailUuid(workContractsKey);
+        userInstitution.setInstitutionRootName("institutionRootName");
+
+        OnboardedProduct product = new OnboardedProduct();
+        product.setProductId("prod-io");
+        product.setProductRole("admin");
+        product.setRole(ADMIN_EA);
+        product.setStatus(OnboardedProductState.ACTIVE);
+
+        List<OnboardedProduct> products = new ArrayList<>();
+        products.add(product);
+        userInstitution.setProducts(products);
+        return userInstitution;
+    }
+
     @Test
     void getUsersEmailsTest() {
 
@@ -1909,6 +1929,27 @@ class UserServiceTest {
 
     }
 
+    @Test
+    void testGetUserInstitutionWithPermissionQueryWithoutProductId_ADMIN_EA_IO() {
+        String institutionId = "institutionId";
+        String userId = "userId";
+
+        Map<String, Object> queryParameter;
+        queryParameter = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
+
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter))
+                .thenReturn(Uni.createFrom().item(createUserInstitution_ADMIN_EA_IO()));
+
+        userService.getUserInstitutionWithPermission(userId, institutionId, null)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(getUserInstitutionWithAction_ADMIN_EA_IO())
+                .assertCompleted();
+
+        verify(userInstitutionService).retrieveFirstFilteredUserInstitution(queryParameter);
+
+    }
+
     private UserInstitutionWithActions getUserInstitutionWithAction() {
         UserInstitutionWithActions userInstitutionWithActions = new UserInstitutionWithActions();
         OnboardedProductWithActions product = new OnboardedProductWithActions();
@@ -1920,6 +1961,33 @@ class UserServiceTest {
                 "Selc:ViewBilling",
                 "Selc:RequestProductAccess",
                 "Selc:ListAvailableProducts",
+                "Selc:ListActiveProducts",
+                "Selc:AccessProductBackoffice",
+                "Selc:ViewManagedInstitutions",
+                "Selc:ViewDelegations",
+                "Selc:ManageProductUsers",
+                "Selc:ListProductUsers",
+                "Selc:ManageProductGroups",
+                "Selc:CreateDelegation",
+                "Selc:ViewInstitutionData",
+                "Selc:UpdateInstitutionData"));
+        userInstitutionWithActions.setInstitutionRootName("institutionRootName");
+        userInstitutionWithActions.setUserMailUuid(workContractsKey);
+        userInstitutionWithActions.setInstitutionId("institutionId");
+        userInstitutionWithActions.setUserId(userId.toString());
+        userInstitutionWithActions.setProducts(List.of(product));
+        return userInstitutionWithActions;
+    }
+
+    private UserInstitutionWithActions getUserInstitutionWithAction_ADMIN_EA_IO() {
+        UserInstitutionWithActions userInstitutionWithActions = new UserInstitutionWithActions();
+        OnboardedProductWithActions product = new OnboardedProductWithActions();
+        product.setRole(ADMIN_EA.name());
+        product.setProductId("prod-io");
+        product.setProductRole("admin");
+        product.setStatus(ACTIVE);
+        product.setUserProductActions(List.of("Selc:UploadLogo",
+                "Selc:ViewBilling",
                 "Selc:ListActiveProducts",
                 "Selc:AccessProductBackoffice",
                 "Selc:ViewManagedInstitutions",
