@@ -36,4 +36,19 @@ After starting, the microservice will be available at `http://localhost:8080/`.
 
 To use the API, refer to the Swagger UI documentation (if available) at `http://localhost:8080/swagger-ui.html`.
 
+## Integration tests
+A new suite of integration tests written with cucumber was added in the `it.pagopa.selfcare.user_group.integration_tests` package.
+The tests are currently disabled by default, to run the tests locally:
 
+1. Start a local mongodb at port 27017, you can use the docker-compose.yml in this folder and run:
+    ```shell script
+    docker-compose up mongodb
+    ```
+
+2. Run the user-group-ms locally at port 8082 (by setting the environment variable MS_USER_GROUP_SERVER_PORT) and using the test public key in `src/test/resources/key/public-key.pub`
+   (by setting the value in a single line of the env var JWT_TOKEN_PUBLIC_KEY).
+
+3. Comment the line starting with @ExcludeTags inside the CucumberSuite file and run the test with maven:
+    ```shell script
+   mvn test -Dtest=CucumberSuite
+   ```
