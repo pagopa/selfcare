@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
@@ -46,6 +45,37 @@ public class UserUtils {
     public static Collection<OnboardedProduct> groupingProductAndReturnMinStateProduct(List<OnboardedProduct> products) {
         Map<String, List<OnboardedProduct>> mapProducts = products.stream()
                 .collect(Collectors.groupingBy(product -> String.format("%s_%s", product.getProductId(), product.getProductRole())));
+
+        Map<String, OnboardedProduct> onboardedProductMap = new HashMap<>();
+        mapProducts
+                .forEach((key, value) -> {
+                    OnboardedProductState state = Collections.min(value.stream()
+                            .map(OnboardedProduct::getStatus)
+                            .toList());
+                    value.stream()
+                            .filter(product -> state.equals(product.getStatus()))
+                            .max(Comparator.comparing(OnboardedProduct::getUpdatedAt, nullsLast(naturalOrder()))
+                                    .thenComparing(OnboardedProduct::getCreatedAt, nullsLast(naturalOrder())))
+                            .ifPresent(product -> onboardedProductMap.put(key, product));
+                });
+
+
+        return onboardedProductMap.values();
+    }
+
+    /**
+     * Groups a list of OnboardedProduct instances by their productId and Role,
+     * then returns a collection of the products with the minimum status within each group.
+     * Among products with the same minimum status, the one with the latest updatedAt
+     * timestamp (and createdAt as a tiebreaker) is selected.
+     * It is used when sending event occurs to send only the current valid role
+     *
+     * @param products the list of OnboardedProduct instances to be processed
+     * @return a collection of OnboardedProduct instances with the minimum state for each productId and PartyRole group
+     */
+    public static Collection<OnboardedProduct> groupingProductWithRoleAndReturnMinStateProduct(List<OnboardedProduct> products) {
+        Map<String, List<OnboardedProduct>> mapProducts = products.stream()
+                .collect(Collectors.groupingBy(product -> String.format("%s_%s", product.getProductId(), product.getRole())));
 
         Map<String, OnboardedProduct> onboardedProductMap = new HashMap<>();
         mapProducts
