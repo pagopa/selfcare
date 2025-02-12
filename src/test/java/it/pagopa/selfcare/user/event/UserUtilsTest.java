@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.user.event;
 
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.UserUtils;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.TrackEventInput;
@@ -29,6 +30,36 @@ public class UserUtilsTest {
         assertNotNull(actual);
         assertNotNull(actual.getStatus());
         assertEquals(OnboardedProductState.ACTIVE, actual.getStatus());
+    }
+
+    @Test
+    void groupingProductAndRoleAndReturnMinStateProduct_whenActiveAndDelete() {
+
+        List<OnboardedProduct> products = new ArrayList<>();
+        products.add(dummyOnboardedProductWithRole("example", OnboardedProductState.ACTIVE, PartyRole.MANAGER));
+        products.add(dummyOnboardedProductWithRole("example", OnboardedProductState.DELETED, PartyRole.MANAGER));
+
+        Collection<OnboardedProduct> actuals = UserUtils.groupingProductWithRoleAndReturnMinStateProduct(products);
+        assertEquals(1, actuals.size());
+        OnboardedProduct actual = actuals.stream().findFirst().orElse(null);
+        assertNotNull(actual);
+        assertNotNull(actual.getStatus());
+        assertEquals(OnboardedProductState.ACTIVE, actual.getStatus());
+    }
+
+    @Test
+    void groupingProductAndReturnMinStateProduct_whenMoreRole() {
+
+        List<OnboardedProduct> products = new ArrayList<>();
+        products.add(dummyOnboardedProductWithRole("example", OnboardedProductState.ACTIVE, PartyRole.MANAGER));
+        products.add(dummyOnboardedProductWithRole("example", OnboardedProductState.DELETED, PartyRole.DELEGATE));
+        products.add(dummyOnboardedProductWithRole("example", OnboardedProductState.DELETED, PartyRole.SUB_DELEGATE));
+
+        Collection<OnboardedProduct> actuals = UserUtils.groupingProductWithRoleAndReturnMinStateProduct(products);
+
+        assertNotNull(actuals);
+        assertEquals(3, actuals.size());
+        assertEquals(products, actuals);
     }
 
     @Test
@@ -75,6 +106,17 @@ public class UserUtilsTest {
         assertTrue(maps.containsKey("userId"));
         assertTrue(maps.containsKey("institutionId"));
         assertTrue(maps.containsKey("productId"));
+    }
+
+    OnboardedProduct dummyOnboardedProductWithRole(String productRole, OnboardedProductState state, PartyRole role) {
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setProductId("productId");
+        onboardedProduct.setProductRole(productRole);
+        onboardedProduct.setRole(role);
+        onboardedProduct.setCreatedAt(OffsetDateTime.of(LocalDate.EPOCH, LocalTime.MIN, ZoneOffset.UTC));
+        onboardedProduct.setUpdatedAt(OffsetDateTime.of(LocalDate.EPOCH, LocalTime.MIN, ZoneOffset.UTC));
+        onboardedProduct.setStatus(state);
+        return onboardedProduct;
     }
 
     OnboardedProduct dummyOnboardedProduct(String productRole, OnboardedProductState state, int day) {
@@ -162,7 +204,7 @@ public class UserUtilsTest {
         OnboardedProduct product = dummyOnboardedProduct("example", OnboardedProductState.ACTIVE, 1);
         product.setProductId("prod-fd");
         products.add(product);
-        List<String> productIdToCheck = List.of("prod-fd", "2");;
+        List<String> productIdToCheck = List.of("prod-fd", "2");
 
         List<OnboardedProduct> result = UserUtils.retrieveFdProduct(products, productIdToCheck, true);
 
