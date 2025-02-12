@@ -70,7 +70,10 @@ public class UserUtils {
     }
 
     public List<UserNotificationToSend> buildUsersNotificationResponse(UserInstitution userInstitution, UserResource userResource) {
-        return it.pagopa.selfcare.user.UserUtils.groupingProductAndReturnMinStateProduct(userInstitution.getProducts())
+        /*
+         * Since this service is used to re-send events from scratch we must send all "history" without grouping by product and state
+         */
+        return userInstitution.getProducts()
                 .stream()
                 .map(onboardedProduct ->  notificationMapper.toUserNotificationToSend(userInstitution, onboardedProduct, userResource))
                 .toList();
