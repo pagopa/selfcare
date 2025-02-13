@@ -28,6 +28,7 @@ import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.util.*;
+import java.util.function.BiFunction;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,45 +45,71 @@ class UserUtilTest {
     @InjectMock
     private ProductService productService;
 
+    private static UserResource getUserResource(UUID uuid) {
+        Map<String, WorkContactResource> map = new HashMap<>();
+        WorkContactResource workContactResource = new WorkContactResource();
+        workContactResource.setEmail(EmailCertifiableSchema.builder().value("test@test.it").build());
+        map.put("MAIL_ID#123", workContactResource);
+        return UserResource.builder().id(uuid).name(NameCertifiableSchema.builder().value("name").build()).familyName(org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema.builder().value("familyName").build()).workContacts(map).build();
+    }
+
+    private static UserInstitution getUserInstitution(String userId, String institutionId, String productId) {
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setId(ObjectId.get());
+        userInstitution.setUserId(userId);
+        userInstitution.setInstitutionId(institutionId);
+        userInstitution.setUserMailUuid("MAIL_ID#123");
+
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setProductId(productId);
+        onboardedProduct.setStatus(OnboardedProductState.ACTIVE);
+        onboardedProduct.setRole(PartyRole.OPERATOR);
+        onboardedProduct.setProductRole("admin2");
+
+        OnboardedProduct onboardedProduct2 = new OnboardedProduct();
+        onboardedProduct2.setProductId(productId);
+        onboardedProduct2.setStatus(OnboardedProductState.SUSPENDED);
+        onboardedProduct2.setRole(PartyRole.OPERATOR);
+        onboardedProduct2.setProductRole("admin2");
+
+        userInstitution.setProducts(List.of(onboardedProduct2, onboardedProduct));
+        return userInstitution;
+    }
+
     @Test
-    void checkRoleValid(){
+    void checkRoleValid() {
         when(productService.validateProductRole(any(), any(), any())).thenReturn(new ProductRole());
         Assertions.assertDoesNotThrow(() -> userUtils.checkProductRole("prod-pagopa", PartyRole.MANAGER, "operatore"));
     }
 
     @Test
-    void checkRoleProductRoleNotFound(){
+    void checkRoleProductRoleNotFound() {
         when(productService.validateProductRole(any(), any(), any())).thenThrow(new IllegalArgumentException("RoleMappings map for product prod-pagopa not found"));
-        Assertions.assertThrows(InvalidRequestException.class, () ->userUtils
-                .checkProductRole("prod-pagopa", PartyRole.MANAGER, "amministratore"), "RoleMappings map for product prod-pagopa not found");
+        Assertions.assertThrows(InvalidRequestException.class, () -> userUtils.checkProductRole("prod-pagopa", PartyRole.MANAGER, "amministratore"), "RoleMappings map for product prod-pagopa not found");
     }
 
     @Test
-    void checkRoleProductRoleListNotExists(){
+    void checkRoleProductRoleListNotExists() {
         when(productService.validateProductRole(any(), any(), any())).thenThrow(new IllegalArgumentException("Role DELEGATE not found"));
-        Assertions.assertThrows(InvalidRequestException.class, () -> userUtils
-                .checkProductRole("prod-pagopa", PartyRole.DELEGATE, "operatore"), "Role DELEGATE not found");
+        Assertions.assertThrows(InvalidRequestException.class, () -> userUtils.checkProductRole("prod-pagopa", PartyRole.DELEGATE, "operatore"), "Role DELEGATE not found");
     }
 
     @Test
-    void checkProductRoleWithoutProductRole(){
+    void checkProductRoleWithoutProductRole() {
         when(productService.validateProductRole(any(), any(), any())).thenThrow(new IllegalArgumentException("ProductRole operatore not found for role MANAGER"));
-        Assertions.assertThrows(InvalidRequestException.class, () -> userUtils
-                .checkProductRole("prod-io", PartyRole.MANAGER, "operatore"), "ProductRole operatore not found for role MANAGER");
+        Assertions.assertThrows(InvalidRequestException.class, () -> userUtils.checkProductRole("prod-io", PartyRole.MANAGER, "operatore"), "ProductRole operatore not found for role MANAGER");
     }
 
     @Test
-    void checkProductRoleWithoutRole(){
+    void checkProductRoleWithoutRole() {
         when(productService.validateProductRole(any(), any(), any())).thenThrow(new IllegalArgumentException("Role is mandatory to check productRole"));
-        Assertions.assertThrows(InvalidRequestException.class, () -> userUtils
-                .checkProductRole("prod-io", null, "operatore"), "Role is mandatory to check productRole");
+        Assertions.assertThrows(InvalidRequestException.class, () -> userUtils.checkProductRole("prod-io", null, "operatore"), "Role is mandatory to check productRole");
     }
 
     @Test
-    void checkRoleWithoutProduct(){
+    void checkRoleWithoutProduct() {
         when(productService.validateProductRole(any(), any(), any())).thenThrow(new IllegalArgumentException("ProductRole admin not found for role MANAGER"));
-        Assertions.assertThrows(InvalidRequestException.class, () -> userUtils
-                .checkProductRole("prod-io", PartyRole.MANAGER, "admin"), "ProductRole admin not found for role MANAGER");
+        Assertions.assertThrows(InvalidRequestException.class, () -> userUtils.checkProductRole("prod-io", PartyRole.MANAGER, "admin"), "ProductRole admin not found for role MANAGER");
     }
 
     private Product getProductResource() {
@@ -117,6 +144,8 @@ class UserUtilTest {
         UserInstitution filteredUserInstitution = userUtils.filterProduct(userInstitution, states);
         Assertions.assertEquals(1, filteredUserInstitution.getProducts().size());
     }
+
+    // Start test generated with Copilot
 
     @Test
     void testFilterInstitutionRolesWorks() {
@@ -153,8 +182,6 @@ class UserUtilTest {
         UserInfo filteredUserInfo = userUtils.filterInstitutionRoles(userInfo, states, null);
         Assertions.assertNull(filteredUserInfo.getInstitutions());
     }
-
-    // Start test generated with Copilot
 
     @Test
     void testBuildWorkContact() {
@@ -230,21 +257,8 @@ class UserUtilTest {
         assertEquals(MAIL_ID_PREFIX + "mail1", result.get());
     }
 
-    private static UserResource getUserResource(UUID uuid) {
-        Map<String, WorkContactResource> map = new HashMap<>();
-        WorkContactResource workContactResource = new WorkContactResource();
-        workContactResource.setEmail(EmailCertifiableSchema.builder().value("test@test.it").build());
-        map.put("MAIL_ID#123", workContactResource);
-        return UserResource.builder()
-                .id(uuid)
-                .name(NameCertifiableSchema.builder().value("name").build())
-                .familyName(org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema.builder().value("familyName").build())
-                .workContacts(map)
-                .build();
-    }
-
     @Test
-    void buildUsersNotificationResponseTest(){
+    void buildUsersNotificationResponseTest() {
         UUID uuid = UUID.randomUUID();
         final String userId = uuid.toString();
         String institutionId = "institutionId";
@@ -261,7 +275,7 @@ class UserUtilTest {
     }
 
     @Test
-    void buildUsersNotificationResponseWithEventTest(){
+    void buildUsersNotificationResponseWithEventTest() {
         UUID uuid = UUID.randomUUID();
         final String userId = uuid.toString();
         String institutionId = "institutionId";
@@ -270,38 +284,12 @@ class UserUtilTest {
         UserInstitution userInstitution = getUserInstitution(userId, institutionId, productId);
         List<UserNotificationToSend> response = userUtils.buildUsersNotificationResponse(userInstitution, userResource);
         Assertions.assertEquals(2, response.size());
-
-        Assertions.assertEquals(institutionId, response.get(0).getInstitutionId());
-        Assertions.assertEquals(productId, response.get(0).getProductId());
-        Assertions.assertEquals(OnboardedProductState.ACTIVE, response.get(0).getUser().getRelationshipStatus());
-        Assertions.assertEquals(institutionId, response.get(1).getInstitutionId());
-        Assertions.assertEquals(productId, response.get(1).getProductId());
-        Assertions.assertEquals(OnboardedProductState.SUSPENDED, response.get(1).getUser().getRelationshipStatus());
         Assertions.assertNotNull(response.get(0).getUser());
         Assertions.assertNotNull(response.get(1).getUser());
 
-    }
-
-    private static UserInstitution getUserInstitution(String userId, String institutionId, String productId) {
-        UserInstitution userInstitution = new UserInstitution();
-        userInstitution.setId(ObjectId.get());
-        userInstitution.setUserId(userId);
-        userInstitution.setInstitutionId(institutionId);
-        userInstitution.setUserMailUuid("MAIL_ID#123");
-
-        OnboardedProduct onboardedProduct = new OnboardedProduct();
-        onboardedProduct.setProductId(productId);
-        onboardedProduct.setStatus(OnboardedProductState.ACTIVE);
-        onboardedProduct.setRole(PartyRole.OPERATOR);
-        onboardedProduct.setProductRole("admin2");
-
-        OnboardedProduct onboardedProduct2 = new OnboardedProduct();
-        onboardedProduct2.setProductId(productId);
-        onboardedProduct2.setStatus(OnboardedProductState.SUSPENDED);
-        onboardedProduct2.setRole(PartyRole.OPERATOR);
-        onboardedProduct2.setProductRole("admin2");
-
-        userInstitution.setProducts(List.of(onboardedProduct2, onboardedProduct));
-        return userInstitution;
+        BiFunction<UserNotificationToSend, OnboardedProductState, Boolean> checkResponseByStatus = (un, s) ->
+                un.getInstitutionId().equals(institutionId) && un.getUser().getRelationshipStatus().equals(s) && un.getProductId().equals(productId);
+        Assertions.assertTrue(response.stream().anyMatch(u -> checkResponseByStatus.apply(u, OnboardedProductState.ACTIVE)));
+        Assertions.assertTrue(response.stream().anyMatch(u -> checkResponseByStatus.apply(u, OnboardedProductState.SUSPENDED)));
     }
 }
