@@ -123,4 +123,108 @@ public class UserUtilsTest {
         onboardedProduct.setStatus(state);
         return onboardedProduct;
     }
+
+    @Test
+    void getSASToken_withValidInputs_shouldReturnValidToken() {
+        String resourceUri = "https://example.com/resource";
+        String keyName = "keyName";
+        String key = "secretKey";
+
+        String sasToken = UserUtils.getSASToken(resourceUri, keyName, key);
+
+        assertNotNull(sasToken);
+        assertTrue(sasToken.contains("SharedAccessSignature sr="));
+        assertTrue(sasToken.contains("&sig="));
+        assertTrue(sasToken.contains("&se="));
+        assertTrue(sasToken.contains("&skn="));
+    }
+
+    @Test
+    void getSASToken_withInvalidEncoding_shouldHandleException() {
+        String resourceUri = "https://example.com/resource";
+        String keyName = "keyName";
+        String key = "secretKey";
+
+        String sasToken = UserUtils.getSASToken(resourceUri, keyName, key);
+
+        assertNotNull(sasToken);
+    }
+
+    @Test
+    void getHMAC256_withValidInputs_shouldReturnValidHash() {
+        String key = "secretKey";
+        String input = "inputString";
+
+        String hash = UserUtils.getHMAC256(key, input);
+
+        assertNotNull(hash);
+    }
+
+    @Test
+    void retrieveFdProduct_withValidProducts_shouldReturnMostRecentlyUpdatedProduct() {
+        List<OnboardedProduct> products = new ArrayList<>();
+        OnboardedProduct product1 = new OnboardedProduct();
+        product1.setProductId("1");
+        product1.setUpdatedAt(OffsetDateTime.now().minusDays(1));
+        product1.setCreatedAt(OffsetDateTime.now().minusDays(2));
+        products.add(product1);
+
+        OnboardedProduct product2 = new OnboardedProduct();
+        product2.setProductId("2");
+        product2.setUpdatedAt(OffsetDateTime.now());
+        product2.setCreatedAt(OffsetDateTime.now().minusDays(1));
+        products.add(product2);
+
+        List<String> productIdToCheck = List.of("1", "2");
+
+        List<OnboardedProduct> result = UserUtils.retrieveFdProduct(products, productIdToCheck, false);
+
+        assertNotNull(result);
+        assertEquals("2", result.get(0).getProductId());
+    }
+
+    @Test
+    void retrieveFdProduct_withEmptyProductList() {
+        List<OnboardedProduct> products = Collections.emptyList();
+        List<String> productIdToCheck = List.of("1", "2");
+
+        List<OnboardedProduct> result = UserUtils.retrieveFdProduct(products, productIdToCheck, false);
+
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    void retrieveFdProduct_mailChanges() {
+        List<OnboardedProduct> products = new ArrayList<>();
+        OnboardedProduct product = dummyOnboardedProduct("example", OnboardedProductState.ACTIVE);
+        product.setProductId("prod-fd");
+        products.add(product);
+        List<String> productIdToCheck = List.of("prod-fd", "2");
+
+        List<OnboardedProduct> result = UserUtils.retrieveFdProduct(products, productIdToCheck, true);
+
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void retrieveFdProduct_withNoFdProductIds() {
+        List<OnboardedProduct> products = new ArrayList<>();
+        OnboardedProduct product1 = new OnboardedProduct();
+        product1.setProductId("1");
+        product1.setUpdatedAt(OffsetDateTime.now().minusDays(1));
+        product1.setCreatedAt(OffsetDateTime.now().minusDays(2));
+        products.add(product1);
+
+        OnboardedProduct product2 = new OnboardedProduct();
+        product2.setProductId("2");
+        product2.setUpdatedAt(OffsetDateTime.now());
+        product2.setCreatedAt(OffsetDateTime.now().minusDays(1));
+        products.add(product2);
+
+        List<String> productIdToCheck = List.of("3", "4");
+
+        List<OnboardedProduct> result = UserUtils.retrieveFdProduct(products, productIdToCheck, false);
+
+        assertEquals(0, result.size());
+    }
 }
