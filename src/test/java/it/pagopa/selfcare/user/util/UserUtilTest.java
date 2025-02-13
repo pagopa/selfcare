@@ -269,12 +269,16 @@ class UserUtilTest {
         UserResource userResource = getUserResource(uuid);
         UserInstitution userInstitution = getUserInstitution(userId, institutionId, productId);
         List<UserNotificationToSend> response = userUtils.buildUsersNotificationResponse(userInstitution, userResource);
-        Assertions.assertEquals(1, response.size());
+        Assertions.assertEquals(2, response.size());
 
         Assertions.assertEquals(institutionId, response.get(0).getInstitutionId());
         Assertions.assertEquals(productId, response.get(0).getProductId());
         Assertions.assertEquals(OnboardedProductState.ACTIVE, response.get(0).getUser().getRelationshipStatus());
+        Assertions.assertEquals(institutionId, response.get(1).getInstitutionId());
+        Assertions.assertEquals(productId, response.get(1).getProductId());
+        Assertions.assertEquals(OnboardedProductState.SUSPENDED, response.get(1).getUser().getRelationshipStatus());
         Assertions.assertNotNull(response.get(0).getUser());
+        Assertions.assertNotNull(response.get(1).getUser());
 
     }
 
