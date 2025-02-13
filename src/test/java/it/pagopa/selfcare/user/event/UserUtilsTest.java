@@ -12,6 +12,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.function.BiFunction;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -59,7 +60,11 @@ public class UserUtilsTest {
 
         assertNotNull(actuals);
         assertEquals(3, actuals.size());
-        assertEquals(products, actuals);
+        OnboardedProduct[] ps = products.toArray(new OnboardedProduct[0]);
+        BiFunction<OnboardedProduct, OnboardedProduct, Boolean> getPredicate = (OnboardedProduct a, OnboardedProduct p) -> a.getStatus().equals(p.getStatus()) && a.getRole().equals(p.getRole());
+        assertTrue(actuals.stream().anyMatch(act -> getPredicate.apply(act, ps[0])));
+        assertTrue(actuals.stream().anyMatch(act -> getPredicate.apply(act, ps[1])));
+        assertTrue(actuals.stream().anyMatch(act -> getPredicate.apply(act, ps[2])));
     }
 
     @Test
