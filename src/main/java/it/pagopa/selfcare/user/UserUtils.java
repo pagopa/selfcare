@@ -75,7 +75,7 @@ public class UserUtils {
      */
     public static Collection<OnboardedProduct> groupingProductWithRoleAndReturnMinStateProduct(List<OnboardedProduct> products) {
         Map<String, List<OnboardedProduct>> mapProducts = products.stream()
-                .collect(Collectors.groupingBy(product -> String.format("%s_%s", product.getProductId(), product.getRole())));
+                .collect(Collectors.groupingBy(product -> String.format("%s_%s_%s", product.getProductId(), product.getProductRole(), product.getRole())));
 
         Map<String, OnboardedProduct> onboardedProductMap = new HashMap<>();
         mapProducts
