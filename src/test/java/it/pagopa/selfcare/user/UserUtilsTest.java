@@ -86,6 +86,22 @@ public class UserUtilsTest {
     }
 
     @Test
+    void groupingProductAndReturnMinStateProduct_whenSameRoleAndPendingStates() {
+
+        List<OnboardedProduct> products = new ArrayList<>();
+        products.add(dummyOnboardedProductWithRole("example", OnboardedProductState.PENDING, PartyRole.OPERATOR));
+        products.add(dummyOnboardedProductWithRole("example", OnboardedProductState.SUSPENDED, PartyRole.OPERATOR));
+
+        Collection<OnboardedProduct> actuals = UserUtils.groupingProductWithRoleAndReturnMinStateProduct(products);
+
+        assertNotNull(actuals);
+        assertEquals(1, actuals.size());
+
+        BiFunction<OnboardedProduct, OnboardedProduct, Boolean> getPredicate = (OnboardedProduct a, OnboardedProduct p) -> a.getStatus().equals(p.getStatus()) && a.getRole().equals(p.getRole());
+        assertTrue(actuals.stream().anyMatch(act -> getPredicate.apply(act, products.get(1))));
+    }
+
+    @Test
     void groupingProductAndReturnMinStateProduct_whenMoreDelete() {
 
         List<OnboardedProduct> products = new ArrayList<>();

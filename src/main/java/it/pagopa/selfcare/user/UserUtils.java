@@ -82,6 +82,7 @@ public class UserUtils {
                 .forEach((key, value) -> {
                     OnboardedProductState state = Collections.min(value.stream()
                             .map(OnboardedProduct::getStatus)
+                            .filter(status -> status != OnboardedProductState.PENDING)
                             .toList());
                     value.stream()
                             .filter(product -> state.equals(product.getStatus()))
