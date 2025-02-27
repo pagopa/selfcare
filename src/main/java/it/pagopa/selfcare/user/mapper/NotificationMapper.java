@@ -7,10 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.UserResource;
+import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.util.Collections;
 import java.util.List;
@@ -59,6 +56,7 @@ public interface NotificationMapper {
         userToNotify.setName(Optional.ofNullable(userResource.getName()).map(NameCertifiableSchema::getValue).orElse(null));
         userToNotify.setFamilyName(Optional.ofNullable(userResource.getFamilyName()).map(FamilyNameCertifiableSchema::getValue).orElse(null));
         userToNotify.setEmail(Optional.ofNullable(userMailUuid).map(mailUuid -> retrieveMailFromWorkContacts(userResource, mailUuid)).orElse(null));
+        userToNotify.setMobilePhone(Optional.ofNullable(userMailUuid).map(mailUuid -> retrievePhoneFromWorkContacts(userResource, mailUuid)).orElse(null));
         userToNotify.setProductRole(onboardedProduct.getProductRole());
         userToNotify.setRole(Optional.ofNullable(onboardedProduct.getRole()).map(Enum::name).orElse(null));
         userToNotify.setRelationshipStatus(onboardedProduct.getStatus());
@@ -72,4 +70,13 @@ public interface NotificationMapper {
                                 .map(EmailCertifiableSchema::getValue)))
                 .orElse(null);
     }
+
+    default String retrievePhoneFromWorkContacts(UserResource userResource, String userMailUuid) {
+        return Optional.ofNullable(userResource.getWorkContacts())
+                .flatMap(stringWorkContactResourceMap -> Optional.ofNullable(stringWorkContactResourceMap.get(userMailUuid))
+                        .flatMap(workContactResource -> Optional.ofNullable(workContactResource.getMobilePhone())
+                                .map(MobilePhoneCertifiableSchema::getValue)))
+                .orElse(null);
+    }
+
 }

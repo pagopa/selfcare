@@ -22,10 +22,7 @@ import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.UserResource;
-import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -49,8 +46,14 @@ class UserUtilTest {
         Map<String, WorkContactResource> map = new HashMap<>();
         WorkContactResource workContactResource = new WorkContactResource();
         workContactResource.setEmail(EmailCertifiableSchema.builder().value("test@test.it").build());
+        workContactResource.setMobilePhone(MobilePhoneCertifiableSchema.builder().value("0000000000").build());
         map.put("MAIL_ID#123", workContactResource);
-        return UserResource.builder().id(uuid).name(NameCertifiableSchema.builder().value("name").build()).familyName(org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema.builder().value("familyName").build()).workContacts(map).build();
+        return UserResource.builder()
+                .id(uuid)
+                .name(NameCertifiableSchema.builder().value("name").build())
+                .familyName(org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema.builder().value("familyName").build())
+                .workContacts(map)
+                .build();
     }
 
     private static UserInstitution getUserInstitution(String userId, String institutionId, String productId) {
@@ -144,8 +147,6 @@ class UserUtilTest {
         UserInstitution filteredUserInstitution = userUtils.filterProduct(userInstitution, states);
         Assertions.assertEquals(1, filteredUserInstitution.getProducts().size());
     }
-
-    // Start test generated with Copilot
 
     @Test
     void testFilterInstitutionRolesWorks() {
@@ -256,6 +257,7 @@ class UserUtilTest {
         assertTrue(result.isPresent());
         assertEquals(MAIL_ID_PREFIX + "mail1", result.get());
     }
+
 
     @Test
     void buildUsersNotificationResponseTest() {
