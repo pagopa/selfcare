@@ -19,6 +19,7 @@ public class UserToNotify {
     private String name;
     private String familyName;
     private String email;
+    private String mobilePhone;
     @Schema(description = "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA")
     private String role;
     private String productRole;
