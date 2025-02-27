@@ -7,11 +7,12 @@ import it.pagopa.selfcare.user.model.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
-import org.openapi.quarkus.user_registry_json.model.UserResource;
+import org.openapi.quarkus.user_registry_json.model.*;
 
-import javax.swing.text.html.Option;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Mapper(componentModel = "cdi", imports = UUID.class)
 public interface NotificationMapper {
@@ -52,9 +53,10 @@ public interface NotificationMapper {
     default UserToNotify mapUser(UserResource userResource, String userMailUuid, OnboardedProduct onboardedProduct) {
         UserToNotify userToNotify = new UserToNotify();
         userToNotify.setUserId(Optional.ofNullable(userResource.getId()).map(UUID::toString).orElse(null));
-        userToNotify.setName(Optional.ofNullable(userResource.getName()).map(CertifiableFieldResourceOfstring::getValue).orElse(null));
-        userToNotify.setFamilyName(Optional.ofNullable(userResource.getFamilyName()).map(CertifiableFieldResourceOfstring::getValue).orElse(null));
+        userToNotify.setName(Optional.ofNullable(userResource.getName()).map(NameCertifiableSchema::getValue).orElse(null));
+        userToNotify.setFamilyName(Optional.ofNullable(userResource.getFamilyName()).map(FamilyNameCertifiableSchema::getValue).orElse(null));
         userToNotify.setEmail(Optional.ofNullable(userMailUuid).map(mailUuid -> retrieveMailFromWorkContacts(userResource, mailUuid)).orElse(null));
+        userToNotify.setMobilePhone(Optional.ofNullable(userMailUuid).map(mailUuid -> retrievePhoneFromWorkContacts(userResource, mailUuid)).orElse(null));
         userToNotify.setProductRole(onboardedProduct.getProductRole());
         userToNotify.setRole(Optional.ofNullable(onboardedProduct.getRole()).map(Enum::name).orElse(null));
         userToNotify.setRelationshipStatus(onboardedProduct.getStatus());
@@ -65,7 +67,15 @@ public interface NotificationMapper {
         return Optional.ofNullable(userResource.getWorkContacts())
                 .flatMap(stringWorkContactResourceMap -> Optional.ofNullable(stringWorkContactResourceMap.get(userMailUuid))
                         .flatMap(workContactResource -> Optional.ofNullable(workContactResource.getEmail())
-                                .map(CertifiableFieldResourceOfstring::getValue)))
+                                .map(EmailCertifiableSchema::getValue)))
+                .orElse(null);
+    }
+
+    default String retrievePhoneFromWorkContacts(UserResource userResource, String userMailUuid) {
+        return Optional.ofNullable(userResource.getWorkContacts())
+                .flatMap(stringWorkContactResourceMap -> Optional.ofNullable(stringWorkContactResourceMap.get(userMailUuid))
+                        .flatMap(workContactResource -> Optional.ofNullable(workContactResource.getMobilePhone())
+                                .map(MobilePhoneCertifiableSchema::getValue)))
                 .orElse(null);
     }
 }
