@@ -10,15 +10,31 @@ services:
     networks:
       - develop-network
 
-  #azurite:
-  #  image: mcr.microsoft.com/azure-storage/azurite
-  #  container_name: azurite
-  #  ports:
-  #    - "10000:10000"  # Expose blob service
-  #  volumes:
-  #    - "./app/src/test/resources/blobStorage:/data"
-  #  networks:
-  #    - develop-network
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: azurite
+    ports:
+      - "10000:10000"
+    command: "azurite --blobHost 0.0.0.0 --inMemoryPersistence"
+    environment:
+      - AZURITE_ACCOUNTS=devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==
+    networks:
+      - develop-network
+
+  azure-cli:
+    build:
+      context: "../../."
+      dockerfile: "apps/user-ms/src/test/resources/Dockerfile-azure-cli"
+    container_name: azure-cli
+    depends_on:
+      - azurite
+    networks:
+      - develop-network
+    volumes:
+      - "./src/test/resources/blobStorageInit/initAzurite.sh:/initAzurite.sh"
+    environment:
+      - SELFCARE_INFRA_PRIVATE_ENV=dev
+      - GITHUB_TOKEN=REPLACE_WITH_TOKEN
 
   mockserver:
     image: mockserver/mockserver
