@@ -1,0 +1,34 @@
+---
+openapi: 3.0.3
+info:
+  title: Auth API
+  version: 1.0.0
+servers:
+- url: http://localhost:8080
+  description: Auto generated value
+- url: http://0.0.0.0:8080
+  description: Auto generated value
+tags:
+- name: Login
+paths:
+  /login/foo:
+    get:
+      tags:
+      - Login
+      summary: Foo API
+      description: Foo API
+      operationId: foo
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+components:
+  securitySchemes:
+    SecurityScheme:
+      type: http
+      description: Authentication
+      scheme: bearer
+      bearerFormat: JWT
