@@ -1,0 +1,24 @@
+user-ms:
+  - changed-files:
+      - any-glob-to-any-file: ['apps/user-ms/**']
+user-group-ms:
+  - changed-files:
+      - any-glob-to-any-file: ['apps/user-group-ms/**']
+user-cdc:
+  - changed-files:
+      - any-glob-to-any-file: ['apps/user-cdc/**']
+
+libs:
+  - changed-files:
+      - any-glob-to-any-file: ['libs/**']
+
+ops:
+  - changed-files:
+      - any-glob-to-any-file: ['.github/**', 'infra/**', '.identity/**']
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file: ['README.md']
+
+hotfix:
+  - base-branch: ['releases/*']
