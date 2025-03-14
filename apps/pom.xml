@@ -7,11 +7,24 @@
         <groupId>it.pagopa.selfcare</groupId>
         <artifactId>root</artifactId>
         <version>0.0.1</version>
-        <relativePath>../../pom.xml</relativePath>
+        <relativePath>../pom.xml</relativePath>
     </parent>
-
+    <packaging>pom</packaging>
     <artifactId>apps</artifactId>
 
+    <profiles>
+        <profile>
+            <id>auth</id>
+            <activation>
+                <file>
+                    <exists>auth/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>auth</module>
+            </modules>
+        </profile>
+    </profiles>
     <properties>
         <maven.compiler.source>23</maven.compiler.source>
         <maven.compiler.target>23</maven.compiler.target>
