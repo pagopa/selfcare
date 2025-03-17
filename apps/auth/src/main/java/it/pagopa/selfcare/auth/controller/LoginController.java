@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.auth.controller;
 
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.auth.controller.response.*;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import lombok.RequiredArgsConstructor;

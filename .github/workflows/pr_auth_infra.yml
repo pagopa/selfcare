@@ -1,0 +1,53 @@
+name: Code Review - Auth infra
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    branches:
+      - main
+      - releases/*
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - 'infra/apps/auth/**'
+      - '.github/workflows/pr_auth_infra.yml'
+      - '.github/workflows/call_code_review_infra.yml'
+
+jobs:
+  code_review_dev:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[DEV] Auth Infra Code Review'
+    if: ${{ !startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: dev
+      dir: ./infra/apps/auth
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+
+  code_review_uat:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[UAT] Auth Infra Code Review'
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: uat
+      dir: ./infra/apps/auth
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+
+  code_review_prod:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[PROD] Auths Infra Code Review'
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: prod
+      dir: ./infra/apps/auth
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})

@@ -1,0 +1,51 @@
+on:
+  workflow_call:
+    inputs:
+      pr_number:
+        type: string
+        required: true
+      module:
+        type: string
+        required: true
+      source_branch:
+        type: string
+        required: true
+      target_branch:
+        type: string
+        required: true
+      sonar_key:
+        type: string
+        required: true
+
+jobs:
+  code_review:
+    name: 'Build & Analysis'
+    runs-on: ubuntu-24.04
+
+    steps:
+
+      - name: Setup Maven Action
+        uses: s4u/setup-maven-action@fa2c7e4517ed008b1f73e7e0195a9eecf5582cd4
+        with:
+          checkout-fetch-depth: 0
+          java-version: 17
+          java-distribution: 'temurin'
+          maven-version: '3.9.5'
+          cache-enabled: true
+
+      - uses: s4u/maven-settings-action@60912582505985be4cc55d2b890eb32767f8de5f # pin@v2.8.0
+        with:
+          servers: '[{"id": "selfcare-onboarding", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
+
+      - name: Build and Analyze
+        shell: bash
+        run: mvn --projects :test-coverage --also-make verify -P${{ inputs.module }},report,coverage
+          -Dsonar.organization=pagopa
+          -Dsonar.projectKey=${{ inputs.sonar_key }}
+          -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+          -Dsonar.pullrequest.key=${{ inputs.pr_number }}
+          -Dsonar.pullrequest.branch=${{ inputs.source_branch }}
+          -Dsonar.pullrequest.base=refs/remotes/origin/${{ inputs.target_branch }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
