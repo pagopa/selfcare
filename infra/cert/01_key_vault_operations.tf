@@ -8,7 +8,6 @@ module "jwt" {
   cert_password       = ""
   tags                = var.tags
   early_renewal_hours = 0
-  cert_allowed_uses   = var.cert_allowed_uses
 }
 
 module "jwt_exchange" {
@@ -20,7 +19,6 @@ module "jwt_exchange" {
   cert_password       = ""
   tags                = var.tags
   early_renewal_hours = 0
-  cert_allowed_uses   = var.cert_allowed_uses
 }
 
 resource "null_resource" "upload_jwks" {
