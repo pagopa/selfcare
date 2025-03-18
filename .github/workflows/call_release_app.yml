@@ -1,0 +1,83 @@
+name: Deploy Selfcare App
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options:
+          - dev
+          - uat
+          - prod
+        required: true
+      target:
+        type: choice
+        description: The target type
+        options:
+          - selc
+          - pnpg
+        required: true
+        default: selc
+      app:
+        type: string
+        description: app name
+        required: true
+
+env:
+  APP_PATH: 'apps/${{ inputs.app }}'
+  INFRA_PATH: 'infra/apps/${{ inputs.app }'
+  APPS_POM: "apps/pom.xml"
+  POM: "pom.xml"
+
+jobs:
+
+  release_dev:
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
+    name: ${{ inputs.target == 'selc' && '[Dev]' || '[Dev-PNPG]' }} - ${{ inputs.app }} Release
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+      tf_environment: ${{ inputs.target == 'selc' && 'dev' || 'dev-pnpg' }}
+      dir: ${{ env.INFRA_PATH }}
+      dockerfile_path: ./${{ env.APP_PATH }}/Dockerfile
+      docker_image_name: pagopa/selfcare-${{ inputs.app }}-ms
+      path_openapi_docs: ./${{ env.APP_PATH }}/src/main/docs/openapi.json
+
+  release_uat:
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
+    name: ${{ inputs.target == 'selc' && '[Uat]' || '[Uat-PNPG]' }} - ${{ inputs.app }} Release
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    secrets: inherit
+    with:
+      environment: uat
+      tf_environment: ${{ inputs.target == 'selc' && 'uat' || 'uat-pnpg' }}
+      dir: ${{ env.INFRA_PATH }}
+      dockerfile_path: ./${{ env.APP_PATH }}/Dockerfile
+      docker_image_name: pagopa/selfcare-${{ inputs.app }}-ms
+      path_openapi_docs: ./${{ env.APP_PATH }}/src/main/docs/openapi.json
+
+  release_prod:
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
+    name: ${{ inputs.target == 'selc' && '[Prod]' || '[Prod-PNPG]' }} - ${{ inputs.app }} Release
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod
+      tf_environment: ${{ inputs.target == 'selc' && 'prod' || 'prod-pnpg' }}
+      dir: ${{ env.INFRA_PATH }}
+      dockerfile_path: ./${{ env.APP_PATH }}/Dockerfile
+      docker_image_name: pagopa/selfcare-${{ inputs.app }}-ms
+      path_openapi_docs: ./${{ env.APP_PATH }}/src/main/docs/openapi.json
+
+  promote_release:
+    name: 'Promote prerelase release'
+    runs-on: ubuntu-24.04
+    needs: [release_prod]
+    steps:
+      - uses:  pagopa/selfcare-commons/github-actions-template/promote-release@main
+        with:
+          github_path_token: ${{ secrets.GH_PAT_VARIABLES }}
+          release_version: ${{ vars.CURRENT_UAT_VERSION }}
