@@ -1,0 +1,30 @@
+name: Deploy functions infra
+
+on:
+  push:
+    branches:
+      - main
+      - releases/*
+    paths:
+      - './infra/cert/**'
+
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options: 
+        - dev
+        - uat
+        - prod
+
+jobs:
+
+  release_dev:
+    uses: ./.github/workflows/call_release_infra.yml
+    name: '[Dev] Run Cert Infra Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+      dir: ./infra/cert
