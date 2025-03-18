@@ -11,6 +11,26 @@
     },
     "httpResponseTemplate": {
       "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"fiscalCode\":\"PRVTNT80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"John\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"},\"workContacts\":{\"ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}},\"ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1\":{\"email\":{\"certification\":\"NONE\",\"value\":\"81956dd1-00fd-4423-888b-f77a48d26ba1@test.it\"}},\"ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375\":{\"email\":{\"certification\":\"NONE\",\"value\":\"875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3335252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          "name,familyName,email,workContacts"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "97a511a7-2acc-47b9-afed-2f3c65753b4a"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
       "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"workContacts\":{\"ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}},\"ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1\":{\"email\":{\"certification\":\"NONE\",\"value\":\"81956dd1-00fd-4423-888b-f77a48d26ba1@test.it\"}},\"ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375\":{\"email\":{\"certification\":\"NONE\",\"value\":\"875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3335252525\"}}}}}"
     }
   },

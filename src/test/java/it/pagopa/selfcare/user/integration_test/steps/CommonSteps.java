@@ -1,5 +1,7 @@
 package it.pagopa.selfcare.user.integration_test.steps;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
@@ -108,6 +110,23 @@ public class CommonSteps {
         );
     }
 
+    @When("I send a PUT request to {string}")
+    public void sendPutRequest(String url) {
+        final String token = sharedStepData.getToken();
+        sharedStepData.setResponse(RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + token)
+                .pathParams(Optional.ofNullable(sharedStepData.getPathParams()).orElse(Collections.emptyMap()))
+                .queryParams(Optional.ofNullable(sharedStepData.getQueryParams()).orElse(Collections.emptyMap()))
+                .body(Optional.ofNullable(sharedStepData.getRequestBody()).orElse(""))
+                .when()
+                .put(url)
+                .then()
+                .extract()
+        );
+    }
+
     @Then("The status code is {int}")
     public void checkStatusCode(int expectedStatusCode) {
         Assertions.assertEquals(expectedStatusCode, sharedStepData.getResponse().statusCode());
@@ -121,10 +140,10 @@ public class CommonSteps {
         });
     }
 
-    @And("The response body contains error string:")
-    public void checkResponseBody(String errorString) {
+    @And("The response body contains string:")
+    public void checkResponseBody(String string) {
         final String currentValue = sharedStepData.getResponse().body().asString();
-        Assertions.assertEquals(errorString, currentValue, String.format("The body %s does not contain the expected value", currentValue));
+        Assertions.assertEquals(string, currentValue, String.format("The body %s does not contain the expected value", currentValue));
     }
 
     @And("The response body contains the list {string} of size {int}")
@@ -148,23 +167,89 @@ public class CommonSteps {
     @And("The response body contains at path {string} the following list of objects in any order:")
     public void checkResponseBodyObjectList(String expectedJsonPath, List<Map<String, Object>> expectedObjects) {
         final List<Map<String, Object>> currentObjects = sharedStepData.getResponse().body().jsonPath().getList(expectedJsonPath);
+        System.out.println("Current: " + currentObjects);
+        System.out.println("Expected: " + expectedObjects);
 
         Assertions.assertEquals(expectedObjects.size(), currentObjects.size(),
                 String.format("The lists have different sizes. Expected: %s, Current: %s", expectedObjects, currentObjects));
 
-        final Set<String> expectedKeySet = expectedObjects.get(0).keySet();
-        final Set<Map<String, String>> expectedSet = expectedObjects.stream()
-                .map(m -> expectedKeySet.stream()
-                        .collect(Collectors.toMap(k -> k, k -> Optional.ofNullable(m.get(k)).map(Object::toString).orElse(""))))
-                .collect(Collectors.toSet());
-        final Set<Map<String, String>> currentSet = currentObjects.stream()
-                .map(m -> expectedKeySet.stream()
-                        .collect(Collectors.toMap(k -> k, k -> Optional.ofNullable(m.get(k)).map(Object::toString).orElse(""))))
-                .collect(Collectors.toSet());
+        ObjectMapper objectMapper = new ObjectMapper();
 
-        Assertions.assertEquals(expectedSet, currentSet,
-                String.format("The lists contain different objects. Expected: %s, Current: %s", expectedSet, currentSet));
+        // Otteniamo la chiave degli attributi attesi
+        Set<String> expectedKeySet = expectedObjects.get(0).keySet();
+
+        Set<String> expectedJsonSet = expectedObjects.stream()
+                .map(obj -> filterExpectedObject(obj, expectedKeySet))
+                .map(obj -> toJson(objectMapper, obj))
+                .collect(Collectors.toSet());
+        expectedJsonSet.forEach(System.out::println);
+
+        Set<String> currentJsonSet = currentObjects.stream()
+                .map(obj -> filterCurrentObject(obj, expectedKeySet))
+                .map(obj -> toJson(objectMapper, obj))
+                .collect(Collectors.toSet());
+        currentJsonSet.forEach(System.out::println);
+
+        Assertions.assertEquals(expectedJsonSet, currentJsonSet,
+                String.format("The lists contain different objects. Expected: %s, Current: %s", expectedJsonSet, currentJsonSet));
     }
+
+    private Map<String, Object> filterExpectedObject(Map<String, Object> obj, Set<String> expectedKeys) {
+        Map<String, Object> filteredMap = new HashMap<>();
+        for (String key : expectedKeys) {
+            if (obj.containsKey(key)) {
+                filteredMap.put(key, obj.get(key));
+            }
+        }
+        return filteredMap;
+    }
+
+    /**
+     * Filtra un oggetto per mantenere solo le chiavi presenti in expectedKeys.
+     */
+    private Map<String, Object> filterCurrentObject(Map<String, Object> obj, Set<String> expectedKeys) {
+        Map<String, Object> filteredMap = new HashMap<>();
+
+        for (String key : expectedKeys) {
+            Object value = getNestedValue(obj, key);
+            if (value != null) {
+                filteredMap.put(key, value);
+            }
+        }
+        return filteredMap;
+    }
+
+    private Object getNestedValue(Map<String, Object> obj, String key) {
+        String[] keys = key.split("\\."); // Divide le chiavi annidate
+        Object value = obj;
+
+        for (String k : keys) {
+            if (!(value instanceof Map)) {
+                return null; // Se si raggiunge un punto non navigabile, restituisce null
+            }
+            value = ((Map<?, ?>) value).get(k);
+            if (value == null) {
+                return null; // Se la chiave non esiste, restituisce null
+            }
+        }
+        return value;
+    }
+
+
+    /**
+     * Converte un oggetto in JSON mantenendo la struttura annidata.
+     */
+    private String toJson(ObjectMapper objectMapper, Map<String, Object> obj) {
+        try {
+            return objectMapper.writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error converting object to JSON", e);
+        }
+    }
+
+
+
 
 
     @And("The following query params:")

@@ -6,6 +6,7 @@ import io.quarkiverse.cucumber.CucumberQuarkusTest;
 import io.restassured.RestAssured;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.ConfigProvider;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
 import java.io.IOException;
@@ -25,18 +26,19 @@ public class CucumberSuite extends CucumberQuarkusTest {
     static void setup() throws IOException {
         Path filePath = Paths.get("src/test/resources/key/public-key.pub");
         String publicKey = Files.readString(filePath);
-
         System.setProperty("JWT-PUBLIC-KEY", publicKey);
-
-        log.info(System.getProperty("JWT-PUBLIC-KEY"));
     }
 
     @Before
     public void setupRestAssured() {
         RestAssured.baseURI = ConfigProvider.getConfig().getValue("rest-assured.base-url", String.class);
         RestAssured.port = ConfigProvider.getConfig().getValue("cucumber.http.test-port", Integer.class);
+    }
 
-        System.out.println("RestAssured configurato su: " + RestAssured.baseURI + ":" + RestAssured.port);
+    @AfterAll
+    static void tearDown() {
+        System.out.println("Cucumber tests are finished.");
+        System.exit(0);
     }
 
 }

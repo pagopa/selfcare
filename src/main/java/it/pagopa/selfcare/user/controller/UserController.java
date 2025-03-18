@@ -60,6 +60,7 @@ public class UserController {
     private final UserMapper userMapper;
     private final UserRegistryService userRegistryService;
 
+    // FATTO
     @Operation(description = "The API retrieves Users' emails using institution id and product id",
             summary = "Retrieve users' emails by institution ID and product ID")
     @GET
@@ -70,6 +71,7 @@ public class UserController {
         return userService.getUsersEmails(institutionId, productId);
     }
 
+    // FATTO
     /**
      * The getUserInfo function retrieves a user's information given the userId and optional ProductId.
      *
@@ -101,6 +103,8 @@ public class UserController {
         return userService.retrievePerson(userId, productId, institutionId);
     }
 
+
+    // FATTO
     @Operation(description = "Retrieves products info and role which the user is enabled", summary = "Retrieve product information and user roles")
     @GET
     @Path("/{userId}/institutions")
@@ -113,6 +117,7 @@ public class UserController {
                 .map(userMapper::toUserInfoResponse);
     }
 
+    // FATTO
     /**
      * getUserById function returns all the information of a user retrieved from pdv given the userId
      *
@@ -130,6 +135,7 @@ public class UserController {
         return userService.getUserById(userId, institutionId, field);
     }
 
+    // FATTO
     @Operation(description = "Search user by fiscalCode", summary = "Search for a user using fiscal code")
     @POST
     @Path("/search")
@@ -140,6 +146,7 @@ public class UserController {
         return userService.searchUserByFiscalCode(dto.getFiscalCode(), institutionId);
     }
 
+    // FATTO
     /**
      * The deleteProducts function is used to delete logically the association institution and product.
      *
@@ -157,6 +164,7 @@ public class UserController {
         return userService.deleteUserInstitutionProduct(userId, institutionId, productId);
     }
 
+    // IN CORSO
     /**
      * The updateUserStatus function updates the status of a user's product.
      *
@@ -195,6 +203,7 @@ public class UserController {
                         .build());
     }
 
+    // FATTO
     /**
      * Retreive all the users given a list of userIds
      *
@@ -208,6 +217,7 @@ public class UserController {
         return userService.findAllByIds(formatQueryParameterList(userIds));
     }
 
+    // FATTO
     @Operation(description = "Retrieve all SC-User for DataLake filtered by optional productId", summary = "Retrieve all SC-Users for DataLake with optional product filter")
     @GET
     @Path(value = "/notification")
@@ -226,6 +236,7 @@ public class UserController {
                 });
     }
 
+    // FATTO
     @Operation(description = "The API retrieves paged users with optional filters in input as query params", summary = "Retrieve paged users with optional query filters")
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
@@ -269,6 +280,7 @@ public class UserController {
                         .build());
     }
 
+    // FATTO
     /**
      * The updateUserProductStatus function is a service to update user product status.
      *
@@ -294,7 +306,7 @@ public class UserController {
                 .onItem().transformToUni(loggedUser -> userService.updateUserProductStatus(userId, institutionId, productId, status, productRole, loggedUser));
     }
 
-
+    // FATTO
     /**
      * The createOrUpdateByUserId function is used to update existing user adding userRole.
      *
@@ -320,6 +332,7 @@ public class UserController {
 
     }
 
+    // FATTO
     /**
      *
      * @param userId  String
@@ -343,6 +356,7 @@ public class UserController {
                 .onFailure(UserRoleAlreadyPresentException.class).recoverWithUni(throwable -> Uni.createFrom().item(Response.status(HttpStatus.SC_OK).entity(userId).build()));
     }
 
+    // IN CORSO
     /**
      * The createOrUpdateByFiscalCode function is used to create a new user or update an existing one.
      * The function takes in a CreateUserDto object, which contains the following fields:
@@ -403,6 +417,7 @@ public class UserController {
         return userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userId);
     }
 
+    // FATTO
     @Operation(description = "Retrieves userInstitution data with list of actions permitted for each user's product", summary = "Retrieve userInstitution data with permitted actions for each product")
     @GET
     @Path("/{userId}/institutions/{institutionId}")
