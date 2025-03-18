@@ -12,6 +12,7 @@
 
     <artifactId>selfcare-sdk-cucumber</artifactId>
     <packaging>jar</packaging>
+    <version>0.0.1</version>
 
     <distributionManagement>
         <repository>
