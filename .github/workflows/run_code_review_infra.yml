@@ -1,4 +1,4 @@
-name: Deploy onboarding ms
+name: Run code review infra
 
 on:
   workflow_dispatch:
