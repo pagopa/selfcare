@@ -1,4 +1,4 @@
-name: Deploy functions infra
+name: Run release infra
 
 on:
   push:
