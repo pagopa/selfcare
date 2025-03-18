@@ -12,6 +12,7 @@
 
     <modules>
         <module>apps</module>
+        <module>test-coverage</module>
     </modules>
 
     <repositories>

@@ -1,0 +1,42 @@
+name: Deploy App
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options:
+          - dev
+          - uat
+          - prod
+        required: true
+      target:
+        type: choice
+        description: Target type
+        options:
+          - selc
+          - pnpg
+        required: true
+        default: selc
+      app:
+        type: choice
+        description: App name
+        options:
+          - auth
+        required: true
+        default: auth
+
+jobs:
+  code_review:
+    uses: ./.github/workflows/call_release_app.yml
+    name: Call Release App
+    secrets: inherit
+    with:
+      env: ${{ inputs.env }}
+      target: ${{ inputs.target }}
+      app: ${{ inputs.app }}
+      APP_PATH: apps/${{ inputs.app }}
+      INFRA_PATH: infra/apps/${{ inputs.app }}
+      APPS_POM: apps/pom.xml
+      POM: pom.xml

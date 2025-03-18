@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>it.pagopa.selfcare</groupId>
+        <artifactId>root</artifactId>
+        <version>0.0.1</version>
+    </parent>
+    <artifactId>test-coverage</artifactId>
+    <packaging>pom</packaging>
+    <name>test-coverage</name>
+
+    <properties>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.coverage.exclusions>**/exception/**, **/response/**, **/request/**, **/entity/**, **/common/**, **/utils/**, **/*Constant*, **/*Config.java, **/error/**, org/**</sonar.coverage.exclusions>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+    </properties>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.8.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>3.10.0.2594</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.8.11</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+    </build>
+
+    <profiles>
+        <profile>
+            <id>auth</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>auth</artifactId>
+                    <version>0.0.1-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>report</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>report</id>
+                                <goals>
+                                    <goal>report-aggregate</goal>
+                                </goals>
+                                <phase>verify</phase>
+                            </execution>
+                        </executions>
+
+                        <configuration>
+
+                            <excludes>
+                                <exclude>**/config/*</exclude>
+                                <exclude>**/exception/**</exclude>
+                                <exclude>**/response/**</exclude>
+                                <exclude>**/request/**</exclude>
+                                <exclude>**/entity/**</exclude>
+                                <exclude>**/common/**</exclude>
+                                <exclude>**/utils/**</exclude>
+                                <exclude>**/error/**</exclude>
+                                <exclude>**/*Constant*</exclude>
+                                <exclude>org/**</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>coverage</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonarsource.scanner.maven</groupId>
+                        <artifactId>sonar-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sonar</id>
+                                <goals>
+                                    <goal>sonar</goal>
+                                </goals>
+                                <phase>verify</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

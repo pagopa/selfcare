@@ -60,8 +60,5 @@ app_settings = [
 
 secrets_names = {
   "APPLICATIONINSIGHTS_CONNECTION_STRING"              = "appinsights-connection-string"
-  "JWT-PRIVATE-KEY"                                    = "jwt-private-key"
-  "OI-CLIENT-ID"                                       = "oi-client-id"
-  "OI-CLIENT-SECRET"                                   = "oi-client-secret"
 }
 
