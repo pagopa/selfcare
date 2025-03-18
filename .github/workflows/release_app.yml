@@ -13,7 +13,7 @@ on:
         required: true
       target:
         type: choice
-        description: The target type
+        description: Target type
         options:
           - selc
           - pnpg
@@ -21,7 +21,7 @@ on:
         default: selc
       app:
         type: choice
-        description: app name
+        description: App name
         options:
           - auth
         required: true
