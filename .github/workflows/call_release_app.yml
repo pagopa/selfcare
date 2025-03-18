@@ -1,7 +1,6 @@
 name: Deploy Selfcare App
 
 on:
-  workflow_dispatch:
   workflow_call:
     inputs:
       env:
