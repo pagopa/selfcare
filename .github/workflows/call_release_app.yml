@@ -4,21 +4,13 @@ on:
   workflow_call:
     inputs:
       env:
-        type: choice
+        type: string
         description: Environment
-        options:
-          - dev
-          - uat
-          - prod
         required: true
       target:
-        type: choice
+        type: string
         description: The target type
-        options:
-          - selc
-          - pnpg
         required: true
-        default: selc
       app:
         type: string
         description: app name
