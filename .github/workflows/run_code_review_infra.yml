@@ -15,7 +15,7 @@ jobs:
 
   code_review_dev:
     uses: ./.github/workflows/call_code_review_infra.yml
-    name: 'Code review cert'
+    name: '[Dev] Code review cert'
     secrets: inherit
     with:
       environment: dev
