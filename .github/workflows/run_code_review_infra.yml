@@ -1,0 +1,26 @@
+name: Deploy onboarding ms
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Module
+        options:
+          - dev
+          - uat
+          - prod
+
+jobs:
+
+  code_review_dev:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: 'Code review cert'
+    secrets: inherit
+    with:
+      environment: dev
+      tf_environment: dev
+      dir: 'infra/cert'
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+
