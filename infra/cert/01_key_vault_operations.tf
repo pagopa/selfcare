@@ -3,7 +3,7 @@ module "jwt" {
   source = "github.com/pagopa/terraform-azurerm-v3.git//jwt_keys?ref=v8.86.0"
 
   jwt_name            = "jwt-test"
-  key_vault_id        = module.key_vault.id
+  key_vault_id        = data.azurerm_key_vault.key_vault.id
   cert_common_name    = "apim"
   cert_password       = ""
   tags                = var.tags
@@ -14,7 +14,7 @@ module "jwt_exchange" {
   source = "github.com/pagopa/terraform-azurerm-v3.git//jwt_keys?ref=v8.86.0"
 
   jwt_name            = "jwt-exchange-test"
-  key_vault_id        = module.key_vault.id
+  key_vault_id        = data.azurerm_key_vault.key_vault.id
   cert_common_name    = "selfcare.pagopa.it"
   cert_password       = ""
   tags                = var.tags
