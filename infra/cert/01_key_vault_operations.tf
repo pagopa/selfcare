@@ -34,27 +34,27 @@ resource "null_resource" "upload_jwks" {
                 --container-name '$web' \
                 --account-name "${var.prefix}${var.env_short}checkoutsa" \
                 --account-key ${data.azurerm_key_vault_secret.web_storage_access_key.value} \
-                --file "${path.module}/.terraform/tmp/oldJwks.json" \
-                --name '.well-known/jwks.json'
-              python "${path.module}/utils/py/jwksFromPems.py" "${path.module}/.terraform/tmp/oldJwks.json" "${module.jwt.jwt_kid}" "${module.jwt.certificate_data_pem}" "${module.jwt_exchange.jwt_kid}" "${module.jwt_exchange.certificate_data_pem}" > "${path.module}/.terraform/tmp/jwks.json"
+                --file "${path.module}/.terraform/tmp/oldjwks-test.json" \
+                --name '.well-known/jwks-test.json'
+              python "${path.module}/utils/py/jwksFromPems.py" "${path.module}/.terraform/tmp/oldjwks-test.json" "${module.jwt.jwt_kid}" "${module.jwt.certificate_data_pem}" "${module.jwt_exchange.jwt_kid}" "${module.jwt_exchange.certificate_data_pem}" > "${path.module}/.terraform/tmp/jwks-test.json"
               if [ $? -eq 1 ]
               then
                 exit 1
               fi
-              cat "${path.module}/.terraform/tmp/jwks.json"
+              cat "${path.module}/.terraform/tmp/jwks-test.json"
+              az storage blob upload \
+                --container-name '$web' \
+                --account-name "${var.prefix}${var.env_short}checkoutsa" \
+                --account-key ${data.azurerm_key_vault_secret.web_storage_access_key.value} \
+                --file "${path.module}/.terraform/tmp/jwks-test.json" \
+                --overwrite true \
+                --name '.well-known/jwks-test.json'
+              az cdn endpoint purge \
+                --resource-group ${data.azurerm_resource_group.checkout_fe_rg.name} \
+                --name "selc-p-weu-pnpg-checkout-cdn-profile" \
+                --profile-name "selc-p-weu-pnpg-checkout-cdn-endpoint" \
+                --content-paths "/.well-known/jwks-test.json" \
+                --no-wait
           EOT
   }
 }
-# az storage blob upload \
-#                 --container-name '$web' \
-#                 --account-name "${var.prefix}${var.env_short}checkoutsa" \
-#                 --account-key ${data.azurerm_key_vault_secret.web_storage_access_key.value} \
-#                 --file "${path.module}/.terraform/tmp/jwks.json" \
-#                 --overwrite true \
-#                 --name '.well-known/jwks.json'
-#               az cdn endpoint purge \
-#                 --resource-group ${data.azurerm_resource_group.checkout_fe_rg.name} \
-#                 --name "selc-p-weu-pnpg-checkout-cdn-profile" \
-#                 --profile-name "selc-p-weu-pnpg-checkout-cdn-endpoint" \
-#                 --content-paths "/.well-known/jwks.json" \
-#                 --no-wait
