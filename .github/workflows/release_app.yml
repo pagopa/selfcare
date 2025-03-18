@@ -36,3 +36,7 @@ jobs:
       env: ${{ inputs.env }}
       target: ${{ inputs.target }}
       app: ${{ inputs.app }}
+      APP_PATH: apps/${{ inputs.app }}
+      INFRA_PATH: infra/apps/${{ inputs.app }}
+      APPS_POM: apps/pom.xml
+      POM: pom.xml

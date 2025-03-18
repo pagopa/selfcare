@@ -9,11 +9,27 @@ on:
         required: true
       target:
         type: string
-        description: The target type
+        description: Target type
         required: true
       app:
         type: string
-        description: app name
+        description: App name
+        required: true
+      APP_PATH:
+        type: string
+        description: App Path
+        required: true
+      INFRA_PATH:
+        type: string
+        description: Infrastructure Path
+        required: true
+      APPS_POM:
+        type: string
+        description: Apps pom module path
+        required: true
+      POM:
+        type: string
+        description: Parent pom
         required: true
 
 env:
@@ -32,10 +48,10 @@ jobs:
     with:
       environment: dev
       tf_environment: ${{ inputs.target == 'selc' && 'dev' || 'dev-pnpg' }}
-      dir: ${{ env.INFRA_PATH }}
-      dockerfile_path: ./${{ env.APP_PATH }}/Dockerfile
+      dir: ${{ inputs.INFRA_PATH }}
+      dockerfile_path: ./${{ inputs.APP_PATH }}/Dockerfile
       docker_image_name: pagopa/selfcare-${{ inputs.app }}-ms
-      path_openapi_docs: ./${{ env.APP_PATH }}/src/main/docs/openapi.json
+      path_openapi_docs: ./${{ inputs.APP_PATH }}/src/main/docs/openapi.json
 
   release_uat:
     uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
@@ -45,10 +61,10 @@ jobs:
     with:
       environment: uat
       tf_environment: ${{ inputs.target == 'selc' && 'uat' || 'uat-pnpg' }}
-      dir: ${{ env.INFRA_PATH }}
-      dockerfile_path: ./${{ env.APP_PATH }}/Dockerfile
+      dir: ${{ inputs.INFRA_PATH }}
+      dockerfile_path: ./${{ inputs.APP_PATH }}/Dockerfile
       docker_image_name: pagopa/selfcare-${{ inputs.app }}-ms
-      path_openapi_docs: ./${{ env.APP_PATH }}/src/main/docs/openapi.json
+      path_openapi_docs: ./${{ inputs.APP_PATH }}/src/main/docs/openapi.json
 
   release_prod:
     uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
@@ -58,7 +74,7 @@ jobs:
     with:
       environment: prod
       tf_environment: ${{ inputs.target == 'selc' && 'prod' || 'prod-pnpg' }}
-      dir: ${{ env.INFRA_PATH }}
-      dockerfile_path: ./${{ env.APP_PATH }}/Dockerfile
+      dir: ${{ inputs.INFRA_PATH }}
+      dockerfile_path: ./${{ inputs.APP_PATH }}/Dockerfile
       docker_image_name: pagopa/selfcare-${{ inputs.app }}-ms
-      path_openapi_docs: ./${{ env.APP_PATH }}/src/main/docs/openapi.json
+      path_openapi_docs: ./${{ inputs.APP_PATH }}/src/main/docs/openapi.json
