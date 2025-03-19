@@ -41,23 +41,22 @@ resource "null_resource" "upload_jwks" {
               then
                 exit 1
               fi
-              cat "${path.module}/.terraform/tmp/jwks-test.json"
-              
+              az storage blob upload \
+                --container-name '$web' \
+                --account-name "${var.prefix}${var.env_short}checkoutsa" \
+                --account-key ${data.azurerm_key_vault_secret.web_storage_access_key.value} \
+                --file "${path.module}/.terraform/tmp/jwks-test.json" \
+                --overwrite true \
+                --name '.well-known/jwks-test.json'
+              az cdn endpoint purge \
+                --resource-group ${data.azurerm_resource_group.checkout_fe_rg.name} \
+                --name "selc-p-checkout-cdn-profile" \
+                --profile-name "selc-p-checkout-cdn-endpoint" \
+                --content-paths "/.well-known/jwks-test.json" \
+                --no-wait
           EOT
   }
 }
 
 
-# az storage blob upload \
-#                 --container-name '$web' \
-#                 --account-name "${var.prefix}${var.env_short}checkoutsa" \
-#                 --account-key ${data.azurerm_key_vault_secret.web_storage_access_key.value} \
-#                 --file "${path.module}/.terraform/tmp/jwks-test.json" \
-#                 --overwrite true \
-#                 --name '.well-known/jwks-test.json'
-#               az cdn endpoint purge \
-#                 --resource-group ${data.azurerm_resource_group.checkout_fe_rg.name} \
-#                 --name "selc-p-checkout-cdn-profile" \
-#                 --profile-name "selc-p-checkout-cdn-endpoint" \
-#                 --content-paths "/.well-known/jwks-test.json" \
-#                 --no-wait
+
