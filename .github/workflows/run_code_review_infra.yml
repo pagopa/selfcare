@@ -10,7 +10,16 @@ on:
           - dev
           - uat
           - prod
-
+      th_env:
+        type: choice
+        description: Terraform Environment
+        options: 
+          - dev
+          - dev-pnpg
+          - uat
+          - uat-pnpg
+          - prod
+          - prod-pnpg
 jobs:
 
   code_review_dev:
@@ -19,7 +28,7 @@ jobs:
     secrets: inherit
     with:
       environment: dev
-      tf_environment: dev
+      tf_environment: inputs.th_env
       dir: 'infra/cert'
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
