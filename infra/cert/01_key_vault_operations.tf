@@ -1,6 +1,6 @@
 # JWT
 module "jwt" {
-  source = "github.com/pagopa/terraform-azurerm-v3.git//jwt_keys?ref=jwt_cert_allowed_uses_as_variable"
+  source = "github.com/pagopa/terraform-azurerm-v3.git//jwt_keys?ref=v8.86.0"
 
   jwt_name            = "jwt-test"
   key_vault_id        = module.key_vault.id
@@ -12,7 +12,7 @@ module "jwt" {
 }
 
 module "jwt_exchange" {
-  source = "github.com/pagopa/terraform-azurerm-v3.git//jwt_keys?ref=jwt_cert_allowed_uses_as_variable"
+  source = "github.com/pagopa/terraform-azurerm-v3.git//jwt_keys?ref=v8.86.0"
 
   jwt_name            = "jwt-exchange-test"
   key_vault_id        = module.key_vault.id
