@@ -1,14 +1,11 @@
-env_short      = "d"
-prefix         = "selc"
-domain         = "pnpg"
-location_short = "weu"
+env_short = "u"
+prefix    = "selc"
 
 tags = {
   CreatedBy   = "Terraform"
-  Environment = "Dev"
+  Environment = "Uat"
   Owner       = "SelfCare"
   Source      = "https://github.com/pagopa/selfcare/cert/jwt"
   CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
-  Application = "PNPG"
 }
 
