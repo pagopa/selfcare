@@ -36,6 +36,6 @@ jobs:
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || startsWith(inputs.env, 'dev') }}
     secrets: inherit
     with:
-      environment: inputs.env
-      tf_environment: inputs.th_env
+      environment: dev
+      tf_environment: ${{ inputs.th_env }}
       dir: ./infra/cert

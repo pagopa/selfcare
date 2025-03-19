@@ -28,7 +28,7 @@ jobs:
     secrets: inherit
     with:
       environment: dev
-      tf_environment: inputs.th_env
+      tf_environment: ${{ inputs.th_env }}
       dir: 'infra/cert'
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
