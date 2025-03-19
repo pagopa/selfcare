@@ -50,8 +50,8 @@ resource "null_resource" "upload_jwks" {
                 --name '.well-known/jwks-test.json'
               az cdn endpoint purge \
                 --resource-group ${data.azurerm_resource_group.checkout_fe_rg.name} \
-                --name "${var.prefix}-${var.env_short}-checkout-cdn-profile" \
-                --profile-name "${var.prefix}-${var.env_short}-checkout-cdn-endpoint" \
+                --name "${var.prefix}-${var.env_short}-checkout-cdn-endpoint" \
+                --profile-name "${var.prefix}-${var.env_short}-checkout-cdn-profile" \
                 --content-paths "/.well-known/jwks-test.json" \
                 --no-wait
           EOT
