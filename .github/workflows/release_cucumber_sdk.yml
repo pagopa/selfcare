@@ -1,11 +1,11 @@
-name: Release Selfcare sdk
+name: Release Cucumber sdk
 
 on:
   push:
     branches:
       - main
     paths:
-      - './libs/**'
+      - './libs/sdk-cucumber/**'
 
   workflow_dispatch:
 
@@ -40,6 +40,6 @@ jobs:
       - name: Deploy to GitHub Package Registry
         shell: bash
         run: |
-          mvn -B deploy -f libs/pom.xml
+          mvn -B deploy -f libs/sdk-cucumber/pom.xml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

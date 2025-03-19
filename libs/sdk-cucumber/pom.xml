@@ -5,19 +5,19 @@
 
 
     <parent>
-        <artifactId>selfcare-libs</artifactId>
+        <artifactId>libs</artifactId>
         <groupId>it.pagopa.selfcare</groupId>
         <version>0.0.1</version>
     </parent>
 
-    <artifactId>selfcare-sdk-cucumber</artifactId>
+    <artifactId>sdk-cucumber</artifactId>
     <packaging>jar</packaging>
     <version>0.0.1</version>
 
     <distributionManagement>
         <repository>
             <id>selfcare-github</id>
-            <name>Selfcare SDK</name>
+            <name>Cucumber SDK</name>
             <url>https://maven.pkg.github.com/pagopa/selfcare</url>
         </repository>
     </distributionManagement>
