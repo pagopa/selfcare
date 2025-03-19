@@ -22,17 +22,17 @@ module "jwt_exchange" {
 }
 
 resource "null_resource" "upload_jwks" {
-  # triggers = {
-  #   "changes-in-jwt" : module.jwt.certificate_data_pem
-  #   "changes-in-jwt-exchange" : module.jwt_exchange.certificate_data_pem
-  # }
+  triggers = {
+    "changes-in-jwt" : module.jwt.certificate_data_pem
+    "changes-in-jwt-exchange" : module.jwt_exchange.certificate_data_pem
+  }
   provisioner "local-exec" {
     command = <<EOT
               mkdir -p "${path.module}/.terraform/tmp"
               pip install --require-hashes --requirement "${path.module}/utils/py/requirements.txt"
               az storage blob download \
                 --container-name '$web' \
-                --account-name "${var.prefix}${var.env_short}checkoutsa" \
+                --account-name "${replace(local.project, "-", "")}checkoutsa" \
                 --account-key ${data.azurerm_key_vault_secret.web_storage_access_key.value} \
                 --file "${path.module}/.terraform/tmp/oldjwks-test.json" \
                 --name '.well-known/jwks.json'
@@ -43,15 +43,15 @@ resource "null_resource" "upload_jwks" {
               fi
               az storage blob upload \
                 --container-name '$web' \
-                --account-name "${var.prefix}${var.env_short}checkoutsa" \
+                --account-name "${replace(local.project, "-", "")}checkoutsa" \
                 --account-key ${data.azurerm_key_vault_secret.web_storage_access_key.value} \
                 --file "${path.module}/.terraform/tmp/jwks-test.json" \
                 --overwrite true \
                 --name '.well-known/jwks-test.json'
               az cdn endpoint purge \
                 --resource-group ${data.azurerm_resource_group.checkout_fe_rg.name} \
-                --name "${var.prefix}-${var.env_short}-checkout-cdn-endpoint" \
-                --profile-name "${var.prefix}-${var.env_short}-checkout-cdn-profile" \
+                --name "${local.project}-checkout-cdn-endpoint" \
+                --profile-name "${local.project}-checkout-cdn-profile" \
                 --content-paths "/.well-known/jwks-test.json" \
                 --no-wait
           EOT
