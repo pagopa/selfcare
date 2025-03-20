@@ -40,6 +40,6 @@ jobs:
       - name: Deploy to GitHub Package Registry
         shell: bash
         run: |
-          mvn -B deploy -f libs/cucumber-sdk/pom.xml
+          mvn -B deploy -X -f libs/cucumber-sdk/pom.xml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
