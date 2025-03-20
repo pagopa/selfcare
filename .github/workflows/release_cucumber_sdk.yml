@@ -35,7 +35,7 @@ jobs:
 
       - name: Build with Maven
         shell: bash
-        run: mvn --projects :cucumber-sdk --also-make-dependents clean package -DskipTests
+        run: mvn --projects :cucumber-sdk --also-make-dependents clean package -DskipTests -U
 
       - name: Deploy to GitHub Package Registry
         shell: bash
