@@ -9,9 +9,19 @@ variable "env_short" {
   }
 }
 
+variable "domain" {
+  type    = string
+  default = ""
+}
+
 variable "location" {
   type    = string
   default = "westeurope"
+}
+
+variable "location_short" {
+  type    = string
+  default = ""
 }
 
 variable "cert_allowed_uses" {

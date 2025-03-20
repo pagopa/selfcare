@@ -1,4 +1,4 @@
-name: Deploy functions infra
+name: Run release infra
 
 on:
   push:
@@ -17,14 +17,25 @@ on:
         - dev
         - uat
         - prod
+      th_env:
+        type: choice
+        description: Terraform Environment
+        options: 
+          - dev
+          - dev-pnpg
+          - uat
+          - uat-pnpg
+          - prod
+          - prod-pnpg
 
 jobs:
 
   release_dev:
     uses: ./.github/workflows/call_release_infra.yml
     name: '[Dev] Run Cert Infra Release'
-    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || startsWith(inputs.env, 'dev') }}
     secrets: inherit
     with:
       environment: dev
+      tf_environment: ${{ inputs.th_env }}
       dir: ./infra/cert

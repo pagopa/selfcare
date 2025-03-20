@@ -10,5 +10,5 @@ data "azurerm_key_vault_secret" "web_storage_access_key" {
 }
 
 data "azurerm_resource_group" "checkout_fe_rg" {
-  name = "${local.project}-checkout-fe-rg"
+  name = "${local.project_full}-checkout-fe-rg"
 }

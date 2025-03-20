@@ -54,3 +54,6 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 
+infra/cert/env/bin
+infra/cert/env/lib
+**/pyvenv.cfg
