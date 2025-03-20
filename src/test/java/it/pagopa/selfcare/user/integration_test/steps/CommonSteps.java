@@ -197,8 +197,16 @@ public class CommonSteps {
     private Map<String, Object> filterExpectedObject(Map<String, Object> obj, Set<String> expectedKeys) {
         Map<String, Object> filteredMap = new HashMap<>();
         for (String key : expectedKeys) {
-            if (obj.containsKey(key)) {
-                filteredMap.put(key, obj.get(key));
+            if (obj.containsKey(key) && Objects.nonNull(obj.get(key))) {
+                Object value = obj.get(key);
+                if (value instanceof String) {
+                    if (Boolean.TRUE.toString().equalsIgnoreCase((String) value)) {
+                        value = true;
+                    } else if (Boolean.FALSE.toString().equalsIgnoreCase((String) value)) {
+                        value = false;
+                    }
+                }
+                filteredMap.put(key, value);
             }
         }
         return filteredMap;

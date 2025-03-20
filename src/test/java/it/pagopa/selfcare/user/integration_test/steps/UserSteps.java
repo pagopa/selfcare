@@ -25,9 +25,11 @@ import java.util.concurrent.CountDownLatch;
 @ApplicationScoped
 public class UserSteps {
     private final String mockUserInstitutionId = "65a4b6c7d8e9f01234567890";
+    private final String mockUserInstitutionId2 = "78a2342c31599e1812b1819a";
     private final String mockUserId = "35a78332-d038-4bfa-8e85-2cba7f6b7bf7";
     private final String mockInstitutionId = "d0d28367-1695-4c50-a260-6fda526e9aab";
     private final String mockUserId2 = "97a511a7-2acc-47b9-afed-2f3c65753b4a";
+    private final String mockUserId3 = "12a521c9-3agc-43l5-adee-3d1c95310b1e";
     private final String mockInstitutionId2 = "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21";
 
     @After("@RemoveUserInstitutionAndUserInfoAfterScenario")
@@ -37,7 +39,6 @@ public class UserSteps {
                         success -> {
                             log.info("userInstitution with id {} deleted", mockUserInstitutionId);
                             UserInfo user = (UserInfo) UserInfo.findById(mockUserId).await().indefinitely();
-                            System.out.println("PRIMA DI ESEGUIRE");
                             user.setInstitutions(user.getInstitutions()
                                     .stream()
                                     .filter(institution -> !institution.getInstitutionId().equals(mockInstitutionId))
@@ -82,6 +83,56 @@ public class UserSteps {
                                         );
     }
 
+    @After("@RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser")
+    public void removeInstitutionIdAfterScenarioWithUnusedUser(Scenario scenario) {
+        UserInstitution.deleteById(new ObjectId(mockUserInstitutionId))
+                .subscribe().with(
+                        success -> {
+                            log.info("userInstitution with id {} deleted", mockUserInstitutionId);
+                            UserInfo user = (UserInfo) UserInfo.findById(mockUserId3).await().indefinitely();
+                            user.setInstitutions(user.getInstitutions()
+                                    .stream()
+                                    .filter(institution -> !institution.getInstitutionId().equals(mockInstitutionId))
+                                    .toList()
+                            );
+
+                            UserInfo.persistOrUpdate(user)
+                                    .subscribe()
+                                    .with(
+                                            updateSuccess -> {
+                                                log.info("UserInfo with id {} update", user.getUserId());
+                                            },
+                                            updateFailure -> {
+                                                log.info("Failed to update UserInfo with id {}: {}", user.getUserId(), updateFailure.getMessage());
+                                            });
+                        },
+                        failure -> log.info("Failed to delete userInstitution with id {}: {}", mockUserInstitutionId, failure.getMessage())
+                );
+        UserInstitution.deleteById(new ObjectId(mockUserInstitutionId2))
+                .subscribe().with(
+                        success -> {
+                            log.info("userInstitution with id {} deleted", mockUserInstitutionId2);
+                            UserInfo user = (UserInfo) UserInfo.findById(mockUserId3).await().indefinitely();
+                            user.setInstitutions(user.getInstitutions()
+                                    .stream()
+                                    .filter(institution -> !institution.getInstitutionId().equals(mockUserInstitutionId2))
+                                    .toList()
+                            );
+
+                            UserInfo.persistOrUpdate(user)
+                                    .subscribe()
+                                    .with(
+                                            updateSuccess -> {
+                                                log.info("UserInfo with id {} update", user.getUserId());
+                                            },
+                                            updateFailure -> {
+                                                log.info("Failed to update UserInfo with id {}: {}", user.getUserId(), updateFailure.getMessage());
+                                            });
+                        },
+                        failure -> log.info("Failed to delete userInstitution with id {}: {}", mockUserInstitutionId2, failure.getMessage())
+                );
+    }
+
 
     @And("A mock userInfo with id {string}, institutionName {string}, status {string}, role {string} to userInfo document with id {string}")
     public void createMockUserInfo(String institutionId, String institutionName, String status, String role, String userId) {
@@ -108,8 +159,6 @@ public class UserSteps {
 
     @And("A mock userInstitution with id {string} and onboardedProductState {string} and role {string} and productId {string}")
     public void createMockInstitution(String id, String onboardedProductState, String role, String productId) {
-        System.out.println("quarkus.mongodb.connection-string "+ ConfigProvider.getConfig().getOptionalValue("quarkus.mongodb.connection-string", String.class).orElse("NON TROVATO"));
-        System.out.println("quarkus.mongodb.database "+ ConfigProvider.getConfig().getOptionalValue("quarkus.mongodb.database", String.class).orElse("NON TROVATO"));
         final UserInstitution userInstitution = new UserInstitution();
         userInstitution.setId(new ObjectId(id));
         userInstitution.setUserId(mockUserId);
@@ -121,6 +170,44 @@ public class UserSteps {
         onboardedProduct.setCreatedAt(OffsetDateTime.of(2024, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC));
         onboardedProduct.setProductId(productId);
         onboardedProduct.setProductRole("admin");
+        onboardedProduct.setRole(PartyRole.valueOf(role));
+        onboardedProduct.setEnv(Env.ROOT);
+        onboardedProduct.setStatus(OnboardedProductState.valueOf(onboardedProductState));
+        onboardedProduct.setTokenId("asda8312-3311-5642-gsds-gfr2252341");
+
+        userInstitution.setProducts(List.of(onboardedProduct));
+        CountDownLatch latch = new CountDownLatch(1);
+        UserInstitution.persist(userInstitution).subscribe().with(
+                success -> {
+                    log.info("userInstitution with id {} created", id);
+                    latch.countDown();
+                },
+                failure -> {
+                    log.info("Failed to create userInstitution with id {}: {}", id, failure.getMessage());
+                    latch.countDown();
+                }
+        );
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @And("A mock userInstitution with id {string} and onboardedProductState {string} and role {string} and productId {string} and institutionId {string} and institutionDescription {string} and unused user")
+    public void createMockInstitutionWithUnusedUser(String id, String onboardedProductState, String role, String productId, String institutionId, String institutionDescription) {
+        final UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setId(new ObjectId(id));
+        userInstitution.setUserId(mockUserId3);
+        userInstitution.setInstitutionId(institutionId);
+        userInstitution.setInstitutionDescription(institutionDescription);
+        userInstitution.setUserMailUuid("ID_MAIL#123123-55555-efaz-12312-apclacpela");
+
+        final OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setCreatedAt(OffsetDateTime.of(2024, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC));
+        onboardedProduct.setProductId(productId);
+        onboardedProduct.setProductRole(role.equals("SUB_DELEGATE") ? "admin" : "referente amministrativo");
         onboardedProduct.setRole(PartyRole.valueOf(role));
         onboardedProduct.setEnv(Env.ROOT);
         onboardedProduct.setStatus(OnboardedProductState.valueOf(onboardedProductState));
