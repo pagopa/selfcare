@@ -125,7 +125,6 @@
                 <version>3.2.0</version>
                 <configuration>
                     <includes>
-                        <include>**/test/**</include>
                         <include>**/*.java</include>
                     </includes>
                 </configuration>
