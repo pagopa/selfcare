@@ -126,6 +126,7 @@
                 <configuration>
                     <includes>
                         <include>**/test/**</include>
+                        <include>**/*.java</include>
                     </includes>
                 </configuration>
             </plugin>
