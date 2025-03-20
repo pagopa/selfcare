@@ -13,6 +13,7 @@
     <modules>
         <module>apps</module>
         <module>test-coverage</module>
+        <module>libs</module>
     </modules>
 
     <repositories>
