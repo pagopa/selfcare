@@ -5,7 +5,7 @@
 
 
     <parent>
-        <artifactId>libs</artifactId>
+        <artifactId>lib</artifactId>
         <groupId>it.pagopa.selfcare</groupId>
         <version>0.0.1</version>
     </parent>
