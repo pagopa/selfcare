@@ -194,7 +194,8 @@ public class CommonSteps {
 
     @And("The response body contains at path {string} the following list of values in any order:")
     public void checkResponseBodyList(String expectedJsonPath, List<String> expectedValues) {
-        final List<String> currentValues = sharedStepData.getResponse().body().jsonPath().getList(expectedJsonPath, String.class);
+        final List<String> currentValues = sharedStepData.getResponse().body().jsonPath().getList(expectedJsonPath, String.class)
+                .stream().filter(Objects::nonNull).toList();
         Assertions.assertEquals(expectedValues.size(), currentValues.size(), String.format("The lists have different sizes. Expected: %s, Current: %s", expectedValues, currentValues));
         final Map<String, Long> expectedTimes = expectedValues.stream().collect(Collectors.groupingBy(s -> s, Collectors.counting()));
         final Map<String, Long> currentTimes = currentValues.stream().collect(Collectors.groupingBy(s -> s, Collectors.counting()));

@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - './libs/sdk-cucumber/**'
+      - './libs/cucumber-sdk/**'
 
   workflow_dispatch:
 
@@ -40,6 +40,6 @@ jobs:
       - name: Deploy to GitHub Package Registry
         shell: bash
         run: |
-          mvn -B deploy -f libs/sdk-cucumber/pom.xml
+          mvn -B deploy -f libs/cucumber-sdk/pom.xml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

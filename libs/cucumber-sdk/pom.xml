@@ -10,7 +10,7 @@
         <version>0.0.1</version>
     </parent>
 
-    <artifactId>sdk-cucumber</artifactId>
+    <artifactId>cucumber-sdk</artifactId>
     <packaging>jar</packaging>
     <version>0.0.1</version>
 
