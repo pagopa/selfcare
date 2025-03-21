@@ -2961,6 +2961,343 @@ Feature: User
 
   ######################### END POST / #########################
 
+  ######################### BEGIN GET /{userId}/institution/{institutionId} #########################
+
+  Scenario: Successfully retrieve a list of users with optional filters and permissions with personId
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId                                                                              | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | institutionId                                                                       | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | personId                                                                            | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+    When I send a GET request to "users/{userId}/institution/{institutionId}"
+    Then The status code is 200
+    And The response body contains:
+      | [0].userId                                                                          | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | [0].institutionId                                                                   | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription                                                          | Comune di Milano                              |
+      | [0].userMailUuid                                                                    | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1  |
+      | [0].role                                                                            | MANAGER                                       |
+      | [0].status                                                                          | ACTIVE                                        |
+      | [0].userResponse.id                                                                 | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | [0].userResponse.taxCode                                                            | PRVTNT80A41H401T                              |
+      | [0].userResponse.name                                                               | John                                          |
+      | [0].userResponse.surname                                                            | Doe                                           |
+      | [0].userResponse.email                                                              | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | [0].userResponse.workContacts.ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e      | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it  |
+      | [0].userResponse.workContacts.ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1          | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | [0].userResponse.workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375      | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
+    And The response body contains the list "[0].products" of size 2
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                | updatedAt                   |
+      | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
+      | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
+
+  Scenario: Successfully retrieve a list of users with optional filters and permissions without personId
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId                                                                              | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | institutionId                                                                       | a1b2c3d4-5678-90ab-cdef-1234567890ab          |
+    When I send a GET request to "users/{userId}/institution/{institutionId}"
+    Then The status code is 200
+    And The response body contains the list "" of size 2
+    And The response body contains at path "" the following list of objects in any order:
+      | userId                                  | institutionId                           | institutionDescription  | userMailUuid                                    | role          | status    | userResponse.id                         | userResponse.taxCode    | userResponse.name   | userResponse.surname    | userResponse.email                            |
+      | 97a511a7-2acc-47b9-afed-2f3c65753b4a    | a1b2c3d4-5678-90ab-cdef-1234567890ab    | Regione Lazio           | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1    | MANAGER       | ACTIVE    | 97a511a7-2acc-47b9-afed-2f3c65753b4a    | PRVTNT80A41H401T        | John                | Doe                     | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7    | a1b2c3d4-5678-90ab-cdef-1234567890ab    | Regione Lazio           | ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv    | SUB_DELEGATE  | ACTIVE    | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7    | blbrki80A41H401T        | rocky               | Balboa                  | r.balboa@regionelazio.it                      |
+
+  Scenario: Successfully retrieve a list of users with optional filters and permissions with personId (with products filter with one product)
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId                                                                              | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | institutionId                                                                       | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | products                                                                            | prod-pagopa                                   |
+      | personId                                                                            | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+    When I send a GET request to "users/{userId}/institution/{institutionId}"
+    Then The status code is 200
+    And The response body contains:
+      | [0].userId                                                                          | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | [0].institutionId                                                                   | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription                                                          | Comune di Milano                              |
+      | [0].userMailUuid                                                                    | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1  |
+      | [0].role                                                                            | MANAGER                                       |
+      | [0].status                                                                          | ACTIVE                                        |
+      | [0].userResponse.id                                                                 | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | [0].userResponse.taxCode                                                            | PRVTNT80A41H401T                              |
+      | [0].userResponse.name                                                               | John                                          |
+      | [0].userResponse.surname                                                            | Doe                                           |
+      | [0].userResponse.email                                                              | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | [0].userResponse.workContacts.ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e      | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it  |
+      | [0].userResponse.workContacts.ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1          | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | [0].userResponse.workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375      | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                | updatedAt                   |
+      | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
+
+  Scenario: Successfully retrieve a list of users with optional filters and permissions with personId (with products filter with two products)
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId                                                                              | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | institutionId                                                                       | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | products                                                                            | prod-pagopa                                   |
+      | products                                                                            | prod-ciban                                    |
+      | personId                                                                            | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+    When I send a GET request to "users/{userId}/institution/{institutionId}"
+    Then The status code is 200
+    And The response body contains:
+      | [0].userId                                                                          | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | [0].institutionId                                                                   | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription                                                          | Comune di Milano                              |
+      | [0].userMailUuid                                                                    | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1  |
+      | [0].role                                                                            | MANAGER                                       |
+      | [0].status                                                                          | ACTIVE                                        |
+      | [0].userResponse.id                                                                 | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | [0].userResponse.taxCode                                                            | PRVTNT80A41H401T                              |
+      | [0].userResponse.name                                                               | John                                          |
+      | [0].userResponse.surname                                                            | Doe                                           |
+      | [0].userResponse.email                                                              | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | [0].userResponse.workContacts.ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e      | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it  |
+      | [0].userResponse.workContacts.ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1          | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | [0].userResponse.workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375      | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
+    And The response body contains the list "[0].products" of size 2
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                | updatedAt                   |
+      | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
+      | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
+
+  Scenario: Successfully retrieve a list of users with optional filters and permissions with personId (with states filter with one state)
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId                                                                              | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | institutionId                                                                       | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | states                                                                              | PENDING                                       |
+      | personId                                                                            | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+    When I send a GET request to "users/{userId}/institution/{institutionId}"
+    Then The status code is 200
+    And The response body contains:
+      | [0].userId                                                                          | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | [0].institutionId                                                                   | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription                                                          | Comune di Milano                              |
+      | [0].userMailUuid                                                                    | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1  |
+      | [0].role                                                                            | MANAGER                                       |
+      | [0].status                                                                          | PENDING                                       |
+      | [0].userResponse.id                                                                 | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | [0].userResponse.taxCode                                                            | PRVTNT80A41H401T                              |
+      | [0].userResponse.name                                                               | John                                          |
+      | [0].userResponse.surname                                                            | Doe                                           |
+      | [0].userResponse.email                                                              | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | [0].userResponse.workContacts.ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e      | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it  |
+      | [0].userResponse.workContacts.ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1          | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | [0].userResponse.workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375      | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                | updatedAt                   |
+      | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
+
+  Scenario: Successfully retrieve a list of users with optional filters and permissions with personId (with states filter with two states)
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId                                                                              | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | institutionId                                                                       | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | states                                                                              | PENDING                                       |
+      | states                                                                              | ACTIVE                                        |
+      | personId                                                                            | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+    When I send a GET request to "users/{userId}/institution/{institutionId}"
+    Then The status code is 200
+    And The response body contains:
+      | [0].userId                                                                          | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | [0].institutionId                                                                   | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription                                                          | Comune di Milano                              |
+      | [0].userMailUuid                                                                    | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1  |
+      | [0].role                                                                            | MANAGER                                       |
+      | [0].status                                                                          | ACTIVE                                        |
+      | [0].userResponse.id                                                                 | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | [0].userResponse.taxCode                                                            | PRVTNT80A41H401T                              |
+      | [0].userResponse.name                                                               | John                                          |
+      | [0].userResponse.surname                                                            | Doe                                           |
+      | [0].userResponse.email                                                              | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | [0].userResponse.workContacts.ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e      | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it  |
+      | [0].userResponse.workContacts.ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1          | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | [0].userResponse.workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375      | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
+    And The response body contains the list "[0].products" of size 2
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                | updatedAt                   |
+      | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
+      | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
+
+  Scenario: Successfully retrieve a list of users with optional filters and permissions with personId (with states filter with two states)
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId                                                                              | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | institutionId                                                                       | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | states                                                                              | PENDING                                       |
+      | states                                                                              | ACTIVE                                        |
+      | personId                                                                            | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+    When I send a GET request to "users/{userId}/institution/{institutionId}"
+    Then The status code is 200
+    And The response body contains:
+      | [0].userId                                                                          | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | [0].institutionId                                                                   | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription                                                          | Comune di Milano                              |
+      | [0].userMailUuid                                                                    | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1  |
+      | [0].role                                                                            | MANAGER                                       |
+      | [0].status                                                                          | ACTIVE                                        |
+      | [0].userResponse.id                                                                 | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | [0].userResponse.taxCode                                                            | PRVTNT80A41H401T                              |
+      | [0].userResponse.name                                                               | John                                          |
+      | [0].userResponse.surname                                                            | Doe                                           |
+      | [0].userResponse.email                                                              | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | [0].userResponse.workContacts.ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e      | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it  |
+      | [0].userResponse.workContacts.ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1          | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | [0].userResponse.workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375      | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
+    And The response body contains the list "[0].products" of size 2
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                | updatedAt                   |
+      | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
+      | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
+
+  Scenario: Successfully retrieve a list of users with optional filters and permissions with personId (with productRoles filter with one productRole)
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId                                                                              | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | institutionId                                                                       | a1b2c3d4-5678-90ab-cdef-1234567890ab          |
+    And The following query params:
+      | productRoles                                                                        | admin                                         |
+      | personId                                                                            | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+    When I send a GET request to "users/{userId}/institution/{institutionId}"
+    Then The status code is 200
+    And The response body contains:
+      | [0].userId                                                                          | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | [0].institutionId                                                                   | a1b2c3d4-5678-90ab-cdef-1234567890ab          |
+      | [0].institutionDescription                                                          | Regione Lazio                                 |
+      | [0].userMailUuid                                                                    | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1  |
+      | [0].role                                                                            | MANAGER                                       |
+      | [0].status                                                                          | ACTIVE                                        |
+      | [0].userResponse.id                                                                 | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | [0].userResponse.taxCode                                                            | PRVTNT80A41H401T                              |
+      | [0].userResponse.name                                                               | John                                          |
+      | [0].userResponse.surname                                                            | Doe                                           |
+      | [0].userResponse.email                                                              | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | [0].userResponse.workContacts.ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e      | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it  |
+      | [0].userResponse.workContacts.ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1          | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | [0].userResponse.workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375      | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                |
+      | prod-io             | abc12345-6789-4def-b012-3456789abcd     | ACTIVE        | admin                       | MANAGER     | ROOT    | 2023-06-15T14:30:00Z     |
+
+  Scenario: Successfully retrieve a list of users with optional filters and permissions with personId (with productRoles filter with two productRoles)
+    Given User login with username "r.balboa" and password "test"
+    And The following path params:
+      | userId                                                                              | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | institutionId                                                                       | a1b2c3d4-5678-90ab-cdef-1234567890ab          |
+    And The following query params:
+      | productRoles                                                                        | admin                                         |
+      | productRoles                                                                        | referente amministrativo                      |
+      | personId                                                                            | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+    When I send a GET request to "users/{userId}/institution/{institutionId}"
+    Then The status code is 200
+    And The response body contains:
+      | [0].userId                                                                          | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | [0].institutionId                                                                   | a1b2c3d4-5678-90ab-cdef-1234567890ab          |
+      | [0].institutionDescription                                                          | Regione Lazio                                 |
+      | [0].userMailUuid                                                                    | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1  |
+      | [0].role                                                                            | MANAGER                                       |
+      | [0].status                                                                          | ACTIVE                                        |
+      | [0].userResponse.id                                                                 | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | [0].userResponse.taxCode                                                            | PRVTNT80A41H401T                              |
+      | [0].userResponse.name                                                               | John                                          |
+      | [0].userResponse.surname                                                            | Doe                                           |
+      | [0].userResponse.email                                                              | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | [0].userResponse.workContacts.ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e      | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it  |
+      | [0].userResponse.workContacts.ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1          | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | [0].userResponse.workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375      | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
+    And The response body contains the list "[0].products" of size 2
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                |
+      | prod-io             | abc12345-6789-4def-b012-3456789abcd     | ACTIVE        | admin                       | MANAGER     | ROOT    | 2023-06-15T14:30:00Z     |
+      | prod-interop        | def67890-1234-4abc-5678-90abcdef1234    | DELETED       | referente amministrativo    | MANAGER     | ROOT    | 2024-01-20T09:45:10.567Z |
+
+  Scenario: Successfully retrieve a list of users with optional filters and permissions without personId (with roles filter with two roles)
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId                                                                              | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | institutionId                                                                       | a1b2c3d4-5678-90ab-cdef-1234567890ab          |
+    And The following query params:
+      | roles                                                                               | MANAGER                                       |
+      | roles                                                                               | SUB_DELEGATE                                  |
+    When I send a GET request to "users/{userId}/institution/{institutionId}"
+    Then The status code is 200
+    And The response body contains the list "" of size 2
+    And The response body contains at path "" the following list of objects in any order:
+      | userId                                  | institutionId                           | institutionDescription  | userMailUuid                                    | role          | status    | userResponse.id                         | userResponse.taxCode    | userResponse.name   | userResponse.surname    | userResponse.email                            |
+      | 97a511a7-2acc-47b9-afed-2f3c65753b4a    | a1b2c3d4-5678-90ab-cdef-1234567890ab    | Regione Lazio           | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1    | MANAGER       | ACTIVE    | 97a511a7-2acc-47b9-afed-2f3c65753b4a    | PRVTNT80A41H401T        | John                | Doe                     | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7    | a1b2c3d4-5678-90ab-cdef-1234567890ab    | Regione Lazio           | ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv    | SUB_DELEGATE  | ACTIVE    | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7    | blbrki80A41H401T        | rocky               | Balboa                  | r.balboa@regionelazio.it                      |
+
+  Scenario: Successfully retrieve a list of users with optional filters and permissions without personId (with roles filter with onr role)
+    Given User login with username "r.balboa" and password "test"
+    And The following path params:
+      | userId                                                                              | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | institutionId                                                                       | a1b2c3d4-5678-90ab-cdef-1234567890ab          |
+    And The following query params:
+      | roles                                                                               | MANAGER                                       |
+    When I send a GET request to "users/{userId}/institution/{institutionId}"
+    Then The status code is 200
+    And The response body contains:
+      | [0].userId                                                                          | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | [0].institutionId                                                                   | a1b2c3d4-5678-90ab-cdef-1234567890ab          |
+      | [0].institutionDescription                                                          | Regione Lazio                                 |
+      | [0].userMailUuid                                                                    | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1  |
+      | [0].role                                                                            | MANAGER                                       |
+      | [0].status                                                                          | ACTIVE                                        |
+      | [0].userResponse.id                                                                 | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | [0].userResponse.taxCode                                                            | PRVTNT80A41H401T                              |
+      | [0].userResponse.name                                                               | John                                          |
+      | [0].userResponse.surname                                                            | Doe                                           |
+      | [0].userResponse.email                                                              | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | [0].userResponse.workContacts.ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e      | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it  |
+      | [0].userResponse.workContacts.ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1          | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | [0].userResponse.workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375      | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
+    And The response body contains the list "[0].products" of size 2
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                |
+      | prod-io             | abc12345-6789-4def-b012-3456789abcd     | ACTIVE        | admin                       | MANAGER     | ROOT    | 2023-06-15T14:30:00Z     |
+      | prod-interop        | def67890-1234-4abc-5678-90abcdef1234    | DELETED       | referente amministrativo    | MANAGER     | ROOT    | 2024-01-20T09:45:10.567Z |
+
+  Scenario: Successfully retrieve a list of users with optional filters and permissions without personId and wrong userId
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId                                                                              | wrongUser                                     |
+      | institutionId                                                                       | a1b2c3d4-5678-90ab-cdef-1234567890ab          |
+    When I send a GET request to "users/{userId}/institution/{institutionId}"
+    Then The status code is 200
+    And The response body contains the list "" of size 0
+
+  Scenario: Successfully retrieve a list of users with optional filters and permissions without personId and wrong institutionId
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId                                                                              | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | institutionId                                                                       | wrongInstitution                              |
+    When I send a GET request to "users/{userId}/institution/{institutionId}"
+    Then The status code is 200
+    And The response body contains the list "" of size 0
+
+  Scenario: Bad Token retrieve a list of users with optional filters and permissions
+    Given A bad jwt token
+    And The following path params:
+      | userId                                                                              | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | institutionId                                                                       | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    When I send a GET request to "users/{userId}/institution/{institutionId}"
+    Then The status code is 401
+
+  ######################### END GET /{userId}/institution/{institutionId} #########################
+
   ######################### BEGIN GET /{userId}/institutions/{institutionId} #########################
 
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role MANAGER)
