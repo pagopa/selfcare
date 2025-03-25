@@ -30,4 +30,4 @@ jobs:
       source_branch: ${{ github.head_ref }}
       target_branch: ${{ github.base_ref }}
       sonar_key: 'pagopa_selfcare'
-      module: 'selfcare-sdk'
+      module: 'libs'
