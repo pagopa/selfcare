@@ -2989,9 +2989,9 @@ Feature: User
       | [0].userResponse.workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375      | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
     And The response body contains the list "[0].products" of size 2
     And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                | updatedAt                   |
-      | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
-      | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
+      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                    |
+      | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2022-09-21T16:44:30.773Z     |
+      | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2023-03-10T10:15:45.123Z     |
 
   Scenario: Successfully retrieve a list of users with optional filters and permissions without personId
     Given User login with username "j.doe" and password "test"
@@ -3033,8 +3033,8 @@ Feature: User
       | [0].userResponse.workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375      | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
     And The response body contains the list "[0].products" of size 1
     And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                | updatedAt                   |
-      | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
+      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                    |
+      | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2023-03-10T10:15:45.123Z     |
 
   Scenario: Successfully retrieve a list of users with optional filters and permissions with personId (with products filter with two products)
     Given User login with username "j.doe" and password "test"
@@ -3064,9 +3064,9 @@ Feature: User
       | [0].userResponse.workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375      | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
     And The response body contains the list "[0].products" of size 2
     And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                | updatedAt                   |
-      | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
-      | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
+      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                     |
+      | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2023-03-10T10:15:45.123Z      |
+      | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2022-09-21T16:44:30.773Z      |
 
   Scenario: Successfully retrieve a list of users with optional filters and permissions with personId (with states filter with one state)
     Given User login with username "j.doe" and password "test"
@@ -3095,8 +3095,8 @@ Feature: User
       | [0].userResponse.workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375      | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
     And The response body contains the list "[0].products" of size 1
     And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                | updatedAt                   |
-      | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
+      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                     |
+      | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2022-09-21T16:44:30.773Z      |
 
   Scenario: Successfully retrieve a list of users with optional filters and permissions with personId (with states filter with two states)
     Given User login with username "j.doe" and password "test"
@@ -3126,9 +3126,9 @@ Feature: User
       | [0].userResponse.workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375      | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
     And The response body contains the list "[0].products" of size 2
     And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                | updatedAt                   |
-      | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
-      | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
+      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                     |
+      | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2023-03-10T10:15:45.123Z      |
+      | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2022-09-21T16:44:30.773Z      |
 
   Scenario: Successfully retrieve a list of users with optional filters and permissions with personId (with states filter with two states)
     Given User login with username "j.doe" and password "test"
@@ -3158,9 +3158,9 @@ Feature: User
       | [0].userResponse.workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375      | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
     And The response body contains the list "[0].products" of size 2
     And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                | updatedAt                   |
-      | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
-      | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2024-03-18T12:34:56Z     | 2025-03-18T10:33:19.762Z    |
+      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                    |
+      | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2023-03-10T10:15:45.123Z     |
+      | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2022-09-21T16:44:30.773Z     |
 
   Scenario: Successfully retrieve a list of users with optional filters and permissions with personId (with productRoles filter with one productRole)
     Given User login with username "j.doe" and password "test"
