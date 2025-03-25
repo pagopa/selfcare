@@ -1,14 +1,18 @@
 package it.pagopa.selfcare.cucumber.utils;
 
 import io.restassured.response.ExtractableResponse;
+import jakarta.enterprise.context.ApplicationScoped;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 
 @Getter
 @Setter
+@ApplicationScoped
+@Component
 public class SharedStepData {
 
     private String token;

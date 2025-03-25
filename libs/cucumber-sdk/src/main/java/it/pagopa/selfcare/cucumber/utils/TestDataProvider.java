@@ -2,14 +2,18 @@ package it.pagopa.selfcare.cucumber.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.selfcare.cucumber.utils.model.TestData;
+import jakarta.enterprise.context.ApplicationScoped;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 @Slf4j
 @Getter
+@Component
+@ApplicationScoped
 public class TestDataProvider {
 
     private final TestData testData;
@@ -20,7 +24,12 @@ public class TestDataProvider {
 
     private TestData readTestData() throws IOException {
         log.info("Reading test data");
-        return new ObjectMapper().readValue(new File("src/test/resources/testData.json"), TestData.class);
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        try (InputStream inputStream = classLoader.getResourceAsStream("testData.json")) {
+            if (inputStream == null) {
+                throw new IOException("File not found in classpath");
+            }
+            return new ObjectMapper().readValue(inputStream, TestData.class);
+        }
     }
-
 }

@@ -11,6 +11,7 @@ import io.cucumber.java.en.When;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import it.pagopa.selfcare.cucumber.utils.model.JwtData;
+import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 
@@ -18,6 +19,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
+@ApplicationScoped
 public class CommonSteps {
 
     private final SharedStepData sharedStepData;
@@ -77,6 +79,7 @@ public class CommonSteps {
     @When("I send a GET request to {string}")
     public void sendGetRequest(String url) {
         final String token = sharedStepData.getToken();
+        log.info(token);
         sharedStepData.setResponse(RestAssured
                 .given()
                 .contentType(ContentType.JSON)
