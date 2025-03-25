@@ -79,7 +79,6 @@ public class CommonSteps {
     @When("I send a GET request to {string}")
     public void sendGetRequest(String url) {
         final String token = sharedStepData.getToken();
-        log.info(token);
         sharedStepData.setResponse(RestAssured
                 .given()
                 .contentType(ContentType.JSON)
