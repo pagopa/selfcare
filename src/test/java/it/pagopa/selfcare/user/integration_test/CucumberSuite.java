@@ -8,25 +8,33 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.platform.suite.api.ExcludeTags;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
 
 @Slf4j
 @CucumberOptions(
         features = "src/test/resources/features",
+        glue = {"it.pagopa.selfcare.cucumber.utils", "it.pagopa.selfcare.user.integration_test.steps"},
         plugin = {
                 "html:target/cucumber-report/cucumber.html",
                 "json:target/cucumber-report/cucumber.json"
         })
+@ExcludeTags({"Institution", "UserPermission"})
 public class CucumberSuite extends CucumberQuarkusTest {
     @BeforeAll
     static void setup() throws IOException {
-        Path filePath = Paths.get("src/test/resources/key/public-key.pub");
-        String publicKey = Files.readString(filePath);
-        System.setProperty("JWT-PUBLIC-KEY", publicKey);
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        try (InputStream inputStream = classLoader.getResourceAsStream("key/public-key.pub")) {
+            if (inputStream == null) {
+                throw new IOException("Public key file not found in classpath");
+            }
+            String publicKey = new Scanner(inputStream, StandardCharsets.UTF_8.name()).useDelimiter("\\A").next();
+            System.setProperty("JWT-PUBLIC-KEY", publicKey);
+        }
     }
 
     @Before
