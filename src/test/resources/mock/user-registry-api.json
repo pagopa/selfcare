@@ -3,6 +3,26 @@
     "httpRequest": {
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          "name,familyName,email,workContacts"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b\",\"name\":{\"certification\":\"SPID\",\"value\":\"Tizio\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Caio\"},\"email\":{\"certification\":\"SPID\",\"value\":\"prova@test.it\"},\"workContacts\":{\"ID_MAIL#123123-55555-efaz-12312-apclacpela\":{\"email\":{\"certification\":\"NONE\",\"value\":\"123123-55555-efaz-12312-apclacpela@test.it\"}},\"ID_CONTACTS#8840aa32-a2ab-434b-8b8a-11281163352e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8840aa32-a2ab-434b-8b8a-11281163352e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"12311111111\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
       "pathParameters": {
         "id": [
           "97a511a7-2acc-47b9-afed-2f3c65753b4a"
@@ -256,5 +276,49 @@
     "httpResponseTemplate": {
       "templateType": "VELOCITY",
       "template": "{\"statusCode\":500,\"body\":\"Something has gone wrong in the server\"}"    }
+  },
+  {
+    "httpRequest": {
+      "method": "PATCH",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "pathParameters": {
+        "id": [
+          "97a511a7-2acc-47b9-afed-2f3c65753b4a"
+        ]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "workContacts": {}
+        },
+        "matchType": "ONLY_MATCHING_FIELDS"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":204}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "PATCH",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "pathParameters": {
+        "id": [
+          "6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"
+        ]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "workContacts": {}
+        },
+        "matchType": "ONLY_MATCHING_FIELDS"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":204}"
+    }
   }
 ]

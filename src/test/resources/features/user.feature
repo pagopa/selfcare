@@ -849,12 +849,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -865,12 +865,12 @@ Feature: User
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
       | [0].institutionDescription    | Comune di Lucca                               |
     And The response body contains the list "[0].products" of size 1
@@ -879,7 +879,7 @@ Feature: User
       | prod-io                       | MANAGER      | ACTIVE     |
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | id              | 12a521c9-3agc-43l5-adee-3d1c95310b1e                        |
+      | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
     And The following query params:
       | status          | DELETED                                                     |
     When I send a PUT request to "users/{id}/status"
@@ -888,12 +888,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -904,12 +904,12 @@ Feature: User
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
       | [0].institutionDescription    | Comune di Lucca                               |
     And The response body contains the list "[0].products" of size 1
@@ -927,12 +927,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -943,12 +943,12 @@ Feature: User
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
       | [0].institutionDescription    | Comune di Lucca                               |
     And The response body contains the list "[0].products" of size 1
@@ -957,7 +957,7 @@ Feature: User
       | prod-io                       | MANAGER      | ACTIVE     |
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | id              | 12a521c9-3agc-43l5-adee-3d1c95310b1e                        |
+      | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
     And The following query params:
       | status          | DELETED                                                     |
       | institutionId   | d0d28367-1695-4c50-a260-6fda526e9aab                        |
@@ -967,12 +967,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -983,12 +983,12 @@ Feature: User
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
       | [0].institutionDescription    | Comune di Lucca                               |
     And The response body contains the list "[0].products" of size 1
@@ -1006,12 +1006,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1022,12 +1022,12 @@ Feature: User
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
       | [0].institutionDescription    | Comune di Lucca                               |
     And The response body contains the list "[0].products" of size 1
@@ -1036,7 +1036,7 @@ Feature: User
       | prod-io                       | MANAGER      | ACTIVE     |
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | id              | 12a521c9-3agc-43l5-adee-3d1c95310b1e                        |
+      | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
     And The following query params:
       | status          | DELETED                                                     |
       | productId       | prod-pagopa                                                 |
@@ -1046,12 +1046,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1062,12 +1062,12 @@ Feature: User
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
       | [0].institutionDescription    | Comune di Lucca                               |
     And The response body contains the list "[0].products" of size 1
@@ -1085,12 +1085,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1101,12 +1101,12 @@ Feature: User
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
       | [0].institutionDescription    | Comune di Lucca                               |
     And The response body contains the list "[0].products" of size 1
@@ -1115,7 +1115,7 @@ Feature: User
       | prod-io                       | MANAGER      | ACTIVE     |
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | id              | 12a521c9-3agc-43l5-adee-3d1c95310b1e                        |
+      | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
     And The following query params:
       | status          | DELETED                                                     |
       | role            | SUB_DELEGATE                                                |
@@ -1125,12 +1125,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1141,12 +1141,12 @@ Feature: User
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
       | [0].institutionDescription    | Comune di Lucca                               |
     And The response body contains the list "[0].products" of size 1
@@ -1164,12 +1164,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1180,12 +1180,12 @@ Feature: User
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
       | [0].institutionDescription    | Comune di Lucca                               |
     And The response body contains the list "[0].products" of size 1
@@ -1194,7 +1194,7 @@ Feature: User
       | prod-io                       | MANAGER      | ACTIVE     |
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | id              | 12a521c9-3agc-43l5-adee-3d1c95310b1e                        |
+      | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
     And The following query params:
       | status          | DELETED                                                     |
       | productRole     | admin                                                       |
@@ -1204,12 +1204,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1220,12 +1220,12 @@ Feature: User
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
       | [0].institutionDescription    | Comune di Lucca                               |
     And The response body contains the list "[0].products" of size 1
@@ -1241,12 +1241,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1255,7 +1255,7 @@ Feature: User
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE    |
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | id              | 12a521c9-3agc-43l5-adee-3d1c95310b1e                        |
+      | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
     And The following query params:
       | status          | PENDING                                                     |
     When I send a PUT request to "users/{id}/status"
@@ -1264,12 +1264,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1285,12 +1285,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1299,7 +1299,7 @@ Feature: User
       | prod-pagopa                   | SUB_DELEGATE | SUSPENDED    |
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | id              | 12a521c9-3agc-43l5-adee-3d1c95310b1e                        |
+      | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
     And The following query params:
       | status          | ACTIVE                                                     |
     When I send a PUT request to "users/{id}/status"
@@ -1308,12 +1308,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1329,12 +1329,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1343,7 +1343,7 @@ Feature: User
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE    |
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | id              | 12a521c9-3agc-43l5-adee-3d1c95310b1e                        |
+      | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
     And The following query params:
       | status          | SUSPENDED                                                     |
     When I send a PUT request to "users/{id}/status"
@@ -1352,12 +1352,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1373,12 +1373,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1387,7 +1387,7 @@ Feature: User
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE    |
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | id              | 12a521c9-3agc-43l5-adee-3d1c95310b1e                        |
+      | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
     And The following query params:
       | status          | DELETED                                                     |
     When I send a PUT request to "users/{id}/status"
@@ -1396,12 +1396,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1417,12 +1417,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1431,7 +1431,7 @@ Feature: User
       | prod-pagopa                   | SUB_DELEGATE | PENDING    |
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | id              | 12a521c9-3agc-43l5-adee-3d1c95310b1e                        |
+      | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
     And The following query params:
       | status          | ACTIVE                                                     |
     When I send a PUT request to "users/{id}/status"
@@ -1444,12 +1444,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1465,12 +1465,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1479,7 +1479,7 @@ Feature: User
       | prod-pagopa                   | SUB_DELEGATE | PENDING    |
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | id              | 12a521c9-3agc-43l5-adee-3d1c95310b1e                        |
+      | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
     And The following query params:
       | status          | DELETED                                                     |
     When I send a PUT request to "users/{id}/status"
@@ -1492,12 +1492,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1513,12 +1513,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1527,7 +1527,7 @@ Feature: User
       | prod-pagopa                   | SUB_DELEGATE | PENDING    |
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | id              | 12a521c9-3agc-43l5-adee-3d1c95310b1e                        |
+      | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
     And The following query params:
       | status          | SUSPENDED                                                     |
     When I send a PUT request to "users/{id}/status"
@@ -1540,12 +1540,12 @@ Feature: User
     And The following path params:
       | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
     And The following query params:
-      | userId                        | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 1
     And The response body contains:
-      | [0].userId                    | 12a521c9-3agc-43l5-adee-3d1c95310b1e          |
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
       | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
       | [0].institutionDescription    | Comune di Milano                              |
     And The response body contains the list "[0].products" of size 1
@@ -1556,7 +1556,7 @@ Feature: User
   Scenario: Unsuccessfully update user status with wrong productId
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | id              |  12a521c9-3agc-43l5-adee-3d1c95310b1e                       |
+      | id              |  6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                       |
     And The following query params:
       | status          | DELETED                                                     |
       | productId          | wrongProduct                                                     |
@@ -1579,7 +1579,7 @@ Feature: User
   Scenario: Unsuccessfully update user status with wrong role
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | id              |  12a521c9-3agc-43l5-adee-3d1c95310b1e                       |
+      | id              |  6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                       |
     And The following query params:
       | status          | DELETED                                                     |
       | role            | wrongRole                                                     |
@@ -1591,7 +1591,7 @@ Feature: User
   Scenario: Unsuccessfully update user status with wrong institutionId
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | id              |  12a521c9-3agc-43l5-adee-3d1c95310b1e                       |
+      | id              |  6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                       |
     And The following query params:
       | status          | DELETED                                                     |
       | institutionId            | wrongInstitution                                                     |
@@ -1603,7 +1603,7 @@ Feature: User
   Scenario: Unsuccessfully update user status with wrong productRole
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | id              |  12a521c9-3agc-43l5-adee-3d1c95310b1e                       |
+      | id              |  6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                       |
     And The following query params:
       | status          | DELETED                                                     |
       | productRole            | wrongProductRole                                                     |
@@ -1954,6 +1954,345 @@ Feature: User
     Then The status code is 401
 
   ######################### END GET / #########################
+
+  ######################### BEGIN PUT /{id}/user-registry #########################
+
+  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  Scenario: Successfully update user in user-registry and send notification when user data gets updated
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
+    And The following path params:
+      | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+      | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription    | Comune di Milano                              |
+      | [0].userMailUuid              | ID_MAIL#123123-55555-efaz-12312-apclacpela    |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | role         | status     |
+      | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | id                            | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    And The following request body:
+      """
+      {
+          "name":"Tizio",
+          "familyName": "Caio",
+          "email": "m.rossi@example.it",
+          "mobilePhone": "123123123123"
+      }
+      """
+    When I send a PUT request to "users/{id}/user-registry"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+      | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription    | Comune di Milano                              |
+    And The response body does not contain:
+      | [0].userMailUuid              | ID_MAIL#123123-55555-efaz-12312-apclacpela    |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | role         | status     |
+      | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+
+  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  Scenario: Successfully update user in user-registry and send notification when user data gets updated with two userInstitutions
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
+    And A mock userInstitution with id "78a2342c31599e1812b1819a" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21" and institutionDescription "Comune di Napoli" and unused user
+    And The following path params:
+      | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+      | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription    | Comune di Milano                              |
+      | [0].userMailUuid              | ID_MAIL#123123-55555-efaz-12312-apclacpela    |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | role         | status     |
+      | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+      | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+      | [0].institutionDescription    | Comune di Napoli                              |
+      | [0].userMailUuid              | ID_MAIL#123123-55555-efaz-12312-apclacpela    |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | role         | status     |
+      | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | id                            | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    And The following request body:
+      """
+      {
+          "name":"Tizio",
+          "familyName": "Caio",
+          "email": "m.rossi@example.it",
+          "mobilePhone": "123123123123"
+      }
+      """
+    When I send a PUT request to "users/{id}/user-registry"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+      | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription    | Comune di Milano                              |
+    And The response body does not contain:
+      | [0].userMailUuid              | ID_MAIL#123123-55555-efaz-12312-apclacpela    |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | role         | status     |
+      | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+      | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+      | [0].institutionDescription    | Comune di Napoli                              |
+    And The response body does not contain:
+      | [0].userMailUuid              | ID_MAIL#123123-55555-efaz-12312-apclacpela    |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | role         | status     |
+      | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+
+  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  Scenario: Successfully update user in user-registry and send notification when user data gets updated with two userInstitutions and institutionId filter
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
+    And A mock userInstitution with id "78a2342c31599e1812b1819a" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21" and institutionDescription "Comune di Napoli" and unused user
+    And The following path params:
+      | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+      | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription    | Comune di Milano                              |
+      | [0].userMailUuid              | ID_MAIL#123123-55555-efaz-12312-apclacpela    |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | role         | status     |
+      | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+      | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+      | [0].institutionDescription    | Comune di Napoli                              |
+      | [0].userMailUuid              | ID_MAIL#123123-55555-efaz-12312-apclacpela    |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | role         | status     |
+      | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | id                            | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    And The following query params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+    And The following request body:
+      """
+      {
+          "name":"Tizio",
+          "familyName": "Caio",
+          "email": "m.rossi@example.it",
+          "mobilePhone": "123123123123"
+      }
+      """
+    When I send a PUT request to "users/{id}/user-registry"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+      | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription    | Comune di Milano                              |
+      | [0].userMailUuid              | ID_MAIL#123123-55555-efaz-12312-apclacpela    |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | role         | status     |
+      | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+      | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+      | [0].institutionDescription    | Comune di Napoli                              |
+    And The response body does not contain:
+      | [0].userMailUuid              | ID_MAIL#123123-55555-efaz-12312-apclacpela    |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | role         | status     |
+      | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+
+  Scenario: Successfully update user in user-registry and send notification when user data gets updated without userInstitution
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 0
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | id                            | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    And The following request body:
+      """
+      {
+          "name":"Tizio",
+          "familyName": "Caio",
+          "email": "m.rossi@example.it",
+          "mobilePhone": "123123123123"
+      }
+      """
+    When I send a PUT request to "users/{id}/user-registry"
+    Then The status code is 204
+
+  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  Scenario: Successfully update user in user-registry and send notification when user data gets updated with wrong institutionId
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
+    And The following path params:
+      | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+      | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription    | Comune di Milano                              |
+      | [0].userMailUuid              | ID_MAIL#123123-55555-efaz-12312-apclacpela    |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | role         | status     |
+      | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | id                            | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    And The following query params:
+      | institutionId                 | wrongInstitutionId                            |
+    And The following request body:
+      """
+      {
+          "name":"Tizio",
+          "familyName": "Caio",
+          "email": "m.rossi@example.it",
+          "mobilePhone": "123123123123"
+      }
+      """
+    When I send a PUT request to "users/{id}/user-registry"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+      | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription    | Comune di Milano                              |
+      | [0].userMailUuid              | ID_MAIL#123123-55555-efaz-12312-apclacpela    |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | role         | status     |
+      | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+
+  Scenario: Unsuccessfully update user in user-registry and send notification when user data gets updated with wrong userId
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | id                            | wrongUser                                     |
+    And The following request body:
+      """
+      {
+          "name":"Tizio",
+          "familyName": "Caio",
+          "email": "m.rossi@example.it",
+          "mobilePhone": "123123123123"
+      }
+      """
+    When I send a PUT request to "users/{id}/user-registry"
+    Then The status code is 500
+    And The response body contains string:
+      | Something has gone wrong in the server                                        |
+
+  Scenario: Bad Token update user in user-registry and send notification when user data gets updated
+    Given A bad jwt token
+    And The following path params:
+      | id            | 97a511a7-2acc-47b9-afed-2f3c65753b4a        |
+    When I send a PUT request to "users/{id}/user-registry"
+    Then The status code is 401
+
+  ######################### END PUT /{id}/user-registry #########################
 
   ######################### BEGIN PUT /{id}/institution/{institutionId}/product/{productId}/status #########################
 

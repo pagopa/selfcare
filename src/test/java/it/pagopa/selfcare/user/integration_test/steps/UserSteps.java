@@ -8,16 +8,18 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.UserInstitutionRole;
+import it.pagopa.selfcare.user.integration_test.utils.SharedStepData;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
-import org.eclipse.microprofile.config.ConfigProvider;
+import org.junit.jupiter.api.Assertions;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
@@ -29,8 +31,9 @@ public class UserSteps {
     private final String mockUserId = "35a78332-d038-4bfa-8e85-2cba7f6b7bf7";
     private final String mockInstitutionId = "d0d28367-1695-4c50-a260-6fda526e9aab";
     private final String mockUserId2 = "97a511a7-2acc-47b9-afed-2f3c65753b4a";
-    private final String mockUserId3 = "12a521c9-3agc-43l5-adee-3d1c95310b1e";
+    private final String mockUserId3 = "6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b";
     private final String mockInstitutionId2 = "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21";
+    private SharedStepData sharedStepData;
 
     @After("@RemoveUserInstitutionAndUserInfoAfterScenario")
     public void removeInstitutionIdAfterScenario(Scenario scenario) {
@@ -89,22 +92,6 @@ public class UserSteps {
                 .subscribe().with(
                         success -> {
                             log.info("userInstitution with id {} deleted", mockUserInstitutionId);
-                            UserInfo user = (UserInfo) UserInfo.findById(mockUserId3).await().indefinitely();
-                            user.setInstitutions(user.getInstitutions()
-                                    .stream()
-                                    .filter(institution -> !institution.getInstitutionId().equals(mockInstitutionId))
-                                    .toList()
-                            );
-
-                            UserInfo.persistOrUpdate(user)
-                                    .subscribe()
-                                    .with(
-                                            updateSuccess -> {
-                                                log.info("UserInfo with id {} update", user.getUserId());
-                                            },
-                                            updateFailure -> {
-                                                log.info("Failed to update UserInfo with id {}: {}", user.getUserId(), updateFailure.getMessage());
-                                            });
                         },
                         failure -> log.info("Failed to delete userInstitution with id {}: {}", mockUserInstitutionId, failure.getMessage())
                 );
@@ -112,22 +99,6 @@ public class UserSteps {
                 .subscribe().with(
                         success -> {
                             log.info("userInstitution with id {} deleted", mockUserInstitutionId2);
-                            UserInfo user = (UserInfo) UserInfo.findById(mockUserId3).await().indefinitely();
-                            user.setInstitutions(user.getInstitutions()
-                                    .stream()
-                                    .filter(institution -> !institution.getInstitutionId().equals(mockUserInstitutionId2))
-                                    .toList()
-                            );
-
-                            UserInfo.persistOrUpdate(user)
-                                    .subscribe()
-                                    .with(
-                                            updateSuccess -> {
-                                                log.info("UserInfo with id {} update", user.getUserId());
-                                            },
-                                            updateFailure -> {
-                                                log.info("Failed to update UserInfo with id {}: {}", user.getUserId(), updateFailure.getMessage());
-                                            });
                         },
                         failure -> log.info("Failed to delete userInstitution with id {}: {}", mockUserInstitutionId2, failure.getMessage())
                 );
@@ -233,4 +204,12 @@ public class UserSteps {
         }
     }
 
+    @And("The response body does not contain:")
+    public void checkResponseBodyNotContains(Map<String, String> unexpectedKeyValues) {
+        unexpectedKeyValues.forEach((key, unexpectedValue) -> {
+            final String actualValue = sharedStepData.getResponse().body().jsonPath().getString(key);
+            Assertions.assertNotEquals(unexpectedValue, actualValue,
+                    String.format("The field %s unexpectedly contains the value %s", key, unexpectedValue));
+        });
+    }
 }
