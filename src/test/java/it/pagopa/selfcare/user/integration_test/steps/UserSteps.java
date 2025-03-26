@@ -35,6 +35,10 @@ public class UserSteps {
     private final String mockInstitutionId2 = "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21";
     private SharedStepData sharedStepData;
 
+    public UserSteps(SharedStepData sharedStepData) {
+        this.sharedStepData = sharedStepData;
+    }
+
     @After("@RemoveUserInstitutionAndUserInfoAfterScenario")
     public void removeInstitutionIdAfterScenario(Scenario scenario) {
         UserInstitution.deleteById(new ObjectId(mockUserInstitutionId))
