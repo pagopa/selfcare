@@ -23,7 +23,6 @@ import java.util.Scanner;
                 "html:target/cucumber-report/cucumber.html",
                 "json:target/cucumber-report/cucumber.json"
         })
-@ExcludeTags({"Institution", "UserPermission"})
 public class CucumberSuite extends CucumberQuarkusTest {
     @BeforeAll
     static void setup() throws IOException {

@@ -3273,6 +3273,370 @@ Feature: User
 
   ######################### BEGIN POST / #########################
 
+  @RemoveUserInstitutionWithMockUser3
+  Scenario: Successfully create a new user or update an existing one (missing mail but hasToSendMail false)
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 0
+    And Clear path and query params
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+        {
+            "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
+            "hasToSendEmail": false,
+            "user": {
+              "fiscalCode": "VRDMRA22T71F205A",
+              "institutionEmail": "prova@email.com"
+            },
+            "product": {
+                "productId": "prod-io",
+                "role": "DELEGATE",
+                "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+                "productRoles": [
+                    "referente amministrativo"
+                ]
+            },
+            "institutionDescription": "Comune di Bergamo",
+            "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+        }
+      """
+    When I send a POST request to "users/"
+    Then The status code is 201
+    And The response body contains string:
+      | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b             |
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                     | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+      | [0].institutionId              | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+      | [0].institutionDescription     | Comune di Bergamo                             |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                      | productRole                                   | role         | status | tokenId                                |
+      | prod-io                        | referente amministrativo                      | DELEGATE     | ACTIVE | 7a3df825-8317-4601-9fea-12283b7ed97f   |
+
+  @RemoveUserInstitutionAndUserInfoAfterScenario
+  Scenario: Successfully create a new user or update an existing one (existing userInstitution with new product)
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-io"
+    And The following path params:
+      | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | userId                        | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                     | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
+      | [0].institutionId              | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription     | Comune di Milano                              |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                      | productRole                                   | role         | status | tokenId                                |
+      | prod-io                        | admin                                         | SUB_DELEGATE | ACTIVE | asda8312-3311-5642-gsds-gfr2252341     |
+    And Clear path and query params
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+        {
+            "institutionId": "d0d28367-1695-4c50-a260-6fda526e9aab",
+            "hasToSendEmail": false,
+            "user": {
+                "fiscalCode": "blbrki80A41H401T",
+                "institutionEmail": "prova@email.com"
+            },
+            "product": {
+                "productId": "prod-pagopa",
+                "role": "MANAGER",
+                "tokenId": "aa1112-5132-4432-gsds-d12322",
+                "productRoles": [
+                    "referente amministrativo"
+                ]
+            },
+            "institutionDescription": "Comune di Milano",
+            "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+        }
+      """
+    When I send a POST request to "users/"
+    Then The status code is 201
+    And The response body contains string:
+      | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                                          |
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa"
+    And The following path params:
+      | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | userId                        | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                     | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
+      | [0].institutionId              | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription     | Comune di Milano                              |
+    And The response body contains the list "[0].products" of size 2
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                      | productRole                                   | role         | status | tokenId                                |
+      | prod-io                        | admin                                         | SUB_DELEGATE | ACTIVE | asda8312-3311-5642-gsds-gfr2252341     |
+      | prod-pagopa                    | referente amministrativo                      | MANAGER      | ACTIVE | aa1112-5132-4432-gsds-d12322           |
+
+  @RemoveUserInstitutionAndUserInfoAfterScenario
+  Scenario: Unsuccessfully create a new user or update an existing one (existing userInstitution with existing product)
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa"
+    And The following path params:
+      | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | userId                        | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                     | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
+      | [0].institutionId              | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription     | Comune di Milano                              |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                      | productRole                                   | role         | status | tokenId                                |
+      | prod-pagopa                    | admin                                         | SUB_DELEGATE | ACTIVE | asda8312-3311-5642-gsds-gfr2252341     |
+    And Clear path and query params
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+        {
+            "institutionId": "d0d28367-1695-4c50-a260-6fda526e9aab",
+            "hasToSendEmail": false,
+            "user": {
+                "fiscalCode": "blbrki80A41H401T",
+                "institutionEmail": "prova@email.com"
+            },
+            "product": {
+                "productId": "prod-pagopa",
+                "role": "MANAGER",
+                "tokenId": "asda8312-3311-5642-gsds-gfr2252341",
+                "productRoles": [
+                    "referente amministrativo"
+                ]
+            },
+            "institutionDescription": "Comune di Milano",
+            "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+        }
+      """
+    When I send a POST request to "users/"
+    Then The status code is 400
+    And The response body contains string:
+      | User already has different role on Product prod-pagopa             |
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa"
+    And The following path params:
+      | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | userId                        | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                     | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
+      | [0].institutionId              | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription     | Comune di Milano                              |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                      | productRole                                   | role         | status | tokenId                                |
+      | prod-pagopa                    | admin                                         | SUB_DELEGATE | ACTIVE | asda8312-3311-5642-gsds-gfr2252341     |
+
+  @RemoveUserInstitutionWithMockUser3
+  Scenario: Unsuccessfully create a new user or update an existing one (missing mail for user creation)
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 0
+    And Clear path and query params
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+      {
+          "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
+          "user": {
+            "fiscalCode": "VRDMRA22T71F205A",
+            "institutionEmail": "prova@email.com"
+          },
+          "product": {
+              "productId": "prod-io",
+              "role": "DELEGATE",
+              "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+              "productRoles": [
+                  "referente amministrativo"
+              ]
+          },
+          "institutionDescription": "Comune di Bergamo",
+          "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+      }
+      """
+    When I send a POST request to "users/"
+    Then The status code is 400
+    And The response body contains string:
+      | Missing mail for userId: 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b |
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                     | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+      | [0].institutionId              | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+      | [0].institutionDescription     | Comune di Bergamo                             |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                      | productRole                                   | role         | status | tokenId                                |
+      | prod-io                        | referente amministrativo                      | DELEGATE     | ACTIVE | 7a3df825-8317-4601-9fea-12283b7ed97f   |
+
+  @RemoveUserInstitutionWithMockUser3
+  Scenario: Unsuccessfully create a new user or update an existing one (without fiscalCode)
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 0
+    And Clear path and query params
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+      {
+          "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
+          "user": {
+            "institutionEmail": "prova@email.com"
+          },
+          "product": {
+              "productId": "prod-io",
+              "role": "DELEGATE",
+              "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+              "productRoles": [
+                  "referente amministrativo"
+              ]
+          },
+          "institutionDescription": "Comune di Bergamo",
+          "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+      }
+      """
+    When I send a POST request to "users/"
+    Then The status code is 500
+    And The response body contains string:
+      | Something has gone wrong in the server                                        |
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 0
+
+  Scenario: Unsuccessfully create a new user or update an existing one (without institutionId)
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+      {
+          "user": {
+            "fiscalCode": "VRDMRA22T71F205A",
+            "institutionEmail": "prova@email.com"
+          },
+          "product": {
+              "productId": "prod-io",
+              "role": "DELEGATE",
+              "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+              "productRoles": [
+                  "referente amministrativo"
+              ]
+          },
+          "institutionDescription": "Comune di Bergamo",
+          "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+      }
+      """
+    When I send a POST request to "users/"
+    Then The status code is 400
+    And The response body contains:
+      | title                                               | Constraint Violation            |
+      | status                                              | 400                             |
+    And The response body contains the list "violations" of size 1
+    And The response body contains at path "violations" the following list of objects in any order:
+      | field                                               | message                         |
+      | createOrUpdateByFiscalCode.userDto.institutionId    | institutionId is required       |
+
+  Scenario: Unsuccessfully create a new user or update an existing one (without user)
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+      {
+          "institutionId": "d0d28367-1695-4c50-a260-6fda526e9aab",
+          "product": {
+              "productId": "prod-io",
+              "role": "DELEGATE",
+              "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+              "productRoles": [
+                  "referente amministrativo"
+              ]
+          },
+          "institutionDescription": "Comune di Bergamo",
+          "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+      }
+      """
+    When I send a POST request to "users/"
+    Then The status code is 400
+    And The response body contains:
+      | title                                               | Constraint Violation            |
+      | status                                              | 400                             |
+    And The response body contains the list "violations" of size 1
+    And The response body contains at path "violations" the following list of objects in any order:
+      | field                                               | message                         |
+      | createOrUpdateByFiscalCode.userDto.user             | user is required                |
+
+  Scenario: Unsuccessfully create a new user or update an existing one (without product)
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+        {
+            "institutionId": "d0d28367-1695-4c50-a260-6fda526e9aab",
+            "hasToSendEmail": false,
+            "user": {
+              "fiscalCode": "blbrki80A41H401T",
+              "institutionEmail": "prova@email.com"
+            },
+            "institutionDescription": "Comune di Milano",
+            "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+        }
+      """
+    When I send a POST request to "users/"
+    Then The status code is 400
+    And The response body contains:
+      | title                                               | Constraint Violation            |
+      | status                                              | 400                             |
+    And The response body contains the list "violations" of size 1
+    And The response body contains at path "violations" the following list of objects in any order:
+      | field                                               | message                         |
+      | createOrUpdateByFiscalCode.userDto.product          | product is required             |
+
   Scenario: Bad Token create a new user or update an existing one
     Given A bad jwt token
     And The following request body:

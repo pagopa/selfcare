@@ -90,6 +90,29 @@ public class UserSteps {
                                         );
     }
 
+    @After("@RemoveUserInstitutionWithMockUser3")
+    public void removeUserInstitutionWithMockUser3(Scenario scenario) {
+        UserInstitution.find("institutionId = ?1 and userId = ?2", mockInstitutionId2, mockUserId3)
+                .firstResult()
+                .subscribe()
+                .with(
+                        success -> {
+                            UserInstitution userInstitution = (UserInstitution) success;
+                            if(!Objects.isNull(userInstitution)) {
+                                UserInstitution.deleteById(userInstitution.getId())
+                                        .subscribe()
+                                        .with(
+                                                deleteSuccess -> log.info("Deleted userInstitution with userId {} and institutionId {}", mockUserId3, mockInstitutionId2),
+                                                deleteFailure -> log.info("Failed to delete userInstitution with  userId {} and institutionId {}: {}", mockUserId3, mockInstitutionId2, deleteFailure.getMessage())
+                                        );
+                            } else {
+                                log.info("No userInstitution with userId {} and institutionId {}", mockUserId3, mockInstitutionId2);
+                            }
+                        },
+                        failure -> log.info("Failed to find userInstitution with userId {} and institutionId {}", mockUserId3, mockInstitutionId2)
+                );
+    }
+
     @After("@RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser")
     public void removeInstitutionIdAfterScenarioWithUnusedUser(Scenario scenario) {
         UserInstitution.deleteById(new ObjectId(mockUserInstitutionId))
@@ -215,5 +238,12 @@ public class UserSteps {
             Assertions.assertNotEquals(unexpectedValue, actualValue,
                     String.format("The field %s unexpectedly contains the value %s", key, unexpectedValue));
         });
+    }
+
+
+    @And("Clear path and query params")
+    public void clearPathAndQueryParams() {
+        System.out.println("JWT: " + sharedStepData.getToken());
+        sharedStepData.clear();
     }
 }
