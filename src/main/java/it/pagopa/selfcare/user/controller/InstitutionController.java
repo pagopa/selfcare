@@ -140,7 +140,8 @@ public class InstitutionController {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> deleteUserInstitutionProductUsers(@PathParam(value = "institutionId") String institutionId,
                                                            @PathParam(value = "productId") String productId) {
-        return userService.deleteUserInstitutionProductUsers(institutionId, productId)
+        return userService.deleteUserInstitutionProductUsers(institutionId.replaceAll("[^a-zA-Z0-9-_]", ""),
+                        productId.replaceAll("[^a-zA-Z0-9-_]", ""))
                 .map(ignore -> Response.status(HttpStatus.SC_NO_CONTENT).build());
     }
 
