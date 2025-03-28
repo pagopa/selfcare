@@ -3,6 +3,7 @@ package it.pagopa.selfcare.auth.controller;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.controller.request.OidcExchangeRequest;
 import it.pagopa.selfcare.auth.controller.response.OidcExchangeResponse;
+import it.pagopa.selfcare.auth.controller.response.Problem;
 import it.pagopa.selfcare.auth.service.OidcService;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -15,7 +16,6 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import org.openapi.quarkus.user_registry_json.model.Problem;
 
 @Tag(name = "OIDC")
 @Path("/oidc")

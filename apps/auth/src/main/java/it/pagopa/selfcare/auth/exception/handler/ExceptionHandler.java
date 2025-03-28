@@ -1,12 +1,13 @@
 package it.pagopa.selfcare.auth.exception.handler;
 
+import it.pagopa.selfcare.auth.controller.response.Problem;
+import it.pagopa.selfcare.auth.exception.ForbiddenException;
 import it.pagopa.selfcare.auth.exception.InvalidRequestException;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import jakarta.ws.rs.core.Response;
 import org.apache.http.HttpStatus;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
-import org.openapi.quarkus.user_registry_json.model.Problem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +16,7 @@ public class ExceptionHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandler.class);
     public static final String SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER = "Something has gone wrong in the server";
+    public static final String FORBIDDEN = "Forbidden";
     public static final String PREFIX_LOGGER = "{}: {}";
 
     @ServerExceptionMapper
@@ -32,7 +34,14 @@ public class ExceptionHandler {
     @ServerExceptionMapper
     public Response toResponse(ResourceNotFoundException exception) {
         LOGGER.warn(PREFIX_LOGGER, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
-        Problem problem = new Problem(exception.getMessage(), null, null, HttpStatus.SC_NOT_FOUND, exception.getMessage(), null);
+        Problem problem = new Problem(exception.getMessage(), null, HttpStatus.SC_NOT_FOUND, exception.getMessage(), null);
         return Response.status(Response.Status.NOT_FOUND).entity(problem).build();
+    }
+
+    @ServerExceptionMapper
+    public Response toResponse(ForbiddenException exception) {
+        LOGGER.warn(PREFIX_LOGGER, FORBIDDEN, exception.getMessage());
+        Problem problem = new Problem(exception.getMessage(), null,  HttpStatus.SC_FORBIDDEN, exception.getMessage(), null);
+        return Response.status(Response.Status.FORBIDDEN).entity(problem).build();
     }
 }

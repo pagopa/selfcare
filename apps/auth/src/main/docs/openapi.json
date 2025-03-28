@@ -87,17 +87,6 @@
   },
   "components" : {
     "schemas" : {
-      "InvalidParam" : {
-        "type" : "object",
-        "properties" : {
-          "name" : {
-            "type" : "string"
-          },
-          "reason" : {
-            "type" : "string"
-          }
-        }
-      },
       "OidcExchangeRequest" : {
         "required" : [ "code", "redirectUri" ],
         "type" : "object",
@@ -120,12 +109,6 @@
           },
           "instance" : {
             "type" : "string"
-          },
-          "invalidParams" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/InvalidParam"
-            }
           },
           "status" : {
             "format" : "int32",

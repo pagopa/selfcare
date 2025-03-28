@@ -57,13 +57,6 @@ paths:
                 $ref: "#/components/schemas/Problem"
 components:
   schemas:
-    InvalidParam:
-      type: object
-      properties:
-        name:
-          type: string
-        reason:
-          type: string
     OidcExchangeRequest:
       required:
       - code
@@ -83,10 +76,6 @@ components:
           type: string
         instance:
           type: string
-        invalidParams:
-          type: array
-          items:
-            $ref: "#/components/schemas/InvalidParam"
         status:
           format: int32
           type: integer
