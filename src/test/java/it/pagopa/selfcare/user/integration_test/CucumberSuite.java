@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.platform.suite.api.ExcludeTags;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,12 +17,17 @@ import java.util.Scanner;
 @Slf4j
 @CucumberOptions(
         features = "src/test/resources/features",
-        glue = {"it.pagopa.selfcare.cucumber.utils", "it.pagopa.selfcare.user.integration_test.steps"},
+        glue = {"it.pagopa.selfcare.cucumber.utils", "it.pagopa.selfcare.user.integration_test"},
         plugin = {
                 "html:target/cucumber-report/cucumber.html",
                 "json:target/cucumber-report/cucumber.json"
         })
 public class CucumberSuite extends CucumberQuarkusTest {
+
+    public static void main(String[] args) {
+        runMain(CucumberSuite.class, args);
+    }
+
     @BeforeAll
     static void setup() throws IOException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
