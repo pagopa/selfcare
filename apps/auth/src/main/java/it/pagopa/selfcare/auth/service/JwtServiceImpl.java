@@ -34,7 +34,7 @@ public class JwtServiceImpl implements JwtService {
       JsonWebToken jsonWebToken = jwtParser.parse(jwt);
       return Uni.createFrom().item(jsonWebToken);
     } catch (ParseException failure) {
-      return Uni.createFrom().failure(() -> new Exception("Cannot parse jwt", failure));
+      return Uni.createFrom().failure(() -> new Exception("Cannot parse jwt", failure.getCause()));
     }
   }
 

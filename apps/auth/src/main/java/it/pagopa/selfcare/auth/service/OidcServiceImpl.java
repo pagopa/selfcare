@@ -56,6 +56,10 @@ public class OidcServiceImpl implements OidcService {
             formData,
             Base64.getEncoder()
                 .encodeToString(String.join(":", oiClientId, oiClientSecret).getBytes()))
+            .onFailure(GeneralUtils::checkIfIsRetryableException)
+            .retry()
+            .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))
+            .atMost(maxRetry)
         .map(TokenData::getIdToken)
         .chain(
             idToken ->
@@ -68,10 +72,6 @@ public class OidcServiceImpl implements OidcService {
             claims ->
                 sessionService.generateSessionToken(
                     claims.get("fiscal_number"), claims.get("name"), claims.get("family_name")))
-        .map(sessionToken -> OidcExchangeResponse.builder().sessionToken(sessionToken).build())
-        .onFailure(GeneralUtils::checkIfIsRetryableException)
-        .retry()
-        .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))
-        .atMost(maxRetry);
+        .map(sessionToken -> OidcExchangeResponse.builder().sessionToken(sessionToken).build());
   }
 }
