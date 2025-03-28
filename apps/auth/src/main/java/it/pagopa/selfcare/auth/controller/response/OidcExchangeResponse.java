@@ -1,15 +1,15 @@
 package it.pagopa.selfcare.auth.controller.response;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginExchangeResponse {
+@Builder
+public class OidcExchangeResponse {
 
     private String sessionToken;
 
