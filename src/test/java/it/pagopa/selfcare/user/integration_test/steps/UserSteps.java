@@ -3,7 +3,6 @@ package it.pagopa.selfcare.user.integration_test.steps;
 import io.cucumber.java.After;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.And;
-import it.pagopa.selfcare.cucumber.utils.SharedStepData;
 import it.pagopa.selfcare.onboarding.common.Env;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.entity.UserInfo;
@@ -14,12 +13,10 @@ import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
-import org.junit.jupiter.api.Assertions;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
@@ -33,11 +30,6 @@ public class UserSteps {
     private final String mockUserId2 = "97a511a7-2acc-47b9-afed-2f3c65753b4a";
     private final String mockUserId3 = "6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b";
     private final String mockInstitutionId2 = "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21";
-    private SharedStepData sharedStepData;
-
-    public UserSteps(SharedStepData sharedStepData) {
-        this.sharedStepData = sharedStepData;
-    }
 
     @After("@RemoveUserInstitutionAndUserInfoAfterScenario")
     public void removeInstitutionIdAfterScenario(Scenario scenario) {
@@ -229,21 +221,5 @@ public class UserSteps {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
-
-    @And("The response body does not contain:")
-    public void checkResponseBodyNotContains(Map<String, String> unexpectedKeyValues) {
-        unexpectedKeyValues.forEach((key, unexpectedValue) -> {
-            final String actualValue = sharedStepData.getResponse().body().jsonPath().getString(key);
-            Assertions.assertNotEquals(unexpectedValue, actualValue,
-                    String.format("The field %s unexpectedly contains the value %s", key, unexpectedValue));
-        });
-    }
-
-
-    @And("Clear path and query params")
-    public void clearPathAndQueryParams() {
-        System.out.println("JWT: " + sharedStepData.getToken());
-        sharedStepData.clear();
     }
 }

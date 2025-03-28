@@ -1,7 +1,6 @@
 Feature: User
 
   ######################### BEGIN GET /users/email #########################
-
   Scenario: Successfully get user emails giving productId and institutionId with two results
     Given User login with username "j.doe" and password "test"
     And The following query params:
@@ -3283,7 +3282,6 @@ Feature: User
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 0
-    And Clear path and query params
     Given User login with username "j.doe" and password "test"
     And The following request body:
       """
@@ -3346,7 +3344,6 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                      | productRole                                   | role         | status | tokenId                                |
       | prod-io                        | admin                                         | SUB_DELEGATE | ACTIVE | asda8312-3311-5642-gsds-gfr2252341     |
-    And Clear path and query params
     Given User login with username "j.doe" and password "test"
     And The following request body:
       """
@@ -3411,7 +3408,6 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                      | productRole                                   | role         | status | tokenId                                |
       | prod-pagopa                    | admin                                         | SUB_DELEGATE | ACTIVE | asda8312-3311-5642-gsds-gfr2252341     |
-    And Clear path and query params
     Given User login with username "j.doe" and password "test"
     And The following request body:
       """
@@ -3466,7 +3462,6 @@ Feature: User
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 0
-    And Clear path and query params
     Given User login with username "j.doe" and password "test"
     And The following request body:
       """
@@ -3519,7 +3514,6 @@ Feature: User
     When I send a GET request to "institutions/{institutionId}/user-institutions"
     Then The status code is 200
     And The response body contains the list "" of size 0
-    And Clear path and query params
     Given User login with username "j.doe" and password "test"
     And The following request body:
       """
