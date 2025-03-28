@@ -205,15 +205,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Uni<Void> deleteUserInstitutionProductUsers(String institutionId, String productId) {
+    public Uni<DeletedUserCountResponse> deleteUserInstitutionProductUsers(String institutionId, String productId) {
         return userInstitutionService.deleteUserInstitutionProductUsers(institutionId, productId)
                 .onItem().invoke(modCount -> log.info("Updated {} userInstitution documents with institutionId {} and productId {} to status DELETED", modCount, institutionId, productId))
-                .onItem().transformToUni(modCount -> {
-                    if (modCount < 1) {
-                        return Uni.createFrom().failure(new ResourceNotFoundException(USERS_TO_DELETE_NOT_FOUND.getMessage()));
-                    }
-                    return Uni.createFrom().voidItem();
-                });
+                .onItem().transformToUni(modCount -> Uni.createFrom().item(new DeletedUserCountResponse(institutionId, productId, modCount)));
     }
 
     @Override

@@ -630,23 +630,23 @@ class UserServiceTest {
         final String institutionId = "institutionId";
         final String productId = "productId";
         when(userInstitutionService.deleteUserInstitutionProductUsers(institutionId, productId)).thenReturn(Uni.createFrom().item(1L));
-        UniAssertSubscriber<Void> subscriber = userService
+        UniAssertSubscriber<DeletedUserCountResponse> subscriber = userService
                 .deleteUserInstitutionProductUsers(institutionId, productId)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
-        subscriber.assertCompleted();
+        subscriber.assertCompleted().assertItem(new DeletedUserCountResponse(institutionId, productId, 1L));
     }
 
     @Test
-    void deleteUserInstitutionProductUsersNotFound() {
+    void deleteUserInstitutionProductUsersFail() {
         final String institutionId = "institutionId";
         final String productId = "productId";
-        when(userInstitutionService.deleteUserInstitutionProductUsers(institutionId, productId)).thenReturn(Uni.createFrom().item(0L));
-        UniAssertSubscriber<Void> subscriber = userService
+        when(userInstitutionService.deleteUserInstitutionProductUsers(institutionId, productId)).thenReturn(Uni.createFrom().failure(new RuntimeException()));
+        UniAssertSubscriber<DeletedUserCountResponse> subscriber = userService
                 .deleteUserInstitutionProductUsers(institutionId, productId)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
-        subscriber.assertFailedWith(ResourceNotFoundException.class, USERS_TO_DELETE_NOT_FOUND.getMessage());
+        subscriber.assertFailedWith(RuntimeException.class);
     }
 
     @Test

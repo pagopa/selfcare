@@ -182,8 +182,12 @@ paths:
         schema:
           type: string
       responses:
-        "204":
-          description: No Content
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeletedUserCountResponse"
         "400":
           description: Bad Request
           content:
@@ -1113,6 +1117,16 @@ components:
           type: string
         hasToSendEmail:
           type: boolean
+    DeletedUserCountResponse:
+      type: object
+      properties:
+        institutionId:
+          type: string
+        productId:
+          type: string
+        deletedUserCount:
+          format: int64
+          type: integer
     Env:
       enum:
       - ROOT

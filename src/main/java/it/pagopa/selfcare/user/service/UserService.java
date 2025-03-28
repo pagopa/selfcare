@@ -34,7 +34,7 @@ public interface UserService {
 
     Uni<Void> deleteUserInstitutionProduct(String userId, String institutionId, String productId);
 
-    Uni<Void> deleteUserInstitutionProductUsers(String institutionId, String productId);
+    Uni<DeletedUserCountResponse> deleteUserInstitutionProductUsers(String institutionId, String productId);
 
     Uni<List<UserNotificationToSend>> findPaginatedUserNotificationToSend(Integer size, Integer page, String productId);
 

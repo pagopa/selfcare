@@ -9,6 +9,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
+import it.pagopa.selfcare.user.controller.response.DeletedUserCountResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.controller.response.UsersCountResponse;
@@ -258,7 +259,7 @@ class InstitutionControllerTest {
         final String productId = "productId";
 
         Mockito.when(userService.deleteUserInstitutionProductUsers(institutionId, productId))
-                .thenReturn(Uni.createFrom().voidItem());
+                .thenReturn(Uni.createFrom().item(new DeletedUserCountResponse(institutionId, productId, 1L)));
 
         given()
                 .when()
@@ -267,7 +268,7 @@ class InstitutionControllerTest {
                 .pathParam("productId", productId)
                 .delete("/{institutionId}/products/{productId}/users")
                 .then()
-                .statusCode(204);
+                .statusCode(200);
     }
 
     @Test
