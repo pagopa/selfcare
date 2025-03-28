@@ -1,11 +1,13 @@
 package it.pagopa.selfcare.auth.util;
 
 import it.pagopa.selfcare.auth.exception.InvalidRequestException;
+import jakarta.ws.rs.WebApplicationException;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeoutException;
 
 public class GeneralUtils {
 
@@ -37,6 +39,11 @@ public class GeneralUtils {
                 throw new InvalidRequestException(String.format("Invalid value %s for %s", v, enumClass.getSimpleName()));
             }
         }).toList() : Collections.emptyList();
+    }
+
+    public static boolean checkIfIsRetryableException(Throwable throwable) {
+        return throwable instanceof TimeoutException ||
+                (throwable instanceof WebApplicationException webApplicationException && webApplicationException.getResponse().getStatus() == 429);
     }
 
 }
