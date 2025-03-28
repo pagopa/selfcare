@@ -626,6 +626,30 @@ class UserServiceTest {
     }
 
     @Test
+    void deleteUserInstitutionProductUsers() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        when(userInstitutionService.deleteUserInstitutionProductUsers(institutionId, productId)).thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<Void> subscriber = userService
+                .deleteUserInstitutionProductUsers(institutionId, productId)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
+    }
+
+    @Test
+    void deleteUserInstitutionProductUsersNotFound() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        when(userInstitutionService.deleteUserInstitutionProductUsers(institutionId, productId)).thenReturn(Uni.createFrom().item(0L));
+        UniAssertSubscriber<Void> subscriber = userService
+                .deleteUserInstitutionProductUsers(institutionId, productId)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertFailedWith(ResourceNotFoundException.class, USERS_TO_DELETE_NOT_FOUND.getMessage());
+    }
+
+    @Test
     void findAllByIds() {
         //given
         List<String> userIds = List.of("userId");

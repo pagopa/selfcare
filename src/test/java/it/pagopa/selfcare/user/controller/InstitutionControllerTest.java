@@ -251,4 +251,38 @@ class InstitutionControllerTest {
                 .statusCode(401);
     }
 
+    @Test
+    @TestSecurity(user = "userJwt")
+    void deleteUserInstitutionProductUsers() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+
+        Mockito.when(userService.deleteUserInstitutionProductUsers(institutionId, productId))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("institutionId", institutionId)
+                .pathParam("productId", productId)
+                .delete("/{institutionId}/products/{productId}/users")
+                .then()
+                .statusCode(204);
+    }
+
+    @Test
+    void deleteUserInstitutionProductUsers_NotAuthorized() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("institutionId", institutionId)
+                .pathParam("productId", productId)
+                .delete("/{institutionId}/products/{productId}/users")
+                .then()
+                .statusCode(401);
+    }
+
 }

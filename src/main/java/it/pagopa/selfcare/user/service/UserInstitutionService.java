@@ -51,4 +51,6 @@ public interface UserInstitutionService {
 
     Uni<Long> countUsers(String institutionId, String productId, List<PartyRole> roles, List<OnboardedProductState> status);
 
+    Uni<Long> deleteUserInstitutionProductUsers(String institutionId, String productId);
+
 }

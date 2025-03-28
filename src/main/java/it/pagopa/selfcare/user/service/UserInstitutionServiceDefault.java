@@ -1,5 +1,7 @@
 package it.pagopa.selfcare.user.service;
 
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.result.UpdateResult;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.quarkus.panache.common.Page;
 import io.smallrye.mutiny.Multi;
@@ -84,6 +86,27 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         UserInstitutionFilter userInstitutionFilter = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build();
         Map<String, Object> filterMap = userUtils.retrieveMapForFilter(onboardedProductFilter.constructMap(), userInstitutionFilter.constructMap());
         return updateUserStatusDao(filterMap, OnboardedProductState.DELETED);
+    }
+
+    @Override
+    public Uni<Long> deleteUserInstitutionProductUsers(String institutionId, String productId) {
+        final String institutionIdField = UserInstitution.Fields.institutionId.name();
+        final String statusField = UserInstitution.Fields.products.name() + "." + OnboardedProduct.Fields.status.name();
+        final String productIdField = UserInstitution.Fields.products.name() + "." + OnboardedProduct.Fields.productId.name();
+        final String productsElemStatus = UserInstitution.Fields.products.name() + ".$[elem]." + OnboardedProduct.Fields.status.name();
+        final String productsElemUpdatedAt = UserInstitution.Fields.products.name() + ".$[elem]." + OnboardedProduct.Fields.updatedAt.name();
+        final String elemProductId = "elem." + OnboardedProduct.Fields.productId.name();
+        final String elemStatus = "elem." + OnboardedProduct.Fields.status.name();
+        return UserInstitution.mongoCollection().updateMany(
+                new Document(institutionIdField, institutionId)
+                        .append(statusField, new Document("$in", List.of(ACTIVE, SUSPENDED)))
+                        .append(productIdField, productId),
+                new Document("$set", new Document(productsElemStatus, DELETED)
+                        .append(productsElemUpdatedAt, Instant.now())),
+                new UpdateOptions().arrayFilters(List.of(new Document(elemProductId, productId)
+                        .append(elemStatus, new Document("$in", List.of(ACTIVE, SUSPENDED)))
+                ))
+        ).map(UpdateResult::getModifiedCount);
     }
 
     @Override

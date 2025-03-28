@@ -1,7 +1,10 @@
 package it.pagopa.selfcare.user.service;
 
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.result.UpdateResult;
 import io.quarkus.mongodb.panache.common.reactive.ReactivePanacheUpdate;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
+import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.quarkus.panache.mock.PanacheMock;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
@@ -565,6 +568,24 @@ class UserInstitutionServiceTest {
                 .thenReturn(update);
         when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
         UniAssertSubscriber<Long> subscriber = userInstitutionService.deleteUserInstitutionProduct(userId, institutionId, "productID")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted().assertItem(1L);
+    }
+
+    @Test
+    void deleteUserInstitutionProductUsers() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        PanacheMock.mock(UserInstitution.class);
+
+        final UpdateResult updateResult = Mockito.mock(UpdateResult.class);
+        when(updateResult.getModifiedCount()).thenReturn(1L);
+
+        final ReactiveMongoCollection mongoCollection = Mockito.mock(ReactiveMongoCollection.class);
+        when(mongoCollection.updateMany(any(Document.class), any(Document.class), any(UpdateOptions.class))).thenReturn(Uni.createFrom().item(updateResult));
+        when(UserInstitution.mongoCollection()).thenReturn(mongoCollection);
+
+        UniAssertSubscriber<Long> subscriber = userInstitutionService.deleteUserInstitutionProductUsers(institutionId, productId)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted().assertItem(1L);
     }
