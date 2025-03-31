@@ -17,19 +17,22 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 @RequiredArgsConstructor
 public class SessionServiceImpl implements SessionService {
 
+  private static final String SPID_FISCAL_NUMBER_PREFIX = "TINIT-";
+
   @ConfigProperty(name = "jwt.session.duration")
   Integer sessionDuration;
 
   @Override
   public Uni<String> generateSessionToken(String fiscalNumber, String name, String familyName) {
-    JwtClaimsBuilder claims = Jwt.claims();
-
-    claims.claim("fiscal_number", fiscalNumber.replace("TINIT-", ""));
-    claims.claim("name", name);
-    claims.claim("family_name", familyName);
-    claims.issuedAt(Instant.now());
-    claims.expiresAt(Instant.now().plus(Duration.ofHours(sessionDuration)));
-
-    return Uni.createFrom().item(claims.sign());
+    String sessionToken =
+        Jwt.claims()
+            .claim("fiscal_number", fiscalNumber.replace(SPID_FISCAL_NUMBER_PREFIX, ""))
+            .claim("name", name)
+            .claim("family_name", familyName)
+            .issuedAt(Instant.now())
+            .expiresAt(Instant.now().plus(Duration.ofHours(sessionDuration)))
+                .jws()
+            .sign();
+    return Uni.createFrom().item(sessionToken);
   }
 }

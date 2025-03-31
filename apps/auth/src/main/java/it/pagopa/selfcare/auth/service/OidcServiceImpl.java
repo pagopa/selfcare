@@ -1,9 +1,10 @@
 package it.pagopa.selfcare.auth.service;
 
-import io.smallrye.jwt.auth.principal.ParseException;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.controller.response.OidcExchangeResponse;
-import it.pagopa.selfcare.auth.exception.InvalidRequestException;
+import it.pagopa.selfcare.auth.exception.ForbiddenException;
+import it.pagopa.selfcare.auth.exception.InternalException;
+import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.auth.util.GeneralUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -46,7 +47,8 @@ public class OidcServiceImpl implements OidcService {
   @RestClient @Inject TokenServerApisApi tokenApi;
 
   @Override
-  public Uni<OidcExchangeResponse> exchange(String authCode, String redirectUri) {
+  public Uni<OidcExchangeResponse> exchange(String authCode, String redirectUri)
+      throws ForbiddenException, ResourceNotFoundException, InternalException {
     CreateRequestTokenMultipartForm formData = new CreateRequestTokenMultipartForm();
     formData.code = authCode;
     formData.grantType = AUTH_CODE_GRANT_TYPE;
@@ -56,10 +58,10 @@ public class OidcServiceImpl implements OidcService {
             formData,
             Base64.getEncoder()
                 .encodeToString(String.join(":", oiClientId, oiClientSecret).getBytes()))
-            .onFailure(GeneralUtils::checkIfIsRetryableException)
-            .retry()
-            .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))
-            .atMost(maxRetry)
+        .onFailure(GeneralUtils::checkIfIsRetryableException)
+        .retry()
+        .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))
+        .atMost(maxRetry)
         .map(TokenData::getIdToken)
         .chain(
             idToken ->
@@ -67,7 +69,8 @@ public class OidcServiceImpl implements OidcService {
                     .extractClaimsFromJwtToken(idToken)
                     .onFailure()
                     .transform(
-                        failure -> new Exception("Cannot parse idToken from authorization code")))
+                        failure ->
+                            new InternalException("Cannot parse idToken from authorization code")))
         .chain(
             claims ->
                 sessionService.generateSessionToken(

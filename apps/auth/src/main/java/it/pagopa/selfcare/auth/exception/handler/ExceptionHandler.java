@@ -2,6 +2,7 @@ package it.pagopa.selfcare.auth.exception.handler;
 
 import it.pagopa.selfcare.auth.controller.response.Problem;
 import it.pagopa.selfcare.auth.exception.ForbiddenException;
+import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.exception.InvalidRequestException;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import jakarta.ws.rs.core.Response;
@@ -43,5 +44,12 @@ public class ExceptionHandler {
         LOGGER.warn(PREFIX_LOGGER, FORBIDDEN, exception.getMessage());
         Problem problem = new Problem(exception.getMessage(), null,  HttpStatus.SC_FORBIDDEN, exception.getMessage(), null);
         return Response.status(Response.Status.FORBIDDEN).entity(problem).build();
+    }
+
+    @ServerExceptionMapper
+    public Response toResponse(InternalException exception) {
+        LOGGER.error(PREFIX_LOGGER, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
+        Problem problem = new Problem(exception.getMessage(), null,  HttpStatus.SC_FORBIDDEN, exception.getMessage(), null);
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(problem).build();
     }
 }
