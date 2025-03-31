@@ -48,7 +48,7 @@ public class CucumberSuite extends CucumberQuarkusTest {
 
     @AfterAll
     static void tearDown() {
-        System.out.println("Cucumber tests are finished.");
+        log.info("Cucumber tests are finished.");
         System.exit(0);
     }
 
