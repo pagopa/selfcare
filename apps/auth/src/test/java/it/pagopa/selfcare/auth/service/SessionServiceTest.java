@@ -8,12 +8,14 @@ import org.junit.jupiter.api.Test;
 @QuarkusTest
 public class SessionServiceTest {
 
-    @Inject
-    SessionService sessionService;
+  @Inject SessionService sessionService;
 
-    @Test
-    void generateSessionTokenWithValidInputs(){
-        var tokenSubscriber = sessionService.generateSessionToken("fiscalNumber", "name", "familyName").subscribe().withSubscriber(UniAssertSubscriber.create());
-        tokenSubscriber.assertCompleted();
-    }
+  @Test
+  void generateSessionTokenWithValidInputs() {
+    sessionService
+        .generateSessionToken("fiscalNumber", "name", "familyName")
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertCompleted();
+  }
 }
