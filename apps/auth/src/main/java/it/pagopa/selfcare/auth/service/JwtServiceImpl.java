@@ -29,9 +29,9 @@ public class JwtServiceImpl implements JwtService {
 
   @Inject JWTParser jwtParser;
 
-  public Uni<JsonWebToken> parseJwt (String jwt) {
+  private Uni<JsonWebToken> parseJwt (String jwt) {
     try {
-      JsonWebToken jsonWebToken = jwtParser.parse(jwt);
+      JsonWebToken jsonWebToken = jwtParser.parseOnly(jwt);
       return Uni.createFrom().item(jsonWebToken);
     } catch (ParseException failure) {
       return Uni.createFrom().failure(() -> new Exception("Cannot parse jwt", failure.getCause()));

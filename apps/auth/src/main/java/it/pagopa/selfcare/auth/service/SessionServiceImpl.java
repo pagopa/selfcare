@@ -31,7 +31,6 @@ public class SessionServiceImpl implements SessionService {
             .claim("family_name", familyName)
             .issuedAt(Instant.now())
             .expiresAt(Instant.now().plus(Duration.ofHours(sessionDuration)))
-                .jws()
             .sign();
     return Uni.createFrom().item(sessionToken);
   }
