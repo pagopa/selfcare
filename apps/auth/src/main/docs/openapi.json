@@ -36,7 +36,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/OidcExchangeRequest"
+                  "$ref" : "#/components/schemas/OidcExchangeResponse"
                 }
               }
             }
@@ -97,6 +97,14 @@
           },
           "redirectUri" : {
             "minLength" : 1,
+            "type" : "string"
+          }
+        }
+      },
+      "OidcExchangeResponse" : {
+        "type" : "object",
+        "properties" : {
+          "sessionToken" : {
             "type" : "string"
           }
         }

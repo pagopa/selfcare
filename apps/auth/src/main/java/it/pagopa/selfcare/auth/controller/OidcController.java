@@ -31,7 +31,7 @@ public class OidcController {
             operationId = "oidcExchange"
     )
     @APIResponses(value = {
-            @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = OidcExchangeRequest.class), mediaType = "application/json")),
+            @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = OidcExchangeResponse.class), mediaType = "application/json")),
             @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
             @APIResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
             @APIResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
@@ -39,6 +39,7 @@ public class OidcController {
     })
     @POST
     @Path(value = "/exchange")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<OidcExchangeResponse> oidcExchange(@Valid OidcExchangeRequest oidcExchangeRequest) {
         return oidcService.exchange(oidcExchangeRequest.code, oidcExchangeRequest.redirectUri);
