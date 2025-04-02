@@ -11,8 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.openapi.quarkus.one_identity_json.api.TokenServerApisApi;
-import org.openapi.quarkus.one_identity_json.api.TokenServerApisApi.CreateRequestTokenMultipartForm;
+import org.openapi.quarkus.one_identity_json.api.DefaultApi;
+import org.openapi.quarkus.one_identity_json.api.DefaultApi.CreateRequestTokenMultipartForm;
 import org.openapi.quarkus.one_identity_json.model.TokenData;
 
 import java.time.Duration;
@@ -43,7 +43,7 @@ public class OidcServiceImpl implements OidcService {
   @ConfigProperty(name = "one-identity.client-secret")
   String oiClientSecret;
 
-  @RestClient @Inject TokenServerApisApi tokenApi;
+  @RestClient @Inject DefaultApi tokenApi;
 
   @Override
   public Uni<OidcExchangeResponse> exchange(String authCode, String redirectUri) {

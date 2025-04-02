@@ -1,2616 +1,2312 @@
 {
-  "openapi": "3.0.3",
-  "info": {
-    "title": "OI - OpenAPI 3.0",
-    "description": "OI description\n\nSome useful links:\n- [One Identity repository](https://github.com/pagopa/oneidentity)\n- [The source API definition for OI](https://github.com/pagopa/oneidentity/blob/master/src/main/resources/openapi.yaml)",
-    "termsOfService": "http://pagopa.it/terms/",
-    "contact": {
-      "email": "team-oneidentity@pagopa.it"
-    },
-    "license": {
-      "name": "Apache 2.0",
-      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
-    },
-    "version": "0.0.1"
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "oneid-es-1-p-restapi",
+    "description" : "OI description\n\nSome useful links:\n- [One Identity repository](https://github.com/pagopa/oneidentity)\n- [The source API definition for OI](https://github.com/pagopa/oneidentity/blob/master/src/main/resources/openapi.yaml)",
+    "version" : "0.0.1"
   },
-  "externalDocs": {
-    "description": "Find out more about OI",
-    "url": "https://pagopa.it"
-  },
-  "servers": [
-    {
-      "url": "${server_url}"
+  "servers" : [ {
+    "url" : "https://oneid.pagopa.it",
+    "x-amazon-apigateway-endpoint-configuration" : {
+      "disableExecuteApiEndpoint" : true
     }
-  ],
-  "x-amazon-apigateway-binary-media-types": [
-    "*/*"
-  ],
-  "paths": {
-    "/status": {
-      "get": {
-        "tags": [
-          "Authorization Server APIs"
-        ],
-        "description": "Endpoint that can be used to verify the actual service health",
-        "operationId": "Get_request_health_check",
-        "x-amazon-apigateway-integration": {
-          "type": "HTTP",
-          "httpMethod": "GET",
-          "uri": "${uri}/q/health/live",
-          "connectionType": "VPC_LINK",
-          "connectionId": "${connection_id}",
-          "requestParameters": {},
-          "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "responses": {
-            "200": {
-              "statusCode": "200",
-              "responseParameters": {}
-            },
-            "500": {
-              "statusCode": "500",
-              "responseParameters": {}
+  } ],
+  "paths" : {
+    "/saml/acs" : {
+      "post" : {
+        "requestBody" : {
+          "content" : {
+            "application/x-www-form-urlencoded" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MODEL0a899b"
+              }
             }
-          }
+          },
+          "required" : true
         },
-        "responses": {
-          "200": {
-            "description": "Responds with no content"
-          },
-          "500": {
-            "description": "Responds with \"error\". This can be due to missing or incorrect API key. Check audit log messages for more information."
-          },
-          "503": {
-            "description": "Responds with \"error\". Returned on health check failure. This can be returned due to bad database configuration, bad certification configuration, etc. Check the audit log messages for more information."
-          }
-        }
-      }
-    },
-    "/login": {
-      "get": {
-        "tags": [
-          "Login landing page"
-        ],
-        "description": "This route will serve the login landing page, where users can choose which IDP use",
-        "parameters": [
-          {
-            "name": "client_id",
-            "in": "query",
-            "required": true,
-            "description": "This is the 'client_id' of the requesting client. Maximum 255 characters.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "response_type",
-            "in": "query",
-            "required": true,
-            "description": "MUST be one of the listed available values. Any response_type other than 'code' or 'token' is only supported in conjunction with scope=openid. As per the OAuth specification: 'code' is used for authorization code grant type flow, 'token' is used for implicit grant type flow, 'token id_token' is an extension provided by OpenID Connect, and 'code id_token', 'id_token', and 'none' are extensions provided by OpenID Connect Multiple Response Types",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "code",
-                "token",
-                "token id_token",
-                "code id_token",
-                "id_token",
-                "code token",
-                "code id_token token",
-                "none"
-              ]
-            }
-          },
-          {
-            "name": "redirect_uri",
-            "in": "query",
-            "required": true,
-            "description": "The 'redirect_uri' that was registered for this client. It is required if multiple redirect_uri's have been registered for this client. If the scope contains openid, this field becomes MANDATORY.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "scope",
-            "in": "query",
-            "required": true,
-            "description": "Only SCOPE values that were registered for this client will be granted. If only non-matching SCOPE values are requested, the request will fail.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "nonce",
-            "in": "query",
-            "required": true,
-            "description": "This is required for response_type 'token id_token'.  Typically, in an OpenID authorization scheme, the nonce represents a cryptographically strong random  string that is used to prevent intercepted responses from being reused.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "state",
-            "in": "query",
-            "required": true,
-            "description": "Value opaque to the server, used by the client to track its session. It will be returned as received.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "x-amazon-apigateway-integration": {
-          "credentials": "${s3_apigateway_proxy_role}",
-          "httpMethod": "GET",
-          "uri": "${assets_bucket_uri}/index.html",
-          "requestParameters": {
-            "integration.request.querystring.client_id": "method.request.querystring.client_id",
-            "integration.request.querystring.response_type": "method.request.querystring.response_type",
-            "integration.request.querystring.redirect_uri": "method.request.querystring.redirect_uri",
-            "integration.request.querystring.scope": "method.request.querystring.scope",
-            "integration.request.querystring.nonce": "method.request.querystring.nonce",
-            "integration.request.querystring.state": "method.request.querystring.state"
-          },
-          "passthroughBehavior": "when_no_match",
-          "responseParameters": {},
-          "type": "aws",
-          "responses": {
-            "200": {
-              "statusCode": "200",
-              "responseParameters": {
-                "method.response.header.content-type": "integration.response.header.Content-Type",
-                "method.response.header.location": "integration.response.header.location"
-              }
-            },
-            "404": {
-              "statusCode": "404",
-              "responseParameters": {}
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/responseOkHtml"
-          },
-          "404": {
-            "$ref": "#/components/responses/notFound"
-          }
-        }
-      }
-    },
-    "/login/error": {
-      "get": {
-        "tags": [
-          "Login error page"
-        ],
-        "description": "This route will serve the login error page",
-        "parameters": [
-          {
-            "name": "errorCode",
-            "in": "query",
-            "required": true,
-            "description": "This is the 'errorCode' of the faced error.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "x-amazon-apigateway-integration": {
-          "credentials": "${s3_apigateway_proxy_role}",
-          "httpMethod": "GET",
-          "uri": "${assets_bucket_uri}/index.html",
-          "type": "aws",
-          "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "requestParameters": {
-            "integration.request.querystring.errorCode": "method.request.querystring.errorCode"
-          },
-          "responseParameters": {},
-          "responses": {
-            "200": {
-              "statusCode": "200",
-              "responseParameters": {
-                "method.response.header.content-type": "integration.response.header.Content-Type"
-              }
-            },
-            "404": {
-              "statusCode": "404",
-              "responseParameters": {}
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/responseOkHtml"
-          },
-          "404": {
-            "$ref": "#/components/responses/notFound"
-          }
-        }
-      }
-    },
-    "/oidc/register": {
-      "post": {
-        "tags": [
-          "Authorization Server APIs"
-        ],
-        "description": "This endpoint follows the specification defined at http://openid.net/specs/openid-connect-registration-1_0.html. It enables a client to dynamically register itself as an OAuth 2.0 client.",
-        "operationId": "Post_oidc_register",
-        "x-amazon-apigateway-integration": {
-          "credentials": "${lambda_apigateway_proxy_role}",
-          "passthroughBehavior": "when_no_match",
-          "contentHandling": "CONVERT_TO_TEXT",
-          "type": "aws_proxy",
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:${aws_region}:lambda:path/2015-03-31/functions/${client_registration_lambda_arn}/invocations",
-          "responses": {
-            "201": {
-              "statusCode": "201",
-              "responseParameters": {
-                "method.response.header.content-type": "'application/json'"
-              }
-            },
-            "400": {
-              "statusCode": "400",
-              "responseParameters": {}
-            },
-            "401": {
-              "statusCode": "401",
-              "responseParameters": {}
-            },
-            "403": {
-              "statusCode": "403",
-              "responseParameters": {}
-            },
-            "405": {
-              "statusCode": "405",
-              "responseParameters": {}
-            },
-            "429": {
-              "statusCode": "405",
-              "responseParameters": {}
-            },
-            "500": {
-              "statusCode": "500",
-              "responseParameters": {}
-            }
-          }
-        },
-        "summary": "OpenID Connect Dynamic Registration endpoint",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ClientRegistration"
-              }
-            }
-          },
-          "description": "Request body",
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Successful registration including details about the registered values.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ClientRegistration"
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "client_id": {
-                          "type": "string",
-                          "example": "47231c87-74f3-4990-99ad-31e8a801e3b5",
-                          "description": "The registered client_id"
-                        },
-                        "client_secret": {
-                          "type": "string",
-                          "example": "e4cccd81-1d19-41e7-b4b0-488aa28af77b",
-                          "description": "The registered client_secret"
-                        },
-                        "client_id_issued_at": {
-                          "type": "integer",
-                          "example": 1497455914,
-                          "description": "The timestamp in seconds indicating the time of registration"
-                        },
-                        "client_secret_expires_at": {
-                          "type": "integer",
-                          "example": 0,
-                          "description": "The timestamp in seconds indicating the time of expiration for this value. 0 indicates no expiration"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/invalidParameters"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "405": {
-            "$ref": "#/components/responses/methodNotAllowed"
-          },
-          "429": {
-            "$ref": "#/components/responses/rateLimit"
-          },
-          "500": {
-            "$ref": "#/components/responses/serverError"
-          }
-        },
-        "security": [
-          {
-            "${authorizer}": []
-          }
-        ]
-      }
-    },
-    "/oidc/register/{client_id}": {
-      "get": {
-        "tags": [
-          "Authorization Server APIs"
-        ],
-        "description": "This endpoint follows the specification defined at http://openid.net/specs/openid-connect-registration-1_0.html. It implements the 'registration_client_uri'.",
-        "operationId": "Get_oidc_register_config",
-        "x-amazon-apigateway-integration": {
-          "credentials": "${lambda_apigateway_proxy_role}",
-          "passthroughBehavior": "when_no_match",
-          "contentHandling": "CONVERT_TO_TEXT",
-          "type": "aws_proxy",
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:${aws_region}:lambda:path/2015-03-31/functions/${client_registration_lambda_arn}/invocations",
-          "responses": {
-            "200": {
-              "statusCode": "200",
-              "responseParameters": {
-                "method.response.header.content-type": "'application/json'"
-              }
-            },
-            "400": {
-              "statusCode": "400",
-              "responseParameters": {}
-            },
-            "401": {
-              "statusCode": "401",
-              "responseParameters": {}
-            },
-            "403": {
-              "statusCode": "403",
-              "responseParameters": {}
-            },
-            "405": {
-              "statusCode": "405",
-              "responseParameters": {}
-            },
-            "429": {
-              "statusCode": "405",
-              "responseParameters": {}
-            },
-            "500": {
-              "statusCode": "500",
-              "responseParameters": {}
-            }
-          },
-          "cacheKeyParameters": [
-            "method.request.path.client_id"
-          ]
-        },
-        "parameters": [
-          {
-            "in": "path",
-            "name": "client_id",
-            "description": "client_id that was returned in the client registration response",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response including details about the client registration. Additional details may also be included",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ClientRegistration"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/invalidParameters"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "405": {
-            "$ref": "#/components/responses/methodNotAllowed"
-          },
-          "429": {
-            "$ref": "#/components/responses/rateLimit"
-          },
-          "500": {
-            "$ref": "#/components/responses/serverError"
-          }
-        },
-        "security": [
-          {
-            "${authorizer}": []
-          }
-        ],
-        "summary": "OpenID Connect Dynamic Registration Configuration endpoint"
-      }
-    },
-    "/monitor/{type}/status": {
-      "get": {
-        "tags": [
-          "Authorization Server APIs"
-        ],
-        "description": "Retrieve status endpoint",
-        "x-amazon-apigateway-integration": {
-          "credentials": "${lambda_apigateway_proxy_role}",
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:${aws_region}:lambda:path/2015-03-31/functions/${retrieve_status_lambda_arn}/invocations",
-          "passthroughBehavior": "when_no_match",
-          "contentHandling": "CONVERT_TO_TEXT",
-          "type": "aws_proxy",
-          "responses": {
-            "200": {
-              "statusCode": "200",
-              "responseParameters": {
-                "method.response.header.content-type": "'application/json'"
-              }
-            },
-            "400": {
-              "statusCode": "400",
-              "responseParameters": {}
-            },
-            "401": {
-              "statusCode": "401",
-              "responseParameters": {}
-            },
-            "403": {
-              "statusCode": "403",
-              "responseParameters": {}
-            },
-            "405": {
-              "statusCode": "405",
-              "responseParameters": {}
-            },
-            "429": {
-              "statusCode": "405",
-              "responseParameters": {}
-            },
-            "500": {
-              "statusCode": "500",
-              "responseParameters": {}
-            }
-          }
-        },
-        "parameters": [
-          {
-            "in": "path",
-            "name": "type",
-            "description": "Type of entity to monitor, either idp or client",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "idp",
-                "client"
-              ]
-            }
-          },
-          {
-            "in": "query",
-            "name": "entityKey",
-            "description": "Entity id of requested client or idp",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "start",
-            "description": "Starting timestamp to monitor",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "end",
-            "description": "Ending timestamp to monitor",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response containing the status history for the specified entity. The response includes an array of status records, each with a start timestamp, an end timestamp, and a status value.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "entityId": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "start": {
-                            "type": "string",
-                            "description": "The start timestamp for the status period."
-                          },
-                          "end": {
-                            "type": "string",
-                            "description": "The end timestamp for the status period."
-                          },
-                          "status": {
-                            "type": "string",
-                            "description": "The status value for the specified period.",
-                            "enum": [
-                              "OK",
-                              "KO"
-                            ]
-                          }
-                        }
-                      }
-                    }
-                  }
-                },
-                "example": {
-                  "entityId1": [
-                    {
-                      "start": 0,
-                      "end": 1738314911,
-                      "status": "OK"
-                    },
-                    {
-                      "start": 1738314911,
-                      "end": 1738315031,
-                      "status": "KO"
-                    },
-                    {
-                      "start": 1738315031,
-                      "end": "latest",
-                      "status": "OK"
-                    }
-                  ],
-                  "entityId2": [
-                    {
-                      "start": "0",
-                      "end": "latest",
-                      "status": "OK"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/invalidParameters"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "405": {
-            "$ref": "#/components/responses/methodNotAllowed"
-          },
-          "429": {
-            "$ref": "#/components/responses/rateLimit"
-          },
-          "500": {
-            "$ref": "#/components/responses/serverError"
-          }
-        }
-      }
-    },
-    "/saml/acs": {
-      "post": {
-        "tags": [
-          "SAML APIs"
-        ],
-        "description": "This route will handle all SAML response as a callback from IDP",
-        "x-amazon-apigateway-integration": {
-          "type": "HTTP",
-          "httpMethod": "POST",
-          "uri": "${uri}/saml/acs",
-          "connectionType": "VPC_LINK",
-          "connectionId": "${connection_id}",
-          "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "requestParameters": {
-            "integration.request.header.accept": "'*/*'"
-          },
-          "responses": {
-            "302": {
-              "statusCode": "302",
-              "responseParameters": {
-                "method.response.header.location": "integration.response.header.Location"
-              }
-            },
-            "400": {
-              "statusCode": "400",
-              "responseParameters": {}
-            },
-            "405": {
-              "statusCode": "405",
-              "responseParameters": {}
-            },
-            "500": {
-              "statusCode": "500",
-              "responseParameters": {}
-            }
-          }
-        },
-        "requestBody": {
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "SAMLResponse": {
-                    "description": "This is the 'SAMLResponse' of the requesting AUTHnreq.",
-                    "type": "string"
-                  },
-                  "RelayState": {
-                    "description": "This is the 'RelayState' which identify the service requested. https://docs.italia.it/italia/spid/spid-regole-tecniche/it/stabile/trasmissione.html",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "SAMLResponse",
-                  "RelayState"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "302": {
-            "description": "Redirect user to a static html page after successful or not successfull authentication process",
-            "headers": {
-              "location": {
-                "description": "Location (URL)",
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "text/html": {
-                "schema": {
-                  "type": "string",
-                  "default": "no-cache"
+        "responses" : {
+          "405" : {
+            "description" : "405 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
                 }
               },
-              "Cache-Control": {
-                "description": "Cache-Control browser directive",
-                "schema": {
-                  "type": "string",
-                  "default": "no-store"
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Allow" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "429" : {
+            "description" : "429 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "400" : {
+            "description" : "400 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "content-type" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "302" : {
+            "description" : "302 response",
+            "headers" : {
+              "location" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "500" : {
+            "description" : "500 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          }
+        }
+      }
+    },
+    "/.well-known/openid-configuration" : {
+      "get" : {
+        "operationId" : "Get_OpenIDDiscovery",
+        "responses" : {
+          "405" : {
+            "description" : "405 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Allow" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OpenIDDiscovery"
                 }
               }
             }
           },
-          "400": {
-            "$ref": "#/components/responses/invalidParameters"
-          },
-          "405": {
-            "$ref": "#/components/responses/methodNotAllowed"
-          },
-          "429": {
-            "$ref": "#/components/responses/rateLimit"
-          },
-          "500": {
-            "$ref": "#/components/responses/serverError"
-          }
-        }
-      }
-    },
-    "/saml/assertion": {
-      "get": {
-        "tags": [
-          "SAML APIs"
-        ],
-        "description": "This route will serves SAML assertion, useful for clients who need it for their local scope",
-        "parameters": [
-          {
-            "name": "access_token",
-            "in": "query",
-            "required": true,
-            "description": "This is the 'access_token' of the requesting client.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "x-amazon-apigateway-integration": {
-          "type": "HTTP",
-          "httpMethod": "GET",
-          "uri": "${uri}/saml/assertion",
-          "connectionType": "VPC_LINK",
-          "connectionId": "${connection_id}",
-          "requestParameters": {
-            "integration.request.header.accept": "'*/*'",
-            "integration.request.querystring.access_token": "method.request.querystring.access_token"
-          },
-          "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "responses": {
-            "200": {
-              "statusCode": "200",
-              "responseParameters": {
-                "method.response.header.content-type": "'application/xml'"
+          "429" : {
+            "description" : "429 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
               }
             },
-            "400": {
-              "statusCode": "400",
-              "responseParameters": {}
-            },
-            "401": {
-              "statusCode": "401",
-              "responseParameters": {}
-            },
-            "403": {
-              "statusCode": "403",
-              "responseParameters": {}
-            },
-            "404": {
-              "statusCode": "404",
-              "responseParameters": {}
-            },
-            "405": {
-              "statusCode": "405",
-              "responseParameters": {}
-            },
-            "500": {
-              "statusCode": "500",
-              "responseParameters": {}
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/responseOkXml"
+            "content" : { }
           },
-          "400": {
-            "$ref": "#/components/responses/invalidParameters"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/notFound"
-          },
-          "405": {
-            "$ref": "#/components/responses/methodNotAllowed"
-          },
-          "429": {
-            "$ref": "#/components/responses/rateLimit"
-          },
-          "500": {
-            "$ref": "#/components/responses/serverError"
-          }
-        }
-      }
-    },
-    "/saml/{id_type}/metadata": {
-      "get": {
-        "tags": [
-          "SAML APIs"
-        ],
-        "description": "This route will serves SAML metadata",
-        "parameters": [
-          {
-            "name": "id_type",
-            "in": "path",
-            "description": "Spid or cie",
-            "required": true,
-            "style": "simple",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "spid",
-                "cie"
-              ],
-              "description": "Allowed metadata type."
-            }
-          }
-        ],
-        "x-amazon-apigateway-integration": {
-          "credentials": "${s3_apigateway_proxy_role}",
-          "httpMethod": "GET",
-          "uri": "${assets_bucket_uri}/{id_type}.xml",
-          "type": "aws",
-          "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "requestParameters": {
-            "integration.request.path.id_type": "method.request.path.id_type"
-          },
-          "responseParameters": {},
-          "responses": {
-            "200": {
-              "statusCode": "200",
-              "responseParameters": {
-                "method.response.header.content-type": "integration.response.header.Content-Type"
+          "500" : {
+            "description" : "500 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
               }
             },
-            "404": {
-              "statusCode": "404",
-              "responseParameters": {}
-            }
+            "content" : { }
           },
-          "cacheKeyParameters": [
-            "method.request.path.id_type"
-          ]
-        },
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/responseOkXml"
-          },
-          "404": {
-            "$ref": "#/components/responses/notFound"
-          },
-          "405": {
-            "$ref": "#/components/responses/methodNotAllowed"
-          },
-          "429": {
-            "$ref": "#/components/responses/rateLimit"
-          },
-          "500": {
-            "$ref": "#/components/responses/serverError"
-          }
-        }
-      }
-    },
-    "/oidc/authorize": {
-      "get": {
-        "tags": [
-          "Authorization Server APIs"
-        ],
-        "description": "Initializes an OAuth 2.0 flow using a response_type. See RFC 6749 (https://tools.ietf.org/html/rfc6749) for more details. Authorization Servers MUST support the use of the HTTP GET and POST methods defined in RFC 7231 [RFC7231] at the Authorization Endpoint. Clients MAY use the HTTP GET or POST methods to send the Authorization Request to the Authorization Server. If using the HTTP GET method, the request parameters are serialized using URI Query String Serialization, per Section 13.1. If using the HTTP POST method, the request parameters are serialized using Form Serialization, per Section 13.2.",
-        "operationId": "Get_request_authorization",
-        "parameters": [
-          {
-            "name": "idp",
-            "in": "query",
-            "required": true,
-            "description": "This is the requested 'idp' to initiate the authentication flow",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "client_id",
-            "in": "query",
-            "required": true,
-            "description": "This is the 'client_id' of the requesting client. Maximum 255 characters.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "response_type",
-            "in": "query",
-            "required": true,
-            "description": "MUST be one of the listed available values. Any response_type other than 'code' or 'token' is only supported in conjunction with scope=openid. As per the OAuth specification: 'code' is used for authorization code grant type flow, 'token' is used for implicit grant type flow, 'token id_token' is an extension provided by OpenID Connect, and 'code id_token', 'id_token', and 'none' are extensions provided by OpenID Connect Multiple Response Types",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "code",
-                "token",
-                "token id_token",
-                "code id_token",
-                "id_token",
-                "code token",
-                "code id_token token",
-                "none"
-              ]
-            }
-          },
-          {
-            "name": "redirect_uri",
-            "in": "query",
-            "required": true,
-            "description": "The 'redirect_uri' that was registered for this client. It is required if multiple redirect_uri's have been registered for this client. If the scope contains openid, this field becomes MANDATORY.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "scope",
-            "in": "query",
-            "required": true,
-            "description": "Only SCOPE values that were registered for this client will be granted. If only non-matching SCOPE values are requested, the request will fail.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "nonce",
-            "in": "query",
-            "required": true,
-            "description": "This is required for response_type 'token id_token'.  Typically, in an OpenID authorization scheme, the nonce represents a cryptographically strong random  string that is used to prevent intercepted responses from being reused.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "state",
-            "in": "query",
-            "required": true,
-            "description": "Value opaque to the server, used by the client to track its session. It will be returned as received.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "X-Forwarded-For",
-            "in": "header",
-            "required": true,
-            "description": "The X-Forwarded-For (XFF) request header is a de-facto standard header for identifying the originating IP address of a client connecting to a web server through a proxy server.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "x-amazon-apigateway-integration": {
-          "type": "HTTP",
-          "httpMethod": "GET",
-          "uri": "${uri}/oidc/authorize",
-          "connectionType": "VPC_LINK",
-          "connectionId": "${connection_id}",
-          "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "requestParameters": {
-            "integration.request.header.accept": "'*/*'",
-            "integration.request.header.X-Forwarded-For": "method.request.header.X-Forwarded-For",
-            "integration.request.querystring.idp": "method.request.querystring.idp",
-            "integration.request.querystring.client_id": "method.request.querystring.client_id",
-            "integration.request.querystring.response_type": "method.request.querystring.response_type",
-            "integration.request.querystring.redirect_uri": "method.request.querystring.redirect_uri",
-            "integration.request.querystring.scope": "method.request.querystring.scope",
-            "integration.request.querystring.nonce": "method.request.querystring.nonce",
-            "integration.request.querystring.state": "method.request.querystring.state"
-          },
-          "responses": {
-            "200": {
-              "statusCode": "200",
-              "responseParameters": {
-                "method.response.header.content-type": "'text/html'"
+          "403" : {
+            "description" : "403 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
               }
             },
-            "302": {
-              "statusCode": "302",
-              "responseParameters": {
-                "method.response.header.location": "integration.response.header.Location"
-              }
-            },
-            "400": {
-              "statusCode": "400",
-              "responseParameters": {}
-            },
-            "401": {
-              "statusCode": "401",
-              "responseParameters": {}
-            },
-            "403": {
-              "statusCode": "403",
-              "responseParameters": {}
-            },
-            "405": {
-              "statusCode": "405",
-              "responseParameters": {}
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/responseOkHtml"
-          },
-          "302": {
-            "$ref": "#/components/responses/auth302"
-          },
-          "400": {
-            "$ref": "#/components/responses/invalidParameters"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "405": {
-            "$ref": "#/components/responses/methodNotAllowed"
-          },
-          "429": {
-            "$ref": "#/components/responses/rateLimit"
-          },
-          "500": {
-            "$ref": "#/components/responses/serverError"
+            "content" : { }
           }
         }
       },
-      "post": {
-        "tags": [
-          "Authorization Server APIs"
-        ],
-        "description": "Initializes an OAuth 2.0 flow using a response_type. See RFC 6749 (https://tools.ietf.org/html/rfc6749) for more details. Authorization Servers MUST support the use of the HTTP GET and POST methods defined in RFC 7231 [RFC7231] at the Authorization Endpoint. Clients MAY use the HTTP GET or POST methods to send the Authorization Request to the Authorization Server. If using the HTTP GET method, the request parameters are serialized using URI Query String Serialization, per Section 13.1. If using the HTTP POST method, the request parameters are serialized using Form Serialization, per Section 13.2.",
-        "operationId": "Post_request_authorization",
-        "requestBody": {
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "idp",
-                  "client_id",
-                  "response_type",
-                  "redirect_uri",
-                  "scope",
-                  "state",
-                  "nonce"
-                ],
-                "properties": {
-                  "idp": {
-                    "type": "string",
-                    "description": "This is the requested 'idp' to initiate the authentication flow"
-                  },
-                  "client_id": {
-                    "type": "string",
-                    "description": "This is the 'client_id' of the requesting client. Maximum 255 characters."
-                  },
-                  "response_type": {
-                    "type": "string",
-                    "description": "MUST be one of the listed available values. Any response_type other than 'code' or 'token' is only supported in conjunction with scope=openid. As per the OAuth specification: 'code' is used for authorization code grant type flow, 'token' is used for implicit grant type flow, 'token id_token' is an extension provided by OpenID Connect, and 'code id_token', 'id_token', and 'none' are extensions provided by OpenID Connect Multiple Response Types",
-                    "enum": [
-                      "code",
-                      "token",
-                      "token id_token",
-                      "code id_token",
-                      "id_token",
-                      "code token",
-                      "code id_token token",
-                      "none"
-                    ]
-                  },
-                  "redirect_uri": {
-                    "type": "string",
-                    "description": "The 'redirect_uri' that was registered for this client. It is required if multiple redirect_uri's have been registered for this client. If the scope contains openid, this field becomes MANDATORY."
-                  },
-                  "scope": {
-                    "type": "string",
-                    "description": "Only SCOPE values that were registered for this client will be granted. If only non-matching SCOPE values are requested, the request will fail."
-                  },
-                  "state": {
-                    "type": "string",
-                    "description": "Value opaque to the server, used by the client to track its session. It will be returned as received."
-                  },
-                  "nonce": {
-                    "type": "string",
-                    "description": "This is required for response_type 'token id_token'.  Typically, in an OpenID authorization scheme, the nonce represents a cryptographically strong random  string that is used to prevent intercepted responses from being reused."
-                  }
-                }
-              }
-            }
+      "options" : {
+        "operationId" : "Options_getOpenIDDiscovery",
+        "parameters" : [ {
+          "name" : "Access-Control-Request-Method",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        },
-        "parameters": [
-          {
-            "name": "X-Forwarded-For",
-            "in": "header",
-            "required": true,
-            "description": "The X-Forwarded-For (XFF) request header is a de-facto standard header for identifying the originating IP address of a client connecting to a web server through a proxy server.",
-            "schema": {
-              "type": "string"
-            }
+        }, {
+          "name" : "Access-Control-Request-Headers",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        ],
-        "x-amazon-apigateway-integration": {
-          "type": "HTTP",
-          "httpMethod": "POST",
-          "uri": "${uri}/oidc/authorize",
-          "connectionType": "VPC_LINK",
-          "connectionId": "${connection_id}",
-          "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "requestParameters": {
-            "integration.request.header.accept": "'*/*'",
-            "integration.request.header.X-Forwarded-For": "method.request.header.X-Forwarded-For"
-          },
-          "responses": {
-            "200": {
-              "statusCode": "200",
-              "responseParameters": {
-                "method.response.header.content-type": "'application/xml'"
-              }
-            },
-            "302": {
-              "statusCode": "302",
-              "responseParameters": {
-                "method.response.header.location": "integration.response.header.Location"
-              }
-            },
-            "400": {
-              "statusCode": "400",
-              "responseParameters": {}
-            },
-            "401": {
-              "statusCode": "401",
-              "responseParameters": {}
-            },
-            "403": {
-              "statusCode": "403",
-              "responseParameters": {}
-            },
-            "405": {
-              "statusCode": "405",
-              "responseParameters": {}
-            }
+        }, {
+          "name" : "Origin",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        },
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/responseOkHtml"
-          },
-          "302": {
-            "$ref": "#/components/responses/auth302"
-          },
-          "400": {
-            "$ref": "#/components/responses/invalidParameters"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "405": {
-            "$ref": "#/components/responses/methodNotAllowed"
-          },
-          "429": {
-            "$ref": "#/components/responses/rateLimit"
-          },
-          "500": {
-            "$ref": "#/components/responses/serverError"
-          }
-        }
-      }
-    },
-    "/oidc/token": {
-      "post": {
-        "tags": [
-          "Token Server APIs"
-        ],
-        "description": "Request access_token or refresh_token using OAuth 2.0 grant_type: password authorization_code refresh_token client_credentials urn:ietf:params:oauth:grant-type:jwt-bearer urn:ietf:params:oauth:grant-type:saml2-bearer. See RFC 6749 for more details.",
-        "operationId": "Create_request_token",
-        "requestBody": {
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "code",
-                  "redirect_uri",
-                  "grant_type"
-                ],
-                "properties": {
-                  "redirect_uri": {
-                    "type": "string",
-                    "description": "Required if grant_type is authorization_code. Must contain a valid auth code"
-                  },
-                  "code": {
-                    "type": "string",
-                    "description": "Required if grant_type is authorization_code"
-                  },
-                  "grant_type": {
-                    "type": "string",
-                    "description": "For grant_type=authorization_code: client_id, client_secret, code, and redirect_uri are required.",
-                    "enum": [
-                      "authorization_code"
-                    ],
-                    "default": "authorization_code"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": true,
-            "description": "The HTTP basic authorization header containing the client credentials as base64 encoded string (authorization: Basic base64(client_id:client_secret)). This can only be used INSTEAD of the parameters 'client_id', 'client_secret'.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "x-amazon-apigateway-integration": {
-          "type": "HTTP",
-          "httpMethod": "POST",
-          "uri": "${uri}/oidc/token",
-          "connectionType": "VPC_LINK",
-          "connectionId": "${connection_id}",
-          "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "requestParameters": {
-            "integration.request.header.accept": "'*/*'",
-            "integration.request.header.authorization": "method.request.header.authorization"
-          },
-          "responses": {
-            "200": {
-              "statusCode": "200",
-              "responseParameters": {}
-            },
-            "204": {
-              "statusCode": "204",
-              "responseParameters": {}
-            },
-            "400": {
-              "statusCode": "400",
-              "responseParameters": {}
-            },
-            "401": {
-              "statusCode": "401",
-              "responseParameters": {}
-            },
-            "403": {
-              "statusCode": "403",
-              "responseParameters": {}
-            },
-            "405": {
-              "statusCode": "405",
-              "responseParameters": {}
-            },
-            "406": {
-              "statusCode": "406",
-              "responseParameters": {}
-            },
-            "500": {
-              "statusCode": "500",
-              "responseParameters": {}
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/authToken200"
-          },
-          "204": {
-            "description": "No Content, applicable to OPTIONS request with preflight configuration",
-            "headers": {
-              "Access-Control-Allow-Methods": {
-                "description": "Allowable Methods, POST",
-                "schema": {
-                  "type": "string",
-                  "default": "POST"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/badRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "405": {
-            "$ref": "#/components/responses/methodNotAllowed"
-          },
-          "406": {
-            "$ref": "#/components/responses/notAcceptable"
-          },
-          "429": {
-            "$ref": "#/components/responses/rateLimit"
-          },
-          "500": {
-            "$ref": "#/components/responses/serverError"
-          }
-        }
-      }
-    },
-    "/oidc/keys": {
-      "options": {
-        "tags": [
-          "Authorization Server APIs"
-        ],
-        "operationId": "Options_jwk_set_",
-        "description": "CORS preflight request",
-        "parameters": [
-          {
-            "name": "Access-Control-Request-Headers",
-            "in": "header",
-            "required": true,
-            "description": "The Access-Control-Request-Headers request header is used when issuing a preflight request to let the server know which HTTP headers will be used when the actual request is made.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Access-Control-Request-Method",
-            "in": "header",
-            "required": true,
-            "description": "The Access-Control-Request-Method request header is used when issuing a preflight request to let the server know which HTTP method will be used when the actual request is made.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Origin",
-            "in": "header",
-            "required": true,
-            "description": "The Origin request header indicates where a fetch originates from.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "x-amazon-apigateway-integration": {
-          "type": "HTTP",
-          "httpMethod": "OPTIONS",
-          "uri": "${uri}/oidc/keys",
-          "connectionType": "VPC_LINK",
-          "connectionId": "${connection_id}",
-          "requestParameters": {
-            "integration.request.header.Access-Control-Request-Headers": "method.request.header.Access-Control-Request-Headers",
-            "integration.request.header.Access-Control-Request-Method": "method.request.header.Access-Control-Request-Method",
-            "integration.request.header.Origin": "method.request.header.Origin"
-          },
-          "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "responses": {
-            "200": {
-              "statusCode": "200",
-              "requestParameters": {}
-            },
-            "204": {
-              "statusCode": "204",
-              "requestParameters": {}
-            },
-            "400": {
-              "statusCode": "400",
-              "requestParameters": {}
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "This might not be necessary.",
-            "headers": {
-              "Access-Control-Allow-Methods": {
-                "description": "Allowable Methods, GET",
-                "schema": {
-                  "type": "string",
-                  "default": "GET"
-                }
-              }
-            }
-          },
-          "204": {
-            "description": "No Content, applicable to OPTIONS request with preflight configuration",
-            "headers": {
-              "Access-Control-Allow-Methods": {
-                "description": "Allowable Methods, GET",
-                "schema": {
-                  "type": "string",
-                  "default": "GET"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/badRequest"
-          }
-        },
-        "summary": "OpenID Connect jwks endpoint"
-      },
-      "get": {
-        "tags": [
-          "Authorization Server APIs"
-        ],
-        "operationId": "Get_jwk_set_",
-        "description": "This endpoint implements the JWKS_URI as specified at http://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata",
-        "x-amazon-apigateway-integration": {
-          "type": "HTTP_PROXY",
-          "httpMethod": "GET",
-          "uri": "${uri}/oidc/keys",
-          "connectionType": "VPC_LINK",
-          "connectionId": "${connection_id}",
-          "requestParameters": {},
-          "responses": {
-            "200": {
-              "statusCode": "200",
-              "requestParameters": {}
-            },
-            "403": {
-              "statusCode": "403",
-              "requestParameters": {}
-            },
-            "405": {
-              "statusCode": "405",
-              "requestParameters": {}
-            },
-            "500": {
-              "statusCode": "500",
-              "requestParameters": {}
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "JWK set containing public keys that enable clients to validate a JSON Web Token (JWT) issued by this OpenID Connect Provider",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "keys": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "example": [
-                        {
-                          "kty": "RSA",
-                          "kid": "default_ssl_key",
-                          "use": "sig",
-                          "n": "58BezRBeYOM3rOo1vcllcLc8QAwz6AmQj4EvGUqATMUz4bfYJ9Lf2wb9xCQhSLSkndfFAF5V754G0mRelBGK7yIja-M-EBXoJeT3nvwA46g7MkZGf11uP2dz2k4CkLdFHnlGzvuLQVBQpqbz-O_hFfEDxBk9zV4shR8O_iGv4fDi0dNHZfXzxkr_iH8Oj2qQeZFvv61I4RffeNmx04lYea2KFsF_8rWDlENWAr8RbqpY_y5lbxgC_xyBunTkoIEommqz55ZFIcklYerJUVSeIA90KMyM60wZh0JF_T5kuXEs-3AWh8Bkx-sVE2hu5S5x4_lADsPojLwWTT7or_sw9Q",
-                          "e": "AQAB"
-                        }
-                      ],
-                      "description": "JWK set in JSON array format"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "405": {
-            "$ref": "#/components/responses/methodNotAllowed"
-          },
-          "429": {
-            "$ref": "#/components/responses/rateLimit"
-          },
-          "500": {
-            "$ref": "#/components/responses/serverError"
-          }
-        },
-        "summary": "OpenID Connect jwks endpoint"
-      }
-    },
-    "/.well-known/openid-configuration": {
-      "options": {
-        "tags": [
-          "Authorization Server APIs"
-        ],
-        "operationId": "Options_getOpenIDDiscovery",
-        "description": "CORS preflight request",
-        "parameters": [
-          {
-            "name": "Access-Control-Request-Headers",
-            "in": "header",
-            "required": true,
-            "description": "The Access-Control-Request-Headers request header is used when issuing a preflight request to let the server know which HTTP headers will be used when the actual request is made.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Access-Control-Request-Method",
-            "in": "header",
-            "required": true,
-            "description": "The Access-Control-Request-Method request header is used when issuing a preflight request to let the server know which HTTP method will be used when the actual request is made.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Origin",
-            "in": "header",
-            "required": true,
-            "description": "The Origin request header indicates where a fetch originates from.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "x-amazon-apigateway-integration": {
-          "type": "HTTP",
-          "httpMethod": "OPTIONS",
-          "uri": "${uri}/.well-known/openid-configuration",
-          "connectionType": "VPC_LINK",
-          "connectionId": "${connection_id}",
-          "requestParameters": {
-            "integration.request.header.Access-Control-Request-Headers": "method.request.header.Access-Control-Request-Headers",
-            "integration.request.header.Access-Control-Request-Method": "method.request.header.Access-Control-Request-Method",
-            "integration.request.header.Origin": "method.request.header.Origin"
-          },
-          "passthroughBehavior": "WHEN_NO_TEMPLATES",
-          "responses": {
-            "204": {
-              "statusCode": "204",
-              "requestParameters": {}
-            },
-            "400": {
-              "statusCode": "400",
-              "requestParameters": {}
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "No Content, applicable to OPTIONS request with preflight configuration",
-            "headers": {
-              "Access-Control-Allow-Methods": {
-                "description": "Allowable Methods, GET",
-                "schema": {
-                  "type": "string",
-                  "default": "GET"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "headers": {
-              "Pragma": {
-                "description": "Pragma browser directive",
-                "schema": {
-                  "type": "string",
-                  "default": "no-cache"
+        } ],
+        "responses" : {
+          "400" : {
+            "description" : "400 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
                 }
               },
-              "Cache-Control": {
-                "description": "Cache-Control browser directive",
-                "schema": {
-                  "type": "string",
-                  "default": "no-store"
-                }
-              }
-            }
-          }
-        },
-        "summary": "OpenID Connect Discovery endpoint"
-      },
-      "get": {
-        "tags": [
-          "Authorization Server APIs"
-        ],
-        "operationId": "Get_OpenIDDiscovery",
-        "x-amazon-apigateway-integration": {
-          "type": "HTTP_PROXY",
-          "httpMethod": "GET",
-          "uri": "${uri}/.well-known/openid-configuration",
-          "connectionType": "VPC_LINK",
-          "connectionId": "${connection_id}",
-          "requestParameters": {
-            "integration.request.header.accept": "'*/*'"
-          },
-          "responses": {
-            "200": {
-              "statusCode": "200",
-              "requestParameters": {}
-            },
-            "403": {
-              "statusCode": "403",
-              "requestParameters": {}
-            },
-            "405": {
-              "statusCode": "405",
-              "requestParameters": {}
-            },
-            "500": {
-              "statusCode": "500",
-              "requestParameters": {}
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OpenID Discovery Configuration",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OpenIDDiscovery"
-                }
-              }
-            }
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "405": {
-            "$ref": "#/components/responses/methodNotAllowed"
-          },
-          "429": {
-            "$ref": "#/components/responses/rateLimit"
-          },
-          "500": {
-            "$ref": "#/components/responses/serverError"
-          }
-        },
-        "summary": "OpenID Connect Discovery endpoint",
-        "description": "This endpoint follows the specification defined at http://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata. It provides a mechanism for an OpenID Connect Relying Party to discover the End-User's OpenID Provider and obtain information needed to interact with it, including its OAuth 2.0 endpoint locations."
-      }
-    },
-    "/idps": {
-      "get": {
-        "tags": [
-          "Authorization Server APIs"
-        ],
-        "operationId": "Get_finAllIdps",
-        "x-amazon-apigateway-integration": {
-          "type": "HTTP_PROXY",
-          "httpMethod": "GET",
-          "uri": "${uri}/idps",
-          "connectionType": "VPC_LINK",
-          "connectionId": "${connection_id}",
-          "requestParameters": {
-            "integration.request.header.accept": "'*/*'"
-          },
-          "responses": {
-            "200": {
-              "statusCode": "200",
-              "requestParameters": {}
-            },
-            "404": {
-              "statusCode": "404",
-              "requestParameters": {}
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Find all Idps",
-            "content": {
-              "application/json": {}
-            }
-          },
-          "404": {
-            "$ref": "#/components/responses/notFound"
-          }
-        },
-        "summary": "Find all idps endpoint",
-        "description": "This endpoint retrieves all ipds"
-      }
-    },
-    "/clients/{client_id}": {
-      "get": {
-        "tags": [
-          "Authorization Server APIs"
-        ],
-        "operationId": "Get_ClientFromClientId",
-        "x-amazon-apigateway-integration": {
-          "type": "HTTP_PROXY",
-          "httpMethod": "GET",
-          "uri": "${uri}/clients/{client_id}",
-          "connectionType": "VPC_LINK",
-          "connectionId": "${connection_id}",
-          "requestParameters": {
-            "integration.request.header.accept": "'*/*'",
-            "integration.request.path.client_id": "method.request.path.client_id"
-          },
-          "responses": {
-            "200": {
-              "statusCode": "200",
-              "requestParameters": {}
-            },
-            "404": {
-              "statusCode": "404",
-              "requestParameters": {}
-            }
-          },
-          "cacheKeyParameters": [
-            "method.request.path.client_id"
-          ]
-        },
-        "parameters": [
-          {
-            "in": "path",
-            "name": "client_id",
-            "description": "client_id that was returned in the client registration response",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Find client information from a client_id",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ClientFE"
-                }
-              }
-            }
-          },
-          "404": {
-            "$ref": "#/components/responses/notFound"
-          }
-        },
-        "summary": "Find client information from a client_id",
-        "description": "This endpoint retrieves client information from its client_id"
-      }
-    },
-    "/clients": {
-      "get": {
-        "tags": [
-          "Authorization Server APIs"
-        ],
-        "operationId": "Get_AllClients",
-        "x-amazon-apigateway-integration": {
-          "type": "HTTP_PROXY",
-          "httpMethod": "GET",
-          "uri": "${uri}/clients",
-          "connectionType": "VPC_LINK",
-          "connectionId": "${connection_id}",
-          "responses": {
-            "200": {
-              "statusCode": "200",
-              "requestParameters": {}
-            },
-            "404": {
-              "statusCode": "404",
-              "requestParameters": {}
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Find all clients information",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ClientFE"
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "$ref": "#/components/responses/notFound"
-          }
-        },
-        "summary": "Find all clients information",
-        "description": "This endpoint retrieves all clients information"
-      }
-    },
-    "/static/{proxy+}": {
-      "get": {
-        "parameters": [
-          {
-            "name": "proxy",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "200 response",
-            "headers": {
-              "Content-Type": {
-                "schema": {
-                  "type": "string"
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
                 }
               }
             },
-            "content": {}
+            "content" : { }
           },
-          "404": {
-            "$ref": "#/components/responses/notFound"
-          }
-        },
-        "x-amazon-apigateway-integration": {
-          "type": "aws",
-          "credentials": "${s3_apigateway_proxy_role}",
-          "httpMethod": "GET",
-          "uri": "${assets_bucket_uri}/static/{proxy}",
-          "responses": {
-            "default": {
-              "statusCode": "200",
-              "responseParameters": {
-                "method.response.header.Content-Type": "integration.response.header.Content-Type"
+          "204" : {
+            "description" : "204 response",
+            "headers" : {
+              "Access-Control-Allow-Methods" : {
+                "schema" : {
+                  "type" : "string"
+                }
               }
             },
-            "404": {
-              "statusCode": "404",
-              "responseParameters": {}
-            }
-          },
-          "requestParameters": {
-            "integration.request.path.proxy": "method.request.path.proxy"
-          },
-          "passthroughBehavior": "when_no_match",
-          "cacheKeyParameters": [
-            "method.request.path.proxy"
-          ]
+            "content" : { }
+          }
         }
       }
     },
-    "/assets/{proxy+}": {
-      "get": {
-        "parameters": [
-          {
-            "name": "proxy",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
+    "/login" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "response_type",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "200 response",
-            "headers": {
-              "Content-Type": {
-                "schema": {
-                  "type": "string"
+        }, {
+          "name" : "state",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "scope",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "client_id",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "nonce",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "redirect_uri",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "404" : {
+            "description" : "404 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
                 }
               },
-              "Content-Length": {
-                "schema": {
-                  "type": "string"
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
                 }
               }
             },
-            "content": {}
+            "content" : { }
           },
-          "404": {
-            "$ref": "#/components/responses/notFound"
-          }
-        },
-        "x-amazon-apigateway-integration": {
-          "type": "aws",
-          "credentials": "${s3_apigateway_proxy_role}",
-          "httpMethod": "GET",
-          "uri": "${assets_bucket_uri}/assets/{proxy}",
-          "responses": {
-            "default": {
-              "statusCode": "200",
-              "responseParameters": {
-                "method.response.header.Content-Type": "integration.response.header.Content-Type"
+          "200" : {
+            "description" : "200 response",
+            "headers" : {
+              "location" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "content-type" : {
+                "schema" : {
+                  "type" : "string"
+                }
               }
             },
-            "404": {
-              "statusCode": "404",
-              "responseParameters": {}
-            }
-          },
-          "requestParameters": {
-            "integration.request.path.proxy": "method.request.path.proxy"
-          },
-          "passthroughBehavior": "when_no_match",
-          "cacheKeyParameters": [
-            "method.request.path.proxy"
-          ]
+            "content" : { }
+          }
         }
       }
     },
-    "/asset-manifest.json": {
-      "get": {
-        "tags": [
-          "asset-manifest.json static file"
-        ],
-        "description": "This route will serve the asset-manifest.json file",
-        "parameters": [],
-        "x-amazon-apigateway-integration": {
-          "credentials": "${s3_apigateway_proxy_role}",
-          "httpMethod": "GET",
-          "uri": "${assets_bucket_uri}/asset-manifest.json",
-          "requestParameters": {},
-          "passthroughBehavior": "when_no_match",
-          "responseParameters": {},
-          "type": "aws",
-          "responses": {
-            "200": {
-              "statusCode": "200",
-              "responseParameters": {
-                "method.response.header.content-type": "integration.response.header.Content-Type",
-                "method.response.header.location": "integration.response.header.location"
+    "/saml/{id_type}/metadata" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "id_type",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "404" : {
+            "description" : "404 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
               }
             },
-            "404": {
-              "statusCode": "404",
-              "responseParameters": {}
+            "content" : { }
+          },
+          "405" : {
+            "description" : "405 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Allow" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "200" : {
+            "description" : "200 response",
+            "headers" : {
+              "location" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "content-type" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "429" : {
+            "description" : "429 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "500" : {
+            "description" : "500 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          }
+        }
+      }
+    },
+    "/oidc/register" : {
+      "post" : {
+        "operationId" : "Post_oidc_register",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ClientRegistration"
+              }
             }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "201 response",
+            "content" : { }
+          },
+          "400" : {
+            "description" : "400 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "content-type" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "401" : {
+            "description" : "401 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "500" : {
+            "description" : "500 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "403" : {
+            "description" : "403 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "405" : {
+            "description" : "405 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Allow" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "429" : {
+            "description" : "429 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
           }
         },
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/responseOkHtml"
+        "security" : [ {
+          "api_key" : [ ]
+        } ]
+      }
+    },
+    "/clients/{client_id}" : {
+      "get" : {
+        "operationId" : "Get_ClientFromClientId",
+        "parameters" : [ {
+          "name" : "client_id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "404" : {
+            "description" : "404 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
           },
-          "404": {
-            "$ref": "#/components/responses/notFound"
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ClientFE"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/monitor/{type}/status" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "start",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "type",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "entityKey",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "end",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MODEL208d3c"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "400 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "content-type" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "401" : {
+            "description" : "401 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "500" : {
+            "description" : "500 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "403" : {
+            "description" : "403 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "405" : {
+            "description" : "405 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Allow" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "429" : {
+            "description" : "429 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          }
+        }
+      }
+    },
+    "/login/error" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "errorCode",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "404" : {
+            "description" : "404 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "200" : {
+            "description" : "200 response",
+            "headers" : {
+              "location" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "content-type" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          }
+        }
+      }
+    },
+    "/idps" : {
+      "get" : {
+        "operationId" : "Get_finAllIdps",
+        "responses" : {
+          "404" : {
+            "description" : "404 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "200" : {
+            "description" : "200 response",
+            "content" : { }
+          }
+        }
+      }
+    },
+    "/saml/assertion" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "access_token",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "headers" : {
+              "location" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "content-type" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "400" : {
+            "description" : "400 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "content-type" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "401" : {
+            "description" : "401 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "500" : {
+            "description" : "500 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "403" : {
+            "description" : "403 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "404" : {
+            "description" : "404 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "405" : {
+            "description" : "405 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Allow" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "429" : {
+            "description" : "429 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          }
+        }
+      }
+    },
+    "/oidc/keys" : {
+      "get" : {
+        "operationId" : "Get_jwk_set_",
+        "responses" : {
+          "405" : {
+            "description" : "405 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Allow" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MODEL2537bd"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "429 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "500" : {
+            "description" : "500 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "403" : {
+            "description" : "403 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          }
+        }
+      },
+      "options" : {
+        "operationId" : "Options_jwk_set_",
+        "parameters" : [ {
+          "name" : "Access-Control-Request-Method",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "Access-Control-Request-Headers",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "Origin",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "400" : {
+            "description" : "400 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "200" : {
+            "description" : "200 response",
+            "headers" : {
+              "Access-Control-Allow-Methods" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "204" : {
+            "description" : "204 response",
+            "headers" : {
+              "Access-Control-Allow-Methods" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          }
+        }
+      }
+    },
+    "/oidc/register/{client_id}" : {
+      "get" : {
+        "operationId" : "Get_oidc_register_config",
+        "parameters" : [ {
+          "name" : "client_id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ClientRegistration"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "400 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "content-type" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "401" : {
+            "description" : "401 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "500" : {
+            "description" : "500 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "403" : {
+            "description" : "403 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "405" : {
+            "description" : "405 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Allow" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "429" : {
+            "description" : "429 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          }
+        },
+        "security" : [ {
+          "api_key" : [ ]
+        } ]
+      }
+    },
+    "/status" : {
+      "get" : {
+        "operationId" : "Get_request_health_check",
+        "responses" : {
+          "503" : {
+            "description" : "503 response",
+            "content" : { }
+          },
+          "500" : {
+            "description" : "500 response",
+            "content" : { }
+          },
+          "200" : {
+            "description" : "200 response",
+            "content" : { }
+          }
+        }
+      }
+    },
+    "/oidc/authorize" : {
+      "get" : {
+        "operationId" : "Get_request_authorization",
+        "parameters" : [ {
+          "name" : "state",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "client_id",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "nonce",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "response_type",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "idp",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "scope",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "X-Forwarded-For",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "redirect_uri",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "headers" : {
+              "location" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "content-type" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "400" : {
+            "description" : "400 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "content-type" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "302" : {
+            "description" : "302 response",
+            "headers" : {
+              "location" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "401" : {
+            "description" : "401 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "500" : {
+            "description" : "500 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "403" : {
+            "description" : "403 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "405" : {
+            "description" : "405 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Allow" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "429" : {
+            "description" : "429 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          }
+        }
+      },
+      "post" : {
+        "operationId" : "Post_request_authorization",
+        "parameters" : [ {
+          "name" : "X-Forwarded-For",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/x-www-form-urlencoded" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MODELb3ac74"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "headers" : {
+              "location" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "content-type" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "400" : {
+            "description" : "400 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "content-type" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "302" : {
+            "description" : "302 response",
+            "headers" : {
+              "location" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "401" : {
+            "description" : "401 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "500" : {
+            "description" : "500 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "403" : {
+            "description" : "403 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "405" : {
+            "description" : "405 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Allow" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "429" : {
+            "description" : "429 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          }
+        }
+      }
+    },
+    "/assets/{proxy+}" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "proxy",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "404" : {
+            "description" : "404 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "200" : {
+            "description" : "200 response",
+            "headers" : {
+              "Content-Length" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Content-Type" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          }
+        }
+      }
+    },
+    "/asset-manifest.json" : {
+      "get" : {
+        "responses" : {
+          "404" : {
+            "description" : "404 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "200" : {
+            "description" : "200 response",
+            "headers" : {
+              "location" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "content-type" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          }
+        }
+      }
+    },
+    "/clients" : {
+      "get" : {
+        "operationId" : "Get_AllClients",
+        "responses" : {
+          "404" : {
+            "description" : "404 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "200" : {
+            "description" : "200 response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ArrayOfClientFE"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oidc/token" : {
+      "post" : {
+        "operationId" : "Create_request_token",
+        "parameters" : [ {
+          "name" : "authorization",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/x-www-form-urlencoded" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MODELf5d026"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TokenData"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "400 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "401" : {
+            "description" : "401 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "500" : {
+            "description" : "500 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "204" : {
+            "description" : "204 response",
+            "headers" : {
+              "Access-Control-Allow-Methods" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "403" : {
+            "description" : "403 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "405" : {
+            "description" : "405 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Allow" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "406" : {
+            "description" : "406 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "429" : {
+            "description" : "429 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          }
+        }
+      }
+    },
+    "/static/{proxy+}" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "proxy",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "404" : {
+            "description" : "404 response",
+            "headers" : {
+              "Cache-Control" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Pragma" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
+          },
+          "200" : {
+            "description" : "200 response",
+            "headers" : {
+              "Content-Type" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : { }
           }
         }
       }
     }
   },
-  "components": {
-    "responses": {
-      "auth302": {
-        "description": "Will contain either: A success response including the redirect location header to the server that handles the authentication.  The redirect parameter 'sessionData's structure looks like the model schema shown OR 'invalid scope' OR 'unsupported response type' OR 'unauthorized client'. The non-successful conditions may include redirect query params as follows: 'error', string with default value:  invalid_request 'error_description', string with description of error 'state', string with no default value.  It is opaque to the server and returned as received.",
-        "headers": {
-          "location": {
-            "description": "Location (URL) includes these required parameters: action=(display or login depending on 'prompt' and 'id_token_hint') and sessionID and sessionData (a JWT containing a JSON message holding session data)",
-            "schema": {
-              "type": "string"
-            }
-          }
-        },
-        "content-type": {
-          "description": "Content type response.",
-          "schema": {
-            "type": "string"
+  "components" : {
+    "schemas" : {
+      "MODEL0a899b" : {
+        "required" : [ "RelayState", "SAMLResponse" ],
+        "type" : "object",
+        "properties" : {
+          "SAMLResponse" : {
+            "type" : "string",
+            "description" : "This is the 'SAMLResponse' of the requesting AUTHnreq."
+          },
+          "RelayState" : {
+            "type" : "string",
+            "description" : "This is the 'RelayState' which identify the service requested. https://docs.italia.it/italia/spid/spid-regole-tecniche/it/stabile/trasmissione.html"
           }
         }
       },
-      "responseOkHtml": {
-        "description": "OK",
-        "headers": {
-          "location": {
-            "description": "Response OK, serving html",
-            "schema": {
-              "type": "string"
+      "ArrayOfClientFE" : {
+        "type" : "array",
+        "items" : {
+          "$ref" : "#/components/schemas/ClientFE"
+        }
+      },
+      "ClientRegistration" : {
+        "type" : "object",
+        "properties" : {
+          "redirect_uris" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
             }
           },
-          "content-type": {
-            "text/html": {
-              "schema": {
-                "type": "string"
+          "client_name" : {
+            "type" : "string"
+          },
+          "logo_uri" : {
+            "type" : "string",
+            "description" : "The RP logo URI",
+            "format" : "uri"
+          },
+          "policy_uri" : {
+            "type" : "string",
+            "description" : "The privacy policy URI",
+            "format" : "uri"
+          },
+          "tos_uri" : {
+            "type" : "string",
+            "description" : "The terms of service URI",
+            "format" : "uri"
+          },
+          "default_acr_values" : {
+            "type" : "array",
+            "description" : "list of the Authentication Context Class References that this RP supports",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "saml_requested_attributes" : {
+            "type" : "array",
+            "description" : "Custom parameter which return all SPID attributes selected, https://docs.italia.it/italia/spid/spid-regole-tecniche/it/stabile/attributi.html",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "MODEL2537bd" : {
+        "type" : "object",
+        "properties" : {
+          "keys" : {
+            "type" : "array",
+            "description" : "JWK set in JSON array format",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "ClientFE" : {
+        "type" : "object",
+        "properties" : {
+          "clientID" : {
+            "type" : "string"
+          },
+          "friendlyName" : {
+            "type" : "string"
+          },
+          "logoUri" : {
+            "type" : "string",
+            "description" : "The RP logo URI",
+            "format" : "uri"
+          },
+          "policyUri" : {
+            "type" : "string",
+            "description" : "The privacy policy URI",
+            "format" : "uri"
+          },
+          "tosUri" : {
+            "type" : "string",
+            "description" : "The terms of service URI",
+            "format" : "uri"
+          }
+        }
+      },
+      "MODELb3ac74" : {
+        "required" : [ "client_id", "idp", "nonce", "redirect_uri", "response_type", "scope", "state" ],
+        "type" : "object",
+        "properties" : {
+          "idp" : {
+            "type" : "string",
+            "description" : "This is the requested 'idp' to initiate the authentication flow"
+          },
+          "client_id" : {
+            "type" : "string",
+            "description" : "This is the 'client_id' of the requesting client. Maximum 255 characters."
+          },
+          "response_type" : {
+            "type" : "string",
+            "description" : "MUST be one of the listed available values. Any response_type other than 'code' or 'token' is only supported in conjunction with scope=openid. As per the OAuth specification: 'code' is used for authorization code grant type flow, 'token' is used for implicit grant type flow, 'token id_token' is an extension provided by OpenID Connect, and 'code id_token', 'id_token', and 'none' are extensions provided by OpenID Connect Multiple Response Types",
+            "enum" : [ "code", "token", "token id_token", "code id_token", "id_token", "code token", "code id_token token", "none" ]
+          },
+          "redirect_uri" : {
+            "type" : "string",
+            "description" : "The 'redirect_uri' that was registered for this client. It is required if multiple redirect_uri's have been registered for this client. If the scope contains openid, this field becomes MANDATORY."
+          },
+          "scope" : {
+            "type" : "string",
+            "description" : "Only SCOPE values that were registered for this client will be granted. If only non-matching SCOPE values are requested, the request will fail."
+          },
+          "state" : {
+            "type" : "string",
+            "description" : "Value opaque to the server, used by the client to track its session. It will be returned as received."
+          },
+          "nonce" : {
+            "type" : "string",
+            "description" : "This is required for response_type 'token id_token'.  Typically, in an OpenID authorization scheme, the nonce represents a cryptographically strong random  string that is used to prevent intercepted responses from being reused."
+          }
+        }
+      },
+      "TokenData" : {
+        "title" : "TokenData",
+        "type" : "object",
+        "properties" : {
+          "access_token" : {
+            "type" : "string",
+            "description" : "The Access Token for the given token request"
+          },
+          "token_type" : {
+            "type" : "string",
+            "description" : "The Token Type issued"
+          },
+          "expires_in" : {
+            "type" : "string",
+            "description" : "The expiry time, in seconds"
+          },
+          "refresh_token" : {
+            "type" : "string",
+            "description" : "The refresh token, if applicable"
+          },
+          "scope" : {
+            "type" : "string",
+            "description" : "The issued scope"
+          },
+          "id_token" : {
+            "type" : "string",
+            "description" : "If the requested SCOPE included 'msso' or 'openid', response includes an id_token"
+          },
+          "id_token_type" : {
+            "type" : "string",
+            "description" : "If the requested SCOPE included 'msso' or 'openid', response includes an id_token_type"
+          }
+        }
+      },
+      "MODELf5d026" : {
+        "required" : [ "code", "grant_type", "redirect_uri" ],
+        "type" : "object",
+        "properties" : {
+          "redirect_uri" : {
+            "type" : "string",
+            "description" : "Required if grant_type is authorization_code. Must contain a valid auth code"
+          },
+          "code" : {
+            "type" : "string",
+            "description" : "Required if grant_type is authorization_code"
+          },
+          "grant_type" : {
+            "type" : "string",
+            "description" : "For grant_type=authorization_code: client_id, client_secret, code, and redirect_uri are required.",
+            "enum" : [ "authorization_code" ],
+            "default" : "authorization_code"
+          }
+        }
+      },
+      "OpenIDDiscovery" : {
+        "required" : [ "authorization_endpoint", "id_token_signing_alg_values_supported", "issuer", "jwks_uri", "response_types_supported", "subject_types_supported", "token_endpoint" ],
+        "type" : "object",
+        "properties" : {
+          "userinfo_endpoint" : {
+            "type" : "string",
+            "description" : "URL of the user info endpoint"
+          },
+          "jwks_uri" : {
+            "type" : "string",
+            "description" : "URL of JSON Web Key Set document"
+          },
+          "scopes_supported" : {
+            "type" : "array",
+            "description" : "list of the OAuth 2.0 scope values that this server supports",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "subject_types_supported" : {
+            "type" : "array",
+            "description" : "list of the Subject Identifier types that this OP supports",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "token_endpoint" : {
+            "type" : "string",
+            "description" : "URL of the OAuth 2.0 token endpoint"
+          },
+          "id_token_signing_alg_values_supported" : {
+            "type" : "array",
+            "description" : "list of the JWS signing algorithms (alg values) supported by the OP for the ID Token to encode the Claims in a JWT",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "response_types_supported" : {
+            "type" : "array",
+            "description" : "ist of the OAuth 2.0 response_type values that this OP supports",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "claims_supported" : {
+            "type" : "array",
+            "description" : "list of the Claim Names of the Claims that the OpenID Provider MAY be able to supply values for",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "authorization_endpoint" : {
+            "type" : "string",
+            "description" : "URL of the OAuth 2.0 authorization endpoint"
+          },
+          "issuer" : {
+            "type" : "string",
+            "description" : "the identifier of the token's issuer. This is identical to the 'iss' Claim value in ID Tokens"
+          },
+          "grant_types_supported" : {
+            "type" : "array",
+            "description" : "list of the OAuth 2.0 Grant Type values that this OP supports",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "acr_values_supported" : {
+            "type" : "array",
+            "description" : "list of the Authentication Context Class References that this OP supports",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "token_endpoint_auth_methods_supported" : {
+            "type" : "array",
+            "description" : "list of Client Authentication methods supported by this Token Endpoint",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "token_endpoint_auth_signing_alg_values_supported" : {
+            "type" : "array",
+            "description" : "list of the JWS signing algorithms (alg values) supported by the Token Endpoint for the signature on the JWT used to authenticate the Client at the Token Endpoint for the private_key_jwt and client_secret_jwt authentication methods. Servers SHOULD support RS256. The value none MUST NOT be used.",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "display_values_supported" : {
+            "type" : "array",
+            "description" : "list of the display parameter values that the OpenID Provider supports",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "claim_types_supported" : {
+            "type" : "array",
+            "description" : "list of the Claim Types that the OpenID Provider supports",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "service_documentation" : {
+            "type" : "string",
+            "description" : "URL of a page containing human-readable information that developers might want or need to know when using the OpenID Provider"
+          },
+          "ui_locales_supported" : {
+            "type" : "array",
+            "description" : "Languages and scripts supported for the user interface",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "description" : "The OpenID configuration document as defined by the specification: http://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata"
+      },
+      "MODEL208d3c" : {
+        "type" : "object",
+        "properties" : {
+          "entityId" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "start" : {
+                  "type" : "string",
+                  "description" : "The start timestamp for the status period."
+                },
+                "end" : {
+                  "type" : "string",
+                  "description" : "The end timestamp for the status period."
+                },
+                "status" : {
+                  "type" : "string",
+                  "description" : "The status value for the specified period.",
+                  "enum" : [ "OK", "KO" ]
+                }
               }
             }
-          }
-        },
-        "content": {
-          "text/html": {
-            "schema": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "responseOkXml": {
-        "description": "OK",
-        "headers": {
-          "location": {
-            "description": "Response OK, serving xml",
-            "schema": {
-              "type": "string"
-            }
-          },
-          "content-type": {
-            "application/xml": {
-              "schema": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "content": {
-          "application/xml": {
-            "schema": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "authToken200": {
-        "description": "A success response that includes the issued token, expire and other details from the OAuth Server",
-        "headers": {
-          "Pragma": {
-            "description": "Pragma browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-cache"
-            }
-          },
-          "Cache-Control": {
-            "description": "Cache-Control browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-store"
-            }
-          }
-        },
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/TokenData"
-            }
-          }
-        }
-      },
-      "createdOkJson": {
-        "description": "Created",
-        "headers": {
-          "content-type": {
-            "application/json": {
-              "schema": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "methodNotAllowed": {
-        "description": "The HTTP method is not valid",
-        "headers": {
-          "Allow": {
-            "description": "This header is required by RFC 2616 and contains a comma separated list of valid HTTP methods.",
-            "schema": {
-              "type": "string",
-              "default": "GET"
-            }
-          },
-          "Pragma": {
-            "description": "Pragma browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-cache"
-            }
-          },
-          "Cache-Control": {
-            "description": "Cache-Control browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-store"
-            }
-          }
-        },
-        "content-type": {
-          "description": "Content type response.",
-          "schema": {
-            "type": "string"
-          }
-        }
-      },
-      "notAcceptable": {
-        "description": "The HyperText Transfer Protocol (HTTP) 406 Not Acceptable client error response code indicates that the server cannot produce a response matching the list of acceptable values defined in the request's proactive content negotiation headers, and that the server is unwilling to supply a default representation.",
-        "headers": {
-          "Pragma": {
-            "description": "Pragma browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-cache"
-            }
-          },
-          "Cache-Control": {
-            "description": "Cache-Control browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-store"
-            }
-          }
-        }
-      },
-      "rateLimit": {
-        "description": "Too many requests",
-        "headers": {
-          "Pragma": {
-            "description": "Pragma browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-cache"
-            }
-          },
-          "Cache-Control": {
-            "description": "Cache-Control browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-store"
-            }
-          }
-        },
-        "content-type": {
-          "description": "Content type response.",
-          "schema": {
-            "type": "string"
-          }
-        }
-      },
-      "badRequest": {
-        "description": "Bad request",
-        "headers": {
-          "Pragma": {
-            "description": "Pragma browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-cache"
-            }
-          },
-          "Cache-Control": {
-            "description": "Cache-Control browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-store"
-            }
-          }
-        },
-        "content-type": {
-          "description": "Content type response.",
-          "schema": {
-            "type": "string"
-          }
-        }
-      },
-      "invalidParameters": {
-        "description": "Invalid parameters | Invalid redirect_uri | invalid client type | invalid response type | invalid code_challenge/method | Bad request",
-        "headers": {
-          "Pragma": {
-            "description": "Pragma browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-cache"
-            }
-          },
-          "Cache-Control": {
-            "description": "Cache-Control browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-store"
-            }
-          },
-          "content-type": {
-            "description": "Content type response.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "unauthorized": {
-        "description": "The client could not be authenticated.",
-        "headers": {
-          "Pragma": {
-            "description": "Pragma browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-cache"
-            }
-          },
-          "Cache-Control": {
-            "description": "Cache-Control browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-store"
-            }
-          }
-        },
-        "content-type": {
-          "description": "Content type response.",
-          "schema": {
-            "type": "string"
-          }
-        }
-      },
-      "forbidden": {
-        "description": "Forbidden.",
-        "headers": {
-          "Pragma": {
-            "description": "Pragma browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-cache"
-            }
-          },
-          "Cache-Control": {
-            "description": "Cache-Control browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-store"
-            }
-          }
-        },
-        "content-type": {
-          "description": "Content type response.",
-          "schema": {
-            "type": "string"
-          }
-        }
-      },
-      "notFound": {
-        "description": "Not Found.",
-        "headers": {
-          "Pragma": {
-            "description": "Pragma browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-cache"
-            }
-          },
-          "Cache-Control": {
-            "description": "Cache-Control browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-store"
-            }
-          }
-        },
-        "content-type": {
-          "description": "Content type response.",
-          "schema": {
-            "type": "string"
-          }
-        }
-      },
-      "serverError": {
-        "description": "unknown error",
-        "headers": {
-          "Pragma": {
-            "description": "Pragma browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-cache"
-            }
-          },
-          "Cache-Control": {
-            "description": "Cache-Control browser directive",
-            "schema": {
-              "type": "string",
-              "default": "no-store"
-            }
-          }
-        },
-        "content-type": {
-          "description": "Content type response.",
-          "schema": {
-            "type": "string"
           }
         }
       }
     },
-    "securitySchemes": {
-      "openId": {
-        "type": "openIdConnect",
-        "openIdConnectUrl": "/.well-known/openid-configuration"
-      },
-      "api_key": {
-        "type": "apiKey",
-        "name": "x-api-key",
-        "in": "header"
-      }
-    },
-    "schemas": {
-      "TokenData": {
-        "type": "object",
-        "properties": {
-          "access_token": {
-            "type": "string",
-            "description": "The Access Token for the given token request"
-          },
-          "token_type": {
-            "type": "string",
-            "description": "The Token Type issued",
-            "example": "Bearer"
-          },
-          "expires_in": {
-            "type": "string",
-            "description": "The expiry time, in seconds",
-            "example": "3600"
-          },
-          "refresh_token": {
-            "type": "string",
-            "description": "The refresh token, if applicable"
-          },
-          "scope": {
-            "type": "string",
-            "description": "The issued scope",
-            "example": "oob"
-          },
-          "id_token": {
-            "type": "string",
-            "description": "If the requested SCOPE included 'msso' or 'openid', response includes an id_token"
-          },
-          "id_token_type": {
-            "type": "string",
-            "description": "If the requested SCOPE included 'msso' or 'openid', response includes an id_token_type"
-          }
-        },
-        "title": "TokenData"
-      },
-      "OpenIDDiscovery": {
-        "required": [
-          "authorization_endpoint",
-          "id_token_signing_alg_values_supported",
-          "issuer",
-          "jwks_uri",
-          "response_types_supported",
-          "subject_types_supported",
-          "token_endpoint"
-        ],
-        "type": "object",
-        "properties": {
-          "userinfo_endpoint": {
-            "type": "string",
-            "example": "https://example.org/oidc/v1/userinfo",
-            "description": "URL of the user info endpoint"
-          },
-          "jwks_uri": {
-            "type": "string",
-            "example": "https://example.org/oidc/v1/keys",
-            "description": "URL of JSON Web Key Set document"
-          },
-          "scopes_supported": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "example": [
-              "openid"
-            ],
-            "description": "list of the OAuth 2.0 scope values that this server supports"
-          },
-          "subject_types_supported": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "example": [
-              "pairwise"
-            ],
-            "description": "list of the Subject Identifier types that this OP supports"
-          },
-          "token_endpoint": {
-            "type": "string",
-            "example": "https://example.org/oidc/v1/token",
-            "description": "URL of the OAuth 2.0 token endpoint"
-          },
-          "id_token_signing_alg_values_supported": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "example": [
-              "RS256",
-              "HS256"
-            ],
-            "description": "list of the JWS signing algorithms (alg values) supported by the OP for the ID Token to encode the Claims in a JWT"
-          },
-          "response_types_supported": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "example": [
-              "code",
-              "token_id_token"
-            ],
-            "description": "ist of the OAuth 2.0 response_type values that this OP supports"
-          },
-          "claims_supported": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "example": [
-              "sub",
-              "iss",
-              "auth_time",
-              "acr"
-            ],
-            "description": "list of the Claim Names of the Claims that the OpenID Provider MAY be able to supply values for"
-          },
-          "authorization_endpoint": {
-            "type": "string",
-            "example": "https://example.org/oidc/v1/authorize",
-            "description": "URL of the OAuth 2.0 authorization endpoint"
-          },
-          "issuer": {
-            "type": "string",
-            "example": "https://example.org",
-            "description": "the identifier of the token's issuer. This is identical to the 'iss' Claim value in ID Tokens"
-          },
-          "grant_types_supported": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "example": [
-              "authorization_code",
-              "implicit"
-            ],
-            "description": "list of the OAuth 2.0 Grant Type values that this OP supports"
-          },
-          "acr_values_supported": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "example": [
-              "urn:mace:incommon:iap:silver"
-            ],
-            "description": "list of the Authentication Context Class References that this OP supports"
-          },
-          "token_endpoint_auth_methods_supported": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "example": [
-              "client_secret_basic"
-            ],
-            "description": "list of Client Authentication methods supported by this Token Endpoint"
-          },
-          "token_endpoint_auth_signing_alg_values_supported": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "example": [
-              "RS256"
-            ],
-            "description": "list of the JWS signing algorithms (alg values) supported by the Token Endpoint for the signature on the JWT used to authenticate the Client at the Token Endpoint for the private_key_jwt and client_secret_jwt authentication methods. Servers SHOULD support RS256. The value none MUST NOT be used."
-          },
-          "display_values_supported": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "example": [
-              "page",
-              "popup"
-            ],
-            "description": "list of the display parameter values that the OpenID Provider supports"
-          },
-          "claim_types_supported": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "example": [
-              "normal"
-            ],
-            "description": "list of the Claim Types that the OpenID Provider supports"
-          },
-          "service_documentation": {
-            "type": "string",
-            "example": "https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth",
-            "description": "URL of a page containing human-readable information that developers might want or need to know when using the OpenID Provider"
-          },
-          "ui_locales_supported": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "example": [
-              "en-US",
-              "en-GB"
-            ],
-            "description": "Languages and scripts supported for the user interface"
-          }
-        },
-        "description": "The OpenID configuration document as defined by the specification: http://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata"
-      },
-      "ClientRegistration": {
-        "type": "object",
-        "properties": {
-          "redirect_uris": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "example": [
-              "https://client.example.org/callback",
-              "https://client.example.org/callback2"
-            ]
-          },
-          "client_name": {
-            "type": "string",
-            "example": "https://example.org"
-          },
-          "logo_uri": {
-            "type": "string",
-            "description": "The RP logo URI",
-            "example": "https://example.org/logo.png",
-            "format": "uri"
-          },
-          "policy_uri": {
-            "type": "string",
-            "description": "The privacy policy URI",
-            "example": "https://example.org/policy",
-            "format": "uri"
-          },
-          "tos_uri": {
-            "type": "string",
-            "description": "The terms of service URI",
-            "example": "https://example.org/tos",
-            "format": "uri"
-          },
-          "default_acr_values": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "list of the Authentication Context Class References that this RP supports",
-            "example": [
-              "https://www.spid.gov.it/SpidL1",
-              "https://www.spid.gov.it/SpidL2",
-              "https://www.spid.gov.it/SpidL3"
-            ]
-          },
-          "saml_requested_attributes": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Custom parameter which return all SPID attributes selected, https://docs.italia.it/italia/spid/spid-regole-tecniche/it/stabile/attributi.html",
-            "example": [
-              "spidCode",
-              "name",
-              "familyName",
-              "fiscalNumber"
-            ]
-          }
-        }
-      },
-      "ClientFE": {
-        "type": "object",
-        "properties": {
-          "clientID": {
-            "type": "string",
-            "example": "https://example.org"
-          },
-          "friendlyName": {
-            "type": "string",
-            "example": "https://example.org"
-          },
-          "logoUri": {
-            "type": "string",
-            "description": "The RP logo URI",
-            "example": "https://example.org/logo.png",
-            "format": "uri"
-          },
-          "policyUri": {
-            "type": "string",
-            "description": "The privacy policy URI",
-            "example": "https://example.org/policy",
-            "format": "uri"
-          },
-          "tosUri": {
-            "type": "string",
-            "description": "The terms of service URI",
-            "example": "https://example.org/tos",
-            "format": "uri"
-          }
-        }
+    "securitySchemes" : {
+      "api_key" : {
+        "type" : "apiKey",
+        "name" : "x-api-key",
+        "in" : "header"
       }
     }
   }

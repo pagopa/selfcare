@@ -15,7 +15,7 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.openapi.quarkus.one_identity_json.api.TokenServerApisApi;
+import org.openapi.quarkus.one_identity_json.api.DefaultApi;
 import org.openapi.quarkus.one_identity_json.model.TokenData;
 
 import java.util.Map;
@@ -33,7 +33,7 @@ public class OidcServiceTest {
   @InjectMock SessionService sessionService;
   @InjectMock JwtService jwtService;
 
-  @RestClient @InjectMock TokenServerApisApi tokenApi;
+  @RestClient @InjectMock DefaultApi tokenApi;
 
   @Test
   void exchangeAuthCodeWithSessionToken() throws ParseException {
