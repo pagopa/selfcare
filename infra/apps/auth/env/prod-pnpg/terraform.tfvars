@@ -1,5 +1,7 @@
 env_short = "p"
 is_pnpg   = true
+dns_zone_prefix     = "pnpg.selfcare"
+api_dns_zone_prefix = "api-pnpg.selfcare"
 
 tags = {
   CreatedBy   = "Terraform"
@@ -37,7 +39,7 @@ app_settings = [
   },
   {
     name  = "APPLICATIONINSIGHTS_ROLE_NAME"
-    value = "auth-ms",
+    value = "pnpg-auth-ms",
   },
   {
     name  = "SHARED_ACCESS_KEY_NAME"
@@ -54,9 +56,29 @@ app_settings = [
   {
     name  = "AUTH_MS_RETRY"
     value = 3
+  },
+  {
+    name = "SESSION_TOKEN_DURATION_HOURS"
+    value = 9
+  },
+  {
+    name = "SESSION_TOKEN_AUDIENCE"
+    value = "api-pnpg.selfcare.pagopa.it"
+  },
+  {
+    name  = "USER_REGISTRY_URL"
+    value = "https://api.pdv.pagopa.it/user-registry/v1"
+  },
+  {
+    name  = "ONE_IDENTITY_URL"
+    value = "https://oneid.pagopa.it"
   }
 ]
 
 secrets_names = {
-  "APPLICATIONINSIGHTS_CONNECTION_STRING"              = "appinsights-connection-string"
+  "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+  "ONE_IDENTITY_CLIENT_ID"                = "oneidentity-client-id"
+  "ONE_IDENTITY_CLIENT_SECRET"            = "oneidentity-client-secret"
+  "SESSION_TOKEN_PRIVATE_KEY"             = "jwt-private-key"
+  "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
 }
