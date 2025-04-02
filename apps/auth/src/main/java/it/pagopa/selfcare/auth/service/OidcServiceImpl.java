@@ -46,7 +46,7 @@ public class OidcServiceImpl implements OidcService {
   @RestClient @Inject TokenServerApisApi tokenApi;
 
   @Override
-  public Uni<OidcExchangeResponse> exchange(String authCode, String redirectUri){
+  public Uni<OidcExchangeResponse> exchange(String authCode, String redirectUri) {
     CreateRequestTokenMultipartForm formData = new CreateRequestTokenMultipartForm();
     formData.code = authCode;
     formData.grantType = AUTH_CODE_GRANT_TYPE;
@@ -60,7 +60,8 @@ public class OidcServiceImpl implements OidcService {
         .retry()
         .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))
         .atMost(maxRetry)
-            .onFailure(WebApplicationException.class).transform(GeneralUtils::extractExceptionFromWebAppException)
+        .onFailure(WebApplicationException.class)
+        .transform(GeneralUtils::extractExceptionFromWebAppException)
         .map(TokenData::getIdToken)
         .chain(
             idToken ->
