@@ -5,8 +5,13 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.jwt.auth.principal.ParseException;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.auth.exception.ForbiddenException;
+import it.pagopa.selfcare.auth.exception.InternalException;
+import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import jakarta.inject.Inject;
 
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -36,17 +41,115 @@ public class OidcServiceTest {
     when(tokenApi.createRequestToken(any(), anyString()))
         .thenReturn(Uni.createFrom().item(TokenData.builder().idToken("idToken").build()));
     when(jwtService.extractClaimsFromJwtToken(anyString()))
-        .thenReturn(Uni.createFrom().item(Map.of("fiscal_number", "TINIT-FISCALCODE", "name", "name", "family_name", "Doe")));
+        .thenReturn(
+            Uni.createFrom()
+                .item(
+                    Map.of(
+                        "fiscal_number",
+                        "TINIT-FISCALCODE",
+                        "name",
+                        "name",
+                        "family_name",
+                        "Doe")));
 
     when(sessionService.generateSessionToken(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().item(SESSION_TOKEN));
 
-    var result = oidcService
+    var result =
+        oidcService
+            .exchange("authCode", "redirectUri")
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create())
+            .assertCompleted()
+            .getItem();
+
+    Assertions.assertEquals(SESSION_TOKEN, result.getSessionToken());
+  }
+
+  @Test
+  void failureWithCreateRequestTokenError() throws ParseException {
+    String exceptionDesc = "Cannot invoke requestToken";
+
+    when(tokenApi.createRequestToken(any(), anyString()))
+        .thenReturn(Uni.createFrom().failure(new WebApplicationException(exceptionDesc)));
+
+    oidcService
         .exchange("authCode", "redirectUri")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
-        .assertCompleted().getItem();
+        .assertFailed()
+        .assertFailedWith(InternalException.class, exceptionDesc);
+  }
 
-    Assertions.assertEquals(SESSION_TOKEN, result.getSessionToken());
+  @Test
+  void failureWithCreateRequestTokenForbidden() throws ParseException {
+
+    when(tokenApi.createRequestToken(any(), anyString()))
+        .thenReturn(Uni.createFrom().failure(new WebApplicationException(Response.status(403).build())));
+
+    oidcService
+            .exchange("authCode", "redirectUri")
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create())
+            .assertFailed()
+            .assertFailedWith(ForbiddenException.class, "Forbidden");
+  }
+
+  @Test
+  void failureWithCreateRequestTokenNotFound() throws ParseException {
+
+    when(tokenApi.createRequestToken(any(), anyString()))
+            .thenReturn(Uni.createFrom().failure(new WebApplicationException(Response.status(404).build())));
+
+    oidcService
+            .exchange("authCode", "redirectUri")
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create())
+            .assertFailed()
+            .assertFailedWith(ResourceNotFoundException.class, "Not Found");
+  }
+
+  @Test
+  void failureWhenExtractingIdTokenClaims() throws ParseException {
+
+    when(tokenApi.createRequestToken(any(), anyString()))
+        .thenReturn(Uni.createFrom().item(TokenData.builder().idToken("invalidIdToken").build()));
+    when(jwtService.extractClaimsFromJwtToken(anyString()))
+        .thenReturn(Uni.createFrom().failure(new Exception("Error")));
+
+    oidcService
+        .exchange("authCode", "redirectUri")
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertFailed()
+        .assertFailedWith(Exception.class, "Cannot parse idToken from authorization code");
+  }
+
+  @Test
+  void failureWhenGeneratingSessionToken() throws ParseException {
+    String exceptionDesc = "Cannot generate sessionToken";
+    when(tokenApi.createRequestToken(any(), anyString()))
+        .thenReturn(Uni.createFrom().item(TokenData.builder().idToken("idToken").build()));
+    when(jwtService.extractClaimsFromJwtToken(anyString()))
+        .thenReturn(
+            Uni.createFrom()
+                .item(
+                    Map.of(
+                        "fiscal_number",
+                        "TINIT-FISCALCODE",
+                        "name",
+                        "name",
+                        "family_name",
+                        "Doe")));
+
+    when(sessionService.generateSessionToken(anyString(), anyString(), anyString()))
+        .thenReturn(Uni.createFrom().failure(new Exception(exceptionDesc)));
+
+    oidcService
+        .exchange("authCode", "redirectUri")
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertFailed()
+        .assertFailedWith(Exception.class, exceptionDesc);
   }
 }

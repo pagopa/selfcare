@@ -59,10 +59,14 @@ class OidcControllerTest {
 
   @Test
   void forbiddenWithForbiddenException() {
-      JsonObject request =
-              Json.createObjectBuilder().add("code", "invalidCode").add("redirectUri", "redirect").build();
+    JsonObject request =
+        Json.createObjectBuilder()
+            .add("code", "invalidCode")
+            .add("redirectUri", "redirect")
+            .build();
 
-    when(oidcService.exchange(anyString(), anyString())).thenThrow(ForbiddenException.class);
+    when(oidcService.exchange(anyString(), anyString()))
+        .thenReturn(Uni.createFrom().failure(new ForbiddenException("Forbidden")));
     given()
         .body(request.toString())
         .when()
@@ -72,33 +76,41 @@ class OidcControllerTest {
         .statusCode(403);
   }
 
-    @Test
-    void notFoundWithNotFoundException() {
-        JsonObject request =
-                Json.createObjectBuilder().add("code", "invalidCode").add("redirectUri", "redirect").build();
+  @Test
+  void notFoundWithNotFoundException() {
+    JsonObject request =
+        Json.createObjectBuilder()
+            .add("code", "invalidCode")
+            .add("redirectUri", "redirect")
+            .build();
 
-        when(oidcService.exchange(anyString(), anyString())).thenThrow(ResourceNotFoundException.class);
-        given()
-                .body(request.toString())
-                .when()
-                .contentType(ContentType.JSON)
-                .post("/exchange")
-                .then()
-                .statusCode(404);
-    }
+    when(oidcService.exchange(anyString(), anyString()))
+        .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("Not Found")));
+    given()
+        .body(request.toString())
+        .when()
+        .contentType(ContentType.JSON)
+        .post("/exchange")
+        .then()
+        .statusCode(404);
+  }
 
-    @Test
-    void internalServerErrorWithInternalException() {
-        JsonObject request =
-                Json.createObjectBuilder().add("code", "invalidCode").add("redirectUri", "redirect").build();
+  @Test
+  void internalServerErrorWithInternalException() {
+    JsonObject request =
+        Json.createObjectBuilder()
+            .add("code", "invalidCode")
+            .add("redirectUri", "redirect")
+            .build();
 
-        when(oidcService.exchange(anyString(), anyString())).thenThrow(InternalException.class);
-        given()
-                .body(request.toString())
-                .when()
-                .contentType(ContentType.JSON)
-                .post("/exchange")
-                .then()
-                .statusCode(500);
-    }
+    when(oidcService.exchange(anyString(), anyString()))
+        .thenReturn(Uni.createFrom().failure(new InternalException("Internal error")));
+    given()
+        .body(request.toString())
+        .when()
+        .contentType(ContentType.JSON)
+        .post("/exchange")
+        .then()
+        .statusCode(500);
+  }
 }

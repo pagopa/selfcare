@@ -8,6 +8,7 @@ import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.auth.util.GeneralUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -47,8 +48,7 @@ public class OidcServiceImpl implements OidcService {
   @RestClient @Inject TokenServerApisApi tokenApi;
 
   @Override
-  public Uni<OidcExchangeResponse> exchange(String authCode, String redirectUri)
-      throws ForbiddenException, ResourceNotFoundException, InternalException {
+  public Uni<OidcExchangeResponse> exchange(String authCode, String redirectUri){
     CreateRequestTokenMultipartForm formData = new CreateRequestTokenMultipartForm();
     formData.code = authCode;
     formData.grantType = AUTH_CODE_GRANT_TYPE;
@@ -62,6 +62,7 @@ public class OidcServiceImpl implements OidcService {
         .retry()
         .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))
         .atMost(maxRetry)
+            .onFailure(WebApplicationException.class).transform(GeneralUtils::extractExceptionFromWebAppException)
         .map(TokenData::getIdToken)
         .chain(
             idToken ->
