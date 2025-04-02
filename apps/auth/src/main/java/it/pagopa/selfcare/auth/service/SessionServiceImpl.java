@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.jwt.build.Jwt;
-import io.smallrye.jwt.build.JwtClaimsBuilder;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 
