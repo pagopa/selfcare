@@ -13,6 +13,9 @@ COPY --link ./apps/pom.xml .
 WORKDIR /src/libs
 COPY --link ./libs/pom.xml .
 
+WORKDIR /src/libs/cucumber-sdk
+COPY --link ./libs/cucumber-sdk/pom.xml .
+
 WORKDIR /src/apps/auth
 COPY --link ./apps/auth/pom.xml .
 COPY ./apps/auth/src/main/ ./src/main/
