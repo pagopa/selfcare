@@ -10,6 +10,9 @@ COPY --link ./test-coverage/pom.xml .
 WORKDIR /src/apps
 COPY --link ./apps/pom.xml .
 
+WORKDIR /src/libs
+COPY --link ./libs/pom.xml .
+
 WORKDIR /src/apps/auth
 COPY --link ./apps/auth/pom.xml .
 COPY ./apps/auth/src/main/ ./src/main/
