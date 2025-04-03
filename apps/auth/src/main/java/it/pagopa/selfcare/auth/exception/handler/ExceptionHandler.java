@@ -49,6 +49,7 @@ public class ExceptionHandler {
     @ServerExceptionMapper
     public Response toResponse(InternalException exception) {
         LOGGER.error(PREFIX_LOGGER, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
-        return toResponse(exception);
+        Problem problem = new Problem(exception.getMessage(), null,  HttpStatus.SC_FORBIDDEN, exception.getMessage(), null);
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(problem).build();
     }
 }
