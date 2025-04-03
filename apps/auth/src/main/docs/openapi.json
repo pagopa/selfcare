@@ -12,22 +12,71 @@
     "description" : "Auto generated value"
   } ],
   "tags" : [ {
-    "name" : "Login"
+    "name" : "OIDC"
   } ],
   "paths" : {
-    "/login/foo" : {
-      "get" : {
-        "tags" : [ "Login" ],
-        "summary" : "Foo API",
-        "description" : "Foo API",
-        "operationId" : "foo",
+    "/oidc/exchange" : {
+      "post" : {
+        "tags" : [ "OIDC" ],
+        "summary" : "OIDC exchange endpoint",
+        "description" : "OIDC exchange endpoint provides a token exchange by accepting a valid authorization code and releasing a jwt session token",
+        "operationId" : "oidcExchange",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OidcExchangeRequest"
+              }
+            }
+          }
+        },
         "responses" : {
           "200" : {
             "description" : "OK",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "string"
+                  "$ref" : "#/components/schemas/OidcExchangeResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
                 }
               }
             }
@@ -37,6 +86,51 @@
     }
   },
   "components" : {
+    "schemas" : {
+      "OidcExchangeRequest" : {
+        "required" : [ "code", "redirectUri" ],
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "redirectUri" : {
+            "minLength" : 1,
+            "type" : "string"
+          }
+        }
+      },
+      "OidcExchangeResponse" : {
+        "type" : "object",
+        "properties" : {
+          "sessionToken" : {
+            "type" : "string"
+          }
+        }
+      },
+      "Problem" : {
+        "type" : "object",
+        "properties" : {
+          "detail" : {
+            "type" : "string"
+          },
+          "instance" : {
+            "type" : "string"
+          },
+          "status" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          }
+        }
+      }
+    },
     "securitySchemes" : {
       "SecurityScheme" : {
         "type" : "http",

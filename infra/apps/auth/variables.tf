@@ -85,3 +85,26 @@ variable "suffix_increment" {
   description = "Suffix increment Container App Environment name"
   default     = ""
 }
+
+variable "private_dns_name" {
+  type        = string
+  description = "Container Apps private DNS record"
+}
+
+variable "dns_zone_prefix" {
+  type        = string
+  default     = "selfcare"
+  description = "The dns subdomain."
+}
+
+variable "api_dns_zone_prefix" {
+  type        = string
+  default     = "api.selfcare"
+  description = "The dns subdomain."
+}
+
+variable "external_domain" {
+  type        = string
+  default     = "pagopa.it"
+  description = "Domain for delegation"
+}

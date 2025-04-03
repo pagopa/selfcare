@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class AuthorizationCodeRequest {
+public class OidcExchangeRequest {
     @NotEmpty(message = "code is required")
     @NotNull(message = "code is required")
     public String code;
