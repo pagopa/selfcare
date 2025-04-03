@@ -16,7 +16,7 @@ resource "azurerm_api_management_api_version_set" "apim_api_auth" {
 }
 
 
-module "apim_api_auth_ms" {
+module "apim_api_bff_dashboard" {
   source              = "github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v8.18.0"
   name                = local.api_name
   api_management_name = local.apim_name

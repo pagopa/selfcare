@@ -74,7 +74,7 @@ public class OidcServiceImpl implements OidcService {
         .chain(
             claims ->
                 sessionService.generateSessionToken(
-                    claims.get("fiscalNumber"), claims.get("name"), claims.get("familyName")))
+                    claims.get("fiscal_number"), claims.get("name"), claims.get("family_name")))
         .map(sessionToken -> OidcExchangeResponse.builder().sessionToken(sessionToken).build());
   }
 }
