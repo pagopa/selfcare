@@ -2,7 +2,9 @@ package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.jwt.build.Jwt;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.util.GeneralUtils;
+import it.pagopa.selfcare.auth.util.Pkcs8Utils;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.time.Duration;
@@ -32,6 +34,9 @@ public class SessionServiceImpl implements SessionService {
 
   @ConfigProperty(name = "jwt.session.audience")
   String audience;
+
+  @ConfigProperty(name = "jwt.session.private.key")
+  String privateKeyPem;
 
   @ConfigProperty(name = "auth-ms.retry.min-backoff")
   Integer retryMinBackOff;
@@ -67,17 +72,22 @@ public class SessionServiceImpl implements SessionService {
         .atMost(maxRetry)
         .onFailure(WebApplicationException.class)
         .transform(GeneralUtils::extractExceptionFromWebAppException)
-        .map(
+        .chain(
             userId ->
-                Jwt.claims()
-                    .claim("fiscal_number", fiscalCode)
-                    .claim("name", name)
-                    .claim("family_name", familyName)
-                    .claim("uid", userId.getId().toString())
-                    .claim("spid_level", SPID_LEVEL_L2)
-                    .audience(audience)
-                    .issuedAt(Instant.now())
-                    .expiresAt(Instant.now().plus(Duration.ofHours(sessionDuration)))
-                    .sign());
+                Pkcs8Utils.extractRSAPrivateKeyFromPem(privateKeyPem)
+                    .onFailure()
+                    .transform(ex -> new InternalException(ex.getMessage()))
+                    .map(
+                        rsaPrivateKey ->
+                            Jwt.claims()
+                                .claim("fiscal_number", fiscalCode)
+                                .claim("name", name)
+                                .claim("family_name", familyName)
+                                .claim("uid", userId.getId().toString())
+                                .claim("spid_level", SPID_LEVEL_L2)
+                                .audience(audience)
+                                .issuedAt(Instant.now())
+                                .expiresAt(Instant.now().plus(Duration.ofHours(sessionDuration)))
+                                .sign(rsaPrivateKey)));
   }
 }

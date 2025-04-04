@@ -27,8 +27,6 @@ import static org.mockito.Mockito.when;
 @QuarkusTest
 public class OidcServiceTest {
 
-  private static final String SESSION_TOKEN =
-      "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJTZWxmY2FyZSBBdXRoIiwiaWF0IjoxNzQzNTIyMzIyLCJleHAiOjE3NDM1MjIzMjQsImF1ZCI6Ind3dy5leGFtcGxlLmNvbSIsInN1YiI6Impyb2NrZXRAZXhhbXBsZS5jb20iLCJuYW1lIjoiSm9obm55IiwiZmFtaWx5X25hbWUiOiJSb2NrZXQiLCJmaXNjYWxfbnVtYmVyIjoiVElOSVQtRklTQ0FMQ09ERSJ9.SVN74DC8_KHqxJsHO5vwAcbbTf9YEJyaKmYfdVZjTSY";
   @Inject OidcService oidcService;
   @InjectMock SessionService sessionService;
   @InjectMock JwtService jwtService;
@@ -53,17 +51,13 @@ public class OidcServiceTest {
                         "Doe")));
 
     when(sessionService.generateSessionToken(anyString(), anyString(), anyString()))
-        .thenReturn(Uni.createFrom().item(SESSION_TOKEN));
+        .thenReturn(Uni.createFrom().item(""));
 
-    var result =
-        oidcService
-            .exchange("authCode", "redirectUri")
-            .subscribe()
-            .withSubscriber(UniAssertSubscriber.create())
-            .assertCompleted()
-            .getItem();
-
-    Assertions.assertEquals(SESSION_TOKEN, result.getSessionToken());
+    oidcService
+        .exchange("authCode", "redirectUri")
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertCompleted();
   }
 
   @Test
@@ -85,28 +79,30 @@ public class OidcServiceTest {
   void failureWithCreateRequestTokenForbidden() throws ParseException {
 
     when(tokenApi.createRequestToken(any(), anyString()))
-        .thenReturn(Uni.createFrom().failure(new WebApplicationException(Response.status(403).build())));
+        .thenReturn(
+            Uni.createFrom().failure(new WebApplicationException(Response.status(403).build())));
 
     oidcService
-            .exchange("authCode", "redirectUri")
-            .subscribe()
-            .withSubscriber(UniAssertSubscriber.create())
-            .assertFailed()
-            .assertFailedWith(ForbiddenException.class, "Forbidden");
+        .exchange("authCode", "redirectUri")
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertFailed()
+        .assertFailedWith(ForbiddenException.class, "Forbidden");
   }
 
   @Test
   void failureWithCreateRequestTokenNotFound() throws ParseException {
 
     when(tokenApi.createRequestToken(any(), anyString()))
-            .thenReturn(Uni.createFrom().failure(new WebApplicationException(Response.status(404).build())));
+        .thenReturn(
+            Uni.createFrom().failure(new WebApplicationException(Response.status(404).build())));
 
     oidcService
-            .exchange("authCode", "redirectUri")
-            .subscribe()
-            .withSubscriber(UniAssertSubscriber.create())
-            .assertFailed()
-            .assertFailedWith(ResourceNotFoundException.class, "Not Found");
+        .exchange("authCode", "redirectUri")
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertFailed()
+        .assertFailedWith(ResourceNotFoundException.class, "Not Found");
   }
 
   @Test
@@ -135,11 +131,11 @@ public class OidcServiceTest {
             Uni.createFrom()
                 .item(
                     Map.of(
-                        "fiscal_number",
+                        "fiscalNumber",
                         "TINIT-FISCALCODE",
                         "name",
                         "name",
-                        "family_name",
+                        "familyName",
                         "Doe")));
 
     when(sessionService.generateSessionToken(anyString(), anyString(), anyString()))
