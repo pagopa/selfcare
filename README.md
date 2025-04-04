@@ -99,3 +99,28 @@ To perform local tests of functionalities that involve sending messages to the S
 - EVENT_HUB_BASE_PATH
 - SHARED_ACCESS_KEY_NAME
 - EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC
+
+## Cucumber Tests
+
+To run the Cucumber tests, first, open the docker-compose.yml file located in the root of user-ms and replace the placeholder REPLACE_WITH_TOKEN with a valid GitHub PAT.
+
+Next, start the docker-compose to run the containers for MongoDB, Azurite, and the mock server.
+
+At this point, launch the user-ms microservice locally with the following environment variables:
+
+USER-REGISTRY-API-KEY=9fypKNFfVY8jvWHUgABpH23VrChnRzvRpSq5b1ng
+USER_REGISTRY_URL=user-registry-mock
+STORAGE_CONTAINER_TEMPLATES=resources
+STORAGE_CONTAINER_PRODUCT=products
+MONGODB-CONNECTION-STRING=mongodb://localhost:27018
+JWT-PUBLIC-KEY=-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnpt9gVNzDW6FpBk/TwNCqd+URprAD3tfGhYWhq2sAxDAP5u9GxgHybFQ8XGNY3yeb9rp5lxLqAcxOg5j19i0tvjkK/Q7GUezteY8xpEfRLJxglIaux/sM8M82YiHCwAjgQPF+EmIPboER5fLLnvDXyl+FYzcGhwPc8Z8AGlYjv8mgijrffSpbjtd7FF0I6WxIqKFHFhIsfUMezBa7NTMSIrxp5dACCMetrKkggTK3Yq8DP86nWuSdDsjIGLrIQFuMQOALr46cSafvHMFK5B/iIDfFLAek7Kg2tELHXWdcctjdPwsc38EXb3P2Fi70WOcLg9lAx9EDgizVLaG5obCCQIDAQAB-----END PUBLIC KEY-----
+JAVA_TOOL_OPTIONS=-Duser.timezone=GMT -Duser.language=en -Duser.country=US
+BLOB-STORAGE-PRODUCT-CONNECTION-STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;BlobEndpoint=http://localhost:10000/devstoreaccount1;
+
+Next, you can proceed to run the Cucumber tests.
+
+To run all the tests, you can open the CucumberSuite file and execute it by pressing the play button, or you can create a JUnit configuration, specifying in the "Build and run" section, under Class, the following:
+it.pagopa.selfcare.user.integration_test.CucumberSuite.
+
+To run a single test or a specific feature file, open the file and press the play button for the corresponding test (or the file). The first execution will fail; you will then need to modify the configuration by setting the main class to:
+it.pagopa.selfcare.user.integration_test.CucumberSuite.

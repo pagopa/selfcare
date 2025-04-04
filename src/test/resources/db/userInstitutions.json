@@ -1,0 +1,125 @@
+[
+  {
+    "_id": {
+      "$oid": "65aea85f85a6a37415221bd6"
+    },
+    "institutionId": "d0d28367-1695-4c50-a260-6fda526e9aab",
+    "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+    "products": [
+      {
+        "productId": "prod-ciban",
+        "relationshipId": "caedc4d5-3444-4f2a-8f2f-541e317747d9",
+        "tokenId": "a3d660df-649d-457c-b4e8-23f6b6e4d135",
+        "status": "PENDING",
+        "productRole": "referente amministrativo",
+        "role": "MANAGER",
+        "env": "ROOT",
+        "createdAt": {
+          "$date": "2022-09-21T16:44:30.773Z"
+        },
+        "updatedAt": null
+      },
+      {
+        "productId": "prod-pagopa",
+        "relationshipId": "b7e5f4c1-89d4-45b3-a8e9-9b7f13d2c9f6",
+        "tokenId": "f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74",
+        "status": "ACTIVE",
+        "productRole": "referente amministrativo",
+        "role": "MANAGER",
+        "env": "ROOT",
+        "createdAt": {
+          "$date": "2023-03-10T10:15:45.123Z"
+        },
+        "updatedAt": null
+      }
+    ],
+    "institutionDescription": "Comune di Milano",
+    "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+  },
+  {
+    "_id": {
+      "$oid": "65b1234f85a6a37415221ef9"
+    },
+    "institutionId": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
+    "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+    "products": [
+      {
+        "productId": "prod-io",
+        "relationshipId": "d9f8e7c6-1234-45a6-b789-0c1d2e3f4a5b",
+        "tokenId": "abc12345-6789-4def-b012-3456789abcd",
+        "status": "ACTIVE",
+        "productRole": "admin",
+        "role": "MANAGER",
+        "env": "ROOT",
+        "createdAt": {
+          "$date": "2023-06-15T14:30:00.000Z"
+        },
+        "updatedAt": null
+      },
+      {
+        "productId": "prod-interop",
+        "relationshipId": "f1e2d3c4-b567-890a-bcde-1234567890ff",
+        "tokenId": "def67890-1234-4abc-5678-90abcdef1234",
+        "status": "DELETED",
+        "productRole": "referente amministrativo",
+        "role": "MANAGER",
+        "env": "ROOT",
+        "createdAt": {
+          "$date": "2024-01-20T09:45:10.567Z"
+        },
+        "updatedAt": null
+      }
+    ],
+    "institutionDescription": "Regione Lazio",
+    "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+  },
+  {
+    "_id": {
+      "$oid": "65b1214f85b2a37412421ef6"
+    },
+    "institutionId": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
+    "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
+    "products": [
+      {
+        "productId": "prod-io",
+        "relationshipId": "d9f8e7c6-1234-45a6-b789-0c1d2e3f4a5b",
+        "tokenId": "abc12345-6789-4def-b012-3456789abcd",
+        "status": "ACTIVE",
+        "productRole": "admin",
+        "role": "SUB_DELEGATE",
+        "env": "ROOT",
+        "createdAt": {
+          "$date": "2023-06-15T14:30:00.000Z"
+        },
+        "updatedAt": null
+      }
+    ],
+    "institutionDescription": "Regione Lazio",
+    "userMailUuid": "ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv"
+  },
+  {
+    "_id": {
+      "$oid": "65b2345a85a6a37415222ff1"
+    },
+    "institutionId": "f2e4d6c8-9876-5432-ba10-abcdef123456",
+    "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
+    "products": [
+      {
+        "productId": "prod-io",
+        "relationshipId": "a7b8c9d0-1234-5678-9abc-def012345678",
+        "tokenId": "ghi78901-2345-6789-abcd-ef0123456789",
+        "status": "PENDING",
+        "productRole": "referente amministrativo",
+        "role": "MANAGER",
+        "env": "ROOT",
+        "createdAt": {
+          "$date": "2024-02-10T12:15:45.890Z"
+        },
+        "updatedAt": null
+      }
+    ],
+    "institutionDescription": "Università di Bologna",
+    "userMailUuid": "ID_MAIL#123123-55555-efaz-12312-apclacpela"
+  }
+
+]

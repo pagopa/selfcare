@@ -101,6 +101,7 @@ public class UserController {
         return userService.retrievePerson(userId, productId, institutionId);
     }
 
+
     @Operation(description = "Retrieves products info and role which the user is enabled", summary = "Retrieve product information and user roles")
     @GET
     @Path("/{userId}/institutions")
@@ -293,7 +294,6 @@ public class UserController {
         return readUserIdFromToken(ctx)
                 .onItem().transformToUni(loggedUser -> userService.updateUserProductStatus(userId, institutionId, productId, status, productRole, loggedUser));
     }
-
 
     /**
      * The createOrUpdateByUserId function is used to update existing user adding userRole.
