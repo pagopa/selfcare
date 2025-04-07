@@ -28,6 +28,7 @@ public class SessionServiceImpl implements SessionService {
 
   private static final String SPID_FISCAL_NUMBER_PREFIX = "TINIT-";
   private static final String SPID_LEVEL_L2 = "https://www.spid.gov.it/SpidL2";
+  private static final String ISSUER = "SPID";
 
   @ConfigProperty(name = "jwt.session.duration")
   Integer sessionDuration;
@@ -85,6 +86,7 @@ public class SessionServiceImpl implements SessionService {
                                 .claim("family_name", familyName)
                                 .claim("uid", userId.getId().toString())
                                 .claim("spid_level", SPID_LEVEL_L2)
+                                .issuer(ISSUER)
                                 .audience(audience)
                                 .issuedAt(Instant.now())
                                 .expiresAt(Instant.now().plus(Duration.ofHours(sessionDuration)))
