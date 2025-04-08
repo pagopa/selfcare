@@ -15,6 +15,8 @@ import org.openapi.quarkus.one_identity_json.api.DefaultApi;
 import org.openapi.quarkus.one_identity_json.api.DefaultApi.CreateRequestTokenMultipartForm;
 import org.openapi.quarkus.one_identity_json.model.TokenData;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
 
@@ -55,7 +57,12 @@ public class OidcServiceImpl implements OidcService {
         .createRequestToken(
             formData,
             Base64.getEncoder()
-                .encodeToString(String.join(":", oiClientId, oiClientSecret).getBytes()))
+                .encodeToString(
+                    String.join(
+                            ":",
+                            URLEncoder.encode(oiClientId, StandardCharsets.UTF_8),
+                            URLEncoder.encode(oiClientSecret, StandardCharsets.UTF_8))
+                        .getBytes()))
         .onFailure(GeneralUtils::checkIfIsRetryableException)
         .retry()
         .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))
