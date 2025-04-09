@@ -12,6 +12,8 @@ tags = {
   CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
 }
 
+private_dns_name = "selc-p-auth-ms-ca.lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
+
 container_app = {
   min_replicas = 1
   max_replicas = 5
@@ -80,6 +82,6 @@ secrets_names = {
   "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
   "ONE_IDENTITY_CLIENT_ID"                = "oneidentity-client-id"
   "ONE_IDENTITY_CLIENT_SECRET"            = "oneidentity-client-secret"
-  "SESSION_TOKEN_PRIVATE_KEY"             = "jwt-private-key"
+  "SESSION_TOKEN_PRIVATE_KEY"             = "jwt-private-key-pkcs8"
   "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
 }
