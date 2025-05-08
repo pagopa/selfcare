@@ -444,15 +444,18 @@ class UserInstitutionServiceTest {
 
         PanacheMock.mock(UserInstitution.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
         when(UserInstitution.find(any(Document.class), any())).thenReturn(query);
         when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitution));
         ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
         when(UserInstitution.update(any(Document.class)))
                 .thenReturn(update);
-        when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
+        when(update.where(embeddedCaptor.capture())).thenReturn(Uni.createFrom().item(1L));
         UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userId, institutionId, productId, null, productRole, OnboardedProductState.SUSPENDED)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted().assertItem(1L);
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains(OnboardedProductState.ACTIVE.name()));
+        Assertions.assertFalse(embeddedCaptor.getValue().toString().contains(OnboardedProductState.SUSPENDED.name()));
     }
 
     @Test
@@ -483,15 +486,18 @@ class UserInstitutionServiceTest {
 
         PanacheMock.mock(UserInstitution.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
         when(UserInstitution.find(any(Document.class), any())).thenReturn(query);
         when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitution));
         ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
         when(UserInstitution.update(any(Document.class)))
                 .thenReturn(update);
-        when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
+        when(update.where(embeddedCaptor.capture())).thenReturn(Uni.createFrom().item(1L));
         UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userId, institutionId, productId, null, productRole, OnboardedProductState.DELETED)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted().assertItem(1L);
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains(OnboardedProductState.ACTIVE.name()));
+        Assertions.assertTrue(embeddedCaptor.getValue().toString().contains(OnboardedProductState.SUSPENDED.name()));
     }
 
     @Test

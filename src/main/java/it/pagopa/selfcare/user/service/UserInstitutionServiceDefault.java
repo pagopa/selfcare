@@ -149,8 +149,10 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
                 filterBuilder.status(OnboardedProductState.SUSPENDED.name());
                 break;
             case SUSPENDED:
-            case DELETED:
                 filterBuilder.status(OnboardedProductState.ACTIVE.name());
+                break;
+            case DELETED:
+                filterBuilder.status(List.of(OnboardedProductState.ACTIVE.name(), OnboardedProductState.SUSPENDED.name()));
                 break;
             default:
                 break;
