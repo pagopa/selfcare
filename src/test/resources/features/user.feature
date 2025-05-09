@@ -2336,6 +2336,46 @@ Feature: User
       | DELETED                    |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
+  Scenario: Successfully update user product status from SUSPENDED to DELETED
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "SUSPENDED" and role "SUB_DELEGATE" and productId "prod-pagopa"
+    And A mock userInfo with id "d0d28367-1695-4c50-a260-6fda526e9aab", institutionName "Comune di Milano", status "SUSPENDED", role "SUB_DELEGATE" to userInfo document with id "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
+    And The following path params:
+      | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
+    And The following query params:
+      | userId                     | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                 |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].id                     | 65a4b6c7d8e9f01234567890                             |
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | status                     |
+      | SUSPENDED                    |
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | id                         | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                 |
+      | institutionId              | d0d28367-1695-4c50-a260-6fda526e9aab                 |
+      | productId                  | prod-pagopa                                          |
+    And The following query params:
+      | status                     | DELETED                                              |
+    When I send a PUT request to "users/{id}/institution/{institutionId}/product/{productId}/status"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
+    And The following query params:
+      | userId                     | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                 |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].id                     | 65a4b6c7d8e9f01234567890                             |
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | status                     |
+      | DELETED                    |
+
+  @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully update user product status from SUSPENDED to ACTIVE
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "SUSPENDED" and role "SUB_DELEGATE" and productId "prod-pagopa"
