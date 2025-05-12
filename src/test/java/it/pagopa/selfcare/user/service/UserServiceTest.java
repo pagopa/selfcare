@@ -2021,7 +2021,8 @@ class UserServiceTest {
                 "Selc:ManageProductGroups",
                 "Selc:CreateDelegation",
                 "Selc:ViewInstitutionData",
-                "Selc:UpdateInstitutionData"));
+                "Selc:UpdateInstitutionData",
+                "Selc:ViewContract"));
         userInstitutionWithActions.setInstitutionRootName("institutionRootName");
         userInstitutionWithActions.setUserMailUuid(workContractsKey);
         userInstitutionWithActions.setInstitutionId("institutionId");
