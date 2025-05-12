@@ -1,5 +1,11 @@
 {
   "MANAGER": {
+    "prod-pagopa": [
+      "Selc:UploadLogo",
+      "Selc:ViewBilling",
+      "Selc:RequestProductAccess",
+      "Selc:ViewContract"
+    ],
     "default": [
       "Selc:UploadLogo",
       "Selc:ViewBilling",
@@ -7,6 +13,12 @@
     ]
   },
   "DELEGATE": {
+    "prod-io": [
+      "Selc:UploadLogo",
+      "Selc:ViewBilling",
+      "Selc:RequestProductAccess",
+      "Selc:ViewContract"
+    ],
     "default": [
       "Selc:UploadLogo",
       "Selc:ViewBilling",
@@ -14,6 +26,12 @@
     ]
   },
   "SUB_DELEGATE": {
+    "prod-interop": [
+      "Selc:UploadLogo",
+      "Selc:ViewBilling",
+      "Selc:RequestProductAccess",
+      "Selc:ViewContract"
+    ],
     "default": [
       "Selc:UploadLogo",
       "Selc:ViewBilling",

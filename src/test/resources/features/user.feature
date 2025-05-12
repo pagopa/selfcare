@@ -4030,6 +4030,7 @@ Feature: User
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:UpdateInstitutionData        |
+      | Selc:ViewContract                 |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role OPERATOR)
@@ -4090,6 +4091,7 @@ Feature: User
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:UpdateInstitutionData        |
+      | Selc:ViewContract                 |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role SUB_DELEGATE)
@@ -4125,6 +4127,7 @@ Feature: User
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:UpdateInstitutionData        |
+      | Selc:ViewContract                 |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role ADMIN_EA and prod pago-pa)
@@ -4158,6 +4161,7 @@ Feature: User
       | Selc:ManageProductGroups          |
       | Selc:ViewInstitutionData          |
       | Selc:UpdateInstitutionData        |
+      | Selc:ViewContract                 |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role ADMIN_EA and prod io)
@@ -4191,6 +4195,7 @@ Feature: User
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:UpdateInstitutionData        |
+      | Selc:ViewContract                 |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role ADMIN_EA and prod ciban)
