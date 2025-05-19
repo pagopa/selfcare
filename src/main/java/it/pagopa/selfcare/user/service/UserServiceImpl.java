@@ -807,24 +807,26 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Uni<UserInstitutionWithActions> getUserInstitutionWithPermission(String userId, String institutionId, String productId) {
+        String mappedProductId;
         Map<String, Object> queryParameter;
         var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
         if (StringUtils.isNotEmpty(productId)) {
-            String mappedProductId = Optional.ofNullable(productService.getProduct(productId))
+            mappedProductId = Optional.ofNullable(productService.getProduct(productId))
                     .map(Product::getParentId)
                     .orElse(productId);
             var productFilters = OnboardedProductFilter.builder().productId(mappedProductId).status(ACTIVE).build().constructMap();
             queryParameter = userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters);
         } else {
+            mappedProductId = null;
             queryParameter = userInstitutionFilters;
         }
         return userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter)
                 .onItem().ifNull().failWith(new ResourceNotFoundException(String.format(USER_INSTITUTION_NOT_FOUND_ERROR.getMessage(), userId, institutionId), USER_INSTITUTION_NOT_FOUND_ERROR.getCode()))
-                .onItem().transformToUni(item ->  mapToUserInstitutionPermission(item, productId))
+                .onItem().transformToUni(item ->  mapToUserInstitutionPermission(item, mappedProductId))
                 .onFailure().invoke(() -> log.error(String.format(USER_INSTITUTION_NOT_FOUND_ERROR.getMessage(), userId, institutionId)));
     }
 
-    private Uni<UserInstitutionWithActions> mapToUserInstitutionPermission(it.pagopa.selfcare.user.entity.UserInstitution userInstitution, String productId) {
+    private Uni<UserInstitutionWithActions> mapToUserInstitutionPermission(UserInstitution userInstitution, String productId) {
         return Uni.createFrom().item(userInstitutionMapper.toUserInstitutionPermission(userInstitution))
                 .onItem().invoke(userInstitutionWithPermission ->
                         userInstitutionWithPermission.setProducts(filterProductAndAddActions(userInstitutionWithPermission, productId)));
@@ -846,7 +848,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Uni<UsersCountResponse> getUsersCount(String institutionId, String productId, List<PartyRole> roles, List<OnboardedProductState> status) {
         final List<PartyRole> roleList = Optional.ofNullable(roles).filter(l -> !l.isEmpty()).orElse(List.of(PartyRole.values()));
-        final List<OnboardedProductState> statusList = Optional.ofNullable(status).filter(l -> !l.isEmpty()).orElse(List.of(OnboardedProductState.ACTIVE));
+        final List<OnboardedProductState> statusList = Optional.ofNullable(status).filter(l -> !l.isEmpty()).orElse(List.of(ACTIVE));
         return userInstitutionService.countUsers(institutionId, productId, roleList, statusList)
                 .onItem().transform(count -> new UsersCountResponse(institutionId, productId, roleList, statusList, count));
     }
