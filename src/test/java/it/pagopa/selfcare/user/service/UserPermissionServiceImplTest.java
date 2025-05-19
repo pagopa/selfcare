@@ -12,7 +12,6 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -32,7 +31,7 @@ public class UserPermissionServiceImplTest {
     private final String userId = "userId";
 
     @Test
-    void testHasPermissionWithAnyPermission() throws IOException {
+    void testHasPermissionWithAnyPermission() {
         // Arrange
         UserInstitution userInstitution = new UserInstitution();
         OnboardedProduct product = new OnboardedProduct();
@@ -50,7 +49,7 @@ public class UserPermissionServiceImplTest {
     }
 
     @Test
-    void testHasPermissionWithADminPermissionOnlyWithProductId() throws IOException {
+    void testHasPermissionWithADminPermissionOnlyWithProductId() {
         // Arrange
         UserInstitution userInstitution = new UserInstitution();
         OnboardedProduct product = new OnboardedProduct();
@@ -69,7 +68,7 @@ public class UserPermissionServiceImplTest {
     }
 
     @Test
-    void testHasPermissionWithValidPermission() throws IOException {
+    void testHasPermissionWithValidPermission() {
         // Arrange
         UserInstitution userInstitution = new UserInstitution();
         OnboardedProduct product = new OnboardedProduct();
@@ -87,7 +86,7 @@ public class UserPermissionServiceImplTest {
     }
 
     @Test
-    void testHasPermissionWithInvalidPermission() throws IOException {
+    void testHasPermissionWithInvalidPermission() {
         // Arrange
         UserInstitution userInstitution = new UserInstitution();
         OnboardedProduct product = new OnboardedProduct();
@@ -105,7 +104,7 @@ public class UserPermissionServiceImplTest {
     }
 
     @Test
-    void testHasPermissionWithUserNotFound() throws IOException {
+    void testHasPermissionWithUserNotFound() {
         // Arrange
         Mockito.when(userInstitutionService.existsValidUserProduct(eq(null), anyString(), anyString(), any(PermissionTypeEnum.class)))
                 .thenReturn(Uni.createFrom().item(false));
