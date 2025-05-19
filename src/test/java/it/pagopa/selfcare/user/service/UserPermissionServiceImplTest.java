@@ -1,33 +1,22 @@
 package it.pagopa.selfcare.user.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.quarkus.test.InjectMock;
-import io.quarkus.test.Mock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import jakarta.inject.Inject;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Collections;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
-
-import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
 @QuarkusTest
 public class UserPermissionServiceImplTest {
