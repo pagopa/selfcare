@@ -12,12 +12,19 @@ import lombok.extern.slf4j.Slf4j;
 public class UserPermissionServiceImpl implements UserPermissionService {
 
     private final UserInstitutionService userInstitutionService;
+    private final it.pagopa.selfcare.product.service.ProductService productService;
 
     @Override
     public Uni<Boolean> hasPermission(String institutionId, String productId, PermissionTypeEnum permission, String userId) {
         log.trace("hasPermission start");
         log.debug("check permission {} for userId: {}, institutionId: {} and productId: {}", permission, userId, institutionId, productId);
 
-        return userInstitutionService.existsValidUserProduct(userId, institutionId, productId, permission);
+        String parentId = productService.getProduct(productId).getParentId();
+
+        String mappedProductId = parentId != null
+                ? parentId
+                : productId;
+
+        return userInstitutionService.existsValidUserProduct(userId, institutionId, mappedProductId, permission);
     }
 }
