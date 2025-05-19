@@ -5,6 +5,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
@@ -809,7 +810,10 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> queryParameter;
         var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
         if (StringUtils.isNotEmpty(productId)) {
-            var productFilters = OnboardedProductFilter.builder().productId(productId).status(ACTIVE).build().constructMap();
+            String mappedProductId = Optional.ofNullable(productService.getProduct(productId))
+                    .map(Product::getParentId)
+                    .orElse(productId);
+            var productFilters = OnboardedProductFilter.builder().productId(mappedProductId).status(ACTIVE).build().constructMap();
             queryParameter = userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters);
         } else {
             queryParameter = userInstitutionFilters;

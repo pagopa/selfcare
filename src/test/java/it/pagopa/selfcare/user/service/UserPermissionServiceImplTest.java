@@ -38,23 +38,9 @@ public class UserPermissionServiceImplTest {
     @Inject
     UserPermissionService userPermissionService;
 
-    @InjectMock
-    it.pagopa.selfcare.product.service.ProductService productService;
-
-    protected ObjectMapper objectMapper;
-
     private final String institutionId = UUID.randomUUID().toString();
     private final String productId = "prod-io";
-    private final String productIdPremium = "prod-io-premium";
     private final String userId = "userId";
-
-    @BeforeEach
-    public void setUp() {
-        MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter = new MappingJackson2HttpMessageConverter();
-        mappingJackson2HttpMessageConverter.setObjectMapper((new ObjectMapper()).disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS).registerModule(new JavaTimeModule()));
-        this.objectMapper = new ObjectMapper();
-        this.objectMapper.registerModule(new JavaTimeModule());
-    }
 
     @Test
     void testHasPermissionWithAnyPermission() throws IOException {
@@ -66,11 +52,6 @@ public class UserPermissionServiceImplTest {
         userInstitution.setProducts(Collections.singletonList(product));
         Mockito.when(userInstitutionService.existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ANY))
                 .thenReturn(Uni.createFrom().item(true));
-        ClassPathResource productResource = new ClassPathResource("json/Product.json");
-        byte[] resourceStreamInstitution = Files.readAllBytes(productResource.getFile().toPath());
-        Product productIo = objectMapper.readValue(resourceStreamInstitution, new TypeReference<>() {
-        });
-        Mockito.when(productService.getProduct(productId)).thenReturn(productIo);
         // Act
         Uni<Boolean> result = userPermissionService.hasPermission(institutionId, productId, PermissionTypeEnum.ANY, userId);
         UniAssertSubscriber<Boolean> subscriber = result.subscribe().withSubscriber(UniAssertSubscriber.create());
@@ -89,11 +70,6 @@ public class UserPermissionServiceImplTest {
         userInstitution.setProducts(Collections.singletonList(product));
         Mockito.when(userInstitutionService.existsValidUserProduct(userId, null, productId, PermissionTypeEnum.ANY))
                 .thenReturn(Uni.createFrom().item(true));
-        ClassPathResource productResource = new ClassPathResource("json/Product.json");
-        byte[] resourceStreamInstitution = Files.readAllBytes(productResource.getFile().toPath());
-        Product productIo = objectMapper.readValue(resourceStreamInstitution, new TypeReference<>() {
-        });
-        Mockito.when(productService.getProduct(productId)).thenReturn(productIo);
 
         // Act
         Uni<Boolean> result = userPermissionService.hasPermission(null, productId, PermissionTypeEnum.ANY, userId);
@@ -109,17 +85,12 @@ public class UserPermissionServiceImplTest {
         UserInstitution userInstitution = new UserInstitution();
         OnboardedProduct product = new OnboardedProduct();
         product.setRole(PartyRole.MANAGER);
-        product.setProductId(productIdPremium);
+        product.setProductId(productId);
         userInstitution.setProducts(Collections.singletonList(product));
         Mockito.when(userInstitutionService.existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ADMIN))
                 .thenReturn(Uni.createFrom().item(true));
-        ClassPathResource productResource = new ClassPathResource("json/Product_prod-io-premium.json");
-        byte[] resourceStreamInstitution = Files.readAllBytes(productResource.getFile().toPath());
-        Product productIoPremium = objectMapper.readValue(resourceStreamInstitution, new TypeReference<>() {
-        });
-        Mockito.when(productService.getProduct(productIdPremium)).thenReturn(productIoPremium);
         // Act
-        Uni<Boolean> result = userPermissionService.hasPermission(institutionId, productIdPremium, PermissionTypeEnum.ADMIN, userId);
+        Uni<Boolean> result = userPermissionService.hasPermission(institutionId, productId, PermissionTypeEnum.ADMIN, userId);
         UniAssertSubscriber<Boolean> subscriber = result.subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Assert
@@ -136,11 +107,6 @@ public class UserPermissionServiceImplTest {
         userInstitution.setProducts(Collections.singletonList(product));
         Mockito.when(userInstitutionService.existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ADMIN))
                 .thenReturn(Uni.createFrom().item(false));
-        ClassPathResource productResource = new ClassPathResource("json/Product.json");
-        byte[] resourceStreamInstitution = Files.readAllBytes(productResource.getFile().toPath());
-        Product productIo = objectMapper.readValue(resourceStreamInstitution, new TypeReference<>() {
-        });
-        Mockito.when(productService.getProduct(productId)).thenReturn(productIo);
         // Act
         Uni<Boolean> result = userPermissionService.hasPermission(institutionId, productId, PermissionTypeEnum.ADMIN, userId);
         UniAssertSubscriber<Boolean> subscriber = result.subscribe().withSubscriber(UniAssertSubscriber.create());
@@ -154,11 +120,6 @@ public class UserPermissionServiceImplTest {
         // Arrange
         Mockito.when(userInstitutionService.existsValidUserProduct(eq(null), anyString(), anyString(), any(PermissionTypeEnum.class)))
                 .thenReturn(Uni.createFrom().item(false));
-        ClassPathResource productResource = new ClassPathResource("json/Product.json");
-        byte[] resourceStreamInstitution = Files.readAllBytes(productResource.getFile().toPath());
-        Product productIo = objectMapper.readValue(resourceStreamInstitution, new TypeReference<>() {
-        });
-        Mockito.when(productService.getProduct(productId)).thenReturn(productIo);
         // Act
         Uni<Boolean> result = userPermissionService.hasPermission(institutionId, productId, PermissionTypeEnum.ANY, userId);
         UniAssertSubscriber<Boolean> assertSubscriber = result.subscribe().withSubscriber(UniAssertSubscriber.create());

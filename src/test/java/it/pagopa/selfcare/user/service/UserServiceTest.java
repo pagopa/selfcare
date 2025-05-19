@@ -2055,6 +2055,30 @@ class UserServiceTest {
     }
 
     @Test
+    void testGetUserInstitutionWithPermissionQueryWithProductWithParent() {
+        String productId = "prod-io-premium";
+        String institutionId = "institutionId";
+        String userId = "userId";
+        String parentProductId = "prod-io";
+
+        Map<String, Object> queryParameter;
+        Map<String, Object> userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
+        Map<String, Object> productFilters = OnboardedProductFilter.builder().productId(parentProductId).status(ACTIVE).build().constructMap();
+        queryParameter = userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters);
+
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter))
+                .thenReturn(Uni.createFrom().item(createUserInstitution()));
+
+
+        userService.getUserInstitutionWithPermission(userId, institutionId, productId)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create()).assertCompleted();
+
+        verify(userInstitutionService).retrieveFirstFilteredUserInstitution(queryParameter);
+
+    }
+
+    @Test
     void testGetUsersCount() {
         final String institutionId = "institutionId";
         final String productId = "productId";
