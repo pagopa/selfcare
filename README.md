@@ -108,15 +108,16 @@ Next, start the docker-compose to run the containers for MongoDB, Azurite, and t
 
 At this point, launch the user-ms microservice locally with the following environment variables:
 
+```environment variables
 USER-REGISTRY-API-KEY=9fypKNFfVY8jvWHUgABpH23VrChnRzvRpSq5b1ng
-USER_REGISTRY_URL=user-registry-mock
+USER_REGISTRY_URL=http://localhost:1080/user-registry-mock/v1
 STORAGE_CONTAINER_TEMPLATES=resources
 STORAGE_CONTAINER_PRODUCT=products
 MONGODB-CONNECTION-STRING=mongodb://localhost:27018
 JWT-PUBLIC-KEY=-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnpt9gVNzDW6FpBk/TwNCqd+URprAD3tfGhYWhq2sAxDAP5u9GxgHybFQ8XGNY3yeb9rp5lxLqAcxOg5j19i0tvjkK/Q7GUezteY8xpEfRLJxglIaux/sM8M82YiHCwAjgQPF+EmIPboER5fLLnvDXyl+FYzcGhwPc8Z8AGlYjv8mgijrffSpbjtd7FF0I6WxIqKFHFhIsfUMezBa7NTMSIrxp5dACCMetrKkggTK3Yq8DP86nWuSdDsjIGLrIQFuMQOALr46cSafvHMFK5B/iIDfFLAek7Kg2tELHXWdcctjdPwsc38EXb3P2Fi70WOcLg9lAx9EDgizVLaG5obCCQIDAQAB-----END PUBLIC KEY-----
 JAVA_TOOL_OPTIONS=-Duser.timezone=GMT -Duser.language=en -Duser.country=US
 BLOB-STORAGE-PRODUCT-CONNECTION-STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;BlobEndpoint=http://localhost:10000/devstoreaccount1;
-
+```
 Next, you can proceed to run the Cucumber tests.
 
 To run all the tests, you can open the CucumberSuite file and execute it by pressing the play button, or you can create a JUnit configuration, specifying in the "Build and run" section, under Class, the following:
