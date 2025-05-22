@@ -193,11 +193,6 @@
     </dependency>
     <dependency>
       <groupId>it.pagopa.selfcare</groupId>
-      <artifactId>user-sdk-event</artifactId>
-      <version>0.0.1</version>
-    </dependency>
-    <dependency>
-      <groupId>it.pagopa.selfcare</groupId>
       <artifactId>cucumber-sdk</artifactId>
       <version>${cucumber-sdk.version}</version>
       <scope>test</scope>
