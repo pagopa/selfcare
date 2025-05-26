@@ -25,6 +25,8 @@ import java.util.Scanner;
         })
 public class CucumberSuite extends CucumberQuarkusTest {
 
+    private static ComposeContainer composeContainer;
+
     public static void main(String[] args) {
         runMain(CucumberSuite.class, args);
     }
@@ -44,7 +46,7 @@ public class CucumberSuite extends CucumberQuarkusTest {
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = 8081;
 
-        final ComposeContainer composeContainer = new ComposeContainer(new File("docker-compose.yml")).withLocalCompose(true)
+        composeContainer = new ComposeContainer(new File("docker-compose.yml")).withLocalCompose(true)
                 .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1));
         composeContainer.start();
         Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
