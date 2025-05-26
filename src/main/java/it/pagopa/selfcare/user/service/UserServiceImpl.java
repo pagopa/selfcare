@@ -581,7 +581,7 @@ public class UserServiceImpl implements UserService {
         return Optional.ofNullable(userInstitution.getProducts())
                 .orElse(Collections.emptyList())
                 .stream()
-                .filter(onboardedProduct -> onboardedProduct.getStatus().equals(ACTIVE))
+                .filter(onboardedProduct -> List.of(ACTIVE, SUSPENDED).contains(onboardedProduct.getStatus()))
                 .filter(onboardedProduct -> onboardedProduct.getProductId().equalsIgnoreCase(product.getProductId()))
                 .anyMatch(onboardedProduct -> !onboardedProduct.getRole().name().equalsIgnoreCase(product.getRole()));
     }
@@ -590,7 +590,7 @@ public class UserServiceImpl implements UserService {
         return Optional.ofNullable(userInstitution.getProducts())
                 .orElse(Collections.emptyList())
                 .stream()
-                .filter(onboardedProduct -> onboardedProduct.getStatus().equals(ACTIVE))
+                .filter(onboardedProduct -> List.of(ACTIVE, SUSPENDED).contains(onboardedProduct.getStatus()))
                 .filter(onboardedProduct -> onboardedProduct.getProductId().equalsIgnoreCase(product.getProductId()))
                 .anyMatch(onboardedProduct -> !onboardedProduct.getRole().name().equalsIgnoreCase(product.getRole()));
     }
@@ -634,7 +634,7 @@ public class UserServiceImpl implements UserService {
                 .stream()
                 .filter(onboardedProduct -> onboardedProduct.getProductId().equals(productId))
                 .filter(onboardedProduct -> productRole.contains(onboardedProduct.getProductRole()))
-                .filter(onboardedProduct -> onboardedProduct.getStatus().equals(ACTIVE))
+                .filter(onboardedProduct -> List.of(ACTIVE, SUSPENDED).contains(onboardedProduct.getStatus()))
                 .map(OnboardedProduct::getProductRole)
                 .toList());
 

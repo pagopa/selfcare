@@ -3430,7 +3430,7 @@ Feature: User
       | prod-pagopa                    | referente amministrativo                      | MANAGER      | ACTIVE | aa1112-5132-4432-gsds-d12322           |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
-  Scenario: Unsuccessfully create a new user or update an existing one (existing userInstitution with existing product)
+  Scenario: Unsuccessfully create a new user or update an existing one with ACTIVE status (existing userInstitution with existing product)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa"
     And The following path params:
@@ -3491,6 +3491,134 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                      | productRole                                   | role         | status | tokenId                                |
       | prod-pagopa                    | admin                                         | SUB_DELEGATE | ACTIVE | asda8312-3311-5642-gsds-gfr2252341     |
+
+  @RemoveUserInstitutionAndUserInfoAfterScenario
+  Scenario: Unsuccessfully create a new user or update an existing one with SUSUPENDED status (existing userInstitution with existing product)
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "SUSPENDED" and role "SUB_DELEGATE" and productId "prod-pagopa"
+    And The following path params:
+      | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | userId                        | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                     | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
+      | [0].institutionId              | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription     | Comune di Milano                              |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                      | productRole                                   | role         | status    | tokenId                                |
+      | prod-pagopa                    | admin                                         | SUB_DELEGATE | SUSPENDED | asda8312-3311-5642-gsds-gfr2252341     |
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+        {
+            "institutionId": "d0d28367-1695-4c50-a260-6fda526e9aab",
+            "hasToSendEmail": false,
+            "user": {
+                "fiscalCode": "blbrki80A41H401T",
+                "institutionEmail": "prova@email.com"
+            },
+            "product": {
+                "productId": "prod-pagopa",
+                "role": "MANAGER",
+                "tokenId": "asda8312-3311-5642-gsds-gfr2252341",
+                "productRoles": [
+                    "referente amministrativo"
+                ]
+            },
+            "institutionDescription": "Comune di Milano",
+            "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+        }
+      """
+    When I send a POST request to "users/"
+    Then The status code is 400
+    And The response body contains string:
+      | User already has different role on Product prod-pagopa             |
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa"
+    And The following path params:
+      | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | userId                        | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                     | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
+      | [0].institutionId              | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription     | Comune di Milano                              |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                      | productRole                                   | role         | status    | tokenId                                |
+      | prod-pagopa                    | admin                                         | SUB_DELEGATE | SUSPENDED | asda8312-3311-5642-gsds-gfr2252341     |
+
+
+  @RemoveUserInstitutionAndUserInfoAfterScenario
+  Scenario: Unsuccessfully update or create a user by userId with a new role (2 times with same product for same institution) with SUSPENDED status
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "SUSPENDED" and role "SUB_DELEGATE" and productId "prod-pagopa"
+    And The following path params:
+      | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | userId                        | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                     | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
+      | [0].institutionId              | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription     | Comune di Milano                              |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                      | productRole                                   | role         | status    | tokenId                                |
+      | prod-pagopa                    | admin                                         | SUB_DELEGATE | SUSPENDED | asda8312-3311-5642-gsds-gfr2252341     |
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+        {
+            "institutionId": "d0d28367-1695-4c50-a260-6fda526e9aab",
+            "hasToSendEmail": false,
+            "user": {
+                "fiscalCode": "blbrki80A41H401T",
+                "institutionEmail": "prova@email.com"
+            },
+            "product": {
+                "productId": "prod-pagopa",
+                "role": "SUB_DELEGATE",
+                "tokenId": "asda8312-3311-5642-gsds-gfr2252341",
+                "productRoles": [
+                    "admin"
+                ]
+            },
+            "institutionDescription": "Comune di Milano",
+            "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+        }
+      """
+    When I send a POST request to "users/"
+    Then The status code is 400
+    And The response body contains string:
+      | User already has roles on Product prod-pagopa             |
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa"
+    And The following path params:
+      | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | userId                        | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                     | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
+      | [0].institutionId              | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription     | Comune di Milano                              |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                      | productRole                                   | role         | status    | tokenId                                |
+      | prod-pagopa                    | admin                                         | SUB_DELEGATE | SUSPENDED | asda8312-3311-5642-gsds-gfr2252341     |
+
 
   @RemoveUserInstitutionWithMockUser3
   Scenario: Unsuccessfully create a new user or update an existing one (missing mail for user creation)

@@ -55,11 +55,11 @@ import java.time.OffsetDateTime;
 import java.util.*;
 
 import static it.pagopa.selfcare.onboarding.common.PartyRole.*;
+import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_INTEROP;
 import static it.pagopa.selfcare.user.constant.CustomError.*;
 import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_SUCCESS;
 import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_NAME;
-import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.ACTIVE;
-import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.DELETED;
+import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.*;
 import static it.pagopa.selfcare.user.service.UserServiceImpl.USERS_FIELD_LIST_WITHOUT_FISCAL_CODE;
 import static it.pagopa.selfcare.user.service.UserServiceImpl.USERS_WORKS_FIELD_LIST;
 import static org.junit.jupiter.api.Assertions.*;
@@ -843,6 +843,114 @@ class UserServiceTest {
         verify(userInstitutionService).findByUserIdAndInstitutionId(any(), any());
         verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(),any());
     }
+    @Test
+    void testCreateOrUpdateUser_ByFiscalCode_Exception_differentRole() {
+        // Arrange
+        String fiscalCode = "fiscalCode";
+        String institutionId = "inst-002";
+        String productId = PROD_INTEROP.getValue();
+        List<String> roles = List.of("admin");
+
+        CreateUserDto userDto = getCreateUserDto(productId, fiscalCode, institutionId, roles, DELEGATE.name());
+
+        LoggedUser loggedUser = LoggedUser.builder().build();
+
+        UserResource user = new UserResource();
+        user.setId(UUID.randomUUID());
+        user.setWorkContacts(new HashMap<>());
+
+        when(userRegistryApi.searchUsingPOST(any(), any()))
+                .thenReturn(Uni.createFrom().item(user));
+
+        when(userUtils.getMailUuidFromMail(any(), any()))
+                .thenReturn(Optional.of("mail-uuid"));
+
+        when(userRegistryApi.updateUsingPATCH(any(), any()))
+                .thenReturn(Uni.createFrom().item(Response.ok().build()));
+
+        OnboardedProduct onboarded1 = new OnboardedProduct();
+        onboarded1.setProductId(productId);
+        onboarded1.setProductRole("operator-api");
+        onboarded1.setStatus(SUSPENDED);
+        onboarded1.setRole(OPERATOR);
+
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setProducts(new ArrayList<>(List.of(onboarded1)));
+
+        when(userInstitutionService.findByUserIdAndInstitutionId(any(), any()))
+                .thenReturn(Uni.createFrom().item(userInstitution));
+
+        InvalidRequestException exception = assertThrows(InvalidRequestException.class, () ->
+                userService.createOrUpdateUserByFiscalCode(userDto, loggedUser)
+                        .await().indefinitely());
+
+        assertEquals("User already has different role on Product prod-interop", exception.getMessage());
+
+    }
+
+    @Test
+    void testCreateOrUpdateUser_ByFiscalCode_Exception_hasAlreadyRoles() {
+        // Arrange
+        String fiscalCode = "fiscalCode";
+        String institutionId = "inst-002";
+        String productId = PROD_INTEROP.getValue();
+        List<String> requestedRoles = List.of("admin");
+
+        CreateUserDto userDto = getCreateUserDto(productId, fiscalCode, institutionId, requestedRoles, DELEGATE.name());
+        LoggedUser loggedUser = LoggedUser.builder().build();
+
+        UserResource user = new UserResource();
+        user.setId(UUID.randomUUID());
+        user.setWorkContacts(new HashMap<>());
+
+        when(userRegistryApi.searchUsingPOST(any(), any()))
+                .thenReturn(Uni.createFrom().item(user));
+
+        when(userUtils.getMailUuidFromMail(any(), any()))
+                .thenReturn(Optional.of("mail-uuid"));
+
+        when(userRegistryApi.updateUsingPATCH(any(), any()))
+                .thenReturn(Uni.createFrom().item(Response.ok().build()));
+
+        OnboardedProduct onboarded = new OnboardedProduct();
+        onboarded.setProductId(productId);
+        onboarded.setProductRole("admin");
+        onboarded.setStatus(ACTIVE);
+        onboarded.setRole(DELEGATE);
+
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setProducts(List.of(onboarded));
+
+        when(userInstitutionService.findByUserIdAndInstitutionId(any(), any()))
+                .thenReturn(Uni.createFrom().item(userInstitution));
+
+        InvalidRequestException exception = assertThrows(InvalidRequestException.class, () ->
+                userService.createOrUpdateUserByFiscalCode(userDto, loggedUser)
+                        .await().indefinitely());
+
+        assertEquals("User already has roles on Product prod-interop", exception.getMessage());
+    }
+
+    private static CreateUserDto getCreateUserDto(String productId, String fiscalCode, String institutionId, List<String> productRoles, String role) {
+
+        CreateUserDto.Product product = new CreateUserDto.Product();
+        product.setProductId(productId);
+        product.setProductRoles(productRoles);
+        product.setRole(role);
+
+        CreateUserDto.User user = new CreateUserDto.User();
+        user.setFiscalCode(fiscalCode);
+        user.setInstitutionEmail("user@example.com");
+
+        CreateUserDto userDto = new CreateUserDto();
+        userDto.setUser(user);
+        userDto.setInstitutionId(institutionId);
+        userDto.setProduct(product);
+        userDto.setHasToSendEmail(false);
+        return userDto;
+    }
+
+
 
     @Test
     void testCreateOrUpdateUser_UpdateUser_SuccessByFiscalCode_with2role() {
