@@ -22,10 +22,10 @@ module "jwt_exchange" {
 }
 
 resource "null_resource" "upload_jwks" {
-  triggers = {
-    "changes-in-jwt" : module.jwt.certificate_data_pem
-    "changes-in-jwt-exchange" : module.jwt_exchange.certificate_data_pem
-  }
+  # triggers = {
+  #   "changes-in-jwt" : module.jwt.certificate_data_pem
+  #   "changes-in-jwt-exchange" : module.jwt_exchange.certificate_data_pem
+  # }
   provisioner "local-exec" {
     command = <<EOT
               mkdir -p "${path.module}/.terraform/tmp"
