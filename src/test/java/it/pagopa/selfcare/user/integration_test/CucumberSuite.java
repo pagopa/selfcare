@@ -1,14 +1,15 @@
 package it.pagopa.selfcare.user.integration_test;
 
-import io.cucumber.java.Before;
 import io.quarkiverse.cucumber.CucumberOptions;
 import io.quarkiverse.cucumber.CucumberQuarkusTest;
 import io.restassured.RestAssured;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.testcontainers.containers.ComposeContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -24,6 +25,8 @@ import java.util.Scanner;
         })
 public class CucumberSuite extends CucumberQuarkusTest {
 
+    private static ComposeContainer composeContainer;
+
     public static void main(String[] args) {
         runMain(CucumberSuite.class, args);
     }
@@ -38,18 +41,22 @@ public class CucumberSuite extends CucumberQuarkusTest {
             String publicKey = new Scanner(inputStream, StandardCharsets.UTF_8.name()).useDelimiter("\\A").next();
             System.setProperty("JWT-PUBLIC-KEY", publicKey);
         }
-    }
 
-    @Before
-    public void setupRestAssured() {
-        RestAssured.baseURI = ConfigProvider.getConfig().getValue("rest-assured.base-url", String.class);
-        RestAssured.port = ConfigProvider.getConfig().getValue("cucumber.http.test-port", Integer.class);
+        // By default, quarkus starts the ms on port 8081
+        RestAssured.baseURI = "http://localhost";
+        RestAssured.port = 8081;
+
+        composeContainer = new ComposeContainer(new File("docker-compose.yml")).withLocalCompose(true)
+                .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1));
+        composeContainer.start();
+        Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
+
+        log.info("\nLANGUAGE: {}\nCOUNTRY: {}\nTIMEZONE: {}\n", System.getProperty("user.language"), System.getProperty("user.country"), System.getProperty("user.timezone"));
     }
 
     @AfterAll
     static void tearDown() {
         log.info("Cucumber tests are finished.");
-        System.exit(0);
     }
 
 }

@@ -4,7 +4,7 @@ services:
   mongodb:
     image: mongo:latest
     ports:
-      - '27018:27017'
+      - '27017:27017'
     volumes:
       - "./src/test/resources/db:/docker-entrypoint-initdb.d"
     networks:
@@ -12,7 +12,6 @@ services:
 
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite
-    container_name: azurite
     ports:
       - "10000:10000"
     command: "azurite --blobHost 0.0.0.0 --inMemoryPersistence"
@@ -25,16 +24,15 @@ services:
     build:
       context: "../../."
       dockerfile: "apps/user-ms/src/test/resources/Dockerfile-azure-cli"
-    container_name: azure-cli
     depends_on:
       - azurite
     networks:
       - develop-network
     volumes:
       - "./src/test/resources/blobStorageInit/initAzurite.sh:/initAzurite.sh"
+      - "./src/test/resources/blobStorageInit/products.json:/workspace/products.json"
     environment:
       - SELFCARE_INFRA_PRIVATE_ENV=dev
-      - GITHUB_TOKEN=REPLACE_WITH_TOKEN
 
   mockserver:
     image: mockserver/mockserver
@@ -48,22 +46,6 @@ services:
       - "./src/test/resources/mock:/config"
     networks:
       - develop-network
-
-  #user-ms:
-  #  build:
-  #    context: "../../."  # Indica il percorso dove si trova il codice del microservizio
-  #    dockerfile: "apps/user-ms/src/test/resources/Dockerfile-cucumber"   # Puoi includere un Dockerfile per la build del servizio
-  #  ports:
-  #    - '8080:8080'  # Porta del microservizio Quarkus
-  #  environment:
-  #    - USER_REGISTRY_URL=http://localhost:1080/user-registry-mock/v1
-  #    - JWT-PUBLIC-KEY=-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnpt9gVNzDW6FpBk/TwNCqd+URprAD3tfGhYWhq2sAxDAP5u9GxgHybFQ8XGNY3yeb9rp5lxLqAcxOg5j19i0tvjkK/Q7GUezteY8xpEfRLJxglIaux/sM8M82YiHCwAjgQPF+EmIPboER5fLLnvDXyl+FYzcGhwPc8Z8AGlYjv8mgijrffSpbjtd7FF0I6WxIqKFHFhIsfUMezBa7NTMSIrxp5dACCMetrKkggTK3Yq8DP86nWuSdDsjIGLrIQFuMQOALr46cSafvHMFK5B/iIDfFLAek7Kg2tELHXWdcctjdPwsc38EXb3P2Fi70WOcLg9lAx9EDgizVLaG5obCCQIDAQAB-----END PUBLIC KEY-----
-  #    - MONGODB-CONNECTION-STRING=mongodb://localhost:27017
-  #  networks:
-  #    - develop-network
-  #  depends_on:
-  #    - mongodb  # Dipende da mongodb
-  #    - mockserver  # Dipende anche da mockserver
 
 networks:
   develop-network:

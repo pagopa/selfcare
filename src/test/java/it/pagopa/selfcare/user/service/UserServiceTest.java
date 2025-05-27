@@ -5,9 +5,7 @@ import com.microsoft.applicationinsights.TelemetryClient;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.quarkus.panache.mock.PanacheMock;
 import io.quarkus.test.InjectMock;
-import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.mongodb.MongoTestResource;
 import io.smallrye.common.constraint.Assert;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -67,7 +65,6 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @QuarkusTest
-@QuarkusTestResource(MongoTestResource.class)
 class UserServiceTest {
 
     @Inject
