@@ -314,4 +314,11 @@
       </properties>
     </profile>
   </profiles>
+  <repositories>
+    <repository>
+      <id>selfcare</id>
+      <name>Selfcare SDK</name>
+      <url>https://maven.pkg.github.com/pagopa/selfcare</url>
+    </repository>
+  </repositories>
 </project>
