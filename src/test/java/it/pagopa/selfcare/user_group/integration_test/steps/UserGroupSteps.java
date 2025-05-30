@@ -4,10 +4,10 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.pagopa.selfcare.cucumber.utils.model.JwtData;
+import it.pagopa.selfcare.cucumber.utils.model.TestData;
 import it.pagopa.selfcare.user_group.dao.UserGroupRepository;
 import it.pagopa.selfcare.user_group.integration_test.KeyGenerator;
-import it.pagopa.selfcare.user_group.model.JwtData;
-import it.pagopa.selfcare.user_group.model.TestProperties;
 import it.pagopa.selfcare.user_group.model.UserGroupEntity;
 import it.pagopa.selfcare.user_group.model.UserGroupEntityPageable;
 import lombok.extern.slf4j.Slf4j;
@@ -47,8 +47,8 @@ public class UserGroupSteps {
     protected String token;
 
     protected void login(String user, String pass) {
-        TestProperties testProperties = readDataPopulation();
-        JwtData jwtData = testProperties.getJwtData().stream()
+        TestData testData = readDataPopulation();
+        JwtData jwtData = testData.getJwtData().stream()
                 .filter(data -> data.getUsername().equals(user) && data.getPassword().equals(pass))
                 .findFirst()
                 .orElse(null);
@@ -77,16 +77,16 @@ public class UserGroupSteps {
     }
 
 
-    public TestProperties readDataPopulation() {
-        TestProperties testProperties = null;
+    public TestData readDataPopulation() {
+        TestData testData = null;
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            testProperties = objectMapper.readValue(new File("src/test/resources/dataPopulation/data.json"), new TypeReference<>() {
+            testData = objectMapper.readValue(new File("src/test/resources/dataPopulation/data.json"), new TypeReference<>() {
             });
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return testProperties;
+        return testData;
     }
 
     public void verifyErrorMessage(String expectedErrorMessage) {
