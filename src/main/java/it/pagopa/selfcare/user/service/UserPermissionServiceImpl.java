@@ -6,6 +6,10 @@ import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+
+import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.*;
+
 @Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -18,6 +22,6 @@ public class UserPermissionServiceImpl implements UserPermissionService {
         log.trace("hasPermission start");
         log.debug("check permission {} for userId: {}, institutionId: {} and productId: {}", permission, userId, institutionId, productId);
 
-        return userInstitutionService.existsValidUserProduct(userId, institutionId, productId, permission);
+        return userInstitutionService.existsValidUserProduct(userId, institutionId, productId, permission, List.of(ACTIVE, PENDING, TOBEVALIDATED));
     }
 }

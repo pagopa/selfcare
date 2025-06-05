@@ -8,13 +8,16 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
+import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
+import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.*;
 import static org.mockito.ArgumentMatchers.*;
 
 @QuarkusTest
@@ -29,6 +32,7 @@ public class UserPermissionServiceImplTest {
     private final String institutionId = UUID.randomUUID().toString();
     private final String productId = "prod-io";
     private final String userId = "userId";
+    private static final List<OnboardedProductState> AVAILABLE_PRODUCT_STATES = List.of(ACTIVE, PENDING, TOBEVALIDATED);
 
     @Test
     void testHasPermissionWithAnyPermission() {
@@ -38,7 +42,7 @@ public class UserPermissionServiceImplTest {
         product.setRole(PartyRole.OPERATOR);
         product.setProductId(productId);
         userInstitution.setProducts(Collections.singletonList(product));
-        Mockito.when(userInstitutionService.existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ANY))
+        Mockito.when(userInstitutionService.existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ANY, AVAILABLE_PRODUCT_STATES))
                 .thenReturn(Uni.createFrom().item(true));
         // Act
         Uni<Boolean> result = userPermissionService.hasPermission(institutionId, productId, PermissionTypeEnum.ANY, userId);
@@ -56,7 +60,7 @@ public class UserPermissionServiceImplTest {
         product.setRole(PartyRole.OPERATOR);
         product.setProductId(productId);
         userInstitution.setProducts(Collections.singletonList(product));
-        Mockito.when(userInstitutionService.existsValidUserProduct(userId, null, productId, PermissionTypeEnum.ANY))
+        Mockito.when(userInstitutionService.existsValidUserProduct(userId, null, productId, PermissionTypeEnum.ANY, AVAILABLE_PRODUCT_STATES))
                 .thenReturn(Uni.createFrom().item(true));
 
         // Act
@@ -75,7 +79,7 @@ public class UserPermissionServiceImplTest {
         product.setRole(PartyRole.MANAGER);
         product.setProductId(productId);
         userInstitution.setProducts(Collections.singletonList(product));
-        Mockito.when(userInstitutionService.existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ADMIN))
+        Mockito.when(userInstitutionService.existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ADMIN, AVAILABLE_PRODUCT_STATES))
                 .thenReturn(Uni.createFrom().item(true));
         // Act
         Uni<Boolean> result = userPermissionService.hasPermission(institutionId, productId, PermissionTypeEnum.ADMIN, userId);
@@ -93,7 +97,7 @@ public class UserPermissionServiceImplTest {
         product.setRole(PartyRole.OPERATOR);
         product.setProductId(productId);
         userInstitution.setProducts(Collections.singletonList(product));
-        Mockito.when(userInstitutionService.existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ADMIN))
+        Mockito.when(userInstitutionService.existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ADMIN, AVAILABLE_PRODUCT_STATES))
                 .thenReturn(Uni.createFrom().item(false));
         // Act
         Uni<Boolean> result = userPermissionService.hasPermission(institutionId, productId, PermissionTypeEnum.ADMIN, userId);
@@ -106,7 +110,7 @@ public class UserPermissionServiceImplTest {
     @Test
     void testHasPermissionWithUserNotFound() {
         // Arrange
-        Mockito.when(userInstitutionService.existsValidUserProduct(eq(null), anyString(), anyString(), any(PermissionTypeEnum.class)))
+        Mockito.when(userInstitutionService.existsValidUserProduct(eq(null), anyString(), anyString(), any(PermissionTypeEnum.class), eq(AVAILABLE_PRODUCT_STATES)))
                 .thenReturn(Uni.createFrom().item(false));
         // Act
         Uni<Boolean> result = userPermissionService.hasPermission(institutionId, productId, PermissionTypeEnum.ANY, userId);

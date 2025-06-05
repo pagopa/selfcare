@@ -13,6 +13,7 @@ import it.pagopa.selfcare.user.controller.response.DeletedUserCountResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.controller.response.UsersCountResponse;
+import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserService;
@@ -282,6 +283,44 @@ class InstitutionControllerTest {
                 .pathParam("institutionId", institutionId)
                 .pathParam("productId", productId)
                 .delete("/{institutionId}/products/{productId}/users")
+                .then()
+                .statusCode(401);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void checkUser() {
+        final String fiscalCode = "fiscalCode";
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+
+        Mockito.when(userService.checkUser(fiscalCode, institutionId, productId))
+                .thenReturn(Uni.createFrom().item(Boolean.TRUE));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("institutionId", institutionId)
+                .pathParam("productId", productId)
+                .body(new SearchUserDto(fiscalCode))
+                .post("/{institutionId}/product/{productId}/check-user")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
+    void checkUser_NotAuthorized() {
+        final String fiscalCode = "fiscalCode";
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("institutionId", institutionId)
+                .pathParam("productId", productId)
+                .body(new SearchUserDto(fiscalCode))
+                .post("/{institutionId}/product/{productId}/check-user")
                 .then()
                 .statusCode(401);
     }

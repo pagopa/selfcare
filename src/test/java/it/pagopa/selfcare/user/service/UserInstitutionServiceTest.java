@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.smallrye.common.constraint.Assert.assertNotNull;
+import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
@@ -48,6 +49,8 @@ class UserInstitutionServiceTest {
 
     @InjectMock
     private ProductService productServiceCacheable;
+
+    public static final List<OnboardedProductState> AVAILABLE_PRODUCT_STATES = List.of(ACTIVE, PENDING, TOBEVALIDATED);
 
     @Test
     void findById() {
@@ -69,7 +72,7 @@ class UserInstitutionServiceTest {
         when(UserInstitution.count(embeddedCaptor.capture()))
                 .thenReturn(Uni.createFrom().item(0L));
         UniAssertSubscriber<Boolean> subscriber = userInstitutionService
-                .existsValidUserProduct(userId, institutionId, null, PermissionTypeEnum.ANY)
+                .existsValidUserProduct(userId, institutionId, null, PermissionTypeEnum.ANY, AVAILABLE_PRODUCT_STATES)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("institutionId"));
         Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("productId"));
@@ -86,7 +89,7 @@ class UserInstitutionServiceTest {
         when(UserInstitution.count(embeddedCaptor.capture()))
                 .thenReturn(Uni.createFrom().item(1L));
         UniAssertSubscriber<Boolean> subscriber = userInstitutionService
-                .existsValidUserProduct(userId, institutionId, null, PermissionTypeEnum.ADMIN)
+                .existsValidUserProduct(userId, institutionId, null, PermissionTypeEnum.ADMIN, AVAILABLE_PRODUCT_STATES)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("institutionId"));
         Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("productId"));
@@ -102,7 +105,7 @@ class UserInstitutionServiceTest {
         when(UserInstitution.count(embeddedCaptor.capture()))
                 .thenReturn(Uni.createFrom().item(1L));
         UniAssertSubscriber<Boolean> subscriber = userInstitutionService
-                .existsValidUserProduct(userId, institutionId, null, PermissionTypeEnum.ANY)
+                .existsValidUserProduct(userId, institutionId, null, PermissionTypeEnum.ANY, AVAILABLE_PRODUCT_STATES)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("institutionId"));
         Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("productId"));
@@ -119,7 +122,7 @@ class UserInstitutionServiceTest {
         when(UserInstitution.count(embeddedCaptor.capture()))
                 .thenReturn(Uni.createFrom().item(0L));
         UniAssertSubscriber<Boolean> subscriber = userInstitutionService
-                .existsValidUserProduct(userId, institutionId, null, PermissionTypeEnum.ADMIN)
+                .existsValidUserProduct(userId, institutionId, null, PermissionTypeEnum.ADMIN, AVAILABLE_PRODUCT_STATES)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("institutionId"));
         Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("productId"));
@@ -136,7 +139,7 @@ class UserInstitutionServiceTest {
         when(UserInstitution.count(embeddedCaptor.capture()))
                 .thenReturn(Uni.createFrom().item(0L));
         UniAssertSubscriber<Boolean> subscriber = userInstitutionService
-                .existsValidUserProduct(userId, null, productId, PermissionTypeEnum.ADMIN)
+                .existsValidUserProduct(userId, null, productId, PermissionTypeEnum.ADMIN, AVAILABLE_PRODUCT_STATES)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("institutionId"));
         Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("productId"));
@@ -153,7 +156,7 @@ class UserInstitutionServiceTest {
         when(UserInstitution.count(embeddedCaptor.capture()))
                 .thenReturn(Uni.createFrom().item(0L));
         UniAssertSubscriber<Boolean> subscriber = userInstitutionService
-                .existsValidUserProduct(userId, null, productId, PermissionTypeEnum.ANY)
+                .existsValidUserProduct(userId, null, productId, PermissionTypeEnum.ANY, AVAILABLE_PRODUCT_STATES)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("institutionId"));
         Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("productId"));
@@ -170,7 +173,7 @@ class UserInstitutionServiceTest {
         when(UserInstitution.count(embeddedCaptor.capture()))
                 .thenReturn(Uni.createFrom().item(1L));
         UniAssertSubscriber<Boolean> subscriber = userInstitutionService
-                .existsValidUserProduct(userId, null, productId, PermissionTypeEnum.ADMIN)
+                .existsValidUserProduct(userId, null, productId, PermissionTypeEnum.ADMIN, AVAILABLE_PRODUCT_STATES)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("institutionId"));
         Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("productId"));
@@ -186,7 +189,7 @@ class UserInstitutionServiceTest {
         when(UserInstitution.count(embeddedCaptor.capture()))
                 .thenReturn(Uni.createFrom().item(1L));
         UniAssertSubscriber<Boolean> subscriber = userInstitutionService
-                .existsValidUserProduct(userId, null, productId, PermissionTypeEnum.ANY)
+                .existsValidUserProduct(userId, null, productId, PermissionTypeEnum.ANY, AVAILABLE_PRODUCT_STATES)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         Assertions.assertFalse(embeddedCaptor.getValue().toString().contains("institutionId"));
         Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("productId"));
@@ -204,7 +207,7 @@ class UserInstitutionServiceTest {
         when(UserInstitution.count(embeddedCaptor.capture()))
                 .thenReturn(Uni.createFrom().item(0L));
         UniAssertSubscriber<Boolean> subscriber = userInstitutionService
-                .existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ADMIN)
+                .existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ADMIN, AVAILABLE_PRODUCT_STATES)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("institutionId"));
         Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("productId"));
@@ -222,7 +225,7 @@ class UserInstitutionServiceTest {
         when(UserInstitution.count(embeddedCaptor.capture()))
                 .thenReturn(Uni.createFrom().item(0L));
         UniAssertSubscriber<Boolean> subscriber = userInstitutionService
-                .existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ANY)
+                .existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ANY, AVAILABLE_PRODUCT_STATES)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("institutionId"));
         Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("productId"));
@@ -241,7 +244,7 @@ class UserInstitutionServiceTest {
                 .thenReturn(Uni.createFrom().item(1L));
 
         UniAssertSubscriber<Boolean> subscriber = userInstitutionService
-                .existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ADMIN)
+                .existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ADMIN, AVAILABLE_PRODUCT_STATES)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("institutionId"));
@@ -260,7 +263,7 @@ class UserInstitutionServiceTest {
         when(UserInstitution.count(embeddedCaptor.capture()))
                 .thenReturn(Uni.createFrom().item(1L));
         UniAssertSubscriber<Boolean> subscriber = userInstitutionService
-                .existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ANY)
+                .existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ANY, AVAILABLE_PRODUCT_STATES)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("institutionId"));
         Assertions.assertTrue(embeddedCaptor.getValue().toString().contains("productId"));

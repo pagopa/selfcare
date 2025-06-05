@@ -693,4 +693,91 @@ Feature: Institution
     When I send a PUT request to "/institutions/{institutionId}"
     Then The status code is 401
 
-  ######################### END PUT /institutions/{institutionId} #########################
+  ######################### END PUT /institutions/{institutionId} ###########################
+
+  ######## BEGIN POST /institutions/{institutionId}/product/{productId}/check-user ##########
+
+  Scenario: Unsuccessfully retrieve check-user (missing fiscalCode field)
+    Given User login with username "r.balboa" and password "test"
+    And The following request body:
+      """
+      {
+          "invalidField": "PRVTNT80A41H401T"
+      }
+      """
+    And The following path params:
+      | institutionId  | a1b2c3d4-5678-90ab-cdef-1234567890ab  |
+      | productId      | prod-io                               |
+    When I send a POST request to "institutions/{institutionId}/product/{productId}/check-user"
+    Then The status code is 400
+    And The response body contains:
+      | title                                                                | Constraint Violation                       |
+      | status                                                               | 400                                        |
+    And The response body contains the list "violations" of size 1
+    And The response body contains at path "violations" the following list of objects in any order:
+      | field                               | message                  |
+      | checkUser.searchUserDto.fiscalCode  | Fiscal code is required  |
+
+  Scenario: Successfully retrieve check user when there's already a user
+    Given User login with username "r.balboa" and password "test"
+    And The following request body:
+      """
+      {
+          "fiscalCode": "PRVTNT80A41H401T"
+      }
+      """
+    And The following path params:
+      | institutionId  | a1b2c3d4-5678-90ab-cdef-1234567890ab  |
+      | productId      | prod-io                               |
+    When I send a POST request to "institutions/{institutionId}/product/{productId}/check-user"
+    Then The status code is 200
+    And The response body contains string:
+      | true |
+
+  Scenario: Successfully retrieve check user when the user is onboarded but deleted
+    Given User login with username "r.balboa" and password "test"
+    And The following request body:
+      """
+      {
+          "fiscalCode": "PRVTNT80A41H401T"
+      }
+      """
+    And The following path params:
+      | institutionId  | a1b2c3d4-5678-90ab-cdef-1234567890ab  |
+      | productId      | prod-interop                          |
+    When I send a POST request to "institutions/{institutionId}/product/{productId}/check-user"
+    Then The status code is 200
+    And The response body contains string:
+      | false |
+
+  Scenario: Successfully retrieve check user when the user is not present on pdv
+    Given User login with username "r.balboa" and password "test"
+    And The following request body:
+      """
+      {
+          "fiscalCode": "CCCVTNT80A41H401C"
+      }
+      """
+    And The following path params:
+      | institutionId  | a1b2c3d4-5678-90ab-cdef-1234567890ab  |
+      | productId      | prod-interop                          |
+    When I send a POST request to "institutions/{institutionId}/product/{productId}/check-user"
+    Then The status code is 200
+    And The response body contains string:
+      | false |
+
+  Scenario: Bad Token while invocking check user
+    Given A bad jwt token
+    And The following request body:
+      """
+      {
+          "fiscalCode": "PRVTNT80A41H401T",
+      }
+      """
+    And The following path params:
+      | institutionId  | a1b2c3d4-5678-90ab-cdef-1234567890ab  |
+      | productId      | prod-io                               |
+    When I send a POST request to "institutions/{institutionId}/product/{productId}/check-user"
+    Then The status code is 401
+
+      ########## END POST /institutions/{institutionId}/product/{productId}/check-user ############

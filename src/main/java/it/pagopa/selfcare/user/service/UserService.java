@@ -63,4 +63,6 @@ public interface UserService {
     Uni<UserInstitutionWithActions> getUserInstitutionWithPermission(String userId, String institutionId, String productId);
 
     Uni<UsersCountResponse> getUsersCount(String institutionId, String productId, List<PartyRole> roles, List<OnboardedProductState> status);
+
+    Uni<Boolean> checkUser(String fiscalCode, String institutionId, String productId);
 }

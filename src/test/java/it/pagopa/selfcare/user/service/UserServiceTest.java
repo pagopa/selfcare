@@ -14,6 +14,7 @@ import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
@@ -36,6 +37,7 @@ import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.utils.CreateOrUpdateUserByFiscalCodeResponse;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import org.apache.http.HttpStatus;
 import org.bson.types.ObjectId;
@@ -2272,6 +2274,59 @@ class UserServiceTest {
                 .assertCompleted();
 
         verify(userInstitutionService).countUsers(institutionId, productId, fullListOfRoles, status);
+    }
+
+    @Test
+    void checkUser_shouldReturnTrue_whenUserExistsAndIsValid() {
+        String fiscalCode = "fiscalCode";
+        String institutionId = "institutionId";
+        String productId = "productId";
+        UserResource userDto = new UserResource();
+        userDto.setId(userId);
+
+        Mockito.when(userRegistryApi.searchUsingPOST(any(), any()))
+                .thenReturn(Uni.createFrom().item(userDto));
+
+        Mockito.when(userInstitutionService.existsValidUserProduct(
+                        userId.toString(), institutionId, productId, PermissionTypeEnum.ANY, List.of(ACTIVE, SUSPENDED)))
+                .thenReturn(Uni.createFrom().item(Boolean.TRUE));
+
+        Uni<Boolean> result = userService.checkUser(fiscalCode, institutionId, productId);
+
+        assertTrue(result.await().indefinitely());
+    }
+
+    @Test
+    void checkUser_shouldReturnFalse_whenUserNotFound() {
+        String fiscalCode = "fiscalCode";
+        String institutionId = "institutionId";
+        String productId = "productId";
+        WebApplicationException notFoundException = new WebApplicationException(Response.status(404).build());
+
+        Mockito.when(userRegistryApi.searchUsingPOST(any(), any()))
+                .thenReturn(Uni.createFrom().failure(notFoundException));
+
+        Uni<Boolean> result = userService.checkUser(fiscalCode, institutionId, productId);
+
+        assertFalse(result.await().indefinitely());
+    }
+
+    @Test
+    void checkUser_shouldPropagateOtherErrors() {
+        String fiscalCode = "fiscalCode";
+        String institutionId = "institutionId";
+        String productId = "productId";
+        RuntimeException genericException = new RuntimeException("Unexpected error");
+
+        Mockito.when(userRegistryApi.searchUsingPOST(any(), any()))
+                .thenReturn(Uni.createFrom().failure(genericException));
+
+        UniAssertSubscriber<Boolean> subscriber =
+                userService.checkUser(fiscalCode, institutionId, productId)
+                        .subscribe()
+                        .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(RuntimeException.class);
     }
 
 }

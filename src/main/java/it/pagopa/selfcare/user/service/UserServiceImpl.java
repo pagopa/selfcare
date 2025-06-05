@@ -7,6 +7,7 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
@@ -34,6 +35,7 @@ import it.pagopa.selfcare.user.service.utils.OPERATION_TYPE;
 import it.pagopa.selfcare.user.util.ActionMapRetriever;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.WebApplicationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -85,13 +87,10 @@ public class UserServiceImpl implements UserService {
     private final ActionMapRetriever actionMapRetriever;
 
     Supplier<String> randomMailId = () -> (MAIL_ID_PREFIX + UUID.randomUUID());
-
     private static final String WORK_CONTACTS = "workContacts";
-
     static final String USERS_WORKS_FIELD_LIST = "fiscalCode,familyName,email,name,workContacts";
-
     public static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
-
+    public static final String USER_FIELD_LIST_WITHOUT_WORK_CONTACTS = "name,familyName,fiscalCode";
     private static final String USER_INSTITUTION_FOUNDED = "UserInstitution with userId: {} and institutionId: {} founded";
     private static final String USER_INSTITUTION_NOT_FOUND = "UserInstitution with userId: {} and institutionId: {} not found";
 
@@ -851,6 +850,24 @@ public class UserServiceImpl implements UserService {
         final List<OnboardedProductState> statusList = Optional.ofNullable(status).filter(l -> !l.isEmpty()).orElse(List.of(ACTIVE));
         return userInstitutionService.countUsers(institutionId, productId, roleList, statusList)
                 .onItem().transform(count -> new UsersCountResponse(institutionId, productId, roleList, statusList, count));
+    }
+
+    @Override
+    public Uni<Boolean> checkUser(String fiscalCode, String institutionId, String productId) {
+        return userRegistryService.searchUsingPOST(USER_FIELD_LIST_WITHOUT_WORK_CONTACTS, new UserSearchDto(fiscalCode))
+                .flatMap(user -> userInstitutionService.existsValidUserProduct(
+                        user.getId().toString(),
+                        institutionId,
+                        productId,
+                        PermissionTypeEnum.ANY,
+                        List.of(ACTIVE,SUSPENDED)
+                ))
+                .onFailure(this::isNotFound)
+                .recoverWithItem(false);
+    }
+
+    private boolean isNotFound(Throwable throwable) {
+        return ((WebApplicationException) throwable).getResponse().getStatus() == 404;
     }
 
 }

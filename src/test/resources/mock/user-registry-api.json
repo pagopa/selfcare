@@ -283,6 +283,48 @@
       "path": "/user-registry-mock/v1/users/search",
       "queryStringParameters": {
         "fl": [
+          "name,familyName,fiscalCode"
+        ]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "PRVTNT80A41H401T"
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"fiscalCode\":\"PRVTNT80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"John\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"}}}"    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/user-registry-mock/v1/users/search",
+      "queryStringParameters": {
+        "fl": [
+          "name,familyName,fiscalCode"
+        ]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "CCCVTNT80A41H401C"
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":404,\"body\":\"Not Found\"}"    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/user-registry-mock/v1/users/search",
+      "queryStringParameters": {
+        "fl": [
           "name,familyName,email,workContacts"
         ]
       },

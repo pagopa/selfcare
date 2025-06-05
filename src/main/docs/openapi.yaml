@@ -118,6 +118,64 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
+  /institutions/{institutionId}/product/{productId}/check-user:
+    post:
+      tags:
+      - Institution
+      summary: Verify if a user is already onboarded on an institution and product
+        given its fiscal code
+      description: Verify if a user is already onboarded on an institution and product
+        given its fiscal code
+      operationId: checkUserUsingPOST
+      parameters:
+      - name: institutionId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchUserDto"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: boolean
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "403":
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+      security:
+      - SecurityScheme: []
   /institutions/{institutionId}/products/{productId}/created-at:
     put:
       tags:

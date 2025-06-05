@@ -9,6 +9,7 @@ import it.pagopa.selfcare.user.controller.response.DeletedUserCountResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.controller.response.UsersCountResponse;
+import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserService;
 import it.pagopa.selfcare.user.util.GeneralUtils;
@@ -143,6 +144,27 @@ public class InstitutionController {
                                                                            @PathParam(value = "productId") String productId) {
         return userService.deleteUserInstitutionProductUsers(institutionId.replaceAll("[^a-zA-Z0-9-_]", ""),
                         productId.replaceAll("[^a-zA-Z0-9-_]", ""));
+    }
+
+    @Operation(
+            summary = "Verify if a user is already onboarded on an institution and product given its fiscal code",
+            operationId = "checkUserUsingPOST",
+            description = "Verify if a user is already onboarded on an institution and product given its fiscal code"
+    )
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = Boolean.class), mediaType = "application/json")),
+            @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "401", description = "Not Authorized", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
+    })
+    @POST
+    @Path(value = "/{institutionId}/product/{productId}/check-user")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Boolean> checkUser(@PathParam(value = "institutionId") String institutionId,
+                                  @PathParam(value = "productId") String productId,
+                                  @Valid SearchUserDto searchUserDto) {
+        return userService.checkUser(searchUserDto.getFiscalCode(), institutionId, productId);
     }
 
 }

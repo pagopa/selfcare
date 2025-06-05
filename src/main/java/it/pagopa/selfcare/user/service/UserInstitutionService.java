@@ -45,7 +45,7 @@ public interface UserInstitutionService {
 
     Uni<UserInstitution> persistOrUpdate(UserInstitution userInstitution);
 
-    Uni<Boolean> existsValidUserProduct(String userId, String institutionId, String productId, PermissionTypeEnum permission);
+    Uni<Boolean> existsValidUserProduct(String userId, String institutionId, String productId, PermissionTypeEnum permission, List<OnboardedProductState> status);
 
     Uni<Long> updateInstitutionDescription(String institutionId, UpdateDescriptionDto updateDescriptionDto);
 
