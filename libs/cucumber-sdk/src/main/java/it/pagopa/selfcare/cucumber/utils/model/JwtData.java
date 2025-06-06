@@ -13,6 +13,6 @@ public class JwtData {
     private String password;
 
     private Map<String, Object> jwtHeader;
-    private Map<String, String> jwtPayload;
+    private Map<String, Object> jwtPayload;
 
 }
