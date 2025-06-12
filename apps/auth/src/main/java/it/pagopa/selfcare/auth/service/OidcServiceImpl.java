@@ -2,6 +2,7 @@ package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.controller.response.OidcExchangeResponse;
+import it.pagopa.selfcare.auth.controller.response.OidcExchangeTokenResponse;
 import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.util.GeneralUtils;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -82,6 +83,6 @@ public class OidcServiceImpl implements OidcService {
             claims ->
                 sessionService.generateSessionToken(
                     claims.get("fiscalNumber"), claims.get("name"), claims.get("familyName")))
-        .map(sessionToken -> OidcExchangeResponse.builder().sessionToken(sessionToken).build());
+        .map(sessionToken -> OidcExchangeTokenResponse.builder().sessionToken(sessionToken).build());
   }
 }

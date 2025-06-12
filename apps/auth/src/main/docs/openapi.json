@@ -34,9 +34,19 @@
           "200" : {
             "description" : "OK",
             "content" : {
-              "application/json" : {
+              "application/problem+json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/OidcExchangeResponse"
+                  "$ref" : "#/components/schemas/OidcExchangeTokenResponse"
+                }
+              }
+            }
+          },
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OidcExchangeOtpResponse"
                 }
               }
             }
@@ -87,6 +97,20 @@
   },
   "components" : {
     "schemas" : {
+      "OidcExchangeOtpResponse" : {
+        "type" : "object",
+        "properties" : {
+          "requiresOtpFlow" : {
+            "type" : "boolean"
+          },
+          "otpSessionUid" : {
+            "type" : "string"
+          },
+          "maskedEmail" : {
+            "type" : "string"
+          }
+        }
+      },
       "OidcExchangeRequest" : {
         "required" : [ "code", "redirectUri" ],
         "type" : "object",
@@ -101,9 +125,12 @@
           }
         }
       },
-      "OidcExchangeResponse" : {
+      "OidcExchangeTokenResponse" : {
         "type" : "object",
         "properties" : {
+          "requiresOtpFlow" : {
+            "type" : "boolean"
+          },
           "sessionToken" : {
             "type" : "string"
           }
