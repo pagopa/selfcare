@@ -2,7 +2,9 @@ package it.pagopa.selfcare.auth.controller;
 
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.controller.request.OidcExchangeRequest;
+import it.pagopa.selfcare.auth.controller.response.OidcExchangeOtpResponse;
 import it.pagopa.selfcare.auth.controller.response.OidcExchangeResponse;
+import it.pagopa.selfcare.auth.controller.response.OidcExchangeTokenResponse;
 import it.pagopa.selfcare.auth.controller.response.Problem;
 import it.pagopa.selfcare.auth.service.OidcService;
 import jakarta.validation.Valid;
@@ -31,9 +33,8 @@ public class OidcController {
             operationId = "oidcExchange"
     )
     @APIResponses(value = {
-            @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = OidcExchangeResponse.class), mediaType = "application/json")),
-            @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
-            @APIResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = OidcExchangeTokenResponse.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "201", description = "Created", content = @Content(schema = @Schema(implementation = OidcExchangeOtpResponse.class), mediaType = "application/problem+json")),
             @APIResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
             @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
     })
