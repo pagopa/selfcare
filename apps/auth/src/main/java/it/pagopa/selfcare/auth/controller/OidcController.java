@@ -35,6 +35,7 @@ public class OidcController {
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = OidcExchangeTokenResponse.class), mediaType = "application/problem+json")),
             @APIResponse(responseCode = "201", description = "Created", content = @Content(schema = @Schema(implementation = OidcExchangeOtpResponse.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
             @APIResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
             @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
     })
