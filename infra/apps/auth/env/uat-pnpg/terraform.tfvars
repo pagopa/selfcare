@@ -74,6 +74,10 @@ app_settings = [
   {
     name  = "ONE_IDENTITY_URL"
     value = "https://uat.oneid.pagopa.it"
+  },
+  {
+    name  = "FEATURE_FLAG_OTP_ENABLED"
+    value = false
   }
 ]
 
