@@ -28,12 +28,7 @@ import it.pagopa.selfcare.user.service.utils.CreateOrUpdateUserByFiscalCodeRespo
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.MobilePhoneCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.UserResource;
-import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.util.*;
 
@@ -655,7 +650,7 @@ class UserControllerTest {
 
 
         // Mock the userService.createOrUpdateUser method
-        when(userService.createOrUpdateUserByUserId(any(AddUserRoleDto.class), anyString(), any()))
+        when(userService.createOrUpdateUserByUserId(any(AddUserRoleDto.class), anyString(), any(), any()))
                 .thenReturn(Uni.createFrom().item("example"));
 
         // Perform the API call
@@ -676,7 +671,7 @@ class UserControllerTest {
         // Set userDto properties
 
         // Mock the userService.createOrUpdateUser method
-        when(userService.createOrUpdateUserByUserId(any(AddUserRoleDto.class), anyString(), any(LoggedUser.class)))
+        when(userService.createOrUpdateUserByUserId(any(AddUserRoleDto.class), anyString(), any(LoggedUser.class), any()))
                 .thenReturn(Uni.createFrom().nullItem());
 
         // Perform the API call

@@ -452,31 +452,32 @@ public class UserServiceImpl implements UserService {
      * Finally, if any operation fails, it logs an error message and returns a Uni that emits a failure.
      */
     @Override
-    public Uni<String> createOrUpdateUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser) {
+    public Uni<String> createOrUpdateUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser, OnboardedProductState status) {
         return userRegistryService.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)
                 .onFailure(UserUtils::isUserNotFoundExceptionOnUserRegistry).retry().atMost(2)
                 .onFailure(UserUtils::isUserNotFoundExceptionOnUserRegistry).recoverWithUni(throwable -> Uni.createFrom().failure(new ResourceNotFoundException(throwable.getMessage())))
-                .onItem().transformToUni(userResource -> updateUserInstitutionByUserId(userResource, userDto, loggedUser))
+                .onItem().transformToUni(userResource -> updateUserInstitutionByUserId(userResource, userDto, loggedUser, status))
                 .onFailure().invoke(exception -> log.error("Error during retrieve user from userRegistry: {} ", exception.getMessage(), exception));
     }
 
     public Uni<String> createUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser) {
         var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(userDto.getInstitutionId()).build().constructMap();
-        var productFilters = OnboardedProductFilter.builder().productId(userDto.getProduct().getProductId()).status(List.of(ACTIVE)).build().constructMap();
+        var productFilters = OnboardedProductFilter.builder().productId(userDto.getProduct().getProductId()).status(List.of(ACTIVE, SUSPENDED)).build().constructMap();
         Map<String, Object> queryParameter = userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters);
         return userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter)
                 .onItem().transformToUni(userInstitution -> {
                     if (Optional.ofNullable(userInstitution).isPresent()) {
-                        log.info("User with userId: {} has already onboarded for product {}. Proceeding with check role", userId, userDto.getProduct().getProductId());
+                        log.info("User with userId: {} has already onboarded for product {}. Proceeding with check role", Encode.forJava(userId), Encode.forJava(userDto.getProduct().getProductId()));
                         PartyRole roleOnProduct = retrieveUserRoleOnProduct(userInstitution, userDto.getProduct().getProductId());
+                        OnboardedProductState currentStatus = retrieveUserStatusOnProduct(userInstitution, userDto.getProduct().getProductId());
                         return checkAndUpdateUserMail(userInstitution, userDto.getUserMailUuid())
-                                .onItem().transformToUni(ignore -> evaluateRoleAndCreateOrUpdateUserByUserId(userDto, userId, loggedUser, roleOnProduct));
+                                .onItem().transformToUni(ignore -> evaluateRoleAndCreateOrUpdateUserByUserId(userDto, userId, loggedUser, roleOnProduct, currentStatus));
                     } else {
-                        log.info("User with userId: {} has not onboarded for product {}. Proceeding with create", userId, userDto.getProduct().getProductId());
-                        return createOrUpdateUserByUserId(userDto, userId, loggedUser);
+                        log.info("User with userId: {} has not onboarded for product {}. Proceeding with create", Encode.forJava(userId), Encode.forJava(userDto.getProduct().getProductId()));
+                        return createOrUpdateUserByUserId(userDto, userId, loggedUser, ACTIVE);
                     }
                 })
-                .onFailure().invoke(exception -> log.error("Error during createOrUpdateManagerByUserId for userId: {}, institutionId: {}: {}", userId, userDto.getInstitutionId(), exception.getMessage(), exception));
+                .onFailure().invoke(exception -> log.error("Error during createOrUpdateManagerByUserId for userId: {}, institutionId: {}: {}", Encode.forJava(userId), Encode.forJava(userDto.getInstitutionId()), exception.getMessage(), exception));
     }
 
     /**
@@ -497,12 +498,14 @@ public class UserServiceImpl implements UserService {
      * The evaluateRoleAndCreateOrUpdateUserByUserId method is designed to evaluate the role of a user for a specific product
      * and either create or update the user's role based on certain conditions.
      * First, the method checks if the roleOnProduct is null. If it is, we need to create new role for the user on selected product.
-     * Next, the method compares the role specified in userDto with the existing roleOnProduct.
-     * If the new role is lower than the existing role (es. new role DELEGATE, old role MANAGER), it then calls
-     * we have to delete the old role, and subsequently we create new role for the user on selected product.
-     * If the new role is equals or higher than the existing role, throw a UserRoleAlreadyPresentException to indicate that we need to keep the old role.
+     * Next, if the new role is MANAGER:
+     * - If the user already has the MANAGER role, no new role is created and the method completes successfully.
+     * - If the user has a different role, the existing role is marked as DELETED and a new MANAGER role is created
+     *   with the same status as the previous one.
+     * If the new role is not MANAGER and the user already has any role on the product, the method throws a
+     * UserRoleAlreadyPresentException to prevent assigning a conflicting role.
      */
-    private Uni<String> evaluateRoleAndCreateOrUpdateUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser, PartyRole roleOnProduct) {
+    private Uni<String> evaluateRoleAndCreateOrUpdateUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser, PartyRole roleOnProduct, OnboardedProductState currentStatus) {
         PartyRole newRole;
         try {
             newRole = PartyRole.valueOf(userDto.getProduct().getRole());
@@ -510,15 +513,25 @@ public class UserServiceImpl implements UserService {
             throw new InvalidRequestException("Invalid role: " + userDto.getProduct().getRole() + ". Allowed value are: " + Arrays.toString(PartyRole.values()));
         }
         if (Objects.isNull(roleOnProduct)) {
-            return createOrUpdateUserByUserId(userDto, userId, loggedUser);
-        } else if (newRole.compareTo(roleOnProduct) < 0) {
-            log.info("User {}, for product {}, has role {}, which is lower than {}. The old role will be deleted, and the new role will be created.", userId, userDto.getProduct().getProductId(), roleOnProduct, userDto.getProduct().getRole());
-            return userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userId, userDto.getInstitutionId(), userDto.getProduct().getProductId(), null, null, DELETED)
-                    .onItem().transformToUni(longValue -> createOrUpdateUserByUserId(userDto, userId, loggedUser));
+            return createOrUpdateUserByUserId(userDto, userId, loggedUser, ACTIVE);
+        }
+
+        if (PartyRole.MANAGER.equals(newRole)) {
+            if (PartyRole.MANAGER.equals(roleOnProduct)) {
+                log.info("User {} already has MANAGER role with status {}. No changes needed.", Encode.forJava(userId), currentStatus);
+                return Uni.createFrom().failure(new UserRoleAlreadyPresentException(
+                        String.format("User already has MANAGER role with status %s for product [%s].", currentStatus, userDto.getProduct().getProductId())));
+            } else {
+                log.info("User {} has role {} with status {}. Replacing with MANAGER role keeping same status.", Encode.forJava(userId), roleOnProduct, currentStatus);
+                return userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(
+                                userId, userDto.getInstitutionId(), userDto.getProduct().getProductId(), null, null, DELETED)
+                        .onItem().transformToUni(ignore -> createOrUpdateUserByUserId(userDto, userId, loggedUser, currentStatus));
+            }
         } else {
-            log.info("User {}, for product {}, has role {}, which is equals or biggest than {}. The old role is kept.", userId, userDto.getProduct().getProductId(), roleOnProduct, userDto.getProduct().getRole());
-            return Uni.createFrom().failure(new UserRoleAlreadyPresentException(String.format("User already has a role equals or bigger than %s for the product [%s] we cannot create %s role",
-                    roleOnProduct, userDto.getProduct().getProductId(), userDto.getProduct().getRole())));
+            log.info("User {} already has status {} for product {}. Cannot assign {} role.", Encode.forJava(userId), Encode.forJava(String.valueOf(currentStatus)), Encode.forJava(userDto.getProduct().getProductId()), Encode.forJava(String.valueOf(newRole)));
+            return Uni.createFrom().failure(new UserRoleAlreadyPresentException(
+                    String.format("User already has status %s for product [%s]. Cannot assign %s role.",
+                            currentStatus, userDto.getProduct().getProductId(), newRole)));
         }
     }
 
@@ -529,13 +542,26 @@ public class UserServiceImpl implements UserService {
         if (Objects.nonNull(userInstitution.getProducts()) && !userInstitution.getProducts().isEmpty()) {
             return userInstitution.getProducts().stream()
                     .filter(onboardedProduct -> productId.equalsIgnoreCase(onboardedProduct.getProductId()))
-                    .filter(onboardedProduct -> ACTIVE.equals(onboardedProduct.getStatus()))
+                    .filter(onboardedProduct -> List.of(ACTIVE, SUSPENDED).contains(onboardedProduct.getStatus()))
                     .findFirst()
                     .map(OnboardedProduct::getRole)
                     .orElse(null);
         }
         return null;
     }
+
+    private OnboardedProductState retrieveUserStatusOnProduct(UserInstitution userInstitution, String productId) {
+        if (Objects.nonNull(userInstitution.getProducts()) && !userInstitution.getProducts().isEmpty()) {
+            return userInstitution.getProducts().stream()
+                    .filter(onboardedProduct -> productId.equalsIgnoreCase(onboardedProduct.getProductId()))
+                    .filter(onboardedProduct -> List.of(ACTIVE, SUSPENDED).contains(onboardedProduct.getStatus()))
+                    .findFirst()
+                    .map(OnboardedProduct::getStatus)
+                    .orElse(null);
+        }
+        return null;
+    }
+
 
     /**
      * Updates or creates a UserInstitution by userId and institutionId, persists the changes,
@@ -546,9 +572,9 @@ public class UserServiceImpl implements UserService {
      * @param loggedUser The currently logged-in user.
      * @return A Uni containing the userId as a string.
      */
-    private Uni<String> updateUserInstitutionByUserId(UserResource userResource, AddUserRoleDto userDto, LoggedUser loggedUser) {
+    private Uni<String> updateUserInstitutionByUserId(UserResource userResource, AddUserRoleDto userDto, LoggedUser loggedUser, OnboardedProductState status) {
         return userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), userDto.getInstitutionId())
-                .onItem().transformToUni(userInstitution -> updateOrCreateUserInstitution(userDto, userInstitution, userResource.getId().toString()))
+                .onItem().transformToUni(userInstitution -> updateOrCreateUserInstitution(userDto, userInstitution, userResource.getId().toString(), status))
                 .onItem().ifNotNull().transformToUni(userInstitutionService::persistOrUpdate)
                 .onItem().ifNotNull().invoke(userInstitution -> log.info("UserInstitution with userId: {}, institutionId: {} persisted", userInstitution.getUserId(), userInstitution.getInstitutionId()))
                 .onFailure().invoke(exception -> log.error("Error during persist user on UserInstitution: {} ", exception.getMessage(), exception))
@@ -557,7 +583,7 @@ public class UserServiceImpl implements UserService {
 
     }
 
-    private Uni<UserInstitution> updateOrCreateUserInstitution(AddUserRoleDto userDto, UserInstitution userInstitution, String userId) {
+    private Uni<UserInstitution> updateOrCreateUserInstitution(AddUserRoleDto userDto, UserInstitution userInstitution, String userId, OnboardedProductState status) {
         if (userInstitution == null) {
             log.info(USER_INSTITUTION_NOT_FOUND, userId, userDto.getInstitutionId());
             return Uni.createFrom().item(userInstitutionMapper.toNewEntity(userDto, userId));
@@ -572,7 +598,7 @@ public class UserServiceImpl implements UserService {
         List<String> productRoleToAdd = checkAlreadyOnboardedProductRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution);
         userDto.getProduct().setProductRoles(productRoleToAdd);
 
-        productRoleToAdd.forEach(productRole -> userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct(), productRole)));
+        productRoleToAdd.forEach(productRole -> userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct(), productRole, status)));
         return Uni.createFrom().item(userInstitution);
     }
 

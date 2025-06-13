@@ -3125,47 +3125,7 @@ Feature: User
       | productId                     | tokenId                                       | role         | productRole               | status     |
       | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE     | referente amministrativo  | DELETED    |
       | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | MANAGER      | admin                     | ACTIVE     |
-    Given User login with username "j.doe" and password "test"
-    And The following request body:
-      """
-      {
-          "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
-          "product": {
-              "productId": "prod-io",
-              "role": "MANAGER",
-              "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
-              "productRoles": [
-                  "admin"
-              ]
-          },
-          "institutionDescription": "Comune di Bergamo",
-          "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
-      }
-      """
-    And The following path params:
-      | userId                        | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
-    When I send a POST request to "users/{userId}/onboarding"
-    Then The status code is 200
-    And The response body contains string:
-      | 97a511a7-2acc-47b9-afed-2f3c65753b4a                                          |
-    Given User login with username "j.doe" and password "test"
-    And The following path params:
-      | institutionId                 |  e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21         |
-    And The following query params:
-      | userId                        | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
-    When I send a GET request to "institutions/{institutionId}/user-institutions"
-    Then The status code is 200
-    And The response body contains the list "" of size 1
-    And The response body contains:
-      | [0].userId                    | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
-      | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
-      | [0].institutionDescription    | Comune di Bergamo                             |
-      | [0].userMailUuid              | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1  |
-    And The response body contains the list "[0].products" of size 2
-    And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId                     | tokenId                                       | role         | productRole               | status     |
-      | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE     | referente amministrativo  | DELETED    |
-      | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | MANAGER      | admin                     | ACTIVE     |
+
 
   Scenario: Unsuccessfully update or create a user by userId after check if user is a manager for the specified product (with wrong role and user not created)
     Given User login with username "j.doe" and password "test"
@@ -3193,7 +3153,7 @@ Feature: User
       | Something has gone wrong in the server                                        |
 
   @RemoveUserInstitutionAfterCreateFromAPI
-  Scenario: Unsuccessfully update or create a user by userId after check if user is a manager for the specified product (with wrong role and user created)
+  Scenario: Successfully update or create a user by userId when is already onboarded as MANAGER, but email updated
     Given User login with username "j.doe" and password "test"
     And The following request body:
       """
@@ -3201,7 +3161,7 @@ Feature: User
           "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
           "product": {
               "productId": "prod-io",
-              "role": "DELEGATE",
+              "role": "MANAGER",
               "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
               "productRoles": [
                   "referente amministrativo"
@@ -3232,8 +3192,8 @@ Feature: User
       | [0].userMailUuid              | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1                           |
     And The response body contains the list "[0].products" of size 1
     And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId                     | tokenId                                       | role                   | productRole               | status     |
-      | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE               | referente amministrativo  | ACTIVE     |
+      | productId                     | tokenId                                       | role                  | productRole               | status     |
+      | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | MANAGER               | referente amministrativo  | ACTIVE     |
     Given User login with username "j.doe" and password "test"
     And The following request body:
       """
@@ -3241,10 +3201,52 @@ Feature: User
           "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
           "product": {
               "productId": "prod-io",
-              "role": "WRONGROLE",
+              "role": "MANAGER",
               "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
               "productRoles": [
-                  "admin"
+                  "referente amministrativo"
+              ]
+          },
+          "institutionDescription": "Comune di Bergamo",
+          "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba2"
+      }
+      """
+    And The following path params:
+      | userId                        | 97a511a7-2acc-47b9-afed-2f3c65753b4a    |
+    When I send a POST request to "users/{userId}/onboarding"
+    Then The status code is 200
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 |  e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21  |
+    And The following query params:
+      | userId                        | 97a511a7-2acc-47b9-afed-2f3c65753b4a  |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 97a511a7-2acc-47b9-afed-2f3c65753b4a                                   |
+      | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21                                   |
+      | [0].institutionDescription    | Comune di Bergamo                                                      |
+      | [0].userMailUuid              | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba2                           |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | tokenId                                       | role                  | productRole               | status     |
+      | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | MANAGER               | referente amministrativo  | ACTIVE     |
+
+
+  @RemoveUserInstitutionAfterCreateFromAPI
+  Scenario: Successfully update or create a user by userId when is already onboarded as DELEGATE with status SUSPENDED
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+      {
+          "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
+          "product": {
+              "productId": "prod-io",
+              "role": "DELEGATE",
+              "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+              "productRoles": [
+                  "referente amministrativo"
               ]
           },
           "institutionDescription": "Comune di Bergamo",
@@ -3252,11 +3254,74 @@ Feature: User
       }
       """
     And The following path params:
-      | userId                        | 97a511a7-2acc-47b9-afed-2f3c65753b4a                                     |
+      | userId                        | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
     When I send a POST request to "users/{userId}/onboarding"
-    Then The status code is 400
+    Then The status code is 201
     And The response body contains string:
-      | Invalid role: WRONGROLE. Allowed value are: [MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA]       |
+      | 97a511a7-2acc-47b9-afed-2f3c65753b4a                                          |
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | id              | 97a511a7-2acc-47b9-afed-2f3c65753b4a                        |
+    And The following query params:
+      | status          | SUSPENDED                                                   |
+      | institutionId   | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21                        |
+    When I send a PUT request to "users/{id}/status"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 |  e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21         |
+    And The following query params:
+      | userId                        | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 97a511a7-2acc-47b9-afed-2f3c65753b4a                                   |
+      | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21                                   |
+      | [0].institutionDescription    | Comune di Bergamo                                                      |
+      | [0].userMailUuid              | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1                           |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | tokenId                                       | role                  | productRole               | status     |
+      | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE              | referente amministrativo  | SUSPENDED  |
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+      {
+          "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
+          "product": {
+              "productId": "prod-io",
+              "role": "DELEGATE",
+              "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+              "productRoles": [
+                  "referente amministrativo"
+              ]
+          },
+          "institutionDescription": "Comune di Bergamo",
+          "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+      }
+      """
+    And The following path params:
+      | userId                        | 97a511a7-2acc-47b9-afed-2f3c65753b4a    |
+    When I send a POST request to "users/{userId}/onboarding"
+    Then The status code is 200
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 |  e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21  |
+    And The following query params:
+      | userId                        | 97a511a7-2acc-47b9-afed-2f3c65753b4a  |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 97a511a7-2acc-47b9-afed-2f3c65753b4a                                   |
+      | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21                                   |
+      | [0].institutionDescription    | Comune di Bergamo                                                      |
+      | [0].userMailUuid              | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1                           |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | tokenId                                       | role                  | productRole               | status     |
+      | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE              | referente amministrativo  | SUSPENDED     |
 
   Scenario: Unsuccessfully update or create a user by userId after check if user is a manager for the specified product (with wrong userId)
     Given User login with username "j.doe" and password "test"

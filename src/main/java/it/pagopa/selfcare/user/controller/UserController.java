@@ -314,7 +314,7 @@ public class UserController {
                                                 @Valid AddUserRoleDto userDto,
                                                 @Context SecurityContext ctx) {
         return readUserIdFromToken(ctx)
-                .onItem().transformToUni(loggedUser -> userService.createOrUpdateUserByUserId(userDto, userId, loggedUser))
+                .onItem().transformToUni(loggedUser -> userService.createOrUpdateUserByUserId(userDto, userId, loggedUser, OnboardedProductState.ACTIVE))
                 .onItem().ifNotNull().transform(ignore -> Response.status(HttpStatus.SC_CREATED).build())
                 .onItem().ifNull().continueWith(Response.status(HttpStatus.SC_OK).build());
 
@@ -327,7 +327,7 @@ public class UserController {
      */
     @Operation(description = "Checks if the user is already a manager for the specified product and, if not, creates or updates the user with a new role.", summary = "Check if the user is manager or Update/create a user by userId with a new role")
     @APIResponses({
-            @APIResponse(responseCode = "200", description = "The user is already a manager for the specified product."),
+            @APIResponse(responseCode = "200", description = "The user is already onboarded for the specified product."),
             @APIResponse(responseCode = "201", description = "The user has been created or updated with a new role."),
     })
     @POST

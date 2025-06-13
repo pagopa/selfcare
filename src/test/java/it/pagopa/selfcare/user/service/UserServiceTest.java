@@ -45,6 +45,8 @@ import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.Spy;
@@ -1210,7 +1212,7 @@ class UserServiceTest {
         when(userRegistryApi.findByIdUsingGET(any(), eq("userId"))).thenReturn(Uni.createFrom().item(userResource));
         when(userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), addUserRoleDto.getInstitutionId())).thenReturn(Uni.createFrom().item(createUserInstitution()));
 
-        userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
+        userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser, ACTIVE)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .assertFailedWith(InvalidRequestException.class, "User already has roles on Product test");
     }
@@ -1232,7 +1234,7 @@ class UserServiceTest {
         when(userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), addUserRoleDto.getInstitutionId())).thenReturn(Uni.createFrom().item(createUserInstitution()));
 
 
-        userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
+        userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser, ACTIVE)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .assertFailedWith(InvalidRequestException.class, "User already has different role on Product test");
 
@@ -1275,7 +1277,7 @@ class UserServiceTest {
 
 
         // Call the method
-        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
+        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser, ACTIVE)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
@@ -1305,7 +1307,7 @@ class UserServiceTest {
         when(productService.getProduct(any())).thenReturn(product);
 
         // Call the method
-        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
+        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser, ACTIVE)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
@@ -1345,7 +1347,7 @@ class UserServiceTest {
 
 
         // Call the method
-        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
+        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser, ACTIVE)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
@@ -1384,7 +1386,7 @@ class UserServiceTest {
 
 
         // Call the method
-        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
+        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser, ACTIVE)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
@@ -1406,7 +1408,7 @@ class UserServiceTest {
         when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().failure(new RuntimeException()));
 
         // Call the method
-        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
+        UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser, ACTIVE)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
@@ -1414,8 +1416,9 @@ class UserServiceTest {
         verify(userRegistryApi).findByIdUsingGET(any(), eq("userId"));
     }
 
-    @Test
-    void createUserFromOnboardingByUserIdUserIsAlreadyManager() {
+    @ParameterizedTest
+    @EnumSource(value = OnboardedProductState.class, names = {"ACTIVE", "SUSPENDED"})
+    void createUserFromOnboardingByUserIdUserIsAlreadyManager(OnboardedProductState status) {
         AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
         addUserRoleDto.setInstitutionId("institutionId");
         AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
@@ -1428,11 +1431,11 @@ class UserServiceTest {
         product.setProductId("test");
         product.setProductRole("admin");
         product.setRole(MANAGER);
-        product.setStatus(OnboardedProductState.ACTIVE);
+        product.setStatus(status);
 
         UserInstitution userInstitution = new UserInstitution();
         OnboardedProduct onboardedProduct = new OnboardedProduct();
-        onboardedProduct.setStatus(OnboardedProductState.ACTIVE);
+        onboardedProduct.setStatus(status);
         List<OnboardedProduct> products = new ArrayList<>();
         products.add(product);
         products.add(onboardedProduct);
@@ -1443,7 +1446,7 @@ class UserServiceTest {
 
         userService.createUserByUserId(addUserRoleDto, "userId", loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
-                .assertFailedWith(UserRoleAlreadyPresentException.class, "User already has a role equals or bigger than MANAGER for the product [test] we cannot create MANAGER role");
+                .assertFailedWith(UserRoleAlreadyPresentException.class, String.format("User already has MANAGER role with status %s for product [test].", status));
     }
 
     @Test
@@ -1479,13 +1482,14 @@ class UserServiceTest {
     }
 
 
-    @Test
-    void createUserFromOnboardingByUserIdUserWithBiggestActiveRoleOnProduct() {
+    @ParameterizedTest
+    @EnumSource(value = PartyRole.class, names = {"SUB_DELEGATE", "DELEGATE", "OPERATOR", "ADMIN_EA"})
+    void createUserFromOnboardingByUserIdWhenIsAlreadyOnboarded(PartyRole role) {
         AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
         addUserRoleDto.setInstitutionId("institutionId");
         AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
         addUserRoleProduct.setProductId("test");
-        addUserRoleProduct.setRole(SUB_DELEGATE.name());
+        addUserRoleProduct.setRole(role.name());
         addUserRoleDto.setProduct(addUserRoleProduct);
 
         LoggedUser loggedUser = LoggedUser.builder().build();
@@ -1508,11 +1512,11 @@ class UserServiceTest {
 
         userService.createUserByUserId(addUserRoleDto, "userId", loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
-                .assertFailedWith(UserRoleAlreadyPresentException.class, "User already has a role equals or bigger than MANAGER for the product [test] we cannot create SUB_DELEGATE role");
+                .assertFailedWith(UserRoleAlreadyPresentException.class, String.format("User already has status ACTIVE for product [test]. Cannot assign %s role.", role));
     }
 
     @Test
-    void createManagerByUserIdUserWithSmallestActiveRoleOnProduct() {
+    void createManagerByUserIdUserWhenIsAlreadyOnboardedWithDifferentRole() {
         AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
         addUserRoleDto.setInstitutionId("institutionId");
         AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();

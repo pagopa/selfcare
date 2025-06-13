@@ -50,7 +50,7 @@ public interface UserService {
 
     Uni<CreateOrUpdateUserByFiscalCodeResponse> createOrUpdateUserByFiscalCode(CreateUserDto userDto, LoggedUser loggedUser);
 
-    Uni<String> createOrUpdateUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser);
+    Uni<String> createOrUpdateUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser, OnboardedProductState status);
 
     Uni<String> createUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser);
 

@@ -1111,7 +1111,7 @@ paths:
               $ref: "#/components/schemas/AddUserRoleDto"
       responses:
         "200":
-          description: The user is already a manager for the specified product.
+          description: The user is already onboarded for the specified product.
           content:
             application/json: {}
         "201":

@@ -4,6 +4,7 @@ import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.OnboardedProductResponse;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
+import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -23,10 +24,11 @@ public interface OnboardedProductMapper {
     @Mapping(target = "productRole", source = "productRole")
     OnboardedProduct toNewOnboardedProduct(CreateUserDto.Product product, String productRole);
 
-    @Mapping(target = "status",  expression = "java(it.pagopa.selfcare.user.model.constants.OnboardedProductState.ACTIVE)")
+    @Mapping(target = "status",  source = "status")
     @Mapping(target = "env",  expression = "java(it.pagopa.selfcare.onboarding.common.Env.ROOT)")
     @Mapping(target = "createdAt", expression = "java(java.time.OffsetDateTime.now())")
     @Mapping(target = "updatedAt", expression = "java(java.time.OffsetDateTime.now())")
     @Mapping(target = "productRole", source = "productRole")
-    OnboardedProduct toNewOnboardedProduct(AddUserRoleDto.Product product, String productRole);
+    OnboardedProduct toNewOnboardedProduct(AddUserRoleDto.Product product, String productRole, OnboardedProductState status);
+
 }
