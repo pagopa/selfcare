@@ -2,12 +2,11 @@ package it.pagopa.selfcare.auth.entity;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntity;
-import it.pagopa.selfcare.auth.model.error.OtpStatus;
+import it.pagopa.selfcare.auth.model.OtpStatus;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
-import org.bson.codecs.pojo.annotations.BsonId;
 
 import java.time.OffsetDateTime;
 

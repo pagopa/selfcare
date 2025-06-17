@@ -2,7 +2,7 @@ package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
-import it.pagopa.selfcare.auth.model.error.OtpStatus;
+import it.pagopa.selfcare.auth.model.OtpStatus;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

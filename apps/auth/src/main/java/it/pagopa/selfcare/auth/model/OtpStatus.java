@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.auth.model.error;
+package it.pagopa.selfcare.auth.model;
 
 public enum OtpStatus {
     PENDING,
