@@ -31,6 +31,8 @@ public class OidcServiceImpl implements OidcService {
 
   private final SessionService sessionService;
 
+  private final UserService userService;
+
   @ConfigProperty(name = "auth-ms.retry.min-backoff")
   Integer retryMinBackOff;
 
@@ -81,8 +83,19 @@ public class OidcServiceImpl implements OidcService {
                             new InternalException("Cannot parse idToken from authorization code")))
         .chain(
             claims ->
-                sessionService.generateSessionToken(
-                    claims.get("fiscalNumber"), claims.get("name"), claims.get("familyName")))
-        .map(sessionToken -> OidcExchangeTokenResponse.builder().sessionToken(sessionToken).build());
+                userService.patchUser(
+                    claims.get("fiscalNumber"),
+                    claims.get("name"),
+                    claims.get("familyName"),
+                    Boolean.valueOf(claims.get("sameIdp"))))
+        .chain(
+            userClaims ->
+                sessionService
+                    .generateSessionToken(userClaims)
+                    .map(
+                        sessionToken ->
+                            OidcExchangeTokenResponse.builder()
+                                .sessionToken(sessionToken)
+                                .build()));
   }
 }
