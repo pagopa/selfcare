@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.auth.model.error;
+package it.pagopa.selfcare.auth.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

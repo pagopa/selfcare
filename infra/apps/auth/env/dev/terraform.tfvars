@@ -12,7 +12,7 @@ tags = {
   CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
 }
 
-private_dns_name = "selc-d-auth-ms-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+private_dns_name = ":selc-d-auth-ms-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
 
 container_app = {
   min_replicas = 0
