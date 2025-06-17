@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.auth.model.error.UserClaims;
+import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.util.GeneralUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;

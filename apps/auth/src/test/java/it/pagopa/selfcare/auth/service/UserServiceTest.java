@@ -6,7 +6,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
-import it.pagopa.selfcare.auth.model.error.UserClaims;
+import it.pagopa.selfcare.auth.model.UserClaims;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
