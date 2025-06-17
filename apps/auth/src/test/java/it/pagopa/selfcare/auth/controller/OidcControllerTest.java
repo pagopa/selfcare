@@ -5,7 +5,7 @@ import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.auth.controller.response.OidcExchangeResponse;
+import it.pagopa.selfcare.auth.controller.response.OidcExchangeTokenResponse;
 import it.pagopa.selfcare.auth.exception.ForbiddenException;
 import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
@@ -30,7 +30,7 @@ class OidcControllerTest {
         Json.createObjectBuilder().add("code", "code").add("redirectUri", "redirect").build();
     when(oidcService.exchange(anyString(), anyString()))
         .thenReturn(
-            Uni.createFrom().item(OidcExchangeResponse.builder().sessionToken("token").build()));
+            Uni.createFrom().item(OidcExchangeTokenResponse.builder().sessionToken("token").build()));
     given()
         .body(request.toString())
         .when()
@@ -47,7 +47,7 @@ class OidcControllerTest {
 
     when(oidcService.exchange(anyString(), anyString()))
         .thenReturn(
-            Uni.createFrom().item(OidcExchangeResponse.builder().sessionToken("token").build()));
+            Uni.createFrom().item(OidcExchangeTokenResponse.builder().sessionToken("token").build()));
     given()
         .body(jsonObject.toString())
         .when()
