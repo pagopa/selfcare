@@ -1,7 +1,7 @@
 locals {
-  prefix            = "selc"
-  domain            = "pnpg"
-  location_short    = "weu"
+  prefix         = "selc"
+  domain         = "pnpg"
+  location_short = "weu"
 
   pnpg_suffix_mongo = var.is_pnpg == true ? "-${local.location_short}-${local.domain}" : ""
   pnpg_suffix       = var.is_pnpg == true ? "-pnpg" : ""
