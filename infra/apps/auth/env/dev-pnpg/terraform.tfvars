@@ -75,7 +75,7 @@ app_settings = [
   },
   {
     name  = "FEATURE_FLAG_OTP_ENABLED"
-    value = false
+    value = "NONE"
   }
 ]
 
