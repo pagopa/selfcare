@@ -3,8 +3,11 @@ package it.pagopa.selfcare.auth.service;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.model.error.UserClaims;
 import it.pagopa.selfcare.auth.util.GeneralUtils;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.internal_json.model.SearchUserDto;
@@ -17,7 +20,11 @@ import org.openapi.quarkus.user_registry_json.model.SaveUserDto;
 
 import java.time.Duration;
 
+@Slf4j
+@ApplicationScoped
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
+
   private static final String SPID_FISCAL_NUMBER_PREFIX = "TINIT-";
 
   @ConfigProperty(name = "auth-ms.retry.min-backoff")

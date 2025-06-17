@@ -83,15 +83,26 @@ public class OidcServiceImpl implements OidcService {
                             new InternalException("Cannot parse idToken from authorization code")))
         .chain(
             claims ->
-                userService.patchUser(
-                    claims.get("fiscalNumber"),
-                    claims.get("name"),
-                    claims.get("familyName"),
-                    Boolean.valueOf(claims.get("sameIdp"))))
+                userService
+                    .patchUser(
+                        claims.get("fiscalNumber"),
+                        claims.get("name"),
+                        claims.get("familyName"),
+                        Boolean.valueOf(claims.get("sameIdp")))
+                    .onFailure()
+                    .transform(
+                        failure ->
+                            new InternalException(
+                                "Cannot patch user on Personal Data Vault:" + failure.toString())))
         .chain(
             userClaims ->
                 sessionService
                     .generateSessionToken(userClaims)
+                    .onFailure()
+                    .transform(
+                        failure ->
+                            new InternalException(
+                                "Cannot generate session token:" + failure.toString()))
                     .map(
                         sessionToken ->
                             OidcExchangeTokenResponse.builder()
