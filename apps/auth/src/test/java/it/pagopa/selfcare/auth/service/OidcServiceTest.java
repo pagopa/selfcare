@@ -127,6 +127,29 @@ public class OidcServiceTest {
   }
 
   @Test
+  void failureWhenPatchingUser() throws ParseException {
+    String exceptionDesc = "Error while patching user";
+    when(tokenApi.createRequestToken(any(), anyString()))
+            .thenReturn(Uni.createFrom().item(TokenData.builder().idToken("idToken").build()));
+    when(jwtService.extractClaimsFromJwtToken(anyString()))
+            .thenReturn(
+                    Uni.createFrom()
+                            .item(
+                                    Map.of(
+                                            "fiscalNumber", "TINIT-FISCALCODE", "name", "name", "familyName", "Doe")));
+
+    when(userService.patchUser(anyString(), anyString(), anyString(), anyBoolean()))
+            .thenReturn(Uni.createFrom().failure(new Exception(exceptionDesc)));
+
+    oidcService
+            .exchange("authCode", "redirectUri")
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create())
+            .assertFailed()
+            .assertFailedWith(Exception.class, exceptionDesc);
+  }
+
+  @Test
   void failureWhenGeneratingSessionToken() throws ParseException {
     String exceptionDesc = "Cannot generate sessionToken";
     when(tokenApi.createRequestToken(any(), anyString()))
