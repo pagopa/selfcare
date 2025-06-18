@@ -2,7 +2,7 @@ package it.pagopa.selfcare.auth.service;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
-import it.pagopa.selfcare.auth.model.error.UserClaims;
+import it.pagopa.selfcare.auth.model.UserClaims;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
