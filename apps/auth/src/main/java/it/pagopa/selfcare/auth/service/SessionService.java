@@ -1,7 +1,8 @@
 package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.auth.model.UserClaims;
 
 public interface SessionService {
-    Uni<String> generateSessionToken(String fiscalNumber, String name, String familyName);
+    Uni<String> generateSessionToken(UserClaims userClaims);
 }

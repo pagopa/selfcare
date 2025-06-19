@@ -8,20 +8,19 @@ import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.auth.exception.ForbiddenException;
 import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.auth.model.UserClaims;
 import jakarta.inject.Inject;
 
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.one_identity_json.api.DefaultApi;
 import org.openapi.quarkus.one_identity_json.model.TokenData;
 
 import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @QuarkusTest
@@ -30,6 +29,7 @@ public class OidcServiceTest {
   @Inject OidcService oidcService;
   @InjectMock SessionService sessionService;
   @InjectMock JwtService jwtService;
+  @InjectMock UserService userService;
 
   @RestClient @InjectMock DefaultApi tokenApi;
 
@@ -50,7 +50,10 @@ public class OidcServiceTest {
                         "family_name",
                         "Doe")));
 
-    when(sessionService.generateSessionToken(anyString(), anyString(), anyString()))
+    when(userService.patchUser(anyString(), anyString(), anyString(), anyBoolean()))
+        .thenReturn(Uni.createFrom().item(UserClaims.builder().fiscalCode("").build()));
+
+    when(sessionService.generateSessionToken(any(UserClaims.class)))
         .thenReturn(Uni.createFrom().item(""));
 
     oidcService
@@ -122,6 +125,29 @@ public class OidcServiceTest {
   }
 
   @Test
+  void failureWhenPatchingUser() throws ParseException {
+    String exceptionDesc = "Error while patching user";
+    when(tokenApi.createRequestToken(any(), anyString()))
+            .thenReturn(Uni.createFrom().item(TokenData.builder().idToken("idToken").build()));
+    when(jwtService.extractClaimsFromJwtToken(anyString()))
+            .thenReturn(
+                    Uni.createFrom()
+                            .item(
+                                    Map.of(
+                                            "fiscalNumber", "TINIT-FISCALCODE", "name", "name", "familyName", "Doe")));
+
+    when(userService.patchUser(anyString(), anyString(), anyString(), anyBoolean()))
+            .thenReturn(Uni.createFrom().failure(new Exception(exceptionDesc)));
+
+    oidcService
+            .exchange("authCode", "redirectUri")
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create())
+            .assertFailed()
+            .assertFailedWith(Exception.class, exceptionDesc);
+  }
+
+  @Test
   void failureWhenGeneratingSessionToken() throws ParseException {
     String exceptionDesc = "Cannot generate sessionToken";
     when(tokenApi.createRequestToken(any(), anyString()))
@@ -131,14 +157,11 @@ public class OidcServiceTest {
             Uni.createFrom()
                 .item(
                     Map.of(
-                        "fiscalNumber",
-                        "TINIT-FISCALCODE",
-                        "name",
-                        "name",
-                        "familyName",
-                        "Doe")));
+                        "fiscalNumber", "TINIT-FISCALCODE", "name", "name", "familyName", "Doe")));
 
-    when(sessionService.generateSessionToken(anyString(), anyString(), anyString()))
+    when(userService.patchUser(anyString(), anyString(), anyString(), anyBoolean()))
+            .thenReturn(Uni.createFrom().item(UserClaims.builder().fiscalCode("").build()));
+    when(sessionService.generateSessionToken(any(UserClaims.class)))
         .thenReturn(Uni.createFrom().failure(new Exception(exceptionDesc)));
 
     oidcService
