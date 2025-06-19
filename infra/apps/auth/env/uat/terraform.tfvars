@@ -77,6 +77,10 @@ app_settings = [
     value = "https://uat.oneid.pagopa.it"
   },
   {
+    name  = "FEATURE_FLAG_OTP_ENABLED"
+    value = "NONE"
+  },
+  {
     name  = "INTERNAL_API_URL"
     value = "https://api.uat.selfcare.pagopa.it/external/internal/v1"
   }
