@@ -77,8 +77,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public Uni<UserResource> getUserInfo(UserClaims userClaims) {
-    SearchUserDto searchUserDto =
-        SearchUserDto.builder().fiscalCode(userClaims.getFiscalCode()).build();
+    SearchUserDto searchUserDto = SearchUserDto.builder().fiscalCode(userClaims.getFiscalCode()).build();
     return internalUserApi
         .v2getUserInfoUsingGET(searchUserDto)
         .onFailure(GeneralUtils::checkIfIsRetryableException)
@@ -87,6 +86,6 @@ public class UserServiceImpl implements UserService {
         .atMost(maxRetry)
         .onFailure(WebApplicationException.class)
         .transform(GeneralUtils::extractExceptionFromWebAppException)
-        .map(UserInfoResource::getUser);
+            .map(UserInfoResource::getUser);
   }
 }

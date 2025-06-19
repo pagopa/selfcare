@@ -16,6 +16,7 @@ import org.openapi.quarkus.internal_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserId;
 
+
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -69,6 +70,7 @@ public class UserServiceTest {
   void getUserInfoWithValidInputs() {
     UUID userId = UUID.randomUUID();
     UserResource userResource = UserResource.builder().id(userId).email("test@test.com").build();
+    UserInfoResource userInfoResource = UserInfoResource.builder().user(userResource).build();
     UserClaims claims =
             UserClaims.builder()
                     .uid(userId.toString())
@@ -78,7 +80,7 @@ public class UserServiceTest {
                     .sameIdp(true)
                     .build();
     when(internalUserApi.v2getUserInfoUsingGET(any()))
-            .thenReturn(Uni.createFrom().item(UserInfoResource.builder().user(userResource).build()));
+            .thenReturn(Uni.createFrom().item(userInfoResource));
     userService
             .getUserInfo(claims)
             .subscribe()

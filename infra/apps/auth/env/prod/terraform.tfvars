@@ -75,6 +75,10 @@ app_settings = [
   {
     name  = "ONE_IDENTITY_URL"
     value = "https://oneid.pagopa.it"
+  },
+  {
+    name  = "INTERNAL_API_URL"
+    value = "https://api.selfcare.pagopa.it/external/internal/v1"
   }
 ]
 
@@ -84,4 +88,5 @@ secrets_names = {
   "ONE_IDENTITY_CLIENT_SECRET"            = "oneidentity-client-secret"
   "SESSION_TOKEN_PRIVATE_KEY"             = "jwt-private-key-pkcs8"
   "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
+  "INTERNAL-API-KEY"                      = "internal-api-key"
 }
