@@ -23,7 +23,8 @@ module "mongodb_collection_otp_flows" {
   cosmosdb_mongo_account_name  = local.mongo_db.cosmosdb_account_mongodb_name
   cosmosdb_mongo_database_name = azurerm_cosmosdb_mongo_database.selc_auth[0].name
 
-  indexes = [{
+  indexes = [
+    {
     keys   = ["uuid"]
     unique = true
     },
@@ -40,13 +41,13 @@ module "mongodb_collection_otp_flows" {
       unique = false
     },
     {
-      keys   = ["userId", "status", "createdAt", "expiresAt"]
+      keys   = ["userId", "createdAt"]
       unique = false
     },
     {
       keys   = ["createdAt"]
       unique = false
-    },
+    }
   ]
 
   lock_enable = true
