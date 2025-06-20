@@ -5,6 +5,7 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.utils.ProductUtils;
@@ -43,6 +44,12 @@ import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_N
 @ApplicationScoped
 public class UserNotificationServiceImpl implements UserNotificationService {
 
+    public static final String REQUESTER_NAME = "requesterName";
+    public static final String REQUESTER_SURNAME = "requesterSurname";
+    public static final String PRODUCT_NAME = "productName";
+    public static final String INSTITUTION_NAME = "institutionName";
+    public static final String NO_ROLE_FOUND = "no_role_found";
+    public static final String PRODUCT_ROLE = "productRole";
     @Inject
     @RestClient
     EventHubRestClient eventHubRestClient;
@@ -131,11 +138,11 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
     private Map<String, String> buildCreateEmailDataModel(LoggedUser loggedUser, Product product, String institutionDescription, List<String> productRoleCodes) {
         Map<String, String> dataModel = new HashMap<>();
-        dataModel.put("requesterName", Optional.ofNullable(loggedUser.getName()).orElse(""));
-        dataModel.put("requesterSurname", Optional.ofNullable(loggedUser.getFamilyName()).orElse(""));
+        dataModel.put(REQUESTER_NAME, Optional.ofNullable(loggedUser.getName()).orElse(""));
+        dataModel.put(REQUESTER_SURNAME, Optional.ofNullable(loggedUser.getFamilyName()).orElse(""));
 
-        dataModel.put("productName", Optional.ofNullable(product.getTitle()).orElse(""));
-        dataModel.put("institutionName", Optional.ofNullable(institutionDescription).orElse(""));
+        dataModel.put(PRODUCT_NAME, Optional.ofNullable(product.getTitle()).orElse(""));
+        dataModel.put(INSTITUTION_NAME, Optional.ofNullable(institutionDescription).orElse(""));
         if (productRoleCodes.size() > 1) {
             List<String> roleLabel = new ArrayList<>();
 
@@ -151,7 +158,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
             }
 
             if(CollectionUtils.isNullOrEmpty(roleLabel)) {
-                roleLabel = List.of("no_role_found");
+                roleLabel = List.of(NO_ROLE_FOUND);
             }
 
             dataModel.put("productRoles", roleLabel.stream().limit(productRoleCodes.size() - 1L)
@@ -161,7 +168,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
             }
 
         } else {
-            String roleLabel = "no_role_found";
+            String roleLabel = NO_ROLE_FOUND;
             if (CollectionUtils.isNotEmpty(product.getAllRoleMappings())) {
                 roleLabel = product.getAllRoleMappings().values().stream()
                         .flatMap(List::stream)
@@ -169,9 +176,9 @@ public class UserNotificationServiceImpl implements UserNotificationService {
                         .filter(productRole -> productRole.getCode().equals(productRoleCodes.get(0)))
                         .map(ProductRole::getLabel)
                         .findAny()
-                        .orElse("no_role_found");
+                        .orElse(NO_ROLE_FOUND);
             }
-            dataModel.put("productRole", roleLabel);
+            dataModel.put(PRODUCT_ROLE, roleLabel);
         }
 
         return dataModel;
@@ -192,11 +199,21 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         }
 
         Map<String, String> dataModel = new HashMap<>();
-        dataModel.put("productName", Optional.ofNullable(product.getTitle()).orElse(""));
-        dataModel.put("productRole", roleLabel.orElse("no_role_found"));
-        dataModel.put("institutionName", Optional.ofNullable(institution.getInstitutionDescription()).orElse(""));
-        dataModel.put("requesterName", Optional.ofNullable(loggedUserName).orElse(""));
-        dataModel.put("requesterSurname", Optional.ofNullable(loggedUserSurname).orElse(""));
+        dataModel.put(PRODUCT_NAME, Optional.ofNullable(product.getTitle()).orElse(""));
+        dataModel.put(PRODUCT_ROLE, roleLabel.orElse(NO_ROLE_FOUND));
+        dataModel.put(INSTITUTION_NAME, Optional.ofNullable(institution.getInstitutionDescription()).orElse(""));
+        dataModel.put(REQUESTER_NAME, Optional.ofNullable(loggedUserName).orElse(""));
+        dataModel.put(REQUESTER_SURNAME, Optional.ofNullable(loggedUserSurname).orElse(""));
+        return dataModel;
+    }
+
+    private Map<String, String> buildEmailDataModelUserRequest(UserInstitution institution, Product product, PartyRole role, String loggedUserName, String loggedUserSurname) {
+        Map<String, String> dataModel = new HashMap<>();
+        dataModel.put(PRODUCT_NAME, Optional.ofNullable(product.getTitle()).orElse(""));
+        dataModel.put(PRODUCT_ROLE, evaluateRole(role));
+        dataModel.put(INSTITUTION_NAME, Optional.ofNullable(institution.getInstitutionDescription()).orElse(""));
+        dataModel.put(REQUESTER_NAME, Optional.ofNullable(loggedUserName).orElse(""));
+        dataModel.put(REQUESTER_SURNAME, Optional.ofNullable(loggedUserSurname).orElse(""));
         return dataModel;
     }
 
@@ -205,6 +222,20 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         Map<String, String> dataModel = buildEmailDataModel(institution, product, productRole, loggedUserName, loggedUserSurname);
         return this.sendEmailNotification(templateName, subject, email, dataModel);
     }
+
+    private String evaluateRole(PartyRole role) {
+        return switch (role) {
+            case MANAGER -> "Legale Rappresentante";
+            case DELEGATE, ADMIN_EA -> "Amministratore";
+            default -> NO_ROLE_FOUND;
+        };
+    }
+
+    @Override
+    public Uni<Void> buildDataModelRequestAndSendEmail(UserResource user, UserInstitution institution, Product product, PartyRole productRole, String loggedUserName, String loggedUserSurname) {
+        String email = retrieveMail(user, institution);
+        Map<String, String> dataModel = buildEmailDataModelUserRequest(institution, product, productRole, loggedUserName, loggedUserSurname);
+        return this.sendEmailNotification(REQUEST_TEMPLATE, REQUEST_SUBJECT, email, dataModel);}
 
     private Uni<Void> sendEmailNotification(String templateName, String subject, String email, Map<String, String> dataModel) {
         return Uni.createFrom().item(getContent(templateName, dataModel))

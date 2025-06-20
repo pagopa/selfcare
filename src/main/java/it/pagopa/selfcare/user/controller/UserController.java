@@ -8,6 +8,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
+import it.pagopa.selfcare.user.controller.request.SendMailDto;
 import it.pagopa.selfcare.user.controller.request.SendEmailOtpDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
@@ -54,24 +55,12 @@ import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList
 @RequiredArgsConstructor
 @Slf4j
 public class UserController {
-    private final UserService userService;
-    private final UserMapper userMapper;
-    private final UserRegistryService userRegistryService;
     @Inject
     CurrentIdentityAssociation currentIdentityAssociation;
 
-    private static List<PartyRole> retrievePartyRoleFromStringList(List<String> roles) {
-        List<PartyRole> roleList = new ArrayList<>();
-        for (String role : roles) {
-            try {
-                roleList.add(PartyRole.valueOf(role));
-            } catch (IllegalArgumentException e) {
-                log.error("Invalid role value: {}", role);
-                throw new InvalidRequestException(String.format("Invalid role value: %s", role));
-            }
-        }
-        return roleList;
-    }
+    private final UserService userService;
+    private final UserMapper userMapper;
+    private final UserRegistryService userRegistryService;
 
     @Operation(description = "The API retrieves Users' emails using institution id and product id",
             summary = "Retrieve users' emails by institution ID and product ID")
@@ -113,6 +102,7 @@ public class UserController {
                                          @QueryParam(value = "productId") String productId) {
         return userService.retrievePerson(userId, productId, institutionId);
     }
+
 
     @Operation(description = "Retrieves products info and role which the user is enabled", summary = "Retrieve product information and user roles")
     @GET
@@ -253,7 +243,7 @@ public class UserController {
                                                                            @QueryParam(value = "size") @DefaultValue("100") Integer size) {
 
         List<PartyRole> roleList = null;
-        if (!CollectionUtils.isNullOrEmpty(roles)) {
+        if(!CollectionUtils.isNullOrEmpty(roles)) {
             roleList = retrievePartyRoleFromStringList(roles);
         }
 
@@ -333,6 +323,7 @@ public class UserController {
     }
 
     /**
+     *
      * @param userId  String
      * @param userDto AddUserRoleDto
      */
@@ -374,7 +365,7 @@ public class UserController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> createOrUpdateByFiscalCode(@Valid CreateUserDto userDto,
-                                                    @Context SecurityContext ctx) {
+                                                  @Context SecurityContext ctx) {
         return readUserIdFromToken(ctx)
                 .onItem().transformToUni(loggedUser -> userService.createOrUpdateUserByFiscalCode(userDto, loggedUser))
                 .map(response -> Response
@@ -424,6 +415,23 @@ public class UserController {
         return userService.getUserInstitutionWithPermission(userId, institutionId, productId);
     }
 
+    /**
+     *
+     * @param userId  String
+     * @param sendMailDto SendMailDto
+     */
+    @Operation(description = "Sends an email notification to a user when the institution receives an onboarding request.", summary = "Sends an email notification to a user when the institution receives an onboarding request.")
+    @POST
+    @Path("/{userId}/send-mail-request")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Void> sendMailRequest(@PathParam("userId") String userId,
+                                            @Valid SendMailDto sendMailDto,
+                                            @Context SecurityContext ctx) {
+        return readUserIdFromToken(ctx)
+                .onItem().transformToUni(loggedUser -> userService.sendMail(userId, sendMailDto.getUserMailUuid(), sendMailDto.getInstitutionName(), sendMailDto.getProductId(), sendMailDto.getRole(), loggedUser));
+    }
+
     @APIResponses({
             @APIResponse(responseCode = "202", description = "Email send accepted!"),
             @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
@@ -464,6 +472,19 @@ public class UserController {
                     }
                     return Uni.createFrom().nullItem();
                 });
+    }
+
+    private static List<PartyRole> retrievePartyRoleFromStringList(List<String> roles) {
+        List<PartyRole> roleList = new ArrayList<>();
+        for (String role : roles) {
+            try {
+                roleList.add(PartyRole.valueOf(role));
+            } catch (IllegalArgumentException e) {
+                log.error("Invalid role value: {}", role);
+                throw new InvalidRequestException(String.format("Invalid role value: %s", role));
+            }
+        }
+        return roleList;
     }
 }
 

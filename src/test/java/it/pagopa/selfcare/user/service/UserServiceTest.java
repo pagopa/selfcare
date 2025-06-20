@@ -932,6 +932,41 @@ class UserServiceTest {
         assertEquals("User already has roles on Product prod-interop", exception.getMessage());
     }
 
+    @Test
+    void testSendMail() {
+        UserResource user = mock(UserResource.class);
+        when(userRegistryApi.findByIdUsingGET(any(), any()))
+                .thenReturn(Uni.createFrom().item(user));
+
+        Product product = mock(Product.class);
+        when(productService.getProduct(any())).thenReturn(product);
+
+        when(userNotificationService.buildDataModelRequestAndSendEmail(
+                any(UserResource.class),
+                any(UserInstitution.class),
+                any(Product.class),
+                any(PartyRole.class),
+                anyString(),
+                anyString())
+        ).thenReturn(Uni.createFrom().voidItem());
+
+        var subscriber = userService.sendMail("userId", "userMailUuid", "institutionId", "productId", DELEGATE,
+                        LoggedUser.builder().build())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.awaitItem();
+
+        verify(userNotificationService, times(1)).buildDataModelRequestAndSendEmail(
+                any(UserResource.class),
+                any(UserInstitution.class),
+                any(Product.class),
+                any(PartyRole.class),
+                eq(null),
+                eq(null)
+        );
+    }
+
     private static CreateUserDto getCreateUserDto(String productId, String fiscalCode, String institutionId, List<String> productRoles, String role) {
 
         CreateUserDto.Product product = new CreateUserDto.Product();
