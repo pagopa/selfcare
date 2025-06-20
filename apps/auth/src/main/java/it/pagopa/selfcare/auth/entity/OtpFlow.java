@@ -6,6 +6,7 @@ import it.pagopa.selfcare.auth.model.OtpStatus;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 
 import java.time.OffsetDateTime;

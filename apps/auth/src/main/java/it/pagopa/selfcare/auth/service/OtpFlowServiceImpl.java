@@ -2,10 +2,13 @@ package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
+import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.model.OtpStatus;
+import it.pagopa.selfcare.auth.util.OtpUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.codec.digest.Md5Crypt;
 import org.bson.Document;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -32,12 +35,12 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                     .uuid(UUID.randomUUID().toString())
                     .userId(userId)
                     .attempts(0)
-                    .otp(Md5Crypt.md5Crypt(otp.getBytes(StandardCharsets.UTF_8)))
+                    .otp(DigestUtils.md5Hex(otp))
                     .status(OtpStatus.PENDING)
                     .createdAt(now)
                     .expiresAt(now.plusMinutes(otpDuration))
                     .build())
-        .chain(otpFlow -> OtpFlow.persist(otpFlow).replaceWith(otpFlow));
+        .chain(otpFlow -> OtpFlow.persist(otpFlow).map(v -> otpFlow));
   }
 
   @Override
