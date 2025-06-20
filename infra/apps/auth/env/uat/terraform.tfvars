@@ -83,6 +83,10 @@ app_settings = [
   {
     name  = "INTERNAL_API_URL"
     value = "https://api.uat.selfcare.pagopa.it/external/internal/v1"
+  },
+  {
+    name  = "INTERNAL_MS_USER_API_URL"
+    value = "https://api.dev.selfcare.pagopa.it/internal/user"
   }
 ]
 
@@ -93,4 +97,5 @@ secrets_names = {
   "SESSION_TOKEN_PRIVATE_KEY"             = "jwt-private-key-pkcs8"
   "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
   "INTERNAL-API-KEY"                      = "internal-api-key"
+  "INTERNAL-MS-USER-API-KEY"              = "internal-ms-user-api-key"
 }
