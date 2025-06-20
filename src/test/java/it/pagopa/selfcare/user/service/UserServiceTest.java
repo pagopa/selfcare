@@ -71,33 +71,6 @@ import static org.mockito.Mockito.*;
 @QuarkusTest
 class UserServiceTest {
 
-    @Inject
-    UserService userService;
-
-    @InjectMock
-    private UserInstitutionService userInstitutionService;
-
-    @InjectMock
-    private UserNotificationService userNotificationService;
-
-    @InjectMock
-    private UserInfoService userInfoService;
-
-    @InjectMock
-    private UserRegistryService userRegistryApi;
-
-    @Spy
-    private UserMapper userMapper;
-
-    @InjectMock
-    private ProductService productService;
-
-    @InjectMock
-    private UserUtils userUtils;
-
-    @InjectMock
-    private TelemetryClient telemetryClient;
-
     private static final UserResource userResource;
     private static final UUID userId = UUID.randomUUID();
     private static final String workContractsKey = "userMailUuid";
@@ -125,7 +98,45 @@ class UserServiceTest {
 
     }
 
-    private UserInstitution createUserInstitution(){
+    @Inject
+    UserService userService;
+    @InjectMock
+    private UserInstitutionService userInstitutionService;
+    @InjectMock
+    private UserNotificationService userNotificationService;
+    @InjectMock
+    private UserInfoService userInfoService;
+    @InjectMock
+    private UserRegistryService userRegistryApi;
+    @Spy
+    private UserMapper userMapper;
+    @InjectMock
+    private ProductService productService;
+    @InjectMock
+    private UserUtils userUtils;
+    @InjectMock
+    private TelemetryClient telemetryClient;
+
+    private static CreateUserDto getCreateUserDto(String productId, String fiscalCode, String institutionId, List<String> productRoles, String role) {
+
+        CreateUserDto.Product product = new CreateUserDto.Product();
+        product.setProductId(productId);
+        product.setProductRoles(productRoles);
+        product.setRole(role);
+
+        CreateUserDto.User user = new CreateUserDto.User();
+        user.setFiscalCode(fiscalCode);
+        user.setInstitutionEmail("user@example.com");
+
+        CreateUserDto userDto = new CreateUserDto();
+        userDto.setUser(user);
+        userDto.setInstitutionId(institutionId);
+        userDto.setProduct(product);
+        userDto.setHasToSendEmail(false);
+        return userDto;
+    }
+
+    private UserInstitution createUserInstitution() {
         UserInstitution userInstitution = new UserInstitution();
         userInstitution.setId(ObjectId.get());
         userInstitution.setUserId(userId.toString());
@@ -151,7 +162,7 @@ class UserServiceTest {
         return userInstitution;
     }
 
-    private UserInstitution createUserInstitution_ADMIN_EA_IO(){
+    private UserInstitution createUserInstitution_ADMIN_EA_IO() {
         UserInstitution userInstitution = new UserInstitution();
         userInstitution.setId(ObjectId.get());
         userInstitution.setUserId(userId.toString());
@@ -238,7 +249,7 @@ class UserServiceTest {
     }
 
     @Test
-    void sendEventsByDateAndUserIdAndInstitutionId(){
+    void sendEventsByDateAndUserIdAndInstitutionId() {
         final Integer page = 1;
         final String institutionId = "institutionId";
         final String userId = "userId";
@@ -270,7 +281,7 @@ class UserServiceTest {
     }
 
     @Test
-    void sendOldData_noFilters(){
+    void sendOldData_noFilters() {
         final OffsetDateTime fromDate = OffsetDateTime.now();
         final UserInstitution userInstitution = createUserInstitution();
         userInstitution.getProducts().forEach(onboardedProduct -> onboardedProduct.setCreatedAt(fromDate.plusDays(1)));
@@ -289,7 +300,6 @@ class UserServiceTest {
         subscriber.assertCompleted();
     }
 
-
     @Test
     void getUserProductsByInstitutionTest() {
         final UserInstitution userInstitution = createUserInstitution();
@@ -298,7 +308,7 @@ class UserServiceTest {
 
         PanacheMock.mock(UserInstitution.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
-        when(query.stream()).thenReturn(Multi.createFrom().items(userInstitution,userInstitutionWithoutMail));
+        when(query.stream()).thenReturn(Multi.createFrom().items(userInstitution, userInstitutionWithoutMail));
         when(UserInstitution.find(any(), (Object) any()))
                 .thenReturn(query);
         when(userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId()))
@@ -441,8 +451,9 @@ class UserServiceTest {
         subscriber.assertCompleted();
 
     }
+
     @Test
-    void searchUserByFiscalCode_notFound(){
+    void searchUserByFiscalCode_notFound() {
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().nullItem());
 
         when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().item(userResource));
@@ -550,7 +561,6 @@ class UserServiceTest {
         assertEquals(userInstitution.getUserId(), actual.get(0).getUserId());
     }
 
-
     @Test
     void findAllUserInstitutionsPaged_whenFilterProductIdAndProductRole() {
         UserInstitution userInstitution = createUserInstitution();
@@ -569,7 +579,6 @@ class UserServiceTest {
         assertEquals(productId, actual.get(0).getProducts().get(0).getProductId());
     }
 
-
     @Test
     void findAllUserInstitutionsPaged_whenFilterStatus() {
         UserInstitution userInstitution = createUserInstitution();
@@ -585,7 +594,6 @@ class UserServiceTest {
         assertEquals(userInstitution.getUserId(), actual.get(0).getUserId());
         assertEquals(OnboardedProductState.ACTIVE, actual.get(0).getProducts().get(0).getStatus());
     }
-
 
     @Test
     void findAllUserInstitutionsPaged_whenFilterRole() {
@@ -711,7 +719,6 @@ class UserServiceTest {
         subscriber.assertCompleted();
     }
 
-
     @Test
     void findPaginatedUserNotificationToSendQueryWithoutProductId() {
         when(userInstitutionService.paginatedFindAllWithFilter(any(), any(), any()))
@@ -755,7 +762,7 @@ class UserServiceTest {
                 anyString())
         ).thenReturn(Uni.createFrom().voidItem());
 
-        var subscriber = userService.updateUserProductStatus("userId", "institutionId", "productId", OnboardedProductState.ACTIVE,"productRole",
+        var subscriber = userService.updateUserProductStatus("userId", "institutionId", "productId", OnboardedProductState.ACTIVE, "productRole",
                         LoggedUser.builder().build())
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
@@ -800,7 +807,7 @@ class UserServiceTest {
         CreateUserDto createUserDto = new CreateUserDto();
         CreateUserDto.User user = new CreateUserDto.User();
         user.setFiscalCode(fiscalCode + " ");
-        CreateUserDto.Product createUserProduct = new  CreateUserDto.Product();
+        CreateUserDto.Product createUserProduct = new CreateUserDto.Product();
         createUserProduct.setProductId("prod-io");
         createUserProduct.setProductRoles(List.of("admin2"));
         createUserDto.setUser(user);
@@ -822,7 +829,7 @@ class UserServiceTest {
         when(userRegistryApi.updateUsingPATCH(any(), any())).thenReturn(Uni.createFrom().item(Response.ok().build()));
         when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(createUserInstitution()));
         when(productService.getProduct(any())).thenReturn(product);
-        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
 
         // Call the method
@@ -832,7 +839,7 @@ class UserServiceTest {
         // Verify the result
         CreateOrUpdateUserByFiscalCodeResponse response = subscriber.awaitItem().getItem();
 
-        assertEquals(userId.toString(),response.getUserId());
+        assertEquals(userId.toString(), response.getUserId());
 
         // Verify fiscalCode trim
         ArgumentCaptor<UserSearchDto> captorFiscalCode = ArgumentCaptor.forClass(UserSearchDto.class);
@@ -842,8 +849,9 @@ class UserServiceTest {
         verify(userRegistryApi).updateUsingPATCH(any(), any());
         verify(userInstitutionService).persistOrUpdate(any());
         verify(userInstitutionService).findByUserIdAndInstitutionId(any(), any());
-        verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(),any());
+        verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(), any());
     }
+
     @Test
     void testCreateOrUpdateUser_ByFiscalCode_Exception_differentRole() {
         // Arrange
@@ -967,27 +975,6 @@ class UserServiceTest {
         );
     }
 
-    private static CreateUserDto getCreateUserDto(String productId, String fiscalCode, String institutionId, List<String> productRoles, String role) {
-
-        CreateUserDto.Product product = new CreateUserDto.Product();
-        product.setProductId(productId);
-        product.setProductRoles(productRoles);
-        product.setRole(role);
-
-        CreateUserDto.User user = new CreateUserDto.User();
-        user.setFiscalCode(fiscalCode);
-        user.setInstitutionEmail("user@example.com");
-
-        CreateUserDto userDto = new CreateUserDto();
-        userDto.setUser(user);
-        userDto.setInstitutionId(institutionId);
-        userDto.setProduct(product);
-        userDto.setHasToSendEmail(false);
-        return userDto;
-    }
-
-
-
     @Test
     void testCreateOrUpdateUser_UpdateUser_SuccessByFiscalCode_with2role() {
         UserInstitution userInstitution = createUserInstitution();
@@ -995,10 +982,10 @@ class UserServiceTest {
         CreateUserDto createUserDto = new CreateUserDto();
         CreateUserDto.User user = new CreateUserDto.User();
         user.setFiscalCode("fiscalCode");
-        CreateUserDto.Product createUserProduct = new  CreateUserDto.Product();
+        CreateUserDto.Product createUserProduct = new CreateUserDto.Product();
         createUserProduct.setProductId("test");
         createUserProduct.setRole(MANAGER.name());
-        createUserProduct.setProductRoles(List.of("admin2","admin3"));
+        createUserProduct.setProductRoles(List.of("admin2", "admin3"));
         createUserDto.setUser(user);
         createUserDto.setProduct(createUserProduct);
         LoggedUser loggedUser = LoggedUser.builder().build();
@@ -1018,7 +1005,7 @@ class UserServiceTest {
         when(userRegistryApi.updateUsingPATCH(any(), any())).thenReturn(Uni.createFrom().item(Response.ok().build()));
         when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(userInstitution));
         when(productService.getProduct(any())).thenReturn(product);
-        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
 
         // Call the method
@@ -1030,11 +1017,11 @@ class UserServiceTest {
 
         CreateOrUpdateUserByFiscalCodeResponse response = subscriber.awaitItem().getItem();
 
-        assertEquals(userId.toString(),response.getUserId());
+        assertEquals(userId.toString(), response.getUserId());
         verify(userRegistryApi).updateUsingPATCH(any(), any());
         verify(userInstitutionService).persistOrUpdate(any());
         verify(userInstitutionService).findByUserIdAndInstitutionId(any(), any());
-        verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(),any());
+        verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -1044,10 +1031,10 @@ class UserServiceTest {
         CreateUserDto createUserDto = new CreateUserDto();
         CreateUserDto.User user = new CreateUserDto.User();
         user.setFiscalCode("fiscalCode");
-        CreateUserDto.Product createUserProduct = new  CreateUserDto.Product();
+        CreateUserDto.Product createUserProduct = new CreateUserDto.Product();
         createUserProduct.setProductId("test");
         createUserProduct.setRole(MANAGER.name());
-        createUserProduct.setProductRoles(List.of("admin","admin3"));
+        createUserProduct.setProductRoles(List.of("admin", "admin3"));
         createUserDto.setUser(user);
         createUserDto.setProduct(createUserProduct);
         LoggedUser loggedUser = LoggedUser.builder().build();
@@ -1067,7 +1054,7 @@ class UserServiceTest {
         when(userRegistryApi.updateUsingPATCH(any(), any())).thenReturn(Uni.createFrom().item(Response.ok().build()));
         when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(userInstitution));
         when(productService.getProduct(any())).thenReturn(product);
-        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
 
         // Call the method
@@ -1079,11 +1066,11 @@ class UserServiceTest {
 
         CreateOrUpdateUserByFiscalCodeResponse response = subscriber.awaitItem().getItem();
 
-        assertEquals(userId.toString(),response.getUserId());
+        assertEquals(userId.toString(), response.getUserId());
         verify(userRegistryApi).updateUsingPATCH(any(), any());
         verify(userInstitutionService).persistOrUpdate(any());
         verify(userInstitutionService).findByUserIdAndInstitutionId(any(), any());
-        verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(),any());
+        verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -1093,10 +1080,10 @@ class UserServiceTest {
         CreateUserDto createUserDto = new CreateUserDto();
         CreateUserDto.User user = new CreateUserDto.User();
         user.setFiscalCode("fiscalCode");
-        CreateUserDto.Product createUserProduct = new  CreateUserDto.Product();
+        CreateUserDto.Product createUserProduct = new CreateUserDto.Product();
         createUserProduct.setProductId("test");
         createUserProduct.setRole(PartyRole.OPERATOR.name());
-        createUserProduct.setProductRoles(List.of("admin","admin3"));
+        createUserProduct.setProductRoles(List.of("admin", "admin3"));
         createUserDto.setUser(user);
         createUserDto.setProduct(createUserProduct);
         LoggedUser loggedUser = LoggedUser.builder().build();
@@ -1116,7 +1103,7 @@ class UserServiceTest {
         when(userRegistryApi.updateUsingPATCH(any(), any())).thenReturn(Uni.createFrom().item(Response.ok().build()));
         when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(userInstitution));
         when(productService.getProduct(any())).thenReturn(product);
-        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
 
         userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
@@ -1124,7 +1111,7 @@ class UserServiceTest {
                 .assertFailedWith(InvalidRequestException.class, "User already has different role on Product test");
 
         Assertions.assertEquals(2, userInstitution.getProducts().size());
-   }
+    }
 
 
     @Test
@@ -1159,7 +1146,7 @@ class UserServiceTest {
         });
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
         when(productService.getProduct(any())).thenReturn(product);
-        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
 
         // Call the method
@@ -1174,7 +1161,7 @@ class UserServiceTest {
         verify(userRegistryApi).saveUsingPATCH(any());
         verify(userRegistryApi).findByIdUsingGET(any(), eq(userId.toString()));
         verify(userInstitutionService).persistOrUpdate(any());
-        verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(),any());
+        verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -1306,7 +1293,7 @@ class UserServiceTest {
         when(userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), addUserRoleDto.getInstitutionId())).thenReturn(Uni.createFrom().item((userInstitution)));
         when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(createUserInstitution()));
         when(productService.getProduct(any())).thenReturn(product);
-        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
         when(userNotificationService.sendKafkaNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
 
@@ -1376,7 +1363,7 @@ class UserServiceTest {
         when(userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), addUserRoleDto.getInstitutionId())).thenReturn(Uni.createFrom().item(createUserInstitution()));
         when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(createUserInstitution()));
         when(productService.getProduct(any())).thenReturn(product);
-        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
         when(userNotificationService.sendKafkaNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
 
@@ -1415,7 +1402,7 @@ class UserServiceTest {
         when(userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), addUserRoleDto.getInstitutionId())).thenReturn(Uni.createFrom().nullItem());
         when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(createUserInstitution()));
         when(productService.getProduct(any())).thenReturn(product);
-        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
         when(userNotificationService.sendKafkaNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
 
@@ -1634,7 +1621,7 @@ class UserServiceTest {
     }
 
     @Test
-    void  createManagerByUserIdUserInstitutionNotFound() {
+    void createManagerByUserIdUserInstitutionNotFound() {
         AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
         addUserRoleDto.setInstitutionId("institutionId");
         AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
@@ -1986,7 +1973,7 @@ class UserServiceTest {
         AssertSubscriber<UserDataResponse> subscriber = userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userUuid)
                 .subscribe().withSubscriber(AssertSubscriber.create(10));
 
-       // Verify the result
+        // Verify the result
         subscriber.assertCompleted().getItems().forEach(actual -> {
             assertNotNull(actual);
             assertEquals(1, actual.getProducts().size());
@@ -2370,7 +2357,8 @@ class UserServiceTest {
 
     @Test
     void testSendMailOtp() {
-        UserResource user = mock(UserResource.class);
+        EmailCertifiableSchema emailSchema = EmailCertifiableSchema.builder().certification(EmailCertifiableSchema.CertificationEnum.NONE).value("test@test.com").build();
+        UserResource user = UserResource.builder().email(emailSchema).build();
         when(userRegistryApi.findByIdUsingGET(any(), any()))
                 .thenReturn(Uni.createFrom().item(user));
 
