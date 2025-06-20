@@ -2357,8 +2357,8 @@ class UserServiceTest {
 
     @Test
     void testSendMailOtp() {
-        EmailCertifiableSchema emailSchema = EmailCertifiableSchema.builder().certification(EmailCertifiableSchema.CertificationEnum.NONE).value("test@test.com").build();
-        UserResource user = UserResource.builder().email(emailSchema).build();
+        NameCertifiableSchema nameSchema = NameCertifiableSchema.builder().value("name").build();
+        UserResource user = UserResource.builder().name(nameSchema).build();
         when(userRegistryApi.findByIdUsingGET(any(), any()))
                 .thenReturn(Uni.createFrom().item(user));
 

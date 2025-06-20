@@ -1579,45 +1579,6 @@
         } ]
       }
     },
-    "/users/{userId}/send-mail-request" : {
-      "post" : {
-        "tags" : [ "User" ],
-        "summary" : "Sends an email notification to a user when the institution receives an onboarding request.",
-        "description" : "Sends an email notification to a user when the institution receives an onboarding request.",
-        "operationId" : "sendMailRequest",
-        "parameters" : [ {
-          "name" : "userId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/SendMailDto"
-              }
-            }
-          }
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Created"
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
     "/users/{userId}/send-mail-otp" : {
       "post" : {
         "tags" : [ "User" ],
@@ -1654,6 +1615,45 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/users/{userId}/send-mail-request" : {
+      "post" : {
+        "tags" : [ "User" ],
+        "summary" : "Sends an email notification to a user when the institution receives an onboarding request.",
+        "description" : "Sends an email notification to a user when the institution receives an onboarding request.",
+        "operationId" : "sendMailRequest",
+        "parameters" : [ {
+          "name" : "userId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SendMailDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created"
           },
           "401" : {
             "description" : "Not Authorized"
@@ -1940,6 +1940,20 @@
           }
         }
       },
+      "SendEmailOtpDto" : {
+        "required" : [ "otp", "institutionalEmail" ],
+        "type" : "object",
+        "properties" : {
+          "otp" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "institutionalEmail" : {
+            "minLength" : 1,
+            "type" : "string"
+          }
+        }
+      },
       "SendMailDto" : {
         "required" : [ "userMailUuid", "institutionName", "productId", "role" ],
         "type" : "object",
@@ -1958,20 +1972,6 @@
           },
           "role" : {
             "$ref" : "#/components/schemas/PartyRole"
-          }
-        }
-      },
-      "SendEmailOtpDto" : {
-        "required" : [ "otp", "institutionalEmail" ],
-        "type" : "object",
-        "properties" : {
-          "otp" : {
-            "minLength" : 1,
-            "type" : "string"
-          },
-          "institutionalEmail" : {
-            "minLength" : 1,
-            "type" : "string"
           }
         }
       },
