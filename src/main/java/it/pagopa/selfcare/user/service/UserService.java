@@ -65,4 +65,6 @@ public interface UserService {
     Uni<UsersCountResponse> getUsersCount(String institutionId, String productId, List<PartyRole> roles, List<OnboardedProductState> status);
 
     Uni<Boolean> checkUser(String fiscalCode, String institutionId, String productId);
+
+    Uni<Void> sendMail(String userId, String userMailUuid, String institutionName, String productId, PartyRole productRole, LoggedUser loggedUser);
 }

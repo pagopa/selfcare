@@ -11,6 +11,7 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.CertificationEnum;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
+import it.pagopa.selfcare.user.controller.request.SendMailDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.entity.UserInfo;
@@ -33,8 +34,10 @@ import org.openapi.quarkus.user_registry_json.model.*;
 import java.util.*;
 
 import static io.restassured.RestAssured.given;
+import static it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER;
+import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_PAGOPA;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @QuarkusTest
 @TestHTTPEndpoint(UserController.class)
@@ -448,7 +451,7 @@ class UserControllerTest {
         queryParam.put("institutionId", "Id");
         queryParam.put("userId", "userId");
         queryParam.put("roles",List.of("MANAGER","DELEGATE"));
-        when(userService.findPaginatedUserInstitutions("Id",  "userId", List.of(PartyRole.MANAGER,PartyRole.DELEGATE), null, null, null, 0 , 100))
+        when(userService.findPaginatedUserInstitutions("Id",  "userId", List.of(MANAGER,PartyRole.DELEGATE), null, null, null, 0 , 100))
                 .thenReturn(Multi.createFrom().items(new UserInstitutionResponse()));
 
         given()
@@ -765,6 +768,40 @@ class UserControllerTest {
                 .statusCode(200);
     }
 
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testSendMail() {
+        String PATH_USER_ID = "userId";
+        String PATH_SEND_MAIL = "/{userId}/send-mail-request";
+        SendMailDto mailDto = createSendMailDto();
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam(PATH_USER_ID, "userId")
+                .body(mailDto)
+                .post(PATH_SEND_MAIL)
+                .then()
+                .statusCode(204);
+
+        verify(userService, times(1)).sendMail(anyString(), anyString(), anyString(), anyString(), any(), any());
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testSendMail_invalidRequestBody() {
+        String PATH_USER_ID = "userId";
+        String PATH_SEND_MAIL = "/{userId}/send-mail-request";
+        SendMailDto mailDto = new SendMailDto();
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .body(mailDto)
+                .pathParam(PATH_USER_ID, "userId")
+                .post(PATH_SEND_MAIL)
+                .then()
+                .statusCode(400);
+    }
+
     private CreateUserDto buildCreateUserDto() {
         CreateUserDto userDto = new CreateUserDto();
         userDto.setInstitutionId("institutionId");
@@ -779,7 +816,7 @@ class UserControllerTest {
         userDto.setUser(user);
         CreateUserDto.Product product = new CreateUserDto.Product();
         product.setProductId("productId");
-        product.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER.name());
+        product.setRole(MANAGER.name());
         product.setTokenId("tokenId");
         product.setProductRoles(Collections.singletonList("productRole"));
         userDto.setProduct(product);
@@ -799,7 +836,7 @@ class UserControllerTest {
         user.setInstitutionEmail("institutionEmail");
         AddUserRoleDto.Product product = new AddUserRoleDto.Product();
         product.setProductId("productId");
-        product.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER.name());
+        product.setRole(MANAGER.name());
         product.setTokenId("tokenId");
         product.setProductRoles(Collections.singletonList("productRole"));
         product.setDelegationId("delegationId");
@@ -826,5 +863,14 @@ class UserControllerTest {
         product.setDelegationId("delegationId");
         userDto.setProduct(product);
         return userDto;
+    }
+
+    private SendMailDto createSendMailDto() {
+        SendMailDto sendMailDto = new SendMailDto();
+        sendMailDto.setUserMailUuid("mailUuid");
+        sendMailDto.setInstitutionName("institutionName");
+        sendMailDto.setProductId(PROD_PAGOPA.getValue());
+        sendMailDto.setRole(MANAGER);
+        return sendMailDto;
     }
 }

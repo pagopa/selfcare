@@ -14,8 +14,6 @@ public class AwsMailServiceImpl implements MailService {
 
     private final SesClient sesClient;
 
-    @ConfigProperty(name = "user-ms.mail.user-subject-prefix")
-    String userMailSubjectPrefix;
     @ConfigProperty(name = "user-ms.mail.no-reply")
     String senderMail;
 
@@ -36,7 +34,7 @@ public class AwsMailServiceImpl implements MailService {
                 .build();
 
         Content sub = Content.builder()
-                .data(userMailSubjectPrefix + subject)
+                .data(subject)
                 .build();
 
         Body body = Body.builder()

@@ -289,6 +289,21 @@ public class UserServiceImpl implements UserService {
                 .replaceWithVoid();
     }
 
+    @Override
+    public Uni<Void> sendMail(String userId, String userMailUuid, String institutionName, String productId, PartyRole productRole, LoggedUser loggedUser) {
+        PrepareNotificationData.PrepareNotificationDataBuilder prepareNotificationDataBuilder = PrepareNotificationData.builder();
+        return Uni.createFrom().nullItem()
+                .onItem().transformToUni(unused -> retrieveUserFromUserRegistryAndAddToPrepareNotificationData(prepareNotificationDataBuilder, userId))
+                .onItem().transformToUni(builder -> retrieveUserInstitutionAndAddToPrepareNotificationDataRequest(builder, userId, userMailUuid, institutionName))
+                .onItem().transformToUni(builder -> retrieveProductAndAddToPrepareNotificationData(builder, productId))
+                .onItem().transform(PrepareNotificationData.PrepareNotificationDataBuilder::build)
+                .onItem().transformToUni(prepareNotificationData -> userNotificationService.buildDataModelRequestAndSendEmail(prepareNotificationData.getUserResource(), prepareNotificationData.getUserInstitution(), prepareNotificationData.getProduct(), productRole, loggedUser.getName(), loggedUser.getFamilyName())
+                        .onFailure().recoverWithNull()
+                        .replaceWith(prepareNotificationData))
+                .onFailure().invoke(throwable -> log.error("Error during update user status for userId: {}, institutionId: {}, productId:{} -> exception: {}", Encode.forJava(userId), Encode.forJava(institutionName), Encode.forJava(productId), throwable.getMessage(), throwable))
+                .replaceWithVoid();
+    }
+
     private Uni<PrepareNotificationData.PrepareNotificationDataBuilder> retrieveProductAndAddToPrepareNotificationData(PrepareNotificationData.PrepareNotificationDataBuilder builder, String productId) {
         return Uni.createFrom().item(productService.getProduct(productId))
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
@@ -308,6 +323,15 @@ public class UserServiceImpl implements UserService {
                     return Uni.createFrom().item(userInstitution);
                 })
                 .replaceWith(builder);
+    }
+
+    private Uni<PrepareNotificationData.PrepareNotificationDataBuilder> retrieveUserInstitutionAndAddToPrepareNotificationDataRequest(PrepareNotificationData.PrepareNotificationDataBuilder builder, String userId, String userMailUuid, String institutionName) {
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setUserId(userId);
+        userInstitution.setUserMailUuid(userMailUuid);
+        userInstitution.setInstitutionDescription(institutionName);
+        builder.userInstitution(userInstitution);
+        return Uni.createFrom().item(builder);
     }
 
     private Uni<PrepareNotificationData.PrepareNotificationDataBuilder> retrieveUserFromUserRegistryAndAddToPrepareNotificationData(PrepareNotificationData.PrepareNotificationDataBuilder prepareNotificationDataBuilder, String userId) {

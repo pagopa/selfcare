@@ -446,4 +446,33 @@ class UserNotificationServiceImplTest {
                 .awaitItem().assertCompleted();
         verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
     }
+
+    @Test
+    void testSendMailNotificationForOnboardingRequest() throws IOException {
+        String loggedUserName = "loggedUserName";
+        String loggedUserSurname = "loggedUserSurname";
+
+        Configuration freemarkerConfig = mock(Configuration.class);
+        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
+        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
+        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
+
+        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true, telemetryClient);
+        when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
+
+        userNotificationServiceImpl.buildDataModelRequestAndSendEmail(
+                        userResource,
+                        userInstitution,
+                        product,
+                        PartyRole.MANAGER,
+                        loggedUserName,
+                        loggedUserSurname
+                )
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .awaitItem().assertCompleted();
+        verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
+
+    }
+
 }

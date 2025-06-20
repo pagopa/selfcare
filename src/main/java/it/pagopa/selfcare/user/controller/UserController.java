@@ -8,6 +8,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
+import it.pagopa.selfcare.user.controller.request.SendMailDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
@@ -411,6 +412,23 @@ public class UserController {
                                                                             @PathParam(value = "institutionId") String institutionId,
                                                                             @QueryParam(value = "productId") String productId) {
         return userService.getUserInstitutionWithPermission(userId, institutionId, productId);
+    }
+
+    /**
+     *
+     * @param userId  String
+     * @param sendMailDto SendMailDto
+     */
+    @Operation(description = "Sends an email notification to a user when the institution receives an onboarding request.", summary = "Sends an email notification to a user when the institution receives an onboarding request.")
+    @POST
+    @Path("/{userId}/send-mail-request")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Void> sendMailRequest(@PathParam("userId") String userId,
+                                            @Valid SendMailDto sendMailDto,
+                                            @Context SecurityContext ctx) {
+        return readUserIdFromToken(ctx)
+                .onItem().transformToUni(loggedUser -> userService.sendMail(userId, sendMailDto.getUserMailUuid(), sendMailDto.getInstitutionName(), sendMailDto.getProductId(), sendMailDto.getRole(), loggedUser));
     }
 
     private Uni<LoggedUser> readUserIdFromToken(SecurityContext ctx) {
