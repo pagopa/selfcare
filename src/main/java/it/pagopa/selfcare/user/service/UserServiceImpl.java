@@ -892,6 +892,14 @@ public class UserServiceImpl implements UserService {
                 .recoverWithItem(false);
     }
 
+    @Override
+    public Uni<Void> sendEmailOtp(String userId, String institutionalEmail, String otp) {
+        return userRegistryService.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userId)
+                .map(userResource -> userResource.getName().getValue()).chain(name ->
+                        userNotificationService.sendOtpNotification(institutionalEmail,name, otp)
+                );
+    }
+
     private boolean isNotFound(Throwable throwable) {
         return ((WebApplicationException) throwable).getResponse().getStatus() == 404;
     }

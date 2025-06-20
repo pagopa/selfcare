@@ -18,4 +18,6 @@ public interface UserNotificationService {
     Uni<Void> sendEmailNotification(UserResource user, UserInstitution institution, Product product, OnboardedProductState status, String productRole, String loggedUserName, String loggedUserSurname);
 
     Uni<Void> sendCreateUserNotification(String institutionDescription, List<String> roleLabels, UserResource userResource, UserInstitution userInstitution, Product product, LoggedUser loggedUser);
+
+    Uni<Void> sendOtpNotification(String institutionalEmail, String name, String otp);
 }

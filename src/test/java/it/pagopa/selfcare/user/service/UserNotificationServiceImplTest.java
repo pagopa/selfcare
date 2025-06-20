@@ -446,4 +446,24 @@ class UserNotificationServiceImplTest {
                 .awaitItem().assertCompleted();
         verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
     }
+
+    @Test
+    void testSendMailNotificationForOtp() throws IOException {
+        Configuration freemarkerConfig = mock(Configuration.class);
+        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
+        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
+        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
+
+        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true, telemetryClient);
+        when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
+
+        userNotificationServiceImpl.sendOtpNotification(
+                        "test@test.com", "name", "123456"
+                )
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .awaitItem().assertCompleted();
+        verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
+
+    }
 }

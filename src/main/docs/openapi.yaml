@@ -1122,6 +1122,40 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
+  /users/{userId}/send-mail-otp:
+    post:
+      tags:
+      - User
+      summary: Send an email with OTP
+      description: The sendEmailOtp function is used to send email containing a One
+        Time Password for account verification
+      operationId: sendEmailOtp
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendEmailOtpDto"
+      responses:
+        "202":
+          description: Email send accepted!
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
 components:
   schemas:
     AddUserRoleDto:
@@ -1344,6 +1378,18 @@ components:
       type: object
       properties:
         fiscalCode:
+          type: string
+    SendEmailOtpDto:
+      required:
+      - otp
+      - institutionalEmail
+      type: object
+      properties:
+        otp:
+          minLength: 1
+          type: string
+        institutionalEmail:
+          minLength: 1
           type: string
     UpdateDescriptionDto:
       required:

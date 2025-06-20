@@ -119,6 +119,16 @@ public class UserNotificationServiceImpl implements UserNotificationService {
                 .onItem().invoke(() -> log.debug("sendCreateNotification end"));
     }
 
+    @Override
+    public Uni<Void> sendOtpNotification(String institutionalEmail, String name, String otp) {
+        log.debug("sendOtpNotification start");
+
+        Map<String, String> dataModel = Map.of("name",name, "otp", otp);
+
+        return this.sendEmailNotification(OTP_TEMPLATE, OTP_SUBJECT, institutionalEmail, dataModel)
+                .onItem().invoke(() -> log.debug("sendOtpNotification end"));
+    }
+
     private Map<String, String> buildCreateEmailDataModel(LoggedUser loggedUser, Product product, String institutionDescription, List<String> productRoleCodes) {
         Map<String, String> dataModel = new HashMap<>();
         dataModel.put("requesterName", Optional.ofNullable(loggedUser.getName()).orElse(""));

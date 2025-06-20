@@ -8,6 +8,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
+import it.pagopa.selfcare.user.controller.request.SendEmailOtpDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
@@ -53,12 +54,24 @@ import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList
 @RequiredArgsConstructor
 @Slf4j
 public class UserController {
-    @Inject
-    CurrentIdentityAssociation currentIdentityAssociation;
-
     private final UserService userService;
     private final UserMapper userMapper;
     private final UserRegistryService userRegistryService;
+    @Inject
+    CurrentIdentityAssociation currentIdentityAssociation;
+
+    private static List<PartyRole> retrievePartyRoleFromStringList(List<String> roles) {
+        List<PartyRole> roleList = new ArrayList<>();
+        for (String role : roles) {
+            try {
+                roleList.add(PartyRole.valueOf(role));
+            } catch (IllegalArgumentException e) {
+                log.error("Invalid role value: {}", role);
+                throw new InvalidRequestException(String.format("Invalid role value: %s", role));
+            }
+        }
+        return roleList;
+    }
 
     @Operation(description = "The API retrieves Users' emails using institution id and product id",
             summary = "Retrieve users' emails by institution ID and product ID")
@@ -100,7 +113,6 @@ public class UserController {
                                          @QueryParam(value = "productId") String productId) {
         return userService.retrievePerson(userId, productId, institutionId);
     }
-
 
     @Operation(description = "Retrieves products info and role which the user is enabled", summary = "Retrieve product information and user roles")
     @GET
@@ -241,7 +253,7 @@ public class UserController {
                                                                            @QueryParam(value = "size") @DefaultValue("100") Integer size) {
 
         List<PartyRole> roleList = null;
-        if(!CollectionUtils.isNullOrEmpty(roles)) {
+        if (!CollectionUtils.isNullOrEmpty(roles)) {
             roleList = retrievePartyRoleFromStringList(roles);
         }
 
@@ -321,7 +333,6 @@ public class UserController {
     }
 
     /**
-     *
      * @param userId  String
      * @param userDto AddUserRoleDto
      */
@@ -363,7 +374,7 @@ public class UserController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> createOrUpdateByFiscalCode(@Valid CreateUserDto userDto,
-                                                  @Context SecurityContext ctx) {
+                                                    @Context SecurityContext ctx) {
         return readUserIdFromToken(ctx)
                 .onItem().transformToUni(loggedUser -> userService.createOrUpdateUserByFiscalCode(userDto, loggedUser))
                 .map(response -> Response
@@ -413,6 +424,25 @@ public class UserController {
         return userService.getUserInstitutionWithPermission(userId, institutionId, productId);
     }
 
+    @APIResponses({
+            @APIResponse(responseCode = "202", description = "Email send accepted!"),
+            @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
+    })
+    @Operation(description = "The sendEmailOtp function is used to send email containing a One Time Password for account verification", summary = "Send an email with OTP")
+    @POST
+    @Path(value = "/{userId}/send-mail-otp")
+    @Tag(name = "User")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> sendEmailOtp(@PathParam(value = "userId") String userId,
+                                      @Valid SendEmailOtpDto sendEmailOtpDto,
+                                      @Context SecurityContext ctx) {
+        return readUserIdFromToken(ctx)
+                .onItem().transformToUni(loggedUser -> userService.sendEmailOtp(userId, sendEmailOtpDto.getInstitutionalEmail(), sendEmailOtpDto.getOtp()))
+                .map(response -> Response
+                        .status(HttpStatus.SC_ACCEPTED).build());
+    }
+
     private Uni<LoggedUser> readUserIdFromToken(SecurityContext ctx) {
         return currentIdentityAssociation.getDeferredIdentity()
                 .onItem().transformToUni(identity -> {
@@ -434,19 +464,6 @@ public class UserController {
                     }
                     return Uni.createFrom().nullItem();
                 });
-    }
-
-    private static List<PartyRole> retrievePartyRoleFromStringList(List<String> roles) {
-        List<PartyRole> roleList = new ArrayList<>();
-        for (String role : roles) {
-            try {
-                roleList.add(PartyRole.valueOf(role));
-            } catch (IllegalArgumentException e) {
-                log.error("Invalid role value: {}", role);
-                throw new InvalidRequestException(String.format("Invalid role value: %s", role));
-            }
-        }
-        return roleList;
     }
 }
 

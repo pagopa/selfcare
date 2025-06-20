@@ -2333,4 +2333,29 @@ class UserServiceTest {
         subscriber.assertFailedWith(RuntimeException.class);
     }
 
+    @Test
+    void testSendMailOtp() {
+        UserResource user = mock(UserResource.class);
+        when(userRegistryApi.findByIdUsingGET(any(), any()))
+                .thenReturn(Uni.createFrom().item(user));
+
+        when(userNotificationService.sendOtpNotification(
+                anyString(),
+                anyString(),
+                anyString())
+        ).thenReturn(Uni.createFrom().voidItem());
+
+        var subscriber = userService.sendEmailOtp("userId", "email", "123456")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.awaitItem();
+
+        verify(userNotificationService, times(1)).sendOtpNotification(
+                eq("email"),
+                eq(user.getName().getValue()),
+                eq("123456")
+        );
+    }
+
 }

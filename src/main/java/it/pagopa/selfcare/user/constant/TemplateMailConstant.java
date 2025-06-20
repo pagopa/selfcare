@@ -15,4 +15,6 @@ public class TemplateMailConstant {
     public static final String CREATE_TEMPLATE_MULTIPLE_ROLE = "user_added_multi_role.ftlh";
     public static final String CREATE_SUBJECT = "Hai un nuovo ruolo per un prodotto PagoPA";
     public static final String CREATE_TEMPLATE_SINGLE_ROLE = "user_added_single_role.ftlh";
+    public static final String OTP_SUBJECT = "Conferma la tua identità";
+    public static final String OTP_TEMPLATE = "user_otp.ftlh";
 }
