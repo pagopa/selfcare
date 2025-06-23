@@ -114,7 +114,6 @@ public class OidcServiceImpl implements OidcService {
                             return Uni.createFrom()
                                 .item(
                                     new OidcExchangeOtpResponse(
-                                        Boolean.TRUE,
                                         otpFlow.getUuid(),
                                         OtpUtils.maskEmail(otpFlow.getNotificationEmail())));
                           } else {

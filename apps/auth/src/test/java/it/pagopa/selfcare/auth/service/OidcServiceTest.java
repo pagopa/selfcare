@@ -5,6 +5,8 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.jwt.auth.principal.ParseException;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.auth.controller.response.OidcExchangeOtpResponse;
+import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.exception.ForbiddenException;
 import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
@@ -14,6 +16,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.one_identity_json.api.DefaultApi;
 import org.openapi.quarkus.one_identity_json.model.TokenData;
@@ -67,6 +70,51 @@ public class OidcServiceTest {
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertCompleted();
+  }
+
+  @Test
+  void exchangeAuthCodeWithOtpFlowChallenge() throws ParseException {
+
+    UserClaims userClaims = UserClaims.builder().fiscalCode("").build();
+    when(tokenApi.createRequestToken(any(), anyString()))
+        .thenReturn(Uni.createFrom().item(TokenData.builder().idToken("idToken").build()));
+    when(jwtService.extractClaimsFromJwtToken(anyString()))
+        .thenReturn(
+            Uni.createFrom()
+                .item(
+                    Map.of(
+                        "fiscal_number",
+                        "TINIT-FISCALCODE",
+                        "name",
+                        "name",
+                        "family_name",
+                        "Doe")));
+
+    when(userService.patchUser(anyString(), anyString(), anyString(), anyBoolean()))
+        .thenReturn(Uni.createFrom().item(userClaims));
+
+    when(otpFlowService.handleOtpFlow(any()))
+        .thenReturn(
+            Uni.createFrom()
+                .item(
+                    Optional.of(
+                        OtpFlow.builder()
+                            .uuid("uuid")
+                            .notificationEmail("test@test.com")
+                            .build())));
+
+    var response = oidcService
+        .exchange("authCode", "redirectUri")
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertCompleted().getItem();
+    Assertions.assertInstanceOf(OidcExchangeOtpResponse.class, response);
+//        .assertItem(
+//            OidcExchangeOtpResponse.builder()
+//                .requiresOtpFlow(true)
+//                .otpSessionUid("uuid")
+//                .maskedEmail(OtpUtils.maskEmail("test@test.com"))
+//                .build());
   }
 
   @Test
