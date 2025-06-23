@@ -14,6 +14,7 @@ import jakarta.inject.Inject;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -41,6 +42,19 @@ public class OtpFlowServiceTest {
   }
 
   @Test
+  void returnEmptyOtpFlow_whenHandlingNoneFFOtpFlow() {
+    UserClaims input = getUserClaims();
+    Optional<OtpFlow> created =
+        otpFlowService
+            .handleOtpFlow(input)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create())
+            .assertCompleted()
+            .getItem();
+    Assertions.assertEquals(created, Optional.empty());
+  }
+
+  @Test
   void persistNewOtpFlow() {
     UserClaims input = getUserClaims();
     String otp = OtpUtils.generateOTP();
@@ -48,7 +62,7 @@ public class OtpFlowServiceTest {
     when(OtpFlow.builder()).thenCallRealMethod();
     OtpFlow created =
         otpFlowService
-            .createNewOtpFlow(input.getUid(), otp)
+            .createNewOtpFlow(input.getUid(), otp, "test@test.com")
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create())
             .assertCompleted()
@@ -69,7 +83,7 @@ public class OtpFlowServiceTest {
     when(OtpFlow.persist(any(OtpFlow.class), any()))
         .thenReturn(Uni.createFrom().failure(new Exception(exceptionDesc)));
     otpFlowService
-        .createNewOtpFlow(input.getUid(), otp)
+        .createNewOtpFlow(input.getUid(), otp, "test@test.com")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()

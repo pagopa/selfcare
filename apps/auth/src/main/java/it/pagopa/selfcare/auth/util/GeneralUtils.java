@@ -56,6 +56,12 @@ public class GeneralUtils {
             && webApplicationException.getResponse().getStatus() == 429);
   }
 
+  public static boolean checkNotFoundException(Throwable throwable) {
+    return throwable instanceof TimeoutException
+            || (throwable instanceof WebApplicationException webApplicationException
+            && webApplicationException.getResponse().getStatus() == 404);
+  }
+
   public static Exception extractExceptionFromWebAppException(Throwable throwable) {
     if (throwable instanceof WebApplicationException webApplicationException) {
       return switch (webApplicationException.getResponse().getStatus()) {

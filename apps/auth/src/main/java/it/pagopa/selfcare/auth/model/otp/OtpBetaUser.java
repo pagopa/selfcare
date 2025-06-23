@@ -1,14 +1,12 @@
 package it.pagopa.selfcare.auth.model.otp;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Data
+@EqualsAndHashCode
 public class OtpBetaUser {
     private String fiscalCode;
     private Boolean forceOtp = Boolean.FALSE;

@@ -10,6 +10,7 @@ public class OidcExchangeTokenResponse extends TokenResponse {
     private Boolean requiresOtpFlow = Boolean.FALSE;
 
     public OidcExchangeTokenResponse(String sessionToken){
+        super();
         this.setSessionToken(sessionToken);
     }
 }

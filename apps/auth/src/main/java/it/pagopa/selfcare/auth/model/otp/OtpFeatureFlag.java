@@ -13,6 +13,14 @@ import java.util.List;
 @Builder
 @Data
 public class OtpFeatureFlag {
-    private FeatureFlagEnum featureFlag;
-    private List<OtpBetaUser> otpBetaUsers;
+  private FeatureFlagEnum featureFlag;
+  private List<OtpBetaUser> otpBetaUsers;
+
+  public Boolean isOtpForced(String fiscalCode) {
+    return otpBetaUsers.stream()
+        .filter(betaUser -> betaUser.getFiscalCode().equals(fiscalCode))
+        .map(OtpBetaUser::getForceOtp)
+        .findFirst()
+        .orElse(Boolean.FALSE);
+  }
 }
