@@ -1,17 +1,15 @@
 package it.pagopa.selfcare.auth.controller.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class OidcExchangeTokenResponse extends OidcExchangeResponse {
-
+public class OidcExchangeTokenResponse extends TokenResponse {
     private Boolean requiresOtpFlow = Boolean.FALSE;
-    private String sessionToken;
 
+    public OidcExchangeTokenResponse(String sessionToken){
+        this.setSessionToken(sessionToken);
+    }
 }
