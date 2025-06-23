@@ -13,6 +13,8 @@
   } ],
   "tags" : [ {
     "name" : "OIDC"
+  }, {
+    "name" : "OTP"
   } ],
   "paths" : {
     "/oidc/exchange" : {
@@ -93,6 +95,85 @@
           }
         }
       }
+    },
+    "/otp/verify" : {
+      "post" : {
+        "tags" : [ "OTP" ],
+        "summary" : "Verify OTP endpoint",
+        "description" : "Verify endpoint is used to complete an otp flow by validating user account",
+        "operationId" : "otpVerify",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OtpVerifyRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OtpForbidden"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Conflict",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components" : {
@@ -128,10 +209,47 @@
       "OidcExchangeTokenResponse" : {
         "type" : "object",
         "properties" : {
+          "sessionToken" : {
+            "type" : "string"
+          },
           "requiresOtpFlow" : {
             "type" : "boolean"
+          }
+        }
+      },
+      "OtpForbidden" : {
+        "type" : "object",
+        "properties" : {
+          "otpForbiddenCode" : {
+            "$ref" : "#/components/schemas/OtpForbiddenCode"
           },
-          "sessionToken" : {
+          "remainingAttempts" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "otpStatus" : {
+            "$ref" : "#/components/schemas/OtpStatus"
+          }
+        }
+      },
+      "OtpForbiddenCode" : {
+        "enum" : [ "CODE_001", "CODE_002" ],
+        "type" : "string"
+      },
+      "OtpStatus" : {
+        "enum" : [ "PENDING", "EXPIRED", "REJECTED", "COMPLETED" ],
+        "type" : "string"
+      },
+      "OtpVerifyRequest" : {
+        "required" : [ "otpUuid", "otp" ],
+        "type" : "object",
+        "properties" : {
+          "otpUuid" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "otp" : {
+            "minLength" : 1,
             "type" : "string"
           }
         }
@@ -153,6 +271,14 @@
             "type" : "string"
           },
           "type" : {
+            "type" : "string"
+          }
+        }
+      },
+      "TokenResponse" : {
+        "type" : "object",
+        "properties" : {
+          "sessionToken" : {
             "type" : "string"
           }
         }

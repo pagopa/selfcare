@@ -103,10 +103,6 @@ public class OidcServiceImpl implements OidcService {
                         failure ->
                             new InternalException(
                                 "Cannot generate session token:" + failure.toString()))
-                    .map(
-                        sessionToken ->
-                            OidcExchangeTokenResponse.builder()
-                                .sessionToken(sessionToken)
-                                .build()));
+                    .map(OidcExchangeTokenResponse::new));
   }
 }

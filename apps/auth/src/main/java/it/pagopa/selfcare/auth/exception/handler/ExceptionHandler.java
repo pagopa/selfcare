@@ -1,10 +1,7 @@
 package it.pagopa.selfcare.auth.exception.handler;
 
 import it.pagopa.selfcare.auth.controller.response.Problem;
-import it.pagopa.selfcare.auth.exception.ForbiddenException;
-import it.pagopa.selfcare.auth.exception.InternalException;
-import it.pagopa.selfcare.auth.exception.InvalidRequestException;
-import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.auth.exception.*;
 import jakarta.ws.rs.core.Response;
 import org.apache.http.HttpStatus;
 import org.jboss.resteasy.reactive.RestResponse;
@@ -51,5 +48,12 @@ public class ExceptionHandler {
         LOGGER.error(PREFIX_LOGGER, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
         Problem problem = new Problem(exception.getMessage(), null,  HttpStatus.SC_INTERNAL_SERVER_ERROR, exception.getMessage(), null);
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(problem).build();
+    }
+
+    @ServerExceptionMapper
+    public Response toResponse(UnimplementedException exception) {
+        LOGGER.error(PREFIX_LOGGER, "Unimplemented endpoint", exception.getMessage());
+        Problem problem = new Problem(exception.getMessage(), null,  HttpStatus.SC_NOT_IMPLEMENTED, exception.getMessage(), null);
+        return Response.status(Response.Status.NOT_IMPLEMENTED).entity(problem).build();
     }
 }
