@@ -103,18 +103,14 @@ public class OidcServiceTest {
                             .notificationEmail("test@test.com")
                             .build())));
 
-    var response = oidcService
-        .exchange("authCode", "redirectUri")
-        .subscribe()
-        .withSubscriber(UniAssertSubscriber.create())
-        .assertCompleted().getItem();
+    var response =
+        oidcService
+            .exchange("authCode", "redirectUri")
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create())
+            .assertCompleted()
+            .getItem();
     Assertions.assertInstanceOf(OidcExchangeOtpResponse.class, response);
-//        .assertItem(
-//            OidcExchangeOtpResponse.builder()
-//                .requiresOtpFlow(true)
-//                .otpSessionUid("uuid")
-//                .maskedEmail(OtpUtils.maskEmail("test@test.com"))
-//                .build());
   }
 
   @Test

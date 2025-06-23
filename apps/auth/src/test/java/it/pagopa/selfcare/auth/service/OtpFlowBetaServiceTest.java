@@ -292,13 +292,12 @@ public class OtpFlowBetaServiceTest {
     input.setSameIdp(true);
     when(userService.getUserInfo(any(UserClaims.class)))
         .thenReturn(Uni.createFrom().failure(new WebApplicationException(500)));
-    OtpFlow foundOtpFlow =
-        OtpFlow.builder()
-            .uuid("uuid")
-            .otp("123456")
-            .status(OtpStatus.COMPLETED)
-            .expiresAt(OffsetDateTime.now())
-            .build();
+    OtpFlow.builder()
+        .uuid("uuid")
+        .otp("123456")
+        .status(OtpStatus.COMPLETED)
+        .expiresAt(OffsetDateTime.now())
+        .build();
 
     otpFlowService
         .handleOtpFlow(input)
@@ -315,19 +314,19 @@ public class OtpFlowBetaServiceTest {
     input.setFiscalCode("noOtpFiscalCode");
     input.setSameIdp(true);
     when(userService.getUserInfo(any(UserClaims.class)))
-            .thenReturn(Uni.createFrom().item(UserResource.builder().email("test@test.com").build()));
+        .thenReturn(Uni.createFrom().item(UserResource.builder().email("test@test.com").build()));
     PanacheMock.mock(OtpFlow.class);
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
-            Mockito.mock(ReactivePanacheQuery.class);
+        Mockito.mock(ReactivePanacheQuery.class);
     when(OtpFlow.builder()).thenCallRealMethod();
     when(query.firstResult()).thenReturn(Uni.createFrom().failure(new Exception(exceptionDesc)));
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
 
     otpFlowService
-            .handleOtpFlow(input)
-            .subscribe()
-            .withSubscriber(UniAssertSubscriber.create())
-            .assertFailed()
-            .assertFailedWith(InternalException.class, exceptionDesc);
+        .handleOtpFlow(input)
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertFailed()
+        .assertFailedWith(InternalException.class, exceptionDesc);
   }
 }
