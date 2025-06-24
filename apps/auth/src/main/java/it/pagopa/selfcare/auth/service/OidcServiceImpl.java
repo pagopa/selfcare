@@ -108,24 +108,29 @@ public class OidcServiceImpl implements OidcService {
                         failure ->
                             new InternalException("Cannot Handle OTP Flow:" + failure.toString()))
                     .chain(
-                        maybeOtpFlow -> {
-                          if (maybeOtpFlow.isPresent()) {
-                            OtpFlow otpFlow = maybeOtpFlow.get();
-                            return Uni.createFrom()
-                                .item(
-                                    new OidcExchangeOtpResponse(
-                                        otpFlow.getUuid(),
-                                        OtpUtils.maskEmail(otpFlow.getNotificationEmail())));
-                          } else {
-                            return sessionService
-                                .generateSessionToken(userClaims)
-                                .onFailure()
-                                .transform(
-                                    failure ->
-                                        new InternalException(
-                                            "Cannot generate session token:" + failure.toString()))
-                                .map(OidcExchangeTokenResponse::new);
-                          }
-                        }));
+                        maybeOtpFlow ->
+                            maybeOtpFlow
+                                .map(
+                                    otpFlow ->
+                                        Uni.createFrom().item(newOidcExchangeOtpResponse(otpFlow)))
+                                .orElse(
+                                    sessionService
+                                        .generateSessionToken(userClaims)
+                                        .onFailure()
+                                        .transform(
+                                            failure ->
+                                                new InternalException(
+                                                    "Cannot generate session token:"
+                                                        + failure.toString()))
+                                        .map(this::newOidcExchangeTokenResponse))));
+  }
+
+  private OidcExchangeResponse newOidcExchangeOtpResponse(OtpFlow otpFlow) {
+    return new OidcExchangeOtpResponse(
+        otpFlow.getUuid(), OtpUtils.maskEmail(otpFlow.getNotificationEmail()));
+  }
+
+  private OidcExchangeResponse newOidcExchangeTokenResponse(String sessionToken) {
+    return new OidcExchangeTokenResponse(sessionToken);
   }
 }
