@@ -25,6 +25,10 @@ module "mongodb_collection_otp_flows" {
 
   indexes = [
     {
+      keys   = ["_id"]
+      unique = true
+    },
+    {
       keys   = ["uuid"]
       unique = true
     },

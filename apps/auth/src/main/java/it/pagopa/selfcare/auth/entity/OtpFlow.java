@@ -20,6 +20,7 @@ public class OtpFlow extends ReactivePanacheMongoEntity {
 
     private String uuid;
     private String userId;
+    private String notificationEmail;
     private String otp;
     private OtpStatus status;
     private Integer attempts;

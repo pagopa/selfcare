@@ -1,10 +1,13 @@
 package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.auth.controller.response.OidcExchangeOtpResponse;
 import it.pagopa.selfcare.auth.controller.response.OidcExchangeResponse;
 import it.pagopa.selfcare.auth.controller.response.OidcExchangeTokenResponse;
+import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.util.GeneralUtils;
+import it.pagopa.selfcare.auth.util.OtpUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
@@ -32,6 +35,8 @@ public class OidcServiceImpl implements OidcService {
   private final SessionService sessionService;
 
   private final UserService userService;
+
+  private final OtpFlowService otpFlowService;
 
   @ConfigProperty(name = "auth-ms.retry.min-backoff")
   Integer retryMinBackOff;
@@ -96,13 +101,36 @@ public class OidcServiceImpl implements OidcService {
                                 "Cannot patch user on Personal Data Vault:" + failure.toString())))
         .chain(
             userClaims ->
-                sessionService
-                    .generateSessionToken(userClaims)
+                otpFlowService
+                    .handleOtpFlow(userClaims)
                     .onFailure()
                     .transform(
                         failure ->
-                            new InternalException(
-                                "Cannot generate session token:" + failure.toString()))
-                    .map(OidcExchangeTokenResponse::new));
+                            new InternalException("Cannot Handle OTP Flow:" + failure.toString()))
+                    .chain(
+                        maybeOtpFlow ->
+                            maybeOtpFlow
+                                .map(
+                                    otpFlow ->
+                                        Uni.createFrom().item(newOidcExchangeOtpResponse(otpFlow)))
+                                .orElse(
+                                    sessionService
+                                        .generateSessionToken(userClaims)
+                                        .onFailure()
+                                        .transform(
+                                            failure ->
+                                                new InternalException(
+                                                    "Cannot generate session token:"
+                                                        + failure.toString()))
+                                        .map(this::newOidcExchangeTokenResponse))));
+  }
+
+  private OidcExchangeResponse newOidcExchangeOtpResponse(OtpFlow otpFlow) {
+    return new OidcExchangeOtpResponse(
+        otpFlow.getUuid(), OtpUtils.maskEmail(otpFlow.getNotificationEmail()));
+  }
+
+  private OidcExchangeResponse newOidcExchangeTokenResponse(String sessionToken) {
+    return new OidcExchangeTokenResponse(sessionToken);
   }
 }

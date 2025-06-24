@@ -4,8 +4,6 @@ import lombok.*;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class OidcExchangeTokenResponse extends TokenResponse {
     private Boolean requiresOtpFlow = Boolean.FALSE;
 

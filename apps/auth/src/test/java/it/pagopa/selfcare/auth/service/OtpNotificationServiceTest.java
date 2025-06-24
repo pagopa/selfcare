@@ -51,7 +51,7 @@ public class OtpNotificationServiceTest {
   }
 
   @Test
-  void failureWhileSendingOtpEmail() {
+  void fireAndForgetWhileSendingOtpEmail() {
     UserClaims input = getUserClaims();
     String otp = OtpUtils.generateOTP();
     String email = "test@test.com";
@@ -62,7 +62,6 @@ public class OtpNotificationServiceTest {
         .sendOtpEmail(input.getUid(), email, otp)
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
-        .assertFailed()
-        .assertFailedWith(InternalException.class);
+        .assertCompleted();
   }
 }

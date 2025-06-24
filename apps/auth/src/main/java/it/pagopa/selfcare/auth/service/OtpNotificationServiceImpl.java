@@ -42,6 +42,7 @@ public class OtpNotificationServiceImpl implements OtpNotificationService {
         .atMost(maxRetry)
         .onFailure(WebApplicationException.class)
         .transform(GeneralUtils::extractExceptionFromWebAppException)
+            .onFailure().recoverWithNull()
         .replaceWithVoid();
   }
 }
