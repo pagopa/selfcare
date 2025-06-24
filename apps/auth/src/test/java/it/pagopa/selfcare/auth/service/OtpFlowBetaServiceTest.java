@@ -288,8 +288,6 @@ public class OtpFlowBetaServiceTest {
   void failure_whenAnErrorOccursCallingGetUserInfo() {
     String exceptionDesc = "Cannot get User Info on External Internal APIs";
     UserClaims input = getUserClaims();
-    input.setFiscalCode("noOtpFiscalCode");
-    input.setSameIdp(true);
     when(userService.getUserInfo(any(UserClaims.class)))
         .thenReturn(Uni.createFrom().failure(new WebApplicationException(500)));
     OtpFlow.builder()
@@ -311,8 +309,6 @@ public class OtpFlowBetaServiceTest {
   void failure_whenAnErrorOccursWhileFindingLastOtpFlow() {
     String exceptionDesc = "Cannot get Last OtpFlow";
     UserClaims input = getUserClaims();
-    input.setFiscalCode("noOtpFiscalCode");
-    input.setSameIdp(true);
     when(userService.getUserInfo(any(UserClaims.class)))
         .thenReturn(Uni.createFrom().item(UserResource.builder().email("test@test.com").build()));
     PanacheMock.mock(OtpFlow.class);

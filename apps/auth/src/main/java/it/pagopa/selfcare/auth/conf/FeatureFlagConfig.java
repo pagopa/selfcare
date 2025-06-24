@@ -31,7 +31,7 @@ public class FeatureFlagConfig {
     } catch (JsonProcessingException e) {
       log.error(e.toString());
     }
-    OtpFeatureFlag otpFeatureFlag =  OtpFeatureFlag.builder()
+    OtpFeatureFlag otpFeatureFlag = OtpFeatureFlag.builder()
         .featureFlag(FeatureFlagEnum.valueOf(otpFf))
         .otpBetaUsers(betaUsers)
         .build();
