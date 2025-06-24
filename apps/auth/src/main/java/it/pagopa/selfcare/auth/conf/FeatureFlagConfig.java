@@ -22,6 +22,7 @@ public class FeatureFlagConfig {
       @ConfigProperty(name = "otp.ff.enabled") String otpFf,
       @ConfigProperty(name = "otp.ff.beta-users") String otpBetaUsers) {
 
+    log.info("Initializing OtpFeatureFlag with otp.ff.enabled={}, and otp.ff.beta-users={}", otpFf, otpBetaUsers);
     ObjectMapper objectMapper = new ObjectMapper();
     TypeReference<List<OtpBetaUser>> jacksonTypeReference = new TypeReference<>() {};
     List<OtpBetaUser> betaUsers = new ArrayList<>();
