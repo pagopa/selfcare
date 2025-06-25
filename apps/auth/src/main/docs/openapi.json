@@ -174,46 +174,6 @@
           }
         }
       }
-    },
-    "/user/info" : {
-      "get" : {
-        "tags" : [ "OTP" ],
-        "summary" : "userInfo",
-        "description" : "userInfo",
-        "operationId" : "userInfo",
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components" : {
