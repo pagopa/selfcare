@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.auth.client.InternalUserMsApi;
 import it.pagopa.selfcare.auth.util.GeneralUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -9,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.openapi.quarkus.internal_ms_user_json.api.UserApi;
 import org.openapi.quarkus.internal_ms_user_json.model.SendEmailOtpDto;
 
 import java.time.Duration;
@@ -28,7 +28,8 @@ public class OtpNotificationServiceImpl implements OtpNotificationService {
   @ConfigProperty(name = "auth-ms.retry")
   Integer maxRetry;
 
-  @RestClient @Inject UserApi internalUserApi;
+  @RestClient @Inject
+  InternalUserMsApi internalUserApi;
 
   @Override
   public Uni<Void> sendOtpEmail(String userId, String email, String otp) {
