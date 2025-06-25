@@ -1,53 +1,13 @@
 package it.pagopa.selfcare.auth.filter;
 
 import jakarta.ws.rs.client.ClientRequestContext;
-import jakarta.ws.rs.client.ClientRequestFilter;
-import jakarta.ws.rs.ext.Provider;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.config.ConfigProvider;
 
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-@Provider
 @Slf4j
-public class ApimHeaderFilter implements ClientRequestFilter {
+public class ApimHeaderFilter {
 
   private static final String HEADER_NAME = "Ocp-Apim-Subscription-Key";
-  private static final String CONFIG_PREFIX = "internal-api-key.";
-  private static final String CONFIG_DEFAULT = "internal-api-key.default";
-
-  @Override
-  public void filter(ClientRequestContext requestContext) {
-    String interfaceName = getClientInterfaceName(requestContext);
-    String configKey = CONFIG_PREFIX + interfaceName;
-
-    Optional<String> apiKey = getConfigValue(configKey).or(() -> getConfigValue(CONFIG_DEFAULT));
-
-    log.info(
-        "ApimHeaderFilter interfaceName: {}, configKey: {} getting apiKey: {}",
-        interfaceName,
-        configKey,
-        apiKey);
-    apiKey.ifPresent(value -> requestContext.getHeaders().putSingle(HEADER_NAME, value));
-  }
-
-  private String getClientInterfaceName(ClientRequestContext context) {
-    Object iface =
-        context.getConfiguration().getProperty("org.eclipse.microprofile.rest.client.interface");
-    log.info(
-        "context.getConfiguration() properties: {}",
-        context.getConfiguration().getProperties().entrySet().stream()
-            .map(entry -> String.format("%s=%s", entry.getKey(), entry.getValue().toString()))
-            .collect(Collectors.joining("\n")));
-    return iface != null ? iface.toString() : "unknown";
-  }
-
-  private Optional<String> getConfigValue(String key) {
-    try {
-      return Optional.of(ConfigProvider.getConfig().getValue(key, String.class));
-    } catch (Exception ignored) {
-      return Optional.empty();
-    }
+  public void injectApimKey(ClientRequestContext requestContext, String apiKey) {
+      requestContext.getHeaders().putSingle(HEADER_NAME, apiKey);
   }
 }
