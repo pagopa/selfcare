@@ -441,7 +441,6 @@ public class UserController {
     @Path(value = "/{userId}/send-mail-otp")
     @Tag(name = "User")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> sendEmailOtp(@PathParam(value = "userId") String userId,
                                       @Valid SendEmailOtpDto sendEmailOtpDto,
                                       @Context SecurityContext ctx) {
