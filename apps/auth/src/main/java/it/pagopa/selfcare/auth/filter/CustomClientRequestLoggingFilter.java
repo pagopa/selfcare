@@ -7,8 +7,6 @@ import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestConte
 import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestFilter;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Provider
 @Slf4j

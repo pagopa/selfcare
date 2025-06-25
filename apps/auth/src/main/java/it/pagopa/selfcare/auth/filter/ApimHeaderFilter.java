@@ -3,11 +3,13 @@ package it.pagopa.selfcare.auth.filter;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
 import jakarta.ws.rs.ext.Provider;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.ConfigProvider;
 
 import java.util.Optional;
 
 @Provider
+@Slf4j
 public class ApimHeaderFilter implements ClientRequestFilter {
 
     private static final String HEADER_NAME = "Ocp-Apim-Subscription-Key";
@@ -22,6 +24,7 @@ public class ApimHeaderFilter implements ClientRequestFilter {
         Optional<String> apiKey = getConfigValue(configKey)
                 .or(() -> getConfigValue(CONFIG_DEFAULT));
 
+        log.info("ApimHeaderFilter interfaceName: {}, configKey: {} getting apiKey: {}", interfaceName, configKey, apiKey);
         apiKey.ifPresent(value ->
                 requestContext.getHeaders().putSingle(HEADER_NAME, value)
         );
