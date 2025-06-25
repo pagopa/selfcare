@@ -5,7 +5,7 @@ import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.openapi.quarkus.internal_ms_user_json.api.UserApi;
 
-@RegisterRestClient(configKey = "org.openapi.quarkus.internal_ms_user_json.api.UserApi")
+@RegisterRestClient(configKey = "internal.user-ms.api")
 @RegisterProvider(InternalUserMsHeaderFilter.class)
 public interface InternalUserMsApi extends UserApi {
 }

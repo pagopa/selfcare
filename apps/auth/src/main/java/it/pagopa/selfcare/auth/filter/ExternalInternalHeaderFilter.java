@@ -10,7 +10,7 @@ import jakarta.ws.rs.ext.Provider;
 public class ExternalInternalHeaderFilter extends ApimHeaderFilter implements ClientRequestFilter {
 
     @Inject
-    @ConfigProperty(name = "internal.api.key")
+    @ConfigProperty(name = "internal.user-api.key")
     String apiKey;
 
     @Override
