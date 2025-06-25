@@ -93,7 +93,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -154,7 +154,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -227,7 +227,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -335,7 +335,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -397,7 +397,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -448,7 +448,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -510,7 +510,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -634,7 +634,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -703,7 +703,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -784,7 +784,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -853,7 +853,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -944,7 +944,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -1012,7 +1012,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -1048,7 +1048,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -1094,7 +1094,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -1138,7 +1138,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -1213,7 +1213,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -1258,7 +1258,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -1300,7 +1300,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -1344,7 +1344,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -1383,7 +1383,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -1440,7 +1440,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -1499,7 +1499,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -1542,7 +1542,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -1594,7 +1594,7 @@
         },
         "security": [
           {
-            "apiKeyHeader": [
+            "api_key": [
               "global"
             ]
           }
@@ -4228,7 +4228,7 @@
       }
     },
     "securitySchemes": {
-      "apiKeyHeader": {
+      "api_key": {
         "type": "apiKey",
         "name": "Ocp-Apim-Subscription-Key",
         "in": "header"
