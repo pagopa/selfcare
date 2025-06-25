@@ -27,7 +27,6 @@ import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.openapi.quarkus.internal_json.model.UserResource;
 
 @QuarkusTest
 @TestProfile(BetaFFTestProfile.class)
@@ -49,8 +48,8 @@ public class OtpFlowBetaServiceTest {
   @Test
   void returnNewOtpFlow_whenNoneOtpFlowExists() {
     UserClaims input = getUserClaims();
-    when(userService.getUserInfo(any(UserClaims.class)))
-        .thenReturn(Uni.createFrom().item(UserResource.builder().email("test@test.com").build()));
+    when(userService.getUserInfoEmail(any(UserClaims.class)))
+        .thenReturn(Uni.createFrom().item("test@test.com"));
     when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().voidItem());
     PanacheMock.mock(OtpFlow.class);
@@ -79,8 +78,8 @@ public class OtpFlowBetaServiceTest {
   void returnNewOtpFlow_whenAnotherCompletedExists() {
     UserClaims input = getUserClaims();
 
-    when(userService.getUserInfo(any(UserClaims.class)))
-        .thenReturn(Uni.createFrom().item(UserResource.builder().email("test@test.com").build()));
+    when(userService.getUserInfoEmail(any(UserClaims.class)))
+        .thenReturn(Uni.createFrom().item("test@test.com"));
     when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().voidItem());
     PanacheMock.mock(OtpFlow.class);
@@ -111,8 +110,8 @@ public class OtpFlowBetaServiceTest {
   void returnNewOtpFlow_whenAnotherRejectedExists() {
     UserClaims input = getUserClaims();
 
-    when(userService.getUserInfo(any(UserClaims.class)))
-        .thenReturn(Uni.createFrom().item(UserResource.builder().email("test@test.com").build()));
+    when(userService.getUserInfoEmail(any(UserClaims.class)))
+        .thenReturn(Uni.createFrom().item("test@test.com"));
     when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().voidItem());
     PanacheMock.mock(OtpFlow.class);
@@ -148,8 +147,8 @@ public class OtpFlowBetaServiceTest {
   void returnNewOtpFlow_whenAnotherExpiredExists() {
     UserClaims input = getUserClaims();
 
-    when(userService.getUserInfo(any(UserClaims.class)))
-        .thenReturn(Uni.createFrom().item(UserResource.builder().email("test@test.com").build()));
+    when(userService.getUserInfoEmail(any(UserClaims.class)))
+        .thenReturn(Uni.createFrom().item("test@test.com"));
     when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().voidItem());
     PanacheMock.mock(OtpFlow.class);
@@ -185,8 +184,8 @@ public class OtpFlowBetaServiceTest {
   void returnExistingOtpFlow_whenUntilValid() {
     UserClaims input = getUserClaims();
 
-    when(userService.getUserInfo(any(UserClaims.class)))
-        .thenReturn(Uni.createFrom().item(UserResource.builder().email("test@test.com").build()));
+    when(userService.getUserInfoEmail(any(UserClaims.class)))
+        .thenReturn(Uni.createFrom().item("test@test.com"));
     when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().voidItem());
     PanacheMock.mock(OtpFlow.class);
@@ -218,7 +217,7 @@ public class OtpFlowBetaServiceTest {
   @Test
   void returnEmpty_whenUserNotExists() {
     UserClaims input = getUserClaims();
-    when(userService.getUserInfo(any(UserClaims.class)))
+    when(userService.getUserInfoEmail(any(UserClaims.class)))
         .thenReturn(Uni.createFrom().failure(new WebApplicationException(404)));
     Optional<OtpFlow> maybeOtpFlow =
         otpFlowService
@@ -235,8 +234,8 @@ public class OtpFlowBetaServiceTest {
     UserClaims input = getUserClaims();
     input.setFiscalCode("noOtpFiscalCode");
     input.setSameIdp(true);
-    when(userService.getUserInfo(any(UserClaims.class)))
-        .thenReturn(Uni.createFrom().item(UserResource.builder().email("test@test.com").build()));
+    when(userService.getUserInfoEmail(any(UserClaims.class)))
+        .thenReturn(Uni.createFrom().item("test@test.com"));
     PanacheMock.mock(OtpFlow.class);
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
         Mockito.mock(ReactivePanacheQuery.class);
@@ -259,8 +258,8 @@ public class OtpFlowBetaServiceTest {
     UserClaims input = getUserClaims();
     input.setFiscalCode("noOtpFiscalCode");
     input.setSameIdp(true);
-    when(userService.getUserInfo(any(UserClaims.class)))
-        .thenReturn(Uni.createFrom().item(UserResource.builder().email("test@test.com").build()));
+    when(userService.getUserInfoEmail(any(UserClaims.class)))
+        .thenReturn(Uni.createFrom().item("test@test.com"));
     PanacheMock.mock(OtpFlow.class);
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
         Mockito.mock(ReactivePanacheQuery.class);
@@ -286,9 +285,9 @@ public class OtpFlowBetaServiceTest {
 
   @Test
   void failure_whenAnErrorOccursCallingGetUserInfo() {
-    String exceptionDesc = "Cannot get User Info on External Internal APIs";
+    String exceptionDesc = "Cannot get User Info Email on External Internal APIs";
     UserClaims input = getUserClaims();
-    when(userService.getUserInfo(any(UserClaims.class)))
+    when(userService.getUserInfoEmail(any(UserClaims.class)))
         .thenReturn(Uni.createFrom().failure(new WebApplicationException(500)));
     OtpFlow.builder()
         .uuid("uuid")
@@ -309,8 +308,8 @@ public class OtpFlowBetaServiceTest {
   void failure_whenAnErrorOccursWhileFindingLastOtpFlow() {
     String exceptionDesc = "Cannot get Last OtpFlow";
     UserClaims input = getUserClaims();
-    when(userService.getUserInfo(any(UserClaims.class)))
-        .thenReturn(Uni.createFrom().item(UserResource.builder().email("test@test.com").build()));
+    when(userService.getUserInfoEmail(any(UserClaims.class)))
+        .thenReturn(Uni.createFrom().item("test@test.com"));
     PanacheMock.mock(OtpFlow.class);
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
         Mockito.mock(ReactivePanacheQuery.class);

@@ -2,6 +2,7 @@ package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.client.ExternalInternalUserApi;
+import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.util.GeneralUtils;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -13,13 +14,13 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.internal_json.model.SearchUserDto;
 import org.openapi.quarkus.internal_json.model.UserInfoResource;
-import org.openapi.quarkus.internal_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.SaveUserDto;
 
 import java.time.Duration;
+import java.util.List;
 
 @Slf4j
 @ApplicationScoped
@@ -39,8 +40,7 @@ public class UserServiceImpl implements UserService {
 
   @RestClient @Inject UserApi userRegistryApi;
 
-  @RestClient @Inject
-  ExternalInternalUserApi internalUserApi;
+  @RestClient @Inject ExternalInternalUserApi externalInternalUserApi;
 
   @Override
   public Uni<UserClaims> patchUser(
@@ -78,9 +78,13 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public Uni<UserResource> getUserInfo(UserClaims userClaims) {
-    SearchUserDto searchUserDto = SearchUserDto.builder().fiscalCode(userClaims.getFiscalCode()).build();
-    return internalUserApi
+  public Uni<String> getUserInfoEmail(UserClaims userClaims) {
+    SearchUserDto searchUserDto =
+        SearchUserDto.builder()
+            .fiscalCode(userClaims.getFiscalCode())
+            .statuses(List.of(SearchUserDto.StatusesEnum.ACTIVE))
+            .build();
+    return externalInternalUserApi
         .v2getUserInfoUsingGET(searchUserDto)
         .onFailure(GeneralUtils::checkIfIsRetryableException)
         .retry()
@@ -88,6 +92,22 @@ public class UserServiceImpl implements UserService {
         .atMost(maxRetry)
         .onFailure(WebApplicationException.class)
         .transform(GeneralUtils::extractExceptionFromWebAppException)
-            .map(UserInfoResource::getUser);
+        .map(UserInfoResource::getOnboardedInstitutions)
+        .map(
+            onboardedInstitutionResources ->
+                onboardedInstitutionResources.stream()
+                    .max(
+                        (oi, oi2) ->
+                            oi2.getProductInfo()
+                                .getCreatedAt()
+                                .compareTo(oi.getProductInfo().getCreatedAt())))
+        .chain(
+            maybeOnboardedInst ->
+                maybeOnboardedInst
+                    .map(onboardedInst -> Uni.createFrom().item(onboardedInst.getUserEmail()))
+                    .orElse(
+                        Uni.createFrom()
+                            .failure(
+                                new ResourceNotFoundException("Onboarded Institution Not Found"))));
   }
 }
