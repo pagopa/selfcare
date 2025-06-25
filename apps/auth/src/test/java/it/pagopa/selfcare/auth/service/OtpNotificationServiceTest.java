@@ -7,7 +7,7 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
-import it.pagopa.selfcare.auth.exception.InternalException;
+import it.pagopa.selfcare.auth.client.InternalUserMsApi;
 import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.util.OtpUtils;
 
@@ -18,14 +18,14 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
-import org.openapi.quarkus.internal_ms_user_json.api.UserApi;
 
 @QuarkusTest
 public class OtpNotificationServiceTest {
 
   @Inject OtpNotificationService otpNotificationService;
 
-  @RestClient @InjectMock UserApi internalUserApi;
+  @RestClient @InjectMock
+  InternalUserMsApi internalUserApi;
 
   private UserClaims getUserClaims() {
     return UserClaims.builder()

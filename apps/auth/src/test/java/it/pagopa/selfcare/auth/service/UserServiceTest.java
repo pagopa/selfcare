@@ -4,6 +4,7 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.auth.client.ExternalInternalUserApi;
 import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.auth.model.UserClaims;
@@ -30,7 +31,7 @@ public class UserServiceTest {
   @RestClient @InjectMock UserApi userRegistryApi;
 
   @RestClient @InjectMock
-  org.openapi.quarkus.internal_json.api.UserApi internalUserApi;
+  ExternalInternalUserApi internalUserApi;
 
   @Test
   void patchUserWithValidInputs() {

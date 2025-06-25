@@ -25,17 +25,6 @@ public class CustomClientRequestLoggingFilter implements ResteasyReactiveClientR
     String query = requestContext.getUri().getQuery();
     String method = requestContext.getMethod();
     MDCUtils.addOperationIdAndParameters(method);
-
-    String headers =
-        requestContext.getStringHeaders().entrySet().stream()
-            .map(
-                entry ->
-                    String.format(
-                        "Header name:%s - value:%s",
-                        entry.getKey(), String.join(",", entry.getValue())))
-            .collect(Collectors.joining(";"));
-    String body = requestContext.getEntity().toString();
-
-      log.info("Request: method: {}, endpoint: {}, headers; {}, query: {}, body: {}", method, endpoint, headers, query, body);
+    log.info("Request: method: {}, endpoint: {}, query: {}", method, endpoint, query);
   }
 }

@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.auth.client.ExternalInternalUserApi;
 import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.util.GeneralUtils;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -38,7 +39,8 @@ public class UserServiceImpl implements UserService {
 
   @RestClient @Inject UserApi userRegistryApi;
 
-  @RestClient @Inject org.openapi.quarkus.internal_json.api.UserApi internalUserApi;
+  @RestClient @Inject
+  ExternalInternalUserApi internalUserApi;
 
   @Override
   public Uni<UserClaims> patchUser(
