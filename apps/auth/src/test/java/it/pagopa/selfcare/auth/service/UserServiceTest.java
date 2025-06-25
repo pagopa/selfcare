@@ -12,12 +12,12 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
+import org.openapi.quarkus.internal_json.model.OnboardedInstitutionResource;
 import org.openapi.quarkus.internal_json.model.UserInfoResource;
-import org.openapi.quarkus.internal_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserId;
 
-
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -30,8 +30,7 @@ public class UserServiceTest {
 
   @RestClient @InjectMock UserApi userRegistryApi;
 
-  @RestClient @InjectMock
-  ExternalInternalUserApi internalUserApi;
+  @RestClient @InjectMock ExternalInternalUserApi internalUserApi;
 
   @Test
   void patchUserWithValidInputs() {
@@ -68,67 +67,69 @@ public class UserServiceTest {
   }
 
   @Test
-  void getUserInfoWithValidInputs() {
+  void getUserInfoEmailWithValidInputs() {
     UUID userId = UUID.randomUUID();
-    UserResource userResource = UserResource.builder().id(userId).email("test@test.com").build();
-    UserInfoResource userInfoResource = UserInfoResource.builder().user(userResource).build();
+    List<OnboardedInstitutionResource> onboardedInstitutionResources =
+        List.of(OnboardedInstitutionResource.builder().userEmail("test@test.email").build());
+    UserInfoResource userInfoResource =
+        UserInfoResource.builder().onboardedInstitutions(onboardedInstitutionResources).build();
     UserClaims claims =
-            UserClaims.builder()
-                    .uid(userId.toString())
-                    .fiscalCode("fiscalCode")
-                    .name("name")
-                    .familyName("family")
-                    .sameIdp(true)
-                    .build();
+        UserClaims.builder()
+            .uid(userId.toString())
+            .fiscalCode("fiscalCode")
+            .name("name")
+            .familyName("family")
+            .sameIdp(true)
+            .build();
     when(internalUserApi.v2getUserInfoUsingGET(any()))
-            .thenReturn(Uni.createFrom().item(userInfoResource));
+        .thenReturn(Uni.createFrom().item(userInfoResource));
     userService
-            .getUserInfo(claims)
-            .subscribe()
-            .withSubscriber(UniAssertSubscriber.create())
-            .assertCompleted()
-            .assertItem(userResource);
+        .getUserInfoEmail(claims)
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertCompleted()
+        .assertItem("test@test.email");
   }
 
   @Test
-  void failure_getUserInfoWhenUserNotFound() {
+  void failure_getUserInfoEmailWhenUserNotFound() {
     UUID userId = UUID.randomUUID();
     UserClaims claims =
-            UserClaims.builder()
-                    .uid(userId.toString())
-                    .fiscalCode("fiscalCode")
-                    .name("name")
-                    .familyName("family")
-                    .sameIdp(true)
-                    .build();
+        UserClaims.builder()
+            .uid(userId.toString())
+            .fiscalCode("fiscalCode")
+            .name("name")
+            .familyName("family")
+            .sameIdp(true)
+            .build();
     when(internalUserApi.v2getUserInfoUsingGET(any()))
-            .thenReturn(Uni.createFrom().failure(new WebApplicationException(404)));
+        .thenReturn(Uni.createFrom().failure(new WebApplicationException(404)));
     userService
-            .getUserInfo(claims)
-            .subscribe()
-            .withSubscriber(UniAssertSubscriber.create())
-            .assertFailed()
-            .assertFailedWith(ResourceNotFoundException.class);
+        .getUserInfoEmail(claims)
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertFailed()
+        .assertFailedWith(ResourceNotFoundException.class);
   }
 
   @Test
-  void failure_getUserInfoWhenInternalApisError() {
+  void failure_getUserInfoEmailWhenInternalApisError() {
     UUID userId = UUID.randomUUID();
     UserClaims claims =
-            UserClaims.builder()
-                    .uid(userId.toString())
-                    .fiscalCode("fiscalCode")
-                    .name("name")
-                    .familyName("family")
-                    .sameIdp(true)
-                    .build();
+        UserClaims.builder()
+            .uid(userId.toString())
+            .fiscalCode("fiscalCode")
+            .name("name")
+            .familyName("family")
+            .sameIdp(true)
+            .build();
     when(internalUserApi.v2getUserInfoUsingGET(any()))
-            .thenReturn(Uni.createFrom().failure(new WebApplicationException(500)));
+        .thenReturn(Uni.createFrom().failure(new WebApplicationException(500)));
     userService
-            .getUserInfo(claims)
-            .subscribe()
-            .withSubscriber(UniAssertSubscriber.create())
-            .assertFailed()
-            .assertFailedWith(InternalException.class);
+        .getUserInfoEmail(claims)
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertFailed()
+        .assertFailedWith(InternalException.class);
   }
 }

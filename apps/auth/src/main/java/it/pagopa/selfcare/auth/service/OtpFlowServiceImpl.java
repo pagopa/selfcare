@@ -17,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.bson.Document;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.openapi.quarkus.internal_json.model.UserResource;
 
 import java.time.OffsetDateTime;
 import java.util.Optional;
@@ -49,7 +48,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
       }
     }
     return userService
-        .getUserInfo(userClaims)
+        .getUserInfoEmail(userClaims)
         .onFailure(GeneralUtils::checkNotFoundException)
         .recoverWithNull()
         .map(Optional::ofNullable)
@@ -57,8 +56,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
         .transform(
             failure ->
                 new InternalException(
-                    "Cannot get User Info on External Internal APIs:" + failure.toString()))
-        .map(o -> o.map(UserResource::getEmail))
+                    "Cannot get User Info Email on External Internal APIs:" + failure.toString()))
         .chain(
             maybeUserEmail ->
                 maybeUserEmail
