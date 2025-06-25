@@ -75,9 +75,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -121,9 +119,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -167,9 +163,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -258,9 +252,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -319,9 +311,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -401,9 +391,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -467,9 +455,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -553,9 +539,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -631,9 +615,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -732,9 +714,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       },
@@ -771,9 +751,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -822,9 +800,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -868,9 +844,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -924,9 +898,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -973,9 +945,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -1060,9 +1030,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -1113,9 +1081,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -1174,9 +1140,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -1273,9 +1237,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -1325,9 +1287,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -1374,9 +1334,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -1467,9 +1425,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -1523,9 +1479,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -1577,9 +1531,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -1625,9 +1577,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -1674,9 +1624,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -1727,9 +1675,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
@@ -1770,9 +1716,7 @@
         },
         "security": [
           {
-            "api_key": [
-              "global"
-            ]
+            "api_key": []
           }
         ]
       }
