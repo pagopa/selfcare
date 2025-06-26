@@ -7,6 +7,7 @@ import it.pagopa.selfcare.auth.model.FeatureFlagEnum;
 import it.pagopa.selfcare.auth.model.OtpStatus;
 import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.model.otp.OtpFeatureFlag;
+import it.pagopa.selfcare.auth.model.otp.OtpInfo;
 import it.pagopa.selfcare.auth.util.GeneralUtils;
 import it.pagopa.selfcare.auth.util.OtpUtils;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -35,16 +36,18 @@ public class OtpFlowServiceImpl implements OtpFlowService {
   Integer otpDuration;
 
   @Override
-  public Uni<Optional<OtpFlow>> handleOtpFlow(UserClaims userClaims) {
-    Optional<OtpFlow> emptyOtpFlow = Optional.empty();
+  public Uni<Optional<OtpInfo>> handleOtpFlow(UserClaims userClaims) {
+    Optional<OtpInfo> emptyOtpInfo = Optional.empty();
     if (FeatureFlagEnum.NONE.equals(otpFeatureFlag.getFeatureFlag())) {
-      return Uni.createFrom().item(emptyOtpFlow);
+      return Uni.createFrom().item(emptyOtpInfo);
     }
     if (FeatureFlagEnum.BETA.equals(otpFeatureFlag.getFeatureFlag())) {
+      if (!otpFeatureFlag.isBetaUser(userClaims.getFiscalCode())) {
+        return Uni.createFrom().item(emptyOtpInfo);
+      }
+
       if (otpFeatureFlag.isOtpForced(userClaims.getFiscalCode())) {
         userClaims.setSameIdp(Boolean.FALSE);
-      } else {
-        return Uni.createFrom().item(emptyOtpFlow);
       }
     }
     return userService
@@ -83,7 +86,13 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                                                         ? createAndSendOtp(
                                                                 userClaims.getUid(),
                                                                 institutionalEmail)
-                                                            .map(Optional::of)
+                                                            .map(
+                                                                createdOtpFlow ->
+                                                                    Optional.of(
+                                                                        new OtpInfo(
+                                                                            createdOtpFlow
+                                                                                .getUuid(),
+                                                                            institutionalEmail)))
                                                         /*
                                                          * A previous PENDING OTP flow is found so we must ask for the same flow to be completed by user
                                                          */
@@ -91,21 +100,30 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                                                                 .getStatus()
                                                                 .equals(OtpStatus.PENDING)
                                                             ? Uni.createFrom()
-                                                                .item(Optional.of(otpFlow))
+                                                                .item(
+                                                                    Optional.of(
+                                                                        new OtpInfo(
+                                                                            otpFlow.getUuid(),
+                                                                            institutionalEmail)))
                                                             // a previous COMPLETED OTP flow with
                                                             // sameIdp=true is found. No OTP flow
                                                             // needed.
-                                                            : Uni.createFrom().item(emptyOtpFlow))
+                                                            : Uni.createFrom().item(emptyOtpInfo))
                                             .orElse(
                                                 !userClaims.getSameIdp()
                                                     // This is the first time a user is asked for an
                                                     // OTP flow
                                                     ? createAndSendOtp(
                                                             userClaims.getUid(), institutionalEmail)
-                                                        .map(Optional::of)
-                                                    : Uni.createFrom().item(emptyOtpFlow))))
+                                                        .map(
+                                                            createdOtpFlow ->
+                                                                Optional.of(
+                                                                    new OtpInfo(
+                                                                        createdOtpFlow.getUuid(),
+                                                                        institutionalEmail)))
+                                                    : Uni.createFrom().item(emptyOtpInfo))))
                     // User is not present on Selfcare so we can proceed without OTP Flow
-                    .orElse(Uni.createFrom().item(emptyOtpFlow)));
+                    .orElse(Uni.createFrom().item(emptyOtpInfo)));
   }
 
   /**
@@ -121,7 +139,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
         .item(OtpUtils::generateOTP)
         .chain(
             otp ->
-                createNewOtpFlow(userId, otp, email)
+                createNewOtpFlow(userId, otp)
                     .onFailure(WebApplicationException.class)
                     .transform(GeneralUtils::extractExceptionFromWebAppException)
                     .chain(
@@ -132,7 +150,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
   }
 
   @Override
-  public Uni<OtpFlow> createNewOtpFlow(String userId, String otp, String email) {
+  public Uni<OtpFlow> createNewOtpFlow(String userId, String otp) {
     return Uni.createFrom()
         .item(OffsetDateTime.now())
         .map(
@@ -141,7 +159,6 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                     .uuid(UUID.randomUUID().toString())
                     .userId(userId)
                     .attempts(0)
-                    .notificationEmail(email)
                     .otp(DigestUtils.md5Hex(otp))
                     .status(OtpStatus.PENDING)
                     .createdAt(now)

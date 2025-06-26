@@ -23,4 +23,8 @@ public class OtpFeatureFlag {
         .findFirst()
         .orElse(Boolean.FALSE);
   }
+
+  public Boolean isBetaUser(String fiscalCode) {
+    return otpBetaUsers.stream().anyMatch(betaUser -> betaUser.getFiscalCode().equals(fiscalCode));
+  }
 }
