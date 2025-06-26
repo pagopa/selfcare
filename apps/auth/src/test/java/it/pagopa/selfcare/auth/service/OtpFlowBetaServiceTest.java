@@ -47,6 +47,33 @@ public class OtpFlowBetaServiceTest {
   }
 
   @Test
+  void returnNewOtpFlow_whenNoneOtpFlowExistsForNotForcedBetaUser() {
+    UserClaims input = getUserClaims();
+    getUserClaims().setFiscalCode("fiscalCode2");
+    when(userService.getUserInfoEmail(any(UserClaims.class)))
+            .thenReturn(Uni.createFrom().item("test@test.com"));
+    when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
+            .thenReturn(Uni.createFrom().voidItem());
+    PanacheMock.mock(OtpFlow.class);
+    ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
+            Mockito.mock(ReactivePanacheQuery.class);
+    when(OtpFlow.builder()).thenCallRealMethod();
+    when(query.firstResult())
+            .thenReturn(Uni.createFrom().failure(new WebApplicationException(404)));
+    when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
+    Optional<OtpInfo> maybeOtpInfo =
+            otpFlowService
+                    .handleOtpFlow(input)
+                    .subscribe()
+                    .withSubscriber(UniAssertSubscriber.create())
+                    .assertCompleted()
+                    .getItem();
+    Assertions.assertTrue(maybeOtpInfo.isPresent());
+    OtpInfo otpInfo = maybeOtpInfo.get();
+    Assertions.assertEquals("test@test.com", otpInfo.getInstitutionalEmail());
+  }
+
+  @Test
   void returnNewOtpFlow_whenNoneOtpFlowExists() {
     UserClaims input = getUserClaims();
     when(userService.getUserInfoEmail(any(UserClaims.class)))
