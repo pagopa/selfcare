@@ -41,12 +41,13 @@ public class OtpFlowServiceImpl implements OtpFlowService {
     if (FeatureFlagEnum.NONE.equals(otpFeatureFlag.getFeatureFlag())) {
       return Uni.createFrom().item(emptyOtpInfo);
     }
-    if (FeatureFlagEnum.BETA.equals(otpFeatureFlag.getFeatureFlag())) {
+    if (FeatureFlagEnum.BETA.equals(otpFeatureFlag.getFeatureFlag())
+        && otpFeatureFlag.isBetaUser(userClaims.getFiscalCode())) {
       if (otpFeatureFlag.isOtpForced(userClaims.getFiscalCode())) {
         userClaims.setSameIdp(Boolean.FALSE);
-      } else {
-        return Uni.createFrom().item(emptyOtpInfo);
       }
+    } else {
+      return Uni.createFrom().item(emptyOtpInfo);
     }
     return userService
         .getUserInfoEmail(userClaims)
