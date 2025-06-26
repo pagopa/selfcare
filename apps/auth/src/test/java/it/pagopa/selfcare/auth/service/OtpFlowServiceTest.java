@@ -9,16 +9,14 @@ import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.model.OtpStatus;
 import it.pagopa.selfcare.auth.model.UserClaims;
+import it.pagopa.selfcare.auth.model.otp.OtpInfo;
 import it.pagopa.selfcare.auth.util.OtpUtils;
 import jakarta.inject.Inject;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.codec.digest.Md5Crypt;
 import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -44,7 +42,7 @@ public class OtpFlowServiceTest {
   @Test
   void returnEmptyOtpFlow_whenHandlingNoneFFOtpFlow() {
     UserClaims input = getUserClaims();
-    Optional<OtpFlow> created =
+    Optional<OtpInfo> created =
         otpFlowService
             .handleOtpFlow(input)
             .subscribe()
@@ -62,7 +60,7 @@ public class OtpFlowServiceTest {
     when(OtpFlow.builder()).thenCallRealMethod();
     OtpFlow created =
         otpFlowService
-            .createNewOtpFlow(input.getUid(), otp, "test@test.com")
+            .createNewOtpFlow(input.getUid(), otp)
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create())
             .assertCompleted()
@@ -83,7 +81,7 @@ public class OtpFlowServiceTest {
     when(OtpFlow.persist(any(OtpFlow.class), any()))
         .thenReturn(Uni.createFrom().failure(new Exception(exceptionDesc)));
     otpFlowService
-        .createNewOtpFlow(input.getUid(), otp, "test@test.com")
+        .createNewOtpFlow(input.getUid(), otp)
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()

@@ -1,12 +1,10 @@
 package it.pagopa.selfcare.auth.entity;
 
+import io.quarkus.arc.All;
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntity;
 import it.pagopa.selfcare.auth.model.OtpStatus;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldNameConstants;
 
 import java.time.OffsetDateTime;
@@ -16,11 +14,12 @@ import java.time.OffsetDateTime;
 @MongoEntity(collection = "otpFlows")
 @FieldNameConstants(asEnum = true)
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class OtpFlow extends ReactivePanacheMongoEntity {
 
     private String uuid;
     private String userId;
-    private String notificationEmail;
     private String otp;
     private OtpStatus status;
     private Integer attempts;

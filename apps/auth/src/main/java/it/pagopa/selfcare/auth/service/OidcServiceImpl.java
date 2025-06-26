@@ -4,8 +4,8 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.controller.response.OidcExchangeOtpResponse;
 import it.pagopa.selfcare.auth.controller.response.OidcExchangeResponse;
 import it.pagopa.selfcare.auth.controller.response.OidcExchangeTokenResponse;
-import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.exception.InternalException;
+import it.pagopa.selfcare.auth.model.otp.OtpInfo;
 import it.pagopa.selfcare.auth.util.GeneralUtils;
 import it.pagopa.selfcare.auth.util.OtpUtils;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -108,11 +108,11 @@ public class OidcServiceImpl implements OidcService {
                         failure ->
                             new InternalException("Cannot Handle OTP Flow:" + failure.toString()))
                     .chain(
-                        maybeOtpFlow ->
-                            maybeOtpFlow
+                        maybeOtpInfo ->
+                                maybeOtpInfo
                                 .map(
-                                    otpFlow ->
-                                        Uni.createFrom().item(newOidcExchangeOtpResponse(otpFlow)))
+                                    otpInfo ->
+                                        Uni.createFrom().item(newOidcExchangeOtpResponse(otpInfo)))
                                 .orElse(
                                     sessionService
                                         .generateSessionToken(userClaims)
@@ -125,9 +125,9 @@ public class OidcServiceImpl implements OidcService {
                                         .map(this::newOidcExchangeTokenResponse))));
   }
 
-  private OidcExchangeResponse newOidcExchangeOtpResponse(OtpFlow otpFlow) {
+  private OidcExchangeResponse newOidcExchangeOtpResponse(OtpInfo otpInfo) {
     return new OidcExchangeOtpResponse(
-        otpFlow.getUuid(), OtpUtils.maskEmail(otpFlow.getNotificationEmail()));
+        otpInfo.getUuid(), OtpUtils.maskEmail(otpInfo.getInstitutionalEmail()));
   }
 
   private OidcExchangeResponse newOidcExchangeTokenResponse(String sessionToken) {

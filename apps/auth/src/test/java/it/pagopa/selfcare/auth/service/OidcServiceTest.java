@@ -11,6 +11,7 @@ import it.pagopa.selfcare.auth.exception.ForbiddenException;
 import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.auth.model.UserClaims;
+import it.pagopa.selfcare.auth.model.otp.OtpInfo;
 import jakarta.inject.Inject;
 
 import jakarta.ws.rs.WebApplicationException;
@@ -98,9 +99,9 @@ public class OidcServiceTest {
             Uni.createFrom()
                 .item(
                     Optional.of(
-                        OtpFlow.builder()
+                        OtpInfo.builder()
                             .uuid("uuid")
-                            .notificationEmail("test@test.com")
+                            .institutionalEmail("test@test.com")
                             .build())));
 
     var response =

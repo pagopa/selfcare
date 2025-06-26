@@ -15,6 +15,7 @@ import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.model.OtpStatus;
 import it.pagopa.selfcare.auth.model.UserClaims;
+import it.pagopa.selfcare.auth.model.otp.OtpInfo;
 import it.pagopa.selfcare.auth.profile.BetaFFTestProfile;
 import jakarta.inject.Inject;
 
@@ -59,19 +60,16 @@ public class OtpFlowBetaServiceTest {
     when(query.firstResult())
         .thenReturn(Uni.createFrom().failure(new WebApplicationException(404)));
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
-    Optional<OtpFlow> maybeOtpFlow =
+    Optional<OtpInfo> maybeOtpInfo =
         otpFlowService
             .handleOtpFlow(input)
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create())
             .assertCompleted()
             .getItem();
-    Assertions.assertTrue(maybeOtpFlow.isPresent());
-    OtpFlow otpFlow = maybeOtpFlow.get();
-    Assertions.assertEquals(otpFlow.getUserId(), input.getUid());
-    Assertions.assertEquals(OtpStatus.PENDING, otpFlow.getStatus());
-    Assertions.assertEquals("test@test.com", otpFlow.getNotificationEmail());
-    Assertions.assertEquals(0, otpFlow.getAttempts());
+    Assertions.assertTrue(maybeOtpInfo.isPresent());
+    OtpInfo otpInfo = maybeOtpInfo.get();
+    Assertions.assertEquals("test@test.com", otpInfo.getInstitutionalEmail());
   }
 
   @Test
@@ -90,20 +88,17 @@ public class OtpFlowBetaServiceTest {
         OtpFlow.builder().uuid("uuid").otp("123456").status(OtpStatus.COMPLETED).build();
     when(query.firstResult()).thenReturn(Uni.createFrom().item(foundOtpFlow));
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
-    Optional<OtpFlow> maybeOtpFlow =
+    Optional<OtpInfo> maybeOtpInfo =
         otpFlowService
             .handleOtpFlow(input)
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create())
             .assertCompleted()
             .getItem();
-    Assertions.assertTrue(maybeOtpFlow.isPresent());
-    OtpFlow otpFlow = maybeOtpFlow.get();
-    Assertions.assertEquals(otpFlow.getUserId(), input.getUid());
-    Assertions.assertEquals(OtpStatus.PENDING, otpFlow.getStatus());
-    Assertions.assertEquals("test@test.com", otpFlow.getNotificationEmail());
-    Assertions.assertEquals(0, otpFlow.getAttempts());
-    Assertions.assertNotEquals(foundOtpFlow.getUuid(), otpFlow.getUuid());
+    Assertions.assertTrue(maybeOtpInfo.isPresent());
+    OtpInfo otpInfo = maybeOtpInfo.get();
+    Assertions.assertEquals("test@test.com", otpInfo.getInstitutionalEmail());
+    Assertions.assertNotEquals(foundOtpFlow.getUuid(), otpInfo.getUuid());
   }
 
   @Test
@@ -127,20 +122,17 @@ public class OtpFlowBetaServiceTest {
             .build();
     when(query.firstResult()).thenReturn(Uni.createFrom().item(foundOtpFlow));
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
-    Optional<OtpFlow> maybeOtpFlow =
+    Optional<OtpInfo> maybeOtpInfo =
         otpFlowService
             .handleOtpFlow(input)
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create())
             .assertCompleted()
             .getItem();
-    Assertions.assertTrue(maybeOtpFlow.isPresent());
-    OtpFlow otpFlow = maybeOtpFlow.get();
-    Assertions.assertEquals(otpFlow.getUserId(), input.getUid());
-    Assertions.assertEquals(OtpStatus.PENDING, otpFlow.getStatus());
-    Assertions.assertEquals("test@test.com", otpFlow.getNotificationEmail());
-    Assertions.assertEquals(0, otpFlow.getAttempts());
-    Assertions.assertNotEquals(foundOtpFlow.getUuid(), otpFlow.getUuid());
+    Assertions.assertTrue(maybeOtpInfo.isPresent());
+    OtpInfo otpInfo = maybeOtpInfo.get();
+    Assertions.assertEquals("test@test.com", otpInfo.getInstitutionalEmail());
+    Assertions.assertNotEquals(foundOtpFlow.getUuid(), otpInfo.getUuid());
   }
 
   @Test
@@ -164,20 +156,17 @@ public class OtpFlowBetaServiceTest {
             .build();
     when(query.firstResult()).thenReturn(Uni.createFrom().item(foundOtpFlow));
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
-    Optional<OtpFlow> maybeOtpFlow =
+    Optional<OtpInfo> maybeOtpInfo =
         otpFlowService
             .handleOtpFlow(input)
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create())
             .assertCompleted()
             .getItem();
-    Assertions.assertTrue(maybeOtpFlow.isPresent());
-    OtpFlow otpFlow = maybeOtpFlow.get();
-    Assertions.assertEquals(otpFlow.getUserId(), input.getUid());
-    Assertions.assertEquals(OtpStatus.PENDING, otpFlow.getStatus());
-    Assertions.assertEquals("test@test.com", otpFlow.getNotificationEmail());
-    Assertions.assertEquals(0, otpFlow.getAttempts());
-    Assertions.assertNotEquals(foundOtpFlow.getUuid(), otpFlow.getUuid());
+    Assertions.assertTrue(maybeOtpInfo.isPresent());
+    OtpInfo otpInfo = maybeOtpInfo.get();
+    Assertions.assertEquals("test@test.com", otpInfo.getInstitutionalEmail());
+    Assertions.assertNotEquals(foundOtpFlow.getUuid(), otpInfo.getUuid());
   }
 
   @Test
@@ -201,17 +190,16 @@ public class OtpFlowBetaServiceTest {
             .build();
     when(query.firstResult()).thenReturn(Uni.createFrom().item(foundOtpFlow));
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
-    Optional<OtpFlow> maybeOtpFlow =
+    Optional<OtpInfo> maybeOtpInfo =
         otpFlowService
             .handleOtpFlow(input)
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create())
             .assertCompleted()
             .getItem();
-    Assertions.assertTrue(maybeOtpFlow.isPresent());
-    OtpFlow otpFlow = maybeOtpFlow.get();
-    Assertions.assertEquals(OtpStatus.PENDING, otpFlow.getStatus());
-    Assertions.assertEquals(foundOtpFlow.getUuid(), otpFlow.getUuid());
+    Assertions.assertTrue(maybeOtpInfo.isPresent());
+    OtpInfo otpInfo = maybeOtpInfo.get();
+    Assertions.assertEquals(foundOtpFlow.getUuid(), otpInfo.getUuid());
   }
 
   @Test
@@ -219,14 +207,14 @@ public class OtpFlowBetaServiceTest {
     UserClaims input = getUserClaims();
     when(userService.getUserInfoEmail(any(UserClaims.class)))
         .thenReturn(Uni.createFrom().failure(new WebApplicationException(404)));
-    Optional<OtpFlow> maybeOtpFlow =
+    Optional<OtpInfo> maybeOtpInfo =
         otpFlowService
             .handleOtpFlow(input)
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create())
             .assertCompleted()
             .getItem();
-    Assertions.assertTrue(maybeOtpFlow.isEmpty());
+    Assertions.assertTrue(maybeOtpInfo.isEmpty());
   }
 
   @Test
@@ -243,14 +231,14 @@ public class OtpFlowBetaServiceTest {
     when(query.firstResult())
         .thenReturn(Uni.createFrom().failure(new WebApplicationException(404)));
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
-    Optional<OtpFlow> maybeOtpFlow =
+    Optional<OtpInfo> maybeOtpInfo =
         otpFlowService
             .handleOtpFlow(input)
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create())
             .assertCompleted()
             .getItem();
-    Assertions.assertTrue(maybeOtpFlow.isEmpty());
+    Assertions.assertTrue(maybeOtpInfo.isEmpty());
   }
 
   @Test
@@ -273,14 +261,14 @@ public class OtpFlowBetaServiceTest {
             .build();
     when(query.firstResult()).thenReturn(Uni.createFrom().item(foundOtpFlow));
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
-    Optional<OtpFlow> maybeOtpFlow =
+    Optional<OtpInfo> maybeOtpInfo =
         otpFlowService
             .handleOtpFlow(input)
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create())
             .assertCompleted()
             .getItem();
-    Assertions.assertTrue(maybeOtpFlow.isEmpty());
+    Assertions.assertTrue(maybeOtpInfo.isEmpty());
   }
 
   @Test
