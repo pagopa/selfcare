@@ -7,6 +7,8 @@ import org.openapi.quarkus.internal_json.model.UserResource;
 public interface UserService {
     Uni<UserClaims> patchUser(String fiscalNumber, String name, String familyName, Boolean sameIdp);
 
+    Uni<UserClaims> getUserClaimsFromPdv(String userId);
+
     Uni<String> getUserInfoEmail(UserClaims userClaims);
 
 }

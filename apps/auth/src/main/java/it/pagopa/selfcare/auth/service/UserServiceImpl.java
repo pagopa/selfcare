@@ -29,6 +29,8 @@ public class UserServiceImpl implements UserService {
 
   private static final String SPID_FISCAL_NUMBER_PREFIX = "TINIT-";
 
+  private static final String USER_REGISTRY_FIELD_LIST = "fiscalCode,name,familyName";
+
   @ConfigProperty(name = "auth-ms.retry.min-backoff")
   Integer retryMinBackOff;
 
@@ -74,6 +76,26 @@ public class UserServiceImpl implements UserService {
                     .name(name)
                     .familyName(familyName)
                     .sameIdp(sameIdp)
+                    .build());
+  }
+
+  @Override
+  public Uni<UserClaims> getUserClaimsFromPdv(String userId) {
+    return userRegistryApi
+        .findByIdUsingGET(USER_REGISTRY_FIELD_LIST, userId)
+        .onFailure(GeneralUtils::checkIfIsRetryableException)
+        .retry()
+        .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))
+        .atMost(maxRetry)
+        .onFailure(WebApplicationException.class)
+        .transform(GeneralUtils::extractExceptionFromWebAppException)
+        .map(
+            userResource ->
+                UserClaims.builder()
+                    .uid(userId)
+                    .fiscalCode(userResource.getFiscalCode())
+                    .name(userResource.getName().getValue())
+                    .familyName(userResource.getFamilyName().getValue())
                     .build());
   }
 

@@ -15,7 +15,10 @@ import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.internal_json.model.OnboardedInstitutionResource;
 import org.openapi.quarkus.internal_json.model.UserInfoResource;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
+import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
+import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.UserId;
+import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import java.util.List;
 import java.util.UUID;
@@ -131,5 +134,43 @@ public class UserServiceTest {
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
         .assertFailedWith(InternalException.class);
+  }
+
+  @Test
+  void failure_getUserClaimsFromPdvWhenInternalError() {
+    String exceptionDesc = "Cannot invoke getUser on PDV";
+    when(userRegistryApi.findByIdUsingGET(anyString(), anyString()))
+        .thenReturn(Uni.createFrom().failure(new Exception(exceptionDesc)));
+    userService
+        .getUserClaimsFromPdv("userId")
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertFailed()
+        .assertFailedWith(Exception.class, exceptionDesc);
+  }
+
+  @Test
+  void getUserClaimsFromPdvWithValidInputs() {
+    UserClaims expectedUserClaims =
+        UserClaims.builder()
+            .familyName("familyName")
+            .name("name")
+            .uid("userId")
+            .fiscalCode("fiscalCode")
+            .build();
+    UserResource pdvUserResource =
+        UserResource.builder()
+            .fiscalCode("fiscalCode")
+            .name(NameCertifiableSchema.builder().value("name").build())
+            .familyName(FamilyNameCertifiableSchema.builder().value("familyName").build())
+            .build();
+    when(userRegistryApi.findByIdUsingGET(anyString(), anyString()))
+        .thenReturn(Uni.createFrom().item(pdvUserResource));
+    userService
+        .getUserClaimsFromPdv("userId")
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertCompleted()
+        .assertItem(expectedUserClaims);
   }
 }
