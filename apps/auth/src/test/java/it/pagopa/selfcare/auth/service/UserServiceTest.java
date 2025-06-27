@@ -12,7 +12,6 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
-import org.openapi.quarkus.internal_json.model.OnboardedInstitutionResource;
 import org.openapi.quarkus.internal_json.model.UserInfoResource;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
@@ -20,7 +19,6 @@ import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.UserId;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
-import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -72,10 +70,11 @@ public class UserServiceTest {
   @Test
   void getUserInfoEmailWithValidInputs() {
     UUID userId = UUID.randomUUID();
-    List<OnboardedInstitutionResource> onboardedInstitutionResources =
-        List.of(OnboardedInstitutionResource.builder().userEmail("test@test.email").build());
-    UserInfoResource userInfoResource =
-        UserInfoResource.builder().onboardedInstitutions(onboardedInstitutionResources).build();
+    org.openapi.quarkus.internal_json.model.UserResource userResource =
+        org.openapi.quarkus.internal_json.model.UserResource.builder()
+            .lastActiveOnboardingUserEmail("test@test.email")
+            .build();
+    UserInfoResource userInfoResource = UserInfoResource.builder().user(userResource).build();
     UserClaims claims =
         UserClaims.builder()
             .uid(userId.toString())
