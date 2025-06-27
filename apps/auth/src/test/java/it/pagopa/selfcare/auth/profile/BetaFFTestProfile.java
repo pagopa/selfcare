@@ -10,6 +10,8 @@ public class BetaFFTestProfile implements QuarkusTestProfile {
     return Map.of(
         "otp.ff.enabled", "BETA",
         "otp.ff.beta-users",
-            "[{\"fiscalCode\": \"fiscalCode\", \"forceOtp\": true}, {\"fiscalCode\": \"fiscalCode2\", \"forceOtp\": false}]");
+            "[{\"fiscalCode\": \"fiscalCode\", \"forceOtp\": true}, " +
+                    "{\"fiscalCode\": \"fiscalCode2\", \"forceOtp\": false}, " +
+                    "{\"fiscalCode\": \"fiscalCode3\", \"forceOtp\": true, \"forcedEmail\": \"forced.mail@test.com\"}]");
   }
 }
