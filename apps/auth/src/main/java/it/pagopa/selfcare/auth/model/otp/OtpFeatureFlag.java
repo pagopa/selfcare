@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Optional;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -26,5 +27,10 @@ public class OtpFeatureFlag {
 
   public Boolean isBetaUser(String fiscalCode) {
     return otpBetaUsers.stream().anyMatch(betaUser -> betaUser.getFiscalCode().equals(fiscalCode));
+  }
+
+  public Optional<OtpBetaUser> getOtpBetaUser(String fiscalCode){
+    return otpBetaUsers.stream()
+            .filter(betaUser -> betaUser.getFiscalCode().equals(fiscalCode)).findFirst();
   }
 }

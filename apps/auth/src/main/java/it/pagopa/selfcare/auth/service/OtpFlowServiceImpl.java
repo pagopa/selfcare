@@ -6,6 +6,7 @@ import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.model.FeatureFlagEnum;
 import it.pagopa.selfcare.auth.model.OtpStatus;
 import it.pagopa.selfcare.auth.model.UserClaims;
+import it.pagopa.selfcare.auth.model.otp.OtpBetaUser;
 import it.pagopa.selfcare.auth.model.otp.OtpFeatureFlag;
 import it.pagopa.selfcare.auth.model.otp.OtpInfo;
 import it.pagopa.selfcare.auth.util.GeneralUtils;
@@ -35,21 +36,31 @@ public class OtpFlowServiceImpl implements OtpFlowService {
   @ConfigProperty(name = "otp.duration")
   Integer otpDuration;
 
+  private String coerceInstitutionalEmail(String institutionalEmail, String forcedEmail) {
+    return Optional.ofNullable(forcedEmail).orElse(institutionalEmail);
+  }
+
   @Override
   public Uni<Optional<OtpInfo>> handleOtpFlow(UserClaims userClaims) {
     Optional<OtpInfo> emptyOtpInfo = Optional.empty();
+    String forcedEmail = null;
     if (FeatureFlagEnum.NONE.equals(otpFeatureFlag.getFeatureFlag())) {
       return Uni.createFrom().item(emptyOtpInfo);
     }
     if (FeatureFlagEnum.BETA.equals(otpFeatureFlag.getFeatureFlag())) {
-      if (!otpFeatureFlag.isBetaUser(userClaims.getFiscalCode())) {
+      Optional<OtpBetaUser> maybeOtpBetaUser =
+          otpFeatureFlag.getOtpBetaUser(userClaims.getFiscalCode());
+      if (maybeOtpBetaUser.isEmpty()) {
         return Uni.createFrom().item(emptyOtpInfo);
       }
-
-      if (otpFeatureFlag.isOtpForced(userClaims.getFiscalCode())) {
+      OtpBetaUser betaUser = maybeOtpBetaUser.get();
+      if (betaUser.getForceOtp()) {
         userClaims.setSameIdp(Boolean.FALSE);
+        forcedEmail = betaUser.getForcedEmail();
       }
     }
+
+    Optional<String> maybeForcedEmail = Optional.ofNullable(forcedEmail);
     return userService
         .getUserInfoEmail(userClaims)
         .onFailure(GeneralUtils::checkNotFoundException)
@@ -60,6 +71,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
             failure ->
                 new InternalException(
                     "Cannot get User Info Email on External Internal APIs:" + failure.toString()))
+        .map(maybeUserEmail -> maybeUserEmail.map(maybeForcedEmail::orElse))
         .chain(
             maybeUserEmail ->
                 maybeUserEmail
