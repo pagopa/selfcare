@@ -17,18 +17,6 @@ public class OtpFeatureFlag {
   private FeatureFlagEnum featureFlag;
   private List<OtpBetaUser> otpBetaUsers;
 
-  public Boolean isOtpForced(String fiscalCode) {
-    return otpBetaUsers.stream()
-        .filter(betaUser -> betaUser.getFiscalCode().equals(fiscalCode))
-        .map(OtpBetaUser::getForceOtp)
-        .findFirst()
-        .orElse(Boolean.FALSE);
-  }
-
-  public Boolean isBetaUser(String fiscalCode) {
-    return otpBetaUsers.stream().anyMatch(betaUser -> betaUser.getFiscalCode().equals(fiscalCode));
-  }
-
   public Optional<OtpBetaUser> getOtpBetaUser(String fiscalCode){
     return otpBetaUsers.stream()
             .filter(betaUser -> betaUser.getFiscalCode().equals(fiscalCode)).findFirst();

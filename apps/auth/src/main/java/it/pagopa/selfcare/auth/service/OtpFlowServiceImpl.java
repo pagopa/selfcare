@@ -54,10 +54,6 @@ public class OtpFlowServiceImpl implements OtpFlowService {
   @ConfigProperty(name = "otp.duration")
   Integer otpDuration;
 
-  private String coerceInstitutionalEmail(String institutionalEmail, String forcedEmail) {
-    return Optional.ofNullable(forcedEmail).orElse(institutionalEmail);
-  }
-
   @ConfigProperty(name = "otp.max.attempts")
   Integer otpMaxAttempts;
 
@@ -92,7 +88,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
             failure ->
                 new InternalException(
                     "Cannot get User Info Email on External Internal APIs:" + failure.toString()))
-        .map(maybeUserEmail -> maybeUserEmail.map(maybeForcedEmail::orElse))
+        .map(optionalEmail -> optionalEmail.map(maybeForcedEmail::orElse))
         .chain(
             maybeUserEmail ->
                 maybeUserEmail
