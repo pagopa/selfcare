@@ -228,7 +228,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
     boolean isReachedMaxOnCurrentAttempt = otpFlow.getAttempts() + 1 >= otpMaxAttempts;
     if (!otpFlow.getOtp().equals(hashedOtp)) {
       OtpStatus newStatus = isReachedMaxOnCurrentAttempt ? OtpStatus.REJECTED : otpFlow.getStatus();
-      Integer remainingAttempts = (otpMaxAttempts - otpFlow.getAttempts() + 1);
+      Integer remainingAttempts = otpMaxAttempts - (otpFlow.getAttempts() + 1);
       return updateOtpFlowVerification(otpFlow.getUuid(), newStatus)
           .onFailure()
           .transform(failure -> new InternalException("Cannot update OtpFlow"))
