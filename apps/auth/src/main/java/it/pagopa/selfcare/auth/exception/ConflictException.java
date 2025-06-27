@@ -3,17 +3,16 @@ package it.pagopa.selfcare.auth.exception;
 import lombok.Getter;
 
 @Getter
-public class ForbiddenException extends  RuntimeException{
+public class ConflictException extends  RuntimeException {
     private final String code;
 
-    public ForbiddenException(String message, String code) {
+    public ConflictException(String message, String code) {
         super(message);
         this.code = code;
     }
 
-    public ForbiddenException(String message) {
+    public ConflictException(String message) {
         super(message);
-        this.code = "403";
+        this.code = "409";
     }
-
 }

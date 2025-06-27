@@ -3,7 +3,7 @@ package it.pagopa.selfcare.auth.controller;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.controller.request.OtpVerifyRequest;
 import it.pagopa.selfcare.auth.controller.response.*;
-import it.pagopa.selfcare.auth.exception.UnimplementedException;
+import it.pagopa.selfcare.auth.service.OtpFlowService;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -22,6 +22,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @Slf4j
 public class OtpController {
 
+    private final OtpFlowService otpFlowService;
 
     @Operation(
             description = "Verify endpoint is used to complete an otp flow by validating user account",
@@ -41,7 +42,7 @@ public class OtpController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<TokenResponse> verifyOtp(@Valid OtpVerifyRequest otpVerifyRequest) {
-        throw new UnimplementedException("Unimplemented endpoint");
+        return otpFlowService.verifyOtp(otpVerifyRequest.getOtpUuid(), otpVerifyRequest.getOtp());
     }
 
 }
