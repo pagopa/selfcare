@@ -78,7 +78,7 @@ app_settings = [
   },
   {
     name  = "FEATURE_FLAG_OTP_ENABLED"
-    value = "NONE"
+    value = "BETA"
   },
   {
     name  = "INTERNAL_API_URL"
@@ -86,16 +86,18 @@ app_settings = [
   },
   {
     name  = "INTERNAL_MS_USER_API_URL"
-    value = "https://api.dev.selfcare.pagopa.it/internal/user"
+    value = "https://api.uat.selfcare.pagopa.it/internal/user"
   }
 ]
 
 secrets_names = {
   "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+  "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
   "ONE_IDENTITY_CLIENT_ID"                = "oneidentity-client-id"
   "ONE_IDENTITY_CLIENT_SECRET"            = "oneidentity-client-secret"
   "SESSION_TOKEN_PRIVATE_KEY"             = "jwt-private-key-pkcs8"
   "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
   "INTERNAL-API-KEY"                      = "internal-api-key"
   "INTERNAL-MS-USER-API-KEY"              = "internal-ms-user-api-key"
+  "FEATURE_FLAG_OTP_BETA_USERS"           = "feature-flag-otp-beta-users"
 }
