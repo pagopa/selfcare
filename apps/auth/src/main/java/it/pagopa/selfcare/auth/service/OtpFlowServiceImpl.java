@@ -26,10 +26,9 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
-
-import static io.smallrye.mutiny.helpers.spies.Spy.onFailure;
 
 @Slf4j
 @ApplicationScoped
@@ -205,7 +204,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
     return OtpFlow.update(
             "{ '$inc': { 'attempts': 1 }, '$set': { 'status': ?1, 'updatedAt': ?2 } }",
             newStatus,
-            OffsetDateTime.now())
+            Date.from(OffsetDateTime.now().toInstant()))
         .where("uuid", uuid);
   }
 
