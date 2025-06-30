@@ -86,7 +86,7 @@ app_settings = [
   },
   {
     name  = "INTERNAL_MS_USER_API_URL"
-    value = "https://api.dev.selfcare.pagopa.it/internal/user"
+    value = "https://api.selfcare.pagopa.it/internal/user"
   }
 ]
 
