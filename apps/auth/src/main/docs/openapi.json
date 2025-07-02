@@ -96,6 +96,75 @@
         }
       }
     },
+    "/otp/resend" : {
+      "post" : {
+        "tags" : [ "OTP" ],
+        "summary" : "Resend OTP endpoint",
+        "description" : "Resend an OTP if email has not been received by user",
+        "operationId" : "otpResend",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OtpResendRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OidcExchangeOtpResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Conflict",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/otp/verify" : {
       "post" : {
         "tags" : [ "OTP" ],
@@ -235,6 +304,16 @@
       "OtpForbiddenCode" : {
         "enum" : [ "CODE_001", "CODE_002" ],
         "type" : "string"
+      },
+      "OtpResendRequest" : {
+        "required" : [ "otpUuid" ],
+        "type" : "object",
+        "properties" : {
+          "otpUuid" : {
+            "minLength" : 1,
+            "type" : "string"
+          }
+        }
       },
       "OtpStatus" : {
         "enum" : [ "PENDING", "EXPIRED", "REJECTED", "COMPLETED" ],
