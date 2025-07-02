@@ -11,8 +11,8 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.CertificationEnum;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
-import it.pagopa.selfcare.user.controller.request.SendMailDto;
 import it.pagopa.selfcare.user.controller.request.SendEmailOtpDto;
+import it.pagopa.selfcare.user.controller.request.SendMailDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.entity.UserInfo;
@@ -784,7 +784,7 @@ class UserControllerTest {
                 .then()
                 .statusCode(204);
 
-        verify(userService, times(1)).sendMail(anyString(), anyString(), anyString(), anyString(), any(), any());
+        verify(userService, times(1)).sendMailUserRequest(anyString(), anyString(), anyString(), anyString(), any(), any());
     }
 
     @Test
@@ -906,6 +906,7 @@ class UserControllerTest {
         sendMailDto.setInstitutionName("institutionName");
         sendMailDto.setProductId(PROD_PAGOPA.getValue());
         sendMailDto.setRole(MANAGER);
+        sendMailDto.setUserRequestUid("loggedUserId");
         return sendMailDto;
     }
 

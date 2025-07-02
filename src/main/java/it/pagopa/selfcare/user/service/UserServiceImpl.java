@@ -290,14 +290,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Uni<Void> sendMail(String userId, String userMailUuid, String institutionName, String productId, PartyRole productRole, LoggedUser loggedUser) {
+    public Uni<Void> sendMailUserRequest(String userId, String userMailUuid, String institutionName, String productId, PartyRole productRole, String loggedUserId) {
         PrepareNotificationData.PrepareNotificationDataBuilder prepareNotificationDataBuilder = PrepareNotificationData.builder();
         return Uni.createFrom().nullItem()
                 .onItem().transformToUni(unused -> retrieveUserFromUserRegistryAndAddToPrepareNotificationData(prepareNotificationDataBuilder, userId))
+                .onItem().transformToUni(unused -> retrieveLoggedUserFromUserRegistryAndAddToPrepareNotificationData(prepareNotificationDataBuilder, loggedUserId))
                 .onItem().transformToUni(builder -> retrieveUserInstitutionAndAddToPrepareNotificationDataRequest(builder, userId, userMailUuid, institutionName))
                 .onItem().transformToUni(builder -> retrieveProductAndAddToPrepareNotificationData(builder, productId))
                 .onItem().transform(PrepareNotificationData.PrepareNotificationDataBuilder::build)
-                .onItem().transformToUni(prepareNotificationData -> userNotificationService.buildDataModelRequestAndSendEmail(prepareNotificationData.getUserResource(), prepareNotificationData.getUserInstitution(), prepareNotificationData.getProduct(), productRole, loggedUser.getName(), loggedUser.getFamilyName())
+                .onItem().transformToUni(prepareNotificationData -> userNotificationService.buildDataModelRequestAndSendEmail(prepareNotificationData.getUserResource(), prepareNotificationData.getUserInstitution(), prepareNotificationData.getProduct(), productRole, prepareNotificationData.getLoggedUserResource().getName().getValue(), prepareNotificationData.getLoggedUserResource().getFamilyName().getValue())
                         .onFailure().recoverWithNull()
                         .replaceWith(prepareNotificationData))
                 .onFailure().invoke(throwable -> log.error("Error during update user status for userId: {}, institutionId: {}, productId:{} -> exception: {}", Encode.forJava(userId), Encode.forJava(institutionName), Encode.forJava(productId), throwable.getMessage(), throwable))
@@ -337,6 +338,11 @@ public class UserServiceImpl implements UserService {
     private Uni<PrepareNotificationData.PrepareNotificationDataBuilder> retrieveUserFromUserRegistryAndAddToPrepareNotificationData(PrepareNotificationData.PrepareNotificationDataBuilder prepareNotificationDataBuilder, String userId) {
         return userRegistryService.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userId)
                 .onItem().transform(prepareNotificationDataBuilder::userResource);
+    }
+
+    private Uni<PrepareNotificationData.PrepareNotificationDataBuilder> retrieveLoggedUserFromUserRegistryAndAddToPrepareNotificationData(PrepareNotificationData.PrepareNotificationDataBuilder prepareNotificationDataBuilder, String userId) {
+        return userRegistryService.findByIdUsingGET(USER_FIELD_LIST_WITHOUT_WORK_CONTACTS, userId)
+                .onItem().transform(prepareNotificationDataBuilder::loggedUserResource);
     }
 
     @Override

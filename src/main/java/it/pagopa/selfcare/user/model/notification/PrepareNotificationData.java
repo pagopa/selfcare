@@ -14,4 +14,5 @@ public class PrepareNotificationData {
     private UserResource userResource;
     private Product product;
     private QueueEvent queueEvent;
+    private UserResource loggedUserResource;
 }

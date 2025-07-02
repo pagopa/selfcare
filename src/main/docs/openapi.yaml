@@ -1426,6 +1426,7 @@ components:
       - institutionName
       - productId
       - role
+      - userRequestUid
       type: object
       properties:
         userMailUuid:
@@ -1439,6 +1440,8 @@ components:
           type: string
         role:
           $ref: "#/components/schemas/PartyRole"
+        userRequestUid:
+          type: string
     UpdateDescriptionDto:
       required:
       - institutionDescription

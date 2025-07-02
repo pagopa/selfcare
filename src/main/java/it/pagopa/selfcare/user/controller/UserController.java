@@ -8,8 +8,8 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
-import it.pagopa.selfcare.user.controller.request.SendMailDto;
 import it.pagopa.selfcare.user.controller.request.SendEmailOtpDto;
+import it.pagopa.selfcare.user.controller.request.SendMailDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
@@ -429,7 +429,7 @@ public class UserController {
                                             @Valid SendMailDto sendMailDto,
                                             @Context SecurityContext ctx) {
         return readUserIdFromToken(ctx)
-                .onItem().transformToUni(loggedUser -> userService.sendMail(userId, sendMailDto.getUserMailUuid(), sendMailDto.getInstitutionName(), sendMailDto.getProductId(), sendMailDto.getRole(), loggedUser));
+                .onItem().transformToUni(loggedUser -> userService.sendMailUserRequest(userId, sendMailDto.getUserMailUuid(), sendMailDto.getInstitutionName(), sendMailDto.getProductId(), sendMailDto.getRole(), sendMailDto.getUserRequestUid()));
     }
 
     @APIResponses({

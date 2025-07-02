@@ -20,4 +20,7 @@ public class SendMailDto {
     @NotNull(message = "role is required")
     private PartyRole role;
 
+    @NotNull(message = "userRequestUid is required")
+    private String userRequestUid;
+
 }
