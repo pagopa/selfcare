@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Optional;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,15 +17,8 @@ public class OtpFeatureFlag {
   private FeatureFlagEnum featureFlag;
   private List<OtpBetaUser> otpBetaUsers;
 
-  public Boolean isOtpForced(String fiscalCode) {
+  public Optional<OtpBetaUser> getOtpBetaUser(String fiscalCode){
     return otpBetaUsers.stream()
-        .filter(betaUser -> betaUser.getFiscalCode().equals(fiscalCode))
-        .map(OtpBetaUser::getForceOtp)
-        .findFirst()
-        .orElse(Boolean.FALSE);
-  }
-
-  public Boolean isBetaUser(String fiscalCode) {
-    return otpBetaUsers.stream().anyMatch(betaUser -> betaUser.getFiscalCode().equals(fiscalCode));
+            .filter(betaUser -> betaUser.getFiscalCode().equals(fiscalCode)).findFirst();
   }
 }

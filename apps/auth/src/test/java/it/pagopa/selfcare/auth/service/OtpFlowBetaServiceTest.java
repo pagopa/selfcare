@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.auth.service;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
@@ -51,26 +51,55 @@ public class OtpFlowBetaServiceTest {
     UserClaims input = getUserClaims();
     getUserClaims().setFiscalCode("fiscalCode2");
     when(userService.getUserInfoEmail(any(UserClaims.class)))
-            .thenReturn(Uni.createFrom().item("test@test.com"));
+        .thenReturn(Uni.createFrom().item("test@test.com"));
     when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
-            .thenReturn(Uni.createFrom().voidItem());
+        .thenReturn(Uni.createFrom().voidItem());
     PanacheMock.mock(OtpFlow.class);
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
-            Mockito.mock(ReactivePanacheQuery.class);
+        Mockito.mock(ReactivePanacheQuery.class);
     when(OtpFlow.builder()).thenCallRealMethod();
     when(query.firstResult())
-            .thenReturn(Uni.createFrom().failure(new WebApplicationException(404)));
+        .thenReturn(Uni.createFrom().failure(new WebApplicationException(404)));
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
     Optional<OtpInfo> maybeOtpInfo =
-            otpFlowService
-                    .handleOtpFlow(input)
-                    .subscribe()
-                    .withSubscriber(UniAssertSubscriber.create())
-                    .assertCompleted()
-                    .getItem();
+        otpFlowService
+            .handleOtpFlow(input)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create())
+            .assertCompleted()
+            .getItem();
     Assertions.assertTrue(maybeOtpInfo.isPresent());
     OtpInfo otpInfo = maybeOtpInfo.get();
     Assertions.assertEquals("test@test.com", otpInfo.getInstitutionalEmail());
+  }
+
+  @Test
+  void returnNewOtpFlow_AndSendMailToForcedEmailForBetaUser() {
+    UserClaims input = getUserClaims();
+    input.setFiscalCode("fiscalCode3");
+    when(userService.getUserInfoEmail(any(UserClaims.class)))
+        .thenReturn(Uni.createFrom().item("test@test.com"));
+    when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
+        .thenReturn(Uni.createFrom().voidItem());
+    PanacheMock.mock(OtpFlow.class);
+    ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
+        Mockito.mock(ReactivePanacheQuery.class);
+    when(OtpFlow.builder()).thenCallRealMethod();
+    when(query.firstResult())
+        .thenReturn(Uni.createFrom().failure(new WebApplicationException(404)));
+    when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
+    Optional<OtpInfo> maybeOtpInfo =
+        otpFlowService
+            .handleOtpFlow(input)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create())
+            .assertCompleted()
+            .getItem();
+    Assertions.assertTrue(maybeOtpInfo.isPresent());
+    OtpInfo otpInfo = maybeOtpInfo.get();
+    verify(otpNotificationService, times(1))
+        .sendOtpEmail(eq(input.getUid()), eq("forced.mail@test.com"), anyString());
+    Assertions.assertEquals("forced.mail@test.com", otpInfo.getInstitutionalEmail());
   }
 
   @Test

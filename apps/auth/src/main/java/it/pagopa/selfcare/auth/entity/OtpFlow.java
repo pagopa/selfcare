@@ -1,6 +1,5 @@
 package it.pagopa.selfcare.auth.entity;
 
-import io.quarkus.arc.All;
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntity;
 import it.pagopa.selfcare.auth.model.OtpStatus;

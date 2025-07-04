@@ -10,4 +10,5 @@ import lombok.*;
 public class OtpBetaUser {
     private String fiscalCode;
     private Boolean forceOtp = Boolean.FALSE;
+    private String forcedEmail;
 }
