@@ -311,12 +311,12 @@ public class OtpFlowServiceImpl implements OtpFlowService {
     }
     return userService
         .getUserClaimsFromPdv(oldOtpFlow.getUserId())
-        .onFailure(GeneralUtils::checkIfIsRetryableException)
-        .retry()
-        .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))
-        .atMost(maxRetry)
-        .onFailure(WebApplicationException.class)
-        .transform(GeneralUtils::extractExceptionFromWebAppException)
+            .onFailure()
+            .transform(
+                    failure ->
+                            new InternalException(
+                                    "Cannot get User from PDV"
+                                            + failure.toString()))
         .chain(
             userClaims ->
                 userService
@@ -355,7 +355,8 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                                                                     .build())))
                                 .orElse(
                                     Uni.createFrom()
-                                        .failure(new ConflictException("User not found")))));
+                                        .failure(new ConflictException("User not found"))))
+        );
   }
 
   @Override
