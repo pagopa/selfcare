@@ -212,7 +212,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
   private Uni<Long> updateOtpFlow(String uuid, OtpStatus newStatus, Boolean attemptsIncrement) {
     StringBuilder updateBuilder = new StringBuilder();
     updateBuilder.append("{");
-    if (attemptsIncrement) {
+    if (Boolean.TRUE.equals(attemptsIncrement)) {
       updateBuilder.append(" $inc': { 'attempts': 1 },");
     }
     updateBuilder.append(" '$set': { 'status': ?1, 'updatedAt': ?2 } }");
