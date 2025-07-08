@@ -64,7 +64,7 @@ public class OtpController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<OidcExchangeOtpResponse> resendOtp(@Valid OtpResendRequest otpResendRequest) {
-        throw new UnimplementedException("Unimplemented endpoint");
+        return otpFlowService.resendOtp(otpResendRequest.getOtpUuid());
     }
 
 }

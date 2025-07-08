@@ -10,6 +10,7 @@ import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.auth.controller.request.OtpResendRequest;
 import it.pagopa.selfcare.auth.controller.request.OtpVerifyRequest;
 import it.pagopa.selfcare.auth.controller.response.OtpForbiddenCode;
 import it.pagopa.selfcare.auth.exception.ConflictException;
@@ -135,6 +136,68 @@ class OtpControllerTest {
             .when()
             .contentType(ContentType.JSON)
             .post("/verify")
+            .then()
+            .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+  }
+
+  @Test
+  void resendOtp_BadRequest() {
+    OtpResendRequest request = new OtpResendRequest();
+
+    given()
+            .body(request)
+            .when()
+            .contentType(ContentType.JSON)
+            .post("/resend")
+            .then()
+            .statusCode(HttpStatus.SC_BAD_REQUEST);
+  }
+
+  @Test
+  void resendOtp_NotFound() {
+    OtpResendRequest request = new OtpResendRequest();
+    request.setOtpUuid("uuid");
+    when(otpFlowService.resendOtp(anyString()))
+            .thenReturn(
+                    Uni.createFrom().failure(new ResourceNotFoundException("Cannot find Otp Flow")));
+
+    given()
+            .body(request)
+            .when()
+            .contentType(ContentType.JSON)
+            .post("/resend")
+            .then()
+            .statusCode(HttpStatus.SC_NOT_FOUND);
+  }
+
+  @Test
+  void resendOtp_Conflict() {
+    OtpResendRequest request = new OtpResendRequest();
+    request.setOtpUuid("uuid");
+    when(otpFlowService.resendOtp(anyString()))
+            .thenReturn(Uni.createFrom().failure(new ConflictException("Conflict")));
+
+    given()
+            .body(request)
+            .when()
+            .contentType(ContentType.JSON)
+            .post("/resend")
+            .then()
+            .statusCode(HttpStatus.SC_CONFLICT);
+  }
+
+  @Test
+  void resendOtp_InternalServerError() {
+    OtpResendRequest request = new OtpResendRequest();
+    request.setOtpUuid("uuid");
+    when(otpFlowService.resendOtp(anyString()))
+            .thenReturn(Uni.createFrom().failure(new InternalException("Internal server error")));
+
+    given()
+            .body(request)
+            .when()
+            .contentType(ContentType.JSON)
+            .post("/resend")
             .then()
             .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
   }

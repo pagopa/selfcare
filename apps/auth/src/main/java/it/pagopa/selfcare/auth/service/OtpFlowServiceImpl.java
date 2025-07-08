@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.auth.controller.response.OidcExchangeOtpResponse;
 import it.pagopa.selfcare.auth.controller.response.OtpForbiddenCode;
 import it.pagopa.selfcare.auth.controller.response.TokenResponse;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
@@ -151,16 +152,16 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                                                                         createdOtpFlow.getUuid(),
                                                                         institutionalEmail)))
                                                     : Uni.createFrom().item(emptyOtpInfo))))
-                    // User is not present on Selfcare so we can proceed without OTP Flow
+                    // User is not present on Self care so we can proceed without OTP Flow
                     .orElse(Uni.createFrom().item(emptyOtpInfo)));
   }
 
   /**
-   * This method is used to create a new OTP Flow and to send an mail notification containing an OTP
+   * This method is used to create a new OTP Flow and to send a mail notification containing an OTP
    * that the user must provide in order to complete authentication flow
    *
    * @param userId the user unique id (provided by PDV)
-   * @param email the user's intitutional email
+   * @param email the user's institutional email
    * @return a new Otp Flow
    */
   private Uni<OtpFlow> createAndSendOtp(String userId, String email) {
@@ -208,12 +209,20 @@ public class OtpFlowServiceImpl implements OtpFlowService {
     return OtpFlow.find(new Document(OtpFlow.Fields.uuid.name(), uuid)).firstResultOptional();
   }
 
-  private Uni<Long> updateOtpFlowVerification(String uuid, OtpStatus newStatus) {
+  private Uni<Long> updateOtpFlow(String uuid, OtpStatus newStatus, Boolean attemptsIncrement) {
+    StringBuilder updateBuilder = new StringBuilder();
+    updateBuilder.append("{");
+    if (Boolean.TRUE.equals(attemptsIncrement)) {
+      updateBuilder.append(" $inc': { 'attempts': 1 },");
+    }
+    updateBuilder.append(" '$set': { 'status': ?1, 'updatedAt': ?2 } }");
     return OtpFlow.update(
-            "{ '$inc': { 'attempts': 1 }, '$set': { 'status': ?1, 'updatedAt': ?2 } }",
-            newStatus,
-            Date.from(OffsetDateTime.now().toInstant()))
+            updateBuilder.toString(), newStatus, Date.from(OffsetDateTime.now().toInstant()))
         .where("uuid", uuid);
+  }
+
+  private Uni<Long> updateOtpFlowVerification(String uuid, OtpStatus newStatus) {
+    return updateOtpFlow(uuid, newStatus, true);
   }
 
   private Uni<String> handleOtpVerification(OtpFlow otpFlow, String hashedOtp) {
@@ -293,5 +302,80 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                                         .failure(
                                             new ResourceNotFoundException(
                                                 "Cannot find OtpFlow")))));
+  }
+
+  private Uni<OtpInfo> handleOtpResend(OtpFlow oldOtpFlow) {
+    if (oldOtpFlow.getExpiresAt().isBefore(OffsetDateTime.now())
+        || oldOtpFlow.getStatus() != OtpStatus.PENDING) {
+      return Uni.createFrom().failure(new ConflictException("Otp is expired or in a final state"));
+    }
+    return userService
+        .getUserClaimsFromPdv(oldOtpFlow.getUserId())
+            .onFailure()
+            .transform(
+                    failure ->
+                            new InternalException(
+                                    "Cannot get User from PDV"
+                                            + failure.toString()))
+        .chain(
+            userClaims ->
+                userService
+                    .getUserInfoEmail(userClaims)
+                    .onFailure(GeneralUtils::checkNotFoundException)
+                    .recoverWithNull()
+                    .map(Optional::ofNullable)
+                    .onFailure()
+                    .transform(
+                        failure ->
+                            new InternalException(
+                                "Cannot get User Info Email on External Internal APIs:"
+                                    + failure.toString()))
+                    .chain(
+                        maybeUserEmail ->
+                            maybeUserEmail
+                                .map(
+                                    institutionalEmail ->
+                                        createAndSendOtp(userClaims.getUid(), institutionalEmail)
+                                            .chain(
+                                                createdOtpFlow ->
+                                                    // Fire & Forget update old otp flow status
+                                                    updateOtpFlow(
+                                                            createdOtpFlow.getUuid(),
+                                                            OtpStatus.REJECTED,
+                                                            false)
+                                                        .replaceWith(createdOtpFlow)
+                                                        .onFailure()
+                                                        .recoverWithItem(createdOtpFlow)
+                                                        .map(
+                                                            newOtpFlow ->
+                                                                OtpInfo.builder()
+                                                                    .institutionalEmail(
+                                                                        institutionalEmail)
+                                                                    .uuid(newOtpFlow.getUuid())
+                                                                    .build())))
+                                .orElse(
+                                    Uni.createFrom()
+                                        .failure(new ConflictException("User not found"))))
+        );
+  }
+
+  @Override
+  public Uni<OidcExchangeOtpResponse> resendOtp(String otpUid) {
+    return findOtpFlowByUuid(otpUid)
+        .chain(
+            maybeOtpFlow ->
+                maybeOtpFlow
+                    .map(
+                        otpFlow ->
+                            handleOtpResend(otpFlow)
+                                .map(
+                                    newOtpInfo ->
+                                        new OidcExchangeOtpResponse(
+                                            newOtpInfo.getUuid(),
+                                            OtpUtils.maskEmail(
+                                                newOtpInfo.getInstitutionalEmail()))))
+                    .orElse(
+                        Uni.createFrom()
+                            .failure(new ResourceNotFoundException("Cannot find OtpFlow"))));
   }
 }
