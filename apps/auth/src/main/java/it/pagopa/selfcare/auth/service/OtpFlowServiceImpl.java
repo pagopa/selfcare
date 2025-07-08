@@ -340,7 +340,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                                                 createdOtpFlow ->
                                                     // Fire & Forget update old otp flow status
                                                     updateOtpFlow(
-                                                            createdOtpFlow.getUuid(),
+                                                            oldOtpFlow.getUuid(),
                                                             OtpStatus.REJECTED,
                                                             false)
                                                         .replaceWith(createdOtpFlow)
