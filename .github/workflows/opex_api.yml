@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - SELC-7073_Add_opex_dashboard
     paths:
       - '.github/workflows/opex_api.yml'
       - '.opex/auth/**'
