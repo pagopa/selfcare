@@ -213,7 +213,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
     StringBuilder updateBuilder = new StringBuilder();
     updateBuilder.append("{");
     if (Boolean.TRUE.equals(attemptsIncrement)) {
-      updateBuilder.append(" $inc': { 'attempts': 1 },");
+      updateBuilder.append(" '$inc': { 'attempts': 1 },");
     }
     updateBuilder.append(" '$set': { 'status': ?1, 'updatedAt': ?2 } }");
     return OtpFlow.update(
