@@ -323,14 +323,26 @@ public class OtpFlowServiceTest {
   }
 
   @Test
-  public void testResendOtp_ConflictWhenOtpIsExpired() {
+  public void testResendOtp_SuccessWhenOtpIsExpired() {
     String otpUid = "test-uuid";
     OtpFlow otpFlow = new OtpFlow();
     otpFlow.setUuid(otpUid);
     otpFlow.setOtp("test-otp");
+    otpFlow.setUserId("userId");
     otpFlow.setAttempts(1);
-    otpFlow.setExpiresAt(OffsetDateTime.now().minusMinutes(1));
+    otpFlow.setExpiresAt(OffsetDateTime.now().minusMinutes(10));
     otpFlow.setStatus(OtpStatus.PENDING);
+
+    String newOtpUid = "test-newuuid";
+    OtpFlow newOtpFlow = new OtpFlow();
+    newOtpFlow.setUuid(newOtpUid);
+    newOtpFlow.setOtp("test-otp");
+    newOtpFlow.setUserId("userId");
+    newOtpFlow.setAttempts(0);
+    otpFlow.setExpiresAt(OffsetDateTime.now().plusMinutes(15));
+    otpFlow.setStatus(OtpStatus.PENDING);
+
+    UserClaims userClaims = getUserClaims();
 
     PanacheMock.mock(OtpFlow.class);
     when(OtpFlow.builder()).thenCallRealMethod();
@@ -338,12 +350,23 @@ public class OtpFlowServiceTest {
         Mockito.mock(ReactivePanacheQuery.class);
     when(query.firstResultOptional()).thenReturn(Uni.createFrom().item(Optional.of(otpFlow)));
     when(OtpFlow.find(any())).thenReturn(query);
+    when(OtpFlow.persist(any(OtpFlow.class), any())).thenReturn(Uni.createFrom().voidItem());
+    ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+    when(update.where(anyString(), any(String.class)))
+        .thenReturn(Uni.createFrom().failure(new Exception("Cannot update old OTP")));
+    when(OtpFlow.update(anyString(), (Object) any())).thenReturn(update);
+
+    when(userService.getUserClaimsFromPdv(anyString()))
+        .thenReturn(Uni.createFrom().item(userClaims));
+    when(userService.getUserInfoEmail(any())).thenReturn(Uni.createFrom().item("test@test.it"));
+    when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
+        .thenReturn(Uni.createFrom().voidItem());
 
     otpFlowService
         .resendOtp(otpUid)
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
-        .assertFailedWith(ConflictException.class, "Otp is expired or in a final state");
+        .assertCompleted();
   }
 
   @Test

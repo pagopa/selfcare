@@ -305,8 +305,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
   }
 
   private Uni<OtpInfo> handleOtpResend(OtpFlow oldOtpFlow) {
-    if (oldOtpFlow.getExpiresAt().isBefore(OffsetDateTime.now())
-        || oldOtpFlow.getStatus() != OtpStatus.PENDING) {
+    if (oldOtpFlow.getStatus() != OtpStatus.PENDING) {
       return Uni.createFrom().failure(new ConflictException("Otp is expired or in a final state"));
     }
     return userService
