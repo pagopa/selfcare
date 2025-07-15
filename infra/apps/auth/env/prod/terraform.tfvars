@@ -78,7 +78,7 @@ app_settings = [
   },
   {
     name  = "FEATURE_FLAG_OTP_ENABLED"
-    value = "BETA"
+    value = "ALL"
   },
   {
     name  = "INTERNAL_API_URL"
