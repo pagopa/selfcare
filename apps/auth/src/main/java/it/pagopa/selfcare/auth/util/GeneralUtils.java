@@ -57,8 +57,8 @@ public class GeneralUtils {
   }
 
   public static boolean checkNotFoundException(Throwable throwable) {
-    return throwable instanceof TimeoutException
-            || (throwable instanceof WebApplicationException webApplicationException
+    return throwable instanceof ResourceNotFoundException
+        || (throwable instanceof WebApplicationException webApplicationException
             && webApplicationException.getResponse().getStatus() == 404);
   }
 
