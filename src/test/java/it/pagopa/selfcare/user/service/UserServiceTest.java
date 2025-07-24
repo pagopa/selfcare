@@ -2130,8 +2130,7 @@ class UserServiceTest {
                 "Selc:ListProductUsers",
                 "Selc:ManageProductGroups",
                 "Selc:CreateDelegation",
-                "Selc:ViewInstitutionData",
-                "Selc:UpdateInstitutionData"));
+                "Selc:ViewInstitutionData"));
         userInstitutionWithActions.setInstitutionRootName("institutionRootName");
         userInstitutionWithActions.setUserMailUuid(workContractsKey);
         userInstitutionWithActions.setInstitutionId("institutionId");
@@ -2158,7 +2157,6 @@ class UserServiceTest {
                 "Selc:ManageProductGroups",
                 "Selc:CreateDelegation",
                 "Selc:ViewInstitutionData",
-                "Selc:UpdateInstitutionData",
                 "Selc:ViewContract"));
         userInstitutionWithActions.setInstitutionRootName("institutionRootName");
         userInstitutionWithActions.setUserMailUuid(workContractsKey);

@@ -120,6 +120,53 @@
     ],
     "institutionDescription": "Università di Bologna",
     "userMailUuid": "ID_MAIL#123123-55555-efaz-12312-apclacpela"
+  },
+  {
+    "_id": {
+      "$oid": "d6bdc33f231ce735ba8649f6"
+    },
+    "institutionId": "df5ebeaf-6f7d-4c79-b35f-b44b689c5cc3",
+    "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+    "products": [
+      {
+        "productId": "prod-io-sign",
+        "relationshipId": "e511d6de-256e-42a4-bd55-8a33a6d1a95d",
+        "tokenId": "23e875fb-3196-4e53-bfc2-f9030d26f6db",
+        "status": "ACTIVE",
+        "productRole": "admin",
+        "role": "MANAGER",
+        "env": "ROOT",
+        "createdAt": {
+          "$date": "2023-07-13T13:30:00.000Z"
+        },
+        "updatedAt": null
+      }
+    ],
+    "institutionDescription": "Regione Campania",
+    "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+  },
+  {
+    "_id": {
+      "$oid": "0b8290dab19a01b6ec598381"
+    },
+    "institutionId": "6b5e0d68-c7bc-4639-a922-48a1662ed991",
+    "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+    "products": [
+      {
+        "productId": "prod-pn-pg",
+        "relationshipId": "5c653239-813e-435b-bff0-37b1f63edd08",
+        "tokenId": "bac836d6-3d76-47e4-a11f-6c4b990cc920",
+        "status": "ACTIVE",
+        "productRole": "admin",
+        "role": "MANAGER",
+        "env": "ROOT",
+        "createdAt": {
+          "$date": "2023-06-15T14:30:00.000Z"
+        },
+        "updatedAt": null
+      }
+    ],
+    "institutionDescription": "Comune di Alassio",
+    "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
   }
-
 ]

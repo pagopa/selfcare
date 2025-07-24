@@ -1639,11 +1639,13 @@ Feature: User
       | userIds                   | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7,97a511a7-2acc-47b9-afed-2f3c65753b4a                            |
     When I send a GET request to "users/ids"
     Then The status code is 200
-    And The response body contains the list "" of size 4
+    And The response body contains the list "" of size 6
     And The response body contains at path "" the following list of objects in any order:
       | id                        | userId                               | institutionId                        | institutionDescription |
       | 65aea85f85a6a37415221bd6  | 97a511a7-2acc-47b9-afed-2f3c65753b4a | d0d28367-1695-4c50-a260-6fda526e9aab | Comune di Milano       |
       | 65b1234f85a6a37415221ef9  | 97a511a7-2acc-47b9-afed-2f3c65753b4a | a1b2c3d4-5678-90ab-cdef-1234567890ab | Regione Lazio          |
+      | d6bdc33f231ce735ba8649f6  | 97a511a7-2acc-47b9-afed-2f3c65753b4a | df5ebeaf-6f7d-4c79-b35f-b44b689c5cc3 | Regione Campania       |
+      | 0b8290dab19a01b6ec598381  | 97a511a7-2acc-47b9-afed-2f3c65753b4a | 6b5e0d68-c7bc-4639-a922-48a1662ed991 | Comune di Alassio      |
       | 65b1214f85b2a37412421ef6  | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 | a1b2c3d4-5678-90ab-cdef-1234567890ab | Regione Lazio          |
       | 65b2345a85a6a37415222ff1  | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 | f2e4d6c8-9876-5432-ba10-abcdef123456 | Università di Bologna  |
 
@@ -1671,11 +1673,13 @@ Feature: User
     Given User login with username "j.doe" and password "test"
     When I send a GET request to "users/ids"
     Then The status code is 200
-    And The response body contains the list "" of size 4
+    And The response body contains the list "" of size 6
     And The response body contains at path "" the following list of objects in any order:
       | id                        | userId                               | institutionId                        | institutionDescription |
       | 65aea85f85a6a37415221bd6  | 97a511a7-2acc-47b9-afed-2f3c65753b4a | d0d28367-1695-4c50-a260-6fda526e9aab | Comune di Milano       |
       | 65b1234f85a6a37415221ef9  | 97a511a7-2acc-47b9-afed-2f3c65753b4a | a1b2c3d4-5678-90ab-cdef-1234567890ab | Regione Lazio          |
+      | d6bdc33f231ce735ba8649f6  | 97a511a7-2acc-47b9-afed-2f3c65753b4a | df5ebeaf-6f7d-4c79-b35f-b44b689c5cc3 | Regione Campania       |
+      | 0b8290dab19a01b6ec598381  | 97a511a7-2acc-47b9-afed-2f3c65753b4a | 6b5e0d68-c7bc-4639-a922-48a1662ed991 | Comune di Alassio      |
       | 65b1214f85b2a37412421ef6  | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 | a1b2c3d4-5678-90ab-cdef-1234567890ab | Regione Lazio          |
       | 65b2345a85a6a37415222ff1  | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 | f2e4d6c8-9876-5432-ba10-abcdef123456 | Università di Bologna  |
 
@@ -1694,7 +1698,7 @@ Feature: User
     Given User login with username "j.doe" and password "test"
     When I send a GET request to "users/notification"
     Then The status code is 200
-    And The response body contains the list "users" of size 5
+    And The response body contains the list "users" of size 7
     And The response body contains at path "users" the following list of objects in any order:
       | id                                                              | institutionId                               | productId      | user.userId                                | user.email                                      | user.role       | user.productRole            | user.relationshipStatus |
       | 65aea85f85a6a37415221bd6_prod-ciban_referente amministrativo    | d0d28367-1695-4c50-a260-6fda526e9aab        | prod-ciban     | 97a511a7-2acc-47b9-afed-2f3c65753b4a       | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it    | MANAGER         | referente amministrativo    | PENDING                 |
@@ -1702,6 +1706,8 @@ Feature: User
       | 65b1234f85a6a37415221ef9_prod-io_admin                          | a1b2c3d4-5678-90ab-cdef-1234567890ab        | prod-io        | 97a511a7-2acc-47b9-afed-2f3c65753b4a       | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it    | MANAGER         | admin                       | ACTIVE                  |
       | 65b1234f85a6a37415221ef9_prod-interop_referente amministrativo  | a1b2c3d4-5678-90ab-cdef-1234567890ab        | prod-interop   | 97a511a7-2acc-47b9-afed-2f3c65753b4a       | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it    | MANAGER         | referente amministrativo    | DELETED                 |
       | 65b1214f85b2a37412421ef6_prod-io_admin                          | a1b2c3d4-5678-90ab-cdef-1234567890ab        | prod-io        | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7       | r.balboa@regionelazio.it                        | SUB_DELEGATE    | admin                       | ACTIVE                  |
+      | d6bdc33f231ce735ba8649f6_prod-io-sign_admin                     | df5ebeaf-6f7d-4c79-b35f-b44b689c5cc3        | prod-io-sign   | 97a511a7-2acc-47b9-afed-2f3c65753b4a       | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it    | MANAGER         | admin                       | ACTIVE                  |
+      | 0b8290dab19a01b6ec598381_prod-pn-pg_admin                       | 6b5e0d68-c7bc-4639-a922-48a1662ed991        | prod-pn-pg     | 97a511a7-2acc-47b9-afed-2f3c65753b4a       | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it    | MANAGER         | admin                       | ACTIVE                  |
 
   Scenario: Successfully retrieve all SC-User for DataLake with productId filter
     Given User login with username "j.doe" and password "test"
@@ -1765,13 +1771,15 @@ Feature: User
     Given User login with username "j.doe" and password "test"
     When I send a GET request to "users"
     Then The status code is 200
-    And The response body contains the list "" of size 4
+    And The response body contains the list "" of size 6
     And The response body contains at path "" the following list of objects in any order:
       | id                                 | institutionId                               | userId                                    | institutionDescription     | userMailUuid                                      |
       | 65aea85f85a6a37415221bd6           | d0d28367-1695-4c50-a260-6fda526e9aab        | 97a511a7-2acc-47b9-afed-2f3c65753b4a      | Comune di Milano           | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1      |
       | 65b2345a85a6a37415222ff1           | f2e4d6c8-9876-5432-ba10-abcdef123456        | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7      | Università di Bologna      | ID_MAIL#123123-55555-efaz-12312-apclacpela        |
       | 65b1214f85b2a37412421ef6           | a1b2c3d4-5678-90ab-cdef-1234567890ab        | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7      | Regione Lazio              | ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv      |
       | 65b1234f85a6a37415221ef9           | a1b2c3d4-5678-90ab-cdef-1234567890ab        | 97a511a7-2acc-47b9-afed-2f3c65753b4a      | Regione Lazio              | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1      |
+      | d6bdc33f231ce735ba8649f6           | df5ebeaf-6f7d-4c79-b35f-b44b689c5cc3        | 97a511a7-2acc-47b9-afed-2f3c65753b4a      | Regione Campania           | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1      |
+      | 0b8290dab19a01b6ec598381           | 6b5e0d68-c7bc-4639-a922-48a1662ed991        | 97a511a7-2acc-47b9-afed-2f3c65753b4a      | Comune di Alassio          | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1      |
 
   Scenario: Successfully retrieve paged users with optional filters in input as query params with institutionId filter
     Given User login with username "j.doe" and password "test"
@@ -1830,13 +1838,15 @@ Feature: User
       | productRoles                        | admin                                      |
     When I send a GET request to "users"
     Then The status code is 200
-    And The response body contains the list "" of size 4
+    And The response body contains the list "" of size 6
     And The response body contains at path "" the following list of objects in any order:
       | id                                 | institutionId                               | userId                                    | institutionDescription     | userMailUuid                                      |
       | 65aea85f85a6a37415221bd6           | d0d28367-1695-4c50-a260-6fda526e9aab        | 97a511a7-2acc-47b9-afed-2f3c65753b4a      | Comune di Milano           | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1      |
       | 65b2345a85a6a37415222ff1           | f2e4d6c8-9876-5432-ba10-abcdef123456        | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7      | Università di Bologna      | ID_MAIL#123123-55555-efaz-12312-apclacpela        |
       | 65b1234f85a6a37415221ef9           | a1b2c3d4-5678-90ab-cdef-1234567890ab        | 97a511a7-2acc-47b9-afed-2f3c65753b4a      | Regione Lazio              | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1      |
       | 65b1214f85b2a37412421ef6           | a1b2c3d4-5678-90ab-cdef-1234567890ab        | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7      | Regione Lazio              | ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv      |
+      | d6bdc33f231ce735ba8649f6           | df5ebeaf-6f7d-4c79-b35f-b44b689c5cc3        | 97a511a7-2acc-47b9-afed-2f3c65753b4a      | Regione Campania           | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1      |
+      | 0b8290dab19a01b6ec598381           | 6b5e0d68-c7bc-4639-a922-48a1662ed991        | 97a511a7-2acc-47b9-afed-2f3c65753b4a      | Comune di Alassio          | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1      |
 
   Scenario: Successfully retrieve paged users with optional filters in input as query params with productRoles (1) filter
     Given User login with username "j.doe" and password "test"
@@ -1844,11 +1854,13 @@ Feature: User
       | productRoles                       | admin                                       |
     When I send a GET request to "users"
     Then The status code is 200
-    And The response body contains the list "" of size 2
+    And The response body contains the list "" of size 4
     And The response body contains at path "" the following list of objects in any order:
       | id                                 | institutionId                               | userId                                    | institutionDescription     | userMailUuid                                      |
       | 65b1234f85a6a37415221ef9           | a1b2c3d4-5678-90ab-cdef-1234567890ab        | 97a511a7-2acc-47b9-afed-2f3c65753b4a      | Regione Lazio              | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1      |
       | 65b1214f85b2a37412421ef6           | a1b2c3d4-5678-90ab-cdef-1234567890ab        | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7      | Regione Lazio              | ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv      |
+      | d6bdc33f231ce735ba8649f6           | df5ebeaf-6f7d-4c79-b35f-b44b689c5cc3        | 97a511a7-2acc-47b9-afed-2f3c65753b4a      | Regione Campania           | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1      |
+      | 0b8290dab19a01b6ec598381           | 6b5e0d68-c7bc-4639-a922-48a1662ed991        | 97a511a7-2acc-47b9-afed-2f3c65753b4a      | Comune di Alassio          | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1      |
 
   Scenario: Successfully retrieve paged users with optional filters in input as query params with paging
     Given User login with username "j.doe" and password "test"
@@ -4230,7 +4242,7 @@ Feature: User
 
   ######################### BEGIN GET /{userId}/institutions/{institutionId} #########################
 
-  Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role MANAGER)
+  Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role MANAGER and prod-pagopa)
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | userId                            | 97a511a7-2acc-47b9-afed-2f3c65753b4a        |
@@ -4262,8 +4274,74 @@ Feature: User
       | Selc:ManageProductGroups          |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
-      | Selc:UpdateInstitutionData        |
       | Selc:ViewContract                 |
+
+  Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role MANAGER and prod-io-sign)
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId                            | 97a511a7-2acc-47b9-afed-2f3c65753b4a        |
+      | institutionId                     | df5ebeaf-6f7d-4c79-b35f-b44b689c5cc3        |
+    When I send a GET request to "users/{userId}/institutions/{institutionId}"
+    Then The status code is 200
+    And The response body contains:
+      | userId                            | 97a511a7-2acc-47b9-afed-2f3c65753b4a        |
+      | institutionId                     | df5ebeaf-6f7d-4c79-b35f-b44b689c5cc3        |
+      | institutionDescription            | Regione Campania                            |
+      | products[0].productId             | prod-io-sign                                |
+      | products[0].tokenId               | 23e875fb-3196-4e53-bfc2-f9030d26f6db        |
+      | products[0].status                | ACTIVE                                      |
+      | products[0].productRole           | admin                                       |
+      | products[0].role                  | MANAGER                                     |
+      | products[0].env                   | ROOT                                        |
+    And The response body contains the list "products" of size 1
+    And The response body contains at path "products[0].userProductActions" the following list of values in any order:
+      | Selc:UploadLogo                   |
+      | Selc:ViewBilling                  |
+      | Selc:RequestProductAccess         |
+      | Selc:ListAvailableProducts        |
+      | Selc:ListActiveProducts           |
+      | Selc:AccessProductBackoffice      |
+      | Selc:ViewManagedInstitutions      |
+      | Selc:ViewDelegations              |
+      | Selc:ManageProductUsers           |
+      | Selc:ListProductUsers             |
+      | Selc:ManageProductGroups          |
+      | Selc:CreateDelegation             |
+      | Selc:ViewInstitutionData          |
+
+  Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role MANAGER and prod-pn-pg)
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId                            | 97a511a7-2acc-47b9-afed-2f3c65753b4a        |
+      | institutionId                     | 6b5e0d68-c7bc-4639-a922-48a1662ed991        |
+    When I send a GET request to "users/{userId}/institutions/{institutionId}"
+    Then The status code is 200
+    And The response body contains:
+      | userId                            | 97a511a7-2acc-47b9-afed-2f3c65753b4a        |
+      | institutionId                     | 6b5e0d68-c7bc-4639-a922-48a1662ed991        |
+      | institutionDescription            | Comune di Alassio                           |
+      | products[0].productId             | prod-pn-pg                                  |
+      | products[0].tokenId               | bac836d6-3d76-47e4-a11f-6c4b990cc920        |
+      | products[0].status                | ACTIVE                                      |
+      | products[0].productRole           | admin                                       |
+      | products[0].role                  | MANAGER                                     |
+      | products[0].env                   | ROOT                                        |
+    And The response body contains the list "products" of size 1
+    And The response body contains at path "products[0].userProductActions" the following list of values in any order:
+      | Selc:UploadLogo                   |
+      | Selc:ViewBilling                  |
+      | Selc:RequestProductAccess         |
+      | Selc:ListAvailableProducts        |
+      | Selc:ListActiveProducts           |
+      | Selc:AccessProductBackoffice      |
+      | Selc:ViewManagedInstitutions      |
+      | Selc:ViewDelegations              |
+      | Selc:ManageProductUsers           |
+      | Selc:ListProductUsers             |
+      | Selc:ManageProductGroups          |
+      | Selc:CreateDelegation             |
+      | Selc:ViewInstitutionData          |
+      | Selc:UpdateInstitutionData        |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role OPERATOR)
@@ -4323,7 +4401,6 @@ Feature: User
       | Selc:ManageProductGroups          |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
-      | Selc:UpdateInstitutionData        |
       | Selc:ViewContract                 |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
@@ -4359,7 +4436,6 @@ Feature: User
       | Selc:ManageProductGroups          |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
-      | Selc:UpdateInstitutionData        |
       | Selc:ViewContract                 |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
@@ -4393,7 +4469,6 @@ Feature: User
       | Selc:ListProductUsers             |
       | Selc:ManageProductGroups          |
       | Selc:ViewInstitutionData          |
-      | Selc:UpdateInstitutionData        |
       | Selc:ViewContract                 |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
@@ -4427,7 +4502,6 @@ Feature: User
       | Selc:ManageProductGroups          |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
-      | Selc:UpdateInstitutionData        |
       | Selc:ViewContract                 |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
@@ -4461,7 +4535,6 @@ Feature: User
       | Selc:ListProductUsers             |
       | Selc:ManageProductGroups          |
       | Selc:ViewInstitutionData          |
-      | Selc:UpdateInstitutionData        |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role ADMIN_EA and prod ciban and correct productId filter)
@@ -4496,7 +4569,6 @@ Feature: User
       | Selc:ListProductUsers             |
       | Selc:ManageProductGroups          |
       | Selc:ViewInstitutionData          |
-      | Selc:UpdateInstitutionData        |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Unsuccessfully retrieves userInstitution data with list of actions permitted for each user's product (with role ADMIN_EA and prod ciban and wrong productId filter)
