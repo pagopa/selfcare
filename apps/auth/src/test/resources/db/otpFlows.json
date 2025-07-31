@@ -1,0 +1,82 @@
+[
+  {
+    "_id": {
+      "$oid": "688335adc2dc1f72d29db53d"
+    },
+    "attempts": 0,
+    "createdAt": {
+      "$date": "2025-07-25T07:43:41.170Z"
+    },
+    "expiresAt": {
+      "$date": "2025-07-25T07:48:41.170Z"
+    },
+    "otp": "d39c88f0354eb91cea46d036fd2ac9d5",
+    "status": "PENDING",
+    "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7ccc",
+    "uuid": "239b58f1-9865-4ef5-b45f-b7f574a0c84c"
+  },
+  {
+    "_id": {
+      "$oid": "688335adc2dc1f72d29db54d"
+    },
+    "attempts": 0,
+    "createdAt": {
+      "$date": "2025-07-25T07:43:41.170Z"
+    },
+    "expiresAt": {
+      "$date": "2025-07-25T07:48:41.170Z"
+    },
+    "otp": "d39c88f0354eb91cea46d036fd2ac7g4",
+    "status": "PENDING",
+    "userId": "35a78332-d038-4bfa-8e85-2cba7f6b784c",
+    "uuid": "239b58f1-9865-4ef5-b45f-b7f574a0c99e"
+  },
+  {
+    "_id": {
+      "$oid": "688335adc2dc1f72d29db55d"
+    },
+    "attempts": 0,
+    "createdAt": {
+      "$date": "2025-07-25T07:43:41.170Z"
+    },
+    "expiresAt": {
+      "$date": "2025-07-25T07:48:41.170Z"
+    },
+    "otp": "d39c88f0354eb91cea46d036fd2ac6d6",
+    "status": "PENDING",
+    "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7321",
+    "uuid": "239b58f1-9865-4ef5-b45f-b7f574a0c456"
+  },
+  {
+    "_id": {
+      "$oid": "688335adc2dc1f72d29db56d"
+    },
+    "attempts": 0,
+    "createdAt": {
+      "$date": "2025-07-25T07:43:41.170Z"
+    },
+    "expiresAt": {
+      "$date": "2025-07-25T07:48:41.170Z"
+    },
+    "otp": "e10adc3949ba59abbe56e057f20f883e",
+    "status": "PENDING",
+    "userId": "35a78332-d038-4bfa-8e85-2cba7f6b4bfa",
+    "uuid": "239b58f1-9865-4ef5-b45f-b7f574a0a6f5"
+  },
+  {
+    "_id": {
+      "$oid": "688335adc2dc1f72d29db57d"
+    },
+    "attempts": 0,
+    "createdAt": {
+      "$date": "2025-07-25T07:43:41.170Z"
+    },
+    "expiresAt": {
+      "$date": "2025-07-25T07:48:41.170Z"
+    },
+    "otp": "e10adc3949ba59abbe56e057f20f883e",
+    "status": "PENDING",
+    "userId": "35a78332-d038-4bfa-8e85-2cba7f6c3fa",
+    "uuid": "239b58f1-9865-4ef5-b45f-b7f574a0b7v7"
+  }
+]
