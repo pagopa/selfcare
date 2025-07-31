@@ -49,9 +49,16 @@ public class CucumberSuite extends CucumberQuarkusTest {
 
 
         composeContainer = new ComposeContainer(new File("docker-compose.yml")).withLocalCompose(true).withPull(true)
+                .withExposedService("userms", 8080)
+                .waitingFor("userms", Wait.forHttp("/q/health/ready").forPort(8080).forStatusCode(200))
+                .waitingFor("institutionms", Wait.forListeningPort())
+                .waitingFor("externalms", Wait.forListeningPort())
+                .waitingFor("azurite", Wait.forListeningPort())
                 .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1))
                 .withStartupTimeout(Duration.ofMinutes(10));
+
         composeContainer.start();
+
         Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
 
         log.info("\nLANGUAGE: {}\nCOUNTRY: {}\nTIMEZONE: {}\n", System.getProperty("user.language"), System.getProperty("user.country"), System.getProperty("user.timezone"));
