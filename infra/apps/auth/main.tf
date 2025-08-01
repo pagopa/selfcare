@@ -30,7 +30,7 @@ module "container_app_auth_ms" {
   app_settings                   = var.app_settings
   secrets_names                  = var.secrets_names
   workload_profile_name          = var.workload_profile_name
-
+  user_assigned_identity_id      = data.azurerm_user_assigned_identity.cae_identity.principal_id
   probes = [
     {
       httpGet = {
@@ -68,4 +68,9 @@ module "container_app_auth_ms" {
   ]
 
   tags = var.tags
+}
+
+data "azurerm_user_assigned_identity" "cae_identity" {
+  name                = "${local.container_app_environment_name}-managed_identity"
+  resource_group_name = local.ca_resource_group_name
 }
