@@ -54,8 +54,7 @@ public class CucumberSuite extends CucumberQuarkusTest {
                 .waitingFor("institutionms", Wait.forListeningPort())
                 .waitingFor("externalms", Wait.forListeningPort())
                 .waitingFor("azurite", Wait.forListeningPort())
-                .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1))
-                .withStartupTimeout(Duration.ofMinutes(10));
+                .withStartupTimeout(Duration.ofMinutes(5));
 
         composeContainer.start();
 
