@@ -15,7 +15,7 @@ resource "azurerm_management_lock" "mongodb_selc_auth" {
 
 module "mongodb_collection_otp_flows" {
   count  = var.is_pnpg ? 0 : 1
-  source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//cosmosdb_mongodb_collection?ref=v7.39.0"
+  source = "github.com/pagopa/terraform-azurerm-v4.git//cosmosdb_mongodb_collection?ref=v6.6.0"
 
   name                = "otpFlows"
   resource_group_name = local.mongo_db.mongodb_rg_name

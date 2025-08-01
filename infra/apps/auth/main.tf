@@ -1,17 +1,22 @@
 terraform {
   required_version = ">= 1.6.0"
 
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "<= 4.27.0"
+    }
+  }
+
   backend "azurerm" {}
 }
 
 provider "azurerm" {
   features {}
-  skip_provider_registration = true
-
 }
 
 module "container_app_auth_ms" {
-  source = "github.com/pagopa/selfcare-commons//infra/terraform-modules/container_app_microservice?ref=main"
+  source = "github.com/pagopa/selfcare-commons//infra/terraform-modules/container_app_microservice?ref=update-container-app"
 
   is_pnpg = var.is_pnpg
 

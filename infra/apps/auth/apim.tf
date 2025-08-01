@@ -17,7 +17,7 @@ resource "azurerm_api_management_api_version_set" "apim_api_auth" {
 
 
 module "apim_api_auth_ms" {
-  source              = "github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v8.18.0"
+  source              = "github.com/pagopa/terraform-azurerm-v4.git//api_management_api?ref=v7.26.5"
   name                = local.api_name
   api_management_name = local.apim_name
   resource_group_name = local.apim_rg
