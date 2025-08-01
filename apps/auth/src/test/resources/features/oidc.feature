@@ -54,7 +54,7 @@ Feature: Oidc
       | iss              | SPID                |
 
   @RemoveOtpFlow
-  Scenario: Successful OIDC exchange with OTP feature flag set to "BETA", user in beta list, forced OTP
+  Scenario: Successful OIDC exchange with OTP feature flag set to "BETA", user in beta list, forced OTP and no previous OTP flow found
     Given User login with username "r.balboa" and password "test"
     And OTP feature flag is set to "BETA"
     And User in the beta user list with the following details:

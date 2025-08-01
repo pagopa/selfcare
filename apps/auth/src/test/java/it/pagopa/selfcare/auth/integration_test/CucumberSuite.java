@@ -50,10 +50,10 @@ public class CucumberSuite extends CucumberQuarkusTest {
 
         composeContainer = new ComposeContainer(new File("docker-compose.yml")).withLocalCompose(true).withPull(true)
                 .withExposedService("userms", 8080)
+                .waitingFor("mongodb", Wait.forListeningPort())
                 .waitingFor("userms", Wait.forHttp("/q/health/ready").forPort(8080).forStatusCode(200))
-                .waitingFor("institutionms", Wait.forListeningPort())
-                .waitingFor("externalms", Wait.forListeningPort())
-                .waitingFor("azurite", Wait.forListeningPort())
+                .waitingFor("institutionms", Wait.forLogMessage(".*Started SelfCareCoreApplication.*\\n", 1))
+                .waitingFor("externalms", Wait.forLogMessage(".*Started SelfCareExternalAPIApplication.*\\n", 1))
                 .withStartupTimeout(Duration.ofMinutes(5));
 
         composeContainer.start();
