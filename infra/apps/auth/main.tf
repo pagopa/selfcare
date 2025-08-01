@@ -30,7 +30,10 @@ module "container_app_auth_ms" {
   app_settings                   = var.app_settings
   secrets_names                  = var.secrets_names
   workload_profile_name          = var.workload_profile_name
-  user_assigned_identity_id      = data.azurerm_user_assigned_identity.cae_identity.principal_id
+
+  user_assigned_identity_id           = data.azurerm_user_assigned_identity.cae_identity.id
+  user_assigned_identity_principal_id = data.azurerm_user_assigned_identity.cae_identity.principal_id
+
   probes = [
     {
       httpGet = {
