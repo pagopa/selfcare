@@ -39,8 +39,10 @@ variable "container_app" {
 
     scale_rules = list(object({
       name = string
-      metadata = map(string)
-      type     = string
+      custom = object({
+        metadata = map(string)
+        type     = string
+      })
     }))
 
     cpu    = number

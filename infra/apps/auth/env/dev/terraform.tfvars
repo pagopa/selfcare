@@ -19,13 +19,15 @@ container_app = {
   max_replicas = 1
   scale_rules = [
     {
-      metadata = {
-        "desiredReplicas" = "1"
-        "start"           = "0 8 * * MON-FRI"
-        "end"             = "0 19 * * MON-FRI"
-        "timezone"        = "Europe/Rome"
+      custom = {
+          metadata = {
+            "desiredReplicas" = "1"
+            "start"           = "0 8 * * MON-FRI"
+            "end"             = "0 19 * * MON-FRI"
+            "timezone"        = "Europe/Rome"
+          }
+        type = "cron"
       }
-      type = "cron"
       name = "cron-scale-rule"
     }
   ]
