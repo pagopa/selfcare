@@ -100,6 +100,5 @@ secrets_names = {
   "INTERNAL-API-KEY"                      = "internal-api-key"
   "INTERNAL-MS-USER-API-KEY"              = "internal-ms-user-api-key"
   "FEATURE_FLAG_OTP_BETA_USERS"           = "feature-flag-otp-beta-users"
-  "FORMATION"                             = "formation"
 }
 
