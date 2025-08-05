@@ -13,7 +13,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.Scanner;
 
 @Slf4j
@@ -47,13 +46,9 @@ public class CucumberSuite extends CucumberQuarkusTest {
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = 8081;
 
-        composeContainer = new ComposeContainer(new File("docker-compose.yml")).withLocalCompose(true).withPull(true)
-                .withExposedService("userms", 8080)
-                .waitingFor("userms", Wait.forHttp("/q/health/ready").forPort(8080).forStatusCode(200))
-                .withStartupTimeout(Duration.ofMinutes(5));
-
+        composeContainer = new ComposeContainer(new File("docker-compose.yml")).withLocalCompose(true)
+                .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1));
         composeContainer.start();
-
         Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
 
         log.info("\nLANGUAGE: {}\nCOUNTRY: {}\nTIMEZONE: {}\n", System.getProperty("user.language"), System.getProperty("user.country"), System.getProperty("user.timezone"));
