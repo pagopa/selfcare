@@ -20,12 +20,12 @@ container_app = {
   scale_rules = [
     {
       custom = {
-        metadata = {
-          "desiredReplicas" = "1"
-          "start"           = "0 8 * * MON-FRI"
-          "end"             = "0 19 * * MON-FRI"
-          "timezone"        = "Europe/Rome"
-        }
+          metadata = {
+            "desiredReplicas" = "1"
+            "start"           = "0 8 * * MON-FRI"
+            "end"             = "0 19 * * MON-FRI"
+            "timezone"        = "Europe/Rome"
+          }
         type = "cron"
       }
       name = "cron-scale-rule"
