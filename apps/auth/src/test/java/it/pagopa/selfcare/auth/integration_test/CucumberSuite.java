@@ -47,6 +47,11 @@ public class CucumberSuite extends CucumberQuarkusTest {
         RestAssured.port = 8081;
 
         composeContainer = new ComposeContainer(new File("docker-compose.yml")).withLocalCompose(true)
+                .withExposedService("userms", 8080)
+                .waitingFor("mongodb", Wait.forListeningPort())
+                .waitingFor("userms", Wait.forHttp("/q/health/ready").forPort(8080).forStatusCode(200))
+                .waitingFor("institutionms", Wait.forLogMessage(".*Started SelfCareCoreApplication.*\\n", 1))
+                .waitingFor("externalms", Wait.forLogMessage(".*Started SelfCareExternalAPIApplication.*\\n", 1))
                 .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1));
         composeContainer.start();
         Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
