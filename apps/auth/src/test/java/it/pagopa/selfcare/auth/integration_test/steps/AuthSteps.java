@@ -70,7 +70,7 @@ public class AuthSteps {
     public void userIsInTheBetaUserList(Map<String, String> userDetails) {
         String fiscalCode = userDetails.get("fiscalCode");
         boolean forceOtp = Boolean.parseBoolean(userDetails.getOrDefault("forceOtp", "false"));
-        String forcedEmail = userDetails.getOrDefault("forcedEmail", null);
+        String forcedEmail = userDetails.get("forcedEmail");
 
         OtpBetaUser betaUser = OtpBetaUser.builder()
                 .fiscalCode(fiscalCode)
