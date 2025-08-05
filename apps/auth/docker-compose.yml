@@ -9,6 +9,12 @@ services:
       - "./src/test/resources/db:/docker-entrypoint-initdb.d"
     networks:
       - develop-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite
@@ -57,7 +63,18 @@ services:
     networks:
       - develop-network
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
+      externalms:
+        condition: service_healthy
+      institutionms:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/q/health/ready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   externalms:
     image: ghcr.io/pagopa/selfcare-external-api-backend:latest
@@ -68,8 +85,12 @@ services:
       - "./src/test/resources/externalenv"
     networks:
       - develop-network
-    depends_on:
-      - mongodb
+    healthcheck:
+      test: [ "CMD", "sh", "-c", "curl -s -o /dev/null -w '%{http_code}' http://localhost:8082 | grep -E '^(200|401|404)'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
 
   institutionms:
     image: ghcr.io/pagopa/selfcare-institution-ms:latest
@@ -80,8 +101,12 @@ services:
       - "./src/test/resources/institutionenv"
     networks:
       - develop-network
-    depends_on:
-      - mongodb
+    healthcheck:
+      test: [ "CMD", "sh", "-c", "curl -s -o /dev/null -w '%{http_code}' http://localhost:8083 | grep -E '^(200|401|404)'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
 
 networks:
   develop-network:
