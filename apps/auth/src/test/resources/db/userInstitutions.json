@@ -1,0 +1,437 @@
+[
+  {
+    "_id": {
+      "$oid": "6772b2beb957efbe104b7391"
+    },
+    "institutionDescription": "Comune di Castelbuono",
+    "institutionId": "c9a50656-f345-4c81-84be-5b2474470544",
+    "products": [
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-interop",
+        "productRole": "admin",
+        "role": "MANAGER",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      },
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-io",
+        "productRole": "admin",
+        "role": "DELEGATE",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      },
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-pn",
+        "productRole": "admin",
+        "role": "DELEGATE",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      },
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-pagopa",
+        "productRole": "admin",
+        "role": "DELEGATE",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      }
+    ],
+    "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+    "userMailUuid": "ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv"
+  },
+  {
+    "_id": {
+      "$oid": "6772b2ccb957efbe104b7393"
+    },
+    "institutionDescription": "Comune di Agrigento",
+    "institutionId": "467ac77d-7faa-47bf-a60e-38ea74bd5fd2",
+    "products": [
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-interop",
+        "productRole": "security",
+        "role": "OPERATOR",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      }
+    ],
+    "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+    "userMailUuid": "ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv"
+  },
+  {
+    "_id": {
+      "$oid": "6772b2d6b957efbe104b7395"
+    },
+    "institutionDescription": "Comune di Agrigento",
+    "institutionId": "467ac77d-7faa-47bf-a60e-38ea74bd5fd2",
+    "products": [
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-io",
+        "productRole": "admin",
+        "role": "DELEGATE",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      }
+    ],
+    "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
+    "userMailUuid": "ID_MAIL#9425e6ea-7d84-4c5e-9196-6f66b62800b2"
+  },
+  {
+    "_id": {
+      "$oid": "6772b2dfb957efbe104b7397"
+    },
+    "institutionDescription": "Comune di Castelbuono",
+    "institutionId": "c9a50656-f345-4c81-84be-5b2474470544",
+    "products": [
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-io",
+        "productRole": "admin",
+        "role": "OPERATOR",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      }
+    ],
+    "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
+    "userMailUuid": "ID_MAIL#9425e6ea-7d84-4c5e-9196-6f66b62800b2"
+  },
+  {
+    "_id": {
+      "$oid": "678004d29a9240780b3964c8"
+    },
+    "institutionDescription": "PT test",
+    "institutionId": "067327d3-bdd6-408d-8655-87e8f1960046",
+    "products": [
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-interop",
+        "productRole": "security",
+        "role": "OPERATOR",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      },
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-interop",
+        "productRole": "api",
+        "role": "OPERATOR",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      },
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-io",
+        "productRole": "admin",
+        "role": "DELEGATE",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      },
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-pn",
+        "productRole": "admin",
+        "role": "DELEGATE",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      },
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-pagopa",
+        "productRole": "admin",
+        "role": "DELEGATE",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      }
+    ],
+    "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+    "userMailUuid": "ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv"
+  },
+  {
+    "_id": {
+      "$oid": "6780e082987fa11bc66e0eaf"
+    },
+    "institutionDescription": "PT test",
+    "institutionId": "067327d3-bdd6-408d-8655-87e8f1960046",
+    "products": [
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-interop",
+        "productRole": "security",
+        "role": "OPERATOR",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      },
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-interop",
+        "productRole": "api",
+        "role": "OPERATOR",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      },
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-io",
+        "productRole": "admin",
+        "role": "DELEGATE",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      },
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-pn",
+        "productRole": "admin",
+        "role": "DELEGATE",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      },
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-pagopa",
+        "productRole": "admin",
+        "role": "DELEGATE",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      }
+    ],
+    "userId": "97a511a7-2acc-47b9-afed-2f3c65753ccc",
+    "userMailUuid": "ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv"
+  },
+  {
+    "_id": {
+      "$oid": "678517128591d3b756e49814"
+    },
+    "institutionDescription": "Comune di Castelbuono",
+    "institutionId": "c9a50656-f345-4c81-84be-5b2474470544",
+    "products": [
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-io",
+        "productRole": "operator",
+        "role": "OPERATOR",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      },
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228Z"
+        },
+        "env": "ROOT",
+        "productId": "prod-pagopa",
+        "productRole": "operator",
+        "role": "OPERATOR",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2025-01-13T14:11:57.454Z"
+        }
+      },
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-interop",
+        "productRole": "security",
+        "role": "OPERATOR",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      },
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-interop",
+        "productRole": "api",
+        "role": "OPERATOR",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      }
+    ],
+    "userId": "4a7be530-1c36-41f4-8967-c479fb2d7fa9",
+    "userMailUuid": "ID_CONTACTS#4a7be530-1c36-41f4-8967-c479fb2d7fa9"
+  },
+  {
+    "_id": {
+      "$oid": "5882e1dfe058efba207e6293"
+    },
+    "institutionDescription": "Comune di Caserta",
+    "institutionId": "2a4c94f1-5d11-41f1-89e9-9fef0de4fbfe",
+    "products": [
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-io",
+        "productRole": "operator",
+        "role": "OPERATOR",
+        "status": "SUSPENDED",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      }
+    ],
+    "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
+    "userMailUuid": "ID_MAIL#9425e6ea-7d84-4c5e-9196-6f66b62800b2"
+  },
+  {
+    "_id": {
+      "$oid": "65b1214f85b2a37412421ef6"
+    },
+    "institutionId": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
+    "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+    "products": [
+      {
+        "productId": "prod-io",
+        "relationshipId": "d9f8e7c6-1234-45a6-b789-0c1d2e3f4a5b",
+        "tokenId": "abc12345-6789-4def-b012-3456789abcd",
+        "status": "ACTIVE",
+        "productRole": "admin",
+        "role": "SUB_DELEGATE",
+        "env": "ROOT",
+        "createdAt": {
+          "$date": "2023-06-15T14:30:00.000Z"
+        },
+        "updatedAt": null
+      }
+    ],
+    "institutionDescription": "Regione Lazio",
+    "userMailUuid": "ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv"
+  },
+  {
+    "_id": {
+      "$oid": "4832e1efe058efba207e6288"
+    },
+    "institutionDescription": "Comune di Caserta",
+    "institutionId": "2a4c94f1-5d11-41f1-89e9-9fef0de4fbfe",
+    "products": [
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-io",
+        "productRole": "admin",
+        "role": "DELEGATE",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      },
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-interop",
+        "productRole": "admin",
+        "role": "DELEGATE",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      }
+    ],
+    "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+    "userMailUuid": "ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv"
+  }
+]
