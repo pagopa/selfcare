@@ -1,0 +1,8 @@
+* @pagopa/selfcare-admin @pagopa/engineering-team-devex
+
+/libs @pagopa/selfcare-admin @pagopa/selfcare-contributors @pagopa/engineering-team-devex
+/apps @pagopa/selfcare-admin @pagopa/selfcare-contributors @pagopa/engineering-team-devex
+/.opex @pagopa/selfcare-admin @pagopa/selfcare-contributors @pagopa/engineering-team-devex
+
+/.github @pagopa/selfcare-admin @pagopa/selfcare-contributors @pagopa/engineering-team-devex
+/infra @pagopa/selfcare-admin @pagopa/selfcare-contributors @pagopa/engineering-team-devex
