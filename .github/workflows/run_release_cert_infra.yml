@@ -39,3 +39,13 @@ jobs:
       environment: dev
       tf_environment: ${{ inputs.th_env }}
       dir: ./infra/cert
+
+  release_uat_prod:
+    uses: ./.github/workflows/call_release_infra.yml
+    name: 'Run Cert Infra Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == uat) || ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == prod) || startsWith(inputs.env, 'uat') || startsWith(inputs.env, 'prod') }}
+    secrets: inherit
+    with:
+      environment: ${{ inputs.env }}
+      tf_environment: ${{ inputs.th_env }}
+      dir: ./infra/cert
