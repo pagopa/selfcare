@@ -2129,6 +2129,7 @@ class UserServiceTest {
                 "Selc:ManageProductUsers",
                 "Selc:ListProductUsers",
                 "Selc:ManageProductGroups",
+                "Selc:ListProductGroups",
                 "Selc:CreateDelegation",
                 "Selc:ViewInstitutionData"));
         userInstitutionWithActions.setInstitutionRootName("institutionRootName");
@@ -2152,7 +2153,7 @@ class UserServiceTest {
                 "Selc:AccessProductBackoffice",
                 "Selc:ViewManagedInstitutions",
                 "Selc:ViewDelegations",
-                "Selc:ManageProductGroups",
+                "Selc:ListProductGroups",
                 "Selc:CreateDelegation",
                 "Selc:ViewInstitutionData",
                 "Selc:ViewContract"));

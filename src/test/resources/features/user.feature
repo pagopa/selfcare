@@ -4272,6 +4272,7 @@ Feature: User
       | Selc:ManageProductUsers           |
       | Selc:ListProductUsers             |
       | Selc:ManageProductGroups          |
+      | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:ViewContract                 |
@@ -4306,6 +4307,7 @@ Feature: User
       | Selc:ManageProductUsers           |
       | Selc:ListProductUsers             |
       | Selc:ManageProductGroups          |
+      | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
 
@@ -4339,6 +4341,7 @@ Feature: User
       | Selc:ManageProductUsers           |
       | Selc:ListProductUsers             |
       | Selc:ManageProductGroups          |
+      | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:UpdateInstitutionData        |
@@ -4362,7 +4365,7 @@ Feature: User
       | products[0].role                  | MANAGER                                     |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
-    And The response body contains the list "products[0].userProductActions" of size 13
+    And The response body contains the list "products[0].userProductActions" of size 14
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4374,6 +4377,7 @@ Feature: User
       | Selc:ManageProductUsers           |
       | Selc:ListProductUsers             |
       | Selc:ManageProductGroups          |
+      | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:ViewContract                 |
@@ -4397,7 +4401,7 @@ Feature: User
       | products[0].role                  | DELEGATE                                    |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
-    And The response body contains the list "products[0].userProductActions" of size 13
+    And The response body contains the list "products[0].userProductActions" of size 14
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4409,6 +4413,7 @@ Feature: User
       | Selc:ManageProductUsers           |
       | Selc:ListProductUsers             |
       | Selc:ManageProductGroups          |
+      | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:ViewContract                 |
@@ -4432,7 +4437,7 @@ Feature: User
       | products[0].role                  | SUB_DELEGATE                                |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
-    And The response body contains the list "products[0].userProductActions" of size 13
+    And The response body contains the list "products[0].userProductActions" of size 14
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4444,6 +4449,7 @@ Feature: User
       | Selc:ManageProductUsers           |
       | Selc:ListProductUsers             |
       | Selc:ManageProductGroups          |
+      | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:ViewContract                 |
@@ -4493,7 +4499,7 @@ Feature: User
       | products[0].role                  | MANAGER                                     |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
-    And The response body contains the list "products[0].userProductActions" of size 13
+    And The response body contains the list "products[0].userProductActions" of size 14
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4505,6 +4511,7 @@ Feature: User
       | Selc:ManageProductUsers           |
       | Selc:ListProductUsers             |
       | Selc:ManageProductGroups          |
+      | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:ViewContract                 |
@@ -4528,7 +4535,7 @@ Feature: User
       | products[0].role                  | DELEGATE                                    |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
-    And The response body contains the list "products[0].userProductActions" of size 13
+    And The response body contains the list "products[0].userProductActions" of size 14
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4540,6 +4547,7 @@ Feature: User
       | Selc:ManageProductUsers           |
       | Selc:ListProductUsers             |
       | Selc:ManageProductGroups          |
+      | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:ViewContract                 |
@@ -4563,7 +4571,7 @@ Feature: User
       | products[0].role                  | SUB_DELEGATE                                |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
-    And The response body contains the list "products[0].userProductActions" of size 13
+    And The response body contains the list "products[0].userProductActions" of size 14
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4575,6 +4583,7 @@ Feature: User
       | Selc:ManageProductUsers           |
       | Selc:ListProductUsers             |
       | Selc:ManageProductGroups          |
+      | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:ViewContract                 |
@@ -4661,6 +4670,7 @@ Feature: User
       | Selc:ManageProductUsers           |
       | Selc:ListProductUsers             |
       | Selc:ManageProductGroups          |
+      | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:ViewContract                 |
@@ -4696,6 +4706,7 @@ Feature: User
       | Selc:ManageProductUsers           |
       | Selc:ListProductUsers             |
       | Selc:ManageProductGroups          |
+      | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:ViewContract                 |
@@ -4730,6 +4741,7 @@ Feature: User
       | Selc:ViewDelegations              |
       | Selc:ListProductUsers             |
       | Selc:ManageProductGroups          |
+      | Selc:ListProductGroups            |
       | Selc:ViewInstitutionData          |
       | Selc:ViewContract                 |
 
@@ -4759,7 +4771,7 @@ Feature: User
       | Selc:AccessProductBackoffice      |
       | Selc:ViewManagedInstitutions      |
       | Selc:ViewDelegations              |
-      | Selc:ManageProductGroups          |
+      | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:ViewContract                 |
@@ -4794,6 +4806,7 @@ Feature: User
       | Selc:ViewDelegations              |
       | Selc:ListProductUsers             |
       | Selc:ManageProductGroups          |
+      | Selc:ListProductGroups            |
       | Selc:ViewInstitutionData          |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
@@ -4828,6 +4841,7 @@ Feature: User
       | Selc:ViewDelegations              |
       | Selc:ListProductUsers             |
       | Selc:ManageProductGroups          |
+      | Selc:ListProductGroups            |
       | Selc:ViewInstitutionData          |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
