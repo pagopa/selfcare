@@ -58,5 +58,14 @@ resource "null_resource" "upload_jwks" {
   }
 }
 
+module "mail_sso" {
+  source = "github.com/pagopa/terraform-azurerm-v4.git//jwt_keys?ref=add-private_key_pkcs8_to_jwt_keys"
 
-
+  jwt_name            = "mail-sso"
+  key_vault_id        = data.azurerm_key_vault.key_vault.id
+  cert_common_name    = "selfcare.pagopa.it"
+  cert_password       = ""
+  tags                = var.tags
+  early_renewal_hours = 0
+  cert_validity_hours = 43800 #5y
+}
