@@ -57,6 +57,3 @@ resource "null_resource" "upload_jwks" {
           EOT
   }
 }
-
-
-

@@ -1,6 +1,6 @@
-env_short = "d"
-suffix_increment = "-002"
-cae_name = "cae-002"
+env_short           = "d"
+suffix_increment    = "-002"
+cae_name            = "cae-002"
 dns_zone_prefix     = "dev.selfcare"
 api_dns_zone_prefix = "api.dev.selfcare"
 
@@ -20,12 +20,12 @@ container_app = {
   scale_rules = [
     {
       custom = {
-          metadata = {
-            "desiredReplicas" = "1"
-            "start"           = "0 8 * * MON-FRI"
-            "end"             = "0 19 * * MON-FRI"
-            "timezone"        = "Europe/Rome"
-          }
+        metadata = {
+          "desiredReplicas" = "1"
+          "start"           = "0 8 * * MON-FRI"
+          "end"             = "0 19 * * MON-FRI"
+          "timezone"        = "Europe/Rome"
+        }
         type = "cron"
       }
       name = "cron-scale-rule"
@@ -61,11 +61,11 @@ app_settings = [
     value = 3
   },
   {
-    name = "SESSION_TOKEN_DURATION_HOURS"
+    name  = "SESSION_TOKEN_DURATION_HOURS"
     value = 9
   },
   {
-    name = "SESSION_TOKEN_AUDIENCE"
+    name  = "SESSION_TOKEN_AUDIENCE"
     value = "api.dev.selfcare.pagopa.it"
   },
   {

@@ -1,6 +1,6 @@
-env_short        = "p"
-suffix_increment = "-002"
-cae_name         = "cae-002"
+env_short           = "p"
+suffix_increment    = "-002"
+cae_name            = "cae-002"
 dns_zone_prefix     = "selfcare"
 api_dns_zone_prefix = "api.selfcare"
 
@@ -61,11 +61,11 @@ app_settings = [
     value = 3
   },
   {
-    name = "SESSION_TOKEN_DURATION_HOURS"
+    name  = "SESSION_TOKEN_DURATION_HOURS"
     value = 9
   },
   {
-    name = "SESSION_TOKEN_AUDIENCE"
+    name  = "SESSION_TOKEN_AUDIENCE"
     value = "api.selfcare.pagopa.it"
   },
   {
