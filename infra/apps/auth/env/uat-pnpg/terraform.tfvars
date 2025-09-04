@@ -1,7 +1,7 @@
-env_short        = "u"
-is_pnpg          = true
-suffix_increment = "-001"
-cae_name         = "cae-001"
+env_short           = "u"
+is_pnpg             = true
+suffix_increment    = "-001"
+cae_name            = "cae-001"
 dns_zone_prefix     = "pnpg.uat.selfcare"
 api_dns_zone_prefix = "api-pnpg.uat.selfcare"
 
@@ -16,7 +16,7 @@ tags = {
 container_app = {
   min_replicas = 1
   max_replicas = 1
-  scale_rules  = [
+  scale_rules = [
     {
       custom = {
         metadata = {
@@ -30,8 +30,8 @@ container_app = {
       name = "cron-scale-rule"
     }
   ]
-  cpu          = 0.5
-  memory       = "1Gi"
+  cpu    = 0.5
+  memory = "1Gi"
 }
 
 app_settings = [
@@ -60,11 +60,11 @@ app_settings = [
     value = 3
   },
   {
-    name = "SESSION_TOKEN_DURATION_HOURS"
+    name  = "SESSION_TOKEN_DURATION_HOURS"
     value = 9
   },
   {
-    name = "SESSION_TOKEN_AUDIENCE"
+    name  = "SESSION_TOKEN_AUDIENCE"
     value = "api-pnpg.uat.selfcare.pagopa.it"
   },
   {

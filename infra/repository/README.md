@@ -17,7 +17,15 @@ Make sure your PAT has access to this repository. Then, follow these steps:
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.6.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | <= 3.112.0 |
+| <a name="requirement_github"></a> [github](#requirement\_github) | 5.45.0 |
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 3.112.0 |
+| <a name="provider_github"></a> [github](#provider\_github) | 5.45.0 |
 
 ## Modules
 
@@ -27,7 +35,11 @@ Make sure your PAT has access to this repository. Then, follow these steps:
 
 ## Resources
 
-No resources.
+| Name | Type |
+|------|------|
+| [github_repository.this](https://registry.terraform.io/providers/integrations/github/5.45.0/docs/resources/repository) | resource |
+| [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
+| [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
 
 ## Inputs
 

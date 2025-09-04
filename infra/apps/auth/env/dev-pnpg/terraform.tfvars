@@ -1,5 +1,5 @@
-env_short = "d"
-is_pnpg   = true
+env_short           = "d"
+is_pnpg             = true
 dns_zone_prefix     = "pnpg.dev.selfcare"
 api_dns_zone_prefix = "api-pnpg.dev.selfcare"
 
@@ -58,11 +58,11 @@ app_settings = [
     value = 3
   },
   {
-    name = "SESSION_TOKEN_DURATION_HOURS"
+    name  = "SESSION_TOKEN_DURATION_HOURS"
     value = 9
   },
   {
-    name = "SESSION_TOKEN_AUDIENCE"
+    name  = "SESSION_TOKEN_AUDIENCE"
     value = "api-pnpg.dev.selfcare.pagopa.it"
   },
   {

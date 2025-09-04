@@ -1,6 +1,6 @@
-env_short        = "u"
-suffix_increment = "-002"
-cae_name         = "cae-002"
+env_short           = "u"
+suffix_increment    = "-002"
+cae_name            = "cae-002"
 dns_zone_prefix     = "uat.selfcare"
 api_dns_zone_prefix = "api.uat.selfcare"
 
@@ -17,7 +17,7 @@ private_dns_name = "selc-u-auth-ms-ca.mangopond-2a5d4d65.westeurope.azurecontain
 container_app = {
   min_replicas = 1
   max_replicas = 1
-  scale_rules  = [
+  scale_rules = [
     {
       custom = {
         metadata = {
@@ -31,8 +31,8 @@ container_app = {
       name = "cron-scale-rule"
     }
   ]
-  cpu          = 0.5
-  memory       = "1Gi"
+  cpu    = 0.5
+  memory = "1Gi"
 }
 
 app_settings = [
@@ -61,11 +61,11 @@ app_settings = [
     value = 3
   },
   {
-    name = "SESSION_TOKEN_DURATION_HOURS"
+    name  = "SESSION_TOKEN_DURATION_HOURS"
     value = 9
   },
   {
-    name = "SESSION_TOKEN_AUDIENCE"
+    name  = "SESSION_TOKEN_AUDIENCE"
     value = "api.uat.selfcare.pagopa.it"
   },
   {
