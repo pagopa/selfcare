@@ -13,3 +13,5 @@ repos:
       - id: terraform_fmt
       - id: terraform_docs
 #      - id: terraform_tfsec
+#        args:
+#          - --hook-config=--retry-once-with-cleanup=true
