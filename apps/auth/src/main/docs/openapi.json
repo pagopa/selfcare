@@ -15,6 +15,8 @@
     "name" : "OIDC"
   }, {
     "name" : "OTP"
+  }, {
+    "name" : "SAML"
   } ],
   "paths" : {
     "/oidc/exchange" : {
@@ -239,6 +241,34 @@
                   "$ref" : "#/components/schemas/Problem"
                 }
               }
+            }
+          }
+        }
+      }
+    },
+    "/saml/acs" : {
+      "post" : {
+        "tags" : [ "SAML" ],
+        "operationId" : "handleSamlResponse",
+        "requestBody" : {
+          "content" : {
+            "application/x-www-form-urlencoded" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "SAMLResponse" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "text/plain" : { }
             }
           }
         }

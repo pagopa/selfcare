@@ -11,6 +11,7 @@ servers:
 tags:
 - name: OIDC
 - name: OTP
+- name: SAML
 paths:
   /oidc/exchange:
     post:
@@ -155,6 +156,24 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+  /saml/acs:
+    post:
+      tags:
+      - SAML
+      operationId: handleSamlResponse
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                SAMLResponse:
+                  type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain: {}
 components:
   schemas:
     OidcExchangeOtpResponse:
