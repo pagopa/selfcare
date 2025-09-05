@@ -454,6 +454,7 @@ public class UserServiceImpl implements UserService {
         Map<String, WorkContactResource> workContacts = new HashMap<>();
         workContacts.put(mailUuid, UserUtils.buildWorkContact(userDto.getUser().getInstitutionEmail()));
         return userRegistryService.saveUsingPATCH(userMapper.toSaveUserDto(userDto.getUser(), workContacts))
+            .onFailure(UserUtils::isConflictOnUserRegistry).retry().withBackOff(Duration.ofSeconds(2)).atMost(3)
             .onFailure().invoke(exception -> log.error("Error during create user on userRegistry: {} ", exception.getMessage(), exception))
             .onItem().invoke(userResource -> log.info("User created with id {}", userResource.getId()))
             .onItem().transform(userResource -> userResource.getId().toString())

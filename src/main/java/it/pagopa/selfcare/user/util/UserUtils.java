@@ -142,6 +142,10 @@ public class UserUtils {
         return fail instanceof WebApplicationException webApplicationException && webApplicationException.getResponse().getStatus() == HttpStatus.SC_NOT_FOUND;
     }
 
+    public static boolean isConflictOnUserRegistry(Throwable fail) {
+        return fail instanceof WebApplicationException webApplicationException && webApplicationException.getResponse().getStatus() == HttpStatus.SC_CONFLICT;
+    }
+
     public Optional<String> getMailUuidFromMail(Map<String, WorkContactResource> workContacts, String email) {
         if(Objects.isNull(workContacts) || workContacts.isEmpty()) return Optional.empty();
 
