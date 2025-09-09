@@ -446,4 +446,26 @@ public class SamlValidatorTest {
     // Then - should return false due to old timestamp
     assertFalse(result);
   }
+
+  @Test
+  public void testSamlValidation() {
+    System.out.println("=== TEST SAML VALIDATION ===");
+
+    try {
+      Map<String, Object> info = samlValidator.extractSamlInfo(VALID_SAML_XML);
+
+      System.out.println("Extracted information:");
+      info.forEach((key, value) ->
+        System.out.println("  " + key + ": " + value)
+      );
+
+      assertTrue(info.containsKey("name_id"), "Should contain name_id");
+      assertEquals("user@example.com", info.get("name_id"));
+
+    } catch (Exception e) {
+      System.out.println("✗ Error during validation: " + e.getMessage());
+      e.printStackTrace();
+    }
+  }
+
 }
