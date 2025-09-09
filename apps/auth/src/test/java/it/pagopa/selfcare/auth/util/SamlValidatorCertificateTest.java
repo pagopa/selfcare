@@ -2,12 +2,15 @@ package it.pagopa.selfcare.auth.util;
 
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.w3c.dom.Document;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
@@ -19,9 +22,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Date;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
 class SamlValidatorCertificateTest {
@@ -30,6 +31,9 @@ class SamlValidatorCertificateTest {
   SamlValidator samlValidator;
 
   private static final String FAKE_CERT = "-----BEGIN CERTIFICATE-----MIIDDzCCAfegAwIBAgIUTCG4Fbd1yUJgFMfL8ic1JIJji80wDQYJKoZIhvcNAQELBQAwFzEVMBMGA1UEAwwMbWlvc2l0by50ZXN0MB4XDTI1MDkwOTE1MjA1N1oXDTI2MDkwOTE1MjA1N1owFzEVMBMGA1UEAwwMbWlvc2l0by50ZXN0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmk4NOiqV11om20yNg/Tpx10FaNO9fGUDtM14V0gh7e9meSHh/nLVSAK/7uAPGvWUL3xZ++0LUFLsArFLSHBsfull63w95Uoq3PtABqUKSkI2gkbYclzFiIdrrH9rIoMYvYG5zIroKNSD2/iUDfE3Go78AWilfFqa/OvIZ3riNpTyqtAbFyqJ9tBlSgdSVV9LrqdpTRnk92bkaX0DVHwnXay3z0RkWjO8uOD/GGC3B8dDuPUS4wZTwgfS8cguz9SsgI0hMi2RXRmeTiSrAJFlx14PfGKnBsaVnM+JDdZH9KTuSJ7+8d8ld4yWz1q56UVdTw1DIV8OC91mEvhtuYJGvwIDAQABo1MwUTAdBgNVHQ4EFgQUfGEOxC2NY2ONlCj7K8vcmh/utGYwHwYDVR0jBBgwFoAUfGEOxC2NY2ONlCj7K8vcmh/utGYwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEANiCG8BvlOuX9cS3yY4DxvLVv0gzTzwAo157JFFE50+qZ5Hn2vQKNKQOlrSHe9+5Jr2K/sGswRapDVG0o+wV5LlFTcoe6k/DVR196XSzg4Y60KTDQLvs/0dfSZ0tYjn0Sni5TuQrGfJgnwgZ2XkWUHMXKg22Fd6ig/PiZE+fNbyisTByUJlcqjESPP1CkhWhhbsg8VSmv66lyeWNSY7dEJbceG/Zl8z+SmSU2IkYQ2eQu0eOc7MvaaPZOWdubeJefm75nx6jnnQZMWEpL5+wQaB2qKdejRibX0ps0E6lRBOSUqf8Ij3BLMRQ4rPYAvM8eGxbsPRrR5KawuhrPCcU82w==-----END CERTIFICATE-----";
+  private Method extractCertificateMethod;
+  private X509Certificate testCertificate;
+  private String testCertificateBase64;
 
   // Helper class to generate self-signed certificates for testing
   private static class CertificateTestUtils {
@@ -98,4 +102,90 @@ class SamlValidatorCertificateTest {
       "A valid certificate should not throw an exception.");
   }
 
+  @BeforeEach
+  void setUp() throws Exception {
+    // Make the private method accessible for testing
+    extractCertificateMethod = SamlValidator.class.getDeclaredMethod("extractCertificateFromSaml", Document.class, String.class);
+    extractCertificateMethod.setAccessible(true);
+
+    // Generate a valid certificate to use in tests
+    KeyPair keyPair = CertificateTestUtils.generateKeyPair();
+    Instant now = Instant.now();
+    Date startDate = Date.from(now.minus(1, ChronoUnit.DAYS));
+    Date endDate = Date.from(now.plus(1, ChronoUnit.DAYS));
+    testCertificate = CertificateTestUtils.generateCertificate(); //"CN=test.com", startDate, endDate, keyPair
+    testCertificateBase64 = Base64.getEncoder().encodeToString(testCertificate.getEncoded());
+  }
+
+  private Document createSamlDocumentWithCert(String certificateContent) throws Exception {
+    String xml = String.format("""
+      <saml2p:Response xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol">
+          <saml2:Assertion xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">
+              <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+                  <ds:KeyInfo>
+                      <ds:X509Data>
+                          <ds:X509Certificate>%s</ds:X509Certificate>
+                      </ds:X509Data>
+                  </ds:KeyInfo>
+              </ds:Signature>
+          </saml2:Assertion>
+      </saml2p:Response>
+      """, certificateContent);
+    // Use the public clean/parse methods from the class itself to get the Document
+    String cleanedXml = samlValidator.cleanXmlContent(xml);
+    Method parseMethod = SamlValidator.class.getDeclaredMethod("parseXmlDocument", String.class);
+    parseMethod.setAccessible(true);
+    return (Document) parseMethod.invoke(samlValidator, cleanedXml);
+  }
+
+  @Test
+  void extractCertificateFromSaml_Success() throws Exception {
+    // Arrange
+    Document doc = createSamlDocumentWithCert(testCertificateBase64);
+
+    // Act
+    X509Certificate extractedCert = (X509Certificate) extractCertificateMethod.invoke(samlValidator, doc, testCertificateBase64);
+
+    // Assert
+    assertNotNull(extractedCert, "The extracted certificate should not be null.");
+    assertEquals(testCertificate, extractedCert, "The extracted certificate should be identical to the original.");
+  }
+
+  @Test
+  void extractCertificateFromSaml_NoCertificateInXml_ShouldThrowException() throws Exception {
+    // Arrange
+    String xmlWithoutCert = """
+      <saml2p:Response xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol">
+          <saml2:Assertion xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">
+          </saml2:Assertion>
+      </saml2p:Response>
+      """;
+    Method parseMethod = SamlValidator.class.getDeclaredMethod("parseXmlDocument", String.class);
+    parseMethod.setAccessible(true);
+    Document doc = (Document) parseMethod.invoke(samlValidator, xmlWithoutCert);
+
+    // Act & Assert
+    Exception exception = assertThrows(Exception.class, () -> {
+      extractCertificateMethod.invoke(samlValidator, doc, "any-cert");
+    });
+
+    // The actual exception is SecurityException, wrapped in InvocationTargetException by reflection
+    assertEquals(SecurityException.class, exception.getCause().getClass());
+    assertEquals("No X.509 certificate found in the SAML response", exception.getCause().getMessage());
+  }
+
+  @Test
+  void extractCertificateFromSaml_CertificateMismatch_ShouldThrowException() throws Exception {
+    // Arrange
+    Document doc = createSamlDocumentWithCert(testCertificateBase64);
+    String wrongCertificate = "a-different-certificate-string";
+
+    // Act & Assert
+    Exception exception = assertThrows(Exception.class, () -> {
+      extractCertificateMethod.invoke(samlValidator, doc, wrongCertificate);
+    });
+
+    assertEquals(SecurityException.class, exception.getCause().getClass());
+    assertEquals("Incorrect certificate", exception.getCause().getMessage());
+  }
 }
