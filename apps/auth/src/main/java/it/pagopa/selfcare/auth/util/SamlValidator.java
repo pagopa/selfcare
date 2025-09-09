@@ -40,7 +40,7 @@ public class SamlValidator {
       Document doc = parseXmlDocument(cleanedXml);
       boolean isRecentEnough = isTimestampValid(doc, interval);
       if (!isRecentEnough) {
-        System.out.println("Il timestamp della risposta è troppo vecchio. Possibile attacco di tipo replay.");
+        log.info("Response timestamp is too old. Possible replay attack.");
         return false;
       }
       X509Certificate certificate = extractCertificateFromSaml(doc, fromBase64(idpCert));
@@ -50,13 +50,13 @@ public class SamlValidator {
       return validateSignature(doc, certificate.getPublicKey());
 
     } catch (Exception e) {
-      log.error("Errore nella validazione SAML", e);
+      log.error("EError during SAML validation", e);
       return false;
     }
   }
 
   /**
-   * Pulisce il contenuto XML da BOM, spazi bianchi e decodifica Base64 se necessario
+   * Cleans the XML content from BOM, whitespace, and decodes Base64 if necessary
    */
   public String cleanXmlContent(String xml) {
     if (xml == null || xml.isEmpty()) {
@@ -72,9 +72,9 @@ public class SamlValidator {
       try {
         byte[] decoded = Base64.getDecoder().decode(xml);
         xml = new String(decoded, StandardCharsets.UTF_8);
-        xml = xml.trim(); // Trim ancora dopo la decodifica
+        xml = xml.trim(); // Trim again after decoding
       } catch (IllegalArgumentException e) {
-        log.warn("Content non è Base64 valido, uso contenuto originale");
+        log.warn("Content is not valid Base64, using original content");
       }
     }
 
@@ -106,7 +106,7 @@ public class SamlValidator {
       "http://www.w3.org/2000/09/xmldsig#", "X509Certificate");
 
     if (certNodes.getLength() == 0) {
-      throw new SecurityException("Nessun certificato X.509 trovato nella risposta SAML");
+      throw new SecurityException("No X.509 certificate found in the SAML response");
     }
 
     Node certNode = certNodes.item(0);
@@ -115,7 +115,7 @@ public class SamlValidator {
     certContent = certContent.replaceAll("\\s", "");
 
     if (!certContent.equals(idpCert)) {
-      throw new SecurityException("Certificato non corretto");
+      throw new SecurityException("Incorrect certificate");
     }
 
     byte[] certBytes = Base64.getDecoder().decode(certContent);
@@ -128,18 +128,18 @@ public class SamlValidator {
   private void validateCertificate(X509Certificate certificate) throws Exception {
     try {
       certificate.checkValidity();
-      log.info("Certificato valido - valido fino al: {}", certificate.getNotAfter());
+      log.info("Certificate is valid - valid until: {}", certificate.getNotAfter());
     } catch (CertificateExpiredException e) {
-      throw new SecurityException("Certificato scaduto il: " + certificate.getNotAfter(), e);
+      throw new SecurityException("Certificate expired on: " + certificate.getNotAfter(), e);
     } catch (CertificateNotYetValidException e) {
-      throw new SecurityException("Certificato non ancora valido fino al: " + certificate.getNotBefore(), e);
+      throw new SecurityException("Certificate not yet valid until: " + certificate.getNotBefore(), e);
     }
   }
 
   private boolean validateSignature(Document doc, PublicKey publicKey) throws Exception {
     NodeList assertionNodeList = doc.getElementsByTagNameNS("urn:oasis:names:tc:SAML:2.0:assertion", "Assertion");
     if (assertionNodeList.getLength() == 0) {
-      log.error("Nessun elemento <saml2:Assertion> trovato nel documento.");
+      log.error("No <saml2:Assertion> element found in the document.");
       return false;
     }
     Element assertionElement = (Element) assertionNodeList.item(0);
@@ -148,7 +148,7 @@ public class SamlValidator {
     NodeList signatures = doc.getElementsByTagNameNS("http://www.w3.org/2000/09/xmldsig#", "Signature");
 
     if (signatures.getLength() == 0) {
-      log.error("Nessuna firma digitale trovata nel documento SAML");
+      log.error("No digital signature found in the SAML document");
       return false;
     }
 
@@ -161,9 +161,9 @@ public class SamlValidator {
     boolean isValid = signature.checkSignatureValue(publicKey);
 
     if (isValid) {
-      log.info("Firma digitale validata con successo");
+      log.info("Digital signature validated successfully");
     } else {
-      log.error("Firma digitale non valida");
+      log.error("Digital signature is not valid");
     }
 
     return isValid;
@@ -173,15 +173,15 @@ public class SamlValidator {
     return Uni.createFrom().item(() -> validateSamlResponse(samlXml, idpCert, interval))
       .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
       .onItem().invoke(result -> {
-        log.info("Validazione SAML completata con risultato: {}", result);
+        log.info("SAML validation completed with result: {}", result);
       })
       .onFailure().invoke(throwable -> {
-        log.error("Errore nella validazione SAML asincrona", throwable);
+        log.error("Error during SAML validation asincrona", throwable);
       });
   }
 
   /**
-   * Estrae informazioni utili dalla risposta SAML
+   * Extracts useful information from the SAML response
    */
   public Map<String, Object> extractSamlInfo(String samlXml) {
     Map<String, Object> info = new HashMap<>();
@@ -196,14 +196,14 @@ public class SamlValidator {
         info.put("name_id", nameIdNodes.item(0).getTextContent());
       }
 
-      // Estrai Issuer
+      // Extract Issuer
       NodeList issuerNodes = doc.getElementsByTagNameNS(
         "urn:oasis:names:tc:SAML:2.0:assertion", "Issuer");
       if (issuerNodes.getLength() > 0) {
         info.put("issuer", issuerNodes.item(0).getTextContent());
       }
 
-      // Estrai SessionIndex
+      // Extract SessionIndex
       NodeList authnNodes = doc.getElementsByTagNameNS(
         "urn:oasis:names:tc:SAML:2.0:assertion", "AuthnStatement");
       if (authnNodes.getLength() > 0) {
@@ -214,18 +214,17 @@ public class SamlValidator {
         }
       }
 
-//      // Informazioni sul certificato
 //      try {
 //        X509Certificate cert = extractCertificateFromSaml(doc, "");
 //        info.put("certificate_subject", cert.getSubjectDN().toString());
 //        info.put("certificate_issuer", cert.getIssuerDN().toString());
 //        info.put("certificate_valid_until", cert.getNotAfter());
 //      } catch (Exception e) {
-//        log.warn("Impossibile estrarre informazioni certificato", e);
+//        log.warn("Unable to extract certificate information", e);
 //      }
 
     } catch (Exception e) {
-      log.error("Errore nell'estrazione informazioni SAML", e);
+      log.error("Error during SAML information extraction", e);
       info.put("error", e.getMessage());
     }
 
@@ -246,11 +245,11 @@ public class SamlValidator {
   }
 
   /**
-   * Verifica che l'attributo IssueInstant della risposta SAML non sia più vecchio di un certo intervallo.
+   * Verifies that the IssueInstant attribute of the SAML response is not older than a certain interval.
    *
-   * @param doc La risposta SAML come stringa XML.
-   * @param maxSeconds La massima differenza in secondi consentita.
-   * @return true se il timestamp è valido, false altrimenti.
+   * @param doc SAML XML response.
+   * @param maxSeconds The maximum allowed difference in seconds.
+   * @return true if timestamp is valid, false otherwise.
    */
   public boolean isTimestampValid(Document doc, long maxSeconds) {
 
@@ -258,14 +257,14 @@ public class SamlValidator {
       "urn:oasis:names:tc:SAML:2.0:protocol", "Response");
 
     if (responseNodeList.getLength() == 0) {
-      log.error("Nessun elemento <saml2p:Response> trovato nel documento.");
+      log.error("No <saml2p:Response> element found in the document.");
       return false;
     }
     Element responseElement = (Element) responseNodeList.item(0);
 
     String issueInstantString = responseElement.getAttribute("IssueInstant");
     if (issueInstantString.isBlank()) {
-      log.error("Attributo 'IssueInstant' non trovato o vuoto nella risposta SAML.");
+      log.error("'IssueInstant' attribute not found or empty in the SAML response.");
       return false;
     }
 
@@ -274,7 +273,7 @@ public class SamlValidator {
 
     Duration timeDifference = Duration.between(issueInstant, now);
 
-    log.info("Timestamp della risposta: {}. Ora corrente: {}. Differenza: {} secondi.",
+    log.info("Response timestamp: {}. Current time: {}. Difference: {} seconds.",
       issueInstant, now, timeDifference.toSeconds());
 
     return Math.abs(timeDifference.toSeconds()) <= maxSeconds;
