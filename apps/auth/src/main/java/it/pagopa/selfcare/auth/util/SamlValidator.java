@@ -125,7 +125,7 @@ public class SamlValidator {
     return (X509Certificate) factory.generateCertificate(bis);
   }
 
-  private void validateCertificate(X509Certificate certificate) throws Exception {
+  public void validateCertificate(X509Certificate certificate) throws Exception {
     try {
       certificate.checkValidity();
       log.info("Certificate is valid - valid until: {}", certificate.getNotAfter());

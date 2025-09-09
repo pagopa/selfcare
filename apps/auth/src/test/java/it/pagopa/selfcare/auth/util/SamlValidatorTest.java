@@ -157,7 +157,7 @@ public class SamlValidatorTest {
   @Test
   void validateSamlResponse_InvalidInput_ShouldReturnFalse() {
     // When
-    boolean result = samlValidator.validateSamlResponse(INVALID_XML, DUMMY_CERT_BASE64, 300);
+    boolean result = samlValidator.validateSamlResponse(INVALID_XML, DUMMY_CERT_BASE64, FAKE_INTERVAL);
 
     // Then
     assertFalse(result);
@@ -166,7 +166,7 @@ public class SamlValidatorTest {
   @Test
   void validateSamlResponse_NullInput_ShouldReturnFalse() {
     // When
-    boolean result = samlValidator.validateSamlResponse(null, DUMMY_CERT_BASE64, 300);
+    boolean result = samlValidator.validateSamlResponse(null, DUMMY_CERT_BASE64, FAKE_INTERVAL);
 
     // Then
     assertFalse(result);
@@ -175,7 +175,7 @@ public class SamlValidatorTest {
   @Test
   void validateSamlResponse_EmptyInput_ShouldReturnFalse() {
     // When
-    boolean result = samlValidator.validateSamlResponse("", DUMMY_CERT_BASE64, 300);
+    boolean result = samlValidator.validateSamlResponse("", DUMMY_CERT_BASE64, FAKE_INTERVAL);
 
     // Then
     assertFalse(result);
@@ -232,7 +232,7 @@ public class SamlValidatorTest {
     String validBase64 = Base64.getEncoder().encodeToString(VALID_SAML_XML.getBytes(StandardCharsets.UTF_8));
 
     // When
-    Uni<Boolean> result = samlValidator.validateSamlResponseAsync(validBase64, DUMMY_CERT_BASE64, 300);
+    Uni<Boolean> result = samlValidator.validateSamlResponseAsync(validBase64, DUMMY_CERT_BASE64, FAKE_INTERVAL);
 
     // Then
     assertNotNull(result);
@@ -251,7 +251,7 @@ public class SamlValidatorTest {
   @Test
   void validateSamlResponseAsync_InvalidInput_ShouldCompleteWithFalse() {
     // When
-    Uni<Boolean> result = samlValidator.validateSamlResponseAsync(INVALID_XML, DUMMY_CERT_BASE64, 300);
+    Uni<Boolean> result = samlValidator.validateSamlResponseAsync(INVALID_XML, DUMMY_CERT_BASE64, FAKE_INTERVAL);
 
     // Then
     UniAssertSubscriber<Boolean> subscriber = result
@@ -326,7 +326,7 @@ public class SamlValidatorTest {
     Document doc = builder.parse(new ByteArrayInputStream(samlWithCurrentTime.getBytes(StandardCharsets.UTF_8)));
 
     // When
-    boolean result = samlValidator.isTimestampValid(doc, 300); // 5 minutes tolerance
+    boolean result = samlValidator.isTimestampValid(doc, FAKE_INTERVAL); // 5 minutes tolerance
 
     // Then
     assertTrue(result);
@@ -344,7 +344,7 @@ public class SamlValidatorTest {
     Document doc = builder.parse(new ByteArrayInputStream(samlWithOldTime.getBytes(StandardCharsets.UTF_8)));
 
     // When
-    boolean result = samlValidator.isTimestampValid(doc, 300); // 5 minutes tolerance
+    boolean result = samlValidator.isTimestampValid(doc, FAKE_INTERVAL); // 5 minutes tolerance
 
     // Then
     assertFalse(result);
@@ -362,7 +362,7 @@ public class SamlValidatorTest {
     Document doc = builder.parse(new ByteArrayInputStream(samlWithFutureTime.getBytes(StandardCharsets.UTF_8)));
 
     // When
-    boolean result = samlValidator.isTimestampValid(doc, 300); // 5 minutes tolerance
+    boolean result = samlValidator.isTimestampValid(doc, FAKE_INTERVAL); // 5 minutes tolerance
 
     // Then
     assertFalse(result);
@@ -384,7 +384,7 @@ public class SamlValidatorTest {
     Document doc = builder.parse(new ByteArrayInputStream(xmlWithoutResponse.getBytes(StandardCharsets.UTF_8)));
 
     // When
-    boolean result = samlValidator.isTimestampValid(doc, 300);
+    boolean result = samlValidator.isTimestampValid(doc, FAKE_INTERVAL);
 
     // Then
     assertFalse(result);
@@ -408,7 +408,7 @@ public class SamlValidatorTest {
     Document doc = builder.parse(new ByteArrayInputStream(samlWithoutIssueInstant.getBytes(StandardCharsets.UTF_8)));
 
     // When
-    boolean result = samlValidator.isTimestampValid(doc, 300);
+    boolean result = samlValidator.isTimestampValid(doc, FAKE_INTERVAL);
 
     // Then
     assertFalse(result);
@@ -426,7 +426,7 @@ public class SamlValidatorTest {
     Document doc = builder.parse(new ByteArrayInputStream(samlWithRecentTime.getBytes(StandardCharsets.UTF_8)));
 
     // When
-    boolean result = samlValidator.isTimestampValid(doc, 300); // 5 minutes tolerance
+    boolean result = samlValidator.isTimestampValid(doc, FAKE_INTERVAL); // 5 minutes tolerance
 
     // Then
     assertTrue(result);
@@ -441,7 +441,7 @@ public class SamlValidatorTest {
     String base64InvalidTime = Base64.getEncoder().encodeToString(VALID_SAML_XML.getBytes(StandardCharsets.UTF_8));
 
     // When - this will fail on timestamp validation since the XML has old timestamp
-    boolean result = samlValidator.validateSamlResponse(base64InvalidTime, DUMMY_CERT_BASE64, 300);
+    boolean result = samlValidator.validateSamlResponse(base64InvalidTime, DUMMY_CERT_BASE64, FAKE_INTERVAL);
 
     // Then - should return false due to old timestamp
     assertFalse(result);
