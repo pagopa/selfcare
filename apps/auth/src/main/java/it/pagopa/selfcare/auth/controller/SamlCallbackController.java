@@ -24,7 +24,7 @@ public class SamlCallbackController {
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.TEXT_PLAIN)
   public Uni<Response> handleSamlResponse(@Context ContainerRequestContext requestContext, @FormParam("SAMLResponse") String samlResponse) {
-    log.info("{}", samlResponse);
+    log.info("{}", samlResponse == null ? null : samlResponse.replaceAll("[\\r\\n]", ""));
     MediaType contentType = requestContext.getMediaType();
     if (contentType == null || !MediaType.APPLICATION_FORM_URLENCODED_TYPE.isCompatible(contentType)) {
       return Uni.createFrom().item(Response.status(Response.Status.UNSUPPORTED_MEDIA_TYPE)
