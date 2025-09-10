@@ -136,7 +136,7 @@ public class SamlValidator {
     }
   }
 
-  private boolean validateSignature(Document doc, PublicKey publicKey) throws Exception {
+  boolean validateSignature(Document doc, PublicKey publicKey) throws Exception {
     NodeList assertionNodeList = doc.getElementsByTagNameNS("urn:oasis:names:tc:SAML:2.0:assertion", "Assertion");
     if (assertionNodeList.getLength() == 0) {
       log.error("No <saml2:Assertion> element found in the document.");

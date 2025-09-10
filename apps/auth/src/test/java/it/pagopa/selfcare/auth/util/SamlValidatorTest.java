@@ -8,11 +8,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyPairGenerator;
+import java.security.PublicKey;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
@@ -77,10 +81,20 @@ public class SamlValidatorTest {
   // Sample certificate for testing (dummy)
   private static final String DUMMY_CERT_BASE64 = "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0NBUUE7Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K";
 
+  private Method validateSignatureMethod;
+
   @BeforeEach
-  void setUp() {
+  void setUp() throws NoSuchMethodException {
     samlValidator = new SamlValidator();
     samlValidatorSpy = Mockito.spy(samlValidator);
+
+    validateSignatureMethod = SamlValidator.class.getDeclaredMethod("validateSignature", Document.class, PublicKey.class);
+    validateSignatureMethod.setAccessible(true);
+
+    // Initialize the XML Security library
+    if (!org.apache.xml.security.Init.isInitialized()) {
+      org.apache.xml.security.Init.init();
+    }
   }
 
   @Test
@@ -468,4 +482,18 @@ public class SamlValidatorTest {
     }
   }
 
+  @Test
+  void validateSignature_WithoutAssertion_ShouldReturnFalse() throws Exception {
+    // Arrange
+    Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+    Element root = doc.createElement("Root");
+    doc.appendChild(root);
+    PublicKey dummyKey = KeyPairGenerator.getInstance("RSA").generateKeyPair().getPublic();
+
+    // Act
+    boolean isValid = (boolean) validateSignatureMethod.invoke(samlValidator, doc, dummyKey);
+
+    // Assert
+    assertFalse(isValid, "Should return false if no Assertion element is present.");
+  }
 }
