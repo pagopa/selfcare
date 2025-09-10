@@ -496,4 +496,63 @@ public class SamlValidatorTest {
     // Assert
     assertFalse(isValid, "Should return false if no Assertion element is present.");
   }
+
+  @Test
+  void testFromBase64_ValidCertWithoutHeaders() throws Exception {
+    // Certificato di esempio Base64 (codifica di "TEST_CERT_CONTENT")
+    String rawCertContent = "TEST_CERT_CONTENT";
+    String base64Cert = Base64.getEncoder().encodeToString(rawCertContent.getBytes());
+
+    String result = samlValidator.fromBase64(base64Cert);
+
+    assertNotNull(result);
+    assertEquals(rawCertContent, result);
+  }
+
+  @Test
+  void testFromBase64_NullString_ShouldThrowException() {
+    String nullCert = null;
+
+    // Ci aspettiamo che lanci NullPointerException, perché Base64.getDecoder().decode(null) lo fa
+    assertThrows(NullPointerException.class, () -> {
+      samlValidator.fromBase64(nullCert);
+    });
+  }
+
+  @Test
+  void testFromBase64_InvalidBase64Character_ShouldThrowException() {
+    // Carattere '$' non è valido per Base64 standard
+    String invalidBase64 = "someInvalid$Base64String";
+
+    assertThrows(IllegalArgumentException.class, () -> {
+      samlValidator.fromBase64(invalidBase64);
+    });
+  }
+
+  @Test
+  void testFromBase64_Base64WithExtraSpacesBeforeDecoding_ShouldThrowException() throws Exception {
+    String rawCertContent = "TEST";
+    String base64Cert = Base64.getEncoder().encodeToString(rawCertContent.getBytes());
+
+    // Aggiungiamo spazi interni che il decoder non dovrebbe gestire se non puliti
+    String base64WithInternalSpaces = base64Cert.substring(0, 2) + " " + base64Cert.substring(2);
+
+    // Il tuo metodo non pulisce gli spazi prima della decodifica
+    assertThrows(IllegalArgumentException.class, () -> {
+      samlValidator.fromBase64(base64WithInternalSpaces);
+    });
+  }
+
+  @Test
+  void testFromBase64_Base64WithTrailingWhitespace_ShouldThrowException() throws Exception {
+    String rawCertContent = "TEST";
+    String base64Cert = Base64.getEncoder().encodeToString(rawCertContent.getBytes());
+
+    // Aggiungiamo spazi alla fine della stringa Base64
+    String base64WithTrailingSpaces = base64Cert + "   ";
+
+    assertThrows(IllegalArgumentException.class, () -> {
+      samlValidator.fromBase64(base64WithTrailingSpaces);
+    });
+  }
 }

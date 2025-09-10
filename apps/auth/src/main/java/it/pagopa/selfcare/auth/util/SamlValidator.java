@@ -231,7 +231,7 @@ public class SamlValidator {
     return info;
   }
 
-  private String fromBase64(String publicCert) throws Exception {
+  public String fromBase64(String publicCert) {
     byte[] keyBytes = Base64.getDecoder().decode(publicCert);
     String publicCertDecoded = new String(keyBytes, StandardCharsets.UTF_8);
 

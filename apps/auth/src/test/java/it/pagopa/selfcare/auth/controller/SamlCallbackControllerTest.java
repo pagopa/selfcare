@@ -3,9 +3,12 @@ package it.pagopa.selfcare.auth.controller;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.response.Response;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
 import io.restassured.RestAssured;
 import it.pagopa.selfcare.auth.service.SAMLService;
-import jakarta.ws.rs.core.MediaType;
+import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -16,8 +19,9 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @QuarkusTest
 @TestHTTPEndpoint(SamlCallbackController.class)
@@ -105,7 +109,7 @@ class SamlCallbackControllerTest {
       .body(equalTo("SAMLResponse is required."));
 
     // Verify that the service is not called when SAMLResponse is null
-    Mockito.verify(samlService, Mockito.never()).validate(anyString());
+    verify(samlService, never()).validate(anyString());
   }
 
   @Test
@@ -121,7 +125,7 @@ class SamlCallbackControllerTest {
       .body(equalTo("SAMLResponse is required."));
 
     // Verify that the service is not called when SAMLResponse is empty
-    Mockito.verify(samlService, Mockito.never()).validate(anyString());
+    verify(samlService, never()).validate(anyString());
   }
 
   @Test
