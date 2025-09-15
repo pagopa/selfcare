@@ -205,6 +205,11 @@
             <artifactId>quarkus-smallrye-jwt-build</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.santuario</groupId>
+            <artifactId>xmlsec</artifactId>
+            <version>4.0.4</version>
+        </dependency>
+        <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>cucumber-sdk</artifactId>
             <version>${cucumber-sdk.version}</version>
@@ -271,7 +276,8 @@
                         </goals>
                         <configuration>
                             <systemPropertyVariables>
-                                <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
+                                <native.image.path>${project.build.directory}/${project.build.finalName}-runner
+                                </native.image.path>
                                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                                 <maven.home>${maven.home}</maven.home>
                             </systemPropertyVariables>
