@@ -184,16 +184,16 @@ class SamlValidatorCertificateTest {
   }
 
 
-//  @Test
-//  void validateCertificate_ExpiredCertificate_ShouldThrowException() throws Exception {
-//    X509Certificate expiredCertificate = CertificateTestUtils.generateCertificate(CERT_EXPIRED);
-//
-//    // Act & Assert
-//    SecurityException exception = assertThrows(SecurityException.class,
-//      () -> samlValidator.validateCertificate(expiredCertificate),
-//      "An expired certificate should throw a SecurityException.");
-//
-//    assertTrue(exception.getMessage().startsWith("Certificate expired on:"),
-//      "The exception message should indicate that the certificate is expired.");
-//  }
+  @Test
+  void validateCertificate_ExpiredCertificate_ShouldThrowException() throws Exception {
+    X509Certificate expiredCertificate = CertificateTestUtils.generateCertificate(CERT_EXPIRED);
+
+    // Act & Assert
+    SecurityException exception = assertThrows(SecurityException.class,
+      () -> samlValidator.validateCertificate(expiredCertificate),
+      "An expired certificate should throw a SecurityException.");
+
+    assertTrue(exception.getMessage().startsWith("Certificate expired on:"),
+      "The exception message should indicate that the certificate is expired.");
+  }
 }
