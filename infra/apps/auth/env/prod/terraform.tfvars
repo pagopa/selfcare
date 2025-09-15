@@ -87,6 +87,14 @@ app_settings = [
   {
     name  = "INTERNAL_MS_USER_API_URL"
     value = "https://api.selfcare.pagopa.it/internal/user"
+  },
+  {
+    name  = "SAML_SP_ACS_URL"
+    value = "https://selfcare.pagopa.it/saml/acs"
+  },
+  {
+    name  = "SAML_SP_ENTITY_ID"
+    value = "https://selfcare.pagopa.it"
   }
 ]
 
@@ -100,4 +108,7 @@ secrets_names = {
   "INTERNAL-API-KEY"                      = "internal-api-key"
   "INTERNAL-MS-USER-API-KEY"              = "internal-ms-user-api-key"
   "FEATURE_FLAG_OTP_BETA_USERS"           = "feature-flag-otp-beta-users"
+  "SAML_IDP_ENTITY_ID"                    = "saml-idp-entity-id"
+  "SAML_IDP_METADATA"                     = "saml-idp-metadata"
+  "SAML_IDP_CERT"                         = "saml-idp-cert"
 }
