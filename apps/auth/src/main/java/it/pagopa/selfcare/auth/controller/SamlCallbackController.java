@@ -11,6 +11,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
 @Tag(name = "SAML")
 @Path("/saml")
 @RequiredArgsConstructor
@@ -43,7 +46,9 @@ public class SamlCallbackController {
   }
 
   Response createResponse(String message) {
-    String responseMessage = String.format("samlResponse: %s", message);
+    byte[] response = Base64.getDecoder().decode(message.getBytes(StandardCharsets.UTF_8));
+    String responseMessage = String.format("samlResponse: %s", new String(response));
+
     return Response.ok(responseMessage).build();
   }
 
