@@ -31,7 +31,7 @@ Feature: Create User Group
     And [CREATE] the response should contain an error message "A group with the same name already exists in ACTIVE or SUSPENDED state"
 
   # Scenario negativo: Dettagli del gruppo mancanti (name non fornito)
-  Scenario: Attempt to create a user group with missing required fields
+  Scenario: Attempt to create a user group with missing required fields (name)
     Given [CREATE] user login with username "j.doe" and password "test"
     And the following user group details:
       | description | productId  | institutionId | status | members                                                                   |
@@ -41,7 +41,7 @@ Feature: Create User Group
     And [CREATE] the response should contain an error message "createUserGroupDto.name,must not be blank"
 
   # Scenario negativo: Dettagli del gruppo mancanti (institutionId non fornito)
-  Scenario: Attempt to create a user group with missing required fields
+  Scenario: Attempt to create a user group with missing required fields (institutionId)
     Given [CREATE] user login with username "j.doe" and password "test"
     And the following user group details:
       | name       | description | productId  | status | members                                                                   |
@@ -51,7 +51,7 @@ Feature: Create User Group
     And [CREATE] the response should contain an error message "createUserGroupDto.institutionId,must not be blank"
 
   # Scenario negativo: Dettagli del gruppo mancanti (productId non fornito)
-  Scenario: Attempt to create a user group with missing required fields
+  Scenario: Attempt to create a user group with missing required fields (productId)
     Given [CREATE] user login with username "j.doe" and password "test"
     And the following user group details:
       | name       | description | institutionId | status | members                                                                   |
@@ -61,7 +61,7 @@ Feature: Create User Group
     And [CREATE] the response should contain an error message "createUserGroupDto.productId,must not be blank"
 
   # Scenario negativo: Dettagli del gruppo mancanti (description non fornito)
-  Scenario: Attempt to create a user group with missing required fields
+  Scenario: Attempt to create a user group with missing required fields (description)
     Given [CREATE] user login with username "j.doe" and password "test"
     And the following user group details:
       | name       | productId  | institutionId | status | members                                                                   |
@@ -71,7 +71,7 @@ Feature: Create User Group
     And [CREATE] the response should contain an error message "createUserGroupDto.description,must not be blank"
 
   # Scenario negativo: Dettagli del gruppo mancanti (status non fornito)
-  Scenario: Attempt to create a user group with missing required fields
+  Scenario: Attempt to create a user group with missing required fields (status)
     Given [CREATE] user login with username "j.doe" and password "test"
     And the following user group details:
       | name       | description | productId  | institutionId | members                                                                   |
@@ -81,7 +81,7 @@ Feature: Create User Group
     And [CREATE] the response should contain an error message "createUserGroupDto.status,must not be null"
 
   # Scenario negativo: Dettagli del gruppo mancanti (members vuoto)
-  Scenario: Attempt to create a user group with missing required fields
+  Scenario: Attempt to create a user group with missing required fields (members)
     Given [CREATE] user login with username "j.doe" and password "test"
     And the following user group details:
       | name       | description | productId  | institutionId | status | members |

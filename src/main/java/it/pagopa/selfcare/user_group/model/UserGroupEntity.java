@@ -20,6 +20,7 @@ public class UserGroupEntity implements UserGroupOperations {
         this();
         id = userGroup.getId();
         institutionId = userGroup.getInstitutionId();
+        parentInstitutionId = userGroup.getParentInstitutionId();
         productId = userGroup.getProductId();
         name = userGroup.getName();
         description = userGroup.getDescription();
@@ -35,6 +36,8 @@ public class UserGroupEntity implements UserGroupOperations {
     private String id;
     @FieldNameConstants.Include
     private String institutionId;
+    @FieldNameConstants.Include
+    private String parentInstitutionId;
     @FieldNameConstants.Include
     private String productId;
     private String name;

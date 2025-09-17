@@ -16,6 +16,10 @@ public interface UserGroupOperations {
 
     void setInstitutionId(String institutionId);
 
+    String getParentInstitutionId();
+
+    void setParentInstitutionId(String parentInstitutionId);
+
     String getProductId();
 
     void setProductId(String productId);

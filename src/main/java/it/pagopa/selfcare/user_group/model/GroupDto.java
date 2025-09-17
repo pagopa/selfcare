@@ -10,6 +10,7 @@ import java.util.Set;
 public class GroupDto implements UserGroupOperations {
     private String id;
     private String institutionId;
+    private String parentInstitutionId;
     private String productId;
     private String name;
     private String description;
