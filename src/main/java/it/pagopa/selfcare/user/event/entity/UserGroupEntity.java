@@ -19,6 +19,7 @@ public class UserGroupEntity extends ReactivePanacheMongoEntity {
     private ObjectId id;
     private String institutionId;
     private String productId;
+    private String parentInstitutionId;
     private String name;
     private String description;
     private String status;
