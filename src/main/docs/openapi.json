@@ -86,7 +86,7 @@
         }, {
           "name" : "userId",
           "in" : "query",
-          "description" : "Member's unique identifier",
+          "description" : "Member's unique identifier (userId)",
           "required" : false,
           "style" : "form",
           "schema" : {
@@ -234,14 +234,14 @@
     },
     "/v1/user-groups/members/{memberId}" : {
       "delete" : {
-        "tags" : [ "UserGroup" ],
+        "tags" : [ "UserGroup", "support" ],
         "summary" : "deleteMemberFromUserGroups",
-        "description" : "Service to delete a member from a specific UserGroup entity",
+        "description" : "Service to delete a member from every group of a specific product of an institution",
         "operationId" : "deleteMemberFromUserGroupsUsingDELETE",
         "parameters" : [ {
           "name" : "memberId",
           "in" : "path",
-          "description" : "Member's unique identifier",
+          "description" : "Member's unique identifier (userId)",
           "required" : true,
           "style" : "simple",
           "schema" : {
@@ -251,7 +251,7 @@
         }, {
           "name" : "institutionId",
           "in" : "query",
-          "description" : "institutionId",
+          "description" : "Users group's institutionId",
           "required" : true,
           "style" : "form",
           "schema" : {
@@ -260,7 +260,7 @@
         }, {
           "name" : "productId",
           "in" : "query",
-          "description" : "productId",
+          "description" : "Users group's productId",
           "required" : true,
           "style" : "form",
           "schema" : {
@@ -588,7 +588,7 @@
         }, {
           "name" : "memberId",
           "in" : "path",
-          "description" : "Member's unique identifier",
+          "description" : "Member's unique identifier (userId)",
           "required" : true,
           "style" : "simple",
           "schema" : {
@@ -636,7 +636,7 @@
         } ]
       },
       "delete" : {
-        "tags" : [ "UserGroup" ],
+        "tags" : [ "UserGroup", "support" ],
         "summary" : "deleteMemberFromUserGroup",
         "description" : "Service to delete a member from a specific UserGroup entity",
         "operationId" : "deleteMemberFromUserGroupUsingDELETE",
@@ -652,7 +652,7 @@
         }, {
           "name" : "memberId",
           "in" : "path",
-          "description" : "Member's unique identifier",
+          "description" : "Member's unique identifier (userId)",
           "required" : true,
           "style" : "simple",
           "schema" : {

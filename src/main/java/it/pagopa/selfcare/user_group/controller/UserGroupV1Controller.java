@@ -197,26 +197,28 @@ public class UserGroupV1Controller {
     @DeleteMapping(value = "/{id}/members/{memberId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation(value = "", notes = "${swagger.user-group.groups.api.deleteMember}")
+    @Tag(name = "UserGroup")
+    @Tag(name = "support")
     public void deleteMemberFromUserGroup(@ApiParam("${swagger.user-group.model.id}")
-                                          @PathVariable("id")
-                                                  String userGroupId,
+                                          @PathVariable("id") String userGroupId,
                                           @ApiParam("${swagger.user-group.model.memberId}")
-                                          @PathVariable("memberId")
-                                                  UUID memberId) {
+                                          @PathVariable("memberId") UUID memberId) {
         log.trace("deleteMemberFromUserGroup start");
         log.debug("deleteMemberFromUserGroup userGroupId = {}, memberId = {}", Encode.forJava(userGroupId), memberId);
         groupService.deleteMember(userGroupId, memberId.toString());
         log.trace("deleteMemberFromUserGroup end");
     }
 
-
     @DeleteMapping(value = "/members/{memberId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ApiOperation(value = "", notes = "${swagger.user-group.groups.api.deleteMember}")
+    @ApiOperation(value = "", notes = "${swagger.user-group.groups.api.deleteMembers}")
+    @Tag(name = "UserGroup")
+    @Tag(name = "support")
     public void deleteMemberFromUserGroups(@ApiParam("${swagger.user-group.model.memberId}")
-                                           @PathVariable("memberId")
-                                                   UUID memberId,
+                                           @PathVariable("memberId") UUID memberId,
+                                           @ApiParam("${swagger.user-group.model.institutionId}")
                                            @RequestParam(value = "institutionId") String institutionId,
+                                           @ApiParam("${swagger.user-group.model.productId}")
                                            @RequestParam(value = "productId") String productId) {
         log.trace("deleteMemberFromUserGroups start");
         log.debug("deleteMemberFromUserGroups memberId = {}, institutionId = {}, productId = {}", memberId, Encode.forJava(institutionId), Encode.forJava(productId));
