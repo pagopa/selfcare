@@ -5,6 +5,7 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.auth.exception.SamlSignatureException;
 import it.pagopa.selfcare.auth.util.SamlValidator;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
@@ -169,8 +170,11 @@ public class SAMLServiceTest {
   public void testEmptyXml() {
     System.out.println("=== TEST EMPTY XML ===");
 
-    boolean response = samlValidator.validateSamlResponse("", "", 190);
-    assertEquals(response, false);
+    RuntimeException thrown = assertThrows(SamlSignatureException.class, () -> {
+      samlValidator.validateSamlResponse("", "", 190);
+    });
+
+    assertEquals("Validation Error", thrown.getMessage(), "The exception message should be propagated");
   }
 
   /**

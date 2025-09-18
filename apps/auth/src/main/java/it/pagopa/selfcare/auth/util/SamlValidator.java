@@ -2,6 +2,8 @@ package it.pagopa.selfcare.auth.util;
 
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import it.pagopa.selfcare.auth.exception.ForbiddenException;
+import it.pagopa.selfcare.auth.exception.SamlSignatureException;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.xml.security.signature.XMLSignature;
@@ -28,30 +30,21 @@ import java.util.Map;
 @ApplicationScoped
 public class SamlValidator {
 
-  public boolean validateSamlResponse(String samlResponse, String idpCert, long interval) {
-    try {
-      byte[] saml = Base64.getDecoder().decode(samlResponse.getBytes(StandardCharsets.UTF_8));
-      String samlResponseXML = new String(saml, StandardCharsets.UTF_8);
+  public boolean validateSamlResponse(String samlResponse, String idpCert, long interval) throws Exception {
 
-      String cleanedXml = cleanXmlContent(samlResponseXML);
-      Document doc = parseXmlDocument(cleanedXml);
-      boolean isRecentEnough = isTimestampValid(doc, interval);
-      if (!isRecentEnough) {
-        log.info("Response timestamp is too old. Possible replay attack.");
-        return false;
-      }
-      X509Certificate certificate = extractCertificateFromSaml(doc, fromBase64(idpCert));
+    byte[] saml = Base64.getDecoder().decode(samlResponse.getBytes(StandardCharsets.UTF_8));
+    String samlResponseXML = new String(saml, StandardCharsets.UTF_8);
 
-      validateCertificate(certificate);
+    String cleanedXml = cleanXmlContent(samlResponseXML);
+    Document doc = parseXmlDocument(cleanedXml);
 
-      extractSamlInfo(doc);
-
-      return validateSignature(doc, certificate.getPublicKey());
-
-    } catch (Exception e) {
-      log.error("Error during SAML validation", e);
-      return false;
+    if (!isTimestampValid(doc, interval)) {
+      throw new SamlSignatureException("Response timestamp is too old. Possible replay attack.");
     }
+
+    X509Certificate certificate = extractCertificateFromSaml(doc, fromBase64(idpCert));
+    validateCertificate(certificate);
+    return validateSignature(doc, certificate.getPublicKey());
   }
 
   /**
@@ -138,8 +131,7 @@ public class SamlValidator {
   boolean validateSignature(Document doc, PublicKey publicKey) throws Exception {
     NodeList assertionNodeList = doc.getElementsByTagNameNS("urn:oasis:names:tc:SAML:2.0:assertion", "Assertion");
     if (assertionNodeList.getLength() == 0) {
-      log.error("No <saml2:Assertion> element found in the document.");
-      return false;
+      throw new SamlSignatureException("No <saml2:Assertion> element found in the document.");
     }
     Element assertionElement = (Element) assertionNodeList.item(0);
     assertionElement.setIdAttribute("ID", true);
@@ -147,8 +139,7 @@ public class SamlValidator {
     NodeList signatures = doc.getElementsByTagNameNS("http://www.w3.org/2000/09/xmldsig#", "Signature");
 
     if (signatures.getLength() == 0) {
-      log.error("No digital signature found in the SAML document");
-      return false;
+      throw new SamlSignatureException("No digital signature found in the SAML document");
     }
 
     Element signatureElement = (Element) signatures.item(0);
@@ -159,17 +150,22 @@ public class SamlValidator {
     XMLSignature signature = new XMLSignature(signatureElement, "");
     boolean isValid = signature.checkSignatureValue(publicKey);
 
-    if (isValid) {
-      log.info("Digital signature validated successfully");
-    } else {
-      log.error("Digital signature is not valid");
+    if (!isValid) {
+      throw new SamlSignatureException("Digital signature is not valid");
     }
 
-    return isValid;
+    log.info("Digital signature validated successfully");
+    return true;
   }
 
   public Uni<Boolean> validateSamlResponseAsync(String samlXml, String idpCert, long interval) {
-    return Uni.createFrom().item(() -> validateSamlResponse(samlXml, idpCert, interval))
+    return Uni.createFrom().item(() -> {
+        try {
+          return validateSamlResponse(samlXml, idpCert, interval);
+        } catch (Exception e) {
+          throw new ForbiddenException(e.getMessage());
+        }
+      })
       .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
       .onItem().invoke(result -> {
         log.info("SAML validation completed with result: {}", result);

@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.auth.exception;
 
-public class InternalException extends  RuntimeException{
+public class InternalException extends RuntimeException {
     private final String code;
 
     public InternalException(String message, String code) {

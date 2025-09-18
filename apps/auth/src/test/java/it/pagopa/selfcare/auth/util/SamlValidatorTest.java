@@ -3,6 +3,7 @@ package it.pagopa.selfcare.auth.util;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.auth.exception.SamlSignatureException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -171,32 +172,35 @@ public class SamlValidatorTest {
   @Test
   void validateSamlResponse_InvalidInput_ShouldReturnFalse() {
     // When
-    boolean result = samlValidator.validateSamlResponse(INVALID_XML, DUMMY_CERT_BASE64, FAKE_INTERVAL);
+    RuntimeException thrown = assertThrows(SamlSignatureException.class, () -> {
+      samlValidator.validateSamlResponse(INVALID_XML, DUMMY_CERT_BASE64, FAKE_INTERVAL);
+    });
 
     // Then
-    assertFalse(result);
+    assertEquals("Validation Error", thrown.getMessage(), "The exception message should be propagated");
   }
 
   @Test
   void validateSamlResponse_NullInput_ShouldReturnFalse() {
     // When
-    boolean result = samlValidator.validateSamlResponse(null, DUMMY_CERT_BASE64, FAKE_INTERVAL);
-
-    // Then
-    assertFalse(result);
+    RuntimeException thrown = assertThrows(NullPointerException.class, () -> {
+      samlValidator.validateSamlResponse(null, DUMMY_CERT_BASE64, FAKE_INTERVAL);
+    });
   }
 
   @Test
   void validateSamlResponse_EmptyInput_ShouldReturnFalse() {
     // When
-    boolean result = samlValidator.validateSamlResponse("", DUMMY_CERT_BASE64, FAKE_INTERVAL);
+    RuntimeException thrown = assertThrows(SamlSignatureException.class, () -> {
+      samlValidator.validateSamlResponse("", DUMMY_CERT_BASE64, FAKE_INTERVAL);
+    });
 
     // Then
-    assertFalse(result);
+    assertEquals("Validation Error", thrown.getMessage(), "The exception message should be propagated");
   }
 
   @Test
-  void testValidateSamlResponseAsync_Success() {
+  void testValidateSamlResponseAsync_Success() throws Exception {
     // Arrange: Configure the spy. When the synchronous method is called,
     // force it to return 'true' without executing its actual complex logic.
     doReturn(true).when(samlValidatorSpy).validateSamlResponse(anyString(), anyString(), anyLong());
@@ -210,7 +214,7 @@ public class SamlValidatorTest {
   }
 
   @Test
-  void testValidateSamlResponseAsync_Failure() {
+  void testValidateSamlResponseAsync_Failure() throws Exception {
     // Arrange: Configure the spy to make the synchronous method return 'false'.
     doReturn(false).when(samlValidatorSpy).validateSamlResponse(anyString(), anyString(), anyLong());
 
@@ -223,7 +227,7 @@ public class SamlValidatorTest {
   }
 
   @Test
-  void testValidateSamlResponseAsync_Exception() {
+  void testValidateSamlResponseAsync_Exception() throws Exception {
     // Arrange: Configure the spy to make the synchronous method throw an exception.
     RuntimeException syncException = new RuntimeException("Error in sync validation");
     doThrow(syncException).when(samlValidatorSpy).validateSamlResponse(anyString(), anyString(), anyLong());
@@ -459,7 +463,7 @@ public class SamlValidatorTest {
   }
 
   @Test
-  void validateSamlResponse_WithMockedTimestamp_ShouldHandleTimeValidation() {
+  void validateSamlResponse_WithMockedTimestamp_ShouldHandleTimeValidation() throws Exception {
     // This test would require more complex mocking of the document parsing
     // and timestamp validation. For now, we test the integration through other methods
 
