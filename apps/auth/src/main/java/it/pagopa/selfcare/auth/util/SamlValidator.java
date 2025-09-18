@@ -5,10 +5,7 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.xml.security.signature.XMLSignature;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
 import org.xml.sax.InputSource;
 
 import javax.xml.XMLConstants;
@@ -47,10 +44,12 @@ public class SamlValidator {
 
       validateCertificate(certificate);
 
+      extractSamlInfo(doc);
+
       return validateSignature(doc, certificate.getPublicKey());
 
     } catch (Exception e) {
-      log.error("EError during SAML validation", e);
+      log.error("Error during SAML validation", e);
       return false;
     }
   }
@@ -83,7 +82,7 @@ public class SamlValidator {
     return xml;
   }
 
-  private Document parseXmlDocument(String xml) throws Exception {
+  public Document parseXmlDocument(String xml) throws Exception {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     factory.setNamespaceAware(true);
     factory.setValidating(false);
@@ -183,17 +182,45 @@ public class SamlValidator {
   /**
    * Extracts useful information from the SAML response
    */
-  public Map<String, Object> extractSamlInfo(String samlXml) {
+  public Map<String, Object> extractSamlInfo(Document doc) {
     Map<String, Object> info = new HashMap<>();
 
     try {
-      String cleanedXml = cleanXmlContent(samlXml);
-      Document doc = parseXmlDocument(cleanedXml);
+//      String cleanedXml = cleanXmlContent(samlXml);
+//      Document doc = parseXmlDocument(cleanedXml);
 
       NodeList nameIdNodes = doc.getElementsByTagNameNS(
         "urn:oasis:names:tc:SAML:2.0:assertion", "NameID");
       if (nameIdNodes.getLength() > 0) {
         info.put("name_id", nameIdNodes.item(0).getTextContent());
+      }
+
+      // Extract attributes
+      NodeList attributeStatements = doc.getElementsByTagNameNS("urn:oasis:names:tc:SAML:2.0:assertion", "AttributeStatement");
+      for (int i = 0; i < attributeStatements.getLength(); i++) {
+        Node attributeStatement = attributeStatements.item(i);
+        NodeList attributeStatementChildren = attributeStatement.getChildNodes();
+        for (int j = 0; j < attributeStatementChildren.getLength(); j++) {
+          Node attribute = attributeStatementChildren.item(j);
+          NamedNodeMap attributes = attribute.getAttributes();
+          String attributeName = "";
+          for (int k = 0; k < attributes.getLength(); k++) {
+            Node attributeOnAttribute = attributes.item(k);
+            if (attributeOnAttribute.getLocalName().equals("Name")) {
+              attributeName = attributeOnAttribute.getTextContent();
+            }
+          }
+          NodeList attributeValues = attribute.getChildNodes();
+          StringBuilder attributeValueSerialized = new StringBuilder();
+          for (int k = 0; k < attributeValues.getLength(); k++) {
+            Element attributeValue = (Element) attributeValues.item(k);
+            if (k > 0) {
+              attributeValueSerialized.append(",");
+            }
+            attributeValueSerialized.append(attributeValue.getTextContent());
+          }
+          info.put(attributeName, attributeValueSerialized.toString());
+        }
       }
 
       // Extract Issuer
@@ -213,15 +240,6 @@ public class SamlValidator {
           info.put("session_index", sessionIndex);
         }
       }
-
-//      try {
-//        X509Certificate cert = extractCertificateFromSaml(doc, "");
-//        info.put("certificate_subject", cert.getSubjectDN().toString());
-//        info.put("certificate_issuer", cert.getIssuerDN().toString());
-//        info.put("certificate_valid_until", cert.getNotAfter());
-//      } catch (Exception e) {
-//        log.warn("Unable to extract certificate information", e);
-//      }
 
     } catch (Exception e) {
       log.error("Error during SAML information extraction", e);
