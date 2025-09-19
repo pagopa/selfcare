@@ -4,6 +4,8 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.response.Response;
+import it.pagopa.selfcare.auth.exception.ForbiddenException;
+import it.pagopa.selfcare.auth.exception.SamlSignatureException;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import io.restassured.RestAssured;
@@ -42,7 +44,7 @@ class SamlCallbackControllerTest {
    * The controller should return a 200 OK response with the SAML response in the body.
    */
   @Test
-  public void testHandleSamlResponse_Success() {
+  public void testHandleSamlResponse_Success() throws Exception {
     // Arrange: Configure the mock service to return 'true' for validation.
     when(samlService.validate(VALID_SAML_RESPONSE))
       .thenReturn(Uni.createFrom().item(true));
@@ -64,9 +66,9 @@ class SamlCallbackControllerTest {
    * The controller should return a 400 Bad Request response with an error message.
    */
   @Test
-  public void testHandleSamlResponse_Invalid() {
+  public void testHandleSamlResponse_Invalid() throws Exception {
     // Arrange: Configure the mock service to return 'false' for validation.
-    when(samlService.validate(anyString())).thenReturn(Uni.createFrom().item(false));
+    when(samlService.validate(anyString())).thenThrow(new SamlSignatureException("Validation Error"));
 
     // Act & Assert
     given()
@@ -75,8 +77,7 @@ class SamlCallbackControllerTest {
       .when()
       .post("/acs")
       .then()
-      .statusCode(400)
-      .body(is("SAMLResponse not valid"));
+      .statusCode(400);
   }
 
   /**
@@ -99,7 +100,7 @@ class SamlCallbackControllerTest {
   }
 
   @Test
-  void handleSamlResponse_NullSamlResponse_ShouldReturnBadRequest() {
+  void handleSamlResponse_NullSamlResponse_ShouldReturnBadRequest() throws Exception {
     // When & Then
     given()
       .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -114,7 +115,7 @@ class SamlCallbackControllerTest {
   }
 
   @Test
-  void handleSamlResponse_EmptySamlResponse_ShouldReturnBadRequest() {
+  void handleSamlResponse_EmptySamlResponse_ShouldReturnBadRequest() throws Exception {
     // When & Then
     given()
       .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -130,7 +131,7 @@ class SamlCallbackControllerTest {
   }
 
   @Test
-  void handleSamlResponse_ServiceValidationFailure_ShouldReturnBadRequest() {
+  void handleSamlResponse_ServiceValidationFailure_ShouldReturnBadRequest() throws Exception {
     // Given
     when(samlService.validate(anyString()))
       .thenReturn(Uni.createFrom().failure(new RuntimeException("Validation failed")));
@@ -158,7 +159,7 @@ class SamlCallbackControllerTest {
   }
 
   @Test
-  void handleSamlResponse_LongSamlResponse_ShouldHandleCorrectly() {
+  void handleSamlResponse_LongSamlResponse_ShouldHandleCorrectly() throws Exception {
     // Given
     StringBuilder longSamlResponse = new StringBuilder();
     for (int i = 0; i < 1000; i++) {
@@ -180,7 +181,7 @@ class SamlCallbackControllerTest {
   }
 
   @Test
-  void handleSamlResponse_SpecialCharactersInSamlResponse_ShouldHandleCorrectly() {
+  void handleSamlResponse_SpecialCharactersInSamlResponse_ShouldHandleCorrectly() throws Exception {
     // Given
     String specialCharsSamlResponse = "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHNhbWxwOlJlc3BvbnNlICZsdDsgJmd0OyAmYW1wOyAmcXVvdDs+PC9zYW1scDpSZXNwb25zZT4K";
 

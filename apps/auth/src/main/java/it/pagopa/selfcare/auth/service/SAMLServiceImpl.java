@@ -37,7 +37,7 @@ public class SAMLServiceImpl implements SAMLService {
   SamlValidator samlValidator;
 
   @Override
-  public Uni<Boolean> validate(String samlResponse) {
+  public Uni<Boolean> validate(String samlResponse) throws Exception {
     return samlValidator.validateSamlResponseAsync(samlResponse, idpCert, timeInterval);
   }
 

@@ -26,7 +26,7 @@ public class SamlCallbackController {
   @Path("/acs")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.TEXT_PLAIN)
-  public Uni<Response> handleSamlResponse(@Context ContainerRequestContext requestContext, @FormParam("SAMLResponse") String samlResponse) {
+  public Uni<Response> handleSamlResponse(@Context ContainerRequestContext requestContext, @FormParam("SAMLResponse") String samlResponse) throws Exception {
     log.info("{}", samlResponse == null ? null : samlResponse.replaceAll("[\\r\\n]", ""));
     MediaType contentType = requestContext.getMediaType();
     if (contentType == null || !MediaType.APPLICATION_FORM_URLENCODED_TYPE.isCompatible(contentType)) {

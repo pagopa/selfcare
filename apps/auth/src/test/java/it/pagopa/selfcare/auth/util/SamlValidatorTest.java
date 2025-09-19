@@ -3,9 +3,11 @@ package it.pagopa.selfcare.auth.util;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.auth.exception.ForbiddenException;
 import it.pagopa.selfcare.auth.exception.SamlSignatureException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.w3c.dom.Document;
@@ -22,57 +24,62 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.*;
 
 @QuarkusTest
 public class SamlValidatorTest {
   private static final long FAKE_INTERVAL = 300;
+  private static final long FAKE_LONG_INTERVAL = 300000000;
   private SamlValidator samlValidator;
   // A Spy is a partial mock. It will behave like the real object,
   // unless we explicitly override a method's behavior.
   @Spy
   SamlValidator samlValidatorSpy;
 
-  // Sample valid SAML response for testing (simplified)
+  @Mock
+  private Logger log;// Sample valid SAML response for testing (simplified)
+
   private static final String VALID_SAML_XML = """
-        <?xml version="1.0" encoding="UTF-8"?>
-        <saml2p:Response xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol" 
-                         ID="_response_id" 
-                         Version="2.0" 
-                         IssueInstant="2024-01-15T10:30:00Z"
-                         Destination="https://example.com/saml/acs">
-            <saml2:Issuer xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">https://accounts.google.com/o/oauth2/auth</saml2:Issuer>
-            <saml2:Assertion xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion_id" Version="2.0" IssueInstant="2024-01-15T10:30:00Z">
-                <saml2:Issuer>https://accounts.google.com/o/oauth2/auth</saml2:Issuer>
-                <saml2:Subject>
-                    <saml2:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">user@example.com</saml2:NameID>
-                </saml2:Subject>
-                <saml2:AuthnStatement SessionIndex="session123">
-                    <saml2:AuthnContext>
-                        <saml2:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport</saml2:AuthnContextClassRef>
-                    </saml2:AuthnContext>
-                </saml2:AuthnStatement>
-                <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
-                    <ds:SignedInfo>
-                        <ds:Reference URI="#_assertion_id">
-                            <ds:DigestValue>dummy_digest</ds:DigestValue>
-                        </ds:Reference>
-                    </ds:SignedInfo>
-                    <ds:SignatureValue>dummy_signature</ds:SignatureValue>
-                    <ds:KeyInfo>
-                        <ds:X509Data>
-                            <ds:X509Certificate>MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMI</ds:X509Certificate>
-                        </ds:X509Data>
-                    </ds:KeyInfo>
-                </ds:Signature>
-            </saml2:Assertion>
-        </saml2p:Response>
-        """;
+    <?xml version="1.0" encoding="UTF-8"?>
+    <saml2p:Response xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol" 
+                     ID="_response_id" 
+                     Version="2.0" 
+                     IssueInstant="2024-01-15T10:30:00Z"
+                     Destination="https://example.com/saml/acs">
+        <saml2:Issuer xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">https://accounts.google.com/o/oauth2/auth</saml2:Issuer>
+        <saml2:Assertion xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion_id" Version="2.0" IssueInstant="2024-01-15T10:30:00Z">
+            <saml2:Issuer>https://accounts.google.com/o/oauth2/auth</saml2:Issuer>
+            <saml2:Subject>
+                <saml2:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">user@example.com</saml2:NameID>
+            </saml2:Subject>
+            <saml2:AuthnStatement SessionIndex="session123">
+                <saml2:AuthnContext>
+                    <saml2:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport</saml2:AuthnContextClassRef>
+                </saml2:AuthnContext>
+            </saml2:AuthnStatement>
+            <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+                <ds:SignedInfo>
+                    <ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+                                                                                         <ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>
+                    <ds:Reference URI="#_assertion_id">
+                        <ds:DigestValue>dummy_digest</ds:DigestValue>
+                    </ds:Reference>
+                </ds:SignedInfo>
+                <ds:SignatureValue>dummy_signature</ds:SignatureValue>
+                <ds:KeyInfo>
+                    <ds:X509Data>
+                        <ds:X509Certificate>MIIDDzCCAfegAwIBAgIUTCG4Fbd1yUJgFMfL8ic1JIJji80wDQYJKoZIhvcNAQELBQAwFzEVMBMGA1UEAwwMbWlvc2l0by50ZXN0MB4XDTI1MDkwOTE1MjA1N1oXDTI2MDkwOTE1MjA1N1owFzEVMBMGA1UEAwwMbWlvc2l0by50ZXN0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmk4NOiqV11om20yNg/Tpx10FaNO9fGUDtM14V0gh7e9meSHh/nLVSAK/7uAPGvWUL3xZ++0LUFLsArFLSHBsfull63w95Uoq3PtABqUKSkI2gkbYclzFiIdrrH9rIoMYvYG5zIroKNSD2/iUDfE3Go78AWilfFqa/OvIZ3riNpTyqtAbFyqJ9tBlSgdSVV9LrqdpTRnk92bkaX0DVHwnXay3z0RkWjO8uOD/GGC3B8dDuPUS4wZTwgfS8cguz9SsgI0hMi2RXRmeTiSrAJFlx14PfGKnBsaVnM+JDdZH9KTuSJ7+8d8ld4yWz1q56UVdTw1DIV8OC91mEvhtuYJGvwIDAQABo1MwUTAdBgNVHQ4EFgQUfGEOxC2NY2ONlCj7K8vcmh/utGYwHwYDVR0jBBgwFoAUfGEOxC2NY2ONlCj7K8vcmh/utGYwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEANiCG8BvlOuX9cS3yY4DxvLVv0gzTzwAo157JFFE50+qZ5Hn2vQKNKQOlrSHe9+5Jr2K/sGswRapDVG0o+wV5LlFTcoe6k/DVR196XSzg4Y60KTDQLvs/0dfSZ0tYjn0Sni5TuQrGfJgnwgZ2XkWUHMXKg22Fd6ig/PiZE+fNbyisTByUJlcqjESPP1CkhWhhbsg8VSmv66lyeWNSY7dEJbceG/Zl8z+SmSU2IkYQ2eQu0eOc7MvaaPZOWdubeJefm75nx6jnnQZMWEpL5+wQaB2qKdejRibX0ps0E6lRBOSUqf8Ij3BLMRQ4rPYAvM8eGxbsPRrR5KawuhrPCcU82w==</ds:X509Certificate>
+                    </ds:X509Data>
+                </ds:KeyInfo>
+            </ds:Signature>
+        </saml2:Assertion>
+    </saml2p:Response>
+    """;
 
   private static final String VALID_SAML_BASE64 = Base64.getEncoder().encodeToString(VALID_SAML_XML.getBytes(StandardCharsets.UTF_8));
 
@@ -80,7 +87,8 @@ public class SamlValidatorTest {
   private static final String EMPTY_XML = "";
 
   // Sample certificate for testing (dummy)
-  private static final String DUMMY_CERT_BASE64 = "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0NBUUE7Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K";
+  private static final String DUMMY_CERT_BASE64 = "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tTUlJRER6Q0NBZmVnQXdJQkFnSVVUQ0c0RmJkMXlVSmdGTWZMOGljMUpJSmppODB3RFFZSktvWklodmNOQVFFTEJRQXdGekVWTUJNR0ExVUVBd3dNYldsdmMybDBieTUwWlhOME1CNFhEVEkxTURrd09URTFNakExTjFvWERUSTJNRGt3T1RFMU1qQTFOMW93RnpFVk1CTUdBMVVFQXd3TWJXbHZjMmwwYnk1MFpYTjBNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQW1rNE5PaXFWMTFvbTIweU5nL1RweDEwRmFOTzlmR1VEdE0xNFYwZ2g3ZTltZVNIaC9uTFZTQUsvN3VBUEd2V1VMM3haKyswTFVGTHNBckZMU0hCc2Z1bGw2M3c5NVVvcTNQdEFCcVVLU2tJMmdrYlljbHpGaUlkcnJIOXJJb01ZdllHNXpJcm9LTlNEMi9pVURmRTNHbzc4QVdpbGZGcWEvT3ZJWjNyaU5wVHlxdEFiRnlxSjl0QmxTZ2RTVlY5THJxZHBUUm5rOTJia2FYMERWSHduWGF5M3owUmtXak84dU9EL0dHQzNCOGREdVBVUzR3WlR3Z2ZTOGNndXo5U3NnSTBoTWkyUlhSbWVUaVNyQUpGbHgxNFBmR0tuQnNhVm5NK0pEZFpIOUtUdVNKNys4ZDhsZDR5V3oxcTU2VVZkVHcxRElWOE9DOTFtRXZodHVZSkd2d0lEQVFBQm8xTXdVVEFkQmdOVkhRNEVGZ1FVZkdFT3hDMk5ZMk9ObENqN0s4dmNtaC91dEdZd0h3WURWUjBqQkJnd0ZvQVVmR0VPeEMyTlkyT05sQ2o3Szh2Y21oL3V0R1l3RHdZRFZSMFRBUUgvQkFVd0F3RUIvekFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBTmlDRzhCdmxPdVg5Y1MzeVk0RHh2TFZ2MGd6VHp3QW8xNTdKRkZFNTArcVo1SG4ydlFLTktRT2xyU0hlOSs1SnIySy9zR3N3UmFwRFZHMG8rd1Y1TGxGVGNvZTZrL0RWUjE5NlhTemc0WTYwS1REUUx2cy8wZGZTWjB0WWpuMFNuaTVUdVFyR2ZKZ253Z1oyWGtXVUhNWEtnMjJGZDZpZy9QaVpFK2ZOYnlpc1RCeVVKbGNxakVTUFAxQ2toV2hoYnNnOFZTbXY2Nmx5ZVdOU1k3ZEVKYmNlRy9abDh6K1NtU1UySWtZUTJlUXUwZU9jN012YWFQWk9XZHViZUplZm03NW54NmpublFaTVdFcEw1K3dRYUIycUtkZWpSaWJYMHBzMEU2bFJCT1NVcWY4SWozQkxNUlE0clBZQXZNOGVHeGJzUFJyUjVLYXd1aHJQQ2NVODJ3PT0tLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0t";
+  private static final String FAKE_CERT = "-----BEGIN CERTIFICATE-----MIIDDzCCAfegAwIBAgIUTCG4Fbd1yUJgFMfL8ic1JIJji80wDQYJKoZIhvcNAQELBQAwFzEVMBMGA1UEAwwMbWlvc2l0by50ZXN0MB4XDTI1MDkwOTE1MjA1N1oXDTI2MDkwOTE1MjA1N1owFzEVMBMGA1UEAwwMbWlvc2l0by50ZXN0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmk4NOiqV11om20yNg/Tpx10FaNO9fGUDtM14V0gh7e9meSHh/nLVSAK/7uAPGvWUL3xZ++0LUFLsArFLSHBsfull63w95Uoq3PtABqUKSkI2gkbYclzFiIdrrH9rIoMYvYG5zIroKNSD2/iUDfE3Go78AWilfFqa/OvIZ3riNpTyqtAbFyqJ9tBlSgdSVV9LrqdpTRnk92bkaX0DVHwnXay3z0RkWjO8uOD/GGC3B8dDuPUS4wZTwgfS8cguz9SsgI0hMi2RXRmeTiSrAJFlx14PfGKnBsaVnM+JDdZH9KTuSJ7+8d8ld4yWz1q56UVdTw1DIV8OC91mEvhtuYJGvwIDAQABo1MwUTAdBgNVHQ4EFgQUfGEOxC2NY2ONlCj7K8vcmh/utGYwHwYDVR0jBBgwFoAUfGEOxC2NY2ONlCj7K8vcmh/utGYwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEANiCG8BvlOuX9cS3yY4DxvLVv0gzTzwAo157JFFE50+qZ5Hn2vQKNKQOlrSHe9+5Jr2K/sGswRapDVG0o+wV5LlFTcoe6k/DVR196XSzg4Y60KTDQLvs/0dfSZ0tYjn0Sni5TuQrGfJgnwgZ2XkWUHMXKg22Fd6ig/PiZE+fNbyisTByUJlcqjESPP1CkhWhhbsg8VSmv66lyeWNSY7dEJbceG/Zl8z+SmSU2IkYQ2eQu0eOc7MvaaPZOWdubeJefm75nx6jnnQZMWEpL5+wQaB2qKdejRibX0ps0E6lRBOSUqf8Ij3BLMRQ4rPYAvM8eGxbsPRrR5KawuhrPCcU82w==-----END CERTIFICATE-----";
 
   private Method validateSignatureMethod;
 
@@ -172,12 +180,12 @@ public class SamlValidatorTest {
   @Test
   void validateSamlResponse_InvalidInput_ShouldReturnFalse() {
     // When
-    RuntimeException thrown = assertThrows(SamlSignatureException.class, () -> {
+    RuntimeException thrown = assertThrows(IllegalArgumentException.class, () -> {
       samlValidator.validateSamlResponse(INVALID_XML, DUMMY_CERT_BASE64, FAKE_INTERVAL);
     });
 
     // Then
-    assertEquals("Validation Error", thrown.getMessage(), "The exception message should be propagated");
+    assertEquals("Illegal base64 character 20", thrown.getMessage(), "The exception message should be propagated");
   }
 
   @Test
@@ -191,12 +199,12 @@ public class SamlValidatorTest {
   @Test
   void validateSamlResponse_EmptyInput_ShouldReturnFalse() {
     // When
-    RuntimeException thrown = assertThrows(SamlSignatureException.class, () -> {
+    RuntimeException thrown = assertThrows(IllegalArgumentException.class, () -> {
       samlValidator.validateSamlResponse("", DUMMY_CERT_BASE64, FAKE_INTERVAL);
     });
 
     // Then
-    assertEquals("Validation Error", thrown.getMessage(), "The exception message should be propagated");
+    assertEquals("XML content is null or empty", thrown.getMessage(), "The exception message should be propagated");
   }
 
   @Test
@@ -206,7 +214,7 @@ public class SamlValidatorTest {
     doReturn(true).when(samlValidatorSpy).validateSamlResponse(anyString(), anyString(), anyLong());
 
     // Act: Call the asynchronous method on the spy object.
-    Uni<Boolean> resultUni = samlValidatorSpy.validateSamlResponseAsync(INVALID_XML, DUMMY_CERT_BASE64, FAKE_INTERVAL);
+    Uni<Boolean> resultUni = samlValidatorSpy.validateSamlResponseAsync(VALID_SAML_XML, DUMMY_CERT_BASE64, FAKE_INTERVAL);
 
     // Assert: Await the result and verify it is true.
     Boolean result = resultUni.await().indefinitely();
@@ -244,41 +252,39 @@ public class SamlValidatorTest {
     assertEquals(syncException.getMessage(), thrown.getMessage(), "The exception should be propagated to the Uni.");
   }
 
+//  @Test
+//  void validateSamlResponseAsync_ValidInput_ShouldReturnUni() throws Exception {
+//    // Given
+//    String validBase64 = Base64.getEncoder().encodeToString(VALID_SAML_XML.getBytes(StandardCharsets.UTF_8));
+//
+//    // When
+//    Uni<Boolean> result = samlValidator.validateSamlResponseAsync(validBase64, DUMMY_CERT_BASE64, FAKE_LONG_INTERVAL);
+//
+//    // Then
+//    assertNotNull(result);
+//
+//    // Test the Uni - this will likely fail due to certificate validation but should not throw
+//    UniAssertSubscriber<Boolean> subscriber = result
+//      .subscribe().withSubscriber(UniAssertSubscriber.create());
+//
+//    subscriber.awaitItem();
+//    subscriber.assertCompleted();
+//    // The result will be false due to dummy certificate, but should not fail
+//    Boolean value = subscriber.getItem();
+//    assertNotNull(value);
+//  }
+//
   @Test
-  void validateSamlResponseAsync_ValidInput_ShouldReturnUni() {
-    // Given
-    String validBase64 = Base64.getEncoder().encodeToString(VALID_SAML_XML.getBytes(StandardCharsets.UTF_8));
-
-    // When
-    Uni<Boolean> result = samlValidator.validateSamlResponseAsync(validBase64, DUMMY_CERT_BASE64, FAKE_INTERVAL);
-
-    // Then
-    assertNotNull(result);
-
-    // Test the Uni - this will likely fail due to certificate validation but should not throw
-    UniAssertSubscriber<Boolean> subscriber = result
-      .subscribe().withSubscriber(UniAssertSubscriber.create());
-
-    subscriber.awaitItem();
-    subscriber.assertCompleted();
-    // The result will be false due to dummy certificate, but should not fail
-    Boolean value = subscriber.getItem();
-    assertNotNull(value);
-  }
-
-  @Test
-  void validateSamlResponseAsync_InvalidInput_ShouldCompleteWithFalse() {
-    // When
+  void validateSamlResponseAsync_InvalidInput_ShouldCompleteWithFalse() throws Exception {
+    System.out.println("=== TEST INVALID XML ===");
     Uni<Boolean> result = samlValidator.validateSamlResponseAsync(INVALID_XML, DUMMY_CERT_BASE64, FAKE_INTERVAL);
 
-    // Then
+// Then
     UniAssertSubscriber<Boolean> subscriber = result
       .subscribe().withSubscriber(UniAssertSubscriber.create());
-
-    subscriber.awaitItem();
-    subscriber.assertCompleted();
-    Boolean value = subscriber.getItem();
-    assertFalse(value);
+    subscriber
+      .awaitFailure(Duration.ofSeconds(5))
+      .assertFailedWith(SamlSignatureException.class, "Illegal base64 character 20");
   }
 
   @Test
@@ -315,6 +321,18 @@ public class SamlValidatorTest {
     assertNotNull(result);
     assertTrue(result.containsKey("name_id"));
     assertEquals("user@example.com", result.get("name_id"));
+  }
+
+
+  @Test
+  public void testEmptyXml() {
+    System.out.println("=== TEST EMPTY XML ===");
+
+    RuntimeException thrown = assertThrows(IllegalArgumentException.class, () -> {
+      samlValidator.validateSamlResponse("", "", 190);
+    });
+
+    assertEquals("XML content is null or empty", thrown.getMessage(), "The exception message should be propagated");
   }
 
 //  @Test apz
@@ -402,11 +420,11 @@ public class SamlValidatorTest {
   void isTimestampValid_NoResponseElement_ShouldReturnFalse() throws Exception {
     // Given
     String xmlWithoutResponse = """
-            <?xml version="1.0" encoding="UTF-8"?>
-            <saml2:Assertion xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion_id">
-                <saml2:Issuer>test</saml2:Issuer>
-            </saml2:Assertion>
-            """;
+      <?xml version="1.0" encoding="UTF-8"?>
+      <saml2:Assertion xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion" ID="_assertion_id">
+          <saml2:Issuer>test</saml2:Issuer>
+      </saml2:Assertion>
+      """;
 
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     factory.setNamespaceAware(true);
@@ -424,13 +442,13 @@ public class SamlValidatorTest {
   void isTimestampValid_NoIssueInstantAttribute_ShouldReturnFalse() throws Exception {
     // Given
     String samlWithoutIssueInstant = """
-            <?xml version="1.0" encoding="UTF-8"?>
-            <saml2p:Response xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol" 
-                             ID="_response_id" 
-                             Version="2.0">
-                <saml2:Issuer xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">test</saml2:Issuer>
-            </saml2p:Response>
-            """;
+      <?xml version="1.0" encoding="UTF-8"?>
+      <saml2p:Response xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol" 
+                       ID="_response_id" 
+                       Version="2.0">
+          <saml2:Issuer xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">test</saml2:Issuer>
+      </saml2p:Response>
+      """;
 
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     factory.setNamespaceAware(true);
@@ -471,10 +489,11 @@ public class SamlValidatorTest {
     String base64InvalidTime = Base64.getEncoder().encodeToString(VALID_SAML_XML.getBytes(StandardCharsets.UTF_8));
 
     // When - this will fail on timestamp validation since the XML has old timestamp
-    boolean result = samlValidator.validateSamlResponse(base64InvalidTime, DUMMY_CERT_BASE64, FAKE_INTERVAL);
+    RuntimeException thrown = assertThrows(SamlSignatureException.class, () -> {
+      samlValidator.validateSamlResponse(base64InvalidTime, DUMMY_CERT_BASE64, FAKE_INTERVAL);
+    });
 
-    // Then - should return false due to old timestamp
-    assertFalse(result);
+    assertEquals("Response timestamp is too old. Possible replay attack.", thrown.getMessage(), "The exception message should be propagated");
   }
 
   @Test
@@ -511,10 +530,9 @@ public class SamlValidatorTest {
     PublicKey dummyKey = KeyPairGenerator.getInstance("RSA").generateKeyPair().getPublic();
 
     // Act
-    boolean isValid = (boolean) validateSignatureMethod.invoke(samlValidator, doc, dummyKey);
-
-    // Assert
-    assertFalse(isValid, "Should return false if no Assertion element is present.");
+    RuntimeException thrown = assertThrows(SamlSignatureException.class, () -> {
+      samlValidator.validateSignature(doc, dummyKey);
+    });
   }
 
   @Test

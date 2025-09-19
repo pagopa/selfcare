@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.auth.util;
 
+import it.pagopa.selfcare.auth.exception.SamlSignatureException;
 import org.apache.xml.security.signature.XMLSignature;
 import org.apache.xml.security.transforms.Transforms;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,10 +65,12 @@ class SamlValidatorValidateTest {
     Document doc = createSamlDocumentWithoutSignature();
 
     // When
-    boolean result = invokeValidateSignature(doc, publicKey);
+    RuntimeException thrown = assertThrows(SamlSignatureException.class, () -> {
+      samlValidator.validateSignature(doc, publicKey);
+    });
 
     // Then
-    assertFalse(result, "Validation should return false when there is no signature");
+    assertEquals("No digital signature found in the SAML document", thrown.getMessage(), "The exception message should be propagated");
   }
 
   @Test
@@ -76,10 +79,12 @@ class SamlValidatorValidateTest {
     Document doc = createDocumentWithoutAssertion();
 
     // When
-    boolean result = invokeValidateSignature(doc, publicKey);
+    RuntimeException thrown = assertThrows(SamlSignatureException.class, () -> {
+      samlValidator.validateSignature(doc, publicKey);
+    });
 
     // Then
-    assertFalse(result, "Validation should return false when there is no Assertion");
+    assertEquals("No <saml2:Assertion> element found in the document.", thrown.getMessage(), "The exception message should be propagated");
   }
 
   @Test
@@ -94,10 +99,12 @@ class SamlValidatorValidateTest {
     PublicKey wrongPublicKey = differentKeyPair.getPublic();
 
     // When
-    boolean result = invokeValidateSignature(doc, wrongPublicKey);
+    RuntimeException thrown = assertThrows(SamlSignatureException.class, () -> {
+      samlValidator.validateSignature(doc, wrongPublicKey);
+    });
 
     // Then
-    assertFalse(result, "Validation should return false with a wrong public key");
+    assertEquals("Digital signature is not valid", thrown.getMessage(), "The exception message should be propagated");
   }
 
   @Test
@@ -106,10 +113,12 @@ class SamlValidatorValidateTest {
     Document doc = createSamlDocumentWithCorruptedSignature();
 
     // When
-    boolean result = invokeValidateSignature(doc, publicKey);
+    RuntimeException thrown = assertThrows(SamlSignatureException.class, () -> {
+      samlValidator.validateSignature(doc, publicKey);
+    });
 
     // Then
-    assertFalse(result, "Validation should return false for a corrupted signature");
+    assertEquals("Digital signature is not valid", thrown.getMessage(), "The exception message should be propagated");
   }
 
   // Helper method to invoke the private validateSignature method using reflection
@@ -279,13 +288,11 @@ class SamlValidatorValidateTest {
     // Given
     String simpleSamlResponse = Base64.getEncoder().encodeToString(createSimpleSamlXml().getBytes());
     String mockCert = "dGVzdA==";
-    long interval = 300;
+    long interval = 3000000 ;
 
     // When & Then - The test verifies that no unexpected exceptions are thrown
-    assertDoesNotThrow(() -> {
-      boolean result = samlValidator.validateSamlResponse(simpleSamlResponse, mockCert, interval);
-      // The result will be false for the simplified SAML, but the test passes if there are no exceptions
-      assertNotNull(result);
+    assertThrows(SamlSignatureException.class, () -> {
+      samlValidator.validateSamlResponse(simpleSamlResponse, mockCert, interval);
     });
   }
 

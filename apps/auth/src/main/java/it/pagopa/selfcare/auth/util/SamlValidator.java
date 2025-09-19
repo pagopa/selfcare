@@ -158,21 +158,22 @@ public class SamlValidator {
     return true;
   }
 
-  public Uni<Boolean> validateSamlResponseAsync(String samlXml, String idpCert, long interval) {
+  public Uni<Boolean> validateSamlResponseAsync(String samlXml, String idpCert, long interval) throws Exception {
     return Uni.createFrom().item(() -> {
         try {
           return validateSamlResponse(samlXml, idpCert, interval);
         } catch (Exception e) {
-          throw new ForbiddenException(e.getMessage());
+          throw new SamlSignatureException(e.getMessage());
         }
       })
       .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
       .onItem().invoke(result -> {
         log.info("SAML validation completed with result: {}", result);
       })
-      .onFailure().invoke(throwable -> {
-        log.error("Error during SAML validation asincrona", throwable);
-      });
+//      .onFailure().invoke(throwable -> {
+//        throw new ForbiddenException("Error during SAML validation async");
+//      })
+      ;
   }
 
   /**

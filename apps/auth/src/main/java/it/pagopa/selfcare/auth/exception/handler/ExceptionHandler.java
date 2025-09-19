@@ -106,9 +106,9 @@ public class ExceptionHandler {
       new Problem(
         exception.getMessage(),
         null,
-        HttpStatus.SC_FORBIDDEN,
+        HttpStatus.SC_BAD_REQUEST,
         exception.getMessage(),
         null);
-    return Response.status(Response.Status.FORBIDDEN).entity(problem).build();
+    return Response.status(Response.Status.BAD_REQUEST).entity(problem).build();
   }
 }

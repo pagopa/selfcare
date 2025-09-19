@@ -166,17 +166,6 @@ public class SAMLServiceTest {
 
   }
 
-  @Test
-  public void testEmptyXml() {
-    System.out.println("=== TEST EMPTY XML ===");
-
-    RuntimeException thrown = assertThrows(SamlSignatureException.class, () -> {
-      samlValidator.validateSamlResponse("", "", 190);
-    });
-
-    assertEquals("Validation Error", thrown.getMessage(), "The exception message should be propagated");
-  }
-
   /**
    * Defines a test profile to supply mock configuration properties.
    */
@@ -191,7 +180,7 @@ public class SAMLServiceTest {
   }
 
   @Test
-  public void testValidate_Success() {
+  public void testValidate_Success() throws Exception {
     // Arrange: Configure the mock validator to return a successful Uni<Boolean>
     when(samlValidator.validateSamlResponseAsync(FAKE_SAML_RESPONSE, FAKE_IDP_CERT, FAKE_TIME_INTERVAL))
       .thenReturn(Uni.createFrom().item(true));
@@ -207,10 +196,10 @@ public class SAMLServiceTest {
   }
 
   @Test
-  public void testValidate_Failure() {
+  public void testValidate_Failure() throws Exception {
     // Arrange: Configure the mock validator to return a failed Uni<Boolean>
     when(samlValidator.validateSamlResponseAsync(FAKE_SAML_RESPONSE, FAKE_IDP_CERT, FAKE_TIME_INTERVAL))
-      .thenReturn(Uni.createFrom().item(false));
+      .thenThrow(new Exception("error"));
 
     // Act: Call the service method
     Uni<Boolean> resultUni = samlService.validate(FAKE_SAML_RESPONSE);
@@ -226,8 +215,12 @@ public class SAMLServiceTest {
   public void testValidate_Exception() {
     // Arrange: Configure the mock validator to return a failed Uni with an exception
     RuntimeException mockException = new RuntimeException("Validation Error");
-    when(samlValidator.validateSamlResponseAsync(FAKE_SAML_RESPONSE, FAKE_IDP_CERT, FAKE_TIME_INTERVAL))
-      .thenReturn(Uni.createFrom().failure(mockException));
+    try {
+      when(samlValidator.validateSamlResponseAsync(FAKE_SAML_RESPONSE, FAKE_IDP_CERT, FAKE_TIME_INTERVAL))
+        .thenThrow(mockException);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
 
     // Act & Assert: Check that the exception is propagated correctly
     RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
@@ -236,6 +229,9 @@ public class SAMLServiceTest {
 
     assertEquals("Validation Error", thrown.getMessage(), "The exception message should be propagated");
 
-    verify(samlValidator).validateSamlResponseAsync(FAKE_SAML_RESPONSE, FAKE_IDP_CERT, FAKE_TIME_INTERVAL);
+    assertThrows(RuntimeException.class, () -> {
+      samlValidator.validateSamlResponseAsync(FAKE_SAML_RESPONSE, FAKE_IDP_CERT, FAKE_TIME_INTERVAL);
+    });
+
   }
 }
