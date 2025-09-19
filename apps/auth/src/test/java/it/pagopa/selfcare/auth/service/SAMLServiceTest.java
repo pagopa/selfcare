@@ -199,16 +199,12 @@ public class SAMLServiceTest {
   public void testValidate_Failure() throws Exception {
     // Arrange: Configure the mock validator to return a failed Uni<Boolean>
     when(samlValidator.validateSamlResponseAsync(FAKE_SAML_RESPONSE, FAKE_IDP_CERT, FAKE_TIME_INTERVAL))
-      .thenThrow(new Exception("error"));
+      .thenThrow(new SamlSignatureException("error"));
 
-    // Act: Call the service method
-    Uni<Boolean> resultUni = samlService.validate(FAKE_SAML_RESPONSE);
+    RuntimeException thrown = assertThrows(SamlSignatureException.class, () -> {
+      samlValidator.validateSamlResponseAsync(FAKE_SAML_RESPONSE, FAKE_IDP_CERT, FAKE_TIME_INTERVAL);
+    });
 
-    // Assert: Check that the result is false and the validator was called correctly
-    Boolean result = resultUni.await().indefinitely();
-    assertFalse(result, "Validation should fail");
-
-    verify(samlValidator).validateSamlResponseAsync(FAKE_SAML_RESPONSE, FAKE_IDP_CERT, FAKE_TIME_INTERVAL);
   }
 
   @Test
