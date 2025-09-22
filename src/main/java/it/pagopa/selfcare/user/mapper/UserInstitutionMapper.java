@@ -55,16 +55,13 @@ public interface UserInstitutionMapper {
             return new ArrayList<>();
         }
         return product.getProductRoles().stream()
-                .map(role -> {
-                    OnboardedProduct onboardedProduct = buildOnboardedProduct();
-                    onboardedProduct.setProductId(product.getProductId());
-                    onboardedProduct.setTokenId(product.getTokenId());
-                    onboardedProduct.setProductRole(role);
-                    if(StringUtils.isNotBlank(product.getRole())) {
-                        onboardedProduct.setRole(PartyRole.valueOf(product.getRole()));
-                    }
-                    return onboardedProduct;
-                })
+                .map(role -> createOnboardedProduct(
+                        product.getProductId(),
+                        product.getTokenId(),
+                        product.getRole(),
+                        role,
+                        product.getToAddOnAggregates()
+                ))
                 .collect(Collectors.toList());
     }
 
@@ -74,16 +71,13 @@ public interface UserInstitutionMapper {
         }
 
         return product.getProductRoles().stream()
-                .map(role -> {
-                    OnboardedProduct onboardedProduct = buildOnboardedProduct();
-                    onboardedProduct.setProductId(product.getProductId());
-                    onboardedProduct.setTokenId(product.getTokenId());
-                    onboardedProduct.setProductRole(role);
-                    if(StringUtils.isNotBlank(product.getRole())) {
-                        onboardedProduct.setRole(PartyRole.valueOf(product.getRole()));
-                    }
-                    return onboardedProduct;
-                })
+                .map(role -> createOnboardedProduct(
+                        product.getProductId(),
+                        product.getTokenId(),
+                        product.getRole(),
+                        role,
+                        product.getToAddOnAggregates()
+                ))
                 .collect(Collectors.toList());
     }
 
@@ -94,6 +88,20 @@ public interface UserInstitutionMapper {
         onboardedProduct.setEnv(it.pagopa.selfcare.onboarding.common.Env.ROOT);
         onboardedProduct.setCreatedAt(now);
         onboardedProduct.setUpdatedAt(now);
+        return onboardedProduct;
+    }
+
+    default OnboardedProduct createOnboardedProduct(String productId, String tokenId,
+                                                    String role, String productRole,
+                                                    Boolean toAddOnAggregates) {
+        OnboardedProduct onboardedProduct = buildOnboardedProduct();
+        onboardedProduct.setProductId(productId);
+        onboardedProduct.setTokenId(tokenId);
+        onboardedProduct.setProductRole(productRole);
+        onboardedProduct.setToAddOnAggregates(toAddOnAggregates);
+        if (StringUtils.isNotBlank(role)) {
+            onboardedProduct.setRole(PartyRole.valueOf(role));
+        }
         return onboardedProduct;
     }
 }

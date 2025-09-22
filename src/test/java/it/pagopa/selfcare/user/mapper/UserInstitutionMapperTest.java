@@ -35,6 +35,7 @@ class UserInstitutionMapperTest {
         product.setProductRoles(Arrays.asList("role1", "role2"));
         product.setProductId("productId");
         product.setTokenId("tokenId");
+        product.setToAddOnAggregates(true);
         product.setRole(PartyRole.MANAGER.name());
 
         List<OnboardedProduct> result = mapper.toNewOnboardedProduct(product);
@@ -43,6 +44,7 @@ class UserInstitutionMapperTest {
         assertEquals("productId", result.get(0).getProductId());
         assertEquals("tokenId", result.get(0).getTokenId());
         assertEquals("role1", result.get(0).getProductRole());
+        assertEquals(true, result.get(0).getToAddOnAggregates());
         assertEquals(PartyRole.MANAGER, result.get(0).getRole());
         assertEquals(OnboardedProductState.ACTIVE, result.get(0).getStatus());
         assertEquals(Env.ROOT, result.get(0).getEnv());
@@ -55,6 +57,7 @@ class UserInstitutionMapperTest {
         product.setProductRoles(Arrays.asList("role1", "role2"));
         product.setProductId("productId");
         product.setTokenId("tokenId");
+        product.setToAddOnAggregates(true);
         product.setRole(PartyRole.MANAGER.name());
 
         List<OnboardedProduct> result = mapper.toNewOnboardedProductFromAddUserRole(product);
@@ -63,6 +66,7 @@ class UserInstitutionMapperTest {
         assertEquals("productId", result.get(0).getProductId());
         assertEquals("tokenId", result.get(0).getTokenId());
         assertEquals("role1", result.get(0).getProductRole());
+        assertEquals(true, result.get(0).getToAddOnAggregates());
         assertEquals(PartyRole.MANAGER, result.get(0).getRole());
         assertEquals(OnboardedProductState.ACTIVE, result.get(0).getStatus());
         assertEquals(Env.ROOT, result.get(0).getEnv());

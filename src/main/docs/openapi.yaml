@@ -1376,6 +1376,8 @@ components:
             type: string
         delegationId:
           type: string
+        toAddOnAggregates:
+          type: boolean
     Product1:
       required:
       - productId
@@ -1396,6 +1398,8 @@ components:
           type: array
           items:
             type: string
+        toAddOnAggregates:
+          type: boolean
     QueueEvent:
       enum:
       - ADD

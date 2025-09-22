@@ -3050,6 +3050,32 @@ Feature: User
       | userId                        | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
     When I send a POST request to "users/{userId}"
     Then The status code is 401
+
+  @RemoveUserInstitutionAfterCreateFromAPI
+  Scenario: Successfully updated or created userInstitution by userId with a new role can be added to aggregates
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+      {
+          "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
+          "product": {
+              "productId": "prod-io",
+              "role": "DELEGATE",
+              "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+              "productRoles": [
+                  "referente amministrativo"
+              ],
+              "toAddOnAggregates" : true
+          },
+          "institutionDescription": "Comune di Bergamo",
+          "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+      }
+      """
+    And The following path params:
+      | userId                        | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+    When I send a POST request to "users/{userId}"
+    Then The status code is 201
+    And The userInstitution with field toAddOnAggregates was saved with value "true"
   ######################### END POST /{userId} #########################
 
   ######################### BEGIN POST /{userId}/onboarding #########################
@@ -3505,6 +3531,35 @@ Feature: User
       | productId                      | productRole                                   | role         | status | tokenId                                |
       | prod-io                        | admin                                         | SUB_DELEGATE | ACTIVE | asda8312-3311-5642-gsds-gfr2252341     |
       | prod-pagopa                    | referente amministrativo                      | MANAGER      | ACTIVE | aa1112-5132-4432-gsds-d12322           |
+
+  @RemoveUserInstitutionWithMockUser3
+  Scenario: Successfully created a new user or updated an existing one can be added to aggregates
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+        {
+            "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
+            "hasToSendEmail": false,
+            "user": {
+              "fiscalCode": "VRDMRA22T71F205A",
+              "institutionEmail": "prova@email.com"
+            },
+            "product": {
+                "productId": "prod-io",
+                "role": "DELEGATE",
+                "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+                "productRoles": [
+                    "referente amministrativo"
+                ],
+                "toAddOnAggregates" : true
+            },
+            "institutionDescription": "Comune di Bergamo",
+            "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+        }
+      """
+    When I send a POST request to "users/"
+    Then The status code is 201
+    And The userInstitution with field toAddOnAggregates was saved with value "true"
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Unsuccessfully create a new user or update an existing one with ACTIVE status (existing userInstitution with existing product)

@@ -37,5 +37,7 @@ public class AddUserRoleDto {
         private List<String> productRoles;
 
         private String delegationId;
+
+        private Boolean toAddOnAggregates;
     }
 }

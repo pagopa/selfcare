@@ -51,5 +51,7 @@ public class CreateUserDto {
 
         @NotNull(message = "productRoles is required")
         private List<String> productRoles;
+
+        private Boolean toAddOnAggregates;
     }
 }

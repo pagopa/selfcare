@@ -13,6 +13,7 @@ import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
+import org.junit.jupiter.api.Assertions;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -221,5 +222,28 @@ public class UserSteps {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    @And("The userInstitution with field toAddOnAggregates was saved with value {string}")
+    public void checkUserInstitutionWithFieldToAddOnAggregates(String arg0) {
+        boolean toAddOnAggregates = Boolean.parseBoolean(arg0);
+        UserInstitution.find("institutionId = ?1", mockInstitutionId2)
+                .firstResult()
+                .subscribe()
+                .with(
+                        success -> {
+                            UserInstitution userInstitution = (UserInstitution) success;
+                            if(!Objects.isNull(userInstitution)) {
+                                List<OnboardedProduct> products = userInstitution.getProducts();
+                                Assertions.assertNotNull(products, "Products list is null");
+                                Assertions.assertFalse(products.isEmpty(), "Products list is empty");
+                                OnboardedProduct product = products.get(0);
+                                Assertions.assertEquals(toAddOnAggregates, product.getToAddOnAggregates(), String.format("The field toAddOnAggregates differ. Expected: %s, Current %s", toAddOnAggregates, product.getToAddOnAggregates()));
+                            } else {
+                                log.info("No userInstitution with institutionId {}", mockInstitutionId2);
+                            }
+                        },
+                        failure -> log.info("Failed to find userInstitution with institutionId {}", mockInstitutionId2)
+                );
     }
 }
