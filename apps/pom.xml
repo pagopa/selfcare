@@ -24,6 +24,17 @@
                 <module>auth</module>
             </modules>
         </profile>
+        <profile>
+            <id>iam</id>
+            <activation>
+                <file>
+                    <exists>iam/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>iam</module>
+            </modules>
+        </profile>
     </profiles>
     <properties>
         <maven.compiler.source>23</maven.compiler.source>
