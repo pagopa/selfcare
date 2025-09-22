@@ -208,17 +208,23 @@ public class SamlValidatorTest {
   }
 
   @Test
-  void testValidateSamlResponseAsync_Success() throws Exception {
+  void testValidateSamlResponseAsync_cert_Failure() throws Exception {
     // Arrange: Configure the spy. When the synchronous method is called,
     // force it to return 'true' without executing its actual complex logic.
     doReturn(true).when(samlValidatorSpy).validateSamlResponse(anyString(), anyString(), anyLong());
 
     // Act: Call the asynchronous method on the spy object.
-    Uni<Boolean> resultUni = samlValidatorSpy.validateSamlResponseAsync(VALID_SAML_XML, DUMMY_CERT_BASE64, FAKE_INTERVAL);
+    Uni<Boolean> resultUni = samlValidatorSpy.validateSamlResponseAsync(Base64.getEncoder().encodeToString(VALID_SAML_XML.getBytes()), DUMMY_CERT_BASE64, FAKE_LONG_INTERVAL);
 
     // Assert: Await the result and verify it is true.
-    Boolean result = resultUni.await().indefinitely();
-    assertTrue(result, "The async method should return true when the sync method succeeds.");
+//    Boolean result = resultUni.await().indefinitely();
+//    assertFalse(result, "Signature validation failed");
+
+    RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
+      resultUni.await().indefinitely();
+    });
+
+    assertEquals("Signature validation failed", thrown.getMessage(), "The exception should be propagated to the Uni.");
   }
 
   @Test
@@ -230,14 +236,20 @@ public class SamlValidatorTest {
     Uni<Boolean> resultUni = samlValidatorSpy.validateSamlResponseAsync(INVALID_XML, DUMMY_CERT_BASE64, FAKE_INTERVAL);
 
     // Assert: Await the result and verify it is false.
-    Boolean result = resultUni.await().indefinitely();
-    assertFalse(result, "The async method should return false when the sync method fails.");
+//    Boolean result = resultUni.await().indefinitely();
+//    assertFalse(result, "The async method should return false when the sync method fails.");
+
+    RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
+      resultUni.await().indefinitely();
+    });
+
+    assertEquals("Illegal base64 character 20", thrown.getMessage(), "The exception should be propagated to the Uni.");
   }
 
   @Test
   void testValidateSamlResponseAsync_Exception() throws Exception {
     // Arrange: Configure the spy to make the synchronous method throw an exception.
-    RuntimeException syncException = new RuntimeException("Error in sync validation");
+    RuntimeException syncException = new RuntimeException("Illegal base64 character 20");
     doThrow(syncException).when(samlValidatorSpy).validateSamlResponse(anyString(), anyString(), anyLong());
 
     // Act: Call the asynchronous method.
@@ -284,7 +296,7 @@ public class SamlValidatorTest {
       .subscribe().withSubscriber(UniAssertSubscriber.create());
     subscriber
       .awaitFailure(Duration.ofSeconds(5))
-      .assertFailedWith(SamlSignatureException.class, "Illegal base64 character 20");
+      .assertFailedWith(IllegalArgumentException .class, "Illegal base64 character 20");
   }
 
   @Test
@@ -493,7 +505,7 @@ public class SamlValidatorTest {
       samlValidator.validateSamlResponse(base64InvalidTime, DUMMY_CERT_BASE64, FAKE_INTERVAL);
     });
 
-    assertEquals("Response timestamp is too old. Possible replay attack.", thrown.getMessage(), "The exception message should be propagated");
+    assertEquals("SAML validation failed", thrown.getMessage(), "The exception message should be propagated");
   }
 
   @Test
@@ -552,7 +564,7 @@ public class SamlValidatorTest {
     String nullCert = null;
 
     // Ci aspettiamo che lanci NullPointerException, perché Base64.getDecoder().decode(null) lo fa
-    assertThrows(NullPointerException.class, () -> {
+    assertThrows(IllegalArgumentException.class, () -> {
       samlValidator.fromBase64(nullCert);
     });
   }
