@@ -25,4 +25,5 @@ public class OnboardedProduct {
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
     private String delegationId;
+    private Boolean toAddOnAggregates;
 }
