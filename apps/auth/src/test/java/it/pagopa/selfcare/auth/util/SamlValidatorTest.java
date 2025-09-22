@@ -214,7 +214,7 @@ public class SamlValidatorTest {
     doReturn(true).when(samlValidatorSpy).validateSamlResponse(anyString(), anyString(), anyLong());
 
     // Act: Call the asynchronous method on the spy object.
-    Uni<Boolean> resultUni = samlValidatorSpy.validateSamlResponseAsync(Base64.getEncoder().encodeToString(VALID_SAML_XML.getBytes()), DUMMY_CERT_BASE64, FAKE_LONG_INTERVAL);
+    Uni<Map<String, String>> resultUni = samlValidatorSpy.validateSamlResponseAsync(Base64.getEncoder().encodeToString(VALID_SAML_XML.getBytes()), DUMMY_CERT_BASE64, FAKE_LONG_INTERVAL);
 
     // Assert: Await the result and verify it is true.
 //    Boolean result = resultUni.await().indefinitely();
@@ -233,7 +233,7 @@ public class SamlValidatorTest {
     doReturn(false).when(samlValidatorSpy).validateSamlResponse(anyString(), anyString(), anyLong());
 
     // Act: Call the asynchronous method.
-    Uni<Boolean> resultUni = samlValidatorSpy.validateSamlResponseAsync(INVALID_XML, DUMMY_CERT_BASE64, FAKE_INTERVAL);
+    Uni<Map<String, String>> resultUni = samlValidatorSpy.validateSamlResponseAsync(INVALID_XML, DUMMY_CERT_BASE64, FAKE_INTERVAL);
 
     // Assert: Await the result and verify it is false.
 //    Boolean result = resultUni.await().indefinitely();
@@ -253,7 +253,7 @@ public class SamlValidatorTest {
     doThrow(syncException).when(samlValidatorSpy).validateSamlResponse(anyString(), anyString(), anyLong());
 
     // Act: Call the asynchronous method.
-    Uni<Boolean> resultUni = samlValidatorSpy.validateSamlResponseAsync(INVALID_XML, DUMMY_CERT_BASE64, FAKE_INTERVAL);
+    Uni<Map<String, String>> resultUni = samlValidatorSpy.validateSamlResponseAsync(INVALID_XML, DUMMY_CERT_BASE64, FAKE_INTERVAL);
 
     // Assert: Verify that awaiting the result of the Uni throws the same exception.
     // This confirms that the failure is correctly propagated.
@@ -289,10 +289,10 @@ public class SamlValidatorTest {
   @Test
   void validateSamlResponseAsync_InvalidInput_ShouldCompleteWithFalse() throws Exception {
     System.out.println("=== TEST INVALID XML ===");
-    Uni<Boolean> result = samlValidator.validateSamlResponseAsync(INVALID_XML, DUMMY_CERT_BASE64, FAKE_INTERVAL);
+    Uni<Map<String, String>> result = samlValidator.validateSamlResponseAsync(INVALID_XML, DUMMY_CERT_BASE64, FAKE_INTERVAL);
 
 // Then
-    UniAssertSubscriber<Boolean> subscriber = result
+    UniAssertSubscriber<Map<String, String>> subscriber = result
       .subscribe().withSubscriber(UniAssertSubscriber.create());
     subscriber
       .awaitFailure(Duration.ofSeconds(5))

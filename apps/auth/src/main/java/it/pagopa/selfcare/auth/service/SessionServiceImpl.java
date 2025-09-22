@@ -50,4 +50,20 @@ public class SessionServiceImpl implements SessionService {
                     .expiresAt(Instant.now().plus(Duration.ofHours(sessionDuration)))
                     .sign(rsaPrivateKey));
   }
+
+  @Override
+  public Uni<String> generateSessionTokenInternal(UserClaims userClaims) {
+    return Pkcs8Utils.extractRSAPrivateKeyFromPem(privateKeyPem)
+      .onFailure()
+      .transform(ex -> new InternalException(ex.getMessage()))
+      .map(
+        rsaPrivateKey ->
+          Jwt.claims()
+            .claim("uid", userClaims.getUid())
+            .issuer("PAGOPA")
+            .audience(audience)
+            .issuedAt(Instant.now())
+            .expiresAt(Instant.now().plus(Duration.ofHours(sessionDuration)))
+            .sign(rsaPrivateKey));
+  }
 }

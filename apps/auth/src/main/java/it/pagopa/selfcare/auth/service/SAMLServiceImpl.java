@@ -1,12 +1,18 @@
 package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.auth.exception.SamlSignatureException;
+import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.util.SamlValidator;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 
 @Slf4j
 @ApplicationScoped
@@ -36,9 +42,26 @@ public class SAMLServiceImpl implements SAMLService {
   @Inject
   SamlValidator samlValidator;
 
+  @Inject
+  private final SessionService sessionService;
+
   @Override
-  public Uni<Boolean> validate(String samlResponse) throws Exception {
-    return samlValidator.validateSamlResponseAsync(samlResponse, idpCert, timeInterval);
+  public Uni<String> generateSessionToken(String samlResponse) throws Exception {
+    return samlValidator.validateSamlResponseAsync(samlResponse, idpCert, timeInterval)
+        .onItem().transformToUni(this::createSessionToken);
+  }
+
+  private Uni<String> createSessionToken(Map<String, String> attributes) {
+    return Uni.createFrom().item(attributes)
+      .onItem().transformToUni(this::createUserClaims)
+      .onItem().transformToUni(sessionService::generateSessionTokenInternal)
+      .onFailure().transform(failure -> new SamlSignatureException("SAML validation failed"));
+  }
+
+  private Uni<UserClaims> createUserClaims(Map<String, String> attributes) {
+    UserClaims userClaims = new UserClaims();
+    userClaims.setUid("0123456789");
+    return Uni.createFrom().item(userClaims);
   }
 
 }

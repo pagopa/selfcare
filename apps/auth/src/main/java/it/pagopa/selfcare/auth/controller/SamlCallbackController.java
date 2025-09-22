@@ -49,19 +49,18 @@ public class SamlCallbackController {
             .build());
         case VALID -> {
           try {
-            yield samlService.validate(samlResponse)
-              .onItem().transformToUni(isValid -> Uni.createFrom().item(
-                isValid ? createResponse(Objects.requireNonNull(samlResponse)) : createErrorResponse()));
+            yield samlService.generateSessionToken(samlResponse)
+              .onItem().transform(message -> createResponse(Objects.requireNonNull(message)));
           } catch (Exception e) {
             throw new SamlSignatureException(e.getMessage());
+//            createErrorResponse();
           }
         }
       });
   }
 
   Response createResponse(String message) {
-    byte[] response = Base64.getDecoder().decode(message.getBytes(StandardCharsets.UTF_8));
-    String responseMessage = String.format("samlResponse: %s", new String(response));
+    String responseMessage = String.format("samlResponse: %s", message);
 
     return Response.ok(responseMessage).build();
   }
@@ -73,14 +72,12 @@ public class SamlCallbackController {
   }
 
   private Uni<ValidationResult> validateRequest(MediaType contentType, String samlResponse) {
-    return Uni.createFrom().item(() -> {
-      return Optional.ofNullable(contentType)
-        .filter(MediaType.APPLICATION_FORM_URLENCODED_TYPE::isCompatible)
-        .map(ct -> Optional.ofNullable(samlResponse)
-          .filter(sr -> !sr.trim().isEmpty())
-          .map(sr -> ValidationResult.VALID)
-          .orElse(ValidationResult.MISSING_SAML_RESPONSE))
-        .orElse(ValidationResult.INVALID_CONTENT_TYPE);
-    });
+    return Uni.createFrom().item(() -> Optional.ofNullable(contentType)
+      .filter(MediaType.APPLICATION_FORM_URLENCODED_TYPE::isCompatible)
+      .map(ct -> Optional.ofNullable(samlResponse)
+        .filter(sr -> !sr.trim().isEmpty())
+        .map(sr -> ValidationResult.VALID)
+        .orElse(ValidationResult.MISSING_SAML_RESPONSE))
+      .orElse(ValidationResult.INVALID_CONTENT_TYPE));
   }
 }

@@ -14,6 +14,7 @@ import org.w3c.dom.Document;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -180,23 +181,31 @@ public class SAMLServiceTest {
   }
 
   @Test
-  public void testValidate_Success() throws Exception {
+  public void testGenerateSessionToken_Success() throws Exception {
+    Map<String, String> responseMap = generateReponseAttribute();
+
     // Arrange: Configure the mock validator to return a successful Uni<Boolean>
     when(samlValidator.validateSamlResponseAsync(FAKE_SAML_RESPONSE, FAKE_IDP_CERT, FAKE_TIME_INTERVAL))
-      .thenReturn(Uni.createFrom().item(true));
+      .thenReturn(Uni.createFrom().item(responseMap));
 
     // Act: Call the service method
-    Uni<Boolean> resultUni = samlService.validate(FAKE_SAML_RESPONSE);
+    Uni<String> resultUni = samlService.generateSessionToken(FAKE_SAML_RESPONSE);
 
     // Assert: Check that the result is true and the validator was called correctly
-    Boolean result = resultUni.await().indefinitely();
-    assertTrue(result, "Validation should be successful");
+    String result = resultUni.await().indefinitely();
+    assertNotNull(result, "Validation should be successful");
 
     verify(samlValidator).validateSamlResponseAsync(FAKE_SAML_RESPONSE, FAKE_IDP_CERT, FAKE_TIME_INTERVAL);
   }
 
+  private static Map<String, String> generateReponseAttribute() {
+    Map<String, String> responseMap = new HashMap<>();
+    responseMap.put("NAME_ID", "email@test");
+    return responseMap;
+  }
+
   @Test
-  public void testValidate_Failure() throws Exception {
+  public void testGenerateSessionToken_Failure() throws Exception {
     // Arrange: Configure the mock validator to return a failed Uni<Boolean>
     when(samlValidator.validateSamlResponseAsync(FAKE_SAML_RESPONSE, FAKE_IDP_CERT, FAKE_TIME_INTERVAL))
       .thenThrow(new SamlSignatureException("error"));
@@ -208,7 +217,7 @@ public class SAMLServiceTest {
   }
 
   @Test
-  public void testValidate_Exception() {
+  public void testGenerateSessionToken_Exception() {
     // Arrange: Configure the mock validator to return a failed Uni with an exception
     RuntimeException mockException = new RuntimeException("Validation Error");
     try {
@@ -220,7 +229,7 @@ public class SAMLServiceTest {
 
     // Act & Assert: Check that the exception is propagated correctly
     RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
-      samlService.validate(FAKE_SAML_RESPONSE).await().indefinitely();
+      samlService.generateSessionToken(FAKE_SAML_RESPONSE).await().indefinitely();
     });
 
     assertEquals("Validation Error", thrown.getMessage(), "The exception message should be propagated");

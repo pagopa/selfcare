@@ -3,19 +3,14 @@ package it.pagopa.selfcare.auth.controller;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.response.Response;
-import it.pagopa.selfcare.auth.exception.ForbiddenException;
 import it.pagopa.selfcare.auth.exception.SamlSignatureException;
-import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import io.restassured.RestAssured;
 import it.pagopa.selfcare.auth.service.SAMLService;
-import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import io.smallrye.mutiny.Uni;
-import org.mockito.Mockito;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
@@ -28,6 +23,7 @@ import static org.mockito.Mockito.*;
 @QuarkusTest
 @TestHTTPEndpoint(SamlCallbackController.class)
 class SamlCallbackControllerTest {
+  public static final String SESSION_TOKEN = "TOKEN";
   @InjectMock
   private SAMLService samlService;
 
@@ -46,8 +42,8 @@ class SamlCallbackControllerTest {
   @Test
   public void testHandleSamlResponse_Success() throws Exception {
     // Arrange: Configure the mock service to return 'true' for validation.
-    when(samlService.validate(VALID_SAML_RESPONSE))
-      .thenReturn(Uni.createFrom().item(true));
+    when(samlService.generateSessionToken(VALID_SAML_RESPONSE))
+      .thenReturn(Uni.createFrom().item(SESSION_TOKEN));
 
     // Act & Assert
     given()
@@ -68,7 +64,7 @@ class SamlCallbackControllerTest {
   @Test
   public void testHandleSamlResponse_Invalid() throws Exception {
     // Arrange: Configure the mock service to return 'false' for validation.
-    when(samlService.validate(anyString())).thenThrow(new SamlSignatureException("Validation Error"));
+    when(samlService.generateSessionToken(anyString())).thenThrow(new SamlSignatureException("Validation Error"));
 
     // Act & Assert
     given()
@@ -111,7 +107,7 @@ class SamlCallbackControllerTest {
       .body(equalTo("SAMLResponse is required."));
 
     // Verify that the service is not called when SAMLResponse is null
-    verify(samlService, never()).validate(anyString());
+    verify(samlService, never()).generateSessionToken(anyString());
   }
 
   @Test
@@ -127,13 +123,13 @@ class SamlCallbackControllerTest {
       .body(equalTo("SAMLResponse is required."));
 
     // Verify that the service is not called when SAMLResponse is empty
-    verify(samlService, never()).validate(anyString());
+    verify(samlService, never()).generateSessionToken(anyString());
   }
 
   @Test
   void handleSamlResponse_ServiceValidationFailure_ShouldReturnBadRequest() throws Exception {
     // Given
-    when(samlService.validate(anyString()))
+    when(samlService.generateSessionToken(anyString()))
       .thenReturn(Uni.createFrom().failure(new RuntimeException("Validation failed")));
 
     // When & Then
@@ -167,8 +163,8 @@ class SamlCallbackControllerTest {
     }
     String longResponse = longSamlResponse.toString();
 
-    when(samlService.validate(longResponse))
-      .thenReturn(Uni.createFrom().item(true));
+    when(samlService.generateSessionToken(longResponse))
+      .thenReturn(Uni.createFrom().item(SESSION_TOKEN));
 
     // When & Then
     given()
@@ -185,8 +181,8 @@ class SamlCallbackControllerTest {
     // Given
     String specialCharsSamlResponse = "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHNhbWxwOlJlc3BvbnNlICZsdDsgJmd0OyAmYW1wOyAmcXVvdDs+PC9zYW1scDpSZXNwb25zZT4K";
 
-    when(samlService.validate(specialCharsSamlResponse))
-      .thenReturn(Uni.createFrom().item(true));
+    when(samlService.generateSessionToken(specialCharsSamlResponse))
+      .thenReturn(Uni.createFrom().item(SESSION_TOKEN));
 
     // When & Then
     given()
@@ -198,6 +194,6 @@ class SamlCallbackControllerTest {
       .statusCode(200)
       .contentType(MediaType.TEXT_PLAIN)
 //      .body(containsString("samlResponse: " + specialCharsSamlResponse));
-      .body(containsString("samlResponse: <?xml version=\"1.0\" encoding=\"UTF-8\"?>")); //TODO APZ should fix
+      .body(containsString("samlResponse: " + SESSION_TOKEN)); //TODO APZ should fix
   }
 }
