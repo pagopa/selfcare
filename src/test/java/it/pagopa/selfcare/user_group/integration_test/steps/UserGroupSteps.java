@@ -8,6 +8,7 @@ import it.pagopa.selfcare.cucumber.utils.model.JwtData;
 import it.pagopa.selfcare.cucumber.utils.model.TestData;
 import it.pagopa.selfcare.user_group.dao.UserGroupRepository;
 import it.pagopa.selfcare.user_group.integration_test.KeyGenerator;
+import it.pagopa.selfcare.user_group.model.AddMembersToUserGroupDto;
 import it.pagopa.selfcare.user_group.model.UserGroupEntity;
 import it.pagopa.selfcare.user_group.model.UserGroupEntityPageable;
 import lombok.extern.slf4j.Slf4j;
@@ -39,11 +40,12 @@ public class UserGroupSteps {
     protected UserGroupEntity userGroupEntityResponse;
     protected UserGroupEntity updatedUserGroupEntity;
     protected UserGroupEntityPageable userGroupEntityResponsePage;
+    protected AddMembersToUserGroupDto addMembersRequest;
     protected Pageable pageable;
     protected UserGroupEntity userGroupEntityFilter;
     protected int status;
     protected String errorMessage;
-    protected List<String> userGroupsIds = List.of("6759f8df78b6af202b222d29", "6759f8df78b6af202b222d2a", "6759f8df78b6af202b222d2b");
+    protected List<String> userGroupsIds = List.of("6759f8df78b6af202b222d29", "6759f8df78b6af202b222d2a", "6759f8df78b6af202b222d2b", "6759f8df78b6af202b222d2c");
     protected String token;
 
     protected void login(String user, String pass) {

@@ -40,6 +40,9 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     private static final String USER_GROUP_ID_REQUIRED_MESSAGE = "A user group id is required";
     private static final String TRYING_TO_MODIFY_SUSPENDED_GROUP = "Trying to modify suspended group";
+    private static final String USER_GROUP_INSTITUTION_ID_REQUIRED_MESSAGE = "A user group institution id is required";
+    private static final String USER_GROUP_PARENT_INSTITUTION_ID_REQUIRED_MESSAGE = "A user group parent institution id is required";
+    private static final String MEMBERS_REQUIRED = "Members are required";
     private static final String MEMBER_ID_REQUIRED = "A member id is required";
     private static final String GROUP_NAME_ALREADY_EXISTS = "A group with the same name already exists in ACTIVE or SUSPENDED state";
     private final List<String> allowedSortingParams;
@@ -83,6 +86,25 @@ public class UserGroupServiceImpl implements UserGroupService {
         insertMember(id, memberId.toString());
         log.trace("addMember end");
     }
+
+    @Override
+    public void addMembers(String institutionId, String parentInstitutionId, String productId, Set<UUID> members) {
+        log.trace("addMembers start");
+        log.debug("addMembers institutionId = {}, parentInstitutionId = {}, members = {}",
+                Encode.forJava(institutionId), Encode.forJava(parentInstitutionId), Encode.forJava(members.toString()));
+        Assert.notNull(institutionId, USER_GROUP_INSTITUTION_ID_REQUIRED_MESSAGE);
+        Assert.notNull(parentInstitutionId, USER_GROUP_PARENT_INSTITUTION_ID_REQUIRED_MESSAGE);
+        Assert.notNull(members, MEMBERS_REQUIRED);
+        UserGroupFilter userGroupFilter = UserGroupFilter.builder()
+                .institutionId(institutionId)
+                .parentInstitutionId(parentInstitutionId)
+                .productId(productId)
+                .build();
+        String groupId = findGroupId(userGroupFilter);
+        insertMembers(groupId, members);
+        log.trace("addMembers end");
+    }
+
 
     @Override
     public void deleteMember(String groupId, String memberId) {
@@ -233,6 +255,41 @@ public class UserGroupServiceImpl implements UserGroupService {
         log.trace("insertMember end");
     }
 
+    private String findGroupId(UserGroupFilter userGroupFilter) {
+        Page<UserGroupOperations> foundGroups = findAll(userGroupFilter, Pageable.unpaged());
+
+        long total = foundGroups.getTotalElements();
+        if (total == 0) {
+            throw new ResourceNotFoundException();
+        }
+        if (total > 1) {
+            throw new IllegalStateException("Expected a single UserGroup, but found " + total);
+        }
+
+        return foundGroups.getContent().get(0).getId();
+    }
+
+    private void insertMembers(String id, Set<UUID> memberIds) {
+        log.trace("insertMembers start");
+        log.debug("insertMembers id = {}, memberIds = {}", Encode.forJava(id), Encode.forJava(memberIds.toString()));
+
+        // convert UUIDs
+        Object[] userIdsAsStrings = memberIds.stream()
+                .map(UUID::toString)
+                .toArray();
+
+        mongoTemplate.updateFirst(
+                createActiveGroupQuery(id),
+                new Update()
+                        .addToSet(UserGroupEntity.Fields.members).each(userIdsAsStrings)
+                        .set(UserGroupEntity.Fields.modifiedBy, auditorAware.getCurrentAuditor().orElse(null))
+                        .currentDate(UserGroupEntity.Fields.modifiedAt),
+                UserGroupEntity.class);
+
+        log.trace("insertMembers end");
+    }
+
+
     private void removeMemberFromActiveGroup(String id, String memberId) {
         log.trace("deleteMember start");
         log.debug("deleteMember id = {}, memberId = {}", id, memberId);
@@ -283,7 +340,7 @@ public class UserGroupServiceImpl implements UserGroupService {
         if (pageable.getSort().isSorted() && !StringUtils.hasText(filter.getProductId()) && !StringUtils.hasText(filter.getInstitutionId())) {
             throw new ValidationException("Sorting not allowed without productId or institutionId");
         }
-        if (filter.getStatus().size() == 1 && !StringUtils.hasText(filter.getUserId()) && !StringUtils.hasText(filter.getProductId()) && !StringUtils.hasText(filter.getInstitutionId())) {
+        if (Optional.ofNullable(filter.getStatus()).map(List::size).orElse(0) == 1 && !StringUtils.hasText(filter.getUserId()) && !StringUtils.hasText(filter.getProductId()) && !StringUtils.hasText(filter.getInstitutionId())) {
             throw new ValidationException("At least one of productId, institutionId and userId must be provided with status filter");
         }
         Query query = new Query(constructCriteria(filter));
@@ -301,6 +358,7 @@ public class UserGroupServiceImpl implements UserGroupService {
                 .isIfNotNull(UserGroupEntity.Fields.productId, filter.getProductId())
                 .isIfNotNull(UserGroupEntity.Fields.members, filter.getUserId())
                 .inIfNotEmpty(UserGroupEntity.Fields.status, filter.getStatus())
+                .isIfNotNull(UserGroupEntity.Fields.parentInstitutionId, filter.getParentInstitutionId())
                 .build();
 
     }

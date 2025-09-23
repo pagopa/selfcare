@@ -21,8 +21,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import it.pagopa.selfcare.user_group.model.DummyCreateUserGroupDto;
-import it.pagopa.selfcare.user_group.model.DummyUpdateUserGroupDto;
 
 import java.util.List;
 import java.util.Set;
@@ -51,6 +49,7 @@ class UserGroupV1ControllerTest {
 
     private static final DummyCreateUserGroupDto CREATE_USER_GROUP_DTO = mockInstance(new DummyCreateUserGroupDto());
     private static final DummyUpdateUserGroupDto UPDATE_USER_GROUP_DTO = mockInstance(new DummyUpdateUserGroupDto());
+    private static final DummyAddMembersToUserGroupDto ADD_MEMBERS_TO_USER_GROUP_DTO = mockInstance(new DummyAddMembersToUserGroupDto());
     private static final String BASE_URL = "/v1/user-groups";
 
     @MockBean
@@ -365,6 +364,24 @@ class UserGroupV1ControllerTest {
         assertEquals(0, result.getResponse().getContentLength());
         verify(groupServiceMock, times(1))
                 .deleteMembers(memberId.toString(), institutionId, productId);
+        Mockito.verifyNoMoreInteractions(groupServiceMock);
+    }
+
+    @Test
+    void addMembers() throws Exception {
+
+        //when
+        MvcResult result = mvc.perform(MockMvcRequestBuilders
+                        .put(BASE_URL + "/members")
+                        .content(mapper.writeValueAsString(ADD_MEMBERS_TO_USER_GROUP_DTO))
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(status().is2xxSuccessful())
+                .andReturn();
+        //then
+        assertEquals(0, result.getResponse().getContentLength());
+        verify(groupServiceMock, times(1))
+                .addMembers(anyString(), anyString(), anyString(), anySet());
         Mockito.verifyNoMoreInteractions(groupServiceMock);
     }
 

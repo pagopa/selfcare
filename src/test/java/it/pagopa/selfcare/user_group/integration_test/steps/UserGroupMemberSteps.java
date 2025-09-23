@@ -6,12 +6,17 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.restassured.RestAssured;
+import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import io.restassured.response.ResponseOptions;
 import io.restassured.specification.RequestSpecification;
+import it.pagopa.selfcare.user_group.model.AddMembersToUserGroupDto;
 import it.pagopa.selfcare.user_group.model.UserGroupEntity;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.Assertions;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 public class UserGroupMemberSteps extends UserGroupSteps {
@@ -72,6 +77,11 @@ public class UserGroupMemberSteps extends UserGroupSteps {
         userGroupEntityFilter.setProductId(productId);
     }
 
+    @Given("the following add members to user group request details:")
+    public void givenAddMembersToUserGroupRequestDetails(List<AddMembersToUserGroupDto> addMembersToUserGroupDtos) {
+        if (addMembersToUserGroupDtos != null && addMembersToUserGroupDtos.size() == 1)
+            this.addMembersRequest = addMembersToUserGroupDtos.get(0);
+    }
 
     @When("I send a PUT request to {string}")
     public void iSendAPutRequestTo(String url) {
@@ -84,6 +94,31 @@ public class UserGroupMemberSteps extends UserGroupSteps {
 
         status = response.statusCode();
         if (status != 204) {
+            errorMessage = response.body().asString();
+        }
+    }
+
+    @When("I send a PUT request to {string} to add members to a group")
+    public void iSendAPUTRequestToAddMembers(String url) {
+        RequestSpecification requestSpecification = RestAssured.given()
+                .contentType("application/json");
+
+        if(StringUtils.isNotBlank(token)){
+            requestSpecification.header("Authorization", "Bearer " + token);
+        }
+
+        ExtractableResponse<?> response = requestSpecification
+                .body(addMembersRequest)
+                .when()
+                .put(url)
+                .then()
+                .extract();
+
+        status = response.statusCode();
+        if(status == 201) {
+            userGroupEntityResponse = response.body().as(UserGroupEntity.class);
+            userGroupId = userGroupEntityResponse.getId();
+        } else {
             errorMessage = response.body().asString();
         }
     }

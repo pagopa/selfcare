@@ -29,8 +29,8 @@ Feature: Get User Group
     And I have no filters
     When I send a GET request to "/v1/user-groups" to retrieve userGroups
     Then [RETRIEVE] the response status should be 200
-    And the response should contain 3 item
-    And the response should contains groupIds "6759f8df78b6af202b222d29,6759f8df78b6af202b222d2a,6759f8df78b6af202b222d2b"
+    And the response should contain 4 item
+    And the response should contains groupIds "6759f8df78b6af202b222d29,6759f8df78b6af202b222d2a,6759f8df78b6af202b222d2b,6759f8df78b6af202b222d2c"
 
   Scenario: Attempt to retrieve user groups with a sorting parameter but no productId or institutionId
     Given [RETRIEVE] user login with username "j.doe" and password "test"
@@ -67,7 +67,7 @@ Feature: Get User Group
     And I set the page number to 1 and page size to 2
     When I send a GET request to "/v1/user-groups" to retrieve userGroups
     Then [RETRIEVE] the response status should be 200
-    And the response should contain a paginated list of user groups of 1 items on page 1
+    And the response should contain a paginated list of user groups of 2 items on page 1
 
   @LastRetrieveGroupScenario
   Scenario: No user groups found for the provided filters

@@ -5,6 +5,7 @@ import it.pagopa.selfcare.user_group.model.UserGroupFilter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Set;
 import java.util.UUID;
 
 public interface UserGroupService {
@@ -12,6 +13,8 @@ public interface UserGroupService {
     UserGroupOperations createGroup(UserGroupOperations group);
 
     void addMember(String id, UUID memberId);
+
+    void addMembers(String institutionId, String parentInstitutionId, String productId, Set<UUID> members);
 
     void deleteMember(String groupId, String memberId);
 

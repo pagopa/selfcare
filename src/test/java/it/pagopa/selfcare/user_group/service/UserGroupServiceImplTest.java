@@ -1,6 +1,8 @@
 package it.pagopa.selfcare.user_group.service;
 
 import com.mongodb.client.result.UpdateResult;
+import it.pagopa.selfcare.commons.base.security.SelfCareUser;
+import it.pagopa.selfcare.commons.utils.TestUtils;
 import it.pagopa.selfcare.user_group.api.UserGroupOperations;
 import it.pagopa.selfcare.user_group.config.CoreTestConfig;
 import it.pagopa.selfcare.user_group.dao.UserGroupRepository;
@@ -11,8 +13,6 @@ import it.pagopa.selfcare.user_group.model.DummyGroup;
 import it.pagopa.selfcare.user_group.model.UserGroupEntity;
 import it.pagopa.selfcare.user_group.model.UserGroupFilter;
 import it.pagopa.selfcare.user_group.model.UserGroupStatus;
-import it.pagopa.selfcare.commons.base.security.SelfCareUser;
-import it.pagopa.selfcare.commons.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,10 +36,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import javax.validation.ValidationException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -853,4 +850,75 @@ class UserGroupServiceImplTest {
         verify(mongoTemplateMock).count(any(Query.class), eq(UserGroupEntity.class));
         verify(group).getName();
     }
+
+    @Test
+    void addMembers_ok() {
+        String institutionId = "inst1";
+        String parentInstitutionId = "parent1";
+        String productId = "prod1";
+        UUID member = UUID.randomUUID();
+        Set<UUID> members = Set.of(member);
+
+        UserGroupEntity entity = new UserGroupEntity();
+        entity.setId("group123");
+
+        when(mongoTemplateMock.count(any(Query.class), eq(UserGroupEntity.class))).thenReturn(1L);
+        when(mongoTemplateMock.find(any(Query.class), eq(UserGroupEntity.class)))
+                .thenReturn(List.of(entity));
+        when(auditorAware.getCurrentAuditor()).thenReturn(Optional.of("testUser"));
+
+        groupService.addMembers(institutionId, parentInstitutionId, productId, members);
+
+        verify(mongoTemplateMock).updateFirst(
+                any(),
+                any(Update.class),
+                eq(UserGroupEntity.class)
+        );
+    }
+
+    @Test
+    void addMembers_nullInstitutionId_shouldThrow() {
+        Set<UUID> members = Set.of(UUID.randomUUID());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> groupService.addMembers(null, "parent", "prod", members));
+    }
+
+    @Test
+    void addMembers_nullParentInstitutionId_shouldThrow() {
+        Set<UUID> members = Set.of(UUID.randomUUID());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> groupService.addMembers("inst", null, "prod", members));
+    }
+
+    @Test
+    void addMembers_noGroupFound_shouldThrowResourceNotFound() {
+        Set<UUID> members = Set.of(UUID.randomUUID());
+
+        when(mongoTemplateMock.count(any(Query.class), eq(UserGroupEntity.class))).thenReturn(0L);
+        when(mongoTemplateMock.find(any(Query.class), eq(UserGroupEntity.class)))
+                .thenReturn(List.of());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> groupService.addMembers("inst", "parent", "prod", members));
+    }
+
+    @Test
+    void addMembers_multipleGroupsFound_shouldThrowIllegalState() {
+        Set<UUID> members = Set.of(UUID.randomUUID());
+
+        UserGroupEntity e1 = new UserGroupEntity();
+        e1.setId("id1");
+        UserGroupEntity e2 = new UserGroupEntity();
+        e2.setId("id2");
+
+        when(mongoTemplateMock.count(any(Query.class), eq(UserGroupEntity.class))).thenReturn(2L);
+        when(mongoTemplateMock.find(any(Query.class), eq(UserGroupEntity.class)))
+                .thenReturn(List.of(e1, e2));
+
+        assertThrows(IllegalStateException.class,
+                () -> groupService.addMembers("inst", "parent", "prod", members));
+    }
+
 }

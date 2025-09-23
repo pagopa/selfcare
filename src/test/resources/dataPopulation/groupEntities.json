@@ -40,5 +40,20 @@
     "createdAt": "2020-07-01T00:00:00.000Z",
     "createdBy": "4ba2832d-9c4c-40f3-9126-e1c72905ef14",
     "modifiedAt": null
+  },
+  {
+    "id": "6759f8df78b6af202b222d2c",
+    "institutionId": "9c7ae123-d990-4400-b043-67a60aff31bc",
+    "parentInstitutionId": "5d1ae124-d870-4400-b043-67a60aff32cb",
+    "productId": "prod-test",
+    "name": "io group with parent",
+    "description": "io group with parent description",
+    "status": "ACTIVE",
+    "members": [
+      "75003d64-7b8c-4768-b20c-cf66467d44c7"
+    ],
+    "createdAt": "2020-07-01T00:00:00.000Z",
+    "createdBy": "4ba2832d-9c4c-40f3-9126-e1c72905ef14",
+    "modifiedAt": null
   }
 ]

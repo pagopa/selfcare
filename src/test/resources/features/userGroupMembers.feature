@@ -68,10 +68,61 @@ Feature: User Group Members
     Then [MEMBERS] the response status should be 500
     And [MEMBERS] the response should contain an error message "A product id is required"
 
-  @LastGroupMembersScenario
   Scenario: Attempt to delete a member who is not in any group associated with the given institutionId and productId
     Given [MEMBERS] user login with username "j.doe" and password "test"
     And I have a member id "19017fde-142a-4e11-9498-a12a746d0f15", institution id "9c8ae123-d990-4400-b043-67a60aff31bc" and product id "prod-test"
     When I send a DELETE request to "/v1/user-groups/members/{memberId}" with query parameters
     Then [MEMBERS] the response status should be 204
 
+
+  Scenario: Successfully add members to a group
+    Given [MEMBERS] user login with username "j.doe" and password "test"
+    And the following add members to user group request details:
+      | productId | institutionId                        | parentInstitutionId                  | members                                                                   |
+      | prod-test | 9c7ae123-d990-4400-b043-67a60aff31bc | 5d1ae124-d870-4400-b043-67a60aff32cb | 525db33f-967f-4a82-8984-c606225e714a,a1b7c86b-d195-41d8-8291-7c3467abfd30 |
+    When I send a PUT request to "/v1/user-groups/members" to add members to a group
+    Then [MEMBERS] the response status should be 204
+    # UPDATE
+    Given [RETRIEVE] user login with username "j.doe" and password "test"
+    And I have valid filters institutionId "9c7ae123-d990-4400-b043-67a60aff31bc" productId "prod-test" and status "ACTIVE"
+    When I send a GET request to "/v1/user-groups" to retrieve userGroups
+    Then [RETRIEVE] the response status should be 200
+    And the response should contain 1 item
+    And the response should contain all members
+
+  Scenario: Attempt to add members without institutionId
+    Given [MEMBERS] user login with username "j.doe" and password "test"
+    And the following add members to user group request details:
+      | productId | institutionId | parentInstitutionId                  | members                                                                   |
+      | prod-test |               | 5d1ae124-d870-4400-b043-67a60aff32cb | 525db33f-967f-4a82-8984-c606225e714a,a1b7c86b-d195-41d8-8291-7c3467abfd30 |
+    When I send a PUT request to "/v1/user-groups/members" to add members to a group
+    Then [MEMBERS] the response status should be 400
+    And [MEMBERS] the response should contain an error message "addMembersToUserGroupDto.institutionId,must not be blank"
+
+  Scenario: Attempt to add members without parentInstitutionId
+    Given [MEMBERS] user login with username "j.doe" and password "test"
+    And the following add members to user group request details:
+      | productId | institutionId                        | parentInstitutionId | members                                                                   |
+      | prod-test | 9c7ae123-d990-4400-b043-67a60aff31bc |                     | 525db33f-967f-4a82-8984-c606225e714a,a1b7c86b-d195-41d8-8291-7c3467abfd30 |
+    When I send a PUT request to "/v1/user-groups/members" to add members to a group
+    Then [MEMBERS] the response status should be 400
+    And [MEMBERS] the response should contain an error message "addMembersToUserGroupDto.parentInstitutionId,must not be blank"
+
+  Scenario: Attempt to add members with empty member list
+    Given [MEMBERS] user login with username "j.doe" and password "test"
+    And the following add members to user group request details:
+      | productId | institutionId                        | parentInstitutionId                  | members |
+      | prod-test | 9c7ae123-d990-4400-b043-67a60aff31bc | 5d1ae124-d870-4400-b043-67a60aff32cb |         |
+    When I send a PUT request to "/v1/user-groups/members" to add members to a group
+    Then [MEMBERS] the response status should be 400
+    And [MEMBERS] the response should contain an error message "addMembersToUserGroupDto.members,must not be empty"
+
+  @LastGroupMembersScenario
+  Scenario: Attempt to add members to a non-existent group
+    Given [MEMBERS] user login with username "j.doe" and password "test"
+    And the following add members to user group request details:
+      | productId  | institutionId | parentInstitutionId | members                                                                   |
+      | product123 | notfound      | inst456             | 525db33f-967f-4a82-8984-c606225e714a,a1b7c86b-d195-41d8-8291-7c3467abfd30 |
+    When I send a PUT request to "/v1/user-groups/members" to add members to a group
+    Then [MEMBERS] the response status should be 404
+    And [MEMBERS] the response should contain an error message "Not Found"
