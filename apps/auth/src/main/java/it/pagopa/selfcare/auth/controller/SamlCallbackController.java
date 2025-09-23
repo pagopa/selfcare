@@ -18,7 +18,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
-import java.util.Objects;
+import java.net.URI;
 import java.util.Optional;
 
 @Tag(name = "SAML")
@@ -66,7 +66,8 @@ public class SamlCallbackController {
         case VALID -> {
           try {
             yield samlService.generateSessionToken(samlResponse)
-              .onItem().transform(message -> createResponse(Objects.requireNonNull(message)));
+              .onItem().transform(samlService::getLoginSuccessUrl)
+              .onItem().transform(this::createResponse);
           } catch (Exception e) {
             throw new SamlSignatureException(e.getMessage());
           }
@@ -74,9 +75,8 @@ public class SamlCallbackController {
       });
   }
 
-  Response createResponse(String message) {
-    String responseMessage = String.format("samlResponse: %s", message);
-    return Response.ok(responseMessage).build();
+  Response createResponse(String url) {
+    return Response.seeOther(URI.create(url)).build();
   }
 
   private Uni<ValidationResult> validateRequest(MediaType contentType, String samlResponse) {

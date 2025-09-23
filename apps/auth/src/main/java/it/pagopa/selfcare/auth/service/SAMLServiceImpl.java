@@ -42,6 +42,10 @@ public class SAMLServiceImpl implements SAMLService {
   long timeInterval;
 
   @Inject
+  @ConfigProperty(name = "auth_fe.url.login.success")
+  String loginSuccessUrl;
+
+  @Inject
   SamlValidator samlValidator;
 
   @Inject
@@ -66,4 +70,8 @@ public class SAMLServiceImpl implements SAMLService {
     return Uni.createFrom().item(userClaims);
   }
 
+  @Override
+  public String getLoginSuccessUrl(String token) {
+    return spEntityId + loginSuccessUrl + "#token=" + token;
+  }
 }
