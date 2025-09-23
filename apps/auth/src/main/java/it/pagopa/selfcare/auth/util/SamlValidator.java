@@ -36,7 +36,7 @@ import java.util.function.Predicate;
 @ApplicationScoped
 public class SamlValidator {
 
-  public static final String INTERNAL_ID = "name_id";
+  public static final String INTERNAL_ID = "internal_id";
 
   public boolean validateSamlResponse(String samlResponse, String idpCert, long interval) throws Exception {
     return createValidationPipeline(interval, fromBase64(idpCert)).apply(samlResponse);
@@ -360,15 +360,15 @@ public class SamlValidator {
     };
   }
 
-  private Optional<String> extractNameId(Document doc) {
+  public Optional<String> extractNameId(Document doc) {
     return extractTextContent(doc, "urn:oasis:names:tc:SAML:2.0:assertion", "NameID");
   }
 
-  private Optional<String> extractIssuer(Document doc) {
+  public Optional<String> extractIssuer(Document doc) {
     return extractTextContent(doc, "urn:oasis:names:tc:SAML:2.0:assertion", "Issuer");
   }
 
-  private Optional<String> extractSessionIndex(Document doc) {
+  public Optional<String> extractSessionIndex(Document doc) {
     NodeList authnNodes = doc.getElementsByTagNameNS(
       "urn:oasis:names:tc:SAML:2.0:assertion", "AuthnStatement");
 
@@ -378,14 +378,14 @@ public class SamlValidator {
       : Optional.empty();
   }
 
-  private Optional<String> extractTextContent(Document doc, String namespaceUri, String localName) {
+  public Optional<String> extractTextContent(Document doc, String namespaceUri, String localName) {
     NodeList nodes = doc.getElementsByTagNameNS(namespaceUri, localName);
     return (nodes.getLength() > 0)
       ? Optional.of(nodes.item(0).getTextContent())
       : Optional.empty();
   }
 
-  private Map<String, String> extractAttributes(Document doc) {
+  public Map<String, String> extractAttributes(Document doc) {
     NodeList attributeStatements = doc.getElementsByTagNameNS(
       "urn:oasis:names:tc:SAML:2.0:assertion", "AttributeStatement");
 
@@ -398,7 +398,7 @@ public class SamlValidator {
     return attributes;
   }
 
-  private void processAttributeStatement(Node attributeStatement, Map<String, String> attributes) {
+  public void processAttributeStatement(Node attributeStatement, Map<String, String> attributes) {
     NodeList children = attributeStatement.getChildNodes();
 
     for (int i = 0; i < children.getLength(); i++) {
@@ -410,19 +410,19 @@ public class SamlValidator {
     }
   }
 
-  private Optional<Map.Entry<String, String>> extractAttributeNameAndValue(Node attribute) {
+  public Optional<Map.Entry<String, String>> extractAttributeNameAndValue(Node attribute) {
     return extractAttributeName(attribute)
       .flatMap(name -> extractAttributeValue(attribute)
         .map(value -> Map.entry(name, value)));
   }
 
-  private Optional<String> extractAttributeName(Node attribute) {
+  public Optional<String> extractAttributeName(Node attribute) {
     return Optional.ofNullable(attribute.getAttributes())
       .map(attrs -> attrs.getNamedItem("Name"))
       .map(Node::getTextContent);
   }
 
-  private Optional<String> extractAttributeValue(Node attribute) {
+  public Optional<String> extractAttributeValue(Node attribute) {
     NodeList valueNodes = attribute.getChildNodes();
     StringBuilder value = new StringBuilder();
 

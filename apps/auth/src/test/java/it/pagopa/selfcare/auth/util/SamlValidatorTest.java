@@ -3,19 +3,22 @@ package it.pagopa.selfcare.auth.util;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
-import it.pagopa.selfcare.auth.exception.ForbiddenException;
 import it.pagopa.selfcare.auth.exception.SamlSignatureException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.xml.sax.InputSource;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
+import java.io.StringReader;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPairGenerator;
@@ -24,6 +27,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -309,13 +313,10 @@ public class SamlValidatorTest {
 
     // Then
     assertNotNull(result);
-    assertTrue(result.containsKey("name_id"));
-    assertTrue(result.containsKey("issuer"));
-    assertTrue(result.containsKey("session_index"));
+    assertTrue(result.containsKey("internal_id"));
 
-    assertEquals("user@example.com", result.get("name_id"));
-    assertEquals("https://accounts.google.com/o/oauth2/auth", result.get("issuer"));
-    assertEquals("session123", result.get("session_index"));
+    assertEquals("user@example.com", result.get("internal_id"));
+
   }
 
   @Test
@@ -331,8 +332,8 @@ public class SamlValidatorTest {
 
     // Then
     assertNotNull(result);
-    assertTrue(result.containsKey("name_id"));
-    assertEquals("user@example.com", result.get("name_id"));
+    assertTrue(result.containsKey("internal_id"));
+    assertEquals("user@example.com", result.get("internal_id"));
   }
 
 
@@ -524,8 +525,8 @@ public class SamlValidatorTest {
         System.out.println("  " + key + ": " + value)
       );
 
-      assertTrue(info.containsKey("name_id"), "Should contain name_id");
-      assertEquals("user@example.com", info.get("name_id"));
+      assertTrue(info.containsKey("internal_id"), "Should contain internal_id");
+      assertEquals("user@example.com", info.get("internal_id"));
 
     } catch (Exception e) {
       System.out.println("✗ Error during validation: " + e.getMessage());
@@ -604,5 +605,173 @@ public class SamlValidatorTest {
     assertThrows(IllegalArgumentException.class, () -> {
       samlValidator.fromBase64(base64WithTrailingSpaces);
     });
+  }
+
+  private Document createTestDocument(String xmlString) throws Exception {
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    factory.setNamespaceAware(true);
+    DocumentBuilder builder = factory.newDocumentBuilder();
+    return builder.parse(new InputSource(new StringReader(xmlString)));
+  }
+
+  @Nested
+  @DisplayName("Tests for Issuer, SessionIndex, and TextContent Extraction")
+  class ExtractionTests {
+
+    @Test
+    @DisplayName("extractIssuer should return issuer when present")
+    void extractIssuer_whenIssuerPresent() throws Exception {
+      String xml = "<saml2:Assertion xmlns:saml2=\"urn:oasis:names:tc:SAML:2.0:assertion\">" +
+        "<saml2:Issuer>https://idp.example.com</saml2:Issuer>" +
+        "</saml2:Assertion>";
+      Document doc = createTestDocument(xml);
+      Optional<String> issuer = samlValidator.extractIssuer(doc);
+      assertTrue(issuer.isPresent());
+      assertEquals("https://idp.example.com", issuer.get());
+    }
+
+    @Test
+    @DisplayName("extractIssuer should return empty when issuer is missing")
+    void extractIssuer_whenIssuerMissing() throws Exception {
+      String xml = "<saml2:Assertion xmlns:saml2=\"urn:oasis:names:tc:SAML:2.0:assertion\"></saml2:Assertion>";
+      Document doc = createTestDocument(xml);
+      Optional<String> issuer = samlValidator.extractIssuer(doc);
+      assertTrue(issuer.isEmpty());
+    }
+
+    @Test
+    @DisplayName("extractSessionIndex should return index when present")
+    void extractSessionIndex_whenPresent() throws Exception {
+      String xml = "<saml2:Assertion xmlns:saml2=\"urn:oasis:names:tc:SAML:2.0:assertion\">" +
+        "<saml2:AuthnStatement SessionIndex=\"_abc123456789\">" +
+        "</saml2:AuthnStatement>" +
+        "</saml2:Assertion>";
+      Document doc = createTestDocument(xml);
+      Optional<String> sessionIndex = samlValidator.extractSessionIndex(doc);
+      assertTrue(sessionIndex.isPresent());
+      assertEquals("_abc123456789", sessionIndex.get());
+    }
+
+    @Test
+    @DisplayName("extractSessionIndex should return empty when attribute is missing")
+    void extractSessionIndex_whenAttributeMissing() throws Exception {
+      String xml = "<saml2:Assertion xmlns:saml2=\"urn:oasis:names:tc:SAML:2.0:assertion\">" +
+        "<saml2:AuthnStatement>" +
+        "</saml2:AuthnStatement>" +
+        "</saml2:Assertion>";
+      Document doc = createTestDocument(xml);
+      Optional<String> sessionIndex = samlValidator.extractSessionIndex(doc);
+      assertTrue(sessionIndex.isEmpty());
+    }
+
+    @Test
+    @DisplayName("extractSessionIndex should return empty when attribute is blank")
+    void extractSessionIndex_whenAttributeIsBlank() throws Exception {
+      String xml = "<saml2:Assertion xmlns:saml2=\"urn:oasis:names:tc:SAML:2.0:assertion\">" +
+        "<saml2:AuthnStatement SessionIndex=\"\">" +
+        "</saml2:AuthnStatement>" +
+        "</saml2:Assertion>";
+      Document doc = createTestDocument(xml);
+      Optional<String> sessionIndex = samlValidator.extractSessionIndex(doc);
+      assertTrue(sessionIndex.isEmpty());
+    }
+  }
+
+  @Nested
+  @DisplayName("Tests for Attribute Extraction")
+  class AttributeExtractionTests {
+
+    @Test
+    @DisplayName("extractAttributes should get a single attribute with a single value")
+    void extractAttributes_singleAttributeSingleValue() throws Exception {
+      String xml = "<saml2:Assertion xmlns:saml2=\"urn:oasis:names:tc:SAML:2.0:assertion\">" +
+        "<saml2:AttributeStatement>" +
+        "<saml2:Attribute Name=\"email\">" +
+        "<saml2:AttributeValue>test@example.com</saml2:AttributeValue>" +
+        "</saml2:Attribute>" +
+        "</saml2:AttributeStatement>" +
+        "</saml2:Assertion>";
+      Document doc = createTestDocument(xml);
+      Map<String, String> attributes = samlValidator.extractAttributes(doc);
+      assertNotNull(attributes);
+      assertEquals(1, attributes.size());
+      assertEquals("test@example.com", attributes.get("email"));
+    }
+
+    @Test
+    @DisplayName("extractAttributes should get multiple attributes")
+    void extractAttributes_multipleAttributes() throws Exception {
+      String xml = "<saml2:Assertion xmlns:saml2=\"urn:oasis:names:tc:SAML:2.0:assertion\">" +
+        "<saml2:AttributeStatement>" +
+        "<saml2:Attribute Name=\"email\">" +
+        "<saml2:AttributeValue>test@example.com</saml2:AttributeValue>" +
+        "</saml2:Attribute>" +
+        "<saml2:Attribute Name=\"firstName\">" +
+        "<saml2:AttributeValue>John</saml2:AttributeValue>" +
+        "</saml2:Attribute>" +
+        "</saml2:AttributeStatement>" +
+        "</saml2:Assertion>";
+      Document doc = createTestDocument(xml);
+      Map<String, String> attributes = samlValidator.extractAttributes(doc);
+      assertEquals(2, attributes.size());
+      assertEquals("test@example.com", attributes.get("email"));
+      assertEquals("John", attributes.get("firstName"));
+    }
+
+    @Test
+    @DisplayName("extractAttributes should join multiple values with a comma")
+    void extractAttributes_multipleValues() throws Exception {
+      String xml = "<saml2:Assertion xmlns:saml2=\"urn:oasis:names:tc:SAML:2.0:assertion\">" +
+        "<saml2:AttributeStatement>" +
+        "<saml2:Attribute Name=\"groups\">" +
+        "<saml2:AttributeValue>Admin</saml2:AttributeValue>" +
+        "<saml2:AttributeValue>User</saml2:AttributeValue>" +
+        "</saml2:Attribute>" +
+        "</saml2:AttributeStatement>" +
+        "</saml2:Assertion>";
+      Document doc = createTestDocument(xml);
+      Map<String, String> attributes = samlValidator.extractAttributes(doc);
+      assertEquals(1, attributes.size());
+      assertEquals("Admin,User", attributes.get("groups"));
+    }
+
+    @Test
+    @DisplayName("extractAttributes should return empty map when no attributes are present")
+    void extractAttributes_noAttributes() throws Exception {
+      String xml = "<saml2:Assertion xmlns:saml2=\"urn:oasis:names:tc:SAML:2.0:assertion\">" +
+        "<saml2:AttributeStatement></saml2:AttributeStatement>" +
+        "</saml2:Assertion>";
+      Document doc = createTestDocument(xml);
+      Map<String, String> attributes = samlValidator.extractAttributes(doc);
+      assertTrue(attributes.isEmpty());
+    }
+
+    @Test
+    @DisplayName("extractAttributes should ignore attribute if Name is missing")
+    void extractAttributes_missingName() throws Exception {
+      String xml = "<saml2:Assertion xmlns:saml2=\"urn:oasis:names:tc:SAML:2.0:assertion\">" +
+        "<saml2:AttributeStatement>" +
+        "<saml2:Attribute>" + // No 'Name' attribute
+        "<saml2:AttributeValue>SomeValue</saml2:AttributeValue>" +
+        "</saml2:Attribute>" +
+        "</saml2:AttributeStatement>" +
+        "</saml2:Assertion>";
+      Document doc = createTestDocument(xml);
+      Map<String, String> attributes = samlValidator.extractAttributes(doc);
+      assertTrue(attributes.isEmpty());
+    }
+
+    @Test
+    @DisplayName("extractAttributes should ignore attribute if value is missing")
+    void extractAttributes_missingValue() throws Exception {
+      String xml = "<saml2:Assertion xmlns:saml2=\"urn:oasis:names:tc:SAML:2.0:assertion\">" +
+        "<saml2:AttributeStatement>" +
+        "<saml2:Attribute Name=\"emptyAttribute\"></saml2:Attribute>" +
+        "</saml2:AttributeStatement>" +
+        "</saml2:Assertion>";
+      Document doc = createTestDocument(xml);
+      Map<String, String> attributes = samlValidator.extractAttributes(doc);
+      assertTrue(attributes.isEmpty());
+    }
   }
 }

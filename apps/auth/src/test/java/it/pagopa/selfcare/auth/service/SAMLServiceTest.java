@@ -200,7 +200,7 @@ public class SAMLServiceTest {
 
   private static Map<String, String> generateReponseAttribute() {
     Map<String, String> responseMap = new HashMap<>();
-    responseMap.put("NAME_ID", "email@test");
+    responseMap.put("internal_id", "email@test");
     return responseMap;
   }
 
