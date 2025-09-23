@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.auth.exception;
 
-public class UnimplementedException extends  RuntimeException{
+public class UnimplementedException extends RuntimeException {
     private final String code;
 
     public UnimplementedException(String message, String code) {

@@ -160,7 +160,10 @@ paths:
     post:
       tags:
       - SAML
-      operationId: handleSamlResponse
+      summary: Login SAML endpoint
+      description: Login SAML endpoint provides a token exchange releasing a jwt session
+        token
+      operationId: loginSaml
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -173,7 +176,32 @@ paths:
         "200":
           description: OK
           content:
-            text/plain: {}
+            application/problem+json:
+              schema: {}
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "403":
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
 components:
   schemas:
     OidcExchangeOtpResponse:

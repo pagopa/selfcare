@@ -1,14 +1,17 @@
 package it.pagopa.selfcare.auth.exception;
 
-public class ResourceNotFoundException extends RuntimeException {
+import lombok.Getter;
+
+@Getter
+public class SamlSignatureException extends RuntimeException {
     private final String code;
 
-    public ResourceNotFoundException(String message, String code) {
+    public SamlSignatureException(String message, String code) {
         super(message);
         this.code = code;
     }
 
-    public ResourceNotFoundException(String message) {
+    public SamlSignatureException(String message) {
         super(message);
         this.code = "0000";
     }

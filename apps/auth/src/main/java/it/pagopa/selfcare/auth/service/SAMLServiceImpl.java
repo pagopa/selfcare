@@ -1,12 +1,20 @@
 package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.auth.exception.SamlSignatureException;
+import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.util.SamlValidator;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+
+import static it.pagopa.selfcare.auth.util.SamlValidator.INTERNAL_ID;
 
 @Slf4j
 @ApplicationScoped
@@ -34,11 +42,36 @@ public class SAMLServiceImpl implements SAMLService {
   long timeInterval;
 
   @Inject
+  @ConfigProperty(name = "auth_fe.url.login.success")
+  String loginSuccessUrl;
+
+  @Inject
   SamlValidator samlValidator;
 
+  @Inject
+  private final SessionService sessionService;
+
   @Override
-  public Uni<Boolean> validate(String samlResponse) {
-    return samlValidator.validateSamlResponseAsync(samlResponse, idpCert, timeInterval);
+  public Uni<String> generateSessionToken(String samlResponse) throws Exception {
+    return samlValidator.validateSamlResponseAsync(samlResponse, idpCert, timeInterval)
+        .onItem().transformToUni(this::createSessionToken);
   }
 
+  private Uni<String> createSessionToken(Map<String, String> attributes) {
+    return Uni.createFrom().item(attributes)
+      .onItem().transformToUni(this::createUserClaims)
+      .onItem().transformToUni(sessionService::generateSessionTokenInternal)
+      .onFailure().transform(failure -> new SamlSignatureException("SAML validation failed"));
+  }
+
+  private Uni<UserClaims> createUserClaims(Map<String, String> attributes) {
+    UserClaims userClaims = new UserClaims();
+    userClaims.setUid(attributes.get(INTERNAL_ID));
+    return Uni.createFrom().item(userClaims);
+  }
+
+  @Override
+  public String getLoginSuccessUrl(String token) {
+    return spEntityId + loginSuccessUrl + "#token=" + token;
+  }
 }

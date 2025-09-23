@@ -15,6 +15,7 @@ public class ExceptionHandler {
   public static final String SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER =
       "Something has gone wrong in the server";
   public static final String FORBIDDEN = "Forbidden";
+  public static final String SAML = "Saml";
   public static final String CONFLICT = "Conflict";
   public static final String PREFIX_LOGGER = "{}: {}";
   private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandler.class);
@@ -96,5 +97,18 @@ public class ExceptionHandler {
             exception.getMessage(),
             null);
     return Response.status(Response.Status.NOT_IMPLEMENTED).entity(problem).build();
+  }
+
+  @ServerExceptionMapper
+  public Response toResponse(SamlSignatureException exception) {
+    LOGGER.error(PREFIX_LOGGER, SAML, exception.getMessage());
+    Problem problem =
+      new Problem(
+        exception.getMessage(),
+        null,
+        HttpStatus.SC_BAD_REQUEST,
+        exception.getMessage(),
+        null);
+    return Response.status(Response.Status.BAD_REQUEST).entity(problem).build();
   }
 }

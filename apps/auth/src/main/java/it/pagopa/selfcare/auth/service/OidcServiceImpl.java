@@ -133,4 +133,6 @@ public class OidcServiceImpl implements OidcService {
   private OidcExchangeResponse newOidcExchangeTokenResponse(String sessionToken) {
     return new OidcExchangeTokenResponse(sessionToken);
   }
+
+
 }
