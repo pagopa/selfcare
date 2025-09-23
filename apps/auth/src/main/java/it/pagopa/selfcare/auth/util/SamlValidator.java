@@ -36,6 +36,8 @@ import java.util.function.Predicate;
 @ApplicationScoped
 public class SamlValidator {
 
+  public static final String INTERNAL_ID = "name_id";
+
   public boolean validateSamlResponse(String samlResponse, String idpCert, long interval) throws Exception {
     return createValidationPipeline(interval, fromBase64(idpCert)).apply(samlResponse);
   }
@@ -71,7 +73,7 @@ public class SamlValidator {
       .onItem().transformToUni(this::parseXmlDocumentAsync)
       .onItem().transformToUni(doc -> validateTimestampAsync(doc, interval))
       .onItem().transformToUni(doc -> extractCertificateAsync(doc, idpCertContent))
-      .onItem().transform(this::extractAttributes)
+      .onItem().transform(this::extractSamlInfo)
       .onItem().transformToUni(attributes -> Uni.createFrom().item(attributes))
       .onFailure().transform(this::mapToSamlException);
   }
@@ -341,18 +343,18 @@ public class SamlValidator {
       });
   }
 
-  public Map<String, Object> extractSamlInfo(Document doc) {
+  public Map<String, String> extractSamlInfo(Document doc) {
     return createSamlInfoExtractor().apply(doc);
   }
 
-  private Function<Document, Map<String, Object>> createSamlInfoExtractor() {
+  private Function<Document, Map<String, String>> createSamlInfoExtractor() {
     return doc -> {
-      Map<String, Object> info = new HashMap<>();
+      Map<String, String> info = new HashMap<>();
 
-      extractNameId(doc).ifPresent(nameId -> info.put("name_id", nameId));
-      info.putAll(extractAttributes(doc));
-      extractIssuer(doc).ifPresent(issuer -> info.put("issuer", issuer));
-      extractSessionIndex(doc).ifPresent(sessionIndex -> info.put("session_index", sessionIndex));
+      extractNameId(doc).ifPresent(nameId -> info.put(INTERNAL_ID, nameId));
+//      info.putAll(extractAttributes(doc));
+//      extractIssuer(doc).ifPresent(issuer -> info.put("issuer", issuer));
+//      extractSessionIndex(doc).ifPresent(sessionIndex -> info.put("session_index", sessionIndex));
 
       return info;
     };

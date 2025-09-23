@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static it.pagopa.selfcare.auth.util.SamlValidator.INTERNAL_ID;
+
 @Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -60,7 +62,7 @@ public class SAMLServiceImpl implements SAMLService {
 
   private Uni<UserClaims> createUserClaims(Map<String, String> attributes) {
     UserClaims userClaims = new UserClaims();
-    userClaims.setUid("0123456789");
+    userClaims.setUid(attributes.get(INTERNAL_ID));
     return Uni.createFrom().item(userClaims);
   }
 

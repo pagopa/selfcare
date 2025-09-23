@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.auth.controller;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.auth.controller.response.Problem;
 import it.pagopa.selfcare.auth.exception.SamlSignatureException;
 import it.pagopa.selfcare.auth.service.SAMLService;
 import jakarta.ws.rs.*;
@@ -10,10 +11,13 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -29,6 +33,18 @@ public class SamlCallbackController {
     VALID, INVALID_CONTENT_TYPE, MISSING_SAML_RESPONSE
   }
 
+  @Operation(
+    description = "Login SAML endpoint provides a token exchange releasing a jwt session token",
+    summary = "Login SAML endpoint",
+    operationId = "loginSaml"
+  )
+  @APIResponses(value = {
+    @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = Response.class), mediaType = "application/problem+json")),
+    @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+    @APIResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+    @APIResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+    @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
+  })
   @POST
   @Path("/acs")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -53,7 +69,6 @@ public class SamlCallbackController {
               .onItem().transform(message -> createResponse(Objects.requireNonNull(message)));
           } catch (Exception e) {
             throw new SamlSignatureException(e.getMessage());
-//            createErrorResponse();
           }
         }
       });
@@ -61,14 +76,7 @@ public class SamlCallbackController {
 
   Response createResponse(String message) {
     String responseMessage = String.format("samlResponse: %s", message);
-
     return Response.ok(responseMessage).build();
-  }
-
-  Response createErrorResponse() {
-    return Response.status(Response.Status.BAD_REQUEST)
-      .entity("SAMLResponse not valid")
-      .build();
   }
 
   private Uni<ValidationResult> validateRequest(MediaType contentType, String samlResponse) {

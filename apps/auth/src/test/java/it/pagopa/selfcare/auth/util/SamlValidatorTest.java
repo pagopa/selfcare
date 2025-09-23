@@ -305,7 +305,7 @@ public class SamlValidatorTest {
     Document doc = samlValidator.parseXmlDocument(cleanedXml);
 
     // When
-    Map<String, Object> result = samlValidator.extractSamlInfo(doc);
+    Map<String, String> result = samlValidator.extractSamlInfo(doc);
 
     // Then
     assertNotNull(result);
@@ -327,7 +327,7 @@ public class SamlValidatorTest {
     Document doc = samlValidator.parseXmlDocument(cleanedXml);
 
     // When
-    Map<String, Object> result = samlValidator.extractSamlInfo(doc);
+    Map<String, String> result = samlValidator.extractSamlInfo(doc);
 
     // Then
     assertNotNull(result);
@@ -517,7 +517,7 @@ public class SamlValidatorTest {
       Document doc = samlValidator.parseXmlDocument(cleanedXml);
 
       // When
-      Map<String, Object> info = samlValidator.extractSamlInfo(doc);
+      Map<String, String> info = samlValidator.extractSamlInfo(doc);
 
       System.out.println("Extracted information:");
       info.forEach((key, value) ->
