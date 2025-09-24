@@ -40,6 +40,41 @@ module "apim_api_auth_ms" {
 
   subscription_required = false
 
+  api_operation_policies = [{
+    operation_id = "loginSaml"
+    xml_content  = <<XML
+      <policies>
+          <inbound>
+              <cors allow-credentials="true">
+                  <allowed-origins>
+                      <origin>https://${var.dns_zone_prefix}.${var.external_domain}</origin>
+                      <origin>https://${var.api_dns_zone_prefix}.${var.external_domain}</origin>
+                      <origin>http://localhost:3000</origin>
+                      <origin>https://accounts.google.com</origin>
+                  </allowed-origins>
+                  <allowed-methods>
+                      <method>POST</method>
+                  </allowed-methods>
+                  <allowed-headers>
+                      <header>*</header>
+                  </allowed-headers>
+              </cors>
+              <base />
+          </inbound>
+          <backend>
+              <base />
+          </backend>
+          <outbound>
+              <base />
+          </outbound>
+          <on-error>
+              <base />
+          </on-error>
+      </policies>
+      XML
+    }
+  ]
+
   xml_content = <<XML
 <policies>
     <inbound>
