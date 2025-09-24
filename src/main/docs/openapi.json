@@ -1536,7 +1536,7 @@
     },
     "/users/{userId}/onboarding" : {
       "post" : {
-        "tags" : [ "User" ],
+        "tags" : [ "internal-v1", "User" ],
         "summary" : "Check if the user is manager or Update/create a user by userId with a new role",
         "description" : "Checks if the user is already a manager for the specified product and, if not, creates or updates the user with a new role.",
         "operationId" : "createUserByUserId",

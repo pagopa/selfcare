@@ -334,6 +334,8 @@ public class UserController {
     })
     @POST
     @Path("/{userId}/onboarding")
+    @Tag(name = "internal-v1")
+    @Tag(name = "User")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> createUserByUserId(@PathParam("userId") String userId,

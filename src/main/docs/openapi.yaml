@@ -1092,6 +1092,7 @@ paths:
   /users/{userId}/onboarding:
     post:
       tags:
+      - internal-v1
       - User
       summary: Check if the user is manager or Update/create a user by userId with
         a new role
