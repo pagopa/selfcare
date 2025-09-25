@@ -227,7 +227,7 @@ public class UserGroupV1Controller {
     }
 
 
-    @PutMapping(value = "/members")
+    @PutMapping(value = "/members", produces = MediaType.ALL_VALUE)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Tag(name = "UserGroup")
     @Tag(name = "internal-v1")
