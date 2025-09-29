@@ -868,6 +868,10 @@
             "type" : "string",
             "description" : "Users group's name"
           },
+          "parentInstitutionId" : {
+            "type" : "string",
+            "description" : "Users group's parent institutionId"
+          },
           "productId" : {
             "type" : "string",
             "description" : "Users group's productId"
@@ -1035,6 +1039,10 @@
           "name" : {
             "type" : "string",
             "description" : "Users group's name"
+          },
+          "parentInstitutionId" : {
+            "type" : "string",
+            "description" : "Users group's parent institutionId"
           },
           "productId" : {
             "type" : "string",

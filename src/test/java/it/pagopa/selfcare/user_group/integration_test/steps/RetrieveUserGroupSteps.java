@@ -176,6 +176,22 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         Assertions.assertNull(userGroupEntityResponse.getModifiedBy());
     }
 
+    @Then("the response should contain the group details with parent institution")
+    public void the_response_should_contain_the_group_details_with_parent_institution() {
+        Assertions.assertEquals(userGroupId, userGroupEntityResponse.getId());
+        Assertions.assertEquals("io group with parent", userGroupEntityResponse.getName());
+        Assertions.assertEquals("io group with parent description", userGroupEntityResponse.getDescription());
+        Assertions.assertEquals("9c7ae123-d990-4400-b043-67a60aff31bc", userGroupEntityResponse.getInstitutionId());
+        Assertions.assertEquals("5d1ae124-d870-4400-b043-67a60aff32cb", userGroupEntityResponse.getParentInstitutionId());
+        Assertions.assertEquals("prod-test", userGroupEntityResponse.getProductId());
+        Assertions.assertEquals("ACTIVE", userGroupEntityResponse.getStatus().name());
+        Assertions.assertEquals(1, userGroupEntityResponse.getMembers().size());
+        Assertions.assertEquals("75003d64-7b8c-4768-b20c-cf66467d44c7", userGroupEntityResponse.getMembers().iterator().next());
+        Assertions.assertNotNull(userGroupEntityResponse.getCreatedAt());
+        Assertions.assertEquals("4ba2832d-9c4c-40f3-9126-e1c72905ef14", userGroupEntityResponse.getCreatedBy());
+        Assertions.assertNull(userGroupEntityResponse.getModifiedBy());
+    }
+
     @And("the response should contain a paginated list of user groups of {int} items on page {int}")
     public void theResponseShouldContainAPaginatedListOfUserGroups(int count, int page) {
         Assertions.assertEquals(count, userGroupEntityResponsePage.getContent().size());
@@ -184,6 +200,20 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         Assertions.assertEquals(2, userGroupEntityResponsePage.getSize());
         Assertions.assertEquals(page, userGroupEntityResponsePage.getNumber());
     }
+
+    @Then("the response page should contain a group with parent institution id")
+    public void the_response_page_should_contain_a_group_with_parent_institution_id() {
+        List<UserGroupEntity> groups = userGroupEntityResponsePage.getContent();
+
+        Assertions.assertFalse(groups.isEmpty(), "Expected response page to contain at least one group");
+
+        boolean hasParentInstitutionId = groups.stream()
+                .anyMatch(group -> group.getParentInstitutionId() != null);
+
+        Assertions.assertTrue(hasParentInstitutionId,
+                "Expected at least one group to have a parentInstitutionId");
+    }
+
 
     @Given("I have valid filters institutionId {string} productId {string} and status {string}")
     public void iHaveValidFiltersAndAnd(String institutionId, String productId, String status) {

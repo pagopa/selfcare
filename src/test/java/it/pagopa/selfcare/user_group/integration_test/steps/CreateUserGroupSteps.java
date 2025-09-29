@@ -54,6 +54,7 @@ public class CreateUserGroupSteps extends UserGroupSteps {
     public UserGroupEntity convertRequest(Map<String, String> entry) {
         UserGroupEntity userGroupEntity = new UserGroupEntity();
         userGroupEntity.setInstitutionId(entry.get("institutionId"));
+        userGroupEntity.setParentInstitutionId(entry.get("parentInstitutionId"));
         userGroupEntity.setProductId(entry.get("productId"));
         userGroupEntity.setName(entry.get("name"));
         userGroupEntity.setDescription(entry.get("description"));
@@ -106,6 +107,11 @@ public class CreateUserGroupSteps extends UserGroupSteps {
     @Then("the response should contain the institutionId {string}")
     public void verifyInstitutionId(String expectedInstitutionId) {
         Assertions.assertEquals(expectedInstitutionId, userGroupEntityResponse.getInstitutionId());
+    }
+
+    @Then("the response should contain the parent institutionId {string}")
+    public void verifyParentInstitutionId(String expectedParentInstitutionId) {
+        Assertions.assertEquals(expectedParentInstitutionId, userGroupEntityResponse.getParentInstitutionId());
     }
 
     @And("the response should contain the status {string}")

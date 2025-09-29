@@ -19,6 +19,9 @@ public class CreateUserGroupDto {
     @NotBlank
     private String institutionId;
 
+    @ApiModelProperty(value = "${swagger.user-group.model.parentInstitutionId}")
+    private String parentInstitutionId;
+
     @ApiModelProperty(value = "${swagger.user-group.model.productId}", required = true)
     @JsonProperty(required = true)
     @NotBlank

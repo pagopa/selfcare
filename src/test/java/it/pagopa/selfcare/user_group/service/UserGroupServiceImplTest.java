@@ -493,7 +493,6 @@ class UserGroupServiceImplTest {
         filter.setProductId("productId"); // Aggiungi un productId per soddisfare la condizione
         Pageable pageable = PageRequest.of(0, 10, Sort.by("name"));
         List<UserGroupEntity> userGroups = Collections.singletonList(mock(UserGroupEntity.class));
-        Page<UserGroupEntity> page = new PageImpl<>(userGroups, pageable, userGroups.size());
         when(mongoTemplateMock.find(any(Query.class), eq(UserGroupEntity.class))).thenReturn(userGroups);
         when(mongoTemplateMock.count(any(Query.class), eq(UserGroupEntity.class))).thenReturn((long) userGroups.size());
         //when
@@ -813,6 +812,43 @@ class UserGroupServiceImplTest {
         //then
         ResourceAlreadyExistsException exception = assertThrows(ResourceAlreadyExistsException.class, executable);
         assertEquals("A group with the same name already exists in ACTIVE or SUSPENDED state", exception.getMessage());
+        verify(mongoTemplateMock).find(any(Query.class), eq(UserGroupEntity.class));
+        verify(mongoTemplateMock).count(any(Query.class), eq(UserGroupEntity.class));
+    }
+
+    @Test
+    void createGroup_duplicateParent() {
+        //given
+        SelfCareUser selfCareUser = SelfCareUser.builder("userId")
+                .email("test@example.com")
+                .name("name")
+                .surname("surname")
+                .build();
+        TestingAuthenticationToken authenticationToken = new TestingAuthenticationToken(selfCareUser, null);
+        TestSecurityContextHolder.setAuthentication(authenticationToken);
+        UserGroupOperations input = TestUtils.mockInstance(new DummyGroup(), "setId", "setCreateAt", "setModifiedAt");
+        input.setName("name 2");
+        input.setProductId("productId");
+        input.setInstitutionId("institutionId");
+        input.setParentInstitutionId("parentInstitutionId");
+
+        UserGroupEntity existingGroup = new UserGroupEntity();
+        existingGroup.setId("existingGroupId");
+        existingGroup.setName("name 1");
+        existingGroup.setProductId("productId");
+        existingGroup.setInstitutionId("institutionId");
+        existingGroup.setParentInstitutionId("parentInstitutionId");
+        existingGroup.setStatus(UserGroupStatus.ACTIVE);
+
+        when(mongoTemplateMock.find(any(Query.class), eq(UserGroupEntity.class))).thenReturn(Collections.singletonList(existingGroup));
+        when(mongoTemplateMock.count(any(Query.class), eq(UserGroupEntity.class))).thenReturn(1L);
+
+        //when
+        Executable executable = () -> groupService.createGroup(input);
+
+        //then
+        ResourceAlreadyExistsException exception = assertThrows(ResourceAlreadyExistsException.class, executable);
+        assertEquals("A group with the same institutionId-parentInstitutionId-productId already exists in ACTIVE or SUSPENDED state", exception.getMessage());
         verify(mongoTemplateMock).find(any(Query.class), eq(UserGroupEntity.class));
         verify(mongoTemplateMock).count(any(Query.class), eq(UserGroupEntity.class));
     }

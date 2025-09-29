@@ -20,6 +20,9 @@ public class UserGroupResource {
     @NotBlank
     private String institutionId;
 
+    @ApiModelProperty(value = "${swagger.user-group.model.parentInstitutionId}")
+    private String parentInstitutionId;
+
     @ApiModelProperty(value = "${swagger.user-group.model.productId}", required = true)
     @NotBlank
     private String productId;

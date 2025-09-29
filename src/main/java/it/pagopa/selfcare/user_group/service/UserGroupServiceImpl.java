@@ -45,6 +45,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     private static final String MEMBERS_REQUIRED = "Members are required";
     private static final String MEMBER_ID_REQUIRED = "A member id is required";
     private static final String GROUP_NAME_ALREADY_EXISTS = "A group with the same name already exists in ACTIVE or SUSPENDED state";
+    private static final String GROUP_PARENT_ALREADY_EXISTS = "A group with the same institutionId-parentInstitutionId-productId already exists in ACTIVE or SUSPENDED state";
     private final List<String> allowedSortingParams;
     private final UserGroupRepository repository;
     private final MongoTemplate mongoTemplate;
@@ -69,7 +70,7 @@ public class UserGroupServiceImpl implements UserGroupService {
         Assert.state(authentication.getPrincipal() instanceof SelfCareUser, "Not SelfCareUser principal");
         Assert.notNull(group, "A group is required");
 
-        checkNameUniqueness(group.getId(), group.getName(), group.getProductId(), group.getInstitutionId());
+        checkGroupUniqueness(group.getId(), group.getName(), group.getProductId(), group.getInstitutionId(), group.getParentInstitutionId());
         return insertUserGroupEntity(group);
     }
 
@@ -194,7 +195,7 @@ public class UserGroupServiceImpl implements UserGroupService {
         if (UserGroupStatus.SUSPENDED.equals(foundGroup.getStatus())) {
             throw new ResourceUpdateException(TRYING_TO_MODIFY_SUSPENDED_GROUP);
         }
-        checkNameUniqueness(id, group.getName(), foundGroup.getProductId(), foundGroup.getInstitutionId());
+        checkGroupUniqueness(id, group.getName(), foundGroup.getProductId(), foundGroup.getInstitutionId(), foundGroup.getParentInstitutionId());
 
         foundGroup.setMembers(group.getMembers());
         foundGroup.setName(group.getName());
@@ -219,19 +220,34 @@ public class UserGroupServiceImpl implements UserGroupService {
         return insert;
     }
 
-    private void checkNameUniqueness(String currentGroupId, String groupName, String productId, String institutionId) {
+    private void checkGroupUniqueness(String currentGroupId, String groupName, String productId, String institutionId, String parentInstitutionId) {
         UserGroupFilter filter = new UserGroupFilter();
         filter.setProductId(productId);
         filter.setInstitutionId(institutionId);
         filter.setStatus(Arrays.asList(UserGroupStatus.ACTIVE, UserGroupStatus.SUSPENDED));
 
         Page<UserGroupOperations> existingGroups = findAll(filter, Pageable.unpaged());
-        boolean isDuplicate = existingGroups.stream()
-                .anyMatch(g -> g.getName().equals(groupName) && !g.getId().equals(currentGroupId));
 
-        if (isDuplicate) {
+        // verify if there's no other group with the same name (but different groupId)
+        boolean isSameName = existingGroups.stream().anyMatch(g ->
+                g.getName().equals(groupName) && !g.getId().equals(currentGroupId));
+
+        // when parentInsitutionId is not null, verify if there's no other group with same institutionId-parentInstitutionId-productId (but different groupId)
+        boolean isDuplicate = parentInstitutionId != null && existingGroups.stream().anyMatch(g ->
+                Objects.equals(g.getInstitutionId(), institutionId)
+                        && Objects.equals(g.getProductId(), productId)
+                        && Objects.equals(g.getParentInstitutionId(), parentInstitutionId)
+                        && !g.getId().equals(currentGroupId));
+
+        if (isSameName) {
             log.warn("Attempted to create/update group with duplicate name: {}", groupName);
             throw new ResourceAlreadyExistsException(GROUP_NAME_ALREADY_EXISTS);
+        }
+
+        if (isDuplicate) {
+            log.warn("Attempted to create/update group with duplicate institutionId: {}, parentInstitutionId: {} and productId: {}",
+                    institutionId, parentInstitutionId, productId);
+            throw new ResourceAlreadyExistsException(GROUP_PARENT_ALREADY_EXISTS);
         }
     }
 
@@ -336,7 +352,9 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     private Page<UserGroupOperations> findAll(UserGroupFilter filter, Pageable pageable) {
         log.trace("findAll start");
-        log.debug("findAll institutionId= {} , productId = {}, userId = {}, pageable = {}", filter.getInstitutionId(), filter.getProductId(), filter.getUserId(), pageable);
+        log.debug("findAll institutionId = {}, parentInstitutionId = {}, productId = {}, userId = {}, pageable = {}",
+                Encode.forJava(filter.getInstitutionId()), Encode.forJava(filter.getParentInstitutionId()),
+                Encode.forJava(filter.getProductId()), Encode.forJava(filter.getUserId()), pageable);
         if (pageable.getSort().isSorted() && !StringUtils.hasText(filter.getProductId()) && !StringUtils.hasText(filter.getInstitutionId())) {
             throw new ValidationException("Sorting not allowed without productId or institutionId");
         }

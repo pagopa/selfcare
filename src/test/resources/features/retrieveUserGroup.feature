@@ -9,6 +9,13 @@ Feature: Get User Group
     Then [RETRIEVE] the response status should be 200
     And the response should contain the group details
 
+  Scenario: Successfully retrieve a group with a valid ID with parent institution
+    Given [RETRIEVE] user login with username "j.doe" and password "test"
+    And I have a valid group ID to retrieve: "6759f8df78b6af202b222d2c"
+    When I send a GET request to "/v1/user-groups/{id}"
+    Then [RETRIEVE] the response status should be 200
+    And the response should contain the group details with parent institution
+
   Scenario: Attempt to retrieve a non-existent group
     Given [RETRIEVE] user login with username "j.doe" and password "test"
     And I have a non-existent group ID to retrieve "99999"
@@ -68,6 +75,7 @@ Feature: Get User Group
     When I send a GET request to "/v1/user-groups" to retrieve userGroups
     Then [RETRIEVE] the response status should be 200
     And the response should contain a paginated list of user groups of 2 items on page 1
+    And the response page should contain a group with parent institution id
 
   @LastRetrieveGroupScenario
   Scenario: No user groups found for the provided filters
