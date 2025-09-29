@@ -4842,6 +4842,7 @@ Feature: User
       | Selc:AccessProductBackoffice      |
       | Selc:ViewManagedInstitutions      |
       | Selc:ViewDelegations              |
+      | Selc:ListProductUsers             |
       | Selc:ManageProductGroups          |
       | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
