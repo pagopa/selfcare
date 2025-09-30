@@ -7,9 +7,17 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.mongodb.MongoTestResource;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.product.entity.ProductRole;
+import it.pagopa.selfcare.product.entity.ProductRoleInfo;
+import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.client.EventHubFdRestClient;
 import it.pagopa.selfcare.user.client.EventHubRestClient;
 import it.pagopa.selfcare.user.event.UserInstitutionCdcService;
+import it.pagopa.selfcare.user.event.client.InternalDelegationApiClient;
+import it.pagopa.selfcare.user.event.client.InternalUserApiClient;
+import it.pagopa.selfcare.user.event.client.InternalUserGroupApiClient;
 import it.pagopa.selfcare.user.event.entity.UserInstitution;
 import it.pagopa.selfcare.user.event.repository.UserInstitutionRepository;
 import it.pagopa.selfcare.user.model.FdUserNotificationToSend;
@@ -17,6 +25,7 @@ import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
 import org.bson.BsonDocument;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -24,6 +33,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.openapi.quarkus.internal_json.model.*;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
@@ -32,6 +42,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static it.pagopa.selfcare.user.event.UserInstitutionCdcService.USERS_FIELD_LIST_WITHOUT_FISCAL_CODE;
@@ -51,6 +62,18 @@ public class UserInstitutionCdcServiceTest {
 
     @RestClient
     @InjectMock
+    InternalDelegationApiClient delegationApi;
+
+    @RestClient
+    @InjectMock
+    InternalUserApiClient userApi;
+
+    @RestClient
+    @InjectMock
+    InternalUserGroupApiClient userGroupApi;
+
+    @RestClient
+    @InjectMock
     EventHubRestClient eventHubRestClient;
 
     @RestClient
@@ -60,6 +83,8 @@ public class UserInstitutionCdcServiceTest {
     @InjectMock
     UserInstitutionRepository userInstitutionRepository;
 
+    @InjectMock
+    ProductService productService;
 
     @Test
     void consumerToSendScUserEvent() {
@@ -300,4 +325,80 @@ public class UserInstitutionCdcServiceTest {
         verify(eventHubRestClient, times(1)).sendMessage(any(UserNotificationToSend.class));
         verify(userInstitutionRepository, times(1)).updateUser(any());
     }
+
+    @Test
+    void consumerToAddOnAggregatesTest() {
+        final String parentInstitutionId = "parentInstitutionId";
+
+        final UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setInstitutionId(parentInstitutionId);
+        userInstitution.setUserId(UUID.randomUUID().toString());
+        final OnboardedProduct prod1 = new OnboardedProduct();
+        prod1.setProductId("prod-interop");
+        prod1.setStatus(OnboardedProductState.ACTIVE);
+        prod1.setRole(PartyRole.SUB_DELEGATE);
+        prod1.setProductRole("admin");
+        final OnboardedProduct prod2 = new OnboardedProduct();
+        prod2.setProductId("prod-pn");
+        prod2.setStatus(OnboardedProductState.SUSPENDED);
+        prod2.setRole(PartyRole.DELEGATE);
+        prod2.setProductRole("admin");
+        prod2.setToAddOnAggregates(true);
+        final OnboardedProduct prod3 = new OnboardedProduct();
+        prod3.setProductId("prod-io");
+        prod3.setStatus(OnboardedProductState.ACTIVE);
+        prod3.setRole(PartyRole.MANAGER);
+        prod3.setProductRole("admin");
+        prod3.setToAddOnAggregates(true);
+        final OnboardedProduct prod4 = new OnboardedProduct();
+        prod4.setProductId("prod-pagopa");
+        prod4.setStatus(OnboardedProductState.ACTIVE);
+        prod4.setRole(PartyRole.OPERATOR);
+        prod4.setProductRole("operator");
+        prod4.setToAddOnAggregates(true);
+        userInstitution.setProducts(List.of(prod1, prod2, prod3, prod4));
+        userInstitution.setUserMailUuid("userMailUuid");
+
+        final DelegationWithPaginationResponse delegationsIo1 = new DelegationWithPaginationResponse();
+        delegationsIo1.setDelegations(List.of(createDelegationResponse(DelegationResponse.StatusEnum.ACTIVE, DelegationResponse.TypeEnum.EA)));
+        delegationsIo1.setPageInfo(PageInfo.builder().pageNo(0L).pageSize(1L).totalPages(2L).totalElements(2L).build());
+        when(delegationApi.getDelegationsUsingGET2(null, parentInstitutionId, "prod-io", null, null, null, 0, null)).thenReturn(Uni.createFrom().item(delegationsIo1));
+        final DelegationWithPaginationResponse delegationsIo2 = new DelegationWithPaginationResponse();
+        delegationsIo2.setDelegations(List.of(createDelegationResponse(DelegationResponse.StatusEnum.ACTIVE, DelegationResponse.TypeEnum.EA)));
+        delegationsIo2.setPageInfo(PageInfo.builder().pageNo(1L).pageSize(1L).totalPages(2L).totalElements(2L).build());
+        when(delegationApi.getDelegationsUsingGET2(null, parentInstitutionId, "prod-io", null, null, null, 1, null)).thenReturn(Uni.createFrom().item(delegationsIo2));
+
+        final DelegationWithPaginationResponse delegationsPagoPa = new DelegationWithPaginationResponse();
+        delegationsPagoPa.setDelegations(List.of(
+                createDelegationResponse(DelegationResponse.StatusEnum.ACTIVE, DelegationResponse.TypeEnum.EA),
+                createDelegationResponse(DelegationResponse.StatusEnum.ACTIVE, DelegationResponse.TypeEnum.PT),
+                createDelegationResponse(DelegationResponse.StatusEnum.DELETED, DelegationResponse.TypeEnum.EA)
+        ));
+        delegationsPagoPa.setPageInfo(PageInfo.builder().pageNo(0L).pageSize(1000L).totalPages(1L).totalElements(3L).build());
+        when(delegationApi.getDelegationsUsingGET2(null, parentInstitutionId, "prod-pagopa", null, null, null, 0, null)).thenReturn(Uni.createFrom().item(delegationsPagoPa));
+
+        final Product p = new Product();
+        final ProductRoleInfo pri = new ProductRoleInfo();
+        final ProductRole pr = new ProductRole();
+        pr.setCode("admin");
+        pri.setRoles(List.of(pr));
+        p.setRoleMappings(Map.of(PartyRole.ADMIN_EA, pri));
+        when(productService.getProduct(any())).thenReturn(p);
+
+        when(userApi.createUserByUserId(any(), any())).thenReturn(Uni.createFrom().item(Response.status(Response.Status.OK).build()));
+        when(userGroupApi.addMembersToUserGroupWithParentInstitutionIdUsingPUT(any())).thenReturn(Uni.createFrom().item(Response.status(Response.Status.OK).build()));
+
+        userInstitutionCdcService.consumerToAddOnAggregates(userInstitution);
+        verify(delegationApi, times(3)).getDelegationsUsingGET2(any(), any(), any(), any(), any(), any(), any(), any());
+        verify(userApi, times(3)).createUserByUserId(any(), any());
+        verify(userGroupApi, times(2)).addMembersToUserGroupWithParentInstitutionIdUsingPUT(any());
+    }
+
+    private DelegationResponse createDelegationResponse(DelegationResponse.StatusEnum status, DelegationResponse.TypeEnum type) {
+        final DelegationResponse delegationResponse = new DelegationResponse();
+        delegationResponse.setStatus(status);
+        delegationResponse.setType(type);
+        return delegationResponse;
+    }
+
 }
