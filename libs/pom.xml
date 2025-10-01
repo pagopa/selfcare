@@ -19,6 +19,7 @@
 
     <modules>
         <module>cucumber-sdk</module>
+        <module>selfcare-sdk-security</module>
     </modules>
 
 
