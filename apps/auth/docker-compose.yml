@@ -2,7 +2,7 @@ version: '3.8'
 services:
 
   mongodb:
-    image: mongo:latest
+    image: mongo:latest@sha256:ea783d8ac4dcac9f8a7ff236b26a52e36649fc1bdd1778ffb44ba5e4de776cda
     ports:
       - '27017:27017'
     volumes:
@@ -11,7 +11,7 @@ services:
       - develop-network
 
   azurite:
-    image: mcr.microsoft.com/azure-storage/azurite
+    image: mcr.microsoft.com/azure-storage/azurite@sha256:647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37
     ports:
       - "10000:10000"
     command: "azurite --blobHost 0.0.0.0 --inMemoryPersistence"
@@ -35,7 +35,7 @@ services:
       - SELFCARE_INFRA_PRIVATE_ENV=dev
 
   mockserver:
-    image: mockserver/mockserver
+    image: mockserver/mockserver@sha256:adec675a93253dcd503cda331dbc8c88383c1c79ceb2370ec9766ad3f010d255
     ports:
       - '1080:1080'
     environment:
@@ -48,7 +48,7 @@ services:
       - develop-network
 
   userms:
-    image: ghcr.io/pagopa/selfcare-user-ms:latest
+    image: ghcr.io/pagopa/selfcare-user-ms:latest@sha256:1b555a0c2ba635a49aa2a3efbb513a3a38275b1e0d49f23c0934ee72efedf3d0
     ports:
       - '8084:8080'
     env_file:
@@ -59,7 +59,7 @@ services:
       - mongodb
 
   externalms:
-    image: ghcr.io/pagopa/selfcare-external-api-backend:latest
+    image: ghcr.io/pagopa/selfcare-external-api-backend:latest@sha256:d99458630b5a14fc8e865f4c64a859de074e150c796432eaae94bf98534eddc1
     ports:
       - '8082:8082'
     env_file:
@@ -68,7 +68,7 @@ services:
       - develop-network
 
   institutionms:
-    image: ghcr.io/pagopa/selfcare-institution-ms:latest
+    image: ghcr.io/pagopa/selfcare-institution-ms:latest@sha256:f99e32c791a924808f1776ff89b62118b70368d285af7c303d2478827497722b
     ports:
       - '8083:8083'
     env_file:
