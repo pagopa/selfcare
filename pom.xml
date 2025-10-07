@@ -19,13 +19,13 @@
     <description>Microservice to manage Self Care User Group</description>
 
     <properties>
-        <selc-commons.version>2.5.9</selc-commons.version>
+        <selc-commons.version>2.5.10</selc-commons.version>
         <sonar.host.url>https://sonarcloud.io/</sonar.host.url>
         <sonar.skip>true</sonar.skip>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <cucumber-sdk.version>0.0.5</cucumber-sdk.version>
+        <cucumber-sdk.version>0.0.7</cucumber-sdk.version>
     </properties>
 
     <dependencyManagement>
