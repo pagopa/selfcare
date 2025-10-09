@@ -30,16 +30,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static io.smallrye.common.constraint.Assert.assertNotNull;
 import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @QuarkusTest
 class UserInstitutionServiceTest {
@@ -672,6 +669,32 @@ class UserInstitutionServiceTest {
         UniAssertSubscriber<Long> subscriber = userInstitutionService.updateInstitutionDescription(institutionId, updateDescriptionDto)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted().assertItem(1L);
+    }
+
+    @Test
+    void persistOrUpdateTest() {
+        final UserInstitution userInstitution = createDummyUserInstitution();
+        final OnboardedProduct prod1 = new OnboardedProduct();
+        prod1.setRoleId("roleId");
+        final OnboardedProduct prod2 = new OnboardedProduct();
+        userInstitution.setProducts(List.of(prod1, prod2));
+        PanacheMock.mock(UserInstitution.class);
+        when(UserInstitution.persistOrUpdate(userInstitution)).thenReturn(Uni.createFrom().voidItem());
+        userInstitutionService.persistOrUpdate(userInstitution);
+        assertEquals("roleId", userInstitution.getProducts().get(0).getRoleId());
+        assertDoesNotThrow(() -> UUID.fromString(userInstitution.getProducts().get(1).getRoleId()));
+        PanacheMock.verify(UserInstitution.class, times(1)).persistOrUpdate(userInstitution);
+    }
+
+    @Test
+    void persistOrUpdateTestWithoutProducts() {
+        final UserInstitution userInstitution = createDummyUserInstitution();
+        userInstitution.setProducts(null);
+        PanacheMock.mock(UserInstitution.class);
+        when(UserInstitution.persistOrUpdate(userInstitution)).thenReturn(Uni.createFrom().voidItem());
+        userInstitutionService.persistOrUpdate(userInstitution);
+        assertNull(userInstitution.getProducts());
+        PanacheMock.verify(UserInstitution.class, times(1)).persistOrUpdate(userInstitution);
     }
 
     @Test

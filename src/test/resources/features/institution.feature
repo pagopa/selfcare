@@ -59,9 +59,9 @@ Feature: Institution
       | 65b1234f85a6a37415221ef9                | 97a511a7-2acc-47b9-afed-2f3c65753b4a                  | a1b2c3d4-5678-90ab-cdef-1234567890ab      | Regione Lazio               | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1        |
     And The response body contains the list "[0].products" of size 2
     And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId     | tokenId                               | status    | productRole                 | role      | env      | createdAt                    |
-      | prod-io       | abc12345-6789-4def-b012-3456789abcd   | ACTIVE    | admin                       | MANAGER   | ROOT     | 2023-06-15T14:30:00Z         |
-      | prod-interop  | def67890-1234-4abc-5678-90abcdef1234  | DELETED   | referente amministrativo    | MANAGER   | ROOT     | 2024-01-20T09:45:10.567Z     |
+      | roleId                               | productId    | tokenId                              | status  | productRole              | role    | env  | createdAt                |
+      | d9f8e7c6-1234-45a6-b789-0c1d2e3f4a5b | prod-io      | abc12345-6789-4def-b012-3456789abcd  | ACTIVE  | admin                    | MANAGER | ROOT | 2023-06-15T14:30:00Z     |
+      | f1e2d3c4-b567-890a-bcde-1234567890ff | prod-interop | def67890-1234-4abc-5678-90abcdef1234 | DELETED | referente amministrativo | MANAGER | ROOT | 2024-01-20T09:45:10.567Z |
 
   Scenario: Successfully retrieve users with optional filters (userId filter)
     Given User login with username "j.doe" and password "test"
@@ -77,9 +77,9 @@ Feature: Institution
       | 65b1234f85a6a37415221ef9                | 97a511a7-2acc-47b9-afed-2f3c65753b4a                  | a1b2c3d4-5678-90ab-cdef-1234567890ab      | Regione Lazio               | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1        |
     And The response body contains the list "[0].products" of size 2
     And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId     | tokenId                               | status    | productRole                 | role      | env      | createdAt                    |
-      | prod-io       | abc12345-6789-4def-b012-3456789abcd   | ACTIVE    | admin                       | MANAGER   | ROOT     | 2023-06-15T14:30:00Z         |
-      | prod-interop  | def67890-1234-4abc-5678-90abcdef1234  | DELETED   | referente amministrativo    | MANAGER   | ROOT     | 2024-01-20T09:45:10.567Z     |
+      | roleId                               | productId     | tokenId                               | status    | productRole                 | role      | env      | createdAt                    |
+      | d9f8e7c6-1234-45a6-b789-0c1d2e3f4a5b | prod-io       | abc12345-6789-4def-b012-3456789abcd   | ACTIVE    | admin                       | MANAGER   | ROOT     | 2023-06-15T14:30:00Z         |
+      | f1e2d3c4-b567-890a-bcde-1234567890ff | prod-interop  | def67890-1234-4abc-5678-90abcdef1234  | DELETED   | referente amministrativo    | MANAGER   | ROOT     | 2024-01-20T09:45:10.567Z     |
 
   Scenario: Successfully retrieve users with optional filters (products filter)
     Given User login with username "j.doe" and password "test"
@@ -95,8 +95,8 @@ Feature: Institution
       | 65b1234f85a6a37415221ef9                | 97a511a7-2acc-47b9-afed-2f3c65753b4a                  | a1b2c3d4-5678-90ab-cdef-1234567890ab      | Regione Lazio               | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1        |
     And The response body contains the list "[0].products" of size 1
     And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId     | tokenId                               | status    | productRole                 | role      | env      | createdAt                    |
-      | prod-interop  | def67890-1234-4abc-5678-90abcdef1234  | DELETED   | referente amministrativo    | MANAGER   | ROOT     | 2024-01-20T09:45:10.567Z     |
+      | roleId                               | productId     | tokenId                               | status    | productRole                 | role      | env      | createdAt                    |
+      | f1e2d3c4-b567-890a-bcde-1234567890ff | prod-interop  | def67890-1234-4abc-5678-90abcdef1234  | DELETED   | referente amministrativo    | MANAGER   | ROOT     | 2024-01-20T09:45:10.567Z     |
 
   Scenario: Successfully retrieve users with optional filters (products filter with two products)
     Given User login with username "j.doe" and password "test"
@@ -127,8 +127,8 @@ Feature: Institution
       | 65b1214f85b2a37412421ef6                | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                  | a1b2c3d4-5678-90ab-cdef-1234567890ab      | Regione Lazio               | ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv        |
     And The response body contains the list "[0].products" of size 1
     And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId     | tokenId                               | status    | productRole                 | role            | env      | createdAt                    |
-      | prod-io       | abc12345-6789-4def-b012-3456789abcd   | ACTIVE    | admin                       | SUB_DELEGATE    | ROOT     | 2023-06-15T14:30:00Z         |
+      | roleId                               | productId     | tokenId                               | status    | productRole                 | role            | env      | createdAt                    |
+      | d9f8e7c6-1234-45a6-b789-0c1d2e3f4a5b | prod-io       | abc12345-6789-4def-b012-3456789abcd   | ACTIVE    | admin                       | SUB_DELEGATE    | ROOT     | 2023-06-15T14:30:00Z         |
 
 
   Scenario: Successfully retrieve users with optional filters (roles filter with two roles)
@@ -160,8 +160,8 @@ Feature: Institution
       | 65b1234f85a6a37415221ef9                | 97a511a7-2acc-47b9-afed-2f3c65753b4a                  | a1b2c3d4-5678-90ab-cdef-1234567890ab      | Regione Lazio               | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1        |
     And The response body contains the list "[0].products" of size 1
     And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId     | tokenId                               | status    | productRole                 | role            | env      | createdAt                    |
-      | prod-interop  | def67890-1234-4abc-5678-90abcdef1234  | DELETED   | referente amministrativo    | MANAGER   | ROOT     | 2024-01-20T09:45:10.567Z     |
+      | roleId                               | productId    | tokenId                              | status  | productRole              | role    | env  | createdAt                |
+      | f1e2d3c4-b567-890a-bcde-1234567890ff | prod-interop | def67890-1234-4abc-5678-90abcdef1234 | DELETED | referente amministrativo | MANAGER | ROOT | 2024-01-20T09:45:10.567Z |
 
   Scenario: Successfully retrieve users with optional filters (states filter with two states)
     Given User login with username "j.doe" and password "test"
@@ -192,8 +192,8 @@ Feature: Institution
       | 65b1234f85a6a37415221ef9                | 97a511a7-2acc-47b9-afed-2f3c65753b4a                  | a1b2c3d4-5678-90ab-cdef-1234567890ab      | Regione Lazio               | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1        |
     And The response body contains the list "[0].products" of size 1
     And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId     | tokenId                               | status    | productRole                 | role            | env      | createdAt                    |
-      | prod-interop  | def67890-1234-4abc-5678-90abcdef1234  | DELETED   | referente amministrativo    | MANAGER   | ROOT     | 2024-01-20T09:45:10.567Z     |
+      | roleId                               | productId    | tokenId                              | status  | productRole              | role    | env  | createdAt                |
+      | f1e2d3c4-b567-890a-bcde-1234567890ff | prod-interop | def67890-1234-4abc-5678-90abcdef1234 | DELETED | referente amministrativo | MANAGER | ROOT | 2024-01-20T09:45:10.567Z |
 
   Scenario: Successfully retrieve users with optional filters (productRoles filter with two productRoles)
     Given User login with username "j.doe" and password "test"
@@ -225,8 +225,8 @@ Feature: Institution
       | 65b1234f85a6a37415221ef9                | 97a511a7-2acc-47b9-afed-2f3c65753b4a                  | a1b2c3d4-5678-90ab-cdef-1234567890ab      | Regione Lazio               | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1        |
     And The response body contains the list "[0].products" of size 1
     And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId     | tokenId                               | status    | productRole                 | role            | env      | createdAt                    |
-      | prod-interop  | def67890-1234-4abc-5678-90abcdef1234  | DELETED   | referente amministrativo    | MANAGER   | ROOT     | 2024-01-20T09:45:10.567Z     |
+      | roleId                               | productId    | tokenId                              | status  | productRole              | role    | env  | createdAt                |
+      | f1e2d3c4-b567-890a-bcde-1234567890ff | prod-interop | def67890-1234-4abc-5678-90abcdef1234 | DELETED | referente amministrativo | MANAGER | ROOT | 2024-01-20T09:45:10.567Z |
 
   Scenario: Successfully retrieve users with optional filters (with wrong institutionId)
     Given User login with username "j.doe" and password "test"
@@ -481,6 +481,7 @@ Feature: Institution
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                                      | createdAt                                 |
       | prod-io                                        | 2024-03-18T12:34:56Z                      |
+    And The response body contains field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
@@ -496,6 +497,7 @@ Feature: Institution
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                                      | createdAt                                 |
       | prod-io                                        | 2024-03-18T12:34:56Z                      |
+    And The response body contains field "[0].products[0].roleId"
 
   Scenario: Unsuccessfully update user's onboarded product creation date (wrong userId)
     Given User login with username "j.doe" and password "test"

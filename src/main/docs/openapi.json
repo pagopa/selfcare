@@ -1773,6 +1773,9 @@
       "OnboardedProductResponse" : {
         "type" : "object",
         "properties" : {
+          "roleId" : {
+            "type" : "string"
+          },
           "productId" : {
             "type" : "string"
           },
@@ -1807,6 +1810,9 @@
       "OnboardedProductWithActions" : {
         "type" : "object",
         "properties" : {
+          "roleId" : {
+            "type" : "string"
+          },
           "productId" : {
             "type" : "string"
           },

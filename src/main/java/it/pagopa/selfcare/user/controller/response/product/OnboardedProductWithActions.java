@@ -16,6 +16,7 @@ import static it.pagopa.selfcare.onboarding.common.Env.ROOT;
 @FieldNameConstants(asEnum = true)
 public class OnboardedProductWithActions {
 
+    private String roleId;
     private String productId;
     private String tokenId;
     private OnboardedProductState status;

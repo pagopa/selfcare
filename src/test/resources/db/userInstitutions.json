@@ -44,6 +44,7 @@
     "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
     "products": [
       {
+        "roleId": "d9f8e7c6-1234-45a6-b789-0c1d2e3f4a5b",
         "productId": "prod-io",
         "relationshipId": "d9f8e7c6-1234-45a6-b789-0c1d2e3f4a5b",
         "tokenId": "abc12345-6789-4def-b012-3456789abcd",
@@ -57,6 +58,7 @@
         "updatedAt": null
       },
       {
+        "roleId": "f1e2d3c4-b567-890a-bcde-1234567890ff",
         "productId": "prod-interop",
         "relationshipId": "f1e2d3c4-b567-890a-bcde-1234567890ff",
         "tokenId": "def67890-1234-4abc-5678-90abcdef1234",
@@ -81,6 +83,7 @@
     "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
     "products": [
       {
+        "roleId": "d9f8e7c6-1234-45a6-b789-0c1d2e3f4a5b",
         "productId": "prod-io",
         "relationshipId": "d9f8e7c6-1234-45a6-b789-0c1d2e3f4a5b",
         "tokenId": "abc12345-6789-4def-b012-3456789abcd",
@@ -153,6 +156,7 @@
     "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
     "products": [
       {
+        "roleId": "bac836d6-3d76-47e4-a11f-6c4b990cc920",
         "productId": "prod-pn-pg",
         "relationshipId": "5c653239-813e-435b-bff0-37b1f63edd08",
         "tokenId": "bac836d6-3d76-47e4-a11f-6c4b990cc920",

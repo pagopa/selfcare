@@ -1270,6 +1270,8 @@ components:
     OnboardedProductResponse:
       type: object
       properties:
+        roleId:
+          type: string
         productId:
           type: string
         tokenId:
@@ -1300,6 +1302,8 @@ components:
     OnboardedProductWithActions:
       type: object
       properties:
+        roleId:
+          type: string
         productId:
           type: string
         tokenId:

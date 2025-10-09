@@ -717,6 +717,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
      | status                      |
      | ACTIVE                      |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | userId                     | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                 |
@@ -737,6 +738,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                                                                            |
       | DELETED                                                                           |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   # Cancellazione di prodotto già cancellato
   @RemoveUserInstitutionAndUserInfoAfterScenario
@@ -756,6 +758,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | DELETED                    |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | userId                     | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                |
@@ -860,6 +863,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
@@ -876,6 +880,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-io                       | MANAGER      | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
@@ -899,6 +904,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | DELETED    |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
@@ -915,6 +921,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-io                       | MANAGER      | DELETED    |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   # Cambio stato con filtro institutionId
   @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
@@ -938,6 +945,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
@@ -954,6 +962,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-io                       | MANAGER      | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
@@ -978,6 +987,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | DELETED    |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
@@ -994,6 +1004,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-io                       | MANAGER      | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   # Cambio stato con filtro productId
   @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
@@ -1017,6 +1028,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
@@ -1033,6 +1045,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-io                       | MANAGER      | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
@@ -1057,6 +1070,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | DELETED    |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
@@ -1073,6 +1087,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-io                       | MANAGER      | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   # Cambio stato con filtro role
   @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
@@ -1096,6 +1111,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
@@ -1112,6 +1128,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-io                       | MANAGER      | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
@@ -1136,6 +1153,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | DELETED    |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
@@ -1152,6 +1170,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-io                       | MANAGER      | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   # Cambio stato con filtro productRole
   @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
@@ -1175,6 +1194,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
@@ -1191,6 +1211,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-io                       | MANAGER      | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
@@ -1215,6 +1236,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | DELETED    |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
@@ -1231,6 +1253,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-io                       | MANAGER      | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
   Scenario: Successfully update user status with status (from ACTIVE to PENDING)
@@ -1252,6 +1275,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE    |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
@@ -1275,6 +1299,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | PENDING    |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
   Scenario: Successfully update user status with status (from SUSPENDED to ACTIVE)
@@ -1296,6 +1321,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | SUSPENDED    |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
@@ -1319,6 +1345,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE    |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
   Scenario: Successfully update user status with status (from ACTIVE to SUSPENDED)
@@ -1340,6 +1367,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE    |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
@@ -1363,6 +1391,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | SUSPENDED    |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
   Scenario: Successfully update user status with status (from ACTIVE to DELETED)
@@ -1384,6 +1413,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE    |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
@@ -1407,6 +1437,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | DELETED    |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
   Scenario: Unsuccessfully update user status with status (from PENDING to ACTIVE)
@@ -1428,6 +1459,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | PENDING    |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
@@ -1455,6 +1487,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | PENDING    |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
   Scenario: Unsuccessfully update user status with status (from PENDING to DELETED)
@@ -1476,6 +1509,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | PENDING    |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
@@ -1503,6 +1537,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | PENDING    |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
   Scenario: Unsuccessfully update user status with status (from PENDING to SUSPENDED)
@@ -1524,6 +1559,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | PENDING    |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
@@ -1551,6 +1587,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | PENDING    |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   Scenario: Unsuccessfully update user status with wrong productId
     Given User login with username "j.doe" and password "test"
@@ -1988,6 +2025,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id                            | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
@@ -2020,6 +2058,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    And The response body contains field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
   Scenario: Successfully update user in user-registry and send notification when user data gets updated with two userInstitutions
@@ -2042,6 +2081,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
@@ -2059,6 +2099,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id                            | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
@@ -2091,6 +2132,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    And The response body contains field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
@@ -2109,6 +2151,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    And The response body contains field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
   Scenario: Successfully update user in user-registry and send notification when user data gets updated with two userInstitutions and institutionId filter
@@ -2131,6 +2174,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
@@ -2148,6 +2192,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id                            | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
@@ -2181,6 +2226,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
@@ -2199,6 +2245,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    And The response body contains field "[0].products[0].roleId"
 
   Scenario: Successfully update user in user-registry and send notification when user data gets updated without userInstitution
     Given User login with username "j.doe" and password "test"
@@ -2244,6 +2291,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id                            | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
@@ -2277,6 +2325,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | role         | status     |
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   Scenario: Unsuccessfully update user in user-registry and send notification when user data gets updated with wrong userId
     Given User login with username "j.doe" and password "test"
@@ -2324,6 +2373,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | ACTIVE                    |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id                         | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                 |
@@ -2346,6 +2396,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | DELETED                    |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully update user product status from SUSPENDED to DELETED
@@ -2364,6 +2415,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | SUSPENDED                    |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id                         | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                 |
@@ -2386,6 +2438,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | DELETED                    |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully update user product status from SUSPENDED to ACTIVE
@@ -2404,6 +2457,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | SUSPENDED                  |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id                         | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                 |
@@ -2426,6 +2480,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | ACTIVE                     |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully update user product status from ACTIVE to SUSPENDED
@@ -2444,6 +2499,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | ACTIVE                     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id                         | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                 |
@@ -2466,6 +2522,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | SUSPENDED                  |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully update user product status with productRole filter
@@ -2484,6 +2541,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | ACTIVE                    |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id                         | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                 |
@@ -2507,6 +2565,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | DELETED                    |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Unsuccessfully update user product status from DELETED to ACTIVE
@@ -2525,6 +2584,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | DELETED                    |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id                         | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                 |
@@ -2551,6 +2611,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | DELETED                    |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Unsuccessfully update user product status from TOBEVALIDATED to ACTIVE
@@ -2569,6 +2630,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | TOBEVALIDATED              |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id                         | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                 |
@@ -2595,6 +2657,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | TOBEVALIDATED              |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Unsuccessfully update user product status from PENDING to ACTIVE
@@ -2613,6 +2676,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | PENDING                    |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id                         | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                 |
@@ -2639,6 +2703,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | PENDING                    |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Unsuccessfully update user product status with wrong productRole filter
@@ -2657,6 +2722,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | ACTIVE                     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id                         | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                 |
@@ -2682,6 +2748,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | ACTIVE                     |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Unsuccessfully update user product status with wrong institutionId
@@ -2756,6 +2823,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | PENDING                    |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id                         | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                 |
@@ -2781,6 +2849,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | status                     |
       | PENDING                    |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   Scenario: Bad Token update user product status
     Given A bad jwt token
@@ -2838,6 +2907,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | tokenId                                       | role         | productRole               | status     |
       | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE     | referente amministrativo  | ACTIVE     |
+    And The response body contains field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAfterCreateFromAPI
   Scenario: Successfully update or create a user by userId with a new role (2 times with different products for same institution)
@@ -2879,6 +2949,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | tokenId                                       | role         | productRole               | status     |
       | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE     | referente amministrativo  | ACTIVE     |
+    And The response body contains field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following request body:
       """
@@ -2918,6 +2989,8 @@ Feature: User
       | productId                     | tokenId                                       | role         | productRole               | status     |
       | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE     | referente amministrativo  | ACTIVE     |
       | prod-pagopa                   | 5b2cfa14-9246-4d03-bfcb-8a9d1e6e3f45          | MANAGER      | admin                     | ACTIVE     |
+    And The response body contains field "[0].products[0].roleId"
+    And The response body contains field "[0].products[1].roleId"
 
   @RemoveUserInstitutionAfterCreateFromAPI
   Scenario: Unsuccessfully update or create a user by userId with a new role (2 times with same product for same institution)
@@ -2959,6 +3032,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | tokenId                                       | role         | productRole               | status     |
       | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE     | referente amministrativo  | ACTIVE     |
+    And The response body contains field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following request body:
       """
@@ -2999,6 +3073,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | tokenId                                       | role         | productRole               | status     |
       | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE     | referente amministrativo  | ACTIVE     |
+    And The response body contains field "[0].products[0].roleId"
 
   Scenario: Unsuccessfully update or create a user by userId with a new role (with wrong user)
     Given User login with username "j.doe" and password "test"
@@ -3122,6 +3197,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | tokenId                                       | role         | productRole               | status     |
       | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE     | referente amministrativo  | ACTIVE     |
+    And The response body contains field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following request body:
       """
@@ -3163,6 +3239,7 @@ Feature: User
       | productId                     | tokenId                                       | role         | productRole               | status     |
       | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE     | referente amministrativo  | DELETED    |
       | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | MANAGER      | admin                     | ACTIVE     |
+    And The response body contains field "[0].products[0].roleId"
 
 
   Scenario: Unsuccessfully update or create a user by userId after check if user is a manager for the specified product (with wrong role and user not created)
@@ -3232,6 +3309,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | tokenId                                       | role                  | productRole               | status     |
       | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | MANAGER               | referente amministrativo  | ACTIVE     |
+    And The response body contains field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following request body:
       """
@@ -3270,6 +3348,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | tokenId                                       | role                  | productRole               | status     |
       | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | MANAGER               | referente amministrativo  | ACTIVE     |
+    And The response body contains field "[0].products[0].roleId"
 
 
   @RemoveUserInstitutionAfterCreateFromAPI
@@ -3322,6 +3401,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | tokenId                                       | role                  | productRole               | status     |
       | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE              | referente amministrativo  | SUSPENDED  |
+    And The response body contains field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following request body:
       """
@@ -3360,6 +3440,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | tokenId                                       | role                  | productRole               | status     |
       | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE              | referente amministrativo  | SUSPENDED     |
+    And The response body contains field "[0].products[0].roleId"
 
   Scenario: Unsuccessfully update or create a user by userId after check if user is a manager for the specified product (with wrong userId)
     Given User login with username "j.doe" and password "test"
@@ -3467,6 +3548,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                      | productRole                                   | role         | status | tokenId                                |
       | prod-io                        | referente amministrativo                      | DELEGATE     | ACTIVE | 7a3df825-8317-4601-9fea-12283b7ed97f   |
+    And The response body contains field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully create a new user or update an existing one (existing userInstitution with new product)
@@ -3487,6 +3569,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                      | productRole                                   | role         | status | tokenId                                |
       | prod-io                        | admin                                         | SUB_DELEGATE | ACTIVE | asda8312-3311-5642-gsds-gfr2252341     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following request body:
       """
@@ -3531,6 +3614,8 @@ Feature: User
       | productId                      | productRole                                   | role         | status | tokenId                                |
       | prod-io                        | admin                                         | SUB_DELEGATE | ACTIVE | asda8312-3311-5642-gsds-gfr2252341     |
       | prod-pagopa                    | referente amministrativo                      | MANAGER      | ACTIVE | aa1112-5132-4432-gsds-d12322           |
+    And The response body contains field "[0].products[0].roleId"
+    And The response body contains field "[0].products[1].roleId"
 
   @RemoveUserInstitutionWithMockUser3
   Scenario: Successfully created a new user or updated an existing one can be added to aggregates
@@ -3580,6 +3665,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                      | productRole                                   | role         | status | tokenId                                |
       | prod-pagopa                    | admin                                         | SUB_DELEGATE | ACTIVE | asda8312-3311-5642-gsds-gfr2252341     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following request body:
       """
@@ -3623,6 +3709,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                      | productRole                                   | role         | status | tokenId                                |
       | prod-pagopa                    | admin                                         | SUB_DELEGATE | ACTIVE | asda8312-3311-5642-gsds-gfr2252341     |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Unsuccessfully create a new user or update an existing one with SUSUPENDED status (existing userInstitution with existing product)
@@ -3643,6 +3730,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                      | productRole                                   | role         | status    | tokenId                                |
       | prod-pagopa                    | admin                                         | SUB_DELEGATE | SUSPENDED | asda8312-3311-5642-gsds-gfr2252341     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following request body:
       """
@@ -3686,6 +3774,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                      | productRole                                   | role         | status    | tokenId                                |
       | prod-pagopa                    | admin                                         | SUB_DELEGATE | SUSPENDED | asda8312-3311-5642-gsds-gfr2252341     |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
@@ -3707,6 +3796,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                      | productRole                                   | role         | status    | tokenId                                |
       | prod-pagopa                    | admin                                         | SUB_DELEGATE | SUSPENDED | asda8312-3311-5642-gsds-gfr2252341     |
+    And The response body doesn't contain field "[0].products[0].roleId"
     Given User login with username "j.doe" and password "test"
     And The following request body:
       """
@@ -3750,6 +3840,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                      | productRole                                   | role         | status    | tokenId                                |
       | prod-pagopa                    | admin                                         | SUB_DELEGATE | SUSPENDED | asda8312-3311-5642-gsds-gfr2252341     |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
 
   @RemoveUserInstitutionWithMockUser3
@@ -3803,6 +3894,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                      | productRole                                   | role         | status | tokenId                                |
       | prod-io                        | referente amministrativo                      | DELEGATE     | ACTIVE | 7a3df825-8317-4601-9fea-12283b7ed97f   |
+    And The response body contains field "[0].products[0].roleId"
 
   @RemoveUserInstitutionWithMockUser3
   Scenario: Unsuccessfully create a new user or update an existing one (without fiscalCode)
@@ -3989,6 +4081,8 @@ Feature: User
       | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                    |
       | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2022-09-21T16:44:30.773Z     |
       | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2023-03-10T10:15:45.123Z     |
+    And The response body doesn't contain field "[0].products[0].roleId"
+    And The response body doesn't contain field "[0].products[1].roleId"
 
   Scenario: Successfully retrieve a list of users with optional filters and permissions without personId
     Given User login with username "j.doe" and password "test"
@@ -4032,6 +4126,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                    |
       | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2023-03-10T10:15:45.123Z     |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   Scenario: Successfully retrieve a list of users with optional filters and permissions with personId (with products filter with two products)
     Given User login with username "j.doe" and password "test"
@@ -4064,6 +4159,8 @@ Feature: User
       | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                     |
       | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2023-03-10T10:15:45.123Z      |
       | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2022-09-21T16:44:30.773Z      |
+    And The response body doesn't contain field "[0].products[0].roleId"
+    And The response body doesn't contain field "[0].products[1].roleId"
 
   Scenario: Successfully retrieve a list of users with optional filters and permissions with personId (with states filter with one state)
     Given User login with username "j.doe" and password "test"
@@ -4094,6 +4191,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                     |
       | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2022-09-21T16:44:30.773Z      |
+    And The response body doesn't contain field "[0].products[0].roleId"
 
   Scenario: Successfully retrieve a list of users with optional filters and permissions with personId (with states filter with two states)
     Given User login with username "j.doe" and password "test"
@@ -4126,6 +4224,8 @@ Feature: User
       | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                     |
       | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2023-03-10T10:15:45.123Z      |
       | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2022-09-21T16:44:30.773Z      |
+    And The response body doesn't contain field "[0].products[0].roleId"
+    And The response body doesn't contain field "[0].products[1].roleId"
 
   Scenario: Successfully retrieve a list of users with optional filters and permissions with personId (with states filter with two states)
     Given User login with username "j.doe" and password "test"
@@ -4158,6 +4258,8 @@ Feature: User
       | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                    |
       | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2023-03-10T10:15:45.123Z     |
       | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2022-09-21T16:44:30.773Z     |
+    And The response body doesn't contain field "[0].products[0].roleId"
+    And The response body doesn't contain field "[0].products[1].roleId"
 
   Scenario: Successfully retrieve a list of users with optional filters and permissions with personId (with productRoles filter with one productRole)
     Given User login with username "j.doe" and password "test"
@@ -4186,8 +4288,8 @@ Feature: User
       | [0].userResponse.workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375      | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
     And The response body contains the list "[0].products" of size 1
     And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                |
-      | prod-io             | abc12345-6789-4def-b012-3456789abcd     | ACTIVE        | admin                       | MANAGER     | ROOT    | 2023-06-15T14:30:00Z     |
+      | roleId                               | productId | tokenId                             | status | productRole | role    | env  | createdAt            |
+      | d9f8e7c6-1234-45a6-b789-0c1d2e3f4a5b | prod-io   | abc12345-6789-4def-b012-3456789abcd | ACTIVE | admin       | MANAGER | ROOT | 2023-06-15T14:30:00Z |
 
   Scenario: Successfully retrieve a list of users with optional filters and permissions with personId (with productRoles filter with two productRoles)
     Given User login with username "r.balboa" and password "test"
@@ -4217,9 +4319,9 @@ Feature: User
       | [0].userResponse.workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375      | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
     And The response body contains the list "[0].products" of size 2
     And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                |
-      | prod-io             | abc12345-6789-4def-b012-3456789abcd     | ACTIVE        | admin                       | MANAGER     | ROOT    | 2023-06-15T14:30:00Z     |
-      | prod-interop        | def67890-1234-4abc-5678-90abcdef1234    | DELETED       | referente amministrativo    | MANAGER     | ROOT    | 2024-01-20T09:45:10.567Z |
+      | roleId                               | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                |
+      | d9f8e7c6-1234-45a6-b789-0c1d2e3f4a5b | prod-io             | abc12345-6789-4def-b012-3456789abcd     | ACTIVE        | admin                       | MANAGER     | ROOT    | 2023-06-15T14:30:00Z     |
+      | f1e2d3c4-b567-890a-bcde-1234567890ff | prod-interop        | def67890-1234-4abc-5678-90abcdef1234    | DELETED       | referente amministrativo    | MANAGER     | ROOT    | 2024-01-20T09:45:10.567Z |
 
   Scenario: Successfully retrieve a list of users with optional filters and permissions without personId (with roles filter with two roles)
     Given User login with username "j.doe" and password "test"
@@ -4263,9 +4365,9 @@ Feature: User
       | [0].userResponse.workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375      | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
     And The response body contains the list "[0].products" of size 2
     And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                |
-      | prod-io             | abc12345-6789-4def-b012-3456789abcd     | ACTIVE        | admin                       | MANAGER     | ROOT    | 2023-06-15T14:30:00Z     |
-      | prod-interop        | def67890-1234-4abc-5678-90abcdef1234    | DELETED       | referente amministrativo    | MANAGER     | ROOT    | 2024-01-20T09:45:10.567Z |
+      | roleId                               | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                |
+      | d9f8e7c6-1234-45a6-b789-0c1d2e3f4a5b | prod-io             | abc12345-6789-4def-b012-3456789abcd     | ACTIVE        | admin                       | MANAGER     | ROOT    | 2023-06-15T14:30:00Z     |
+      | f1e2d3c4-b567-890a-bcde-1234567890ff | prod-interop        | def67890-1234-4abc-5678-90abcdef1234    | DELETED       | referente amministrativo    | MANAGER     | ROOT    | 2024-01-20T09:45:10.567Z |
 
   Scenario: Successfully retrieve a list of users with optional filters and permissions without personId and wrong userId
     Given User login with username "j.doe" and password "test"
@@ -4315,6 +4417,7 @@ Feature: User
       | products[0].role                  | MANAGER                                     |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4352,6 +4455,7 @@ Feature: User
       | products[0].role                  | MANAGER                                     |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4381,6 +4485,7 @@ Feature: User
       | userId                            | 97a511a7-2acc-47b9-afed-2f3c65753b4a        |
       | institutionId                     | 6b5e0d68-c7bc-4639-a922-48a1662ed991        |
       | institutionDescription            | Comune di Alassio                           |
+      | products[0].roleId                | bac836d6-3d76-47e4-a11f-6c4b990cc920        |
       | products[0].productId             | prod-pn-pg                                  |
       | products[0].tokenId               | bac836d6-3d76-47e4-a11f-6c4b990cc920        |
       | products[0].status                | ACTIVE                                      |
@@ -4426,6 +4531,7 @@ Feature: User
       | products[0].role                  | MANAGER                                     |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
     And The response body contains the list "products[0].userProductActions" of size 14
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
@@ -4462,6 +4568,7 @@ Feature: User
       | products[0].role                  | DELEGATE                                    |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
     And The response body contains the list "products[0].userProductActions" of size 14
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
@@ -4498,6 +4605,7 @@ Feature: User
       | products[0].role                  | SUB_DELEGATE                                |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
     And The response body contains the list "products[0].userProductActions" of size 14
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
@@ -4534,6 +4642,7 @@ Feature: User
       | products[0].role                  | OPERATOR                                    |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
     And The response body contains the list "products[0].userProductActions" of size 4
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:ViewBilling                  |
@@ -4560,6 +4669,7 @@ Feature: User
       | products[0].role                  | MANAGER                                     |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
     And The response body contains the list "products[0].userProductActions" of size 16
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
@@ -4598,6 +4708,7 @@ Feature: User
       | products[0].role                  | DELEGATE                                    |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
     And The response body contains the list "products[0].userProductActions" of size 16
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
@@ -4636,6 +4747,7 @@ Feature: User
       | products[0].role                  | SUB_DELEGATE                                |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
     And The response body contains the list "products[0].userProductActions" of size 16
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
@@ -4674,6 +4786,7 @@ Feature: User
       | products[0].role                  | OPERATOR                                    |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
     And The response body contains the list "products[0].userProductActions" of size 4
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:ViewBilling                  |
@@ -4700,6 +4813,7 @@ Feature: User
       | products[0].role                  | OPERATOR                                    |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:ViewBilling                  |
       | Selc:AccessProductBackoffice      |
@@ -4725,6 +4839,7 @@ Feature: User
       | products[0].role                  | DELEGATE                                    |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4763,6 +4878,7 @@ Feature: User
       | products[0].role                  | SUB_DELEGATE                                |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4801,6 +4917,7 @@ Feature: User
       | products[0].role                  | ADMIN_EA                                    |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4835,6 +4952,7 @@ Feature: User
       | products[0].role                  | ADMIN_EA                                    |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4868,6 +4986,7 @@ Feature: User
       | products[0].role                  | ADMIN_EA                                    |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4903,6 +5022,7 @@ Feature: User
       | products[0].role                  | ADMIN_EA                                    |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |

@@ -28,10 +28,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.*;
 import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductEnum.*;
@@ -235,6 +232,9 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
     @Override
     public Uni<UserInstitution> persistOrUpdate(UserInstitution userInstitution) {
+        Optional.ofNullable(userInstitution.getProducts()).ifPresent(l ->
+                l.stream().filter(p -> p.getRoleId() == null)
+                        .forEach(p -> p.setRoleId(UUID.randomUUID().toString())));
         return UserInstitution.persistOrUpdate(userInstitution)
                 .replaceWith(userInstitution);
     }

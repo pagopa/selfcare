@@ -10,6 +10,7 @@ import java.time.OffsetDateTime;
 @Data
 public class OnboardedProductResponse {
 
+    private String roleId;
     private String productId;
     private String tokenId;
     private OnboardedProductState status;
