@@ -11,9 +11,9 @@ import io.restassured.response.Response;
 import io.restassured.response.ResponseOptions;
 import io.restassured.specification.RequestSpecification;
 import it.pagopa.selfcare.user_group.model.AddMembersToUserGroupDto;
+import it.pagopa.selfcare.user_group.model.DeleteMembersFromUserGroupDto;
 import it.pagopa.selfcare.user_group.model.UserGroupEntity;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.jupiter.api.Assertions;
 
 import java.io.IOException;
 import java.util.List;
@@ -83,6 +83,12 @@ public class UserGroupMemberSteps extends UserGroupSteps {
             this.addMembersRequest = addMembersToUserGroupDtos.get(0);
     }
 
+    @Given("the following members to delete from user group request details:")
+    public void givenMembersToDeleteFromUserGroupRequestDetails(List<DeleteMembersFromUserGroupDto> deleteMembersFromUserGroupDtos) {
+        if (deleteMembersFromUserGroupDtos != null && deleteMembersFromUserGroupDtos.size() == 1)
+            this.deleteMembersRequest = deleteMembersFromUserGroupDtos.get(0);
+    }
+
     @When("I send a PUT request to {string}")
     public void iSendAPutRequestTo(String url) {
         ResponseOptions<Response> response = RestAssured.given()
@@ -119,6 +125,28 @@ public class UserGroupMemberSteps extends UserGroupSteps {
             userGroupEntityResponse = response.body().as(UserGroupEntity.class);
             userGroupId = userGroupEntityResponse.getId();
         } else {
+            errorMessage = response.body().asString();
+        }
+    }
+
+    @When("I send a DELETE request to {string} to delete members from a group")
+    public void iSendADELETERequestToDeleteMembers(String url) {
+        RequestSpecification requestSpecification = RestAssured.given()
+                .contentType("application/json");
+
+        if(StringUtils.isNotBlank(token)){
+            requestSpecification.header("Authorization", "Bearer " + token);
+        }
+
+        ExtractableResponse<?> response = requestSpecification
+                .body(deleteMembersRequest)
+                .when()
+                .delete(url)
+                .then()
+                .extract();
+
+        status = response.statusCode();
+        if(status != 204) {
             errorMessage = response.body().asString();
         }
     }

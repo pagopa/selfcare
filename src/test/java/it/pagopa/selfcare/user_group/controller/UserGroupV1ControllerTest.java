@@ -50,6 +50,9 @@ class UserGroupV1ControllerTest {
     private static final DummyCreateUserGroupDto CREATE_USER_GROUP_DTO = mockInstance(new DummyCreateUserGroupDto());
     private static final DummyUpdateUserGroupDto UPDATE_USER_GROUP_DTO = mockInstance(new DummyUpdateUserGroupDto());
     private static final DummyAddMembersToUserGroupDto ADD_MEMBERS_TO_USER_GROUP_DTO = mockInstance(new DummyAddMembersToUserGroupDto());
+
+    private static final DummyDeleteMembersFromUserGroupDto DELETE_MEMBERS_FROM_USER_GROUP_DTO = mockInstance(new DummyDeleteMembersFromUserGroupDto());
+
     private static final String BASE_URL = "/v1/user-groups";
 
     @MockBean
@@ -384,5 +387,25 @@ class UserGroupV1ControllerTest {
                 .addMembers(anyString(), anyString(), anyString(), anySet());
         Mockito.verifyNoMoreInteractions(groupServiceMock);
     }
+
+    @Test
+    void deleteMembersWithParentInstitutionId() throws Exception {
+
+        //when
+        MvcResult result = mvc.perform(MockMvcRequestBuilders
+                        .delete(BASE_URL + "/members")
+                        .content(mapper.writeValueAsString(DELETE_MEMBERS_FROM_USER_GROUP_DTO))
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(status().is2xxSuccessful())
+                .andReturn();
+        //then
+        assertEquals(0, result.getResponse().getContentLength());
+        verify(groupServiceMock, times(1))
+                .deleteMembersWithParentInstitutionId(anyString(), anyString(), anyString(), anySet());
+        Mockito.verifyNoMoreInteractions(groupServiceMock);
+    }
+
+
 
 }

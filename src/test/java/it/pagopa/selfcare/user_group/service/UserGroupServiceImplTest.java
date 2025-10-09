@@ -957,4 +957,79 @@ class UserGroupServiceImplTest {
                 () -> groupService.addMembers("inst", "parent", "prod", members));
     }
 
+    @Test
+    void deleteMembersWithParentInstitutionId_ok() {
+        String institutionId = "inst1";
+        String parentInstitutionId = "parent1";
+        String productId = "prod1";
+        UUID member = UUID.randomUUID();
+        Set<UUID> members = Set.of(member);
+
+        UserGroupEntity entity = new UserGroupEntity();
+        entity.setId("group123");
+
+        UpdateResult updateResult = mock(UpdateResult.class);
+
+        when(updateResult.getModifiedCount()).thenReturn(1L);
+        when(mongoTemplateMock.updateFirst(any(Query.class), any(Update.class), eq(UserGroupEntity.class))).thenReturn(updateResult);
+
+        when(mongoTemplateMock.count(any(Query.class), eq(UserGroupEntity.class))).thenReturn(1L);
+        when(mongoTemplateMock.find(any(Query.class), eq(UserGroupEntity.class)))
+                .thenReturn(List.of(entity));
+        when(auditorAware.getCurrentAuditor()).thenReturn(Optional.of("testUser"));
+
+        groupService.deleteMembersWithParentInstitutionId(institutionId, parentInstitutionId, productId, members);
+
+        verify(mongoTemplateMock).updateFirst(
+                any(),
+                any(Update.class),
+                eq(UserGroupEntity.class)
+        );
+    }
+
+    @Test
+    void deleteMembersWithParentInstitutionId_nullInstitutionId_shouldThrow() {
+        Set<UUID> members = Set.of(UUID.randomUUID());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> groupService.deleteMembersWithParentInstitutionId(null, "parent", "prod", members));
+    }
+
+    @Test
+    void deleteMembersWithParentInstitutionId_nullParentInstitutionId_shouldThrow() {
+        Set<UUID> members = Set.of(UUID.randomUUID());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> groupService.deleteMembersWithParentInstitutionId("inst", null, "prod", members));
+    }
+
+    @Test
+    void deleteMembersWithParentInstitutionId_noGroupFound_shouldThrowResourceNotFound() {
+        Set<UUID> members = Set.of(UUID.randomUUID());
+
+        when(mongoTemplateMock.count(any(Query.class), eq(UserGroupEntity.class))).thenReturn(0L);
+        when(mongoTemplateMock.find(any(Query.class), eq(UserGroupEntity.class)))
+                .thenReturn(List.of());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> groupService.deleteMembersWithParentInstitutionId("inst", "parent", "prod", members));
+    }
+
+    @Test
+    void deleteMembersWithParentInstitutionId_multipleGroupsFound_shouldThrowIllegalState() {
+        Set<UUID> members = Set.of(UUID.randomUUID());
+
+        UserGroupEntity e1 = new UserGroupEntity();
+        e1.setId("id1");
+        UserGroupEntity e2 = new UserGroupEntity();
+        e2.setId("id2");
+
+        when(mongoTemplateMock.count(any(Query.class), eq(UserGroupEntity.class))).thenReturn(2L);
+        when(mongoTemplateMock.find(any(Query.class), eq(UserGroupEntity.class)))
+                .thenReturn(List.of(e1, e2));
+
+        assertThrows(IllegalStateException.class,
+                () -> groupService.deleteMembersWithParentInstitutionId("inst", "parent", "prod", members));
+    }
+
 }

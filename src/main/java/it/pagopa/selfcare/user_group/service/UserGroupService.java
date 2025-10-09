@@ -16,6 +16,8 @@ public interface UserGroupService {
 
     void addMembers(String institutionId, String parentInstitutionId, String productId, Set<UUID> members);
 
+    void deleteMembersWithParentInstitutionId(String institutionId, String parentInstitutionId, String productId, Set<UUID> members);
+
     void deleteMember(String groupId, String memberId);
 
     void deleteMembers(String userId, String institutionId, String memberId);

@@ -242,4 +242,19 @@ public class UserGroupV1Controller {
         log.trace("addMemberToUserGroup end");
     }
 
+    @DeleteMapping(value = "/members", produces = MediaType.ALL_VALUE)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Tag(name = "UserGroup")
+    @Tag(name = "internal-v1")
+    @ApiOperation(value = "", notes = "${swagger.user-group.groups.api.deleteMembersWithParentInstitutionId}")
+    public void deleteMembersFromUserGroupWithParentInstitutionId(@RequestBody
+                                                             @Valid
+                                                                      DeleteMembersFromUserGroupDto deleteMembersFromUserGroupDto) {
+        log.trace("deleteMembersFromUserGroupWithParentInstitutionId start");
+        log.debug("deleteMembersFromUserGroupWithParentInstitutionId institutionId = {}, parentInstitutionId = {}, productId = {}",
+                Encode.forJava(deleteMembersFromUserGroupDto.getInstitutionId()), Encode.forJava(deleteMembersFromUserGroupDto.getParentInstitutionId()), Encode.forJava(deleteMembersFromUserGroupDto.getProductId()));
+        groupService.deleteMembersWithParentInstitutionId(deleteMembersFromUserGroupDto.getInstitutionId(), deleteMembersFromUserGroupDto.getParentInstitutionId(), deleteMembersFromUserGroupDto.getProductId(), deleteMembersFromUserGroupDto.getMembers());
+        log.trace("deleteMembersFromUserGroupWithParentInstitutionId end");
+    }
+
 }

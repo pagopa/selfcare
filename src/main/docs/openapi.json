@@ -285,6 +285,59 @@
         "security" : [ {
           "bearerAuth" : [ "global" ]
         } ]
+      },
+      "delete" : {
+        "tags" : [ "UserGroup", "internal-v1" ],
+        "summary" : "deleteMembersFromUserGroupWithParentInstitutionId",
+        "description" : "Service to delete members from a specific UserGroup entity by its institutionId, parentInstitutionId and productId",
+        "operationId" : "deleteMembersFromUserGroupWithParentInstitutionIdUsingDELETE",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DeleteMembersFromUserGroupDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
       }
     },
     "/v1/user-groups/members/{memberId}" : {
@@ -880,6 +933,34 @@
             "type" : "string",
             "description" : "Users group's status",
             "enum" : [ "ACTIVE", "DELETED", "SUSPENDED" ]
+          }
+        }
+      },
+      "DeleteMembersFromUserGroupDto" : {
+        "title" : "DeleteMembersFromUserGroupDto",
+        "required" : [ "institutionId", "members", "parentInstitutionId", "productId" ],
+        "type" : "object",
+        "properties" : {
+          "institutionId" : {
+            "type" : "string",
+            "description" : "Users group's institutionId"
+          },
+          "members" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "description" : "List of all the members of the group",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          "parentInstitutionId" : {
+            "type" : "string",
+            "description" : "Users group's parent institutionId"
+          },
+          "productId" : {
+            "type" : "string",
+            "description" : "Users group's productId"
           }
         }
       },
