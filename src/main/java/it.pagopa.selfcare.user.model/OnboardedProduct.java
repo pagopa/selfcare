@@ -16,6 +16,7 @@ import static it.pagopa.selfcare.onboarding.common.Env.ROOT;
 @FieldNameConstants(asEnum = true)
 public class OnboardedProduct {
 
+    private String roleId;
     private String productId;
     private String tokenId;
     private OnboardedProductState status;
@@ -26,4 +27,5 @@ public class OnboardedProduct {
     private OffsetDateTime updatedAt;
     private String delegationId;
     private Boolean toAddOnAggregates;
+
 }
