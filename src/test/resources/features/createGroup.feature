@@ -19,24 +19,15 @@ Feature: Create User Group
     And the response should contain the createdAt notNull
     And the response should contain the modified data null
 
-  @CreateNewGroup
-  Scenario: Successfully create a new user group with parentInstitutionId
+  # Scenario negativo: Nome del gruppo non permesso
+  Scenario: Attempt to create a user group with a duplicate name
     Given [CREATE] user login with username "j.doe" and password "test"
     And the following user group details:
-      | name                          | description                | productId  | institutionId | parentInstitutionId | status | members                                                                   |
-      | Group Name Parent Institution | TestGroupParentInstitution | product123 | inst123       | inst234             | ACTIVE | 525db33f-967f-4a82-8984-c606225e714a,a1b7c86b-d195-41d8-8291-7c3467abfd30 |
+      | name                      | description | productId | institutionId                        | status | members                                                                   |
+      | Ente Aggregatore io group | TestGroup   | prod-test | 9c8ae123-d990-4400-b043-67a60aff31bc | ACTIVE | 525db33f-967f-4a82-8984-c606225e714a,a1b7c86b-d195-41d8-8291-7c3467abfd30 |
     When I send a POST request to "/v1/user-groups" with the given details
-    Then [CREATE] the response status should be 201
-    And the response should contain a valid user group resource with name "Group Name Parent Institution"
-    And the response should contain the description "TestGroupParentInstitution"
-    And the response should contain the productId "product123"
-    And the response should contain the institutionId "inst123"
-    And the response should contain the parent institutionId "inst234"
-    And the response should contain the status "ACTIVE"
-    And the response should contain 2 members
-    And the response should contain the createdBy "97a511a7-2acc-47b9-afed-2f3c65753b4a"
-    And the response should contain the createdAt notNull
-    And the response should contain the modified data null
+    Then [CREATE] the response status should be 500
+    And [CREATE] the response should contain an error message "Group name cannot start with 'Ente Aggregatore'"
 
   # Scenario negativo: Nome del gruppo già esistente (conflitto)
   @DuplicateGroupName
@@ -48,17 +39,6 @@ Feature: Create User Group
     When I send a POST request to "/v1/user-groups" with the given details
     Then [CREATE] the response status should be 409
     And [CREATE] the response should contain an error message "A group with the same name already exists in ACTIVE or SUSPENDED state"
-
-  # Scenario negativo: Gruppo già esistente con stesso institutionId-parentInstitutionId-productId (conflitto)
-  @DuplicateGroupName
-  Scenario: Attempt to create a user group with a duplicate institutionId-parentInstitutionId-productId
-    Given [CREATE] user login with username "j.doe" and password "test"
-    And the following user group details:
-      | name                   | description | productId | institutionId                        | parentInstitutionId                  | status  | members                                                                   |
-      | io group with parent 2 | TestGroup   | prod-test | 9c7ae123-d990-4400-b043-67a60aff31bc | 5d1ae124-d870-4400-b043-67a60aff32cb |ACTIVE   | 525db33f-967f-4a82-8984-c606225e714a,a1b7c86b-d195-41d8-8291-7c3467abfd30 |
-    When I send a POST request to "/v1/user-groups" with the given details
-    Then [CREATE] the response status should be 409
-    And [CREATE] the response should contain an error message "A group with the same institutionId-parentInstitutionId-productId already exists in ACTIVE or SUSPENDED state"
 
   # Scenario negativo: Dettagli del gruppo mancanti (name non fornito)
   Scenario: Attempt to create a user group with missing required fields (name)

@@ -40,7 +40,9 @@ public class UserGroupEntity implements UserGroupOperations {
     private String parentInstitutionId;
     @FieldNameConstants.Include
     private String productId;
+    @FieldNameConstants.Include
     private String name;
+    @FieldNameConstants.Include
     private String description;
     @FieldNameConstants.Include
     private UserGroupStatus status;

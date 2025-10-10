@@ -869,9 +869,13 @@
     "schemas" : {
       "AddMembersToUserGroupDto" : {
         "title" : "AddMembersToUserGroupDto",
-        "required" : [ "institutionId", "members", "parentInstitutionId", "productId" ],
+        "required" : [ "description", "institutionId", "members", "name", "parentInstitutionId", "productId" ],
         "type" : "object",
         "properties" : {
+          "description" : {
+            "type" : "string",
+            "description" : "Users group's description"
+          },
           "institutionId" : {
             "type" : "string",
             "description" : "Users group's institutionId"
@@ -884,6 +888,10 @@
               "type" : "string",
               "format" : "uuid"
             }
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "Users group's name"
           },
           "parentInstitutionId" : {
             "type" : "string",
@@ -920,10 +928,6 @@
           "name" : {
             "type" : "string",
             "description" : "Users group's name"
-          },
-          "parentInstitutionId" : {
-            "type" : "string",
-            "description" : "Users group's parent institutionId"
           },
           "productId" : {
             "type" : "string",

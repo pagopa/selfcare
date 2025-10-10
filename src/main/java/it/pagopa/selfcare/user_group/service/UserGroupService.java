@@ -14,7 +14,7 @@ public interface UserGroupService {
 
     void addMember(String id, UUID memberId);
 
-    void addMembers(String institutionId, String parentInstitutionId, String productId, Set<UUID> members);
+    void createGroupOrAddMembers(UserGroupOperations group);
 
     void deleteMembersWithParentInstitutionId(String institutionId, String parentInstitutionId, String productId, Set<UUID> members);
 

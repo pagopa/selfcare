@@ -2,6 +2,7 @@ package it.pagopa.selfcare.user_group.integration_test.steps;
 
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
+import io.cucumber.java.DataTableType;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -16,10 +17,29 @@ import it.pagopa.selfcare.user_group.model.UserGroupEntity;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class UserGroupMemberSteps extends UserGroupSteps {
+
+    @DataTableType
+    public AddMembersToUserGroupDto convertAddMembersRequest(Map<String, String> entry) {
+        AddMembersToUserGroupDto request = new AddMembersToUserGroupDto();
+        request.setInstitutionId(entry.get("institutionId"));
+        request.setParentInstitutionId(entry.get("parentInstitutionId"));
+        request.setProductId(entry.get("productId"));
+        request.setName(entry.get("name"));
+        request.setDescription(entry.get("description"));
+
+        Set<UUID> members = Optional.ofNullable(entry.get("members"))
+                .map(s -> Arrays.stream(s.split(","))
+                        .map(UUID::fromString)
+                        .collect(Collectors.toSet()))
+                .orElse(Set.of());
+        request.setMembers(members);
+
+        return request;
+    }
 
     @Before("@FirstGroupMembersScenario")
     public void beforeFeature() throws IOException {

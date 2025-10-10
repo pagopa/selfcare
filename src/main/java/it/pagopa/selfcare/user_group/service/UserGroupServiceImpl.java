@@ -19,6 +19,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -43,9 +44,11 @@ public class UserGroupServiceImpl implements UserGroupService {
     private static final String USER_GROUP_INSTITUTION_ID_REQUIRED_MESSAGE = "A user group institution id is required";
     private static final String USER_GROUP_PARENT_INSTITUTION_ID_REQUIRED_MESSAGE = "A user group parent institution id is required";
     private static final String MEMBERS_REQUIRED = "Members are required";
+    private static final String GROUP_NAME_REQUIRED = "A group name is required";
     private static final String MEMBER_ID_REQUIRED = "A member id is required";
+    private static final String GROUP_NAME_FORBIDDEN = "Group name cannot start with 'Ente Aggregatore'";
     private static final String GROUP_NAME_ALREADY_EXISTS = "A group with the same name already exists in ACTIVE or SUSPENDED state";
-    private static final String GROUP_PARENT_ALREADY_EXISTS = "A group with the same institutionId-parentInstitutionId-productId already exists in ACTIVE or SUSPENDED state";
+    private static final String ENTE_AGGREGATORE_PLACEHOLDER = "Ente Aggregatore ";
     private final List<String> allowedSortingParams;
     private final UserGroupRepository repository;
     private final MongoTemplate mongoTemplate;
@@ -70,7 +73,7 @@ public class UserGroupServiceImpl implements UserGroupService {
         Assert.state(authentication.getPrincipal() instanceof SelfCareUser, "Not SelfCareUser principal");
         Assert.notNull(group, "A group is required");
 
-        checkGroupUniqueness(group.getId(), group.getName(), group.getProductId(), group.getInstitutionId(), group.getParentInstitutionId());
+        checkGroupUniqueness(group.getId(), group.getName(), group.getProductId(), group.getInstitutionId());
         return insertUserGroupEntity(group);
     }
 
@@ -89,21 +92,30 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     @Override
-    public void addMembers(String institutionId, String parentInstitutionId, String productId, Set<UUID> members) {
-        log.trace("addMembers start");
-        log.debug("addMembers institutionId = {}, parentInstitutionId = {}, members = {}",
-                Encode.forJava(institutionId), Encode.forJava(parentInstitutionId), Encode.forJava(members.toString()));
-        Assert.notNull(institutionId, USER_GROUP_INSTITUTION_ID_REQUIRED_MESSAGE);
-        Assert.notNull(parentInstitutionId, USER_GROUP_PARENT_INSTITUTION_ID_REQUIRED_MESSAGE);
-        Assert.notNull(members, MEMBERS_REQUIRED);
-        UserGroupFilter userGroupFilter = UserGroupFilter.builder()
-                .institutionId(institutionId)
-                .parentInstitutionId(parentInstitutionId)
-                .productId(productId)
-                .build();
-        String groupId = findGroupId(userGroupFilter);
-        insertMembers(groupId, members);
-        log.trace("addMembers end");
+    public void createGroupOrAddMembers(UserGroupOperations userGroupOperations) {
+        log.trace("createGroupOrAddMembers start");
+        log.debug("createGroupOrAddMembers institutionId = {}, parentInstitutionId = {}, members = {}",
+                Encode.forJava(userGroupOperations.getInstitutionId()), Encode.forJava(userGroupOperations.getParentInstitutionId()), Encode.forJava(userGroupOperations.getMembers().toString()));
+        Assert.notNull(userGroupOperations.getInstitutionId(), USER_GROUP_INSTITUTION_ID_REQUIRED_MESSAGE);
+        Assert.notNull(userGroupOperations.getParentInstitutionId(), USER_GROUP_PARENT_INSTITUTION_ID_REQUIRED_MESSAGE);
+        Assert.notNull(userGroupOperations.getMembers(), MEMBERS_REQUIRED);
+
+        Query query = new Query(Criteria.where(UserGroupEntity.Fields.institutionId).is(userGroupOperations.getInstitutionId())
+                .and(UserGroupEntity.Fields.productId).is(userGroupOperations.getProductId())
+                .and(UserGroupEntity.Fields.parentInstitutionId).is(userGroupOperations.getParentInstitutionId())
+                .and(UserGroupEntity.Fields.status).in(List.of(UserGroupStatus.ACTIVE, UserGroupStatus.SUSPENDED)));
+
+        Update update = new Update()
+                .setOnInsert(UserGroupEntity.Fields.name, ENTE_AGGREGATORE_PLACEHOLDER + userGroupOperations.getName())
+                .setOnInsert(UserGroupEntity.Fields.description, userGroupOperations.getDescription())
+                .setOnInsert(UserGroupEntity.Fields.status, UserGroupStatus.ACTIVE)
+                .addToSet(UserGroupEntity.Fields.members).each(userGroupOperations.getMembers());
+
+        FindAndModifyOptions options = FindAndModifyOptions.options()
+                .upsert(true);
+
+        mongoTemplate.findAndModify(query, update, options, UserGroupEntity.class);
+        log.trace("createGroupOrAddMembers end");
     }
 
     @Override
@@ -213,7 +225,8 @@ public class UserGroupServiceImpl implements UserGroupService {
         if (UserGroupStatus.SUSPENDED.equals(foundGroup.getStatus())) {
             throw new ResourceUpdateException(TRYING_TO_MODIFY_SUSPENDED_GROUP);
         }
-        checkGroupUniqueness(id, group.getName(), foundGroup.getProductId(), foundGroup.getInstitutionId(), foundGroup.getParentInstitutionId());
+
+        checkGroupUniqueness(id, group.getName(), foundGroup.getProductId(), foundGroup.getInstitutionId());
 
         foundGroup.setMembers(group.getMembers());
         foundGroup.setName(group.getName());
@@ -238,36 +251,26 @@ public class UserGroupServiceImpl implements UserGroupService {
         return insert;
     }
 
-    private void checkGroupUniqueness(String currentGroupId, String groupName, String productId, String institutionId, String parentInstitutionId) {
-        UserGroupFilter filter = new UserGroupFilter();
-        filter.setProductId(productId);
-        filter.setInstitutionId(institutionId);
-        filter.setStatus(Arrays.asList(UserGroupStatus.ACTIVE, UserGroupStatus.SUSPENDED));
+    private void checkGroupUniqueness(String currentGroupId, String groupName, String productId, String institutionId) {
 
-        Page<UserGroupOperations> existingGroups = findAll(filter, Pageable.unpaged());
+        Assert.notNull(groupName, GROUP_NAME_REQUIRED);
+        Assert.isTrue(!groupName.startsWith(ENTE_AGGREGATORE_PLACEHOLDER), GROUP_NAME_FORBIDDEN);
 
-        // verify if there's no other group with the same name (but different groupId)
-        boolean isSameName = existingGroups.stream().anyMatch(g ->
+        Query query = new Query(
+                Criteria.where(UserGroupEntity.Fields.institutionId).is(institutionId)
+                        .and(UserGroupEntity.Fields.productId).is(productId)
+                        .and(UserGroupEntity.Fields.status).in(List.of(UserGroupStatus.ACTIVE, UserGroupStatus.SUSPENDED))
+        );
+
+        List<UserGroupEntity> foundGroups = mongoTemplate.find(query, UserGroupEntity.class);
+
+        boolean isSameName = foundGroups.stream().anyMatch(g ->
                 g.getName().equals(groupName) && !g.getId().equals(currentGroupId));
-
-        // when parentInsitutionId is not null, verify if there's no other group with same institutionId-parentInstitutionId-productId (but different groupId)
-        boolean isDuplicate = parentInstitutionId != null && existingGroups.stream().anyMatch(g ->
-                Objects.equals(g.getInstitutionId(), institutionId)
-                        && Objects.equals(g.getProductId(), productId)
-                        && Objects.equals(g.getParentInstitutionId(), parentInstitutionId)
-                        && !g.getId().equals(currentGroupId));
 
         if (isSameName) {
             log.warn("Attempted to create/update group with duplicate name: {}", groupName);
             throw new ResourceAlreadyExistsException(GROUP_NAME_ALREADY_EXISTS);
-        }
-
-        if (isDuplicate) {
-            log.warn("Attempted to create/update group with duplicate institutionId: {}, parentInstitutionId: {} and productId: {}",
-                    institutionId, parentInstitutionId, productId);
-            throw new ResourceAlreadyExistsException(GROUP_PARENT_ALREADY_EXISTS);
-        }
-    }
+        }    }
 
     private Query createActiveGroupQuery(String id) {
         return Query.query(Criteria.where(UserGroupEntity.Fields.ID).is(id)
@@ -301,26 +304,6 @@ public class UserGroupServiceImpl implements UserGroupService {
         }
 
         return foundGroups.getContent().get(0).getId();
-    }
-
-    private void insertMembers(String id, Set<UUID> memberIds) {
-        log.trace("insertMembers start");
-        log.debug("insertMembers id = {}, memberIds = {}", Encode.forJava(id), Encode.forJava(memberIds.toString()));
-
-        // convert UUIDs
-        Object[] userIdsAsStrings = memberIds.stream()
-                .map(UUID::toString)
-                .toArray();
-
-        mongoTemplate.updateFirst(
-                createActiveGroupQuery(id),
-                new Update()
-                        .addToSet(UserGroupEntity.Fields.members).each(userIdsAsStrings)
-                        .set(UserGroupEntity.Fields.modifiedBy, auditorAware.getCurrentAuditor().orElse(null))
-                        .currentDate(UserGroupEntity.Fields.modifiedAt),
-                UserGroupEntity.class);
-
-        log.trace("insertMembers end");
     }
 
     private void removeMembersWithParentInstitutionId(String id, Set<UUID> memberIds) {

@@ -27,6 +27,16 @@ public class AddMembersToUserGroupDto {
     @NotBlank
     private String productId;
 
+    @ApiModelProperty(value = "${swagger.user-group.model.name}", required = true)
+    @JsonProperty(required = true)
+    @NotBlank
+    private String name;
+
+    @ApiModelProperty(value = "${swagger.user-group.model.description}", required = true)
+    @JsonProperty(required = true)
+    @NotBlank
+    private String description;
+
     @ApiModelProperty(value = "${swagger.user-group.model.members}", required = true)
     @JsonProperty(required = true)
     @NotEmpty

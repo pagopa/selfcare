@@ -384,7 +384,7 @@ class UserGroupV1ControllerTest {
         //then
         assertEquals(0, result.getResponse().getContentLength());
         verify(groupServiceMock, times(1))
-                .addMembers(anyString(), anyString(), anyString(), anySet());
+                .createGroupOrAddMembers(any());
         Mockito.verifyNoMoreInteractions(groupServiceMock);
     }
 

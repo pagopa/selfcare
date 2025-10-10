@@ -13,7 +13,6 @@ import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import io.restassured.response.ResponseOptions;
 import io.restassured.specification.RequestSpecification;
-import it.pagopa.selfcare.user_group.model.AddMembersToUserGroupDto;
 import it.pagopa.selfcare.user_group.model.DeleteMembersFromUserGroupDto;
 import it.pagopa.selfcare.user_group.model.UserGroupEntity;
 import it.pagopa.selfcare.user_group.model.UserGroupStatus;
@@ -37,23 +36,6 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
     @After("@LastRetrieveGroupScenario")
     public void afterFeature() {
         userGroupRepository.deleteAllById(userGroupsIds);
-    }
-
-    @DataTableType
-    public AddMembersToUserGroupDto convertAddMembersRequest(Map<String, String> entry) {
-        AddMembersToUserGroupDto request = new AddMembersToUserGroupDto();
-        request.setInstitutionId(entry.get("institutionId"));
-        request.setParentInstitutionId(entry.get("parentInstitutionId"));
-        request.setProductId(entry.get("productId"));
-
-        Set<UUID> members = Optional.ofNullable(entry.get("members"))
-                .map(s -> Arrays.stream(s.split(","))
-                        .map(UUID::fromString)
-                        .collect(Collectors.toSet()))
-                .orElse(Set.of());
-        request.setMembers(members);
-
-        return request;
     }
 
     @DataTableType
@@ -272,6 +254,11 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
     @Given("[RETRIEVE] user login with username {string} and password {string}")
     public void createUserLoginWithUsernameAndPassword(String user, String pass) {
         super.login(user, pass);
+    }
+
+    @Then("[RETRIEVE] the response should contain a valid user group resource with name {string}")
+    public void verifyUserGroupName(String expectedName) {
+        Assertions.assertEquals(expectedName, userGroupEntityResponse.getName());
     }
 }
 

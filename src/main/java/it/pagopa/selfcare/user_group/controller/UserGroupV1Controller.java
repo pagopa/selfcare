@@ -238,7 +238,7 @@ public class UserGroupV1Controller {
         log.trace("addMembersToUserGroup start");
         log.debug("addMembersToUserGroup institutionId = {}, parentInstitutionId = {}, productId = {}",
                 Encode.forJava(groupDto.getInstitutionId()), Encode.forJava(groupDto.getParentInstitutionId()), Encode.forJava(groupDto.getProductId()));
-        groupService.addMembers(groupDto.getInstitutionId(), groupDto.getParentInstitutionId(), groupDto.getProductId(), groupDto.getMembers());
+        groupService.createGroupOrAddMembers(userGroupMapper.toUserGroupOperations(groupDto));
         log.trace("addMemberToUserGroup end");
     }
 
