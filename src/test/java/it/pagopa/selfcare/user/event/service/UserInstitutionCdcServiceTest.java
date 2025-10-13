@@ -328,46 +328,47 @@ public class UserInstitutionCdcServiceTest {
 
     @Test
     void consumerToAddOnAggregatesTest() {
-        final String parentInstitutionId = "parentInstitutionId";
+        // no toAddOnAggregates
+        final OnboardedProduct prod1 = createOnboardedProduct("roleId1", "prod-interop", OnboardedProductState.ACTIVE,
+                PartyRole.SUB_DELEGATE, "admin", null);
+        // no delegations
+        final OnboardedProduct prod2 = createOnboardedProduct("roleId2", "prod-pn", OnboardedProductState.SUSPENDED,
+                PartyRole.DELEGATE, "admin", true);
+        // to propagate
+        final OnboardedProduct prod3 = createOnboardedProduct("roleId3", "prod-io", OnboardedProductState.ACTIVE,
+                PartyRole.MANAGER, "admin", true);
+        // to propagate
+        final OnboardedProduct prod3bis = createOnboardedProduct("roleId3bis", "prod-io", OnboardedProductState.DELETED,
+                PartyRole.DELEGATE, "admin", true);
+        // to propagate (but no group)
+        final OnboardedProduct prod4 = createOnboardedProduct("roleId4", "prod-pagopa", OnboardedProductState.ACTIVE,
+                PartyRole.OPERATOR, "operator", true);
+        // no roleId
+        final OnboardedProduct prod5 = createOnboardedProduct(null, "prod-pagopa", OnboardedProductState.ACTIVE,
+                PartyRole.OPERATOR, "operator", true);
+        // Parent UserInstitution
+        final UserInstitution parentUserInstitution = createUserInstitution("parentInstitutionId",
+                UUID.randomUUID().toString(), List.of(prod1, prod2, prod3, prod3bis, prod4, prod5), "userMailUuid");
 
-        final UserInstitution userInstitution = new UserInstitution();
-        userInstitution.setInstitutionId(parentInstitutionId);
-        userInstitution.setUserId(UUID.randomUUID().toString());
-        final OnboardedProduct prod1 = new OnboardedProduct();
-        prod1.setProductId("prod-interop");
-        prod1.setStatus(OnboardedProductState.ACTIVE);
-        prod1.setRole(PartyRole.SUB_DELEGATE);
-        prod1.setProductRole("admin");
-        final OnboardedProduct prod2 = new OnboardedProduct();
-        prod2.setProductId("prod-pn");
-        prod2.setStatus(OnboardedProductState.SUSPENDED);
-        prod2.setRole(PartyRole.DELEGATE);
-        prod2.setProductRole("admin");
-        prod2.setToAddOnAggregates(true);
-        final OnboardedProduct prod3 = new OnboardedProduct();
-        prod3.setProductId("prod-io");
-        prod3.setStatus(OnboardedProductState.ACTIVE);
-        prod3.setRole(PartyRole.MANAGER);
-        prod3.setProductRole("admin");
-        prod3.setToAddOnAggregates(true);
-        final OnboardedProduct prod4 = new OnboardedProduct();
-        prod4.setProductId("prod-pagopa");
-        prod4.setStatus(OnboardedProductState.ACTIVE);
-        prod4.setRole(PartyRole.OPERATOR);
-        prod4.setProductRole("operator");
-        prod4.setToAddOnAggregates(true);
-        userInstitution.setProducts(List.of(prod1, prod2, prod3, prod4));
-        userInstitution.setUserMailUuid("userMailUuid");
-
+        // Delegations IO page 1
         final DelegationWithPaginationResponse delegationsIo1 = new DelegationWithPaginationResponse();
         delegationsIo1.setDelegations(List.of(createDelegationResponse(DelegationResponse.StatusEnum.ACTIVE, DelegationResponse.TypeEnum.EA)));
         delegationsIo1.setPageInfo(PageInfo.builder().pageNo(0L).pageSize(1L).totalPages(2L).totalElements(2L).build());
-        when(delegationApi.getDelegationsUsingGET2(null, parentInstitutionId, "prod-io", null, null, null, 0, null)).thenReturn(Uni.createFrom().item(delegationsIo1));
+        when(delegationApi.getDelegationsUsingGET2(null, parentUserInstitution.getInstitutionId(), "prod-io", null, null, null, 0, null)).thenReturn(Uni.createFrom().item(delegationsIo1));
+
+        // Delegations IO page 2
         final DelegationWithPaginationResponse delegationsIo2 = new DelegationWithPaginationResponse();
         delegationsIo2.setDelegations(List.of(createDelegationResponse(DelegationResponse.StatusEnum.ACTIVE, DelegationResponse.TypeEnum.EA)));
         delegationsIo2.setPageInfo(PageInfo.builder().pageNo(1L).pageSize(1L).totalPages(2L).totalElements(2L).build());
-        when(delegationApi.getDelegationsUsingGET2(null, parentInstitutionId, "prod-io", null, null, null, 1, null)).thenReturn(Uni.createFrom().item(delegationsIo2));
+        when(delegationApi.getDelegationsUsingGET2(null, parentUserInstitution.getInstitutionId(), "prod-io", null, null, null, 1, null)).thenReturn(Uni.createFrom().item(delegationsIo2));
 
+        // Delegations PN
+        final DelegationWithPaginationResponse delegationsPn = new DelegationWithPaginationResponse();
+        delegationsPn.setDelegations(List.of());
+        delegationsPn.setPageInfo(PageInfo.builder().pageNo(0L).pageSize(0L).totalPages(0L).totalElements(0L).build());
+        when(delegationApi.getDelegationsUsingGET2(null, parentUserInstitution.getInstitutionId(), "prod-pn", null, null, null, 0, null)).thenReturn(Uni.createFrom().item(delegationsPn));
+
+        // Delegations PagoPA
         final DelegationWithPaginationResponse delegationsPagoPa = new DelegationWithPaginationResponse();
         delegationsPagoPa.setDelegations(List.of(
                 createDelegationResponse(DelegationResponse.StatusEnum.ACTIVE, DelegationResponse.TypeEnum.EA),
@@ -375,8 +376,9 @@ public class UserInstitutionCdcServiceTest {
                 createDelegationResponse(DelegationResponse.StatusEnum.DELETED, DelegationResponse.TypeEnum.EA)
         ));
         delegationsPagoPa.setPageInfo(PageInfo.builder().pageNo(0L).pageSize(1000L).totalPages(1L).totalElements(3L).build());
-        when(delegationApi.getDelegationsUsingGET2(null, parentInstitutionId, "prod-pagopa", null, null, null, 0, null)).thenReturn(Uni.createFrom().item(delegationsPagoPa));
+        when(delegationApi.getDelegationsUsingGET2(null, parentUserInstitution.getInstitutionId(), "prod-pagopa", null, null, null, 0, null)).thenReturn(Uni.createFrom().item(delegationsPagoPa));
 
+        // Product Service
         final Product p = new Product();
         final ProductRoleInfo pri = new ProductRoleInfo();
         final ProductRole pr = new ProductRole();
@@ -385,13 +387,43 @@ public class UserInstitutionCdcServiceTest {
         p.setRoleMappings(Map.of(PartyRole.ADMIN_EA, pri));
         when(productService.getProduct(any())).thenReturn(p);
 
-        when(userApi.createUserByUserId(any(), any())).thenReturn(Uni.createFrom().item(Response.status(Response.Status.OK).build()));
-        when(userGroupApi.addMembersToUserGroupWithParentInstitutionIdUsingPUT(any())).thenReturn(Uni.createFrom().item(Response.status(Response.Status.OK).build()));
+        // Updated UserInstitution for prod3
+        final UserInstitution updatedUserInstitutionForProd3 = createUserInstitution("aggregateInstitutionId",
+                parentUserInstitution.getUserId(), List.of(
+                        createOnboardedProduct(null, "prod-io", OnboardedProductState.DELETED,
+                                PartyRole.MANAGER, "admin", null),
+                        prod3
+                ), parentUserInstitution.getUserMailUuid());
 
-        userInstitutionCdcService.consumerToAddOnAggregates(userInstitution);
-        verify(delegationApi, times(3)).getDelegationsUsingGET2(any(), any(), any(), any(), any(), any(), any(), any());
-        verify(userApi, times(3)).createUserByUserId(any(), any());
+        // Updated UserInstitution for prod3Bis
+        final UserInstitution updatedUserInstitutionForProd3Bis = createUserInstitution("aggregateInstitutionId",
+                parentUserInstitution.getUserId(), List.of(
+                        prod3bis,
+                        createOnboardedProduct(null, "prod-y", OnboardedProductState.SUSPENDED,
+                                PartyRole.DELEGATE, "admin", null)
+                ), parentUserInstitution.getUserMailUuid());
+
+        // Updated UserInstitution for prod4
+        final UserInstitution updatedUserInstitutionForProd4 = createUserInstitution("aggregateInstitutionId",
+                parentUserInstitution.getUserId(), List.of(prod4), parentUserInstitution.getUserMailUuid());
+
+        when(userInstitutionRepository.propagateUserToAggregate(any(), eq(prod3), any(), any(), any(), any())).thenReturn(Uni.createFrom().item(updatedUserInstitutionForProd3));
+        when(userInstitutionRepository.propagateUserToAggregate(any(), eq(prod3bis), any(), any(), any(), any())).thenReturn(Uni.createFrom().item(updatedUserInstitutionForProd3Bis));
+        when(userInstitutionRepository.propagateUserToAggregate(any(), eq(prod4), any(), any(), any(), any())).thenReturn(Uni.createFrom().item(updatedUserInstitutionForProd4));
+        when(userGroupApi.addMembersToUserGroupWithParentInstitutionIdUsingPUT(any())).thenReturn(Uni.createFrom().item(Response.status(Response.Status.OK).build()));
+        when(userGroupApi.deleteMembersFromUserGroupWithParentInstitutionIdUsingDELETE(any())).thenReturn(Uni.createFrom().item(Response.status(Response.Status.OK).build()));
+
+        userInstitutionCdcService.consumerToAddOnAggregates(parentUserInstitution);
+
+        // 4 products valid for propagation -> 1 call for prod2, 2 call for prod3 (2 pages), 2 call for prod3Bis (2 pages), 1 call for prod4
+        verify(delegationApi, times(6)).getDelegationsUsingGET2(any(), any(), any(), any(), any(), any(), any(), any());
+        // prod2 has no delegations -> we propagate only prod3 (on 2 aggregates), prod3Bis (on 2 aggregates) and prod4 (on 1 aggregate)
+        verify(userInstitutionRepository, times(5)).propagateUserToAggregate(any(), any(), any(), any(), any(), any());
+        // prod4 is prod-pagopa -> propagation to group is disabled
+        // prod3 with ACTIVE role for prod-io -> we keep user inside group (2 calls for 2 aggregates)
         verify(userGroupApi, times(2)).addMembersToUserGroupWithParentInstitutionIdUsingPUT(any());
+        // prod3Bis without ACTIVE / SUSPENDED roles for prod-io -> we remove user from group (2 calls for 2 aggregates)
+        verify(userGroupApi, times(2)).deleteMembersFromUserGroupWithParentInstitutionIdUsingDELETE(any());
     }
 
     private DelegationResponse createDelegationResponse(DelegationResponse.StatusEnum status, DelegationResponse.TypeEnum type) {
@@ -399,6 +431,27 @@ public class UserInstitutionCdcServiceTest {
         delegationResponse.setStatus(status);
         delegationResponse.setType(type);
         return delegationResponse;
+    }
+
+    private OnboardedProduct createOnboardedProduct(String roleId, String productId, OnboardedProductState status,
+                                                    PartyRole role, String productRole, Boolean toAddOnAggregates) {
+        OnboardedProduct product = new OnboardedProduct();
+        product.setRoleId(roleId);
+        product.setProductId(productId);
+        product.setStatus(status);
+        product.setRole(role);
+        product.setProductRole(productRole);
+        product.setToAddOnAggregates(toAddOnAggregates);
+        return product;
+    }
+
+    private UserInstitution createUserInstitution(String institutionId, String userId, List<OnboardedProduct> products, String userMailUuid) {
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setInstitutionId(institutionId);
+        userInstitution.setUserId(userId);
+        userInstitution.setProducts(products);
+        userInstitution.setUserMailUuid(userMailUuid);
+        return userInstitution;
     }
 
 }

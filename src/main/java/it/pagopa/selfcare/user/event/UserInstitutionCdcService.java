@@ -18,6 +18,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.subscription.MultiEmitter;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.UserUtils;
@@ -44,9 +45,8 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.openapi.quarkus.internal_json.model.AddMembersToUserGroupDto;
-import org.openapi.quarkus.internal_json.model.AddUserRoleDto;
 import org.openapi.quarkus.internal_json.model.DelegationResponse;
-import org.openapi.quarkus.internal_json.model.Product;
+import org.openapi.quarkus.internal_json.model.DeleteMembersFromUserGroupDto;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 
 import java.time.Duration;
@@ -382,16 +382,16 @@ public class UserInstitutionCdcService {
     public void consumerToAddOnAggregates(UserInstitution userInstitutionChanged) {
         log.info("Starting consumerToAddOnAggregates on UserInstitution with id {}", userInstitutionChanged.getId());
         userInstitutionChanged.getProducts().stream()
-                .filter(p -> p.getStatus() == OnboardedProductState.ACTIVE && Boolean.TRUE.equals(p.getToAddOnAggregates()))
+                // To propagate the user on aggregates: toAddOnAggregates and roleId is required on the parent
+                .filter(p -> Boolean.TRUE.equals(p.getToAddOnAggregates()) && p.getRoleId() != null)
                 .forEach(p -> {
                     final String parentInstitutionId = userInstitutionChanged.getInstitutionId();
-                    final String userId = userInstitutionChanged.getUserId();
-                    final String userMailUuid = userInstitutionChanged.getUserMailUuid();
+                    final String parentName = userInstitutionChanged.getInstitutionDescription();
                     getDelegations(parentInstitutionId, p.getProductId())
                             .onItem().transformToUniAndConcatenate(d ->
-                                    createUserOnAggregate(d.getInstitutionId(), d.getInstitutionName(), d.getInstitutionType(), parentInstitutionId, userId, userMailUuid, p)
-                                            .onItem().transformToUni(r ->
-                                                    addUserToAggregatorGroup(d.getInstitutionId(), parentInstitutionId, p.getProductId(), userId)
+                                    upsertUserOnAggregate(userInstitutionChanged, p, d)
+                                            .onItem().transformToUni(updatedUser ->
+                                                    keepOrDeleteUserFromAggregatorGroup(updatedUser, parentInstitutionId, parentName, p.getProductId())
                                                             .onFailure().recoverWithNull()
                                             )
                                             .onFailure().recoverWithNull()
@@ -436,25 +436,16 @@ public class UserInstitutionCdcService {
                 });
     }
 
-    private Uni<Response> createUserOnAggregate(String institutionId, String institutionDescription, String institutionType, String parentInstitutionId,
-                                                String userId, String userMailUuid, OnboardedProduct product) {
-        log.info("Creating user {} to institution {} and product {} from parentInstitutionId {}", userId, institutionId, product.getProductId(), parentInstitutionId);
-        final AddUserRoleDto addUserRoleDto = AddUserRoleDto.builder()
-                .institutionId(institutionId)
-                .institutionDescription(institutionDescription)
-                .product(Product.builder()
-                        .role(getRoleToPropagate(product.getRole()))
-                        .productId(product.getProductId())
-                        .productRoles(getProductRolesToPropagate(product.getRole(), product.getProductRole(), product.getProductId(), institutionType))
-                        .tokenId(product.getTokenId())
-                        .build())
-                .hasToSendEmail(false)
-                .userMailUuid(userMailUuid)
-                .build();
-        return userApi.createUserByUserId(userId, addUserRoleDto)
+    private Uni<UserInstitution> upsertUserOnAggregate(UserInstitution parentUser, OnboardedProduct parentProduct, DelegationResponse delegation) {
+        final String aggregateId = delegation.getInstitutionId();
+        final String aggregateDescription = delegation.getInstitutionName();
+        final String aggregateInstitutionType = delegation.getInstitutionType();
+        final PartyRole roleToPropagate = getRoleToPropagate(parentProduct.getRole());
+        final String productRoleToPropagate = getProductRoleToPropagate(parentProduct, aggregateInstitutionType);
+        return userInstitutionRepository.propagateUserToAggregate(parentUser, parentProduct, aggregateId, aggregateDescription, roleToPropagate, productRoleToPropagate)
                 .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
-                .onFailure().invoke(t -> log.error("Error creating user {} on aggregate {} for parentInstitutionId {}: {}", userId, institutionId, parentInstitutionId, t.getMessage()))
-                .onItem().invoke(r -> log.info("Created user on aggregate {} for parentInstitutionId {} - status {}", institutionId, parentInstitutionId, r.getStatus()));
+                .onFailure().invoke(t -> log.error("Error upserting user {} on aggregate {} for parentInstitutionId {}: {}", parentUser.getUserId(), aggregateId, parentUser.getInstitutionId(), t.getMessage()))
+                .onItem().invoke(x -> log.info("Upserted user on aggregate {} for parentInstitutionId {}", aggregateId, parentUser.getInstitutionId()));
     }
 
     /**
@@ -465,8 +456,8 @@ public class UserInstitutionCdcService {
      * @param parentRole the role of the user on the aggregator
      * @return the role to assign to the new user on the aggregate
      */
-    private String getRoleToPropagate(PartyRole parentRole) {
-        return PartyRole.OPERATOR.equals(parentRole) ? PartyRole.OPERATOR.name() : PartyRole.ADMIN_EA.name();
+    private PartyRole getRoleToPropagate(PartyRole parentRole) {
+        return PartyRole.OPERATOR.equals(parentRole) ? PartyRole.OPERATOR : PartyRole.ADMIN_EA;
     }
 
     /**
@@ -474,43 +465,62 @@ public class UserInstitutionCdcService {
      * If the parentRole is OPERATOR, we simply propagate the same parentProductRole, otherwise
      * we retrieve the productRole associated to the ADMIN_EA role for the product using the ProductService.
      *
-     * @param parentRole the role of the user on the aggregator
-     * @param parentProductRole the productRole of the user on the aggregator
-     * @param productId the productId of the user on the aggregator
-     * @param targetInstitutionType the institutionType of the aggregate
+     * @param parentProduct the product of the user on the aggregator
+     * @param aggregateInstitutionType the institutionType of the aggregate
      * @return the productRole to assign to the new user on the aggregate
      */
-    private List<String> getProductRolesToPropagate(PartyRole parentRole, String parentProductRole, String productId, String targetInstitutionType) {
-        if (PartyRole.OPERATOR.equals(parentRole)) {
-            return List.of(parentProductRole);
+    private String getProductRoleToPropagate(OnboardedProduct parentProduct, String aggregateInstitutionType) {
+        if (PartyRole.OPERATOR.equals(parentProduct.getRole())) {
+            return parentProduct.getProductRole();
         } else {
-            final it.pagopa.selfcare.product.entity.Product product = productService.getProduct(productId);
-            final Map<PartyRole, ProductRoleInfo> roleMappings = product.getRoleMappings(targetInstitutionType);
+            final it.pagopa.selfcare.product.entity.Product product = productService.getProduct(parentProduct.getProductId());
+            final Map<PartyRole, ProductRoleInfo> roleMappings = product.getRoleMappings(aggregateInstitutionType);
             return Optional.ofNullable(roleMappings.get(PartyRole.ADMIN_EA))
-                    .map(pri -> pri.getRoles().stream().findFirst()
-                            .map(r -> List.of(r.getCode()))
-                            .orElse(List.of()))
-                    .orElse(List.of());
+                    .flatMap(pri -> pri.getRoles().stream().findFirst().map(ProductRole::getCode))
+                    .orElse(null);
         }
     }
 
-    private Uni<Response> addUserToAggregatorGroup(String institutionId, String parentInstitutionId, String productId, String userId) {
+    private Uni<Response> keepOrDeleteUserFromAggregatorGroup(UserInstitution updatedUser, String parentInstitutionId, String parentName, String productId) {
+        final String institutionId = updatedUser.getInstitutionId();
+        final String userId = updatedUser.getUserId();
+
         if (!addOnAggregatesGroupProducts.contains(productId)) {
-            log.info("Skipping adding user {} to group of institution {}, parentInstitutionId {} and product {}", userId, institutionId, parentInstitutionId, productId);
+            log.info("Skipping adding user {} to group of institution {} and parentInstitutionId {}: Function not enabled for the product {}", userId, institutionId, parentInstitutionId, productId);
             return Uni.createFrom().item(Response.status(Response.Status.OK).build());
         }
 
-        log.info("Adding user {} to group of institution {}, parentInstitutionId {} and product {}", userId, institutionId, parentInstitutionId, productId);
-        final AddMembersToUserGroupDto addMembersToUserGroupDto = AddMembersToUserGroupDto.builder()
-                .institutionId(institutionId)
-                .parentInstitutionId(parentInstitutionId)
-                .productId(productId)
-                .members(Set.of(UUID.fromString(userId)))
-                .build();
-        return userGroupApi.addMembersToUserGroupWithParentInstitutionIdUsingPUT(addMembersToUserGroupDto)
-                .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
-                .onFailure().invoke(t -> log.error("Error adding user {} to group of institution {} with parentInstitutionId {}: {}", userId, institutionId, parentInstitutionId, t.getMessage()))
-                .onItem().invoke(r -> log.info("Added user {} on group of institution {} with parentInstitutionId {} - status {}", userId, institutionId, parentInstitutionId, r.getStatus()));
+        final boolean isUserActiveOrSuspended = updatedUser.getProducts().stream().anyMatch(p ->
+                productId.equals(p.getProductId()) &&
+                (OnboardedProductState.ACTIVE.equals(p.getStatus()) || OnboardedProductState.SUSPENDED.equals(p.getStatus()))
+        );
+
+        if (isUserActiveOrSuspended) {
+            log.info("Keeping user {} inside group of institution {}, parentInstitutionId {} and product {}", userId, institutionId, parentInstitutionId, productId);
+            final AddMembersToUserGroupDto addMembersToUserGroupDto = AddMembersToUserGroupDto.builder()
+                    .institutionId(institutionId)
+                    .parentInstitutionId(parentInstitutionId)
+                    .description("Questo gruppo contiene gli utenti dell'Ente Aggregatore '" + parentName + "'")
+                    .name(parentName)
+                    .productId(productId)
+                    .members(Set.of(UUID.fromString(userId)))
+                    .build();
+            return userGroupApi.addMembersToUserGroupWithParentInstitutionIdUsingPUT(addMembersToUserGroupDto)
+                    .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
+                    .onFailure().invoke(t -> log.error("Error adding user {} to group of institution {} with parentInstitutionId {} and productId {}: {}", userId, institutionId, parentInstitutionId, productId, t.getMessage()))
+                    .onItem().invoke(r -> log.info("Added user {} to group of institution {} with parentInstitutionId {} and productId {} - status {}", userId, institutionId, parentInstitutionId, productId, r.getStatus()));
+        } else {
+            log.info("Removing user {} from group of institution {}, parentInstitutionId {} and product {}", userId, institutionId, parentInstitutionId, productId);
+            DeleteMembersFromUserGroupDto deleteMembersFromUserGroupDto = new DeleteMembersFromUserGroupDto();
+            deleteMembersFromUserGroupDto.setInstitutionId(institutionId);
+            deleteMembersFromUserGroupDto.setParentInstitutionId(parentInstitutionId);
+            deleteMembersFromUserGroupDto.setProductId(productId);
+            deleteMembersFromUserGroupDto.setMembers(Set.of(UUID.fromString(userId)));
+            return userGroupApi.deleteMembersFromUserGroupWithParentInstitutionIdUsingDELETE(deleteMembersFromUserGroupDto)
+                    .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
+                    .onFailure().invoke(t -> log.error("Error removing user {} from group of institution {} with parentInstitutionId {}: {}", userId, institutionId, parentInstitutionId, t.getMessage()))
+                    .onItem().invoke(r -> log.info("Removed user {} from group of institution {} with parentInstitutionId {} and productId {} - status {}", userId, institutionId, parentInstitutionId, productId, r.getStatus()));
+        }
     }
 
 }

@@ -2067,6 +2067,65 @@
             ]
           }
         ]
+      },
+      "delete": {
+        "tags": [
+          "UserGroup"
+        ],
+        "summary": "deleteMembersFromUserGroupWithParentInstitutionId",
+        "description": "Service to delete members from a specific UserGroup entity by its institutionId, parentInstitutionId and productId",
+        "operationId": "deleteMembersFromUserGroupWithParentInstitutionIdUsingDELETE",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteMembersFromUserGroupDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
       }
     }
   },
@@ -2106,6 +2165,9 @@
           },
           "institutionType": {
             "type": "string"
+          },
+          "isTest": {
+            "type": "boolean"
           },
           "productId": {
             "type": "string"
@@ -2412,10 +2474,12 @@
               "PA",
               "PG",
               "PRV",
+              "PRV_PF",
               "PSP",
               "PT",
               "REC",
               "SA",
+              "SCEC",
               "SCP"
             ]
           },
@@ -2776,7 +2840,7 @@
               "type": "string"
             }
           },
-          "disabledStateInstituion": {
+          "disabledStateInstitution": {
             "type": "string"
           },
           "descriptionStateInstitution": {
@@ -3002,10 +3066,12 @@
               "PA",
               "PG",
               "PRV",
+              "PRV_PF",
               "PSP",
               "PT",
               "REC",
               "SA",
+              "SCEC",
               "SCP"
             ]
           },
@@ -3597,10 +3663,12 @@
               "PA",
               "PG",
               "PRV",
+              "PRV_PF",
               "PSP",
               "PT",
               "REC",
               "SA",
+              "SCEC",
               "SCP"
             ]
           },
@@ -3757,10 +3825,12 @@
               "PA",
               "PG",
               "PRV",
+              "PRV_PF",
               "PSP",
               "PT",
               "REC",
               "SA",
+              "SCEC",
               "SCP"
             ]
           },
@@ -3879,6 +3949,11 @@
             "description": "Send an email notification to the user. By default it's set to true",
             "example": false
           },
+          "toAddOnAggregates": {
+            "type": "boolean",
+            "description": "Enable automatic management of group assignment",
+            "example": false
+          },
           "users": {
             "type": "array",
             "description": "List of users to add",
@@ -3995,10 +4070,12 @@
               "PA",
               "PG",
               "PRV",
+              "PRV_PF",
               "PSP",
               "PT",
               "REC",
               "SA",
+              "SCEC",
               "SCP"
             ]
           },
@@ -4417,9 +4494,6 @@
           "signContract": {
             "type": "boolean"
           },
-          "soleTrader": {
-            "type": "boolean"
-          },
           "institution": {
             "$ref": "#/components/schemas/InstitutionBaseRequest"
           },
@@ -4635,7 +4709,9 @@
           "REC",
           "CON",
           "PRV",
-          "GPU"
+          "PRV_PF",
+          "GPU",
+          "SCEC"
         ],
         "type": "string"
       },
@@ -4843,9 +4919,6 @@
           "signContract": {
             "type": "boolean"
           },
-          "soleTrader": {
-            "type": "boolean"
-          },
           "institution": {
             "$ref": "#/components/schemas/InstitutionBaseRequest"
           },
@@ -5035,9 +5108,6 @@
           "signContract": {
             "type": "boolean"
           },
-          "soleTrader": {
-            "type": "boolean"
-          },
           "institution": {
             "$ref": "#/components/schemas/InstitutionPspRequest"
           },
@@ -5151,6 +5221,49 @@
       },
       "AddMembersToUserGroupDto": {
         "title": "AddMembersToUserGroupDto",
+        "required": [
+          "description",
+          "institutionId",
+          "members",
+          "name",
+          "parentInstitutionId",
+          "productId"
+        ],
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Users group's description"
+          },
+          "institutionId": {
+            "type": "string",
+            "description": "Users group's institutionId"
+          },
+          "members": {
+            "uniqueItems": true,
+            "type": "array",
+            "description": "List of all the members of the group",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "name": {
+            "type": "string",
+            "description": "Users group's name"
+          },
+          "parentInstitutionId": {
+            "type": "string",
+            "description": "Users group's parent institutionId"
+          },
+          "productId": {
+            "type": "string",
+            "description": "Users group's productId"
+          }
+        }
+      },
+      "DeleteMembersFromUserGroupDto": {
+        "title": "DeleteMembersFromUserGroupDto",
         "required": [
           "institutionId",
           "members",
