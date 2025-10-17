@@ -5,7 +5,7 @@
 
     <artifactId>selfcare-sdk-security</artifactId>
     <packaging>jar</packaging>
-    <version>0.0.1</version>
+    <version>0.1.0</version>
     <groupId>it.pagopa.selfcare</groupId>
 
     <distributionManagement>
@@ -92,11 +92,11 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
+            <artifactId>quarkus-rest-jackson</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest-client-reactive-jackson</artifactId>
+            <artifactId>quarkus-rest-client-jackson</artifactId>
         </dependency>
         <dependency>
             <groupId>jakarta.activation</groupId>

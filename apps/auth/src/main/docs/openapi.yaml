@@ -1,31 +1,121 @@
 ---
-openapi: 3.0.3
-info:
-  title: Auth API
-  version: 1.0.0
-servers:
-- url: http://localhost:8080
-  description: Auto generated value
-- url: http://0.0.0.0:8080
-  description: Auto generated value
+openapi: 3.1.0
 tags:
 - name: OIDC
 - name: OTP
 - name: SAML
+components:
+  schemas:
+    OidcExchangeOtpResponse:
+      type: object
+      properties:
+        requiresOtpFlow:
+          type: boolean
+        otpSessionUid:
+          type: string
+        maskedEmail:
+          type: string
+    OidcExchangeRequest:
+      type: object
+      required:
+      - code
+      - redirectUri
+      properties:
+        code:
+          type: string
+          minLength: 1
+        redirectUri:
+          type: string
+          minLength: 1
+    OidcExchangeTokenResponse:
+      type: object
+      properties:
+        sessionToken:
+          type: string
+        requiresOtpFlow:
+          type: boolean
+    OtpForbidden:
+      type: object
+      properties:
+        otpForbiddenCode:
+          $ref: "#/components/schemas/OtpForbiddenCode"
+        remainingAttempts:
+          type: integer
+          format: int32
+        otpStatus:
+          $ref: "#/components/schemas/OtpStatus"
+    OtpForbiddenCode:
+      type: string
+      enum:
+      - CODE_001
+      - CODE_002
+    OtpResendRequest:
+      type: object
+      required:
+      - otpUuid
+      properties:
+        otpUuid:
+          type: string
+          minLength: 1
+    OtpStatus:
+      type: string
+      enum:
+      - PENDING
+      - EXPIRED
+      - REJECTED
+      - COMPLETED
+    OtpVerifyRequest:
+      type: object
+      required:
+      - otpUuid
+      - otp
+      properties:
+        otpUuid:
+          type: string
+          minLength: 1
+        otp:
+          type: string
+          minLength: 1
+    Problem:
+      type: object
+      properties:
+        detail:
+          type: string
+        instance:
+          type: string
+        status:
+          type: integer
+          format: int32
+        title:
+          type: string
+        type:
+          type: string
+    TokenResponse:
+      type: object
+      properties:
+        sessionToken:
+          type: string
+  securitySchemes:
+    SecurityScheme:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Authentication
 paths:
   /oidc/exchange:
     post:
-      tags:
-      - OIDC
       summary: OIDC exchange endpoint
       description: OIDC exchange endpoint provides a token exchange by accepting a
         valid authorization code and releasing a jwt session token
       operationId: oidcExchange
+      tags:
+      - OIDC
       requestBody:
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/OidcExchangeRequest"
+        required: true
       responses:
         "200":
           description: OK
@@ -65,16 +155,17 @@ paths:
                 $ref: "#/components/schemas/Problem"
   /otp/resend:
     post:
-      tags:
-      - OTP
       summary: Resend OTP endpoint
       description: Resend an OTP if email has not been received by user
       operationId: otpResend
+      tags:
+      - OTP
       requestBody:
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/OtpResendRequest"
+        required: true
       responses:
         "200":
           description: OK
@@ -108,17 +199,18 @@ paths:
                 $ref: "#/components/schemas/Problem"
   /otp/verify:
     post:
-      tags:
-      - OTP
       summary: Verify OTP endpoint
       description: Verify endpoint is used to complete an otp flow by validating user
         account
       operationId: otpVerify
+      tags:
+      - OTP
       requestBody:
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/OtpVerifyRequest"
+        required: true
       responses:
         "200":
           description: OK
@@ -158,12 +250,12 @@ paths:
                 $ref: "#/components/schemas/Problem"
   /saml/acs:
     post:
-      tags:
-      - SAML
       summary: Login SAML endpoint
       description: Login SAML endpoint provides a token exchange releasing a jwt session
         token
       operationId: loginSaml
+      tags:
+      - SAML
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -172,6 +264,7 @@ paths:
               properties:
                 SAMLResponse:
                   type: string
+        required: true
       responses:
         "200":
           description: OK
@@ -202,100 +295,11 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-components:
-  schemas:
-    OidcExchangeOtpResponse:
-      type: object
-      properties:
-        requiresOtpFlow:
-          type: boolean
-        otpSessionUid:
-          type: string
-        maskedEmail:
-          type: string
-    OidcExchangeRequest:
-      required:
-      - code
-      - redirectUri
-      type: object
-      properties:
-        code:
-          minLength: 1
-          type: string
-        redirectUri:
-          minLength: 1
-          type: string
-    OidcExchangeTokenResponse:
-      type: object
-      properties:
-        sessionToken:
-          type: string
-        requiresOtpFlow:
-          type: boolean
-    OtpForbidden:
-      type: object
-      properties:
-        otpForbiddenCode:
-          $ref: "#/components/schemas/OtpForbiddenCode"
-        remainingAttempts:
-          format: int32
-          type: integer
-        otpStatus:
-          $ref: "#/components/schemas/OtpStatus"
-    OtpForbiddenCode:
-      enum:
-      - CODE_001
-      - CODE_002
-      type: string
-    OtpResendRequest:
-      required:
-      - otpUuid
-      type: object
-      properties:
-        otpUuid:
-          minLength: 1
-          type: string
-    OtpStatus:
-      enum:
-      - PENDING
-      - EXPIRED
-      - REJECTED
-      - COMPLETED
-      type: string
-    OtpVerifyRequest:
-      required:
-      - otpUuid
-      - otp
-      type: object
-      properties:
-        otpUuid:
-          minLength: 1
-          type: string
-        otp:
-          minLength: 1
-          type: string
-    Problem:
-      type: object
-      properties:
-        detail:
-          type: string
-        instance:
-          type: string
-        status:
-          format: int32
-          type: integer
-        title:
-          type: string
-        type:
-          type: string
-    TokenResponse:
-      type: object
-      properties:
-        sessionToken:
-          type: string
-  securitySchemes:
-    SecurityScheme:
-      type: http
-      description: Authentication
-      scheme: bearer
-      bearerFormat: JWT
+info:
+  title: Auth API
+  version: 1.0.0
+servers:
+- url: http://localhost:8080
+  description: Auto generated value
+- url: http://0.0.0.0:8080
+  description: Auto generated value

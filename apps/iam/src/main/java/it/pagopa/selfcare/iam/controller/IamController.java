@@ -1,10 +1,12 @@
 package it.pagopa.selfcare.iam.controller;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
 import it.pagopa.selfcare.iam.controller.response.*;
 import it.pagopa.selfcare.iam.service.IamService;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -14,30 +16,52 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
+import javax.validation.Valid;
+
 @Tag(name = "IAM")
 @Path("/iam")
 @RequiredArgsConstructor
 @Slf4j
 public class IamController {
 
-    private final IamService iamService;
+  private final IamService iamService;
 
-    @Operation(
-            summary = "Ping endpoint",
-            operationId = "ping"
-    )
-    @APIResponses(value = {
-            @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = String.class), mediaType = "application/problem+json")),
-            @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
-    })
-    @GET
-    @Path(value = "/ping")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Uni<String> ping() {
-        return iamService.ping();
-    }
+  @Operation(
+    summary = "Ping endpoint",
+    operationId = "ping"
+  )
+  @APIResponses(value = {
+    @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = String.class), mediaType = "application/problem+json")),
+    @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
+  })
+  @GET
+  @Path(value = "/ping")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<String> ping() {
+    return iamService.ping();
+  }
 
-
+  @APIResponses(value = {
+    @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = String.class), mediaType = "application/problem+json")),
+    @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+    @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
+  })
+  @PATCH
+  @Path(value = "/users")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<Response> users(@Valid SaveUserRequest saveUserRequest) {
+    return iamService.saveUser(saveUserRequest)
+      .onItem().transform(user -> Response.ok(user).build())
+      .onFailure(IllegalArgumentException.class)
+      .recoverWithItem(ex -> Response.status(Response.Status.BAD_REQUEST)
+        .entity(Response.status(Response.Status.BAD_REQUEST).entity(ex.getMessage()).build())
+        .build())
+      .onFailure()
+      .recoverWithItem(ex -> Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+        .entity(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(ex.getMessage()).build())
+        .build());
+  }
 }
 
