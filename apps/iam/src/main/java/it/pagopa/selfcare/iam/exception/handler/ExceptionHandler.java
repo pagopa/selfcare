@@ -2,6 +2,7 @@ package it.pagopa.selfcare.iam.exception.handler;
 
 import it.pagopa.selfcare.iam.controller.response.Problem;
 import it.pagopa.selfcare.iam.exception.*;
+import jakarta.ws.rs.NotAllowedException;
 import jakarta.ws.rs.core.Response;
 import org.apache.http.HttpStatus;
 import org.jboss.resteasy.reactive.RestResponse;
@@ -82,5 +83,18 @@ public class ExceptionHandler {
             exception.getMessage(),
             null);
     return Response.status(Response.Status.NOT_IMPLEMENTED).entity(problem).build();
+  }
+
+  @ServerExceptionMapper
+  public Response toResponse(NotAllowedException exception) {
+    LOGGER.error(PREFIX_LOGGER, "Unimplemented endpoint", exception.getMessage());
+    Problem problem =
+        new Problem(
+            exception.getMessage(),
+            null,
+            HttpStatus.SC_METHOD_NOT_ALLOWED,
+            exception.getMessage(),
+            null);
+    return Response.status(Response.Status.METHOD_NOT_ALLOWED).entity(problem).build();
   }
 }

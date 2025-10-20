@@ -6,5 +6,6 @@ import it.pagopa.selfcare.iam.entity.UserClaims;
 
 public interface IamService {
     Uni<String> ping();
-    Uni<UserClaims> saveUser(SaveUserRequest saveUserRequest);
+    Uni<UserClaims> saveUser(SaveUserRequest saveUserRequest, String productId);
+    Uni<UserClaims> getUser(String userId, String productId);
 }

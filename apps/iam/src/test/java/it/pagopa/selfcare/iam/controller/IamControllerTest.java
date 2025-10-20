@@ -25,7 +25,7 @@ public class IamControllerTest {
     response.setName("john");
     response.setEmail("john@example.com");
 
-    Mockito.when(iamService.saveUser(Mockito.any(SaveUserRequest.class)))
+    Mockito.when(iamService.saveUser(Mockito.any(SaveUserRequest.class), Mockito.anyString()))
       .thenReturn(Uni.createFrom().item(response));
 
     given()
@@ -44,7 +44,7 @@ public class IamControllerTest {
     SaveUserRequest request = new SaveUserRequest();
     request.setName(null);
 
-    Mockito.when(iamService.saveUser(Mockito.any(SaveUserRequest.class)))
+    Mockito.when(iamService.saveUser(Mockito.any(SaveUserRequest.class), Mockito.anyString()))
       .thenReturn(Uni.createFrom().failure(new IllegalArgumentException("Invalid user")));
 
     given()

@@ -18,6 +18,15 @@ components:
           type: string
         type:
           type: string
+    ProductRoles:
+      type: object
+      properties:
+        productId:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
     SaveUserRequest:
       type: object
       required:
@@ -26,14 +35,16 @@ components:
         email:
           type: string
           minLength: 1
+        uid:
+          type: string
         name:
           type: string
         familyName:
           type: string
-        roles:
-          type: array
-          items:
-            type: string
+        productRoles:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ProductRoles"
   securitySchemes:
     SecurityScheme:
       type: http
@@ -65,6 +76,11 @@ paths:
       operationId: users
       tags:
       - IAM
+      parameters:
+      - name: productId
+        in: query
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -75,7 +91,7 @@ paths:
         "200":
           description: OK
           content:
-            application/problem+json:
+            application/json:
               schema:
                 type: string
         "400":
@@ -91,6 +107,47 @@ paths:
               schema:
                 $ref: "#/components/schemas/Problem"
       summary: Users
+  /iam/users/{uid}:
+    get:
+      operationId: getUser
+      tags:
+      - IAM
+      parameters:
+      - name: uid
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: productId
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+      summary: Get User
 info:
   title: IAM API
   version: 1.0.0

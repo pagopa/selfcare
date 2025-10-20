@@ -92,7 +92,7 @@ public class IamServiceImplTest {
  @Test
  @RunOnVertxContext
   void shouldFailWhenUserIsNull(UniAsserter asserter) {
-    asserter.assertFailedWith(() -> iamService.saveUser(null),
+    asserter.assertFailedWith(() -> iamService.saveUser(null, null),
       IllegalArgumentException.class
       // , ex -> assertEquals("User cannot be null", ex.getMessage())
     );

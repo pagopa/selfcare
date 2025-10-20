@@ -3,6 +3,7 @@ package it.pagopa.selfcare.iam.controller;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
 import it.pagopa.selfcare.iam.controller.response.*;
+import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.iam.service.IamService;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -43,7 +44,7 @@ public class IamController {
   }
 
   @APIResponses(value = {
-    @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = String.class), mediaType = "application/problem+json")),
+    @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = String.class), mediaType = "application/json")),
     @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
     @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
   })
@@ -51,17 +52,45 @@ public class IamController {
   @Path(value = "/users")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Uni<Response> users(@Valid SaveUserRequest saveUserRequest) {
-    return iamService.saveUser(saveUserRequest)
-      .onItem().transform(user -> Response.ok(user).build())
-      .onFailure(IllegalArgumentException.class)
-      .recoverWithItem(ex -> Response.status(Response.Status.BAD_REQUEST)
-        .entity(Response.status(Response.Status.BAD_REQUEST).entity(ex.getMessage()).build())
-        .build())
-      .onFailure()
-      .recoverWithItem(ex -> Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-        .entity(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(ex.getMessage()).build())
-        .build());
+  public Uni<Response> users(@Valid SaveUserRequest saveUserRequest, @QueryParam("productId") String productId) {
+    return iamService.saveUser(saveUserRequest, productId)
+      .onItem().transform(user -> Response.ok(user).build());
+//      .onFailure(IllegalArgumentException.class)
+//      .recoverWithItem(ex -> Response.status(Response.Status.BAD_REQUEST)
+//        .entity(Response.status(Response.Status.BAD_REQUEST).entity(ex.getMessage()).build())
+//        .build())
+//      .onFailure()
+//      .recoverWithItem(ex -> Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+//        .entity(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(ex.getMessage()).build())
+//        .build());
   }
+
+  @APIResponses(value = {
+    @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = String.class), mediaType = "application/json")),
+    @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+    @APIResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+    @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
+  })
+  @GET
+  @Path(value = "/users/{uid}")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<Response> getUser(@PathParam("uid") String userId, @QueryParam("productId") String productId) {
+    return iamService.getUser(userId, productId)
+      .onItem().transform(user -> Response.ok(user).build());
+//      .onFailure(IllegalArgumentException.class)
+//      .recoverWithItem(ex -> Response.status(Response.Status.BAD_REQUEST)
+//        .entity(Response.status(Response.Status.BAD_REQUEST).entity(ex.getMessage()).build())
+//        .build())
+//      .onFailure(ResourceNotFoundException.class)
+//      .recoverWithItem(ex -> Response.status(Response.Status.NOT_FOUND)
+//        .entity(Response.status(Response.Status.NOT_FOUND).entity(ex.getMessage()).build())
+//        .build())
+//      .onFailure()
+//      .recoverWithItem(ex -> Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+//        .entity(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(ex.getMessage()).build())
+//        .build());
+  }
+
 }
 
