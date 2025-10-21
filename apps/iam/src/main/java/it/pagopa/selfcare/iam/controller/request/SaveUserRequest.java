@@ -27,5 +27,5 @@ public class SaveUserRequest {
   private String uid;
   private String name;
   private String familyName;
-  private Map<String, ProductRoles> productRoles = new HashMap<>();
+  private List<ProductRoles> productRoles;
 }

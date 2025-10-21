@@ -55,14 +55,6 @@ public class IamController {
   public Uni<Response> users(@Valid SaveUserRequest saveUserRequest, @QueryParam("productId") String productId) {
     return iamService.saveUser(saveUserRequest, productId)
       .onItem().transform(user -> Response.ok(user).build());
-//      .onFailure(IllegalArgumentException.class)
-//      .recoverWithItem(ex -> Response.status(Response.Status.BAD_REQUEST)
-//        .entity(Response.status(Response.Status.BAD_REQUEST).entity(ex.getMessage()).build())
-//        .build())
-//      .onFailure()
-//      .recoverWithItem(ex -> Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-//        .entity(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(ex.getMessage()).build())
-//        .build());
   }
 
   @APIResponses(value = {
@@ -78,19 +70,24 @@ public class IamController {
   public Uni<Response> getUser(@PathParam("uid") String userId, @QueryParam("productId") String productId) {
     return iamService.getUser(userId, productId)
       .onItem().transform(user -> Response.ok(user).build());
-//      .onFailure(IllegalArgumentException.class)
-//      .recoverWithItem(ex -> Response.status(Response.Status.BAD_REQUEST)
-//        .entity(Response.status(Response.Status.BAD_REQUEST).entity(ex.getMessage()).build())
-//        .build())
-//      .onFailure(ResourceNotFoundException.class)
-//      .recoverWithItem(ex -> Response.status(Response.Status.NOT_FOUND)
-//        .entity(Response.status(Response.Status.NOT_FOUND).entity(ex.getMessage()).build())
-//        .build())
-//      .onFailure()
-//      .recoverWithItem(ex -> Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-//        .entity(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(ex.getMessage()).build())
-//        .build());
   }
 
+  @APIResponses(value = {
+    @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = Boolean.class), mediaType = "application/json")),
+    @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+    @APIResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+    @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
+  })
+  @GET
+  @Path(value = "/users/{uid}/permissions/{permission}")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<Response> hasPermission(@PathParam("uid") String userId,
+                                       @PathParam("permission") String permission,
+                                       @QueryParam("productId") String productId,
+                                       @QueryParam("institutionId") String institutionId) {
+    return iamService.hasPermission(userId, permission, productId, institutionId)
+      .onItem().transform(hasPermission -> Response.ok(hasPermission).build()); 
+  }
 }
 

@@ -1,18 +1,15 @@
 package it.pagopa.selfcare.iam.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.iam.model.ProductRoles;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
-
-import java.util.*;
-import java.util.stream.Collectors;
-
 import org.bson.codecs.pojo.annotations.BsonId;
-import org.bson.codecs.pojo.annotations.BsonIgnore;
+
+import java.util.List;
+import java.util.Optional;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,7 +26,7 @@ public class UserClaims extends ReactivePanacheMongoEntityBase {
   private String name;
   private String familyName;
   @Builder.Default
-  private Map<String, ProductRoles> productRoles = new HashMap<>();
+  private List<ProductRoles> productRoles = List.of();
 
 
   public static Uni<UserClaims> findByUid(String uid) {
@@ -43,8 +40,8 @@ public class UserClaims extends ReactivePanacheMongoEntityBase {
   public static Uni<UserClaims> findByUidAndProductId(String uid, String productId) {
     return Optional.ofNullable(productId).isPresent() ?
       find("_id = ?1 and productRoles.productId = ?2", uid, productId)
-      .firstResult()
-      .map(entity -> (UserClaims) entity) :
+        .firstResult()
+        .map(entity -> (UserClaims) entity) :
       findByUid(uid);
   }
 }

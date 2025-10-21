@@ -58,8 +58,8 @@
             "type" : "string"
           },
           "productRoles" : {
-            "type" : "object",
-            "additionalProperties" : {
+            "type" : "array",
+            "items" : {
               "$ref" : "#/components/schemas/ProductRoles"
             }
           }
@@ -222,6 +222,82 @@
           }
         },
         "summary" : "Get User"
+      }
+    },
+    "/iam/users/{uid}/permissions/{permission}" : {
+      "get" : {
+        "operationId" : "hasPermission",
+        "tags" : [ "IAM" ],
+        "parameters" : [ {
+          "name" : "permission",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "uid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "institutionId",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productId",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "boolean"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "summary" : "Has Permission"
       }
     }
   },

@@ -7,6 +7,7 @@ import it.pagopa.selfcare.iam.entity.UserClaims;
 import it.pagopa.selfcare.iam.exception.InvalidRequestException;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.iam.model.ProductRoles;
+import it.pagopa.selfcare.iam.repository.UserPermissionsRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,9 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class IamServiceImpl implements IamService {
+
+  @Inject
+  private final UserPermissionsRepository userPermissionsRepository;
 
   @Override
   public Uni<String> ping() {
@@ -50,8 +54,24 @@ public class IamServiceImpl implements IamService {
               .onItem().ifNotNull().transform(existing -> {
                 Optional.ofNullable(userClaims.getName()).ifPresent(existing::setName);
                 Optional.ofNullable(userClaims.getFamilyName()).ifPresent(existing::setFamilyName);
-                Optional.ofNullable(userClaims.getProductRoles()).ifPresent(prodRoles ->
-                  prodRoles.forEach((key, value) -> existing.getProductRoles().put(key, value)));
+
+                Optional.ofNullable(productId).ifPresentOrElse(
+                    pid -> Optional.ofNullable(userClaims.getProductRoles())
+                      .flatMap(prs -> prs.stream().filter(pr -> pr.getProductId().equals(pid)).findFirst())
+                      .ifPresent(newProductRole -> {
+                        List<ProductRoles> existingRoles = Optional.ofNullable(existing.getProductRoles()).orElse(List.of());
+                        List<ProductRoles> mutableRoles = new ArrayList<>(existingRoles);
+                        mutableRoles.stream()
+                          .filter(epr -> epr.getProductId().equals(pid))
+                          .findFirst()
+                          .ifPresentOrElse(
+                            existingProductRole -> existingProductRole.setRoles(newProductRole.getRoles()),
+                            () -> mutableRoles.add(newProductRole)
+                          );
+                        existing.setProductRoles(mutableRoles);
+                      }),
+                    () -> Optional.ofNullable(userClaims.getProductRoles()).ifPresent(existing::setProductRoles)
+                  );
                 return existing;
               })
               .chain(user -> user.persistOrUpdate().map(v -> userClaims))
@@ -70,14 +90,28 @@ public class IamServiceImpl implements IamService {
       .onItem().ifNull().failWith(() -> new ResourceNotFoundException("User not found"));
   }
 
-  public Map<String, ProductRoles> setFilteredProductRoles(Map<String, ProductRoles> productRoles, String productId) {
-    return Optional.ofNullable(productId)
-      .map(pid -> Optional.ofNullable(productRoles)
-        .filter(prs -> prs.containsKey(pid))
-        .map(prs -> Map.of(pid, prs.get(pid)))
-        .orElse(Map.of()))
-      .orElse(productRoles);
+//  public Map<String, ProductRoles> setFilteredProductRoles(Map<String, ProductRoles> productRoles, String productId) {
+//    return Optional.ofNullable(productId)
+//      .map(pid -> Optional.ofNullable(productRoles)
+//        .filter(prs -> prs.containsKey(pid))
+//        .map(prs -> Map.of(pid, prs.get(pid)))
+//        .orElse(Map.of()))
+//      .orElse(productRoles);
+//  }
+
+  public List<ProductRoles> setFilteredProductRoles(List<ProductRoles> productRoles, String productId) {
+    return Optional.ofNullable(productId).map(pid ->
+      Optional.ofNullable(productRoles)
+        .map(prs -> prs.stream()
+          .filter(pr -> pr.getProductId().equals(pid))
+          .toList())
+        .orElse(List.of())
+    ).orElse(productRoles);
   }
 
-
+  @Override
+  public Uni<Boolean> hasPermission(String userId, String permission, String productId, String institutionId) {
+    return userPermissionsRepository.getUserPermissions(userId, permission, productId)
+      .onItem().transform(userPermissions -> userPermissions.getPermissions().contains(permission));
+  }
 }
