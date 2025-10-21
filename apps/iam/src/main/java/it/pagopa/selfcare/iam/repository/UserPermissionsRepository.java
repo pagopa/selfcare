@@ -26,13 +26,16 @@ public class UserPermissionsRepository {
   ReactiveMongoClient mongoClient;
 
   /**
-   * Aggregazione per estrarre i permessi di un utente per un prodotto specifico
+   * Aggregation query to extract a user's permissions for a specific product (optional).
    */
   public Uni<UserPermissions> getUserPermissions(String uid, String permission, String productId) {
-    List<Bson> pipeline = Arrays.asList(
-      Aggregates.match(Filters.eq("_id", uid)),
-      Aggregates.unwind("$productRoles"),
-      Aggregates.match(Filters.eq("productRoles.productId", productId)),
+    List<Bson> pipeline = new ArrayList<>();
+    pipeline.add(Aggregates.match(Filters.eq("_id", uid)));
+    pipeline.add(Aggregates.unwind("$productRoles"));
+    Optional.ofNullable(productId)
+      .ifPresent(pid -> pipeline.add(Aggregates.match(Filters.eq("productRoles.productId", pid))));
+
+    List<Bson> pipelinePost = Arrays.asList(
       Aggregates.unwind("$productRoles.roles"),
       Aggregates.lookup(
         "roles",
@@ -67,52 +70,14 @@ public class UserPermissionsRepository {
       )
     );
 
-      return getCollection()
-      .aggregate(pipeline, Document.class)
-      .collect().first()
-      .map(this::documentToUserPermissions)
-      .onItem().ifNull().failWith(() -> 
-        new ResourceNotFoundException("Permission not found"));
-  }
-
-  /**
-   * Versione senza filtro productId - restituisce tutti i permessi dell'utente
-   */
-  public Uni<Map<String, Set<String>>> getAllUserPermissions(String email) {
-    List<Bson> pipeline = Arrays.asList(
-      Aggregates.match(Filters.eq("_id", email)),
-      Aggregates.unwind("$productRoles"),
-      Aggregates.unwind("$productRoles.roles"),
-      Aggregates.lookup("roles", "productRoles.roles", "_id", "roleDetails"),
-      Aggregates.unwind("$roleDetails"),
-      Aggregates.group(
-        "$productRoles.productId",
-        Accumulators.addToSet("permissions", "$roleDetails.permissions")
-      ),
-      Aggregates.project(
-        Projections.fields(
-          Projections.computed("productId", "$_id"),
-          Projections.computed("permissions", 
-            new Document("$reduce", new Document()
-              .append("input", "$permissions")
-              .append("initialValue", new ArrayList<>())
-              .append("in", new Document("$concatArrays", Arrays.asList("$$value", "$$this")))
-            )
-          ),
-          Projections.excludeId()
-        )
-      )
-    );
+    pipeline.addAll(pipelinePost);
 
     return getCollection()
       .aggregate(pipeline, Document.class)
-      .collect().asList()
-      .map(docs -> docs.stream()
-        .collect(Collectors.toMap(
-          doc -> doc.getString("productId"),
-          doc -> new HashSet<>((List<String>) doc.get("permissions"))
-        ))
-      );
+      .collect().first()
+      .map(this::documentToUserPermissions)
+      .onItem().ifNull().failWith(() ->
+        new ResourceNotFoundException("Permission not found"));
   }
 
   private ReactiveMongoCollection<Document> getCollection() {
@@ -121,8 +86,10 @@ public class UserPermissionsRepository {
   }
 
   private UserPermissions documentToUserPermissions(Document doc) {
-    if (doc == null) return null;
-    
+    if (doc == null) {
+      return null;
+    }
+
     return UserPermissions.builder()
       .email(doc.getString("email"))
       .uid(doc.getString("uid"))
