@@ -69,15 +69,7 @@ public class IamController {
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<Response> users(@Valid SaveUserRequest saveUserRequest, @QueryParam("productId") String productId) {
     return iamService.saveUser(saveUserRequest, productId)
-      .onItem().transform(user -> Response.ok(user).build())
-      .onFailure(IllegalArgumentException.class)
-      .recoverWithItem(ex -> Response.status(Response.Status.BAD_REQUEST)
-        .entity(Response.status(Response.Status.BAD_REQUEST).entity(ex.getMessage()).build())
-        .build())
-      .onFailure()
-      .recoverWithItem(ex -> Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-        .entity(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(ex.getMessage()).build())
-        .build());
+      .onItem().transform(user -> Response.ok(user).build());
 
   }
 

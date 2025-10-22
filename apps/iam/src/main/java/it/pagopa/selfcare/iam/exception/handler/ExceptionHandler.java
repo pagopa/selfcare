@@ -12,6 +12,7 @@ import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@ApplicationScoped
 public class ExceptionHandler {
 
   public static final String SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER =

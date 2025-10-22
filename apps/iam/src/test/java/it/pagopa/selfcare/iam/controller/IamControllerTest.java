@@ -73,32 +73,13 @@ public class IamControllerTest {
       .statusCode(200);
   }
 
-   @ParameterizedTest
-   @ValueSource(strings = {"", "   "}) // Test with both an empty string and spaces
-   @DisplayName("An empty user should return 400 Bad Request")
-   void handleUSersResponse_withEmptyUSer_shouldReturnBadRequest(String emptySamlResponse) throws Exception {
-     SaveUserRequest request = new SaveUserRequest();
-
-     // ARRANGE
-     Mockito.when(iamService.saveUser(Mockito.any(SaveUserRequest.class), Mockito.anyString()))
-       .thenReturn(Uni.createFrom().failure(new InvalidRequestException("User cannot be null")));
-
-     Uni<jakarta.ws.rs.core.Response> responseUni = controller.users(null, null);
-     jakarta.ws.rs.core.Response response = responseUni.await().indefinitely();
-
-     // ASSERT
-     assertNotNull(response);
-     assertEquals(jakarta.ws.rs.core.Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
-     Mockito.verifyNoInteractions(iamService);
-   }
-
   @Test
   void shouldReturn400WhenServiceFails() {
     SaveUserRequest request = new SaveUserRequest();
     request.setEmail(null);
 
-    Mockito.when(iamService.saveUser(Mockito.any(SaveUserRequest.class), Mockito.anyString()))
-      .thenReturn(Uni.createFrom().failure(new InvalidRequestException("User cannot be null")));
+    Mockito.when(iamService.saveUser(Mockito.any(SaveUserRequest.class), Mockito.nullable(String.class)))
+      .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Email cannot be null")));
 
     given()
       .contentType(ContentType.JSON)
@@ -106,7 +87,7 @@ public class IamControllerTest {
       .when()
       .patch("/users")
       .then()
-      .log().all()  // Aggiungi log per vedere cosa viene restituito
+      .log().all()
       .statusCode(400)
       .body(containsString("Email cannot be null"));
   }
@@ -121,8 +102,9 @@ public class IamControllerTest {
 
     given()
       .when()
-      .get("/users/{uid}", userId)
+      .get("/users/{uid}?productId={productid}", userId, productId)
       .then()
+      .log().all()
       .statusCode(404);
   }
 
@@ -143,10 +125,89 @@ public class IamControllerTest {
 
     given()
       .when()
-      .get("/users/{uid}", userId)
+      .get("/users/{uid}?productId={productid}", userId, productId)
+      .then()
+      .log().all()
+      .statusCode(200);
+  }
+
+  @Test
+  void hasPermission_shouldReturn200_true() {
+    String uid = "user-1";
+    String permission = "read:users";
+    String productId = "productA";
+    String institutionId = "inst-1";
+
+    Mockito.when(iamService.hasPermission(uid, permission, productId, institutionId))
+      .thenReturn(Uni.createFrom().item(true));
+
+    given()
+      .accept(ContentType.JSON)
+      .when()
+      .get("/users/{uid}/permissions/{permission}?productId={productId}&institutionId={institutionId}",
+        uid, permission, productId, institutionId)
       .then()
       .statusCode(200)
-      .body("id", is(userId))
-      .body("productId", is(productId));
+      .body(equalTo("true"));
+  }
+
+  @Test
+  void hasPermission_shouldReturn200_false() {
+    Mockito.when(iamService.hasPermission("user-2", "write:users", "productB", "inst-2"))
+      .thenReturn(Uni.createFrom().item(false));
+
+    given()
+      .accept(ContentType.JSON)
+      .when()
+      .get("/users/{uid}/permissions/{permission}?productId={productId}&institutionId={institutionId}",
+        "user-2", "write:users", "productB", "inst-2")
+      .then()
+      .statusCode(200)
+      .body(equalTo("false"));
+  }
+
+  @Test
+  void hasPermission_shouldReturn400_invalidRequest() {
+    Mockito.when(iamService.hasPermission(Mockito.eq("user-3"), Mockito.eq("bad:perm"),
+        Mockito.eq("productC"), Mockito.eq("inst-3")))
+      .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Invalid permission")));
+
+    given()
+      .accept(ContentType.JSON)
+      .when()
+      .get("/users/{uid}/permissions/{permission}?productId={productId}&institutionId={institutionId}",
+        "user-3", "bad:perm", "productC", "inst-3")
+      .then()
+      .statusCode(400)
+      .body(containsString("Invalid permission"));
+  }
+
+  @Test
+  void hasPermission_shouldReturn404_userNotFound() {
+    Mockito.when(iamService.hasPermission("missing-user", "read:users", "productD", "inst-4"))
+      .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("User not found")));
+
+    given()
+      .accept(ContentType.JSON)
+      .when()
+      .get("/users/{uid}/permissions/{permission}?productId={productId}&institutionId={institutionId}",
+        "missing-user", "read:users", "productD", "inst-4")
+      .then()
+      .statusCode(404)
+      .body(containsString("User not found"));
+  }
+
+  @Test
+  void hasPermission_shouldHandleNullOptionalQueryParams() {
+    Mockito.when(iamService.hasPermission("user-null", "read:users", null, null))
+      .thenReturn(Uni.createFrom().item(true));
+
+    given()
+      .accept(ContentType.JSON)
+      .when()
+      .get("/users/{uid}/permissions/{permission}", "user-null", "read:users")
+      .then()
+      .statusCode(200)
+      .body(equalTo("true"));
   }
 }

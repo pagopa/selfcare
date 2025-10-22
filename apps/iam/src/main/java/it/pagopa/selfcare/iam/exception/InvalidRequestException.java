@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.iam.exception;
 
-public class InvalidRequestException extends  RuntimeException{
+public class InvalidRequestException extends  RuntimeException {
     private final String code;
 
     public InvalidRequestException(String message, String code) {
