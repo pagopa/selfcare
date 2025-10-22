@@ -1,6 +1,5 @@
 package it.pagopa.selfcare.iam.service;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
 import it.pagopa.selfcare.iam.entity.UserClaims;
@@ -12,10 +11,11 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.codecs.pojo.annotations.BsonIgnore;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @ApplicationScoped
