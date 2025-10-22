@@ -46,50 +46,51 @@ public class IamServiceImpl implements IamService {
     return Uni.createFrom().item(saveUserRequest)
       .onItem().ifNull().failWith(() -> new InvalidRequestException("User cannot be null"))
       .onItem().transformToUni(req ->
-        Uni.createFrom().optional(
-            Optional.ofNullable(req.getEmail())
-              .filter(email -> !email.isBlank())
-              .map(email -> UserClaims.builder()
-                .email(req.getEmail())
-                .name(req.getName())
-                .familyName(req.getFamilyName())
-                .productRoles(setFilteredProductRoles(req.getProductRoles(), productId))
-                .build())
-          )
-          .onItem().ifNull().failWith(() -> new InvalidRequestException("User cannot be null"))
-          .onItem().transformToUni(userClaims ->
-            UserClaims.findByEmail(userClaims.getEmail())
-              .onItem().ifNull().continueWith(() -> {
-                userClaims.setUid(UUID.randomUUID().toString());
-                return userClaims;
-              })
-              .onItem().ifNotNull().transform(existing -> {
-                userClaims.setUid(existing.getUid());
-                Optional.ofNullable(userClaims.getName()).ifPresent(existing::setName);
-                Optional.ofNullable(userClaims.getFamilyName()).ifPresent(existing::setFamilyName);
+      Uni.createFrom().optional(
+        Optional.ofNullable(req.getEmail())
+          .filter(email -> !email.isBlank())
+          .filter(email -> email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"))
+          .map(email -> UserClaims.builder()
+          .email(req.getEmail())
+          .name(req.getName())
+          .familyName(req.getFamilyName())
+          .productRoles(setFilteredProductRoles(req.getProductRoles(), productId))
+          .build())
+        )
+        .onItem().ifNull().failWith(() -> new InvalidRequestException("Invalid email format"))
+        .onItem().transformToUni(userClaims ->
+        UserClaims.findByEmail(userClaims.getEmail())
+          .onItem().ifNull().continueWith(() -> {
+          userClaims.setUid(UUID.randomUUID().toString());
+          return userClaims;
+          })
+          .onItem().ifNotNull().transform(existing -> {
+          userClaims.setUid(existing.getUid());
+          Optional.ofNullable(userClaims.getName()).ifPresent(existing::setName);
+          Optional.ofNullable(userClaims.getFamilyName()).ifPresent(existing::setFamilyName);
 
-                Optional.ofNullable(productId).ifPresentOrElse(
-                    pid -> Optional.ofNullable(userClaims.getProductRoles())
-                      .flatMap(prs -> prs.stream().filter(pr -> pr.getProductId().equals(pid)).findFirst())
-                      .ifPresent(newProductRole -> {
-                        List<ProductRoles> existingRoles = Optional.ofNullable(existing.getProductRoles()).orElse(List.of());
-                        List<ProductRoles> mutableRoles = new ArrayList<>(existingRoles);
-                        mutableRoles.stream()
-                          .filter(epr -> epr.getProductId().equals(pid))
-                          .findFirst()
-                          .ifPresentOrElse(
-                            existingProductRole -> existingProductRole.setRoles(newProductRole.getRoles()),
-                            () -> mutableRoles.add(newProductRole)
-                          );
-                        existing.setProductRoles(mutableRoles);
-                      }),
-                    () -> Optional.ofNullable(userClaims.getProductRoles()).ifPresent(existing::setProductRoles)
-                  );
-                return existing;
-              })
-              .chain(user -> user.persistOrUpdate().map(v -> userClaims))
-          )
-          .onItem().ifNull().failWith(() -> new InvalidRequestException("Email cannot be null"))
+          Optional.ofNullable(productId).ifPresentOrElse(
+            pid -> Optional.ofNullable(userClaims.getProductRoles())
+              .flatMap(prs -> prs.stream().filter(pr -> pr.getProductId().equals(pid)).findFirst())
+              .ifPresent(newProductRole -> {
+              List<ProductRoles> existingRoles = Optional.ofNullable(existing.getProductRoles()).orElse(List.of());
+              List<ProductRoles> mutableRoles = new ArrayList<>(existingRoles);
+              mutableRoles.stream()
+                .filter(epr -> epr.getProductId().equals(pid))
+                .findFirst()
+                .ifPresentOrElse(
+                existingProductRole -> existingProductRole.setRoles(newProductRole.getRoles()),
+                () -> mutableRoles.add(newProductRole)
+                );
+              existing.setProductRoles(mutableRoles);
+              }),
+            () -> Optional.ofNullable(userClaims.getProductRoles()).ifPresent(existing::setProductRoles)
+            );
+          return existing;
+          })
+          .chain(user -> user.persistOrUpdate().map(v -> userClaims))
+        )
+        .onItem().ifNull().failWith(() -> new InvalidRequestException("Email cannot be null"))
       );
   }
 

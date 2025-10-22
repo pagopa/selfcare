@@ -63,7 +63,7 @@ Feature: User Management
 
     Examples:
       | email                 | name | statusCode | errorMessage          |
-      |                       | John | 400        | User cannot be null  |
+      |                       | John | 400        | Invalid email format  |
       | invalid-email         | John | 400        | Invalid email format  |
       | valid@example.com     |      | 200        |                       |
 
