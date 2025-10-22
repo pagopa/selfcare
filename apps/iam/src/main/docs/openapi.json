@@ -107,7 +107,9 @@
     },
     "/iam/users" : {
       "patch" : {
-        "operationId" : "users",
+        "summary" : "Saves IAM User",
+        "description" : "Saves or updates a user with their product-specific roles.",
+        "operationId" : "saveIAMUser",
         "tags" : [ "IAM" ],
         "parameters" : [ {
           "name" : "productId",
@@ -157,13 +159,14 @@
               }
             }
           }
-        },
-        "summary" : "Users"
+        }
       }
     },
     "/iam/users/{uid}" : {
       "get" : {
-        "operationId" : "getUser",
+        "summary" : "Get IAM User",
+        "description" : "Retrieves a user by their ID and product ID.",
+        "operationId" : "getIAMUser",
         "tags" : [ "IAM" ],
         "parameters" : [ {
           "name" : "uid",
@@ -220,13 +223,14 @@
               }
             }
           }
-        },
-        "summary" : "Get User"
+        }
       }
     },
     "/iam/users/{uid}/permissions/{permission}" : {
       "get" : {
-        "operationId" : "hasPermission",
+        "summary" : "Check IAM User hasPermission",
+        "description" : "Checks if a user has a specific permission for a product.",
+        "operationId" : "hasIAMUserPermission",
         "tags" : [ "IAM" ],
         "parameters" : [ {
           "name" : "permission",
@@ -296,8 +300,7 @@
               }
             }
           }
-        },
-        "summary" : "Has Permission"
+        }
       }
     }
   },

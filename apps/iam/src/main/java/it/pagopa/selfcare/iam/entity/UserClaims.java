@@ -11,6 +11,42 @@ import org.bson.codecs.pojo.annotations.BsonId;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Entity representing user claims and permissions.
+ * 
+ * <h2>MongoDB Collection</h2>
+ * <pre>userClaims</pre>
+ * 
+ * <h2>Document Structure</h2>
+ * <pre>
+ * {
+ *   "_id": "user@example.com",
+ *   "uid": "uuid",
+ *   "productRoles": [
+ *     {
+ *       "productId": "product1",
+ *       "roles": ["admin"]
+ *     }
+ *   ]
+ * }
+ * </pre>
+ * 
+ * <h2>Relationships</h2>
+ * <ul>
+ *   <li>Contains embedded {@link ProductRoles} (1:N)</li>
+ *   <li>References {@link Roles} via productRoles.roles array</li>
+ * </ul>
+ * 
+ * <h2>Indexes</h2>
+ * <ul>
+ *   <li>Primary: _id (email)</li>
+ *   <li>Secondary: uid (unique)</li>
+ * </ul>
+ * 
+ * @see ProductRoles
+ * @see Roles
+ * @see UserPermissionsRepository#getUserPermissions
+ */
 @NoArgsConstructor
 @AllArgsConstructor
 @Data

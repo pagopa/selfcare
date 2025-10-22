@@ -12,6 +12,37 @@ import java.util.Optional;
 
 import org.bson.codecs.pojo.annotations.BsonId;
 
+/**
+ * Entity representing roles and their associated permissions.
+ * 
+ * <h2>MongoDB Collection</h2>
+ * <pre>roles</pre>
+ * 
+ * <h2>Document Structure</h2>
+ * <pre>
+ * {
+ *   "_id": "admin",
+ *   "permissions": [
+ *     "read",
+ *     "write",
+ *     "delete"
+ *   ]
+ * }
+ * </pre>
+ * 
+ * <h2>Relationships</h2>
+ * <ul>
+ *   <li>Referenced by {@link it.pagopa.selfcare.iam.entity.UserClaims} via productRoles.roles array</li>
+ * </ul>
+ * 
+ * <h2>Indexes</h2>
+ * <ul>
+ *   <li>Primary: _id (role name)</li>
+ * </ul>
+ * 
+ * @see ProductRoles
+ * @see it.pagopa.selfcare.iam.entity.UserClaims
+ */
 @NoArgsConstructor
 @AllArgsConstructor
 @Data

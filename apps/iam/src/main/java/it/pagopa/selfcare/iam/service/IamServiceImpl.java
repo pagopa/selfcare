@@ -30,6 +30,16 @@ public class IamServiceImpl implements IamService {
     return Uni.createFrom().item("OK");
   }
 
+  /**
+   * Saves or updates a user with their product-specific roles.
+   * If the user doesn't exist, creates a new user with a generated UID.
+   * If the user exists, updates their information and merges product roles.
+   * 
+   * @param saveUserRequest the request containing user details and product roles
+   * @param productId optional product ID to filter roles for a specific product
+   * @return a Uni containing the saved or updated UserClaims
+   * @throws InvalidRequestException if the request or email is null/blank
+   */
   @Override
   public Uni<UserClaims> saveUser(SaveUserRequest saveUserRequest, final String productId) {
     return Uni.createFrom().item(saveUserRequest)
@@ -45,13 +55,15 @@ public class IamServiceImpl implements IamService {
                 .productRoles(setFilteredProductRoles(req.getProductRoles(), productId))
                 .build())
           )
-          .chain(userClaims ->
+          .onItem().ifNull().failWith(() -> new InvalidRequestException("User cannot be null"))
+          .onItem().transformToUni(userClaims ->
             UserClaims.findByEmail(userClaims.getEmail())
               .onItem().ifNull().continueWith(() -> {
                 userClaims.setUid(UUID.randomUUID().toString());
                 return userClaims;
               })
               .onItem().ifNotNull().transform(existing -> {
+                userClaims.setUid(existing.getUid());
                 Optional.ofNullable(userClaims.getName()).ifPresent(existing::setName);
                 Optional.ofNullable(userClaims.getFamilyName()).ifPresent(existing::setFamilyName);
 
@@ -80,6 +92,14 @@ public class IamServiceImpl implements IamService {
       );
   }
 
+  /**
+   * Retrieves a user by their ID and product ID.
+   *
+   * @param userId the ID of the user
+   * @param productId the ID of the product
+   * @return a Uni containing the UserClaims if found
+   * @throws ResourceNotFoundException if the user is not found
+   */
   @Override
   public Uni<UserClaims> getUser(String userId, String productId) {
     return UserClaims.findByUidAndProductId(userId, productId)
@@ -90,15 +110,12 @@ public class IamServiceImpl implements IamService {
       .onItem().ifNull().failWith(() -> new ResourceNotFoundException("User not found"));
   }
 
-//  public Map<String, ProductRoles> setFilteredProductRoles(Map<String, ProductRoles> productRoles, String productId) {
-//    return Optional.ofNullable(productId)
-//      .map(pid -> Optional.ofNullable(productRoles)
-//        .filter(prs -> prs.containsKey(pid))
-//        .map(prs -> Map.of(pid, prs.get(pid)))
-//        .orElse(Map.of()))
-//      .orElse(productRoles);
-//  }
-
+  /**
+   * Filters the product roles for a specific product ID.
+   * @param productRoles the list of product roles
+   * @param productId the ID of the product
+   * @return a list of filtered ProductRoles
+   */
   public List<ProductRoles> setFilteredProductRoles(List<ProductRoles> productRoles, String productId) {
     return Optional.ofNullable(productId).map(pid ->
       Optional.ofNullable(productRoles)
@@ -109,6 +126,15 @@ public class IamServiceImpl implements IamService {
     ).orElse(productRoles);
   }
 
+  /**
+   * Checks if a user has a specific permission for a product.
+   *
+   * @param userId the ID of the user
+   * @param permission the permission to check
+   * @param productId the ID of the product
+   * @param institutionId the ID of the institution
+   * @return a Uni containing true if the user has the permission, false otherwise
+   */
   @Override
   public Uni<Boolean> hasPermission(String userId, String permission, String productId, String institutionId) {
     return userPermissionsRepository.getUserPermissions(userId, permission, productId)

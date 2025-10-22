@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * Model representing roles assigned to a user for a specific product.
+ */
 @Data
 @Builder
 @NoArgsConstructor

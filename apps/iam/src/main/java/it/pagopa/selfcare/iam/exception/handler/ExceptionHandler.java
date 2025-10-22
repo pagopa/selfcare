@@ -2,6 +2,8 @@ package it.pagopa.selfcare.iam.exception.handler;
 
 import it.pagopa.selfcare.iam.controller.response.Problem;
 import it.pagopa.selfcare.iam.exception.*;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.NotAllowedException;
 import jakarta.ws.rs.core.Response;
 import org.apache.http.HttpStatus;
@@ -18,6 +20,11 @@ public class ExceptionHandler {
   public static final String CONFLICT = "Conflict";
   public static final String PREFIX_LOGGER = "{}: {}";
   private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandler.class);
+
+  @PostConstruct
+  void init() {
+    LOGGER.info("ExceptionHandler initialized - Exception mappers are active");
+  }
 
   @ServerExceptionMapper
   public RestResponse<String> toResponse(InvalidRequestException exception) {
