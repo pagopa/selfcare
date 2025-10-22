@@ -9,6 +9,7 @@ import it.pagopa.selfcare.iam.model.ProductRoles;
 import it.pagopa.selfcare.iam.repository.UserPermissionsRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -138,6 +139,8 @@ public class IamServiceImpl implements IamService {
   @Override
   public Uni<Boolean> hasPermission(String userId, String permission, String productId, String institutionId) {
     return userPermissionsRepository.getUserPermissions(userId, permission, productId)
-      .onItem().transform(userPermissions -> userPermissions.getPermissions().contains(permission));
+      .onItem().transform(userPermissions -> userPermissions.getPermissions().contains(permission))
+      .onFailure(ResourceNotFoundException.class)
+      .recoverWithItem(ex -> false);
   }
 }

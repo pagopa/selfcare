@@ -1,0 +1,59 @@
+[
+  {
+    "_id": "d8880750-906a-4c43-8d48-983693fe24a4",
+    "email": "user-001@email.xyz",
+    "name": "user-001",
+    "productRoles": [{
+      "productId": "product-A",
+      "roles": [
+        "ADMIN"
+      ]
+    }]
+  },
+  {
+    "_id": "a0530f76-3454-418c-9d65-eb3162075495",
+    "email": "user-002@mail.xyz",
+    "name": "user-002",
+    "productRoles": [
+      {
+        "productId": "product-A",
+        "roles": [
+          "OPERATOR"
+        ]
+      },
+      {
+        "productId": "product-B",
+        "roles": [
+          "OPERATOR",
+          "SUPPORT"
+        ]
+      }
+    ]
+  },
+  {
+    "_id": "042b311a-7b99-4eaa-8c7d-9e5b5f6bb9ae",
+    "email": "user-003@email.xyz",
+    "name": "user-003",
+    "productRoles": []
+  },
+  {
+    "_id": "72d4984f-d2bc-4584-a6a7-dd63068b7f48",
+    "email": "user-004@mail.xyz",
+    "name": "user-004",
+    "productRoles": [
+      {
+        "productId": "product-A",
+        "roles": [
+          "OPERATOR"
+        ]
+      },
+      {
+        "productId": "product-B",
+        "roles": [
+          "OPERATOR",
+          "SUPPORT"
+        ]
+      }
+    ]
+  }
+]

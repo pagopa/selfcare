@@ -1,40 +1,27 @@
 package it.pagopa.selfcare.iam.controller;
 
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.InjectMock;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
-import io.restassured.parsing.Parser;
-import io.restassured.response.Response;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
 import it.pagopa.selfcare.iam.entity.UserClaims;
 import it.pagopa.selfcare.iam.exception.InvalidRequestException;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
-import it.pagopa.selfcare.iam.exception.handler.ExceptionHandler;
 import it.pagopa.selfcare.iam.model.ProductRoles;
 import it.pagopa.selfcare.iam.service.IamServiceImpl;
-
-import jakarta.inject.Inject;
-import jakarta.ws.rs.container.ContainerRequestContext;
-import jakarta.ws.rs.core.MediaType;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.mockito.stubbing.OngoingStubbing;
 
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.when;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 
 @QuarkusTest
 @TestHTTPEndpoint(IamController.class)
@@ -42,9 +29,6 @@ public class IamControllerTest {
 
   @InjectMock
   IamServiceImpl iamService;
-
-  @Inject
-  IamController controller;
 
   @BeforeEach
   void setup() {
