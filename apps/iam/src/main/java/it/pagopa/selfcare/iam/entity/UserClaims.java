@@ -63,6 +63,7 @@ public class UserClaims extends ReactivePanacheMongoEntityBase {
   private String familyName;
   @Builder.Default
   private List<ProductRoles> productRoles = List.of();
+  private boolean test;
 
 
   public static Uni<UserClaims> findByUid(String uid) {
