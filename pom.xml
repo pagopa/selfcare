@@ -24,9 +24,14 @@
             </url>
         </repository>
         <repository>
-            <id>selfcare-github</id>
+            <id>selfcare</id>
             <name>Selfcare Lib SDK</name>
             <url>https://maven.pkg.github.com/pagopa/selfcare</url>
+        </repository>
+        <repository>
+            <id>selfcare-onboarding</id>
+            <name>Selfcare Onboarding SDK</name>
+            <url>https://maven.pkg.github.com/pagopa/selfcare-onboarding</url>
         </repository>
     </repositories>
     <build>
