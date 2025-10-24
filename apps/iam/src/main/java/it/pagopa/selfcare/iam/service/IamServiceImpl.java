@@ -7,6 +7,7 @@ import it.pagopa.selfcare.iam.exception.InvalidRequestException;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.iam.model.ProductRoles;
 import it.pagopa.selfcare.iam.repository.UserPermissionsRepository;
+import it.pagopa.selfcare.iam.util.DataEncryptionConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
@@ -50,11 +51,11 @@ public class IamServiceImpl implements IamService {
           .filter(email -> !email.isBlank())
           .filter(email -> email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"))
           .map(email -> UserClaims.builder()
-          .email(req.getEmail())
-          .name(req.getName())
-          .familyName(req.getFamilyName())
-          .productRoles(setFilteredProductRoles(req.getProductRoles(), productId))
-          .build())
+            .email(DataEncryptionConfig.encrypt(req.getEmail()))
+            .name(DataEncryptionConfig.encrypt(req.getName()))
+            .familyName(DataEncryptionConfig.encrypt(req.getFamilyName()))
+            .productRoles(setFilteredProductRoles(req.getProductRoles(), productId))
+            .build())
         )
         .onItem().ifNull().failWith(() -> new InvalidRequestException("Invalid email format"))
         .onItem().transformToUni(userClaims ->
@@ -87,10 +88,22 @@ public class IamServiceImpl implements IamService {
             );
           return existing;
           })
-          .chain(user -> user.persistOrUpdate().map(v -> userClaims))
+          .chain(user -> user.persistOrUpdate()
+            .map(v -> decryptUser(userClaims)))
         )
         .onItem().ifNull().failWith(() -> new InvalidRequestException("Email cannot be null"))
       );
+  }
+
+  private UserClaims decryptUser(UserClaims userClaims) {
+    return UserClaims.builder()
+      .uid(Optional.ofNullable(userClaims.getUid()).orElse(""))
+      .email(DataEncryptionConfig.decrypt(userClaims.getEmail()))
+      .name(DataEncryptionConfig.decrypt(userClaims.getName()))
+      .familyName(DataEncryptionConfig.decrypt(userClaims.getFamilyName()))
+      .productRoles(userClaims.getProductRoles())
+      .test(userClaims.isTest())
+      .build();
   }
 
   /**
@@ -106,7 +119,7 @@ public class IamServiceImpl implements IamService {
     return UserClaims.findByUidAndProductId(userId, productId)
       .onItem().ifNotNull().transform(userClaims -> {
         userClaims.setProductRoles(setFilteredProductRoles(userClaims.getProductRoles(), productId));
-        return userClaims;
+        return decryptUser(userClaims);
       })
       .onItem().ifNull().failWith(() -> new ResourceNotFoundException("User not found"));
   }

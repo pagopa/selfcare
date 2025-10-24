@@ -11,7 +11,6 @@ import it.pagopa.selfcare.iam.model.ProductRoles;
 import it.pagopa.selfcare.iam.model.UserPermissions;
 import it.pagopa.selfcare.iam.repository.UserPermissionsRepository;
 import jakarta.inject.Inject;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -118,15 +117,15 @@ class IamServiceImplTest {
 
     try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
       mockedStatic.when(UserClaims::builder).thenCallRealMethod();
-      mockedStatic.when(() -> UserClaims.findByEmail("existing@example.com"))
+      mockedStatic.when(() -> UserClaims.findByEmail("AEpJ4wSTGoucJLy8OCYfL23M0kSt0WwYo9/cJ9jboUtEgxsJ"))
         .thenReturn(Uni.createFrom().item(spyUser));
 
       UserClaims result = service.saveUser(request, "productA").await().indefinitely();
 
       assertNotNull(result);
       assertEquals(existingUid, result.getUid());
-      assertEquals("Jane", spyUser.getName());
-      assertEquals("Smith", spyUser.getFamilyName());
+      assertEquals("Jane", result.getName());
+      assertEquals("Smith", result.getFamilyName());
       verify(spyUser, times(1)).persistOrUpdate();
     }
   }
@@ -142,7 +141,7 @@ class IamServiceImplTest {
 
     String existingUid = UUID.randomUUID().toString();
     UserClaims existingUser = UserClaims.builder()
-      .email("merge@example.com")
+      .email("CFdS9xW6EZS9LLSxMHgQJS7KuMuQ50MOy5zX05Tjt3L5")
       .uid(existingUid)
       .name("Bob")
       .productRoles(List.of(
@@ -154,7 +153,7 @@ class IamServiceImplTest {
 
     try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
       mockedStatic.when(UserClaims::builder).thenCallRealMethod();
-      mockedStatic.when(() -> UserClaims.findByEmail("merge@example.com"))
+      mockedStatic.when(() -> UserClaims.findByEmail("CFdS9xW6EZS9LLSxMHgQJS7KuMuQ50MOy5zX05Tjt3L5"))
         .thenReturn(Uni.createFrom().item(spyUser));
 
       UserClaims result = service.saveUser(request, "productB").await().indefinitely();
@@ -191,7 +190,7 @@ class IamServiceImplTest {
 
     try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
       mockedStatic.when(UserClaims::builder).thenCallRealMethod();
-      mockedStatic.when(() -> UserClaims.findByEmail("replace@example.com"))
+      mockedStatic.when(() -> UserClaims.findByEmail("F1dQ/BGZEay5OaWwJToWZCDA0H9W7CtYk084i1dg1crtqEc="))
         .thenReturn(Uni.createFrom().item(spyUser));
 
       service.saveUser(request, "productA").await().indefinitely();
@@ -227,7 +226,7 @@ class IamServiceImplTest {
 
     try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
       mockedStatic.when(UserClaims::builder).thenCallRealMethod();
-      mockedStatic.when(() -> UserClaims.findByEmail("replaceall@example.com"))
+      mockedStatic.when(() -> UserClaims.findByEmail("F1dQ/BGZEY2wLYS4LTceOi/Kk0rnREus5wvMa9zMPRSkuA26a5Y="))
         .thenReturn(Uni.createFrom().item(spyUser));
 
       service.saveUser(request, null).await().indefinitely();
@@ -245,7 +244,7 @@ class IamServiceImplTest {
     String productId = "productA";
 
     UserClaims foundUser = UserClaims.builder()
-      .email("found@example.com")
+      .email("A11V/hS6EZS9LLSxMHgQJS6O1OStWkFnwpbN4fHhy0I6") //found@example.com
       .uid(userId)
       .productRoles(List.of(
         ProductRoles.builder().productId("productA").roles(List.of("admin")).build(),
@@ -254,6 +253,7 @@ class IamServiceImplTest {
       .build();
 
     try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
+      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
       mockedStatic.when(() -> UserClaims.findByUidAndProductId(userId, productId))
         .thenReturn(Uni.createFrom().item(foundUser));
 
@@ -285,7 +285,7 @@ class IamServiceImplTest {
     String userId = "user-456";
 
     UserClaims foundUser = UserClaims.builder()
-      .email("all@example.com")
+      .email("BF5M0BWCFYGsLaHzNjker68nsqTr/pizCvinopNUlQ==") //all@example.com
       .uid(userId)
       .productRoles(List.of(
         ProductRoles.builder().productId("productA").roles(List.of("admin")).build(),
@@ -294,6 +294,7 @@ class IamServiceImplTest {
       .build();
 
     try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
+      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
       mockedStatic.when(() -> UserClaims.findByUidAndProductId(userId, null))
         .thenReturn(Uni.createFrom().item(foundUser));
 
