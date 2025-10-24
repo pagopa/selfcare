@@ -5,11 +5,10 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.response.Response;
 import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
-import it.pagopa.selfcare.iam.entity.UserClaims;
+import it.pagopa.selfcare.iam.cucumber.CucumberSuiteTest;
 import it.pagopa.selfcare.iam.model.ProductRoles;
 
 import java.util.ArrayList;
@@ -17,8 +16,6 @@ import java.util.List;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class IamStepDefinitions {
@@ -28,9 +25,12 @@ public class IamStepDefinitions {
   private String createdUserUid;
   private String createdUserEmail;
 
+
+
   @Given("the IAM service is running")
   public void theIamServiceIsRunning() {
     response = given()
+      .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
       .when()
       .get("/iam/ping")
       .then()
@@ -51,6 +51,7 @@ public class IamStepDefinitions {
     userRequest.setName(name);
 
     response = given()
+      .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
       .contentType(ContentType.JSON)
       .body(userRequest)
       .when()
@@ -85,6 +86,7 @@ public class IamStepDefinitions {
     }
 
     response = given()
+      .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
       .contentType(ContentType.JSON)
       .body(userRequest)
       .when()
@@ -119,6 +121,7 @@ public class IamStepDefinitions {
     ));
 
     response = given()
+      .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
       .contentType(ContentType.JSON)
       .body(userRequest)
       .when()
@@ -157,6 +160,7 @@ public class IamStepDefinitions {
     userRequest.setProductRoles(productRoles);
 
     response = given()
+      .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
       .contentType(ContentType.JSON)
       .body(userRequest)
       .when()
@@ -173,6 +177,7 @@ public class IamStepDefinitions {
     userRequest.setName(newName);
 
     response = given()
+      .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
       .contentType(ContentType.JSON)
       .body(userRequest)
       .when()
@@ -195,6 +200,7 @@ public class IamStepDefinitions {
     ));
 
     response = given()
+      .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
       .contentType(ContentType.JSON)
       .body(updateRequest)
       .queryParam("productId", productId)
@@ -218,6 +224,7 @@ public class IamStepDefinitions {
     ));
 
     response = given()
+      .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
       .contentType(ContentType.JSON)
       .body(updateRequest)
       .queryParam("productId", productId)
@@ -230,6 +237,7 @@ public class IamStepDefinitions {
   @When("I request the user with UID {string} for product {string}")
   public void iRequestTheUserWithUIDForProduct(String uid, String productId) {
     response = given()
+      .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
       .queryParam("productId", productId)
       .when()
       .get("/iam/users/" + uid)
@@ -240,6 +248,7 @@ public class IamStepDefinitions {
   @When("I request the user filtered by product {string}")
   public void iRequestTheUserFilteredByProduct(String productId) {
     response = given()
+      .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
       .queryParam("productId", productId)
       .when()
       .get("/iam/users/" + createdUserUid)
@@ -255,6 +264,7 @@ public class IamStepDefinitions {
   @And("I request the user without product")
   public void iRequestTheUser() {
     response = given()
+      .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
       .when()
       .get("/iam/users/" + createdUserUid)
       .then()

@@ -31,11 +31,6 @@ class IamServiceImplTest {
   @InjectMock
   UserPermissionsRepository userPermissionsRepository;
 
-  @BeforeEach
-  void setUp() {
-//    Mockito.reset(userPermissionsRepository);
-  }
-
   @Test
   void ping_shouldReturnOK() {
     String result = service.ping().await().indefinitely();

@@ -1,14 +1,11 @@
 package it.pagopa.selfcare.iam.cucumber.steps;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mongodb.client.MongoDatabase;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.restassured.response.Response;
-import it.pagopa.selfcare.cucumber.utils.SharedStepData;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import it.pagopa.selfcare.iam.cucumber.CucumberSuiteTest;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeAll;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +27,10 @@ public class PingStepDefinitions {
   private List<Response> responses = new ArrayList<>();
   private long startTime;
 
+  @BeforeAll
+  static void setup() {
+
+  }
 
 //   @BeforeAll
 //   static void setup() {
@@ -58,7 +59,9 @@ public class PingStepDefinitions {
 
   @When("I ping the IAM service")
   public void iPingTheIAMService() {
+    log.info("TOKEN: " + CucumberSuiteTest.tokenTest);
     response = given()
+      .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
       .when()
       .get("/iam/ping")
       .then()
@@ -72,6 +75,7 @@ public class PingStepDefinitions {
     
     for (int i = 0; i < count; i++) {
       responses.add(given()
+        .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
         .when()
         .get("/iam/ping")
         .then()

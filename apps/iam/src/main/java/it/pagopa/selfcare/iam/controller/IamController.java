@@ -1,10 +1,13 @@
 package it.pagopa.selfcare.iam.controller;
 
+import io.quarkus.security.Authenticated;
+import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
 import it.pagopa.selfcare.iam.controller.response.*;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.iam.service.IamService;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -19,6 +22,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import javax.validation.Valid;
 
+@Authenticated
 @Tag(name = "IAM")
 @Path("/iam")
 @RequiredArgsConstructor
@@ -26,6 +30,9 @@ import javax.validation.Valid;
 public class IamController {
 
   private final IamService iamService;
+
+  @Inject
+  SecurityIdentity securityIdentity;
 
   @Operation(
     summary = "Ping endpoint",

@@ -5,11 +5,12 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.restassured.response.Response;
+import it.pagopa.selfcare.iam.cucumber.CucumberSuiteTest;
 
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PermissionStepDefinitions {
 
@@ -40,6 +41,7 @@ public class PermissionStepDefinitions {
   @When("I check if user {string} has permission {string} for product {string}")
   public void iCheckIfUserHasPermissionForProduct(String userId, String permission, String productId) {
     response = given()
+      .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
       .queryParam("productId", productId)
       .when()
       .get("/iam/users/" + userId + "/permissions/" + permission)
@@ -52,6 +54,7 @@ public class PermissionStepDefinitions {
                                                                  String productId, String institutionId) {
     response = given()
       .queryParam("productId", productId)
+      .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
       .queryParam("institutionId", institutionId)
       .when()
       .get("/iam/users/" + userId + "/permissions/" + permission)

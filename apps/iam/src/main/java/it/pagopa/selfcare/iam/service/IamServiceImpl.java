@@ -9,7 +9,6 @@ import it.pagopa.selfcare.iam.model.ProductRoles;
 import it.pagopa.selfcare.iam.repository.UserPermissionsRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

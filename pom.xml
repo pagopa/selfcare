@@ -23,6 +23,11 @@
                 https://pkgs.dev.azure.com/pagopaspa/selfcare-platform-app-projects/_packaging/selfcare-platform/maven/v1
             </url>
         </repository>
+        <repository>
+            <id>selfcare-github</id>
+            <name>Selfcare Lib SDK</name>
+            <url>https://maven.pkg.github.com/pagopa/selfcare</url>
+        </repository>
     </repositories>
     <build>
         <plugins>

@@ -4,8 +4,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>selfcare-sdk-security</artifactId>
+    <name>selfcare-sdk-security</name>
     <packaging>jar</packaging>
-    <version>0.1.0</version>
+    <version>0.2.1</version>
     <groupId>it.pagopa.selfcare</groupId>
 
     <distributionManagement>
