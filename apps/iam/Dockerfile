@@ -29,7 +29,6 @@ RUN echo "<settings>\n" \
          "<username>\${repoLogin}</username>\n" \
          "<password>\${repoPwd}</password>\n" \
          "</server>\n" \
-         "</servers>\n" \
          "<server>\n" \
          "<id>\${selfcareOnboardingId}</id>\n" \
          "<username>\${repoLogin}</username>\n" \
