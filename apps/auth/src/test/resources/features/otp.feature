@@ -126,7 +126,7 @@ Feature: Otp
     Then The status code is 404
     And The response body contains:
       | status | 404                     |
-      | detail | Not Found:Received: 'Not Found, status code 404' when invoking: Rest Client method: 'org.openapi.quarkus.user_registry_json.api.UserApi#findByIdUsingGET' |
+      | detail | Not Found:Received: 'Not Found, status code 404' when invoking REST Client method: 'org.openapi.quarkus.user_registry_json.api.UserApi#findByIdUsingGET' |
 
 
   ######################## END POST /otp/verify #########################
@@ -172,7 +172,7 @@ Feature: Otp
     Then The status code is 500
     And The response body contains:
       | status | 500                     |
-      | detail | Cannot get User from PDVit.pagopa.selfcare.auth.exception.ResourceNotFoundException: Not Found:Received: 'Not Found, status code 404' when invoking: Rest Client method: 'org.openapi.quarkus.user_registry_json.api.UserApi#findByIdUsingGET' |
+      | detail | Cannot get User from PDVit.pagopa.selfcare.auth.exception.ResourceNotFoundException: Not Found:Received: 'Not Found, status code 404' when invoking REST Client method: 'org.openapi.quarkus.user_registry_json.api.UserApi#findByIdUsingGET' |
 
 
   Scenario: Unsuccessfully get user info email on External Internal API
@@ -188,7 +188,7 @@ Feature: Otp
     Then The status code is 500
     And The response body contains:
       | status | 500                     |
-      | detail | Cannot get User Info Email on External Internal APIs:it.pagopa.selfcare.auth.exception.InternalException: Internal server error:Received: 'Internal Server Error, status code 500' when invoking: Rest Client method: 'org.openapi.quarkus.internal_json.api.UserApi#v2getUserInfoUsingGET' |
+      | detail | Cannot get User Info Email on External Internal APIs:it.pagopa.selfcare.auth.exception.InternalException: Internal server error:Received: 'Internal Server Error, status code 500' when invoking REST Client method: 'org.openapi.quarkus.internal_json.api.UserApi#v2getUserInfoUsingGET' |
 
   @RemoveOtpFlow
   Scenario: Successfully resend otp flow

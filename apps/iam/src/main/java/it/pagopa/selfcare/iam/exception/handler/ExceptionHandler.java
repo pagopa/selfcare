@@ -2,6 +2,9 @@ package it.pagopa.selfcare.iam.exception.handler;
 
 import it.pagopa.selfcare.iam.controller.response.Problem;
 import it.pagopa.selfcare.iam.exception.*;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.NotAllowedException;
 import jakarta.ws.rs.core.Response;
 import org.apache.http.HttpStatus;
 import org.jboss.resteasy.reactive.RestResponse;
@@ -9,6 +12,7 @@ import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@ApplicationScoped
 public class ExceptionHandler {
 
   public static final String SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER =
@@ -17,6 +21,11 @@ public class ExceptionHandler {
   public static final String CONFLICT = "Conflict";
   public static final String PREFIX_LOGGER = "{}: {}";
   private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandler.class);
+
+  @PostConstruct
+  void init() {
+    LOGGER.info("ExceptionHandler initialized - Exception mappers are active");
+  }
 
   @ServerExceptionMapper
   public RestResponse<String> toResponse(InvalidRequestException exception) {
@@ -82,5 +91,18 @@ public class ExceptionHandler {
             exception.getMessage(),
             null);
     return Response.status(Response.Status.NOT_IMPLEMENTED).entity(problem).build();
+  }
+
+  @ServerExceptionMapper
+  public Response toResponse(NotAllowedException exception) {
+    LOGGER.error(PREFIX_LOGGER, "Unimplemented endpoint", exception.getMessage());
+    Problem problem =
+        new Problem(
+            exception.getMessage(),
+            null,
+            HttpStatus.SC_METHOD_NOT_ALLOWED,
+            exception.getMessage(),
+            null);
+    return Response.status(Response.Status.METHOD_NOT_ALLOWED).entity(problem).build();
   }
 }

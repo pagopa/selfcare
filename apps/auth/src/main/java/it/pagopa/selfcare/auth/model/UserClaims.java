@@ -14,5 +14,6 @@ public class UserClaims {
     private String fiscalCode;
     private String name;
     private String familyName;
+    private String email;
     private Boolean sameIdp = Boolean.TRUE;
 }
