@@ -2,6 +2,7 @@
 openapi: 3.1.0
 tags:
 - name: IAM
+- name: external-v2
 components:
   schemas:
     Problem:
@@ -100,7 +101,7 @@ paths:
       description: Saves or updates a user with their product-specific roles.
       operationId: saveIAMUser
       tags:
-      - IAM
+      - external-v2
       parameters:
       - name: productId
         in: query
@@ -143,7 +144,7 @@ paths:
       description: Retrieves a user by their ID and product ID.
       operationId: getIAMUser
       tags:
-      - IAM
+      - external-v2
       parameters:
       - name: uid
         in: path

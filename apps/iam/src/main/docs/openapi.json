@@ -2,6 +2,8 @@
   "openapi" : "3.1.0",
   "tags" : [ {
     "name" : "IAM"
+  }, {
+    "name" : "external-v2"
   } ],
   "components" : {
     "schemas" : {
@@ -145,7 +147,7 @@
         "summary" : "Saves IAM User",
         "description" : "Saves or updates a user with their product-specific roles.",
         "operationId" : "saveIAMUser",
-        "tags" : [ "IAM" ],
+        "tags" : [ "external-v2" ],
         "parameters" : [ {
           "name" : "productId",
           "in" : "query",
@@ -211,7 +213,7 @@
         "summary" : "Get IAM User",
         "description" : "Retrieves a user by their ID and product ID.",
         "operationId" : "getIAMUser",
-        "tags" : [ "IAM" ],
+        "tags" : [ "external-v2" ],
         "parameters" : [ {
           "name" : "uid",
           "in" : "path",
