@@ -2,6 +2,8 @@ package it.pagopa.selfcare.user.service;
 
 import com.microsoft.applicationinsights.TelemetryClient;
 import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
@@ -30,6 +32,7 @@ import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.io.IOException;
+import java.io.Writer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -350,6 +353,53 @@ class UserNotificationServiceImplTest {
                 .awaitItem().assertCompleted();
         verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
     }
+
+    @Test
+    void testSendCreateUserNotification_whenLoggedUserIsFromApim_shouldUseDefaultName() throws IOException, TemplateException {
+        // Arrange
+        LoggedUser loggedUser = LoggedUser.builder()
+                .name("apim")
+                .build();
+
+        Configuration freemarkerConfig = mock(Configuration.class);
+        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
+        Template mockTemplate = mock(freemarker.template.Template.class);
+
+        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mockTemplate);
+        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
+
+        ArgumentCaptor<Map<String, String>> dataModelCaptor = ArgumentCaptor.forClass(Map.class);
+        doNothing().when(mockTemplate).process(dataModelCaptor.capture(), any(Writer.class));
+
+        UserNotificationServiceImpl userNotificationService = new UserNotificationServiceImpl(
+                freemarkerConfig, cloudTemplateLoader, mailService, true, telemetryClient
+        );
+
+        when(mailService.sendMail(anyString(), anyString(), anyString()))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        List<String> roleLabels = List.of("code2", "code3");
+
+        // Act
+        userNotificationService.sendCreateUserNotification(
+                        userInstitution.getInstitutionDescription(),
+                        roleLabels,
+                        userResource,
+                        userInstitution,
+                        product,
+                        loggedUser
+                )
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .assertCompleted();
+
+        // Assert
+        verify(mockTemplate, times(1)).process(any(Map.class), any(Writer.class));
+        Map<String, String> capturedDataModel = dataModelCaptor.getValue();
+        assertEquals(UserNotificationServiceImpl.DEFAULT_NAME, capturedDataModel.get(UserNotificationServiceImpl.REQUESTER_NAME));
+    }
+
 
     @Test
     void testSendCreateUserNotificationWith2RoleLabel() throws IOException {

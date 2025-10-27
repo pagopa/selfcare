@@ -50,6 +50,8 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     public static final String INSTITUTION_NAME = "institutionName";
     public static final String NO_ROLE_FOUND = "no_role_found";
     public static final String PRODUCT_ROLE = "productRole";
+    public static final String DEFAULT_NAME = "Operatore PagoPa";
+
     @Inject
     @RestClient
     EventHubRestClient eventHubRestClient;
@@ -138,7 +140,13 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
     private Map<String, String> buildCreateEmailDataModel(LoggedUser loggedUser, Product product, String institutionDescription, List<String> productRoleCodes) {
         Map<String, String> dataModel = new HashMap<>();
-        dataModel.put(REQUESTER_NAME, Optional.ofNullable(loggedUser.getName()).orElse(""));
+
+        if(Objects.equals(loggedUser.getName(), "apim")){
+            dataModel.put(REQUESTER_NAME, DEFAULT_NAME);
+        } else {
+            dataModel.put(REQUESTER_NAME, Optional.ofNullable(loggedUser.getName()).orElse(""));
+        }
+
         dataModel.put(REQUESTER_SURNAME, Optional.ofNullable(loggedUser.getFamilyName()).orElse(""));
 
         dataModel.put(PRODUCT_NAME, Optional.ofNullable(product.getTitle()).orElse(""));
