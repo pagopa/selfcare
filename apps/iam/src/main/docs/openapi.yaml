@@ -45,6 +45,23 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ProductRoles"
+    UserClaims:
+      type: object
+      properties:
+        uid:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        familyName:
+          type: string
+        productRoles:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductRoles"
+        test:
+          type: boolean
   securitySchemes:
     SecurityScheme:
       type: http
@@ -101,7 +118,7 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: "#/components/schemas/UserClaims"
         "400":
           description: Bad Request
           content:

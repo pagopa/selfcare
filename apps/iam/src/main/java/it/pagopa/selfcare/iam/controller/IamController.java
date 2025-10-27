@@ -4,7 +4,8 @@ import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
-import it.pagopa.selfcare.iam.controller.response.*;
+import it.pagopa.selfcare.iam.controller.response.Problem;
+import it.pagopa.selfcare.iam.entity.UserClaims;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.iam.service.IamService;
 import jakarta.inject.Inject;
@@ -58,7 +59,7 @@ public class IamController {
    * @param saveUserRequest the request containing user details and product roles
    * @param productId optional product ID to filter roles for a specific product
    * @return a Uni containing the saved or updated UserClaims
-   * @throws InvalidRequestException if the request or email is null/blank
+   * @throws Error if the request or email is null/blank
    */
   @Operation(
     description = "Saves or updates a user with their product-specific roles.",
@@ -66,7 +67,7 @@ public class IamController {
     operationId = "saveIAMUser"
   )
   @APIResponses(value = {
-    @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = String.class), mediaType = "application/json")),
+    @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UserClaims.class), mediaType = "application/json")),
     @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
     @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
   })
