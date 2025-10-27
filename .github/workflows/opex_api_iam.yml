@@ -1,4 +1,4 @@
-name: Opex Dashboard Auth
+name: Opex Dashboard Iam
 
 on:
   push:
@@ -6,12 +6,12 @@ on:
       - main
     paths:
       - '.github/workflows/opex_api.yml'
-      - '.opex/auth/**'
+      - '.opex/iam/**'
   workflow_dispatch:
 
 env:
   TEMPLATE_DIR: azure-dashboard
-  API_NAME: auth
+  API_NAME: iam
   DOCKER_IMAGE_TAG: sha256:04d8ead53c772d23b094c2a395292dc159e6f2905e1b13b5f828f31eac6eb27f
 
 permissions:
