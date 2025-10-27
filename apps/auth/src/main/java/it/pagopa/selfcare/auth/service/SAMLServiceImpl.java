@@ -101,6 +101,7 @@ public class SAMLServiceImpl implements SAMLService {
     return spEntityId + loginSuccessUrl + "#token=" + token;
   }
 
+  @Override
   public Uni<UserClaims> saveUser(String email) {
     return Uni.createFrom().item(email)
       .onItem().transform(mail -> {

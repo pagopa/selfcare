@@ -5,10 +5,14 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.auth.client.IamMsApi;
 import it.pagopa.selfcare.auth.exception.SamlSignatureException;
+import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.util.SamlValidator;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
+import org.openapi.quarkus.iam_json.model.SaveUserRequest;
 import org.w3c.dom.Document;
 
 import java.lang.reflect.Method;
@@ -18,6 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,7 +35,14 @@ public class SAMLServiceTest {
   @Inject
   SAMLService samlService;
 
-  private static final String TEST_SAML = """
+  @InjectMock
+  SessionService sessionService;
+
+  @RestClient
+  @InjectMock
+  IamMsApi iamApi;
+
+  public static final String TEST_SAML = """
     <?xml version="1.0" encoding="UTF-8" standalone="no"?>
                       <saml2p:Response
                       	xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol" Destination="https://dev.selfcare.test.it/saml/acs" ID="_123456789" IssueInstant="2025-09-05T11:01:16.063Z" Version="2.0">
@@ -187,6 +200,16 @@ public class SAMLServiceTest {
     // Arrange: Configure the mock validator to return a successful Uni<Boolean>
     when(samlValidator.validateSamlResponseAsync(FAKE_SAML_RESPONSE, FAKE_IDP_CERT, FAKE_TIME_INTERVAL))
       .thenReturn(Uni.createFrom().item(responseMap));
+
+    UserClaims userClaims = new UserClaims();
+    userClaims.setEmail("email@test");
+    userClaims.setUid("123");
+    when(sessionService.generateSessionTokenInternal(any(UserClaims.class))).thenReturn(Uni.createFrom().item("fake-session-token"));
+
+    org.openapi.quarkus.iam_json.model.UserClaims userClaimsApi = new org.openapi.quarkus.iam_json.model.UserClaims();
+    userClaimsApi.setEmail(userClaims.getEmail());
+    userClaimsApi.setUid(userClaims.getUid());
+    when(iamApi.saveIAMUser(any(SaveUserRequest.class), isNull())).thenReturn(Uni.createFrom().item(userClaimsApi));
 
     // Act: Call the service method
     Uni<String> resultUni = samlService.generateSessionToken(FAKE_SAML_RESPONSE);
