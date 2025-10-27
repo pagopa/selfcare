@@ -95,6 +95,10 @@ app_settings = [
   {
     name  = "SAML_SP_ENTITY_ID"
     value = "https://uat.selfcare.pagopa.it"
+  },
+  {
+    name  = "IAM_API_URL"
+    value = "https://selc-u-iam-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
   }
 ]
 

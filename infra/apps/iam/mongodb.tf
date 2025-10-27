@@ -30,7 +30,27 @@ module "mongodb_collection_iam_user" {
     },
     {
       keys   = ["email"]
-      unique = false
+      unique = true
+    }
+  ]
+
+  lock_enable = true
+}
+
+module "mongodb_collection_roles" {
+  count  = var.is_pnpg ? 0 : 1
+  source = "github.com/pagopa/terraform-azurerm-v4.git//cosmosdb_mongodb_collection?ref=v6.6.0"
+
+  name                = "roles"
+  resource_group_name = local.mongo_db.mongodb_rg_name
+
+  cosmosdb_mongo_account_name  = local.mongo_db.cosmosdb_account_mongodb_name
+  cosmosdb_mongo_database_name = azurerm_cosmosdb_mongo_database.selc_iam[0].name
+
+  indexes = [
+    {
+      keys   = ["_id"]
+      unique = true
     }
   ]
 
