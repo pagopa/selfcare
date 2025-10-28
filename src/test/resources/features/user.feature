@@ -3321,7 +3321,8 @@ Feature: User
               "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
               "productRoles": [
                   "referente amministrativo"
-              ]
+              ],
+              "toAddOnAggregates": true
           },
           "institutionDescription": "Comune di Bergamo",
           "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba2"
@@ -3349,6 +3350,8 @@ Feature: User
       | productId                     | tokenId                                       | role                  | productRole               | status     |
       | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | MANAGER               | referente amministrativo  | ACTIVE     |
     And The response body contains field "[0].products[0].roleId"
+    And The response body contains field "[0].products[0].updatedAt"
+    And The userInstitution with field toAddOnAggregates was saved with value "true"
 
 
   @RemoveUserInstitutionAfterCreateFromAPI
@@ -3413,7 +3416,8 @@ Feature: User
               "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
               "productRoles": [
                   "referente amministrativo"
-              ]
+              ],
+              "toAddOnAggregates": true
           },
           "institutionDescription": "Comune di Bergamo",
           "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
@@ -3439,8 +3443,10 @@ Feature: User
     And The response body contains the list "[0].products" of size 1
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | tokenId                                       | role                  | productRole               | status     |
-      | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE              | referente amministrativo  | SUSPENDED     |
+      | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE              | referente amministrativo  | SUSPENDED  |
     And The response body contains field "[0].products[0].roleId"
+    And The response body contains field "[0].products[0].updatedAt"
+    And The userInstitution with field toAddOnAggregates was saved with value "true"
 
   Scenario: Unsuccessfully update or create a user by userId after check if user is a manager for the specified product (with wrong userId)
     Given User login with username "j.doe" and password "test"

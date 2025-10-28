@@ -499,10 +499,7 @@ public class UserServiceImpl implements UserService {
                 .onItem().transformToUni(userInstitution -> {
                     if (Optional.ofNullable(userInstitution).isPresent()) {
                         log.info("User with userId: {} has already onboarded for product {}. Proceeding with check role", Encode.forJava(userId), Encode.forJava(userDto.getProduct().getProductId()));
-                        PartyRole roleOnProduct = retrieveUserRoleOnProduct(userInstitution, userDto.getProduct().getProductId());
-                        OnboardedProductState currentStatus = retrieveUserStatusOnProduct(userInstitution, userDto.getProduct().getProductId());
-                        return checkAndUpdateUserMail(userInstitution, userDto.getUserMailUuid())
-                                .onItem().transformToUni(ignore -> evaluateRoleAndCreateOrUpdateUserByUserId(userDto, userId, loggedUser, roleOnProduct, currentStatus));
+                        return evaluateRoleAndCreateOrUpdateUserByUserId(userInstitution ,userDto, userId, loggedUser);
                     } else {
                         log.info("User with userId: {} has not onboarded for product {}. Proceeding with create", Encode.forJava(userId), Encode.forJava(userDto.getProduct().getProductId()));
                         return createOrUpdateUserByUserId(userDto, userId, loggedUser, ACTIVE);
@@ -514,16 +511,35 @@ public class UserServiceImpl implements UserService {
     /**
      * Check if the user's mail uuid is still the same on UserInstitution and update it if not
      */
-    private Uni<UserInstitution> checkAndUpdateUserMail(UserInstitution userInstitution, String userMailUuid) {
-        if (userMailUuid == null || userMailUuid.equals(userInstitution.getUserMailUuid())) {
-            log.info("UserMailUuid not changed for user {} and institution {}", userInstitution.getUserId(), userInstitution.getInstitutionId());
-            return Uni.createFrom().item(userInstitution);
-        }
-        userInstitution.setUserMailUuid(userMailUuid);
-        userInstitution.setUserMailUpdatedAt(OffsetDateTime.now());
-        log.info("Updating userMailUuid for user {} and institution {}", userInstitution.getUserId(), userInstitution.getInstitutionId());
+    private Uni<UserInstitution> updateUserMailAndToAddOnAggregates(UserInstitution userInstitution, AddUserRoleDto userDto) {
+        // Update userMailUuid if required
+        Optional.ofNullable(userDto.getUserMailUuid())
+                .filter(newUuid -> !newUuid.equals(userInstitution.getUserMailUuid()))
+                .ifPresent(newUuid -> {
+                    userInstitution.setUserMailUuid(newUuid);
+                    userInstitution.setUserMailUpdatedAt(OffsetDateTime.now());
+                    log.info("Updating userMailUuid for user {} and institution {}", userInstitution.getUserId(), userInstitution.getInstitutionId());
+                });
+
+        // Update toAddOnAggregates and updatedAt if product is valid
+        Optional.ofNullable(userDto.getProduct())
+                .map(AddUserRoleDto.Product::getProductId)
+                .ifPresent(productId -> userInstitution.getProducts().stream()
+                        .filter(p -> productId.equals(p.getProductId())
+                                && (p.getStatus() == OnboardedProductState.ACTIVE
+                                || p.getStatus() == OnboardedProductState.SUSPENDED))
+                        .forEach(product -> {
+                            AddUserRoleDto.Product dtoProduct = userDto.getProduct();
+                            product.setToAddOnAggregates(dtoProduct.getToAddOnAggregates());
+                            product.setUpdatedAt(OffsetDateTime.now());
+                            log.info("Updated product {} for user {}: toAddOnAggregates={}, updatedAt={}",
+                            Encode.forJava(productId), Encode.forJava(userInstitution.getUserId()), Encode.forJava(String.valueOf(dtoProduct.getToAddOnAggregates())), Encode.forJava(String.valueOf(product.getUpdatedAt())));
+                        })
+                );
+
         return userInstitutionService.persistOrUpdate(userInstitution);
     }
+
 
     /**
      * The evaluateRoleAndCreateOrUpdateUserByUserId method is designed to evaluate the role of a user for a specific product
@@ -536,28 +552,36 @@ public class UserServiceImpl implements UserService {
      * If the new role is not MANAGER and the user already has any role on the product, the method throws a
      * UserRoleAlreadyPresentException to prevent assigning a conflicting role.
      */
-    private Uni<String> evaluateRoleAndCreateOrUpdateUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser, PartyRole roleOnProduct, OnboardedProductState currentStatus) {
+    private Uni<String> evaluateRoleAndCreateOrUpdateUserByUserId(UserInstitution userInstitution ,AddUserRoleDto userDto, String userId, LoggedUser loggedUser) {
         PartyRole newRole;
         try {
             newRole = PartyRole.valueOf(userDto.getProduct().getRole());
         } catch (IllegalArgumentException e) {
             throw new InvalidRequestException("Invalid role: " + userDto.getProduct().getRole() + ". Allowed value are: " + Arrays.toString(PartyRole.values()));
         }
+
+        PartyRole roleOnProduct = retrieveUserRoleOnProduct(userInstitution, userDto.getProduct().getProductId());
+
         if (Objects.isNull(roleOnProduct)) {
             return createOrUpdateUserByUserId(userDto, userId, loggedUser, ACTIVE);
         }
 
-        if (PartyRole.MANAGER.equals(newRole)) {
-            if (PartyRole.MANAGER.equals(roleOnProduct)) {
-                log.info("User {} already has MANAGER role with status {}. No changes needed.", Encode.forJava(userId), currentStatus);
-                return Uni.createFrom().failure(new UserRoleAlreadyPresentException(
-                        String.format("User already has MANAGER role with status %s for product [%s].", currentStatus, userDto.getProduct().getProductId())));
-            } else {
-                log.info("User {} has role {} with status {}. Replacing with MANAGER role keeping same status.", Encode.forJava(userId), roleOnProduct, currentStatus);
-                return userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(
-                                userId, userDto.getInstitutionId(), userDto.getProduct().getProductId(), null, null, DELETED)
-                        .onItem().transformToUni(ignore -> createOrUpdateUserByUserId(userDto, userId, loggedUser, currentStatus));
-            }
+        OnboardedProductState currentStatus = retrieveUserStatusOnProduct(userInstitution, userDto.getProduct().getProductId());
+
+        if (roleOnProduct.equals(newRole)) {
+            log.info("User {} already has {} role with status {}. Updating mail and toAddOnAggregates.",
+                    Encode.forJava(newRole.toString()), Encode.forJava(userId), currentStatus);
+
+            return updateUserMailAndToAddOnAggregates(userInstitution, userDto)
+                    .flatMap(ignore -> Uni.createFrom().failure(
+                            new UserRoleAlreadyPresentException(
+                                    String.format("User already has %s role with status %s for product [%s].",
+                                            roleOnProduct, currentStatus, userDto.getProduct().getProductId()))));
+        } else if (PartyRole.MANAGER.equals(newRole)) {
+            log.info("User {} has role {} with status {}. Replacing with MANAGER role keeping same status.", Encode.forJava(userId), roleOnProduct, currentStatus);
+            return userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(
+                            userId, userDto.getInstitutionId(), userDto.getProduct().getProductId(), null, null, DELETED)
+                    .onItem().transformToUni(ignore -> createOrUpdateUserByUserId(userDto, userId, loggedUser, currentStatus));
         } else {
             log.info("User {} already has status {} for product {}. Cannot assign {} role.", Encode.forJava(userId), Encode.forJava(String.valueOf(currentStatus)), Encode.forJava(userDto.getProduct().getProductId()), Encode.forJava(String.valueOf(newRole)));
             return Uni.createFrom().failure(new UserRoleAlreadyPresentException(

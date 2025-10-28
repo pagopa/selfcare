@@ -1469,6 +1469,7 @@ class UserServiceTest {
 
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap()))
                 .thenReturn(Uni.createFrom().item(userInstitution));
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(createUserInstitutionManagerRole()));
 
         userService.createUserByUserId(addUserRoleDto, "userId", loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
@@ -1698,6 +1699,8 @@ class UserServiceTest {
                 .assertFailedWith(UserRoleAlreadyPresentException.class);
         assertEquals("newUserMailUuid", userInstitution.getUserMailUuid());
         assertNotNull(userInstitution.getUserMailUpdatedAt());
+        verify(userInstitutionService).persistOrUpdate(any());
+
     }
 
     @Test
@@ -1736,6 +1739,7 @@ class UserServiceTest {
                 .assertFailedWith(UserRoleAlreadyPresentException.class);
         assertEquals("userMailUuid", userInstitution.getUserMailUuid());
         assertNull(userInstitution.getUserMailUpdatedAt());
+        verify(userInstitutionService).persistOrUpdate(any());
     }
 
     @Test
@@ -1773,6 +1777,7 @@ class UserServiceTest {
                 .assertFailedWith(UserRoleAlreadyPresentException.class);
         assertEquals("userMailUuid", userInstitution.getUserMailUuid());
         assertNull(userInstitution.getUserMailUpdatedAt());
+        verify(userInstitutionService).persistOrUpdate(any());
     }
 
     private UserInstitution createUserInstitutionWithoutManagerRole() {
@@ -1780,6 +1785,16 @@ class UserServiceTest {
         OnboardedProduct onboardedProduct = new OnboardedProduct();
         onboardedProduct.setProductId("test");
         onboardedProduct.setRole(OPERATOR);
+        onboardedProduct.setStatus(ACTIVE);
+        userInstitution.setProducts(List.of(onboardedProduct));
+        return userInstitution;
+    }
+
+    private UserInstitution createUserInstitutionManagerRole() {
+        UserInstitution userInstitution = new UserInstitution();
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setProductId("test");
+        onboardedProduct.setRole(MANAGER);
         onboardedProduct.setStatus(ACTIVE);
         userInstitution.setProducts(List.of(onboardedProduct));
         return userInstitution;
