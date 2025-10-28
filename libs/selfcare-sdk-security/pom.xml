@@ -7,6 +7,7 @@
     <name>selfcare-sdk-security</name>
     <packaging>jar</packaging>
     <version>0.2.2</version>
+    <groupId>it.pagopa.selfcare</groupId>
 <!--    <parent>-->
 <!--        <groupId>it.pagopa.selfcare</groupId>-->
 <!--        <artifactId>selfcare-sdk-pom</artifactId>-->
