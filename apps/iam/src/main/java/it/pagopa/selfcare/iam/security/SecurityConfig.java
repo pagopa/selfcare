@@ -1,10 +1,10 @@
 package it.pagopa.selfcare.iam.security;
 
-import it.pagopa.selfcare.commons.web.security.JWTCallerPrincipalFactory;
+import it.pagopa.selfcare.security.JWTCallerPrincipalFactory;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
-import jakarta.enterprise.inject.Produces; 
+import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 

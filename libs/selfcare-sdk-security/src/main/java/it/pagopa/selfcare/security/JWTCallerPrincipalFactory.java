@@ -1,8 +1,11 @@
-package it.pagopa.selfcare.commons.web.security;
+package it.pagopa.selfcare.security;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.smallrye.jwt.auth.principal.*;
+import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipalFactory;
+import io.smallrye.jwt.auth.principal.JWTAuthContextInfo;
+import io.smallrye.jwt.auth.principal.JWTCallerPrincipal;
+import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
