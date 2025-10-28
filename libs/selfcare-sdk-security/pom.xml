@@ -11,6 +11,7 @@
         <groupId>it.pagopa.selfcare</groupId>
         <artifactId>selfcare-sdk-pom</artifactId>
         <version>1.0.0</version>
+        <relativePath>../selfcare-sdk-pom</relativePath>
     </parent>
 
     <properties>
