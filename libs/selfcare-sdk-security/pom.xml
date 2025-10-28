@@ -7,12 +7,11 @@
     <name>selfcare-sdk-security</name>
     <packaging>jar</packaging>
     <version>0.2.2</version>
-    <groupId>it.pagopa.selfcare</groupId>
-<!--    <parent>-->
-<!--        <groupId>it.pagopa.selfcare</groupId>-->
-<!--        <artifactId>selfcare-sdk-pom</artifactId>-->
-<!--        <version>1.0.0</version>-->
-<!--    </parent>-->
+    <parent>
+        <groupId>it.pagopa.selfcare</groupId>
+        <artifactId>selfcare-sdk-pom</artifactId>
+        <version>1.0.0</version>
+    </parent>
 
     <properties>
         <java.version>17</java.version>
