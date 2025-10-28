@@ -19,6 +19,9 @@ COPY --link ./libs/cucumber-sdk/pom.xml .
 WORKDIR /src/libs/selfcare-sdk-security
 COPY --link ./libs/selfcare-sdk-security/pom.xml .
 
+WORKDIR /src/libs/selfcare-sdk-pom
+COPY --link ./libs/selfcare-sdk-pom/pom.xml .
+
 WORKDIR /src/apps/iam
 COPY --link ./apps/iam/pom.xml .
 COPY ./apps/iam/src/main/ ./src/main/

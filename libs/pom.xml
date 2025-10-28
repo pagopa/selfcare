@@ -11,7 +11,6 @@
 
     <artifactId>libs</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.1</version>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
@@ -20,6 +19,7 @@
     <modules>
         <module>cucumber-sdk</module>
         <module>selfcare-sdk-security</module>
+        <module>selfcare-sdk-pom</module>
     </modules>
 
 
