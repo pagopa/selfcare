@@ -11,13 +11,7 @@ WORKDIR /src/apps
 COPY --link ./apps/pom.xml .
 
 WORKDIR /src/libs
-COPY --link ./libs/pom.xml .
-
-WORKDIR /src/libs/cucumber-sdk
-COPY --link ./libs/cucumber-sdk/pom.xml .
-
-WORKDIR /src/libs/selfcare-sdk-security
-COPY --link ./libs/selfcare-sdk-security/pom.xml .
+COPY --link ./libs/ .
 
 WORKDIR /src/apps/auth
 COPY --link ./apps/auth/pom.xml .
