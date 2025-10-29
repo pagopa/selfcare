@@ -6,12 +6,13 @@
     <artifactId>selfcare-sdk-security</artifactId>
     <name>selfcare-sdk-security</name>
     <packaging>jar</packaging>
-    <version>0.2.2</version>
-<!--    <parent>-->
-<!--        <groupId>it.pagopa.selfcare</groupId>-->
-<!--        <artifactId>selfcare-sdk-pom</artifactId>-->
-<!--        <version>1.0.0</version>-->
-<!--    </parent>-->
+    <version>0.2.3</version>
+    <parent>
+        <groupId>it.pagopa.selfcare</groupId>
+        <artifactId>selfcare-sdk-pom</artifactId>
+        <version>1.0.0</version>
+        <relativePath>../selfcare-sdk-pom</relativePath>
+    </parent>
 
     <properties>
         <java.version>17</java.version>
@@ -22,7 +23,22 @@
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
         <quarkus.platform.version>3.11.2</quarkus.platform.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.release>17</maven.compiler.release>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>${quarkus.platform.group-id}</groupId>
+                <artifactId>${quarkus.platform.artifact-id}</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
 

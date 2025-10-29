@@ -3,7 +3,7 @@ package it.pagopa.selfcare.iam.security;
 import io.quarkus.security.identity.AuthenticationRequestContext;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.commons.web.security.JWTSecurityIdentityAugmentor;
+import it.pagopa.selfcare.security.JWTSecurityIdentityAugmentor;
 
 public class IamSecurityIdentityAugmentor extends JWTSecurityIdentityAugmentor {
   @Override

@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.commons.web.security;
+package it.pagopa.selfcare.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.jwt.auth.principal.JWTAuthContextInfo;
