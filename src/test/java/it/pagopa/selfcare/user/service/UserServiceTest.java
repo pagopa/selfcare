@@ -2171,8 +2171,6 @@ class UserServiceTest {
                 "Selc:ViewManagedInstitutions",
                 "Selc:ViewDelegations",
                 "Selc:ListProductUsers",
-                "Selc:ManageProductGroups",
-                "Selc:ListProductGroups",
                 "Selc:CreateDelegation",
                 "Selc:ViewInstitutionData",
                 "Selc:ViewContract"));
