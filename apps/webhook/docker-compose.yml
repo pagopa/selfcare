@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  webhook:
+    build:
+      context: ../..
+      dockerfile: apps/webhook/Dockerfile
+      args:
+        REPO_SELFCARE: selfcare
+        REPO_ONBOARDING: selfcare-onboarding
+        REPO_USERNAME: ${GITHUB_USERNAME}
+        REPO_PASSWORD: ${GITHUB_TOKEN}
+    ports:
+      - "8083:8083"
+    environment:
+      - MONGODB_CONNECTION_STRING=mongodb://mongodb:27017
+      - MONGODB_DATABASE=webhook
+      - JWT_ISSUER=https://selfcare.pagopa.it
+      - WEBHOOK_RETRY_MAX_ATTEMPTS=3
+      - WEBHOOK_RETRY_INITIAL_DELAY=1000
+      - WEBHOOK_RETRY_MAX_DELAY=10000
+      - WEBHOOK_TIMEOUT_CONNECT=5000
+      - WEBHOOK_TIMEOUT_READ=10000
+    depends_on:
+      - mongodb
+    networks:
+      - webhook-network
+
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - webhook-network
+
+networks:
+  webhook-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
