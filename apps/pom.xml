@@ -35,6 +35,17 @@
                 <module>iam</module>
             </modules>
         </profile>
+        <profile>
+            <id>product</id>
+            <activation>
+                <file>
+                    <exists>product/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>product</module>
+            </modules>
+        </profile>
     </profiles>
     <properties>
         <maven.compiler.source>23</maven.compiler.source>
