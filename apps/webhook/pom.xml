@@ -13,7 +13,6 @@
     <artifactId>webhook</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <name>webhook</name>
-    <description>Microservizio per la gestione e invio di notifiche via webhook HTTP</description>
 
     <properties>
         <compiler-plugin.version>3.13.0</compiler-plugin.version>
@@ -24,9 +23,12 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-        <quarkus.platform.version>3.28.3</quarkus.platform.version>
+        <quarkus.platform.version>3.29.0</quarkus.platform.version>
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
+        <quarkus-openapi-generator.version>2.12.0</quarkus-openapi-generator.version>
+        <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
+        <cucumber-sdk.version>0.0.7</cucumber-sdk.version>
         <security-sdk.version>0.2.3</security-sdk.version>
     </properties>
 
@@ -64,17 +66,26 @@
         <!-- MongoDB Reactive -->
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-mongodb-panache-reactive</artifactId>
+            <artifactId>quarkus-mongodb-panache</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-reactive-routes</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-panache-mock</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <!-- Reactive -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-vertx</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.smallrye.reactive</groupId>
+            <artifactId>smallrye-mutiny-vertx-web-client</artifactId>
         </dependency>
 
         <!-- Security -->

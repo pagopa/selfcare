@@ -4,11 +4,11 @@ import io.quarkus.logging.Log;
 import io.quarkus.scheduler.Scheduled;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
-import io.vertx.ext.web.client.WebClientOptions;
 import it.pagopa.selfcare.webhook.entity.Webhook;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
@@ -55,18 +55,27 @@ public class WebhookNotificationService {
     @Scheduled(every = "30s")
     public Uni<Void> processFailedNotifications() {
         init();
-        return notificationRepository.findPendingNotifications()
-                .onItem().transformToUni(notifications -> {
-                    if (notifications.isEmpty()) {
-                        return Uni.createFrom().voidItem();
-                    }
-                    List<Uni<Void>> processes = notifications.stream()
-                            .map(notification -> processNotification(notification.getId().toString())
-                                    .onFailure().recoverWithNull())
-                            .toList();
-                    return Uni.join().all(processes).andFailFast()
-                            .replaceWithVoid();
-                });
+        // Lock notifications for 5 minutes - if processing takes longer, lock expires
+        return notificationRepository.findAndLockPendingNotifications(100, 5)
+            .onItem().transformToUni(notifications -> {
+                if (notifications.isEmpty()) {
+                    return Uni.createFrom().voidItem();
+                }
+                Log.infof("Processing %d pending notifications", notifications.size());
+                List<Uni<Void>> processes = notifications.stream()
+                    .map(notification -> processNotification(notification.getId().toString())
+                        .onItem().transformToUni(v -> 
+                            notificationRepository.releaseProcessingLock(notification)
+                                .replaceWithVoid())
+                        .onFailure().recoverWithUni(error -> {
+                            Log.errorf(error, "Error processing notification %s", notification.getId());
+                            return notificationRepository.releaseProcessingLock(notification)
+                                .replaceWithVoid();
+                        }))
+                    .toList();
+                return Uni.join().all(processes).andFailFast()
+                    .replaceWithVoid();
+            });
     }
     
     public Uni<Void> processNotification(String notificationId) {
@@ -78,14 +87,14 @@ public class WebhookNotificationService {
                                         processNotification(notification, webhook))
                                 .onItem().ifNull().continueWith(() -> {
                                     Log.errorf("Webhook not found for notification: %s", notificationId);
-                                    return markNotificationAsFailed(notification, "Webhook not found")
-                                            .replaceWithVoid();
-                                }))
+                                    Uni.createFrom().item(markNotificationAsFailed(notification, "Webhook not found"))
+                                      .subscribe().with(item -> {}, failure -> Log.error("Error", failure));;
+                                    return null;
+                          }))
                 .onItem().ifNull().continueWith(() -> {
                     Log.warnf("Notification not found: %s", notificationId);
-                    return Uni.createFrom().voidItem();
-                })
-                .onItem().ifNotNull().transformToUni(uni -> uni);
+                    return null;
+                });
     }
 
     public Uni<Void> processNotification(WebhookNotification notification, Webhook webhook) {
