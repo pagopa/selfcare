@@ -1,6 +1,5 @@
 package it.pagopa.selfcare.webhook.service;
 
-import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.webhook.dto.NotificationRequest;
 import it.pagopa.selfcare.webhook.dto.WebhookRequest;
@@ -12,10 +11,12 @@ import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @ApplicationScoped
 public class WebhookService {
     
@@ -52,7 +53,7 @@ public class WebhookService {
         }
         
         return webhookRepository.persist(webhook)
-                .invoke(() -> Log.infof("Created webhook with ID: %s", webhook.getId()))
+                .invoke(() -> log.info("Created webhook with ID: {}", webhook.getId()))
                 .map(this::toResponse);
     }
     
@@ -90,7 +91,7 @@ public class WebhookService {
                     }
                 })
                 .call(webhook -> webhookRepository.update(webhook))
-                .invoke(() -> Log.infof("Updated webhook with ID: %s", id))
+                .invoke(() -> log.info("Updated webhook with ID: {}", id))
                 .map(this::toResponse);
     }
     
@@ -98,7 +99,7 @@ public class WebhookService {
         return webhookRepository.findByIdOptional(id)
                 .onItem().ifNull().failWith(() -> new IllegalArgumentException("Webhook not found: " + id))
                 .call(webhook -> webhookRepository.deleteByIdSafe(id))
-                .invoke(() -> Log.infof("Deleted webhook with ID: %s", id))
+                .invoke(() -> log.info("Deleted webhook with ID: {}", id))
                 .replaceWith(true);
     }
     
@@ -106,9 +107,9 @@ public class WebhookService {
         return webhookRepository.findActiveWebhooksByProduct(request.getProductId())
                 .invoke(webhooks -> {
                     if (webhooks.isEmpty()) {
-                        Log.warnf("No active webhooks found for product: %s", request.getProductId());
+                        log.warn("No active webhooks found for product: {}", request.getProductId());
                     } else {
-                        Log.infof("Found %d active webhook(s) for product: %s", webhooks.size(), request.getProductId());
+                        log.info("Found {} active webhook(s) for product: {}", webhooks.size(), request.getProductId());
                     }
                 })
                 .onItem().transformToMulti(webhooks -> io.smallrye.mutiny.Multi.createFrom().iterable(webhooks))
@@ -116,12 +117,12 @@ public class WebhookService {
                     WebhookNotification notification = new WebhookNotification();
                     notification.setWebhookId(webhook.getId());
                     notification.setPayload(request.getPayload());
-                    notification.setStatus(WebhookNotification.NotificationStatus.PENDING);
+                    notification.setStatus(WebhookNotification.NotificationStatus.SENDING);
                     notification.setAttemptCount(0);
                     notification.setCreatedAt(LocalDateTime.now());
                     
                     return notificationRepository.persist(notification)
-                            .invoke(() -> Log.infof("Created notification with ID: %s for webhook: %s (product: %s)", 
+                            .invoke(() -> log.info("Created notification with ID: {} for webhook: {} (product: {})",
                                     notification.getId(), webhook.getId(), request.getProductId()))
                             .call(n -> notificationService.processNotification(n, webhook));
                 })

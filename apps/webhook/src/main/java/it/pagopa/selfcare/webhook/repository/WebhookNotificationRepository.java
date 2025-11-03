@@ -7,12 +7,15 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import jakarta.enterprise.context.ApplicationScoped;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
+@Slf4j
 @ApplicationScoped
 public class WebhookNotificationRepository implements ReactivePanacheMongoRepository<WebhookNotification> {
     
@@ -55,7 +58,7 @@ public class WebhookNotificationRepository implements ReactivePanacheMongoReposi
             .uni(() -> mongoCollection()
                 .findOneAndUpdate(query, update, options))
             .atMost(limit)
-            .filter(doc -> doc != null)
+            .filter(Objects::nonNull)
             .map(doc -> mongoCollection().getDocumentClass().cast(doc))
             .collect().asList();
     }
@@ -64,9 +67,10 @@ public class WebhookNotificationRepository implements ReactivePanacheMongoReposi
      * Release the processing lock on a notification
      */
     public Uni<WebhookNotification> releaseProcessingLock(WebhookNotification notification) {
-        notification.setProcessing(false);
-        notification.setProcessingUntil(null);
-        return update(notification);
+      log.info("ReleaseProcessingLock {} notifications", notification.getId().toString());
+      notification.setProcessing(false);
+      notification.setProcessingUntil(null);
+      return update(notification);
     }
     
     public Uni<List<WebhookNotification>> findByWebhookId(String webhookId) {
