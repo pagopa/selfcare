@@ -1,15 +1,15 @@
-package it.pagopa.selfcare.iam.service;
+package it.pagopa.selfcare.product.service;
 
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
-import it.pagopa.selfcare.iam.entity.UserClaims;
-import it.pagopa.selfcare.iam.exception.InvalidRequestException;
-import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
-import it.pagopa.selfcare.iam.model.ProductRoles;
-import it.pagopa.selfcare.iam.model.UserPermissions;
-import it.pagopa.selfcare.iam.repository.UserPermissionsRepository;
+import it.pagopa.selfcare.product.controller.request.SaveUserRequest;
+import it.pagopa.selfcare.product.entity.UserClaims;
+import it.pagopa.selfcare.product.exception.InvalidRequestException;
+import it.pagopa.selfcare.product.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.product.model.ProductRoles;
+import it.pagopa.selfcare.product.model.UserPermissions;
+import it.pagopa.selfcare.product.repository.UserPermissionsRepository;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;

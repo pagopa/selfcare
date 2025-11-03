@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.iam.exception;
+package it.pagopa.selfcare.product.exception;
 
 public class InternalException extends  RuntimeException{
     private final String code;

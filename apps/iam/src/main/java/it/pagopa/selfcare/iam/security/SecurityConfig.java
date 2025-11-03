@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.iam.security;
+package it.pagopa.selfcare.product.security;
 
 import it.pagopa.selfcare.security.JWTCallerPrincipalFactory;
 import jakarta.annotation.Priority;

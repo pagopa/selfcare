@@ -1,8 +1,8 @@
-package it.pagopa.selfcare.iam.service;
+package it.pagopa.selfcare.product.service;
 
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
-import it.pagopa.selfcare.iam.entity.UserClaims;
+import it.pagopa.selfcare.product.controller.request.SaveUserRequest;
+import it.pagopa.selfcare.product.entity.UserClaims;
 
 public interface IamService {
     Uni<String> ping();

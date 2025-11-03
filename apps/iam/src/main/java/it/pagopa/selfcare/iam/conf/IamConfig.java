@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.iam.conf;
+package it.pagopa.selfcare.product.conf;
 
 import com.microsoft.applicationinsights.TelemetryClient;
 import com.microsoft.applicationinsights.TelemetryConfiguration;

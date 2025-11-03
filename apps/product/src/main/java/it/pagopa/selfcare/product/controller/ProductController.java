@@ -16,7 +16,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @Authenticated
-@Tag(name = "product")
+@Tag(name = "Product")
 @Path("/product")
 @RequiredArgsConstructor
 @Slf4j

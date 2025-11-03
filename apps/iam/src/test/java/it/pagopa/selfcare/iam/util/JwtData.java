@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.iam.util;
+package it.pagopa.selfcare.product.util;
 
 import lombok.Builder;
 import lombok.Data;

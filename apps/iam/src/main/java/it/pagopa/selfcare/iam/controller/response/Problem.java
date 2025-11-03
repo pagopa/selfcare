@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.iam.controller.response;
+package it.pagopa.selfcare.product.controller.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

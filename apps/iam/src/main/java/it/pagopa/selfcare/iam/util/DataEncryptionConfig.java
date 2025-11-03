@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.iam.util;
+package it.pagopa.selfcare.product.util;
 
 import io.quarkus.runtime.Startup;
 import it.pagopa.selfcare.onboarding.crypto.utils.DataEncryptionUtils;

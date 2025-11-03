@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.iam.repository;
+package it.pagopa.selfcare.product.repository;
 
 import com.mongodb.client.model.Accumulators;
 import com.mongodb.client.model.Aggregates;
@@ -7,8 +7,8 @@ import com.mongodb.client.model.Projections;
 import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
-import it.pagopa.selfcare.iam.model.UserPermissions;
+import it.pagopa.selfcare.product.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.product.model.UserPermissions;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;

@@ -1,7 +1,7 @@
-package it.pagopa.selfcare.iam.util;
+package it.pagopa.selfcare.product.util;
 
 import io.quarkus.test.junit.QuarkusTest;
-import it.pagopa.selfcare.iam.exception.InvalidRequestException;
+import it.pagopa.selfcare.product.exception.InvalidRequestException;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

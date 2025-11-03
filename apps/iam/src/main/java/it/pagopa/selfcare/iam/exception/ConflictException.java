@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.iam.exception;
+package it.pagopa.selfcare.product.exception;
 
 import lombok.Getter;
 
