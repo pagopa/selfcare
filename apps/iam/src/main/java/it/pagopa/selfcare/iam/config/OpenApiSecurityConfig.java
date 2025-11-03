@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.product.config;
+package it.pagopa.selfcare.iam.config;
 
 import org.eclipse.microprofile.openapi.annotations.enums.SecuritySchemeType;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;

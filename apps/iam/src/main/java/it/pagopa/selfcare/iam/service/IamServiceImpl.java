@@ -1,13 +1,13 @@
-package it.pagopa.selfcare.product.service;
+package it.pagopa.selfcare.iam.service;
 
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.product.controller.request.SaveUserRequest;
-import it.pagopa.selfcare.product.entity.UserClaims;
-import it.pagopa.selfcare.product.exception.InvalidRequestException;
-import it.pagopa.selfcare.product.exception.ResourceNotFoundException;
-import it.pagopa.selfcare.product.model.ProductRoles;
-import it.pagopa.selfcare.product.repository.UserPermissionsRepository;
-import it.pagopa.selfcare.product.util.DataEncryptionConfig;
+import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
+import it.pagopa.selfcare.iam.entity.UserClaims;
+import it.pagopa.selfcare.iam.exception.InvalidRequestException;
+import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.iam.model.ProductRoles;
+import it.pagopa.selfcare.iam.repository.UserPermissionsRepository;
+import it.pagopa.selfcare.iam.util.DataEncryptionConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;

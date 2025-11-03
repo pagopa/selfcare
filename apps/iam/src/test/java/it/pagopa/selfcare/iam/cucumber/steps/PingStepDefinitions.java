@@ -1,9 +1,9 @@
-package it.pagopa.selfcare.product.cucumber.steps;
+package it.pagopa.selfcare.iam.cucumber.steps;
 
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.restassured.response.Response;
-import it.pagopa.selfcare.product.cucumber.CucumberSuiteTest;
+import it.pagopa.selfcare.iam.cucumber.CucumberSuiteTest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 

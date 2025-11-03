@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.product.filter;
+package it.pagopa.selfcare.iam.filter;
 
 import org.slf4j.MDC;
 

@@ -1,9 +1,9 @@
-package it.pagopa.selfcare.product.util;
+package it.pagopa.selfcare.iam.util;
 
-import it.pagopa.selfcare.product.exception.ForbiddenException;
-import it.pagopa.selfcare.product.exception.InternalException;
-import it.pagopa.selfcare.product.exception.InvalidRequestException;
-import it.pagopa.selfcare.product.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.iam.exception.ForbiddenException;
+import it.pagopa.selfcare.iam.exception.InternalException;
+import it.pagopa.selfcare.iam.exception.InvalidRequestException;
+import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
 import jakarta.ws.rs.WebApplicationException;
 
 import java.util.Arrays;

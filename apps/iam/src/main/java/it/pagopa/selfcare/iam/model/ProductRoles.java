@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.product.model;
+package it.pagopa.selfcare.iam.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

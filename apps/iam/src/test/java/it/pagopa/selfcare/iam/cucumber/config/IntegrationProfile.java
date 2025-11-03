@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.product.cucumber.config;
+package it.pagopa.selfcare.iam.cucumber.config;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.client.MongoClient;

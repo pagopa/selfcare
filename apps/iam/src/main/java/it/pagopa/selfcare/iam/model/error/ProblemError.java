@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.product.model.error;
+package it.pagopa.selfcare.iam.model.error;
 
 import lombok.Builder;
 import lombok.Data;

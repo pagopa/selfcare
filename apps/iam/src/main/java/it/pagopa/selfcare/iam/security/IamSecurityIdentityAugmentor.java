@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.product.security;
+package it.pagopa.selfcare.iam.security;
 
 import io.quarkus.security.identity.AuthenticationRequestContext;
 import io.quarkus.security.identity.SecurityIdentity;

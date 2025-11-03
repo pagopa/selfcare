@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.product.util;
+package it.pagopa.selfcare.iam.util;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;

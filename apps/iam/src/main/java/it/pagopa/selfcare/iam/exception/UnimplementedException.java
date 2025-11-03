@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.product.exception;
+package it.pagopa.selfcare.iam.exception;
 
 public class UnimplementedException extends  RuntimeException {
     private final String code;

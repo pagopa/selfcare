@@ -1,11 +1,11 @@
-package it.pagopa.selfcare.product.cucumber;
+package it.pagopa.selfcare.iam.cucumber;
 
 import com.mongodb.client.MongoDatabase;
 import io.quarkiverse.cucumber.CucumberOptions;
 import io.quarkiverse.cucumber.CucumberQuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.RestAssured;
-import it.pagopa.selfcare.product.cucumber.config.IntegrationProfile;
+import it.pagopa.selfcare.iam.cucumber.config.IntegrationProfile;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.AfterAll;

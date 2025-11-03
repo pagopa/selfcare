@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.product.filter;
+package it.pagopa.selfcare.iam.filter;
 
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.ext.Provider;

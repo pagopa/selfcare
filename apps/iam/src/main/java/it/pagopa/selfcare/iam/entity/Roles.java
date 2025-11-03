@@ -2,7 +2,7 @@ package it.pagopa.selfcare.product.entity;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
-import it.pagopa.selfcare.product.model.ProductRoles;
+import it.pagopa.selfcare.iam.model.ProductRoles;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.bson.codecs.pojo.annotations.BsonId;
@@ -29,7 +29,7 @@ import java.util.List;
  * 
  * <h2>Relationships</h2>
  * <ul>
- *   <li>Referenced by {@link it.pagopa.selfcare.product.entity.UserClaims} via productRoles.roles array</li>
+ *   <li>Referenced by {@link it.pagopa.selfcare.iam.entity.UserClaims} via productRoles.roles array</li>
  * </ul>
  * 
  * <h2>Indexes</h2>
@@ -38,7 +38,7 @@ import java.util.List;
  * </ul>
  * 
  * @see ProductRoles
- * @see it.pagopa.selfcare.product.entity.UserClaims
+ * @see it.pagopa.selfcare.iam.entity.UserClaims
  */
 @NoArgsConstructor
 @AllArgsConstructor

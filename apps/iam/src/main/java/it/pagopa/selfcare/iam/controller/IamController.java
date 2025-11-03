@@ -1,13 +1,13 @@
-package it.pagopa.selfcare.product.controller;
+package it.pagopa.selfcare.iam.controller;
 
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.product.controller.request.SaveUserRequest;
-import it.pagopa.selfcare.product.controller.response.Problem;
-import it.pagopa.selfcare.product.entity.UserClaims;
-import it.pagopa.selfcare.product.exception.ResourceNotFoundException;
-import it.pagopa.selfcare.product.service.IamService;
+import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
+import it.pagopa.selfcare.iam.controller.response.Problem;
+import it.pagopa.selfcare.iam.entity.UserClaims;
+import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.iam.service.IamService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;

@@ -1,7 +1,7 @@
-package it.pagopa.selfcare.product.cucumber;
+package it.pagopa.selfcare.iam.cucumber;
 
-import it.pagopa.selfcare.product.util.JwtData;
-import it.pagopa.selfcare.product.util.JwtUtils;
+import it.pagopa.selfcare.iam.util.JwtData;
+import it.pagopa.selfcare.iam.util.JwtUtils;
 import com.mongodb.ConnectionString;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;

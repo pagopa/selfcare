@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.product.conf;
+package it.pagopa.selfcare.iam.conf;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;

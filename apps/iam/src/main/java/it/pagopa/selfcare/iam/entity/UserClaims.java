@@ -1,9 +1,9 @@
-package it.pagopa.selfcare.product.entity;
+package it.pagopa.selfcare.iam.entity;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.product.model.ProductRoles;
+import it.pagopa.selfcare.iam.model.ProductRoles;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.bson.codecs.pojo.annotations.BsonId;
