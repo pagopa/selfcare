@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.product.entity;
+package it.pagopa.selfcare.iam.entity;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
