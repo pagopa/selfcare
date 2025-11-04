@@ -28,7 +28,7 @@ public class ApimProxyController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<UserInfoResource> apimProxyV2getUserInfoUsingGET(SearchUserDto searchUserDto) {
-        return testExternalInternalUserApi.v2getUserInfoUsingGET(searchUserDto);
+        return testExternalInternalUserApi.v2getUserInfoUsingGET(null, searchUserDto);
     }
 }
 
