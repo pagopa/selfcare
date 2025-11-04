@@ -83,7 +83,7 @@ public class UserServiceTest {
             .familyName("family")
             .sameIdp(true)
             .build();
-    when(internalUserApi.v2getUserInfoUsingGET(any()))
+    when(internalUserApi.v2getUserInfoUsingGET(any(), any()))
         .thenReturn(Uni.createFrom().item(userInfoResource));
     userService
         .getUserInfoEmail(claims)
@@ -104,7 +104,7 @@ public class UserServiceTest {
             .familyName("family")
             .sameIdp(true)
             .build();
-    when(internalUserApi.v2getUserInfoUsingGET(any()))
+    when(internalUserApi.v2getUserInfoUsingGET(any(), any()))
         .thenReturn(Uni.createFrom().failure(new WebApplicationException(404)));
     userService
         .getUserInfoEmail(claims)
@@ -125,7 +125,7 @@ public class UserServiceTest {
             .familyName("family")
             .sameIdp(true)
             .build();
-    when(internalUserApi.v2getUserInfoUsingGET(any()))
+    when(internalUserApi.v2getUserInfoUsingGET(any(), any()))
         .thenReturn(Uni.createFrom().failure(new WebApplicationException(500)));
     userService
         .getUserInfoEmail(claims)
