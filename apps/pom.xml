@@ -35,6 +35,17 @@
                 <module>iam</module>
             </modules>
         </profile>
+        <profile>
+            <id>webhook</id>
+            <activation>
+                <file>
+                    <exists>webhook/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>webhook</module>
+            </modules>
+        </profile>
     </profiles>
     <properties>
         <maven.compiler.source>23</maven.compiler.source>
