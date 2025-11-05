@@ -109,7 +109,7 @@ public class UserServiceImpl implements UserService {
             .statuses(List.of(SearchUserDto.StatusesEnum.ACTIVE))
             .build();
     return externalInternalUserApi
-        .v2getUserInfoUsingGET(searchUserDto)
+        .v2getUserInfoUsingGET(null, searchUserDto)
         .onFailure(GeneralUtils::checkIfIsRetryableException)
         .retry()
         .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))
