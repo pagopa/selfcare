@@ -59,6 +59,10 @@ app_settings = [
   {
     name  = "IAM_MS_RETRY"
     value = 3
+  },
+  {
+    name  = "MONGODB_DATABASE_NAME"
+    value = "selcProduct"
   }
 ]
 
