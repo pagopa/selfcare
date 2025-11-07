@@ -59,11 +59,10 @@ public class ProductController {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> createProduct(@Valid ProductCreateRequest productCreateRequest) {
         return productService.createProduct(productCreateRequest)
-                .onItem().transform(productResponse -> {
-                    return Response.status(Response.Status.OK)
-                            .entity(productResponse)
-                            .build();
-                });
+                .onItem().transform(productResponse ->
+                        Response.status(Response.Status.OK)
+                                .entity(productResponse)
+                                .build());
     }
 
     @GET
