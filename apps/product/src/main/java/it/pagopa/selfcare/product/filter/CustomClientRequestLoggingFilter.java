@@ -12,17 +12,17 @@ import java.io.IOException;
 @Slf4j
 public class CustomClientRequestLoggingFilter implements ResteasyReactiveClientRequestFilter {
 
-  @Override
-  public void filter(ClientRequestContext requestContext) throws IOException {
-    ResteasyReactiveClientRequestFilter.super.filter(requestContext);
-  }
+    @Override
+    public void filter(ClientRequestContext requestContext) throws IOException {
+        ResteasyReactiveClientRequestFilter.super.filter(requestContext);
+    }
 
-  @Override
-  public void filter(ResteasyReactiveClientRequestContext requestContext) {
-    String endpoint = requestContext.getUri().getPath();
-    String query = requestContext.getUri().getQuery();
-    String method = requestContext.getMethod();
-    MDCUtils.addOperationIdAndParameters(method);
-    log.info("Request: method: {}, endpoint: {}, query: {}", method, endpoint, query);
-  }
+    @Override
+    public void filter(ResteasyReactiveClientRequestContext requestContext) {
+        String endpoint = requestContext.getUri().getPath();
+        String query = requestContext.getUri().getQuery();
+        String method = requestContext.getMethod();
+        MDCUtils.addOperationIdAndParameters(method);
+        log.info("Request: method: {}, endpoint: {}, query: {}", method, endpoint, query);
+    }
 }

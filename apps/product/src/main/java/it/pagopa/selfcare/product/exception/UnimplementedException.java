@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.product.exception;
 
-public class UnimplementedException extends  RuntimeException {
+public class UnimplementedException extends RuntimeException {
     private final String code;
 
     public UnimplementedException(String message, String code) {

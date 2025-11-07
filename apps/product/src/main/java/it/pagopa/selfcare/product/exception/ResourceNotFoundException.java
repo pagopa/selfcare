@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.product.exception;
 
-public class ResourceNotFoundException extends  RuntimeException {
+public class ResourceNotFoundException extends RuntimeException {
     private final String code;
 
     public ResourceNotFoundException(String message, String code) {
