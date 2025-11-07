@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.product.conf;
+package it.pagopa.selfcare.product.config;
 
 import com.mongodb.MongoClientSettings;
 import jakarta.enterprise.context.ApplicationScoped;

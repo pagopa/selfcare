@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.product.conf;
+package it.pagopa.selfcare.product.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
