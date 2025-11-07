@@ -5,4 +5,5 @@ import it.pagopa.selfcare.product.model.Product;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
-public class ProductRepository implements ReactivePanacheMongoRepositoryBase<Product, String> { }
+public class ProductRepository implements ReactivePanacheMongoRepositoryBase<Product, String> {
+}

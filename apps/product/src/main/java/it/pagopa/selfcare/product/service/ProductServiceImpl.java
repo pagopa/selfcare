@@ -2,6 +2,7 @@ package it.pagopa.selfcare.product.service;
 
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
+import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.controller.response.ProductResponse;
 import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
 import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
@@ -14,10 +15,10 @@ import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.types.ObjectId;
 import org.codehaus.plexus.util.StringUtils;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Slf4j
 @ApplicationScoped
@@ -39,7 +40,8 @@ public class ProductServiceImpl implements ProductService {
         return Uni.createFrom().item("OK");
     }
 
-    public Uni<String> createProduct(ProductCreateRequest productCreateRequest) {
+    @Override
+    public Uni<ProductBaseResponse> createProduct(ProductCreateRequest productCreateRequest) {
         Product product = productMapperRequest.toProduct(productCreateRequest);
 
         if (StringUtils.isBlank(product.getAlias())) {
@@ -51,16 +53,21 @@ public class ProductServiceImpl implements ProductService {
         }
 
         //userValidator.validateRoles(product.getRoleMappings());
+        product.setId(UUID.randomUUID().toString());
 
         return productRepository.persist(product)
-                .replaceWith(String.valueOf(product.getId()));
+                .replaceWith(product)
+                .map(storedProduct -> productMapperResponse.toProductBaseResponse(
+                        Product.builder().id(storedProduct.getId()).build()
+                ));
     }
 
+    @Override
     public Uni<ProductResponse> getProductById(String id) {
         if (StringUtils.isBlank(id)) {
             return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by id: %s", id)));
         }
-        return productRepository.findById(String.valueOf(new ObjectId(id)))
+        return productRepository.findById(id)
                 .onItem().ifNull().failWith(() -> new NotFoundException("Product " + id + " not found"))
                 .map(productMapperResponse::toProductResponse);
     }

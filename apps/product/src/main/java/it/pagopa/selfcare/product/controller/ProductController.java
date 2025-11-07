@@ -1,11 +1,15 @@
 package it.pagopa.selfcare.product.controller;
 
-import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.controller.response.Problem;
+import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.controller.response.ProductResponse;
 import it.pagopa.selfcare.product.service.ProductService;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -22,23 +26,88 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @Slf4j
 public class ProductController {
 
-  private final ProductService productService;
+    //SERVICE
+    private final ProductService productService;
 
-  @Operation(
-    summary = "Ping endpoint",
-    operationId = "ping"
-  )
-  @APIResponses(value = {
-    @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = String.class), mediaType = "application/problem+json")),
-    @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
-  })
-  @GET
-  @Path(value = "/ping")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  public Uni<String> ping() {
-    return productService.ping();
-  }
+    @Operation(
+            summary = "Ping endpoint",
+            operationId = "ping"
+    )
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = String.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
+    })
+    @GET
+    @Path(value = "/ping")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<String> ping() {
+        return productService.ping();
+    }
+
+    @POST
+    @Operation(summary = "Create product", description = "Add new product configuration", operationId = "createProduct")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "201", description = "Created",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProductBaseResponse.class))),
+            @APIResponse(responseCode = "400", description = "Bad Request",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class))),
+            @APIResponse(responseCode = "409", description = "Conflict",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class)))
+    })
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> createProduct(@Valid ProductCreateRequest productCreateRequest) {
+        return productService.createProduct(productCreateRequest)
+                .onItem().transform(productResponse -> {
+                    return Response.status(Response.Status.OK)
+                            .entity(productResponse)
+                            .build();
+                });
+    }
+
+    @GET
+    @Path("/{id}")
+    @Operation(
+            summary = "Get product by ID",
+            description = "Retrieve a product by its unique identifier.",
+            operationId = "getProductById"
+    )
+    @APIResponses(value = {
+            @APIResponse(
+                    responseCode = "200",
+                    description = "Product found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = ProductResponse.class))
+            ),
+            @APIResponse(
+                    responseCode = "404",
+                    description = "Product not found",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class))
+            ),
+            @APIResponse(
+                    responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class))
+            )
+    })
+    public Uni<Response> getProductById(@PathParam("id") String id) {
+        return productService.getProductById(id)
+                .onItem().transform(product ->
+                        Response.ok(product).build()
+                )
+                .onFailure(NotFoundException.class).recoverWithItem(() ->
+                        Response.status(Response.Status.NOT_FOUND)
+                                .entity(Problem.builder()
+                                        .title("Product not found")
+                                        .detail("No product found with id=" + id)
+                                        .status(Response.Status.NOT_FOUND.getStatusCode())
+                                        .instance("/products/" + id)
+                                        .build())
+                                .build()
+                );
+    }
 
 }
-

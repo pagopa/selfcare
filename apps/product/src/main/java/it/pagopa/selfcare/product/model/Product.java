@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bson.codecs.pojo.annotations.BsonId;
-import org.bson.types.ObjectId;
 
 import java.time.Instant;
 import java.util.List;
@@ -20,7 +19,7 @@ import java.util.Map;
 public class Product {
 
     @BsonId
-    private ObjectId id;
+    private String id;
 
     private String alias;
 
