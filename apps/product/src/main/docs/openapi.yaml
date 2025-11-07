@@ -4,6 +4,70 @@ tags:
 - name: Product
 components:
   schemas:
+    AttachmentTemplate:
+      type: object
+      properties:
+        templatePath:
+          type: string
+        templateVersion:
+          type: string
+        name:
+          type: string
+        mandatory:
+          type: boolean
+        generated:
+          type: boolean
+        workflowType:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowType"
+        workflowState:
+          $ref: "#/components/schemas/OnboardingStatus"
+        order:
+          type: integer
+          format: int32
+    BackOfficeConfigurations:
+      type: object
+      properties:
+        url:
+          type: string
+        identityTokenAudience:
+          type: string
+    ContractTemplate:
+      type: object
+      properties:
+        contractTemplatePath:
+          type: string
+        contractTemplateVersion:
+          type: string
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttachmentTemplate"
+    EmailTemplate:
+      type: object
+      properties:
+        path:
+          type: string
+        version:
+          type: string
+        status:
+          $ref: "#/components/schemas/OnboardingStatus"
+    Instant:
+      type: string
+      format: date-time
+      examples:
+      - 2022-03-10T16:15:50Z
+    OnboardingStatus:
+      type: string
+      enum:
+      - REQUEST
+      - TOBEVALIDATED
+      - PENDING
+      - COMPLETED
+      - FAILED
+      - REJECTED
+      - DELETED
     Problem:
       type: object
       properties:
@@ -18,6 +82,235 @@ components:
           type: string
         type:
           type: string
+    ProductBaseResponse:
+      type: object
+      properties:
+        id:
+          type: string
+    ProductCreateRequest:
+      type: object
+      properties:
+        alias:
+          type: string
+        allowedInstitutionTaxCode:
+          type: array
+          items:
+            type: string
+        backOfficeEnvironmentConfigurations:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/BackOfficeConfigurations"
+        consumers:
+          type: array
+          items:
+            type: string
+        createdAt:
+          $ref: "#/components/schemas/Instant"
+        createdBy:
+          type: string
+          pattern: \S
+        delegable:
+          type: boolean
+        depictImageUrl:
+          type: string
+        description:
+          type: string
+        emailTemplates:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: array
+              items:
+                $ref: "#/components/schemas/EmailTemplate"
+        enabled:
+          type: boolean
+        expirationDate:
+          type: integer
+          format: int32
+        identityTokenAudience:
+          type: string
+        logo:
+          type: string
+        logoBgColor:
+          type: string
+          pattern: "^#([A-Fa-f0-9]{6})$"
+        modifiedAt:
+          $ref: "#/components/schemas/Instant"
+        modifiedBy:
+          type: string
+        roleMappings:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/UserRolePermission"
+        status:
+          type: string
+          pattern: \S
+        title:
+          type: string
+          pattern: \S
+        urlBO:
+          type: string
+        urlPublic:
+          type: string
+        institutionAggregatorContractMappings:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ContractTemplate"
+        institutionContractMappings:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ContractTemplate"
+        userAggregatorContractMappings:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ContractTemplate"
+        userContractMappings:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ContractTemplate"
+        invoiceable:
+          type: boolean
+      required:
+      - createdAt
+      - createdBy
+      - status
+      - title
+    ProductResponse:
+      type: object
+      properties:
+        alias:
+          type: string
+        allowedInstitutionTaxCode:
+          type: array
+          items:
+            type: string
+        backOfficeEnvironmentConfigurations:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/BackOfficeConfigurations"
+        consumers:
+          type: array
+          items:
+            type: string
+        createdAt:
+          $ref: "#/components/schemas/Instant"
+        createdBy:
+          type: string
+          pattern: \S
+        delegable:
+          type: boolean
+        depictImageUrl:
+          type: string
+        description:
+          type: string
+        emailTemplates:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: array
+              items:
+                $ref: "#/components/schemas/EmailTemplate"
+        enabled:
+          type: boolean
+        expirationDate:
+          type: integer
+          format: int32
+        identityTokenAudience:
+          type: string
+        logo:
+          type: string
+        logoBgColor:
+          type: string
+          pattern: "^#([A-Fa-f0-9]{6})$"
+        modifiedAt:
+          $ref: "#/components/schemas/Instant"
+        modifiedBy:
+          type: string
+        roleMappings:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/UserRolePermission"
+        status:
+          type: string
+          pattern: \S
+        title:
+          type: string
+          pattern: \S
+        urlBO:
+          type: string
+        urlPublic:
+          type: string
+        institutionAggregatorContractMappings:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ContractTemplate"
+        institutionContractMappings:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ContractTemplate"
+        userAggregatorContractMappings:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ContractTemplate"
+        userContractMappings:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ContractTemplate"
+        invoiceable:
+          type: boolean
+        id:
+          type: string
+      required:
+      - createdAt
+      - createdBy
+      - status
+      - title
+    ProductRole:
+      type: object
+      properties:
+        code:
+          type: string
+        label:
+          type: string
+        productLabel:
+          type: string
+        description:
+          type: string
+    UserRolePermission:
+      type: object
+      properties:
+        multiroleAllowed:
+          type: boolean
+        skipUserCreation:
+          type: boolean
+        phasesAdditionAllowed:
+          type: array
+          items:
+            type: string
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductRole"
+    WorkflowType:
+      type: string
+      enum:
+      - CONTRACT_REGISTRATION
+      - FOR_APPROVE
+      - FOR_APPROVE_PT
+      - FOR_APPROVE_GPU
+      - CONFIRMATION
+      - USERS
+      - USERS_IMPORT
+      - IMPORT
+      - IMPORT_AGGREGATION
+      - CONTRACT_REGISTRATION_AGGREGATOR
+      - CONFIRMATION_AGGREGATE
+      - INCREMENT_REGISTRATION_AGGREGATOR
+      - CONFIRMATION_AGGREGATOR
+      - USERS_PG
+      - USERS_EA
   securitySchemes:
     SecurityScheme:
       type: http
@@ -25,6 +318,38 @@ components:
       bearerFormat: JWT
       description: Authentication
 paths:
+  /product:
+    post:
+      summary: Create product
+      description: Add new product configuration
+      operationId: createProduct
+      tags:
+      - Product
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductCreateRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductBaseResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "409":
+          description: Conflict
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
   /product/ping:
     get:
       summary: Ping endpoint
@@ -44,12 +369,38 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
+  /product/{id}:
+    get:
+      summary: Get product by ID
+      description: Retrieve a product by its unique identifier.
+      operationId: getProductById
+      tags:
+      - Product
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Product found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+        "404":
+          description: Product not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
 info:
   title: Product API
   version: 1.0.0
