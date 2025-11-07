@@ -206,6 +206,12 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-jwt-build</artifactId>
         </dependency>
+        <!-- open-api -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-swagger-ui</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-sdk-security</artifactId>
