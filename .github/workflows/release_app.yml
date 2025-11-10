@@ -25,6 +25,7 @@ on:
         options:
           - auth
           - iam
+          - product
         required: true
         default: auth
 

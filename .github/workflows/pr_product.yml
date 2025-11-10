@@ -1,0 +1,31 @@
+name: Code Review - Product
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    branches:
+      - main
+      - releases/**
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - "apps/product/**"
+      - ".github/workflows/pr_products.yml"
+      - ".github/workflows/call_code_review.yml"
+
+jobs:
+  code_review:
+    uses: ./.github/workflows/call_code_review.yml
+    name: Product Code Review
+    secrets: inherit
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+      source_branch: ${{ github.head_ref }}
+      target_branch: ${{ github.base_ref }}
+      sonar_key: "pagopa_selfcare"
+      module: "product"
