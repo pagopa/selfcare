@@ -48,16 +48,23 @@ public class ProductServiceImpl implements ProductService {
             throw new BadRequestException(String.format("Missing product by id: %s", product.getAlias()));
         }
 
-        if (StringUtils.isBlank(product.getCreatedAt().toString())) {
-            product.setCreatedAt(Instant.now());
+        if (StringUtils.isBlank(product.getStatus().name())) {
+            log.info("Product status missing - default TESTING");
+            product.setStatus(ProductStatus.TESTING);
         }
+
+        Instant now = Instant.now();
+        product.setCreatedAt(now);
+        product.setUpdatedAt(now);
+
+        product.setVersion(1);
 
         product.setId(UUID.randomUUID().toString());
 
         return productRepository.persist(product)
                 .replaceWith(product)
                 .map(storedProduct -> productMapperResponse.toProductBaseResponse(
-                        Product.builder().id(storedProduct.getId()).build()
+                        Product.builder().id(storedProduct.getId()).productId(storedProduct.getProductId()).status(storedProduct.getStatus()).build()
                 ));
     }
 

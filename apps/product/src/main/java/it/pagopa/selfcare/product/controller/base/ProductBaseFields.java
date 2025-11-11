@@ -4,6 +4,7 @@ import it.pagopa.selfcare.product.model.BackOfficeConfigurations;
 import it.pagopa.selfcare.product.model.ContractTemplate;
 import it.pagopa.selfcare.product.model.EmailTemplate;
 import it.pagopa.selfcare.product.model.UserRolePermission;
+import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.model.enums.UserRole;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -24,6 +25,8 @@ import java.util.Map;
 public class ProductBaseFields {
 
     private String alias;
+
+    private String productId;
 
     private List<String> allowedInstitutionTaxCode;
 
@@ -62,8 +65,7 @@ public class ProductBaseFields {
 
     private Map<UserRole, UserRolePermission> roleMappings;
 
-    @NotBlank
-    private String status;
+    private ProductStatus status;
 
     @NotBlank
     private String title;
