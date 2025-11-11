@@ -1,0 +1,60 @@
+---
+openapi: 3.1.0
+tags:
+- name: Product
+components:
+  schemas:
+    Problem:
+      type: object
+      properties:
+        detail:
+          type: string
+        instance:
+          type: string
+        status:
+          type: integer
+          format: int32
+        title:
+          type: string
+        type:
+          type: string
+  securitySchemes:
+    SecurityScheme:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Authentication
+paths:
+  /product/ping:
+    get:
+      summary: Ping endpoint
+      operationId: ping
+      tags:
+      - Product
+      responses:
+        "200":
+          description: OK
+          content:
+            application/problem+json:
+              schema:
+                type: string
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+info:
+  title: Product API
+  version: 1.0.0
+servers:
+- url: http://localhost:8080
+  description: Auto generated value
+- url: http://0.0.0.0:8080
+  description: Auto generated value

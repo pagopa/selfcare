@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+
+  mongodb:
+    image: mongo:latest@sha256:bc0c381d51fb4a316a8f420bf35b6c29ca45167cdea4ec1df4e6e64c9b90022a
+    ports:
+      - '27017:27017'
+    volumes:
+      - "./src/test/resources/db:/docker-entrypoint-initdb.d"
+    networks:
+      - develop-network
+
+#  azurite:
+#    image: mcr.microsoft.com/azure-storage/azurite
+#    ports:
+#      - "10000:10000"
+#    command: "azurite --blobHost 0.0.0.0 --inMemoryPersistence"
+#    environment:
+#      - AZURITE_ACCOUNTS=devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==
+#    networks:
+#      - develop-network
+#
+#  mockserver:
+#    image: mockserver/mockserver
+#    ports:
+#      - '1080:1080'
+#    environment:
+#      - MOCKSERVER_INITIALIZATION_JSON_PATH=/config/*.json
+#      - MOCKSERVER_ENABLE_CORS_FOR_API="true"
+#      - MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES="true"
+#    volumes:
+#      - "./src/test/resources/mock:/config"
+#    networks:
+#      - develop-network
+
+networks:
+  develop-network:
+    name: selfcare-develop-network
