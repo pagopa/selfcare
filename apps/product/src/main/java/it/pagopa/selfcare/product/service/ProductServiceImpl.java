@@ -33,7 +33,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapperResponse productMapperResponse;
 
     //VALIDATOR
-    private final UserValidator userValidator;
+    //private final UserValidator userValidator;
 
     @Override
     public Uni<String> ping() {
@@ -52,7 +52,6 @@ public class ProductServiceImpl implements ProductService {
             product.setCreatedAt(Instant.now());
         }
 
-        //userValidator.validateRoles(product.getRoleMappings());
         product.setId(UUID.randomUUID().toString());
 
         return productRepository.persist(product)

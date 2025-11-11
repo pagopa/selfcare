@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.product.controller;
 
+import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.controller.response.Problem;
