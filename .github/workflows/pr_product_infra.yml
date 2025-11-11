@@ -1,0 +1,57 @@
+name: Code Review - Product Infra
+
+permissions:
+  contents: read
+  pull-requests: read
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    branches:
+      - main
+      - releases/*
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - "infra/apps/product/**"
+      - ".github/workflows/pr_product_infra.yml"
+      - ".github/workflows/call_code_review_infra.yml"
+
+jobs:
+  code_review_dev:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: "[DEV] Product Infra Code Review"
+    if: ${{ !startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: dev
+      dir: ./infra/apps/product
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+
+  code_review_uat:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: "[UAT] Product Infra Code Review"
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: uat
+      dir: ./infra/apps/product
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+
+  code_review_prod:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: "[PROD] Product Infra Code Review"
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: prod
+      dir: ./infra/apps/product
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
