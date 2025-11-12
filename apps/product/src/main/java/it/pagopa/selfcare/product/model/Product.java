@@ -57,9 +57,6 @@ public class Product {
     private String logo;
     private String logoBgColor;
 
-    private Instant modifiedAt;
-    private String modifiedBy;
-
     private Map<String, UserRolePermission> roleMappings;
 
     private ProductStatus status;
