@@ -7,6 +7,7 @@ import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
 import it.pagopa.selfcare.iam.controller.response.Problem;
 import it.pagopa.selfcare.iam.entity.UserClaims;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.iam.model.ProductRolePermissionsList;
 import it.pagopa.selfcare.iam.service.IamService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -109,6 +110,31 @@ public class IamController {
   public Uni<Response> getUser(@PathParam("uid") String userId, @QueryParam("productId") String productId) {
     return iamService.getUser(userId, productId)
       .onItem().transform(user -> Response.ok(user).build());
+  }
+
+  /**
+   * Retrieves a list of product, role and permissions by user ID
+   *
+   * @param userId the ID of the user
+   * @return a Uni containing a ProductRolePermissionsList if found
+   */
+  @Tag(name = "external-v2")
+  @Operation(
+          description = "Retrieves a list of product, role and permissions by user ID",
+          summary = "Get IAM user Product Role Permissions List",
+          operationId = "getIAMProductRolePermissionsList"
+  )
+  @APIResponses(value = {
+          @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = ProductRolePermissionsList.class), mediaType = "application/json")),
+          @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
+  })
+  @GET
+  @Path(value = "/users/role/permissions/{uid}")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<Response> getProductRolePermissionsList(@PathParam("uid") String userId) {
+    return iamService.getProductRolePermissionsList(userId)
+            .onItem().transform(user -> Response.ok(user).build());
   }
 
   /**

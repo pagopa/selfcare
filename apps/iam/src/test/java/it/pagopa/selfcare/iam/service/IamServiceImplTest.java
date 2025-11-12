@@ -3,10 +3,14 @@ package it.pagopa.selfcare.iam.service;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
 import it.pagopa.selfcare.iam.entity.UserClaims;
+import it.pagopa.selfcare.iam.exception.InternalException;
 import it.pagopa.selfcare.iam.exception.InvalidRequestException;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.iam.model.ProductRolePermissions;
+import it.pagopa.selfcare.iam.model.ProductRolePermissionsList;
 import it.pagopa.selfcare.iam.model.ProductRoles;
 import it.pagopa.selfcare.iam.model.UserPermissions;
 import it.pagopa.selfcare.iam.repository.UserPermissionsRepository;
@@ -15,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -349,6 +354,62 @@ class IamServiceImplTest {
     List<ProductRoles> result = service.setFilteredProductRoles(null, "productA");
 
     assertTrue(result.isEmpty());
+  }
+
+  // ========== getProductRolePermissionsList Tests ==========
+
+  @Test
+  void getProductRolePermissionsList_shouldReturnProductRolePermissionsList_whenUserExists() {
+    String userId = "user-123";
+
+    ProductRolePermissions prp1 = ProductRolePermissions.builder()
+        .productId("productA")
+        .role("admin")
+        .permissions(List.of("read:users", "write:users"))
+        .build();
+
+    List<ProductRolePermissions> productRolePermissions = List.of(prp1);
+
+    ProductRolePermissionsList productRolePermissionsList = new ProductRolePermissionsList(productRolePermissions);
+
+    when(userPermissionsRepository.getUserProductRolePermissionsList(userId))
+            .thenReturn(Uni.createFrom().item(productRolePermissions));
+
+    ProductRolePermissionsList result = service.getProductRolePermissionsList(userId)
+            .await().indefinitely();
+
+    assertNotNull(result);
+    assertEquals(1, result.getItems().size());
+    assertEquals(productRolePermissionsList, result);
+  }
+
+  @Test
+  void getProductRolePermissionsList_shouldReturnEmptyList_whenNoMatch() {
+    String userId = "user-123";
+
+    when(userPermissionsRepository.getUserProductRolePermissionsList(userId))
+            .thenReturn(Uni.createFrom().item(Collections.emptyList()));
+
+    ProductRolePermissionsList result = service.getProductRolePermissionsList(userId)
+            .await().indefinitely();
+
+    assertNotNull(result);
+    assertTrue(result.getItems().isEmpty());
+  }
+
+  @Test
+  void getProductRolePermissionsList_serviceError_throwsInternalException() {
+    String userId = "user-123";
+
+    when(userPermissionsRepository.getUserProductRolePermissionsList(userId))
+            .thenReturn(Uni.createFrom().failure(new InternalException("Database error")));
+
+    Uni<ProductRolePermissionsList> result = service.getProductRolePermissionsList(userId);
+
+    result.subscribe()
+            .withSubscriber(UniAssertSubscriber.create())
+            .awaitFailure()
+            .assertFailedWith(InternalException.class);
   }
 
   // ========== hasPermission Tests ==========

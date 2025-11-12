@@ -76,3 +76,12 @@ Feature: User Management
     When I request the user filtered by product "product-B"
     Then the response should contain only 1 product role
     And the product role should be for product "product-B"
+
+  Scenario: Get user product role permissions list by UID
+    When I request the user product role permissions list with UID "a0530f76-3454-418c-9d65-eb3162075495"
+    Then the user product role permissions list should be retrieved successfully
+    And the user should have the following product role permissions:
+      | productId | role     | permissions            |
+      | product-A | OPERATOR | read:users             |
+      | product-B | OPERATOR | read:users             |
+      | product-B | SUPPORT  | read:users,write:users |

@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.iam.cucumber.steps;
 
 import io.cucumber.datatable.DataTable;
+import io.cucumber.java.DataTableType;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -9,9 +10,11 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
 import it.pagopa.selfcare.iam.cucumber.CucumberSuiteTest;
+import it.pagopa.selfcare.iam.model.ProductRolePermissions;
 import it.pagopa.selfcare.iam.model.ProductRoles;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +29,14 @@ public class IamStepDefinitions {
   private String createdUserEmail;
 
 
+  @DataTableType
+  public ProductRolePermissions defineProductRolePermissions(Map<String, String> row) {
+    return ProductRolePermissions.builder()
+            .productId(row.get("productId"))
+            .role(row.get("role"))
+            .permissions(Arrays.asList(row.get("permissions").split(",")))
+            .build();
+  }
 
   @Given("the IAM service is running")
   public void theIamServiceIsRunning() {
@@ -245,6 +256,16 @@ public class IamStepDefinitions {
       .extract().response();
   }
 
+  @When("I request the user product role permissions list with UID {string}")
+  public void iRequestTheUserProductRolePermissionsListWithUID(String uid) {
+    response = given()
+            .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
+            .when()
+            .get("/iam/users/role/permissions/" + uid)
+            .then()
+            .extract().response();
+  }
+
   @When("I request the user filtered by product {string}")
   public void iRequestTheUserFilteredByProduct(String productId) {
     response = given()
@@ -275,6 +296,12 @@ public class IamStepDefinitions {
   public void theUserShouldBeCreatedSuccessfully() {
     assertEquals(200, response.statusCode());
     assertNotNull(response.jsonPath().getString("uid"));
+  }
+
+  @Then("the user product role permissions list should be retrieved successfully")
+  public void theUserProductRolePermissionsListShouldBeRetrievedSuccessfully() {
+    assertEquals(200, response.statusCode());
+    assertNotNull(response.jsonPath().get("items"));
   }
 
   @Then("the user should be updated successfully")
@@ -314,6 +341,20 @@ public class IamStepDefinitions {
     assertEquals(expectedCount, productRoles.size());
   }
 
+  @Then("the user should have the following product role permissions:")
+  public void theUserShouldHaveProductRolePermissions(List<ProductRolePermissions> expectedProductRolePermissions) {
+    List<ProductRolePermissions> responseList = response.jsonPath().getList("items", ProductRolePermissions.class);
+    assertEquals(expectedProductRolePermissions.size(), responseList.size());
+    for (ProductRolePermissions expected : expectedProductRolePermissions) {
+      boolean found = responseList.stream().anyMatch(actual ->
+        actual.getProductId().equals(expected.getProductId()) &&
+        actual.getRole().equals(expected.getRole()) &&
+        actual.getPermissions().containsAll(expected.getPermissions())
+      );
+      assertTrue(found, "Expected product role permissions not found: " + expected);
+    }
+  }
+
   @Then("the user should have role {string} for product {string}")
   public void theUserShouldHaveRoleForProduct(String role, String productId) {
     List<Map<String, Object>> productRoles = response.jsonPath().getList("productRoles");
@@ -350,7 +391,7 @@ public class IamStepDefinitions {
 
   @Then("the error message should contain {string}")
   public void theErrorMessageShouldContain(String expectedMessage) {
-    if (!expectedMessage.isEmpty()) {
+     if (!expectedMessage.isEmpty()) {
       String body = response.getBody().asString();
       assertTrue(body.contains(expectedMessage), 
         "Expected message '" + expectedMessage + "' not found in response: " + body);

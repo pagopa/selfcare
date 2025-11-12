@@ -5,6 +5,7 @@ import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
 import it.pagopa.selfcare.iam.entity.UserClaims;
 import it.pagopa.selfcare.iam.exception.InvalidRequestException;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.iam.model.ProductRolePermissionsList;
 import it.pagopa.selfcare.iam.model.ProductRoles;
 import it.pagopa.selfcare.iam.repository.UserPermissionsRepository;
 import it.pagopa.selfcare.iam.util.DataEncryptionConfig;
@@ -122,6 +123,18 @@ public class IamServiceImpl implements IamService {
         return decryptUser(userClaims);
       })
       .onItem().ifNull().failWith(() -> new ResourceNotFoundException("User not found"));
+  }
+
+  /**
+   * Retrieves a list of product, role and permissions by user ID
+   *
+   * @param userId the ID of the user
+   * @return a Uni containing a ProductRolePermissionsList if found
+   */
+  @Override
+  public Uni<ProductRolePermissionsList> getProductRolePermissionsList(String userId) {
+    return userPermissionsRepository.getUserProductRolePermissionsList(userId)
+            .map(ProductRolePermissionsList::new);
   }
 
   /**
