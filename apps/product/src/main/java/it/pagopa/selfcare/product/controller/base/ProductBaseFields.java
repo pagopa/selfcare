@@ -36,7 +36,6 @@ public class ProductBaseFields {
 
     private Instant createdAt;
 
-    @NotBlank
     private String createdBy;
 
     private boolean delegable;
