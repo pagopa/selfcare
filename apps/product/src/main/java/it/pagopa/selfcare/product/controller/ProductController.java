@@ -47,7 +47,7 @@ public class ProductController {
     }
 
     @POST
-    @Operation(summary = "Create product", description = "Add new product configuration", operationId = "createProduct")
+    @Operation(summary = "Create or update a product configuration (upsert)", description = "Creates a new product configuration or updates the existing one when a match is found")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Created",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProductBaseResponse.class))),
@@ -69,7 +69,7 @@ public class ProductController {
     @GET
     @Path("/{productId}")
     @Operation(
-            summary = "Get product by ID",
+            summary = "Get product by productId",
             description = "Retrieve a product by its unique identifier.",
             operationId = "getProductById"
     )
