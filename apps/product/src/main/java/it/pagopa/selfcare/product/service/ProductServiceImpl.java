@@ -16,6 +16,7 @@ import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.codehaus.plexus.util.StringUtils;
+import org.owasp.encoder.Encode;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -78,13 +79,14 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Uni<ProductResponse> getProductById(String productId) {
-        log.info("Getting info from product {}", productId);
-        if (StringUtils.isBlank(productId)) {
-            return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by productId: %s", productId)));
+        String sanitizedProductId = Encode.forJava(productId);
+        log.info("Getting info from product {}", sanitizedProductId);
+        if (StringUtils.isBlank(sanitizedProductId)) {
+            return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by productId: %s", sanitizedProductId)));
         }
 
-        return productRepository.findProductById(productId)
-                .onItem().ifNull().failWith(() -> new NotFoundException("Product " + productId + " not found"))
+        return productRepository.findProductById(sanitizedProductId)
+                .onItem().ifNull().failWith(() -> new NotFoundException("Product " + sanitizedProductId + " not found"))
                 .map(productMapperResponse::toProductResponse);
     }
 
