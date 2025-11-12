@@ -87,11 +87,18 @@ components:
       properties:
         id:
           type: string
+        productId:
+          type: string
+        status:
+          $ref: "#/components/schemas/ProductStatus"
     ProductCreateRequest:
       type: object
       properties:
         alias:
           type: string
+        productId:
+          type: string
+          pattern: \S
         allowedInstitutionTaxCode:
           type: array
           items:
@@ -115,6 +122,7 @@ components:
           type: string
         description:
           type: string
+          pattern: \S
         emailTemplates:
           type: object
           additionalProperties:
@@ -135,17 +143,12 @@ components:
         logoBgColor:
           type: string
           pattern: "^#([A-Fa-f0-9]{6})$"
-        modifiedAt:
-          $ref: "#/components/schemas/Instant"
-        modifiedBy:
-          type: string
         roleMappings:
           type: object
           additionalProperties:
             $ref: "#/components/schemas/UserRolePermission"
         status:
-          type: string
-          pattern: \S
+          $ref: "#/components/schemas/ProductStatus"
         title:
           type: string
           pattern: \S
@@ -171,16 +174,22 @@ components:
             $ref: "#/components/schemas/ContractTemplate"
         invoiceable:
           type: boolean
+        version:
+          type: integer
+          format: int32
       required:
-      - createdAt
+      - productId
       - createdBy
-      - status
+      - description
       - title
     ProductResponse:
       type: object
       properties:
         alias:
           type: string
+        productId:
+          type: string
+          pattern: \S
         allowedInstitutionTaxCode:
           type: array
           items:
@@ -204,6 +213,7 @@ components:
           type: string
         description:
           type: string
+          pattern: \S
         emailTemplates:
           type: object
           additionalProperties:
@@ -224,17 +234,12 @@ components:
         logoBgColor:
           type: string
           pattern: "^#([A-Fa-f0-9]{6})$"
-        modifiedAt:
-          $ref: "#/components/schemas/Instant"
-        modifiedBy:
-          type: string
         roleMappings:
           type: object
           additionalProperties:
             $ref: "#/components/schemas/UserRolePermission"
         status:
-          type: string
-          pattern: \S
+          $ref: "#/components/schemas/ProductStatus"
         title:
           type: string
           pattern: \S
@@ -260,12 +265,15 @@ components:
             $ref: "#/components/schemas/ContractTemplate"
         invoiceable:
           type: boolean
+        version:
+          type: integer
+          format: int32
         id:
           type: string
       required:
-      - createdAt
+      - productId
       - createdBy
-      - status
+      - description
       - title
     ProductRole:
       type: object
@@ -278,6 +286,13 @@ components:
           type: string
         description:
           type: string
+    ProductStatus:
+      type: string
+      enum:
+      - TESTING
+      - ACTIVE
+      - DELETED
+      - SUSPEND
     UserRolePermission:
       type: object
       properties:
@@ -381,7 +396,7 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
-  /product/{id}:
+  /product/{productId}:
     get:
       summary: Get product by ID
       description: Retrieve a product by its unique identifier.
@@ -389,7 +404,7 @@ paths:
       tags:
       - Product
       parameters:
-      - name: id
+      - name: productId
         in: path
         required: true
         schema:
