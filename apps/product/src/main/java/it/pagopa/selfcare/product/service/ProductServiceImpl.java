@@ -7,8 +7,8 @@ import it.pagopa.selfcare.product.controller.response.ProductResponse;
 import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
 import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
 import it.pagopa.selfcare.product.model.Product;
+import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.repository.ProductRepository;
-import it.pagopa.selfcare.product.validator.entity.UserValidator;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
@@ -42,32 +42,50 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Uni<ProductBaseResponse> createProduct(ProductCreateRequest productCreateRequest) {
-        Product product = productMapperRequest.toProduct(productCreateRequest);
+        Product requestProduct = productMapperRequest.toProduct(productCreateRequest);
 
-        if (StringUtils.isBlank(product.getAlias())) {
-            throw new BadRequestException(String.format("Missing product by id: %s", product.getAlias()));
+        if (StringUtils.isBlank(requestProduct.getAlias())) {
+            throw new BadRequestException(String.format("Missing product by id: %s", requestProduct.getAlias()));
         }
 
-        if (StringUtils.isBlank(product.getCreatedAt().toString())) {
-            product.setCreatedAt(Instant.now());
+        if (requestProduct.getStatus() == null) {
+            log.info("Product status missing - default TESTING");
+            requestProduct.setStatus(ProductStatus.TESTING);
         }
 
-        product.setId(UUID.randomUUID().toString());
+        Instant now = Instant.now();
 
-        return productRepository.persist(product)
-                .replaceWith(product)
-                .map(storedProduct -> productMapperResponse.toProductBaseResponse(
-                        Product.builder().id(storedProduct.getId()).build()
+        requestProduct.setId(UUID.randomUUID().toString());
+        requestProduct.setCreatedAt(now);
+        requestProduct.setUpdatedAt(now);
+        requestProduct.setVersion(1);
+
+        String productId = requestProduct.getProductId();
+
+        return productRepository.findProductById(productId).onItem().ifNotNull().transformToUni(currentProduct -> {
+                    int nextVersion = currentProduct.getVersion() == null ? 1 : currentProduct.getVersion() + 1;
+                    requestProduct.setVersion(nextVersion);
+                    log.info("Updating configuration of product {} with version {}", requestProduct.getProductId(), nextVersion);
+                    return productRepository.persist(productMapperRequest.cloneObject(currentProduct, requestProduct)).replaceWith(requestProduct);
+                }).onItem().ifNull().switchTo(() -> {
+                    log.info("Adding new config of product {}", requestProduct.getProductId());
+                    return productRepository.persist(requestProduct).replaceWith(requestProduct);
+                })
+                .map(saved -> productMapperResponse.toProductBaseResponse(
+                        Product.builder().id(saved.getId()).productId(saved.getProductId()).status(saved.getStatus()).build()
                 ));
     }
 
     @Override
-    public Uni<ProductResponse> getProductById(String id) {
-        if (StringUtils.isBlank(id)) {
-            return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by id: %s", id)));
+    public Uni<ProductResponse> getProductById(String productId) {
+        log.info("Getting info from product {}", productId);
+        if (StringUtils.isBlank(productId)) {
+            return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by productId: %s", productId)));
         }
-        return productRepository.findById(id)
-                .onItem().ifNull().failWith(() -> new NotFoundException("Product " + id + " not found"))
+
+        return productRepository.findProductById(productId)
+                .onItem().ifNull().failWith(() -> new NotFoundException("Product " + productId + " not found"))
                 .map(productMapperResponse::toProductResponse);
     }
+
 }

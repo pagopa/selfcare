@@ -4,9 +4,9 @@ import it.pagopa.selfcare.product.model.BackOfficeConfigurations;
 import it.pagopa.selfcare.product.model.ContractTemplate;
 import it.pagopa.selfcare.product.model.EmailTemplate;
 import it.pagopa.selfcare.product.model.UserRolePermission;
+import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.model.enums.UserRole;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,13 +25,15 @@ public class ProductBaseFields {
 
     private String alias;
 
+    @NotBlank
+    private String productId;
+
     private List<String> allowedInstitutionTaxCode;
 
     private Map<String, BackOfficeConfigurations> backOfficeEnvironmentConfigurations;
 
     private List<String> consumers;
 
-    @NotNull
     private Instant createdAt;
 
     @NotBlank
@@ -41,6 +43,7 @@ public class ProductBaseFields {
 
     private String depictImageUrl;
 
+    @NotBlank
     private String description;
 
     private Map<String, Map<String, List<EmailTemplate>>> emailTemplates;
@@ -56,14 +59,9 @@ public class ProductBaseFields {
     @Pattern(regexp = "^#([A-Fa-f0-9]{6})$", message = "logoBgColor should be in the format #RRGGBB")
     private String logoBgColor;
 
-    private Instant modifiedAt;
-
-    private String modifiedBy;
-
     private Map<UserRole, UserRolePermission> roleMappings;
 
-    @NotBlank
-    private String status;
+    private ProductStatus status;
 
     @NotBlank
     private String title;
@@ -77,4 +75,6 @@ public class ProductBaseFields {
     private Map<String, ContractTemplate> userContractMappings;
 
     private boolean invoiceable;
+
+    private Integer version;
 }

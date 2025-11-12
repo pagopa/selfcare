@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.product.model;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
+import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,6 +24,8 @@ public class Product {
 
     private String alias;
 
+    private String productId;
+
     private List<String> allowedInstitutionTaxCode;
 
     private Map<String, BackOfficeConfigurations> backOfficeEnvironmentConfigurations;
@@ -31,8 +34,11 @@ public class Product {
 
     private Instant createdAt;
 
-
     private String createdBy;
+
+    private Instant updatedAt;
+
+    private Integer version;
 
     private boolean delegable;
 
@@ -51,12 +57,9 @@ public class Product {
     private String logo;
     private String logoBgColor;
 
-    private Instant modifiedAt;
-    private String modifiedBy;
-
     private Map<String, UserRolePermission> roleMappings;
 
-    private String status;
+    private ProductStatus status;
 
     private String title;
 
