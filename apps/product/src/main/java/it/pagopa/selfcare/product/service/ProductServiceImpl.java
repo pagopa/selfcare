@@ -72,8 +72,8 @@ public class ProductServiceImpl implements ProductService {
                     log.info("Adding new config of product {}", requestProduct.getProductId());
                     return productRepository.persist(requestProduct).replaceWith(requestProduct);
                 })
-                .map(saved -> productMapperResponse.toProductBaseResponse(
-                        Product.builder().id(saved.getId()).productId(saved.getProductId()).status(saved.getStatus()).build()
+                .map(productUpdated -> productMapperResponse.toProductBaseResponse(
+                        Product.builder().id(productUpdated.getId()).productId(productUpdated.getProductId()).status(productUpdated.getStatus()).build()
                 ));
     }
 
