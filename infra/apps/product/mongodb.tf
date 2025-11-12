@@ -13,7 +13,7 @@ resource "azurerm_management_lock" "mongodb_selc_product" {
   notes      = "This items can't be deleted in this subscription!"
 }
 
-module "mongodb_collection_product_user" {
+module "mongodb_collection_product" {
   count  = var.is_pnpg ? 0 : 1
   source = "github.com/pagopa/terraform-azurerm-v4.git//cosmosdb_mongodb_collection?ref=v6.6.0"
 
