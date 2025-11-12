@@ -79,4 +79,6 @@ public class ProductBaseFields {
     private Map<String, ContractTemplate> userContractMappings;
 
     private boolean invoiceable;
+
+    private Integer version;
 }
