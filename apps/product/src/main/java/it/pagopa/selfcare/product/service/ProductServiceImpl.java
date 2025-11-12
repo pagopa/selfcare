@@ -78,7 +78,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Uni<ProductResponse> getProductById(String productId) {
-        log.info("Getting info from {}", productId);
+        log.info("Getting info from product {}", productId);
         if (StringUtils.isBlank(productId)) {
             return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by productId: %s", productId)));
         }
