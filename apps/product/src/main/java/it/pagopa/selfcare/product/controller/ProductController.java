@@ -67,7 +67,7 @@ public class ProductController {
     }
 
     @GET
-    @Path("/{id}")
+    @Path("/{productId}")
     @Operation(
             summary = "Get product by ID",
             description = "Retrieve a product by its unique identifier.",
@@ -93,8 +93,8 @@ public class ProductController {
                             schema = @Schema(implementation = Problem.class))
             )
     })
-    public Uni<Response> getProductById(@PathParam("id") String id) {
-        return productService.getProductById(id)
+    public Uni<Response> getProductById(@PathParam("productId") String productId) {
+        return productService.getProductById(productId)
                 .onItem().transform(product ->
                         Response.ok(product).build()
                 )
@@ -102,9 +102,9 @@ public class ProductController {
                         Response.status(Response.Status.NOT_FOUND)
                                 .entity(Problem.builder()
                                         .title("Product not found")
-                                        .detail("No product found with id=" + id)
+                                        .detail("No product found with productId=" + productId)
                                         .status(Response.Status.NOT_FOUND.getStatusCode())
-                                        .instance("/products/" + id)
+                                        .instance("/products/" + productId)
                                         .build())
                                 .build()
                 );

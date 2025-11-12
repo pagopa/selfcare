@@ -7,8 +7,8 @@ import it.pagopa.selfcare.product.controller.response.ProductResponse;
 import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
 import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
 import it.pagopa.selfcare.product.model.Product;
+import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.repository.ProductRepository;
-import it.pagopa.selfcare.product.validator.entity.UserValidator;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
@@ -69,12 +69,15 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Uni<ProductResponse> getProductById(String id) {
-        if (StringUtils.isBlank(id)) {
-            return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by id: %s", id)));
+    public Uni<ProductResponse> getProductById(String productId) {
+        log.info("Getting info from {}", productId);
+        if (StringUtils.isBlank(productId)) {
+            return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by productId: %s", productId)));
         }
-        return productRepository.findById(id)
-                .onItem().ifNull().failWith(() -> new NotFoundException("Product " + id + " not found"))
+
+        return productRepository.findProductById(productId)
+                .onItem().ifNull().failWith(() -> new NotFoundException("Product " + productId + " not found"))
                 .map(productMapperResponse::toProductResponse);
     }
+
 }
