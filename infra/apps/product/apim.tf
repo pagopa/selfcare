@@ -2,10 +2,9 @@ locals {
   apim_name    = format("selc-%s-apim-v2", var.env_short)
   apim_rg      = format("selc-%s-api-v2-rg", var.env_short)
   api_name     = var.is_pnpg ? format("selc-%s-pnpg-api-product", var.env_short) : format("selc-%s-api-product", var.env_short)
-  display_name = var.is_pnpg ? "PNPG IAM API" : "IAM API"
+  display_name = var.is_pnpg ? "PNPG Product API" : "Product API"
   base_path    = var.is_pnpg ? "imprese/product" : "product"
 }
-
 
 resource "azurerm_api_management_api_version_set" "apim_api_product" {
   name                = local.api_name

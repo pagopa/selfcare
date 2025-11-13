@@ -1,14 +1,15 @@
-package it.pagopa.selfcare.product.conf;
+package it.pagopa.selfcare.product.config;
 
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import org.bson.BsonReader;
 import org.bson.BsonType;
 import org.bson.BsonWriter;
 import org.bson.codecs.Codec;
 import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
+
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
 public class DateCodec implements Codec<OffsetDateTime> {
 
@@ -20,7 +21,6 @@ public class DateCodec implements Codec<OffsetDateTime> {
         }
         return null;
     }
-
 
     @Override
     public void encode(BsonWriter bsonWriter, OffsetDateTime aLong, EncoderContext encoderContext) {

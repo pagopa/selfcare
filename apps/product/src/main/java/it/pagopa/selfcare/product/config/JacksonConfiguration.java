@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.product.conf;
+package it.pagopa.selfcare.product.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -18,7 +18,7 @@ public class JacksonConfiguration {
 
     @Produces
     public ObjectMapper objectMapper() {
-        ObjectMapper mapper =  DatabindCodec.mapper();
+        ObjectMapper mapper = DatabindCodec.mapper();
         mapper.registerModule(new ParameterNamesModule(JsonCreator.Mode.DELEGATING)); // mandatory config
 
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

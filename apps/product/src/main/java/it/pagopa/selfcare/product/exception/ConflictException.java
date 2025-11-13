@@ -3,7 +3,7 @@ package it.pagopa.selfcare.product.exception;
 import lombok.Getter;
 
 @Getter
-public class ConflictException extends  RuntimeException {
+public class ConflictException extends RuntimeException {
     private final String code;
 
     public ConflictException(String message, String code) {

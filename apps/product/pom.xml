@@ -15,7 +15,7 @@
     <properties>
         <compiler-plugin.version>3.13.0</compiler-plugin.version>
         <lombok.version>1.18.28</lombok.version>
-        <mapstruct.version>1.5.5.Final</mapstruct.version>
+        <mapstruct.version>1.6.3</mapstruct.version>
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -29,6 +29,7 @@
         <cucumber-sdk.version>0.0.7</cucumber-sdk.version>
         <security-sdk.version>0.2.3</security-sdk.version>
         <selfcare-onboarding-sdk.version>0.12.0</selfcare-onboarding-sdk.version>
+        <mapstruct.lombok.version>0.2.0</mapstruct.lombok.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -206,6 +207,12 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-jwt-build</artifactId>
         </dependency>
+        <!-- open-api -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-swagger-ui</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-sdk-security</artifactId>
@@ -261,19 +268,19 @@
                     </compilerArgs>
                     <annotationProcessorPaths>
                         <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                        <path>
                             <groupId>org.mapstruct</groupId>
                             <artifactId>mapstruct-processor</artifactId>
                             <version>${mapstruct.version}</version>
                         </path>
                         <path>
                             <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>${lombok.version}</version>
-                        </path>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
                             <artifactId>lombok-mapstruct-binding</artifactId>
-                            <version>0.2.0</version>
+                            <version>${mapstruct.lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
