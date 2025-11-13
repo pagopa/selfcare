@@ -45,8 +45,10 @@ public class ProductServiceImpl implements ProductService {
     public Uni<ProductBaseResponse> createProduct(ProductCreateRequest productCreateRequest) {
         Product requestProduct = productMapperRequest.toProduct(productCreateRequest);
 
-        if (StringUtils.isBlank(requestProduct.getAlias())) {
-            throw new BadRequestException(String.format("Missing product by id: %s", requestProduct.getAlias()));
+        String productId = requestProduct.getProductId();
+
+        if (StringUtils.isBlank(productId)) {
+            throw new BadRequestException(String.format("Missing product by id: %s", productId));
         }
 
         if (requestProduct.getStatus() == null) {
@@ -61,15 +63,13 @@ public class ProductServiceImpl implements ProductService {
         requestProduct.setUpdatedAt(now);
         requestProduct.setVersion(1);
 
-        String productId = requestProduct.getProductId();
-
         return productRepository.findProductById(productId).onItem().ifNotNull().transformToUni(currentProduct -> {
                     int nextVersion = currentProduct.getVersion() == null ? 1 : currentProduct.getVersion() + 1;
                     requestProduct.setVersion(nextVersion);
-                    log.info("Updating configuration of product {} with version {}", requestProduct.getProductId(), nextVersion);
+                    log.info("Updating configuration of product {} with version {}", productId, nextVersion);
                     return productRepository.persist(productMapperRequest.cloneObject(currentProduct, requestProduct)).replaceWith(requestProduct);
                 }).onItem().ifNull().switchTo(() -> {
-                    log.info("Adding new config of product {}", requestProduct.getProductId());
+                    log.info("Adding new config of product {}", productId);
                     return productRepository.persist(requestProduct).replaceWith(requestProduct);
                 })
                 .map(productUpdated -> productMapperResponse.toProductBaseResponse(
