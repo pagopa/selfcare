@@ -53,15 +53,19 @@ public class ProductController {
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProductBaseResponse.class))),
             @APIResponse(responseCode = "400", description = "Bad Request",
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class))),
-            @APIResponse(responseCode = "409", description = "Conflict",
-                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class)))
+            @APIResponse(
+                    responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class))
+            )
     })
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> createProduct(@Valid ProductCreateRequest productCreateRequest) {
         return productService.createProduct(productCreateRequest)
                 .onItem().transform(productResponse ->
-                        Response.status(Response.Status.OK)
+                        Response.status(Response.Status.CREATED)
                                 .entity(productResponse)
                                 .build());
     }
