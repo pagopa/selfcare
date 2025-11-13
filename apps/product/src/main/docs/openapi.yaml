@@ -115,7 +115,6 @@ components:
           $ref: "#/components/schemas/Instant"
         createdBy:
           type: string
-          pattern: \S
         delegable:
           type: boolean
         depictImageUrl:
@@ -179,7 +178,6 @@ components:
           format: int32
       required:
       - productId
-      - createdBy
       - description
       - title
     ProductResponse:
@@ -206,7 +204,6 @@ components:
           $ref: "#/components/schemas/Instant"
         createdBy:
           type: string
-          pattern: \S
         delegable:
           type: boolean
         depictImageUrl:
@@ -272,7 +269,6 @@ components:
           type: string
       required:
       - productId
-      - createdBy
       - description
       - title
     ProductRole:
@@ -335,8 +331,9 @@ components:
 paths:
   /product:
     post:
-      summary: Create product
-      description: Add new product configuration
+      summary: Create or update a product configuration (upsert)
+      description: Creates a new product configuration or updates the existing one
+        when a match is found
       operationId: createProduct
       tags:
       - Product
@@ -359,8 +356,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-        "409":
-          description: Conflict
+        "500":
+          description: Internal Server Error
           content:
             application/problem+json:
               schema:
@@ -398,7 +395,7 @@ paths:
       - SecurityScheme: []
   /product/{productId}:
     get:
-      summary: Get product by ID
+      summary: Get product by productId
       description: Retrieve a product by its unique identifier.
       operationId: getProductById
       tags:

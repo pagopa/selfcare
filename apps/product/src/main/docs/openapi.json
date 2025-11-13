@@ -156,8 +156,7 @@
             "$ref" : "#/components/schemas/Instant"
           },
           "createdBy" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "type" : "string"
           },
           "delegable" : {
             "type" : "boolean"
@@ -249,7 +248,7 @@
             "format" : "int32"
           }
         },
-        "required" : [ "productId", "createdBy", "description", "title" ]
+        "required" : [ "productId", "description", "title" ]
       },
       "ProductResponse" : {
         "type" : "object",
@@ -283,8 +282,7 @@
             "$ref" : "#/components/schemas/Instant"
           },
           "createdBy" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "type" : "string"
           },
           "delegable" : {
             "type" : "boolean"
@@ -379,7 +377,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "productId", "createdBy", "description", "title" ]
+        "required" : [ "productId", "description", "title" ]
       },
       "ProductRole" : {
         "type" : "object",
@@ -442,8 +440,8 @@
   "paths" : {
     "/product" : {
       "post" : {
-        "summary" : "Create product",
-        "description" : "Add new product configuration",
+        "summary" : "Create or update a product configuration (upsert)",
+        "description" : "Creates a new product configuration or updates the existing one when a match is found",
         "operationId" : "createProduct",
         "tags" : [ "Product" ],
         "requestBody" : {
@@ -477,8 +475,8 @@
               }
             }
           },
-          "409" : {
-            "description" : "Conflict",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
@@ -539,7 +537,7 @@
     },
     "/product/{productId}" : {
       "get" : {
-        "summary" : "Get product by ID",
+        "summary" : "Get product by productId",
         "description" : "Retrieve a product by its unique identifier.",
         "operationId" : "getProductById",
         "tags" : [ "Product" ],

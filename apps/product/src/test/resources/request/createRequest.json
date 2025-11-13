@@ -1,0 +1,38 @@
+{
+  "id": "prod-test_id",
+  "productId": "prod-test",
+  "alias": "prod-test",
+  "allowedInstitutionTaxCode": [],
+  "backOfficeEnvironmentConfigurations": {
+  },
+  "consumers": [],
+  "createdAt": "2021-12-15T15:54:55.190Z",
+  "createdBy": "test",
+  "delegable": false,
+  "depictImageUrl": "",
+  "description": "Descrizione prodotto",
+  "emailTemplates": {
+  },
+  "enabled": true,
+  "expirationDate": 30,
+  "identityTokenAudience": "",
+  "institutionAggregatorContractMappings": {
+  },
+  "institutionContractMappings": {
+  },
+  "invoiceable": true,
+  "logo": "",
+  "logoBgColor": "#0B3EE3",
+  "modifiedAt": "2022-11-18T17:59:27.744Z",
+  "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+  "roleMappings": {
+  },
+  "status": "TESTING",
+  "title": "PROD TEST",
+  "urlBO": "",
+  "urlPublic": "",
+  "userAggregatorContractMappings": {
+  },
+  "userContractMappings": {
+  }
+}
