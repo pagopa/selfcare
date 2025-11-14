@@ -203,8 +203,9 @@ public class IamControllerTest {
   @Test
   void getProductRolePermissionsList_shouldReturn200() {
     String uid = "user-1";
+    String productId = "productA";
 
-    Mockito.when(iamService.getProductRolePermissionsList(uid))
+    Mockito.when(iamService.getProductRolePermissionsList(uid, productId))
             .thenReturn(Uni.createFrom().item(Mockito.any(ProductRolePermissionsList.class)));
 
     given()
@@ -218,8 +219,9 @@ public class IamControllerTest {
   @Test
   void getProductRolePermissionsList_shouldReturn500_serviceError() {
     String uid = "user-1";
+    String productId = "productA";
 
-    Mockito.when(iamService.getProductRolePermissionsList(uid))
+    Mockito.when(iamService.getProductRolePermissionsList(uid, productId))
             .thenReturn(Uni.createFrom().failure(
                     new InternalException("Database error")
             ));

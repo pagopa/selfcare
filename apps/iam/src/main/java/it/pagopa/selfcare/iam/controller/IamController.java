@@ -116,11 +116,12 @@ public class IamController {
    * Retrieves a list of product, role and permissions by user ID
    *
    * @param userId the ID of the user
+   * @param productId the ID of the product
    * @return a Uni containing a ProductRolePermissionsList if found
    */
   @Tag(name = "external-v2")
   @Operation(
-          description = "Retrieves a list of product, role and permissions by user ID",
+          description = "Retrieves a list of product, role and permissions by user ID and product ID.",
           summary = "Get IAM user Product Role Permissions List",
           operationId = "getIAMProductRolePermissionsList"
   )
@@ -132,8 +133,8 @@ public class IamController {
   @Path(value = "/users/role/permissions/{uid}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Uni<Response> getProductRolePermissionsList(@PathParam("uid") String userId) {
-    return iamService.getProductRolePermissionsList(userId)
+  public Uni<Response> getProductRolePermissionsList(@PathParam("uid") String userId, @QueryParam("productId") String productId) {
+    return iamService.getProductRolePermissionsList(userId, productId)
             .onItem().transform(user -> Response.ok(user).build());
   }
 

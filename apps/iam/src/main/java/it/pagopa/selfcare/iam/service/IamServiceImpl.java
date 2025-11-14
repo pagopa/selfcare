@@ -126,14 +126,15 @@ public class IamServiceImpl implements IamService {
   }
 
   /**
-   * Retrieves a list of product, role and permissions by user ID
+   * Retrieves a list of product, role and permissions by user ID and product ID.
    *
    * @param userId the ID of the user
+   * @param productId the ID of the product
    * @return a Uni containing a ProductRolePermissionsList if found
    */
   @Override
-  public Uni<ProductRolePermissionsList> getProductRolePermissionsList(String userId) {
-    return userPermissionsRepository.getUserProductRolePermissionsList(userId)
+  public Uni<ProductRolePermissionsList> getProductRolePermissionsList(String userId, String productId) {
+    return userPermissionsRepository.getUserProductRolePermissionsList(userId, productId)
             .map(ProductRolePermissionsList::new);
   }
 

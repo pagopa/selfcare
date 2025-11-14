@@ -88,10 +88,12 @@ public class UserPermissionsRepository {
   /**
    * Aggregation query to extract a list of pruduct, role and permissions for a specific user.
    */
-  public Uni<List<ProductRolePermissions>> getUserProductRolePermissionsList(String uid) {
+  public Uni<List<ProductRolePermissions>> getUserProductRolePermissionsList(String uid, String productId) {
     List<Bson> pipeline = new ArrayList<>();
     pipeline.add(Aggregates.match(Filters.eq("_id", uid)));
     pipeline.add(Aggregates.unwind("$productRoles"));
+    Optional.ofNullable(productId)
+            .ifPresent(pid -> pipeline.add(Aggregates.match(Filters.eq("productRoles.productId", pid))));
 
     List<Bson> pipelinePost = Arrays.asList(
             Aggregates.unwind("$productRoles.roles"),

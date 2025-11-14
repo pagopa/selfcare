@@ -239,13 +239,19 @@
     "/iam/users/role/permissions/{uid}" : {
       "get" : {
         "summary" : "Get IAM user Product Role Permissions List",
-        "description" : "Retrieves a list of product, role and permissions by user ID",
+        "description" : "Retrieves a list of product, role and permissions by user ID and product ID.",
         "operationId" : "getIAMProductRolePermissionsList",
         "tags" : [ "external-v2" ],
         "parameters" : [ {
           "name" : "uid",
           "in" : "path",
           "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productId",
+          "in" : "query",
           "schema" : {
             "type" : "string"
           }

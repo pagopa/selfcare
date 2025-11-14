@@ -256,10 +256,14 @@ public class IamStepDefinitions {
       .extract().response();
   }
 
-  @When("I request the user product role permissions list with UID {string}")
-  public void iRequestTheUserProductRolePermissionsListWithUID(String uid) {
+  @When("I request the user product role permissions list with parameters:")
+  public void iRequestTheUserProductRolePermissionsListWithUID(Map<String, String> params) {
+    String uid = params.get("uid");
+    String productId = params.get("productId");
+
     response = given()
             .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
+            .queryParam("productId", productId)
             .when()
             .get("/iam/users/role/permissions/" + uid)
             .then()

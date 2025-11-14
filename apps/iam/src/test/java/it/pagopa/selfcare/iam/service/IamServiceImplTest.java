@@ -361,6 +361,7 @@ class IamServiceImplTest {
   @Test
   void getProductRolePermissionsList_shouldReturnProductRolePermissionsList_whenUserExists() {
     String userId = "user-123";
+    String productId = "productA";
 
     ProductRolePermissions prp1 = ProductRolePermissions.builder()
         .productId("productA")
@@ -372,10 +373,10 @@ class IamServiceImplTest {
 
     ProductRolePermissionsList productRolePermissionsList = new ProductRolePermissionsList(productRolePermissions);
 
-    when(userPermissionsRepository.getUserProductRolePermissionsList(userId))
+    when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId))
             .thenReturn(Uni.createFrom().item(productRolePermissions));
 
-    ProductRolePermissionsList result = service.getProductRolePermissionsList(userId)
+    ProductRolePermissionsList result = service.getProductRolePermissionsList(userId, productId)
             .await().indefinitely();
 
     assertNotNull(result);
@@ -386,11 +387,12 @@ class IamServiceImplTest {
   @Test
   void getProductRolePermissionsList_shouldReturnEmptyList_whenNoMatch() {
     String userId = "user-123";
+    String productId = "productA";
 
-    when(userPermissionsRepository.getUserProductRolePermissionsList(userId))
+    when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId))
             .thenReturn(Uni.createFrom().item(Collections.emptyList()));
 
-    ProductRolePermissionsList result = service.getProductRolePermissionsList(userId)
+    ProductRolePermissionsList result = service.getProductRolePermissionsList(userId, productId)
             .await().indefinitely();
 
     assertNotNull(result);
@@ -400,11 +402,12 @@ class IamServiceImplTest {
   @Test
   void getProductRolePermissionsList_serviceError_throwsInternalException() {
     String userId = "user-123";
+    String productId = "productA";
 
-    when(userPermissionsRepository.getUserProductRolePermissionsList(userId))
+    when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId))
             .thenReturn(Uni.createFrom().failure(new InternalException("Database error")));
 
-    Uni<ProductRolePermissionsList> result = service.getProductRolePermissionsList(userId);
+    Uni<ProductRolePermissionsList> result = service.getProductRolePermissionsList(userId, productId);
 
     result.subscribe()
             .withSubscriber(UniAssertSubscriber.create())
