@@ -7,18 +7,18 @@ import com.mongodb.client.model.Projections;
 import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.iam.exception.InternalException;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.iam.model.ProductRolePermissions;
 import it.pagopa.selfcare.iam.model.UserPermissions;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @ApplicationScoped
@@ -26,6 +26,9 @@ public class UserPermissionsRepository {
 
   @Inject
   ReactiveMongoClient mongoClient;
+
+  @ConfigProperty(name = "quarkus.mongodb.database")
+  String databaseName;
 
   /**
    * Aggregation query to extract a user's permissions for a specific product (optional).
@@ -83,8 +86,46 @@ public class UserPermissionsRepository {
         new ResourceNotFoundException("Permission not found"));
   }
 
+  /**
+   * Aggregation query to extract a list of pruduct, role and permissions for a specific user.
+   */
+  public Uni<List<ProductRolePermissions>> getUserProductRolePermissionsList(String uid, String productId) {
+    List<Bson> pipeline = new ArrayList<>();
+    pipeline.add(Aggregates.match(Filters.eq("_id", uid)));
+    pipeline.add(Aggregates.unwind("$productRoles"));
+    Optional.ofNullable(productId)
+            .ifPresent(pid -> pipeline.add(Aggregates.match(Filters.eq("productRoles.productId", pid))));
+
+    List<Bson> pipelinePost = Arrays.asList(
+            Aggregates.unwind("$productRoles.roles"),
+            Aggregates.lookup(
+                    "roles",
+                    "productRoles.roles",
+                    "_id",
+                    "roleDetails"
+            ),
+            Aggregates.unwind("$roleDetails"),
+            Aggregates.project(
+                    Projections.fields(
+                            Projections.computed("role", "$roleDetails._id"),
+                            Projections.computed("productId", "$productRoles.productId"),
+                            Projections.computed("permissions", "$roleDetails.permissions"),
+                            Projections.excludeId()
+                    )
+            )
+    );
+
+    pipeline.addAll(pipelinePost);
+
+    return getCollection()
+            .aggregate(pipeline, ProductRolePermissions.class)
+            .collect().asList()
+            .onFailure()
+            .transform(failure -> new InternalException("Error retrieving product role permissions list: " + failure.toString()));
+  }
+
   private ReactiveMongoCollection<Document> getCollection() {
-    return mongoClient.getDatabase("selcIam")
+    return mongoClient.getDatabase(databaseName)
       .getCollection("userClaims");
   }
 
