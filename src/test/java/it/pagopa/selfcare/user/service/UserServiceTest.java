@@ -2164,13 +2164,14 @@ class UserServiceTest {
         product.setProductId("prod-io");
         product.setProductRole("admin");
         product.setStatus(ACTIVE);
-        product.setUserProductActions(List.of("Selc:UploadLogo",
+        product.setUserProductActions(List.of(
+                "Selc:UploadLogo",
                 "Selc:ViewBilling",
                 "Selc:ListActiveProducts",
                 "Selc:AccessProductBackoffice",
                 "Selc:ViewManagedInstitutions",
                 "Selc:ViewDelegations",
-                "Selc:ListProductUsers",
+                "Selc:ListProductGroups",
                 "Selc:CreateDelegation",
                 "Selc:ViewInstitutionData",
                 "Selc:ViewContract"));
