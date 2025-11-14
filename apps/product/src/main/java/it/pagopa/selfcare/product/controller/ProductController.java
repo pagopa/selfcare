@@ -118,11 +118,11 @@ public class ProductController {
     @Path("/{productId}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
-            summary = "Cancel (soft-delete) product by ID",
+            summary = "Cancel product by ID",
             description = "Marks the product as CANCELLED if it exists.",
             operationId = "deleteProductById"
     )
-    @APIResponses({
+    @APIResponses(value = {
             @APIResponse(
                     responseCode = "200",
                     description = "Product cancelled",
@@ -172,6 +172,5 @@ public class ProductController {
                                 .build()
                 );
     }
-
 
 }

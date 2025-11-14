@@ -431,6 +431,49 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
+    delete:
+      summary: Cancel product by ID
+      description: Marks the product as CANCELLED if it exists.
+      operationId: deleteProductById
+      tags:
+      - Product
+      parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Product cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductBaseResponse"
+        "400":
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Product not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
 info:
   title: Product API
   version: 1.0.0
