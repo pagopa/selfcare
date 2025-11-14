@@ -114,4 +114,64 @@ public class ProductController {
                 );
     }
 
+    @DELETE
+    @Path("/{productId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(
+            summary = "Cancel (soft-delete) product by ID",
+            description = "Marks the product as CANCELLED if it exists.",
+            operationId = "deleteProductById"
+    )
+    @APIResponses({
+            @APIResponse(
+                    responseCode = "200",
+                    description = "Product cancelled",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = ProductBaseResponse.class))
+            ),
+            @APIResponse(
+                    responseCode = "400",
+                    description = "Bad request",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class))
+            ),
+            @APIResponse(
+                    responseCode = "404",
+                    description = "Product not found",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class))
+            ),
+            @APIResponse(
+                    responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class))
+            )
+    })
+    public Uni<Response> deleteProductById(@PathParam("productId") String productId) {
+        return productService.deleteProductById(productId)
+                .map(product -> Response.ok(product).build())
+                .onFailure(IllegalArgumentException.class).recoverWithItem(() ->
+                        Response.status(Response.Status.BAD_REQUEST)
+                                .entity(Problem.builder()
+                                        .title("Invalid productId")
+                                        .detail("productId is required and must be non-blank")
+                                        .status(Response.Status.BAD_REQUEST.getStatusCode())
+                                        .instance("/products/" + productId)
+                                        .build())
+                                .build()
+                )
+                .onFailure(NotFoundException.class).recoverWithItem(() ->
+                        Response.status(Response.Status.NOT_FOUND)
+                                .entity(Problem.builder()
+                                        .title("Product not found")
+                                        .detail("No product found with productId=" + productId)
+                                        .status(Response.Status.NOT_FOUND.getStatusCode())
+                                        .instance("/products/" + productId)
+                                        .build())
+                                .build()
+                );
+    }
+
+
 }

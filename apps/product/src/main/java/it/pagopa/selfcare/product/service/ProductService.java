@@ -10,5 +10,7 @@ public interface ProductService {
 
     Uni<ProductBaseResponse> createProduct(ProductCreateRequest product);
 
-    Uni<ProductResponse> getProductById(String id);
+    Uni<ProductResponse> getProductById(String productId);
+
+    Uni<ProductBaseResponse> deleteProductById(String productId);
 }

@@ -81,13 +81,32 @@ public class ProductServiceImpl implements ProductService {
     public Uni<ProductResponse> getProductById(String productId) {
         String sanitizedProductId = Encode.forJava(productId);
         log.info("Getting info from product {}", sanitizedProductId);
+        if (StringUtils.isBlank(productId)) {
+            return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by productId: %s", sanitizedProductId)));
+        }
+
+        return productRepository.findProductById(productId)
+                .onItem().ifNull().failWith(() -> new NotFoundException("Product " + sanitizedProductId + " not found"))
+                .map(productMapperResponse::toProductResponse);
+    }
+
+    @Override
+    public Uni<ProductBaseResponse> deleteProductById(String productId) {
+        String sanitizedProductId = Encode.forJava(productId);
+        log.info("Delete product by id: {}", sanitizedProductId);
+
         if (StringUtils.isBlank(sanitizedProductId)) {
             return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by productId: %s", sanitizedProductId)));
         }
 
-        return productRepository.findProductById(sanitizedProductId)
+        return productRepository.findProductById(productId)
                 .onItem().ifNull().failWith(() -> new NotFoundException("Product " + sanitizedProductId + " not found"))
-                .map(productMapperResponse::toProductResponse);
+                .invoke(currentProduct -> {
+                            currentProduct.setUpdatedAt(Instant.now());
+                            currentProduct.setStatus(ProductStatus.DELETED);
+                        })
+                .call(productRepository::update)
+                .map(productMapperResponse::toProductBaseResponse);
     }
 
 }
