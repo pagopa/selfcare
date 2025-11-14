@@ -29,14 +29,13 @@ import org.mockito.ArgumentCaptor;
 import java.io.IOException;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@Slf4j
 @QuarkusTest
 @TestHTTPEndpoint(ProductController.class)
-@Slf4j
 class ProductControllerTest {
 
     @InjectMock
@@ -91,8 +90,6 @@ class ProductControllerTest {
         Assertions.assertEquals("prod-test", passed.getProductId());
     }
 
-
-
     @Test
     @TestSecurity(user = "userJwt")
     void createProduct_shouldReturnKo_whenBadRequest() {
@@ -137,6 +134,87 @@ class ProductControllerTest {
         verify(productService, times(1)).getProductById(missing);
     }
 
+    @Test
+    @TestSecurity(user = "userJwt")
+    void deleteProductTest_shouldReturn200() {
+        // given
+        String productId = "prod-test";
+
+        ProductBaseResponse productBaseResponse = new ProductBaseResponse();
+
+        when(productService.deleteProductById(productId))
+                .thenReturn(Uni.createFrom().item(productBaseResponse));
+
+        // when
+        given()
+                .accept(ContentType.JSON)
+                .when()
+                .delete("/{productId}", productId)
+                .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .body(notNullValue());
+
+        // then
+        verify(productService, times(1)).deleteProductById(productId);
+        verifyNoMoreInteractions(productService);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void deleteProductTest_ShouldReturn400_whenBadRequest() {
+        // given
+        String productId = "prod-test";
+
+        when(productService.deleteProductById(productId))
+                .thenReturn(Uni.createFrom().failure(new IllegalArgumentException()));
+
+        // when
+        given()
+                .accept(ContentType.JSON)
+                .when()
+                .delete("/{productId}", productId)
+                .then()
+                .statusCode(400)
+                .contentType(ContentType.JSON)
+                .body("title", equalTo("Invalid productId"))
+                .body("detail", equalTo("productId is required and must be non-blank"))
+                .body("status", equalTo(400))
+                .body("instance", equalTo("/products/" + productId));
+
+        // then
+        verify(productService, times(1)).deleteProductById(productId);
+        verifyNoMoreInteractions(productService);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void deleteProductTest_shouldReturn404_whenNotFound() {
+        // given
+        String productId = "missing";
+
+        when(productService.deleteProductById(productId))
+                .thenReturn(Uni.createFrom().failure(new NotFoundException("Product missing not found")));
+
+        // when
+        given()
+                .accept(ContentType.JSON)
+                .when()
+                .delete("/{productId}", productId)
+                .then()
+                .statusCode(404)
+                .contentType(ContentType.JSON)
+                .body("title", equalTo("Product not found"))
+                .body("detail", equalTo("No product found with productId=" + productId))
+                .body("status", equalTo(404))
+                .body("instance", equalTo("/products/" + productId));
+
+        // then
+        verify(productService, times(1)).deleteProductById(productId);
+        verifyNoMoreInteractions(productService);
+    }
+
+    // UTILS
     private ProductCreateRequest getProductCreateRequest() {
         ProductCreateRequest productCreateRequest = null;
         try {
