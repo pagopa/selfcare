@@ -34,8 +34,9 @@ public class UserPermissionsRepository {
     List<Bson> pipeline = new ArrayList<>();
     pipeline.add(Aggregates.match(Filters.eq("_id", uid)));
     pipeline.add(Aggregates.unwind("$productRoles"));
-    Optional.ofNullable(productId)
-      .ifPresent(pid -> pipeline.add(Aggregates.match(Filters.eq("productRoles.productId", pid))));
+
+    List<String> productIds = Optional.ofNullable(productId).isPresent() ? List.of("ALL", productId) : List.of("ALL");
+    pipeline.add(Aggregates.match(Filters.in("productRoles.productId", productIds)));
 
     List<Bson> pipelinePost = Arrays.asList(
       Aggregates.unwind("$productRoles.roles"),
