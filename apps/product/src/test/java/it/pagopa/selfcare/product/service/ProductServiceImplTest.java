@@ -81,7 +81,6 @@ class ProductServiceImplTest {
         assertEquals(ProductStatus.TESTING, productPersisted.getStatus());
         assertEquals(1, productPersisted.getVersion());
         assertNotNull(productPersisted.getCreatedAt());
-        assertNotNull(productPersisted.getUpdatedAt());
         assertDoesNotThrow(() -> UUID.fromString(productPersisted.getId()));
     }
 
@@ -105,7 +104,6 @@ class ProductServiceImplTest {
                 .status(ProductStatus.ACTIVE)
                 .version(2)
                 .createdAt(Instant.now().minusSeconds(3600))
-                .updatedAt(Instant.now().minusSeconds(100))
                 .build();
 
         when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(current));
@@ -117,7 +115,6 @@ class ProductServiceImplTest {
                             .alias(reqP.getAlias())
                             .status(reqP.getStatus())
                             .version(reqP.getVersion())
-                            .updatedAt(reqP.getUpdatedAt())
                             .build();
                 });
 
