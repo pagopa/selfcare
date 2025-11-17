@@ -28,6 +28,34 @@
           }
         }
       },
+      "ProductRolePermissions" : {
+        "type" : "object",
+        "properties" : {
+          "productId" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string"
+          },
+          "permissions" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "ProductRolePermissionsList" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProductRolePermissions"
+            }
+          }
+        }
+      },
       "ProductRoles" : {
         "type" : "object",
         "properties" : {
@@ -182,6 +210,59 @@
               "application/problem+json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/iam/users/role/permissions/{uid}" : {
+      "get" : {
+        "summary" : "Get IAM user Product Role Permissions List",
+        "description" : "Retrieves a list of product, role and permissions by user ID and product ID.",
+        "operationId" : "getIAMProductRolePermissionsList",
+        "tags" : [ "external-v2" ],
+        "parameters" : [ {
+          "name" : "uid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productId",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductRolePermissionsList"
                 }
               }
             }
