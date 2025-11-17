@@ -60,7 +60,6 @@ public class ProductServiceImpl implements ProductService {
 
         requestProduct.setId(UUID.randomUUID().toString());
         requestProduct.setCreatedAt(now);
-        requestProduct.setUpdatedAt(now);
         requestProduct.setVersion(1);
 
         return productRepository.findProductById(productId).onItem().ifNotNull().transformToUni(currentProduct -> {
@@ -101,10 +100,7 @@ public class ProductServiceImpl implements ProductService {
 
         return productRepository.findProductById(productId)
                 .onItem().ifNull().failWith(() -> new NotFoundException("Product " + sanitizedProductId + " not found"))
-                .invoke(currentProduct -> {
-                            currentProduct.setUpdatedAt(Instant.now());
-                            currentProduct.setStatus(ProductStatus.DELETED);
-                        })
+                .invoke(currentProduct -> currentProduct.setStatus(ProductStatus.DELETED))
                 .call(productRepository::update)
                 .map(productMapperResponse::toProductBaseResponse);
     }
