@@ -19,8 +19,10 @@ import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.controller.response.ProductResponse;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.service.ProductService;
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -53,7 +55,6 @@ class ProductControllerTest {
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         objectMapper.registerModule(new Jdk8Module());
     }
-
 
     @Test
     @TestSecurity(user = "userJwt")
@@ -211,6 +212,148 @@ class ProductControllerTest {
 
         // then
         verify(productService, times(1)).deleteProductById(productId);
+        verifyNoMoreInteractions(productService);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void patchProductTest_shouldReturn200_whenOk() {
+        // given
+        String productId = "prod-test";
+        var updated = mock(ProductResponse.class);
+        when(productService.patchProductById(eq(productId), any()))
+                .thenReturn(Uni.createFrom().item(updated));
+        String patchDoc = "{\"status\":\"TESTING\"}";
+
+        // when
+        given()
+                .contentType("application/merge-patch+json")
+                .accept(ContentType.JSON)
+                .body(patchDoc)
+                .when()
+                .patch("/{productId}", productId)
+                .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON);
+
+        // then
+        verify(productService, times(1)).patchProductById(eq(productId), any());
+        verifyNoMoreInteractions(productService);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void patchProductTest_shouldReturn400_whenInvalidProductId() {
+        // given
+        String productId = StringUtils.EMPTY;
+        when(productService.patchProductById(eq(productId), any()))
+                .thenReturn(Uni.createFrom().failure(new IllegalArgumentException()));
+        String patchDoc = "{\"productId\":\"\"}";
+
+        // when
+        given()
+                .contentType("application/merge-patch+json")
+                .accept(ContentType.JSON)
+                .body(patchDoc)
+                .when()
+                .patch("/{productId}", productId)
+                .then()
+                .statusCode(400)
+                .contentType(ContentType.JSON)
+                .body("title", equalTo("Invalid productId"))
+                .body("detail", equalTo("productId is required and must be non-blank"))
+                .body("status", equalTo(400))
+                .body("instance", equalTo("/products/" + productId));
+
+        // then
+        verify(productService, times(1)).patchProductById(eq(productId), any());
+        verifyNoMoreInteractions(productService);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void patchProductTest_shouldReturn404_whenProductNotFound() {
+        // given
+        String productId = "prod-test";
+        when(productService.patchProductById(eq(productId), any()))
+                .thenReturn(Uni.createFrom().failure(new NotFoundException()));
+        String patchDoc = "{\"productId\":\"prod-test\"}";
+
+        // when
+        given()
+                .contentType("application/merge-patch+json")
+                .accept(ContentType.JSON)
+                .body(patchDoc)
+                .when()
+                .patch("/{productId}", productId)
+                .then()
+                .statusCode(404)
+                .contentType(ContentType.JSON)
+                .body("title", equalTo("Product not found"))
+                .body("detail", equalTo("No product found with productId=" + productId))
+                .body("status", equalTo(404))
+                .body("instance", equalTo("/products/" + productId));
+
+        // then
+        verify(productService, times(1)).patchProductById(eq(productId), any());
+        verifyNoMoreInteractions(productService);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void patchProductTest_shouldReturn500_whenRuntimeError() {
+        // given
+        String productId = "prod-test";
+        when(productService.patchProductById(eq(productId), any()))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException()));
+        String patchDoc = "{}";
+
+        // when
+        given()
+                .contentType("application/merge-patch+json")
+                .accept(ContentType.JSON)
+                .body(patchDoc)
+                .when()
+                .patch("/{productId}", productId)
+                .then()
+                .statusCode(500)
+                .contentType(ContentType.JSON)
+                .body("title", equalTo("Internal Server Error"))
+                .body("status", equalTo(500))
+                .body("instance", equalTo("/products/" + productId));
+
+        // then
+        verify(productService, times(1)).patchProductById(eq(productId), any());
+        verifyNoMoreInteractions(productService);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void patchProductTest_shouldReturn400_whenInvalidPatchDocument() {
+        // given
+        String productId = "prod-test";
+        String invalidPayload = "{}";
+
+        when(productService.patchProductById(eq(productId), any()))
+                .thenReturn(Uni.createFrom().failure(new BadRequestException("Invalid merge patch document")));
+
+        // when
+        given()
+                .contentType("application/merge-patch+json")
+                .accept(ContentType.JSON)
+                .body(invalidPayload)
+                .when()
+                .patch("/{productId}", productId)
+                .then()
+                .statusCode(400)
+                .contentType(ContentType.JSON)
+                .body("title", equalTo("Bad Request"))
+                .body("detail", equalTo("Invalid patch payload or field constraints violated: Invalid merge patch document"))
+                .body("status", equalTo(400))
+                .body("instance", equalTo("/products/" + productId));
+
+        // then
+        verify(productService, times(1)).patchProductById(eq(productId), any());
         verifyNoMoreInteractions(productService);
     }
 
