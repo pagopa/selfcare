@@ -50,4 +50,22 @@ public class JsonUtils {
         return treeToValue(mergedNode, type);
     }
 
+    public JsonMergePatch toMergePatch(JsonValue jsonBody) {
+        if (jsonBody == null) {
+            throw new BadRequestException("Missing request param to update");
+        }
+        if (jsonBody.getValueType() != JsonValue.ValueType.OBJECT) {
+            throw new BadRequestException("Invalid merge patch document");
+        }
+        JsonObject obj = jsonBody.asJsonObject();
+        if (obj.isEmpty()) {
+            throw new BadRequestException("Missing request param to update");
+        }
+        try {
+            return Json.createMergePatch(obj);
+        } catch (Exception e) {
+            throw new BadRequestException("Invalid merge patch document", e);
+        }
+    }
+
 }

@@ -8,9 +8,6 @@ import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.controller.response.ProductResponse;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
-import jakarta.json.Json;
-import jakarta.json.JsonException;
-import jakarta.json.JsonMergePatch;
 import jakarta.json.JsonValue;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -221,25 +218,9 @@ public class ProductController {
     @Consumes("application/merge-patch+json")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> patchProductById(@PathParam("productId") String productId,
-                                          JsonValue patchDoc) {
-        final JsonMergePatch mergePatch;
-        try {
-            mergePatch = Json.createMergePatch(patchDoc);
-        } catch (JsonException | IllegalArgumentException e) {
-            return Uni.createFrom().item(
-                    Response.status(Response.Status.BAD_REQUEST)
-                            .type("application/problem+json")
-                            .entity(Problem.builder()
-                                    .title("Invalid merge patch document")
-                                    .detail("Patch payload is not a valid JSON Merge Patch")
-                                    .status(400)
-                                    .instance("/products/" + productId)
-                                    .build())
-                            .build()
-            );
-        }
+                                          JsonValue updateBody) {
 
-        return productService.patchProductById(productId, mergePatch)
+        return productService.patchProductById(productId, updateBody)
                 .map(updated -> Response.ok(updated).build())
                 .onFailure(IllegalArgumentException.class).recoverWithItem(() ->
                         Response.status(Response.Status.BAD_REQUEST)
@@ -251,12 +232,12 @@ public class ProductController {
                                         .instance("/products/" + productId)
                                         .build())
                                 .build())
-                .onFailure(BadRequestException.class).recoverWithItem(() ->
+                .onFailure(BadRequestException.class).recoverWithItem(t ->
                         Response.status(Response.Status.BAD_REQUEST)
                                 .type("application/problem+json")
                                 .entity(Problem.builder()
                                         .title("Bad Request")
-                                        .detail("Invalid patch payload or field constraints violated")
+                                        .detail(String.format("Invalid patch payload or field constraints violated: %s", t.getMessage()))
                                         .status(400)
                                         .instance("/products/" + productId)
                                         .build())
