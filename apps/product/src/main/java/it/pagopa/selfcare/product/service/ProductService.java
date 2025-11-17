@@ -4,6 +4,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.controller.response.ProductResponse;
+import jakarta.json.JsonMergePatch;
 
 public interface ProductService {
     Uni<String> ping();
@@ -13,4 +14,6 @@ public interface ProductService {
     Uni<ProductResponse> getProductById(String productId);
 
     Uni<ProductBaseResponse> deleteProductById(String productId);
+
+    Uni<ProductResponse> patchProductById(String productId, JsonMergePatch mergePatch);
 }
