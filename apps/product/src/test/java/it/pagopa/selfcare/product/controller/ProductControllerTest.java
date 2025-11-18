@@ -1,0 +1,160 @@
+package it.pagopa.selfcare.product.controller;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import io.quarkus.test.InjectMock;
+import io.quarkus.test.common.http.TestHTTPEndpoint;
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.security.TestSecurity;
+import io.restassured.http.ContentType;
+import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
+import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.controller.response.ProductResponse;
+import it.pagopa.selfcare.product.model.enums.ProductStatus;
+import it.pagopa.selfcare.product.service.ProductService;
+import jakarta.ws.rs.NotFoundException;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+
+import java.io.IOException;
+
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@QuarkusTest
+@TestHTTPEndpoint(ProductController.class)
+@Slf4j
+class ProductControllerTest {
+
+    @InjectMock
+    ProductService productService;
+
+    private static ObjectMapper objectMapper;
+
+    @BeforeAll
+    static void setup(){
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new ParameterNamesModule(JsonCreator.Mode.DELEGATING));
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper.registerModule(new Jdk8Module());
+    }
+
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void ping_shouldReturnOk() {
+        // given
+        when(productService.ping()).thenReturn(Uni.createFrom().item("pong"));
+
+        // when
+        given().accept(ContentType.JSON).when().get("/ping").then().statusCode(200).body(containsString("pong"));
+
+        // then
+        verify(productService, times(1)).ping();
+    }
+
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void createProduct_shouldReturnOK() {
+        // given
+        ProductCreateRequest productCreateRequest = getProductCreateRequest();
+
+        ProductBaseResponse productBaseResponse = ProductBaseResponse.builder().productId("prod-test").status(ProductStatus.TESTING).id("prod-test-id").build();
+
+        when(productService.createProduct(any(ProductCreateRequest.class))).thenReturn(Uni.createFrom().item(productBaseResponse));
+
+        // when
+        given().contentType(ContentType.JSON).body(productCreateRequest).when().post().then().statusCode(201).contentType(ContentType.JSON).body("id", equalTo("prod-test-id")).body("productId", equalTo("prod-test")).body("status", equalTo("TESTING"));
+
+        // then
+        ArgumentCaptor<ProductCreateRequest> captor = ArgumentCaptor.forClass(ProductCreateRequest.class);
+        verify(productService, times(1)).createProduct(captor.capture());
+        ProductCreateRequest passed = captor.getValue();
+        Assertions.assertNotNull(captor);
+        Assertions.assertEquals("prod-test", passed.getProductId());
+    }
+
+
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void createProduct_shouldReturnKo_whenBadRequest() {
+        // given
+        ProductCreateRequest productCreateRequest = new ProductCreateRequest();
+
+        ProductBaseResponse productBaseResponse = new ProductBaseResponse();
+
+        when(productService.createProduct(any(ProductCreateRequest.class))).thenReturn(Uni.createFrom().item(productBaseResponse));
+
+        // when
+        given().contentType(ContentType.JSON).body(productCreateRequest).when().post().then().statusCode(400).contentType(ContentType.JSON);
+
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void getProductById_shouldReturnOk() {
+        // given
+        ProductResponse response = getProductResponse();
+
+        when(productService.getProductById("prod-test")).thenReturn(Uni.createFrom().item(response));
+
+        // when
+        given().accept(ContentType.JSON).when().get("/prod-test").then().statusCode(200).contentType(ContentType.JSON).body("productId", equalTo("prod-test")).body("status", equalTo("TESTING"));
+
+        // then
+        verify(productService, times(1)).getProductById("prod-test");
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void getProductById_whenNotFound_shouldReturnKO() {
+        // given
+        String missing = "prod-ko";
+        when(productService.getProductById(missing)).thenReturn(Uni.createFrom().failure(new NotFoundException("not found")));
+
+        // when
+        given().accept(ContentType.JSON).when().get("/" + missing).then().statusCode(404).contentType(ContentType.JSON).body("title", equalTo("Product not found")).body("status", equalTo(404)).body("detail", containsString(missing)).body("instance", equalTo("/products/" + missing));
+
+        // then
+        verify(productService, times(1)).getProductById(missing);
+    }
+
+    private ProductCreateRequest getProductCreateRequest() {
+        ProductCreateRequest productCreateRequest = null;
+        try {
+            productCreateRequest =  objectMapper.readValue(getClass().getResource("/request/createRequest.json"), ProductCreateRequest.class);
+        } catch (IOException e) {
+            log.error("Error", e);
+        }
+        return productCreateRequest;
+    }
+
+    private ProductResponse getProductResponse() {
+        ProductResponse productResponse = null;
+        try {
+            productResponse =  objectMapper.readValue(getClass().getResource("/request/createRequest.json"), ProductResponse.class);
+        } catch (IOException e) {
+            log.error("Error", e);
+        }
+        return productResponse;
+    }
+
+}
