@@ -245,10 +245,10 @@ class ProductControllerTest {
     @TestSecurity(user = "userJwt")
     void patchProductTest_shouldReturn400_whenInvalidProductId() {
         // given
-        String productId = StringUtils.EMPTY;
+        String productId = " ";
         when(productService.patchProductById(eq(productId), any()))
                 .thenReturn(Uni.createFrom().failure(new IllegalArgumentException()));
-        String patchDoc = "{\"productId\":\"\"}";
+        String patchDoc = "{\"status\":\"TESTING\"}";
 
         // when
         given()
