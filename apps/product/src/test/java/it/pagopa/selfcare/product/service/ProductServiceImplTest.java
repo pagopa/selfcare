@@ -11,7 +11,9 @@ import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.repository.ProductRepository;
+import it.pagopa.selfcare.product.util.JsonUtils;
 import jakarta.inject.Inject;
+import jakarta.json.Json;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import org.apache.commons.lang3.StringUtils;
@@ -21,6 +23,8 @@ import org.mockito.ArgumentCaptor;
 import java.time.Instant;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -214,4 +218,188 @@ class ProductServiceImplTest {
     void ping_ok() {
         assertEquals("OK", productService.ping().await().indefinitely());
     }
+
+    @Test
+    void patchProductByIdTest_whenMissingProductIdOnStorage_thenBadRequest() {
+        // given
+        var jsonUtils = mock(JsonUtils.class);
+        var validBodyObject = Json.createObjectBuilder().add("productId", "prod-test").build();
+
+        // when
+        Throwable thrown = catchThrowable(() ->
+                productService.patchProductById(" ", validBodyObject).await().indefinitely());
+
+        // then
+        assertThat(thrown).isInstanceOf(BadRequestException.class)
+                .hasMessage("Missing productId");
+        verifyNoInteractions(jsonUtils, productRepository);
+    }
+
+    @Test
+    void patchProductByIdTest_whenParsingFails_thenBadRequest() {
+        // given
+        var jsonUtils = mock(JsonUtils.class);
+        var validBodyObject = Json.createValue("broken");
+
+        Product current = new Product();
+        current.setProductId("prod-test");
+        current.setVersion(2);
+
+        when(productRepository.findProductById("prod-test"))
+                .thenReturn(Uni.createFrom().item(current));
+
+        when(jsonUtils.toMergePatch(validBodyObject)).thenThrow(new BadRequestException("Invalid merge patch document"));
+
+        // when
+        Throwable thrown = catchThrowable(() ->
+                productService.patchProductById("prod-test", validBodyObject).await().indefinitely());
+
+        // then
+        assertThat(thrown).isInstanceOf(BadRequestException.class)
+                .hasMessage("Invalid merge patch document");
+        verifyNoInteractions(productRepository);
+    }
+
+    @Test
+    void patchProductByIdTest_whenRepositoryReturnsNull_thenNotFound() {
+        // given
+        var jsonUtils = mock(JsonUtils.class);
+        var validBodyObject = Json.createObjectBuilder().add("productId", "prod-test").build();
+        var mergePatch = Json.createMergePatch(validBodyObject);
+
+        when(jsonUtils.toMergePatch(validBodyObject)).thenReturn(mergePatch);
+        when(productRepository.findProductById("prod-test"))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        // when
+        Throwable thrown = catchThrowable(() ->
+                productService.patchProductById("prod-test", validBodyObject).await().indefinitely());
+
+        // then
+        assertThat(thrown).isInstanceOf(NotFoundException.class)
+                .hasMessage("Product prod-test not found");
+        verify(productRepository, times(1)).findProductById("prod-test");
+        verifyNoMoreInteractions(productRepository);
+    }
+
+    @Test
+    void patchProductByIdTest_whenPersistingBody_thenReturnResponse() {
+        // given
+        var jsonUtils = mock(JsonUtils.class);
+        var validBodyObject = Json.createObjectBuilder().add("productId", "prod-test").build();
+        var mergePatch = Json.createMergePatch(validBodyObject);
+
+        Product current = new Product();
+        current.setProductId("prod-test");
+        current.setVersion(2);
+
+        when(jsonUtils.toMergePatch(validBodyObject)).thenReturn(mergePatch);
+        when(productRepository.findProductById("prod-test"))
+                .thenReturn(Uni.createFrom().item(current));
+
+        Product patched = new Product();
+        when(jsonUtils.mergePatch(eq(mergePatch), eq(current), eq(Product.class)))
+                .thenReturn(patched);
+
+        when(productRepository.persist(any(Product.class))).thenReturn(Uni.createFrom().item(current));
+
+        ProductResponse mapped = new ProductResponse();
+        when(productMapperResponse.toProductResponse(any(Product.class))).thenReturn(mapped);
+
+        // when
+        ProductResponse out = productService.patchProductById("prod-test", validBodyObject).await().indefinitely();
+
+        // then
+        assertThat(out).isSameAs(mapped);
+        verify(productRepository).findProductById("prod-test");
+        verify(productRepository).persist(any(Product.class));
+        verify(productMapperResponse).toProductResponse(any(Product.class));
+        verifyNoMoreInteractions(productRepository, productMapperResponse);
+    }
+
+    @Test
+    void deleteProductByIdTest_whenDeleting_thenBadRequest() {
+        // given
+        var blank = StringUtils.EMPTY;
+
+        // when
+        Throwable thrown = catchThrowable(() -> productService.deleteProductById(blank).await().indefinitely());
+
+        // then
+        assertThat(thrown)
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Missing product by productId: ");
+        verifyNoInteractions(productRepository, productMapperResponse);
+    }
+
+    @Test
+    void deleteProductByIdTest_whenDeleting_thenNotFound() {
+        // given
+        String productId = "prod-test";
+        when(productRepository.findProductById(productId)).thenReturn(Uni.createFrom().nullItem());
+
+        // when
+        Throwable thrown = catchThrowable(() -> productService.deleteProductById(productId).await().indefinitely());
+
+        // then
+        assertThat(thrown)
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Product prod-test not found");
+        verify(productRepository, times(1)).findProductById(productId);
+        verifyNoMoreInteractions(productRepository);
+        verifyNoInteractions(productMapperResponse);
+    }
+
+    @Test
+    void deleteProductByIdTest_whenDeleting_thenSetStatusDeleted() {
+        // given
+        String productId = "prod-test";
+        Product current = new Product();
+        current.setStatus(ProductStatus.ACTIVE);
+
+        when(productRepository.findProductById(productId))
+                .thenReturn(Uni.createFrom().item(current));
+
+        ArgumentCaptor<Product> updatedCaptor = ArgumentCaptor.forClass(Product.class);
+        when(productRepository.update(updatedCaptor.capture())).thenReturn(Uni.createFrom().item(current));
+
+        ProductBaseResponse mapped = new ProductBaseResponse();
+        when(productMapperResponse.toProductBaseResponse(any(Product.class))).thenReturn(mapped);
+
+        // when
+        ProductBaseResponse out = productService.deleteProductById(productId).await().indefinitely();
+
+        // then
+        assertThat(out).isSameAs(mapped);
+        Product updated = updatedCaptor.getValue();
+        assertThat(updated.getStatus()).isEqualTo(ProductStatus.DELETED);
+        verify(productRepository, times(1)).findProductById(productId);
+        verify(productRepository, times(1)).update(any(Product.class));
+        verify(productMapperResponse, times(1)).toProductBaseResponse(any(Product.class));
+        verifyNoMoreInteractions(productRepository, productMapperResponse);
+    }
+
+    @Test
+    void deleteProductByIdTest_whenDeleting_thenPropagatesError() {
+        // given
+        String productId = "prod-test";
+        Product current = new Product();
+        current.setStatus(ProductStatus.ACTIVE);
+
+        when(productRepository.findProductById(productId))
+                .thenReturn(Uni.createFrom().item(current));
+        when(productRepository.update(any(Product.class)))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException()));
+
+        // when
+        Throwable thrown = catchThrowable(() -> productService.deleteProductById(productId).await().indefinitely());
+
+        // then
+        assertThat(thrown)
+                .isInstanceOf(RuntimeException.class);
+        verify(productRepository, times(1)).findProductById(productId);
+        verify(productRepository, times(1)).update(any(Product.class));
+        verifyNoInteractions(productMapperResponse);
+    }
+
 }

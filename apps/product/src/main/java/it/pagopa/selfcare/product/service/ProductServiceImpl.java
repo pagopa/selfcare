@@ -95,7 +95,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Uni<ProductBaseResponse> deleteProductById(String productId) {
         String sanitizedProductId = Encode.forJava(productId);
-        log.info("Delete product by id: {}", sanitizedProductId);
+        log.info("Delete product configuration by productId: {}", sanitizedProductId);
 
         if (StringUtils.isBlank(sanitizedProductId)) {
             return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by productId: %s", sanitizedProductId)));
@@ -110,6 +110,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Uni<ProductResponse> patchProductById(String productId, JsonValue body) {
+        String sanitizedProductId = Encode.forJava(productId);
+        log.info("Update product configuration by productId: {}", sanitizedProductId);
         return Uni.createFrom().item(() -> {
                     if (StringUtils.isBlank(productId)) {
                         throw new BadRequestException("Missing productId");
