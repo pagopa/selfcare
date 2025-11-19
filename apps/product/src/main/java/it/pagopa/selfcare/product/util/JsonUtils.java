@@ -3,15 +3,15 @@ package it.pagopa.selfcare.product.util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import jakarta.json.*;
 import jakarta.ws.rs.BadRequestException;
 import lombok.RequiredArgsConstructor;
 
 import java.io.StringReader;
 
-@Singleton
+@ApplicationScoped
 @RequiredArgsConstructor(onConstructor_ = {@Inject})
 public class JsonUtils {
 

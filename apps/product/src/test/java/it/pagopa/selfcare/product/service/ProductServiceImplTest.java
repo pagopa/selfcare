@@ -44,6 +44,9 @@ class ProductServiceImplTest {
     @InjectMock
     ProductMapperResponse productMapperResponse;
 
+    @InjectMock
+    JsonUtils jsonUtils;
+
     @Test
     void createProductTest() {
         // given
@@ -222,7 +225,6 @@ class ProductServiceImplTest {
     @Test
     void patchProductByIdTest_whenMissingProductIdOnStorage_thenBadRequest() {
         // given
-        var jsonUtils = mock(JsonUtils.class);
         var validBodyObject = Json.createObjectBuilder().add("productId", "prod-test").build();
 
         // when
@@ -238,7 +240,6 @@ class ProductServiceImplTest {
     @Test
     void patchProductByIdTest_whenParsingFails_thenBadRequest() {
         // given
-        var jsonUtils = mock(JsonUtils.class);
         var validBodyObject = Json.createValue("broken");
 
         Product current = new Product();
@@ -263,7 +264,6 @@ class ProductServiceImplTest {
     @Test
     void patchProductByIdTest_whenRepositoryReturnsNull_thenNotFound() {
         // given
-        var jsonUtils = mock(JsonUtils.class);
         var validBodyObject = Json.createObjectBuilder().add("productId", "prod-test").build();
         var mergePatch = Json.createMergePatch(validBodyObject);
 
@@ -285,7 +285,6 @@ class ProductServiceImplTest {
     @Test
     void patchProductByIdTest_whenPersistingBody_thenReturnResponse() {
         // given
-        var jsonUtils = mock(JsonUtils.class);
         var validBodyObject = Json.createObjectBuilder().add("productId", "prod-test").build();
         var mergePatch = Json.createMergePatch(validBodyObject);
 
