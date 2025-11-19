@@ -61,12 +61,10 @@ public class ProductServiceImpl implements ProductService {
             requestProduct.setStatus(ProductStatus.TESTING);
         }
 
-        requestProduct.setId(UUID.randomUUID().toString());
         requestProduct.setCreatedAt(Instant.now());
-        requestProduct.setVersion(1);
 
         return productRepository.findProductById(productId).onItem().ifNotNull().transformToUni(currentProduct -> {
-                    int nextVersion = currentProduct.getVersion() == null ? 1 : currentProduct.getVersion() + 1;
+                    int nextVersion = currentProduct.getVersion() + 1;
                     requestProduct.setVersion(nextVersion);
                     log.info("Updating configuration of product {} with version {}", productId, nextVersion);
                     return productRepository.persist(productMapperRequest.cloneObject(currentProduct, requestProduct)).replaceWith(requestProduct);
@@ -83,11 +81,11 @@ public class ProductServiceImpl implements ProductService {
     public Uni<ProductResponse> getProductById(String productId) {
         String sanitizedProductId = Encode.forJava(productId);
         log.info("Getting info from product {}", sanitizedProductId);
-        if (StringUtils.isBlank(productId)) {
+        if (StringUtils.isBlank(sanitizedProductId)) {
             return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by productId: %s", sanitizedProductId)));
         }
 
-        return productRepository.findProductById(productId)
+        return productRepository.findProductById(sanitizedProductId)
                 .onItem().ifNull().failWith(() -> new NotFoundException("Product " + sanitizedProductId + " not found"))
                 .map(productMapperResponse::toProductResponse);
     }
@@ -123,10 +121,9 @@ public class ProductServiceImpl implements ProductService {
                                 .onItem().ifNull().failWith(() -> new NotFoundException("Product " + productId + " not found"))
                                 .onItem().transformToUni(current -> {
                                     Product candidate = jsonUtils.mergePatch(patch, current, Product.class);
-                                    candidate.setId(UUID.randomUUID().toString());
                                     candidate.setProductId(current.getProductId());
                                     candidate.setCreatedAt(Instant.now());
-                                    candidate.setVersion(current.getVersion() == null ? 1 : current.getVersion() + 1);
+                                    candidate.setVersion(current.getVersion() + 1);
                                     return productRepository.persist(candidate)
                                             .map(productMapperResponse::toProductResponse);
                                 })

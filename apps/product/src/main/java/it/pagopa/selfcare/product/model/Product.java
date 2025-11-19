@@ -11,6 +11,7 @@ import org.bson.codecs.pojo.annotations.BsonId;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Data
 @Builder(toBuilder = true)
@@ -20,7 +21,8 @@ import java.util.Map;
 public class Product {
 
     @BsonId
-    private String id;
+    @Builder.Default
+    private String id = UUID.randomUUID().toString();
 
     private String alias;
 
@@ -36,7 +38,8 @@ public class Product {
 
     private String createdBy;
 
-    private Integer version;
+    @Builder.Default
+    private int version = 1;
 
     private boolean delegable;
 
@@ -48,7 +51,8 @@ public class Product {
 
     private boolean enabled;
 
-    private Integer expirationDate;
+    @Builder.Default
+    private int expirationDate = 30;
 
     private String identityTokenAudience;
 
