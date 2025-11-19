@@ -121,7 +121,7 @@ public class ProductController {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Cancel product by ID",
-            description = "Marks the product as CANCELLED if it exists.",
+            description = "Marks the product as DELETED if it exists.",
             operationId = "deleteProductById"
     )
     @APIResponses(value = {
@@ -232,16 +232,18 @@ public class ProductController {
                                         .instance("/products/" + productId)
                                         .build())
                                 .build())
-                .onFailure(BadRequestException.class).recoverWithItem(t ->
-                        Response.status(Response.Status.BAD_REQUEST)
+                .onFailure(BadRequestException.class).recoverWithItem(t -> {
+                    log.error("Unexpected error occurred while while parsing data for {}", productId, t);
+                    return Response.status(Response.Status.BAD_REQUEST)
                                 .type("application/problem+json")
                                 .entity(Problem.builder()
                                         .title("Bad Request")
-                                        .detail(String.format("Invalid patch payload or field constraints violated: %s", t.getMessage()))
+                                        .detail("Invalid patch payload or field constraints violated")
                                         .status(400)
                                         .instance("/products/" + productId)
                                         .build())
-                                .build())
+                            .build();
+                })
                 .onFailure(NotFoundException.class).recoverWithItem(() ->
                         Response.status(Response.Status.NOT_FOUND)
                                 .type("application/problem+json")
@@ -252,16 +254,18 @@ public class ProductController {
                                         .instance("/products/" + productId)
                                         .build())
                                 .build())
-                .onFailure().recoverWithItem(t ->
-                        Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                                .type("application/problem+json")
-                                .entity(Problem.builder()
-                                        .title("Internal Server Error")
-                                        .detail(String.format("Error stackTrace: %s", t.getMessage()))
-                                        .status(500)
-                                        .instance("/products/" + productId)
-                                        .build())
-                                .build());
+                .onFailure().recoverWithItem(t -> {
+                    log.error("Unexpected error occurred while patching product with id {}", productId, t);
+                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                            .type("application/problem+json")
+                            .entity(Problem.builder()
+                                    .title("Internal Server Error")
+                                    .detail("An unexpected error occurred.")
+                                    .status(500)
+                                    .instance("/products/" + productId)
+                                    .build())
+                            .build();
+                });
     }
 
 }

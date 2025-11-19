@@ -348,7 +348,7 @@ class ProductControllerTest {
                 .statusCode(400)
                 .contentType(ContentType.JSON)
                 .body("title", equalTo("Bad Request"))
-                .body("detail", equalTo("Invalid patch payload or field constraints violated: Invalid merge patch document"))
+                .body("detail", equalTo("Invalid patch payload or field constraints violated"))
                 .body("status", equalTo(400))
                 .body("instance", equalTo("/products/" + productId));
 

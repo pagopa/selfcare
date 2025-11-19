@@ -680,7 +680,7 @@
       },
       "delete" : {
         "summary" : "Cancel product by ID",
-        "description" : "Marks the product as CANCELLED if it exists.",
+        "description" : "Marks the product as DELETED if it exists.",
         "operationId" : "deleteProductById",
         "tags" : [ "Product" ],
         "parameters" : [ {

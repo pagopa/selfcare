@@ -64,7 +64,7 @@ public class JsonUtils {
         try {
             return Json.createMergePatch(obj);
         } catch (Exception e) {
-            throw new BadRequestException("Invalid merge patch document", e);
+            throw new BadRequestException("Merge patch must be a JSON object, got: " + jsonBody.getValueType());
         }
     }
 

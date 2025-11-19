@@ -101,7 +101,7 @@ public class ProductServiceImpl implements ProductService {
             return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by productId: %s", sanitizedProductId)));
         }
 
-        return productRepository.findProductById(productId)
+        return productRepository.findProductById(sanitizedProductId)
                 .onItem().ifNull().failWith(() -> new NotFoundException("Product " + sanitizedProductId + " not found"))
                 .invoke(currentProduct -> currentProduct.setStatus(ProductStatus.DELETED))
                 .call(productRepository::update)
