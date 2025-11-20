@@ -121,6 +121,7 @@ public class ProductServiceImpl implements ProductService {
                                 .onItem().ifNull().failWith(() -> new NotFoundException("Product " + productId + " not found"))
                                 .onItem().transformToUni(current -> {
                                     Product candidate = jsonUtils.mergePatch(patch, current, Product.class);
+                                    candidate.setId(UUID.randomUUID().toString());
                                     candidate.setProductId(current.getProductId());
                                     candidate.setCreatedAt(Instant.now());
                                     candidate.setVersion(current.getVersion() + 1);
