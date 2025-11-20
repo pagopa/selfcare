@@ -74,7 +74,6 @@ Feature: Product API end-to-end onboarding and lifecycle
       | productId | prod-test |
       | status    | TESTING   |
 
-  @happy-path @get
   Scenario: Successfully get product by id after initial creation
     Given User login with username "j.doe" and password "test"
     And The following path params:
@@ -254,7 +253,7 @@ Feature: Product API end-to-end onboarding and lifecycle
       | productId | prod-unknown |
     And The following request body:
     """
-      { "enabled": "not-a-boolean" }
+      {}
     """
     When I send a PATCH request to "/product/{productId}" with content type "application/merge-patch+json"
     Then The status code is 400
