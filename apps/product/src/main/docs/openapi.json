@@ -2,6 +2,10 @@
   "openapi" : "3.1.0",
   "tags" : [ {
     "name" : "Product"
+  }, {
+    "name" : "external-pnpg"
+  }, {
+    "name" : "external-v2"
   } ],
   "components" : {
     "schemas" : {
@@ -455,7 +459,7 @@
         "summary" : "Create or update a product configuration (upsert)",
         "description" : "Creates a new product configuration or updates the existing one when a match is found",
         "operationId" : "createProduct",
-        "tags" : [ "Product" ],
+        "tags" : [ "external-v2", "external-pnpg" ],
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -552,7 +556,7 @@
         "summary" : "Partially update a product by ID (JSON Merge Patch)",
         "description" : "Applies a JSON Merge Patch document to partially update an existing product identified by its productId.",
         "operationId" : "patchProductById",
-        "tags" : [ "Product" ],
+        "tags" : [ "external-v2", "external-pnpg" ],
         "parameters" : [ {
           "name" : "productId",
           "in" : "path",
@@ -627,7 +631,7 @@
         "summary" : "Get product by productId",
         "description" : "Retrieve a product by its unique identifier.",
         "operationId" : "getProductById",
-        "tags" : [ "Product" ],
+        "tags" : [ "external-v2", "external-pnpg" ],
         "parameters" : [ {
           "name" : "productId",
           "in" : "path",
@@ -682,7 +686,7 @@
         "summary" : "Cancel product by ID",
         "description" : "Marks the product as DELETED if it exists.",
         "operationId" : "deleteProductById",
-        "tags" : [ "Product" ],
+        "tags" : [ "external-v2", "external-pnpg" ],
         "parameters" : [ {
           "name" : "productId",
           "in" : "path",
