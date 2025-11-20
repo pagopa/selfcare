@@ -36,8 +36,6 @@ public class Product {
 
     private String createdBy;
 
-    private Instant updatedAt;
-
     private Integer version;
 
     private boolean delegable;

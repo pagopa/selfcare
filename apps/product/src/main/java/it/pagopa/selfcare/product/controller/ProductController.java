@@ -7,6 +7,8 @@ import it.pagopa.selfcare.product.controller.response.Problem;
 import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.controller.response.ProductResponse;
 import it.pagopa.selfcare.product.service.ProductService;
+import jakarta.inject.Inject;
+import jakarta.json.JsonValue;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -23,7 +25,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @Authenticated
 @Tag(name = "Product")
 @Path("/product")
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = {@Inject})
 @Slf4j
 public class ProductController {
 
@@ -112,6 +114,158 @@ public class ProductController {
                                         .build())
                                 .build()
                 );
+    }
+
+    @DELETE
+    @Path("/{productId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(
+            summary = "Cancel product by ID",
+            description = "Marks the product as DELETED if it exists.",
+            operationId = "deleteProductById"
+    )
+    @APIResponses(value = {
+            @APIResponse(
+                    responseCode = "200",
+                    description = "Product cancelled",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = ProductBaseResponse.class))
+            ),
+            @APIResponse(
+                    responseCode = "400",
+                    description = "Bad request",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class))
+            ),
+            @APIResponse(
+                    responseCode = "404",
+                    description = "Product not found",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class))
+            ),
+            @APIResponse(
+                    responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class))
+            )
+    })
+    public Uni<Response> deleteProductById(@PathParam("productId") String productId) {
+        return productService.deleteProductById(productId)
+                .map(product -> Response.ok(product).build())
+                .onFailure(IllegalArgumentException.class).recoverWithItem(() ->
+                        Response.status(Response.Status.BAD_REQUEST)
+                                .entity(Problem.builder()
+                                        .title("Invalid productId")
+                                        .detail("productId is required and must be non-blank")
+                                        .status(Response.Status.BAD_REQUEST.getStatusCode())
+                                        .instance("/products/" + productId)
+                                        .build())
+                                .build()
+                )
+                .onFailure(NotFoundException.class).recoverWithItem(() ->
+                        Response.status(Response.Status.NOT_FOUND)
+                                .entity(Problem.builder()
+                                        .title("Product not found")
+                                        .detail("No product found with productId=" + productId)
+                                        .status(Response.Status.NOT_FOUND.getStatusCode())
+                                        .instance("/products/" + productId)
+                                        .build())
+                                .build()
+                );
+    }
+
+    @PATCH
+    @Path("/{productId}")
+    @Operation(
+            summary = "Partially update a product by ID (JSON Merge Patch)",
+            description = "Applies a JSON Merge Patch document to partially update an existing product identified by its productId."
+    )
+    @APIResponses(value = {
+            @APIResponse(
+                    responseCode = "200",
+                    description = "Product successfully patched",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = ProductBaseResponse.class)
+                    )
+            ),
+            @APIResponse(
+                    responseCode = "400",
+                    description = "Bad Request - Invalid patch document, invalid productId, or field constraint violation",
+                    content = @Content(
+                            mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class)
+                    )
+            ),
+            @APIResponse(
+                    responseCode = "404",
+                    description = "Not Found - No product found with the specified productId",
+                    content = @Content(
+                            mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class)
+                    )
+            ),
+            @APIResponse(
+                    responseCode = "500",
+                    description = "Internal Server Error - Unexpected error occurred while applying the patch",
+                    content = @Content(
+                            mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class)
+                    )
+            )
+    })
+    @Consumes("application/merge-patch+json")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> patchProductById(@PathParam("productId") String productId,
+                                          JsonValue updateBody) {
+
+        return productService.patchProductById(productId, updateBody)
+                .map(updated -> Response.ok(updated).build())
+                .onFailure(IllegalArgumentException.class).recoverWithItem(() ->
+                        Response.status(Response.Status.BAD_REQUEST)
+                                .type("application/problem+json")
+                                .entity(Problem.builder()
+                                        .title("Invalid productId")
+                                        .detail("productId is required and must be non-blank")
+                                        .status(400)
+                                        .instance("/products/" + productId)
+                                        .build())
+                                .build())
+                .onFailure(BadRequestException.class).recoverWithItem(t -> {
+                    log.error("Unexpected error occurred while while parsing data for {}", productId, t);
+                    return Response.status(Response.Status.BAD_REQUEST)
+                                .type("application/problem+json")
+                                .entity(Problem.builder()
+                                        .title("Bad Request")
+                                        .detail("Invalid patch payload or field constraints violated")
+                                        .status(400)
+                                        .instance("/products/" + productId)
+                                        .build())
+                            .build();
+                })
+                .onFailure(NotFoundException.class).recoverWithItem(() ->
+                        Response.status(Response.Status.NOT_FOUND)
+                                .type("application/problem+json")
+                                .entity(Problem.builder()
+                                        .title("Product not found")
+                                        .detail("No product found with productId=" + productId)
+                                        .status(404)
+                                        .instance("/products/" + productId)
+                                        .build())
+                                .build())
+                .onFailure().recoverWithItem(t -> {
+                    log.error("Unexpected error occurred while patching product with id {}", productId, t);
+                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                            .type("application/problem+json")
+                            .entity(Problem.builder()
+                                    .title("Internal Server Error")
+                                    .detail("An unexpected error occurred.")
+                                    .status(500)
+                                    .instance("/products/" + productId)
+                                    .build())
+                            .build();
+                });
     }
 
 }

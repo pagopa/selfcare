@@ -58,6 +58,11 @@ components:
       format: date-time
       examples:
       - 2022-03-10T16:15:50Z
+    JsonValue:
+      type: object
+      properties:
+        valueType:
+          $ref: "#/components/schemas/ValueType"
     OnboardingStatus:
       type: string
       enum:
@@ -304,6 +309,16 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ProductRole"
+    ValueType:
+      type: string
+      enum:
+      - ARRAY
+      - OBJECT
+      - STRING
+      - NUMBER
+      - "TRUE"
+      - "FALSE"
+      - "NULL"
     WorkflowType:
       type: string
       enum:
@@ -394,6 +409,58 @@ paths:
       security:
       - SecurityScheme: []
   /product/{productId}:
+    patch:
+      summary: Partially update a product by ID (JSON Merge Patch)
+      description: Applies a JSON Merge Patch document to partially update an existing
+        product identified by its productId.
+      operationId: patchProductById
+      tags:
+      - Product
+      parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: "#/components/schemas/JsonValue"
+        required: true
+      responses:
+        "200":
+          description: Product successfully patched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductBaseResponse"
+        "400":
+          description: "Bad Request - Invalid patch document, invalid productId, or\
+            \ field constraint violation"
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found - No product found with the specified productId
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error - Unexpected error occurred while applying
+            the patch
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
     get:
       summary: Get product by productId
       description: Retrieve a product by its unique identifier.
@@ -413,6 +480,49 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProductResponse"
+        "404":
+          description: Product not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+    delete:
+      summary: Cancel product by ID
+      description: Marks the product as DELETED if it exists.
+      operationId: deleteProductById
+      tags:
+      - Product
+      parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Product cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductBaseResponse"
+        "400":
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "404":
           description: Product not found
           content:
