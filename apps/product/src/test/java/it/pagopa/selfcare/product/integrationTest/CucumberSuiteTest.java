@@ -2,11 +2,8 @@ package it.pagopa.selfcare.product.integrationTest;
 
 import io.quarkiverse.cucumber.CucumberOptions;
 import io.quarkiverse.cucumber.CucumberQuarkusTest;
-import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 import io.restassured.RestAssured;
-import it.pagopa.selfcare.cucumber.utils.CommonSteps;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.ws.rs.Produces;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -24,12 +21,12 @@ import java.time.Duration;
                 "html:target/cucumber-report/cucumber.html",
                 "json:target/cucumber-report/cucumber.json"
         })
+@TestProfile(IntegrationProfile.class)
 public class CucumberSuiteTest extends CucumberQuarkusTest {
 
     public static void main(String[] args) {
         runMain(CucumberSuiteTest.class, args);
     }
-
 
     @BeforeAll
     static void setup() {

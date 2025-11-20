@@ -19,7 +19,7 @@ import java.util.Scanner;
 @Slf4j
 @CucumberOptions(
         features = "src/test/resources/features",
-        glue = {"it.pagopa.selfcare.cucumber.utils", "it.pagopa.selfcare.auth.integration_test"},
+        glue = {"it.pagopa.selfcare.cucumber.utils", "it.pagopa.selfcare.auth.integrationTest"},
         plugin = {
                 "html:target/cucumber-report/cucumber.html",
                 "json:target/cucumber-report/cucumber.json"
