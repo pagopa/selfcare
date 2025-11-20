@@ -364,4 +364,20 @@ public class CommonSteps {
         sharedStepData.setContentMultiPart(currentInput);
     }
 
+    @When("I send a PATCH request to {string} with content type {string}")
+    public void sendPatchRequest(String url, String contentType) {
+        final String token = sharedStepData.getToken();
+        sharedStepData.setResponse(RestAssured
+                .given()
+                .contentType(contentType)
+                .header("Authorization", "Bearer " + token)
+                .pathParams(Optional.ofNullable(sharedStepData.getPathParams()).orElse(Collections.emptyMap()))
+                .queryParams(Optional.ofNullable(sharedStepData.getQueryParams()).orElse(Collections.emptyMap()))
+                .body(Optional.ofNullable(sharedStepData.getRequestBody()).orElse(""))
+                .when()
+                .patch (url)
+                .then()
+                .extract()
+        );
+    }
 }
