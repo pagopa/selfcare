@@ -57,3 +57,6 @@ override.tf.json
 infra/cert/env/bin
 infra/cert/env/lib
 **/pyvenv.cfg
+
+### INTELLIJ RUN CONFIG ###
+.run/product.run.xml
