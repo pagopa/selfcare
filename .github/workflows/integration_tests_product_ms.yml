@@ -40,7 +40,7 @@ jobs:
 
       - name: Run Integration Tests
         id: int_tests
-        run: mvn --projects :product --also-make test -Dtest=CucumberSuite -Dsurefire.failIfNoSpecifiedTests=false
+        run: mvn --projects :product --also-make test -Dtest=CucumberSuiteTest -Dsurefire.failIfNoSpecifiedTests=false
         shell: bash
 
       - name: Upload Test Results
