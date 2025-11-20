@@ -13,7 +13,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
-@QuarkusTestResource(MongoTestResource.class)
+@QuarkusTestResource(value = MongoTestResource.class, restrictToAnnotatedClass = true)
 class ProductRepositoryTest {
 
     @Inject
