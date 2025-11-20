@@ -1,6 +1,6 @@
 Feature: Product API end-to-end onboarding and lifecycle
 
-  Scenario: Successfully create product onboarding (initial TESTING state)
+  Scenario: POST /product - successfully create product in TESTING state
     Given User login with username "j.doe" and password "test"
     And The following request body:
     """
@@ -74,7 +74,7 @@ Feature: Product API end-to-end onboarding and lifecycle
       | productId | prod-test |
       | status    | TESTING   |
 
-  Scenario: Successfully get product by id after initial creation
+  Scenario: GET /product/{productId} - successfully retrieve product after creation
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | productId | prod-test |
@@ -85,10 +85,7 @@ Feature: Product API end-to-end onboarding and lifecycle
       | status    | TESTING   |
       | version   | 1         |
 
-  # =========================
-  # 2) Upsert (override some fields; status=ACTIVE) and verification (version should increment)
-  # =========================
-  Scenario: Successfully upsert product onboarding (switch to ACTIVE)
+  Scenario: POST /product - successfully upsert existing product to ACTIVE state
     Given User login with username "j.doe" and password "test"
     And The following request body:
     """
@@ -162,7 +159,7 @@ Feature: Product API end-to-end onboarding and lifecycle
       | productId | prod-test |
       | status    | ACTIVE    |
 
-  Scenario: Successfully get product by id after upsert (version should be 2)
+  Scenario: GET /product/{productId} - successfully retrieve product after upsert
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | productId | prod-test |
@@ -173,10 +170,7 @@ Feature: Product API end-to-end onboarding and lifecycle
       | status    | ACTIVE    |
       | version   | 2         |
 
-  # =========================
-  # 3) Partial update via JSON Merge Patch and verification
-  # =========================
-  Scenario: Successfully patch selected product fields
+  Scenario: PATCH /product/{productId} - successfully update product fields
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | productId | prod-test |
@@ -196,7 +190,7 @@ Feature: Product API end-to-end onboarding and lifecycle
       | enabled     | false                         |
       | title       | Prod TEST 2 - Patched         |
 
-  Scenario: Successfully get product by id after patch
+  Scenario: GET /product/{productId} - successfully retrieve product after patch
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | productId | prod-test |
@@ -207,10 +201,7 @@ Feature: Product API end-to-end onboarding and lifecycle
       | description | Description updated via PATCH |
       | enabled     | false                         |
 
-  # =========================
-  # 4) Delete and verification
-  # =========================
-  Scenario: Successfully delete product by id (status becomes DELETED)
+  Scenario: DELETE /product/{productId} - successfully mark product as DELETED
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | productId | prod-test |
@@ -220,10 +211,7 @@ Feature: Product API end-to-end onboarding and lifecycle
       | productId | prod-test |
       | status    | DELETED   |
 
-  # =========================
-  # Negative paths
-  # =========================
-  Scenario: Get product by id - product not found
+  Scenario: GET /product/{productId} - return 404 when product not found
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | productId | prod-unknown |
@@ -233,7 +221,7 @@ Feature: Product API end-to-end onboarding and lifecycle
       | title  | Product not found |
       | status | 404               |
 
-  Scenario: Create product - bad request (missing productId)
+  Scenario: POST /product - return 400 when productId is missing
     Given User login with username "j.doe" and password "test"
     And The following request body:
     """
@@ -247,7 +235,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     When I send a POST request to "/product"
     Then The status code is 400
 
-  Scenario: Patch product - bad payload (type mismatch)
+  Scenario: PATCH /product/{productId} - return 400 when payload is invalid
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | productId | prod-unknown |
@@ -261,7 +249,7 @@ Feature: Product API end-to-end onboarding and lifecycle
       | title  | Bad Request |
       | status | 400         |
 
-  Scenario: Delete product - product not found
+  Scenario: DELETE /product/{productId} - return 404 when product not found
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | productId | prod-unknown |
