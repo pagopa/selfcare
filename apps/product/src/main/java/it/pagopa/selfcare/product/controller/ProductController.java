@@ -49,6 +49,8 @@ public class ProductController {
     }
 
     @POST
+    @Tag(name = "external-v2")
+    @Tag(name = "external-pnpg")
     @Operation(summary = "Create or update a product configuration (upsert)", description = "Creates a new product configuration or updates the existing one when a match is found")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Created",
@@ -73,6 +75,8 @@ public class ProductController {
     }
 
     @GET
+    @Tag(name = "external-v2")
+    @Tag(name = "external-pnpg")
     @Path("/{productId}")
     @Operation(
             summary = "Get product by productId",
@@ -117,6 +121,8 @@ public class ProductController {
     }
 
     @DELETE
+    @Tag(name = "external-v2")
+    @Tag(name = "external-pnpg")
     @Path("/{productId}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
@@ -176,6 +182,8 @@ public class ProductController {
     }
 
     @PATCH
+    @Tag(name = "external-v2")
+    @Tag(name = "external-pnpg")
     @Path("/{productId}")
     @Operation(
             summary = "Partially update a product by ID (JSON Merge Patch)",

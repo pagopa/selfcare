@@ -2,6 +2,8 @@
 openapi: 3.1.0
 tags:
 - name: Product
+- name: external-pnpg
+- name: external-v2
 components:
   schemas:
     AttachmentTemplate:
@@ -351,7 +353,8 @@ paths:
         when a match is found
       operationId: createProduct
       tags:
-      - Product
+      - external-v2
+      - external-pnpg
       requestBody:
         content:
           application/json:
@@ -415,7 +418,8 @@ paths:
         product identified by its productId.
       operationId: patchProductById
       tags:
-      - Product
+      - external-v2
+      - external-pnpg
       parameters:
       - name: productId
         in: path
@@ -466,7 +470,8 @@ paths:
       description: Retrieve a product by its unique identifier.
       operationId: getProductById
       tags:
-      - Product
+      - external-v2
+      - external-pnpg
       parameters:
       - name: productId
         in: path
@@ -503,7 +508,8 @@ paths:
       description: Marks the product as DELETED if it exists.
       operationId: deleteProductById
       tags:
-      - Product
+      - external-v2
+      - external-pnpg
       parameters:
       - name: productId
         in: path
