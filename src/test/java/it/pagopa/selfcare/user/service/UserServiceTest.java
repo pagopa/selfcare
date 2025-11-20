@@ -2173,8 +2173,7 @@ class UserServiceTest {
                 "Selc:ViewDelegations",
                 "Selc:ListProductGroups",
                 "Selc:CreateDelegation",
-                "Selc:ViewInstitutionData",
-                "Selc:ViewContract"));
+                "Selc:ViewInstitutionData"));
         userInstitutionWithActions.setInstitutionRootName("institutionRootName");
         userInstitutionWithActions.setUserMailUuid(workContractsKey);
         userInstitutionWithActions.setInstitutionId("institutionId");

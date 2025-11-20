@@ -16,8 +16,7 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "prod-pagopa": [
       "Selc:UploadLogo",
@@ -35,8 +34,7 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "prod-pn": [
       "Selc:UploadLogo",
@@ -54,8 +52,7 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "prod-interop": [
       "Selc:UploadLogo",
@@ -73,8 +70,7 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "prod-pn-pg": [
       "Selc:UploadLogo",
@@ -281,8 +277,7 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "prod-idpay-merchant": [
       "Selc:UploadLogo",
@@ -297,8 +292,7 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "default": [
       "Selc:UploadLogo",
@@ -336,8 +330,7 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "prod-pagopa": [
       "Selc:UploadLogo",
@@ -355,8 +348,7 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "prod-pn": [
       "Selc:UploadLogo",
@@ -374,8 +366,7 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "prod-interop": [
       "Selc:UploadLogo",
@@ -393,8 +384,7 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "prod-pn-pg": [
       "Selc:UploadLogo",
@@ -601,8 +591,7 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "prod-idpay-merchant": [
       "Selc:UploadLogo",
@@ -617,8 +606,7 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "default": [
       "Selc:UploadLogo",
@@ -656,8 +644,7 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "prod-pagopa": [
       "Selc:UploadLogo",
@@ -675,8 +662,7 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "prod-pn": [
       "Selc:UploadLogo",
@@ -694,8 +680,7 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "prod-interop": [
       "Selc:UploadLogo",
@@ -713,8 +698,7 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "prod-pn-pg": [
       "Selc:UploadLogo",
@@ -921,8 +905,7 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "prod-idpay-merchant": [
       "Selc:UploadLogo",
@@ -937,8 +920,7 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "default": [
       "Selc:UploadLogo",
@@ -969,8 +951,7 @@
       "Selc:ViewDelegations",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "prod-pagopa": [
       "Selc:UploadLogo",
@@ -984,8 +965,7 @@
       "Selc:ListProductUsers",
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
-      "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewInstitutionData"
     ],
     "default": [
       "Selc:UploadLogo",
