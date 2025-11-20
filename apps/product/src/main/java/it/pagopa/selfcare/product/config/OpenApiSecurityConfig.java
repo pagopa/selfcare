@@ -4,7 +4,7 @@ import org.eclipse.microprofile.openapi.annotations.enums.SecuritySchemeType;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
 import org.eclipse.microprofile.openapi.annotations.security.SecuritySchemes;
 
-@SecuritySchemes({
+@SecuritySchemes(value = {
         @SecurityScheme(
                 securitySchemeName = "bearerAuth",
                 type = SecuritySchemeType.HTTP,
