@@ -1,8 +1,8 @@
-* @pagopa/selfcare-admin @pagopa/engineering-team-devex @giampiero-ferrara
+* @pagopa/selfcare-admin @giampiero-ferrara
 
-/libs @pagopa/selfcare-admin @pagopa/selfcare-contributors @pagopa/engineering-team-devex @giampiero-ferrara
-/apps @pagopa/selfcare-admin @pagopa/selfcare-contributors @pagopa/engineering-team-devex @giampiero-ferrara
-/.opex @pagopa/selfcare-admin @pagopa/selfcare-contributors @pagopa/engineering-team-devex @giampiero-ferrara
+/libs @pagopa/selfcare-admin @pagopa/selfcare-contributors @giampiero-ferrara
+/apps @pagopa/selfcare-admin @pagopa/selfcare-contributors @giampiero-ferrara
+/.opex @pagopa/selfcare-admin @pagopa/selfcare-contributors @giampiero-ferrara
 
-/.github @pagopa/selfcare-admin @pagopa/selfcare-contributors @pagopa/engineering-team-devex @giampiero-ferrara
-/infra @pagopa/selfcare-admin @pagopa/selfcare-contributors @pagopa/engineering-team-devex @giampiero-ferrara
+/.github @pagopa/selfcare-admin @pagopa/selfcare-contributors @giampiero-ferrara
+/infra @pagopa/selfcare-admin @pagopa/selfcare-contributors @giampiero-ferrara
