@@ -49,6 +49,7 @@ public class ProductController {
     }
 
     @POST
+    @Tag(name = "Product")
     @Tag(name = "external-v2")
     @Tag(name = "external-pnpg")
     @Operation(summary = "Create or update a product configuration (upsert)", description = "Creates a new product configuration or updates the existing one when a match is found")
@@ -75,6 +76,7 @@ public class ProductController {
     }
 
     @GET
+    @Tag(name = "Product")
     @Tag(name = "external-v2")
     @Tag(name = "external-pnpg")
     @Path("/{productId}")
@@ -121,6 +123,7 @@ public class ProductController {
     }
 
     @DELETE
+    @Tag(name = "Product")
     @Tag(name = "external-v2")
     @Tag(name = "external-pnpg")
     @Path("/{productId}")
@@ -182,6 +185,7 @@ public class ProductController {
     }
 
     @PATCH
+    @Tag(name = "Product")
     @Tag(name = "external-v2")
     @Tag(name = "external-pnpg")
     @Path("/{productId}")

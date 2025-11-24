@@ -353,6 +353,7 @@ paths:
         when a match is found
       operationId: createProduct
       tags:
+      - Product
       - external-v2
       - external-pnpg
       requestBody:
@@ -418,6 +419,7 @@ paths:
         product identified by its productId.
       operationId: patchProductById
       tags:
+      - Product
       - external-v2
       - external-pnpg
       parameters:
@@ -470,6 +472,7 @@ paths:
       description: Retrieve a product by its unique identifier.
       operationId: getProductById
       tags:
+      - Product
       - external-v2
       - external-pnpg
       parameters:
@@ -508,6 +511,7 @@ paths:
       description: Marks the product as DELETED if it exists.
       operationId: deleteProductById
       tags:
+      - Product
       - external-v2
       - external-pnpg
       parameters:
