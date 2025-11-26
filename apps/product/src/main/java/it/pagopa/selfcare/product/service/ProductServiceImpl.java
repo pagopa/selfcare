@@ -29,6 +29,8 @@ import java.util.UUID;
 @RequiredArgsConstructor(onConstructor_ = {@Inject})
 public class ProductServiceImpl implements ProductService {
 
+    public static final String GETTING_INFO_FROM_PRODUCT = "Getting info from product {}";
+
     //JPA
     private final ProductRepository productRepository;
 
@@ -81,7 +83,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Uni<ProductResponse> getProductById(String productId) {
         String sanitizedProductId = Encode.forJava(productId);
-        log.info("Getting info from product {}", sanitizedProductId);
+        log.info(GETTING_INFO_FROM_PRODUCT, sanitizedProductId);
         if (StringUtils.isBlank(sanitizedProductId)) {
             return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by productId: %s", sanitizedProductId)));
         }
@@ -135,7 +137,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Uni<ProductOriginResponse> getProductOriginsById(String productId) {
         String sanitizedProductId = Encode.forJava(productId);
-        log.info("Getting info from product {}", sanitizedProductId);
+        log.info(GETTING_INFO_FROM_PRODUCT, sanitizedProductId);
         if (StringUtils.isBlank(sanitizedProductId)) {
             return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by productId: %s", sanitizedProductId)));
         }
