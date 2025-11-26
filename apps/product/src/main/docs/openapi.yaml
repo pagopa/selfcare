@@ -102,6 +102,15 @@ components:
       - INFOCAMERE
       - IVASS
       - PDND_INFOCAMERE
+    OriginEntry:
+      type: object
+      properties:
+        institutionType:
+          $ref: "#/components/schemas/InstitutionType"
+        origin:
+          $ref: "#/components/schemas/Origin"
+        labelKey:
+          type: string
     Problem:
       type: object
       properties:
@@ -207,6 +216,14 @@ components:
             $ref: "#/components/schemas/ContractTemplate"
         invoiceable:
           type: boolean
+        institutionOrigins:
+          type: array
+          items:
+            $ref: "#/components/schemas/OriginEntry"
+        allowIndividualOnboarding:
+          type: boolean
+        allowCompanyOnboarding:
+          type: boolean
         version:
           type: integer
           format: int32
@@ -220,16 +237,7 @@ components:
         origins:
           type: array
           items:
-            $ref: "#/components/schemas/ProductOrigins"
-    ProductOrigins:
-      type: object
-      properties:
-        institutionType:
-          $ref: "#/components/schemas/InstitutionType"
-        origin:
-          $ref: "#/components/schemas/Origin"
-        labelKey:
-          type: string
+            $ref: "#/components/schemas/OriginEntry"
     ProductResponse:
       type: object
       properties:
@@ -311,6 +319,14 @@ components:
           additionalProperties:
             $ref: "#/components/schemas/ContractTemplate"
         invoiceable:
+          type: boolean
+        institutionOrigins:
+          type: array
+          items:
+            $ref: "#/components/schemas/OriginEntry"
+        allowIndividualOnboarding:
+          type: boolean
+        allowCompanyOnboarding:
           type: boolean
         version:
           type: integer

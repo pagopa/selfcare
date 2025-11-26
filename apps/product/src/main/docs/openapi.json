@@ -109,6 +109,20 @@
         "type" : "string",
         "enum" : [ "IPA", "SELC", "ANAC", "ADE", "INFOCAMERE", "IVASS", "PDND_INFOCAMERE" ]
       },
+      "OriginEntry" : {
+        "type" : "object",
+        "properties" : {
+          "institutionType" : {
+            "$ref" : "#/components/schemas/InstitutionType"
+          },
+          "origin" : {
+            "$ref" : "#/components/schemas/Origin"
+          },
+          "labelKey" : {
+            "type" : "string"
+          }
+        }
+      },
       "Problem" : {
         "type" : "object",
         "properties" : {
@@ -263,6 +277,18 @@
           "invoiceable" : {
             "type" : "boolean"
           },
+          "institutionOrigins" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OriginEntry"
+            }
+          },
+          "allowIndividualOnboarding" : {
+            "type" : "boolean"
+          },
+          "allowCompanyOnboarding" : {
+            "type" : "boolean"
+          },
           "version" : {
             "type" : "integer",
             "format" : "int32"
@@ -276,22 +302,8 @@
           "origins" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/ProductOrigins"
+              "$ref" : "#/components/schemas/OriginEntry"
             }
-          }
-        }
-      },
-      "ProductOrigins" : {
-        "type" : "object",
-        "properties" : {
-          "institutionType" : {
-            "$ref" : "#/components/schemas/InstitutionType"
-          },
-          "origin" : {
-            "$ref" : "#/components/schemas/Origin"
-          },
-          "labelKey" : {
-            "type" : "string"
           }
         }
       },
@@ -412,6 +424,18 @@
             }
           },
           "invoiceable" : {
+            "type" : "boolean"
+          },
+          "institutionOrigins" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OriginEntry"
+            }
+          },
+          "allowIndividualOnboarding" : {
+            "type" : "boolean"
+          },
+          "allowCompanyOnboarding" : {
             "type" : "boolean"
           },
           "version" : {
