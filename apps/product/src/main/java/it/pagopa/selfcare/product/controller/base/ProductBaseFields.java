@@ -1,9 +1,6 @@
 package it.pagopa.selfcare.product.controller.base;
 
-import it.pagopa.selfcare.product.model.BackOfficeConfigurations;
-import it.pagopa.selfcare.product.model.ContractTemplate;
-import it.pagopa.selfcare.product.model.EmailTemplate;
-import it.pagopa.selfcare.product.model.UserRolePermission;
+import it.pagopa.selfcare.product.model.*;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.model.enums.UserRole;
 import jakarta.validation.constraints.NotBlank;
@@ -74,6 +71,11 @@ public class ProductBaseFields {
     private Map<String, ContractTemplate> userContractMappings;
 
     private boolean invoiceable;
+
+    private List<OriginEntry> institutionOrigins;
+
+    private boolean allowIndividualOnboarding;
+    private boolean allowCompanyOnboarding;
 
     private Integer version;
 }

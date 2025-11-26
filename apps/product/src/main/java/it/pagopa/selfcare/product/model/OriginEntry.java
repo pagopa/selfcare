@@ -1,17 +1,17 @@
-package it.pagopa.selfcare.product.controller.base;
+package it.pagopa.selfcare.product.model;
 
 import it.pagopa.selfcare.product.model.enums.InstitutionType;
 import it.pagopa.selfcare.product.model.enums.Origin;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder
-public class ProductOrigins {
+public class OriginEntry {
     private InstitutionType institutionType;
     private Origin origin;
     private String labelKey;

@@ -75,4 +75,8 @@ public class Product {
 
     private boolean invoiceable;
 
+    private List<OriginEntry> institutionOrigins;
+
+    private boolean allowIndividualOnboarding;
+    private boolean allowCompanyOnboarding;
 }

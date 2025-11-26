@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.product.controller.response;
 
-import it.pagopa.selfcare.product.controller.base.ProductOrigins;
+import it.pagopa.selfcare.product.model.OriginEntry;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -14,5 +14,5 @@ import java.util.List;
 @SuperBuilder
 @NoArgsConstructor
 public class ProductOriginResponse {
-    private List<ProductOrigins> origins;
+    private List<OriginEntry> origins;
 }
