@@ -89,6 +89,10 @@
         "format" : "date-time",
         "examples" : [ "2022-03-10T16:15:50Z" ]
       },
+      "InstitutionType" : {
+        "type" : "string",
+        "enum" : [ "PA", "PG", "GSP", "SA", "PT", "SCP", "PSP", "AS", "REC", "CON", "PRV", "PRV_PF", "GPU", "SCEC" ]
+      },
       "JsonValue" : {
         "type" : "object",
         "properties" : {
@@ -100,6 +104,10 @@
       "OnboardingStatus" : {
         "type" : "string",
         "enum" : [ "REQUEST", "TOBEVALIDATED", "PENDING", "COMPLETED", "FAILED", "REJECTED", "DELETED" ]
+      },
+      "Origin" : {
+        "type" : "string",
+        "enum" : [ "IPA", "SELC", "ANAC", "ADE", "INFOCAMERE", "IVASS", "PDND_INFOCAMERE" ]
       },
       "Problem" : {
         "type" : "object",
@@ -261,6 +269,31 @@
           }
         },
         "required" : [ "productId", "description", "title" ]
+      },
+      "ProductOriginResponse" : {
+        "type" : "object",
+        "properties" : {
+          "origins" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProductOrigins"
+            }
+          }
+        }
+      },
+      "ProductOrigins" : {
+        "type" : "object",
+        "properties" : {
+          "institutionType" : {
+            "$ref" : "#/components/schemas/InstitutionType"
+          },
+          "origin" : {
+            "$ref" : "#/components/schemas/Origin"
+          },
+          "labelKey" : {
+            "type" : "string"
+          }
+        }
       },
       "ProductResponse" : {
         "type" : "object",
@@ -712,6 +745,63 @@
               "application/problem+json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Product not found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/product/{productId}/origins" : {
+      "get" : {
+        "summary" : "Get product origins by productId",
+        "description" : "Retrieve the list of institution origins for the given product.",
+        "operationId" : "getProductOriginsById",
+        "tags" : [ "Product", "external-v2", "external-pnpg" ],
+        "parameters" : [ {
+          "name" : "productId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Origins found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductOriginResponse"
                 }
               }
             }
