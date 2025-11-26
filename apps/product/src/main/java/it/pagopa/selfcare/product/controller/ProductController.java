@@ -5,6 +5,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.controller.response.Problem;
 import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.controller.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.controller.response.ProductResponse;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
@@ -278,6 +279,58 @@ public class ProductController {
                                     .build())
                             .build();
                 });
+    }
+    @GET
+    @Tag(name = "Product")
+    @Tag(name = "external-v2")
+    @Tag(name = "external-pnpg")
+    @Path("/{productId}/origins")
+    @Operation(
+            summary = "Get product origins by productId",
+            description = "Retrieve the list of institution origins for the given product.",
+            operationId = "getProductOriginsById"
+    )
+    @APIResponses(value = {
+            @APIResponse(
+                    responseCode = "200",
+                    description = "Origins found",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = ProductOriginResponse.class)
+                    )
+            ),
+            @APIResponse(
+                    responseCode = "404",
+                    description = "Product not found",
+                    content = @Content(
+                            mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class)
+                    )
+            ),
+            @APIResponse(
+                    responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(
+                            mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class)
+                    )
+            )
+    })
+    public Uni<Response> getProductOriginsById(@PathParam("productId") String productId) {
+        return productService.getProductOriginsById(productId)
+                .onItem().transform(originsResponse ->
+                        Response.ok(originsResponse).build()
+                )
+                .onFailure(NotFoundException.class).recoverWithItem(() ->
+                        Response.status(Response.Status.NOT_FOUND)
+                                .entity(Problem.builder()
+                                        .title("Product not found")
+                                        .detail("No product found with productId=" + productId)
+                                        .status(Response.Status.NOT_FOUND.getStatusCode())
+                                        .instance("/products/" + productId + "/origins")
+                                        .build())
+                                .build()
+                );
     }
 
 }

@@ -3,6 +3,7 @@ package it.pagopa.selfcare.product.service;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.controller.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.controller.response.ProductResponse;
 import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
 import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
@@ -129,6 +130,19 @@ public class ProductServiceImpl implements ProductService {
                                             .map(productMapperResponse::toProductResponse);
                                 })
                 );
+    }
+
+    @Override
+    public Uni<ProductOriginResponse> getProductOriginsById(String productId) {
+        String sanitizedProductId = Encode.forJava(productId);
+        log.info("Getting info from product {}", sanitizedProductId);
+        if (StringUtils.isBlank(sanitizedProductId)) {
+            return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by productId: %s", sanitizedProductId)));
+        }
+
+        return productRepository.findProductById(sanitizedProductId)
+                .onItem().ifNull().failWith(() -> new NotFoundException("Product " + sanitizedProductId + " not found"))
+                .map(productMapperResponse::toProductOriginResponse);
     }
 
 }

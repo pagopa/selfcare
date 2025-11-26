@@ -3,6 +3,7 @@ package it.pagopa.selfcare.product.service;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.controller.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.controller.response.ProductResponse;
 import jakarta.json.JsonValue;
 
@@ -16,4 +17,6 @@ public interface ProductService {
     Uni<ProductBaseResponse> deleteProductById(String productId);
 
     Uni<ProductResponse> patchProductById(String productId, JsonValue body);
+
+    Uni<ProductOriginResponse> getProductOriginsById(String productId);
 }
