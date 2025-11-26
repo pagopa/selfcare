@@ -280,6 +280,7 @@ public class ProductController {
                             .build();
                 });
     }
+    
     @GET
     @Tag(name = "Product")
     @Tag(name = "external-v2")

@@ -16,19 +16,23 @@ import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.controller.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.controller.response.ProductResponse;
+import it.pagopa.selfcare.product.model.OriginEntry;
+import it.pagopa.selfcare.product.model.enums.InstitutionType;
+import it.pagopa.selfcare.product.model.enums.Origin;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
+import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
@@ -356,6 +360,59 @@ class ProductControllerTest {
         verify(productService, times(1)).patchProductById(eq(productId), any());
         verifyNoMoreInteractions(productService);
     }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void getProductOriginsById_shouldReturnOk() {
+        // given
+        String productId = "prod-test";
+        ProductOriginResponse response = ProductOriginResponse.builder().origins(List.of(OriginEntry.builder().institutionType(InstitutionType.PA).labelKey("pa").origin(Origin.IPA).build())).build();
+
+        when(productService.getProductOriginsById(productId))
+                .thenReturn(Uni.createFrom().item(response));
+
+        // when
+        given()
+                .accept(ContentType.JSON)
+                .when()
+                .get("/" + productId + "/origins")
+                .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .body("origins[0].institutionType", equalTo(InstitutionType.PA.name()))
+                .body("origins[0].labelKey", equalTo("pa"))
+                .body("origins[0].origin", equalTo(Origin.IPA.name()));
+
+        // then
+        verify(productService, times(1)).getProductOriginsById(productId);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void getProductOriginsById_whenNotFound_shouldReturnKO() {
+        // given
+        String missing = "prod-test";
+
+        when(productService.getProductOriginsById(missing))
+                .thenReturn(Uni.createFrom().failure(new NotFoundException()));
+
+        // when
+        given()
+                .accept(ContentType.JSON)
+                .when()
+                .get("/" + missing + "/origins")
+                .then()
+                .statusCode(404)
+                .contentType(ContentType.JSON)
+                .body("title", equalTo("Product not found"))
+                .body("status", equalTo(404))
+                .body("detail", containsString(missing))
+                .body("instance", equalTo("/products/" + missing + "/origins"));
+
+        // then
+        verify(productService, times(1)).getProductOriginsById(missing);
+    }
+
 
     // UTILS
     private ProductCreateRequest getProductCreateRequest() {
