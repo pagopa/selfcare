@@ -263,6 +263,9 @@ public class UserController {
     @Path("/{id}/user-registry")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Tag(name = "User")
+    @Tag(name = "support")
+    @Tag(name = "support-pnpg")
     public Uni<Response> updateUserRegistryAndSendNotification(@PathParam(value = "id") String userId,
                                                                @QueryParam(value = "institutionId") String institutionId,
                                                                @Valid UpdateUserRequest updateUserRequest) {

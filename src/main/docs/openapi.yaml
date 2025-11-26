@@ -857,6 +857,8 @@ paths:
     put:
       tags:
       - User
+      - support
+      - support-pnpg
       summary: Update user registry and send notification upon data update
       description: Service to update user in user-registry and send notification when
         user data gets updated
