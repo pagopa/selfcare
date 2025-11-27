@@ -284,11 +284,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | productId | prod-unknown |
-    And The following request body:
-    """
-      {}
-    """
-    When I send a PATCH request to "/product/{productId}" with content type "application/merge-patch+json"
+    When I send a PATCH request to "/product/{productId}" with content type "application/json"
     Then The status code is 400
     And The response body contains:
       | title  | Bad Request |
