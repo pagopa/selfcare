@@ -21,7 +21,6 @@ Feature: Product API end-to-end onboarding and lifecycle
         "depictImageUrl": "http://localhost:8080",
         "description": "Product description",
         "emailTemplates": {
-          "default": {
             "IMPORT": [
               {
                 "path": "contracts/template/mail/import-massivo-io/1.0.0.json",
@@ -29,7 +28,6 @@ Feature: Product API end-to-end onboarding and lifecycle
                 "version": "1.0.0"
               }
             ]
-          }
         },
         "enabled": true,
         "expirationDate": 30,
@@ -136,7 +134,6 @@ Feature: Product API end-to-end onboarding and lifecycle
         "depictImageUrl": "http://localhost:8080",
         "description": "Product description 2",
         "emailTemplates": {
-          "default": {
             "IMPORT": [
               {
                 "path": "contracts/template/mail/import-massivo-io/1.0.0.json",
@@ -144,7 +141,6 @@ Feature: Product API end-to-end onboarding and lifecycle
                 "version": "1.0.0"
               }
             ]
-          }
         },
         "enabled": true,
         "expirationDate": 30,
