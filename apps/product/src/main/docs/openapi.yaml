@@ -55,11 +55,6 @@ components:
           type: string
         status:
           $ref: "#/components/schemas/OnboardingStatus"
-    Instant:
-      type: string
-      format: date-time
-      examples:
-      - 2022-03-10T16:15:50Z
     InstitutionType:
       type: string
       enum:
@@ -136,12 +131,16 @@ components:
           $ref: "#/components/schemas/ProductStatus"
     ProductCreateRequest:
       type: object
+      required:
+      - productId
+      - description
+      - title
       properties:
-        alias:
-          type: string
         productId:
           type: string
           pattern: \S
+        alias:
+          type: string
         allowedInstitutionTaxCode:
           type: array
           items:
@@ -154,8 +153,6 @@ components:
           type: array
           items:
             type: string
-        createdAt:
-          $ref: "#/components/schemas/Instant"
         createdBy:
           type: string
         delegable:
@@ -224,13 +221,6 @@ components:
           type: boolean
         allowCompanyOnboarding:
           type: boolean
-        version:
-          type: integer
-          format: int32
-      required:
-      - productId
-      - description
-      - title
     ProductOriginResponse:
       type: object
       properties:
@@ -240,12 +230,16 @@ components:
             $ref: "#/components/schemas/OriginEntry"
     ProductResponse:
       type: object
+      required:
+      - productId
+      - description
+      - title
       properties:
-        alias:
-          type: string
         productId:
           type: string
           pattern: \S
+        alias:
+          type: string
         allowedInstitutionTaxCode:
           type: array
           items:
@@ -258,10 +252,6 @@ components:
           type: array
           items:
             type: string
-        createdAt:
-          $ref: "#/components/schemas/Instant"
-        createdBy:
-          type: string
         delegable:
           type: boolean
         depictImageUrl:
@@ -328,15 +318,13 @@ components:
           type: boolean
         allowCompanyOnboarding:
           type: boolean
+        id:
+          type: string
+        createdBy:
+          type: string
         version:
           type: integer
           format: int32
-        id:
-          type: string
-      required:
-      - productId
-      - description
-      - title
     ProductRole:
       type: object
       properties:

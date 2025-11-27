@@ -84,11 +84,6 @@
           }
         }
       },
-      "Instant" : {
-        "type" : "string",
-        "format" : "date-time",
-        "examples" : [ "2022-03-10T16:15:50Z" ]
-      },
       "InstitutionType" : {
         "type" : "string",
         "enum" : [ "PA", "PG", "GSP", "SA", "PT", "SCP", "PSP", "AS", "REC", "CON", "PRV", "PRV_PF", "GPU", "SCEC" ]
@@ -160,13 +155,14 @@
       },
       "ProductCreateRequest" : {
         "type" : "object",
+        "required" : [ "productId", "description", "title" ],
         "properties" : {
-          "alias" : {
-            "type" : "string"
-          },
           "productId" : {
             "type" : "string",
             "pattern" : "\\S"
+          },
+          "alias" : {
+            "type" : "string"
           },
           "allowedInstitutionTaxCode" : {
             "type" : "array",
@@ -185,9 +181,6 @@
             "items" : {
               "type" : "string"
             }
-          },
-          "createdAt" : {
-            "$ref" : "#/components/schemas/Instant"
           },
           "createdBy" : {
             "type" : "string"
@@ -288,13 +281,8 @@
           },
           "allowCompanyOnboarding" : {
             "type" : "boolean"
-          },
-          "version" : {
-            "type" : "integer",
-            "format" : "int32"
           }
-        },
-        "required" : [ "productId", "description", "title" ]
+        }
       },
       "ProductOriginResponse" : {
         "type" : "object",
@@ -309,13 +297,14 @@
       },
       "ProductResponse" : {
         "type" : "object",
+        "required" : [ "productId", "description", "title" ],
         "properties" : {
-          "alias" : {
-            "type" : "string"
-          },
           "productId" : {
             "type" : "string",
             "pattern" : "\\S"
+          },
+          "alias" : {
+            "type" : "string"
           },
           "allowedInstitutionTaxCode" : {
             "type" : "array",
@@ -334,12 +323,6 @@
             "items" : {
               "type" : "string"
             }
-          },
-          "createdAt" : {
-            "$ref" : "#/components/schemas/Instant"
-          },
-          "createdBy" : {
-            "type" : "string"
           },
           "delegable" : {
             "type" : "boolean"
@@ -438,15 +421,17 @@
           "allowCompanyOnboarding" : {
             "type" : "boolean"
           },
+          "id" : {
+            "type" : "string"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
           "version" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "id" : {
-            "type" : "string"
           }
-        },
-        "required" : [ "productId", "description", "title" ]
+        }
       },
       "ProductRole" : {
         "type" : "object",
