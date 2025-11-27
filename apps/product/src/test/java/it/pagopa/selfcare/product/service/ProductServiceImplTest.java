@@ -4,6 +4,7 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
+import it.pagopa.selfcare.product.controller.request.ProductPatchRequest;
 import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.controller.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.controller.response.ProductResponse;
@@ -17,7 +18,6 @@ import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.repository.ProductRepository;
 import it.pagopa.selfcare.product.util.JsonUtils;
 import jakarta.inject.Inject;
-import jakarta.json.Json;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import org.apache.commons.lang3.StringUtils;
@@ -231,13 +231,24 @@ class ProductServiceImplTest {
     }
 
     @Test
+    void patchProductByIdTest_whenMissingPatchRequest_thenBadRequest() {
+        // when
+        Throwable thrown = catchThrowable(() ->
+                productService.patchProductById("prod-test", null).await().indefinitely());
+
+        // then
+        assertThat(thrown).isInstanceOf(BadRequestException.class)
+                .hasMessage("Missing request patch object into body");
+    }
+
+    @Test
     void patchProductByIdTest_whenMissingProductIdOnStorage_thenBadRequest() {
         // given
-        var validBodyObject = Json.createObjectBuilder().add("productId", "prod-test").build();
+        var patchRequest = ProductPatchRequest.builder().build();
 
         // when
         Throwable thrown = catchThrowable(() ->
-                productService.patchProductById(" ", validBodyObject).await().indefinitely());
+                productService.patchProductById(" ", patchRequest).await().indefinitely());
 
         // then
         assertThat(thrown).isInstanceOf(BadRequestException.class)
@@ -246,42 +257,16 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void patchProductByIdTest_whenParsingFails_thenBadRequest() {
-        // given
-        var validBodyObject = Json.createValue("broken");
-
-        Product current = new Product();
-        current.setProductId("prod-test");
-        current.setVersion(2);
-
-        when(productRepository.findProductById("prod-test"))
-                .thenReturn(Uni.createFrom().item(current));
-
-        when(jsonUtils.toMergePatch(validBodyObject)).thenThrow(new BadRequestException("Invalid merge patch document"));
-
-        // when
-        Throwable thrown = catchThrowable(() ->
-                productService.patchProductById("prod-test", validBodyObject).await().indefinitely());
-
-        // then
-        assertThat(thrown).isInstanceOf(BadRequestException.class)
-                .hasMessage("Invalid merge patch document");
-        verifyNoInteractions(productRepository);
-    }
-
-    @Test
     void patchProductByIdTest_whenRepositoryReturnsNull_thenNotFound() {
         // given
-        var validBodyObject = Json.createObjectBuilder().add("productId", "prod-test").build();
-        var mergePatch = Json.createMergePatch(validBodyObject);
+        var patchRequest = ProductPatchRequest.builder().build();
 
-        when(jsonUtils.toMergePatch(validBodyObject)).thenReturn(mergePatch);
         when(productRepository.findProductById("prod-test"))
                 .thenReturn(Uni.createFrom().nullItem());
 
         // when
         Throwable thrown = catchThrowable(() ->
-                productService.patchProductById("prod-test", validBodyObject).await().indefinitely());
+                productService.patchProductById("prod-test", patchRequest).await().indefinitely());
 
         // then
         assertThat(thrown).isInstanceOf(NotFoundException.class)
@@ -293,32 +278,38 @@ class ProductServiceImplTest {
     @Test
     void patchProductByIdTest_whenPersistingBody_thenReturnResponse() {
         // given
-        var validBodyObject = Json.createObjectBuilder().add("productId", "prod-test").build();
-        var mergePatch = Json.createMergePatch(validBodyObject);
+        var patchRequest = ProductPatchRequest.builder().description("update description").build();
 
         Product current = new Product();
         current.setProductId("prod-test");
         current.setVersion(2);
 
-        when(jsonUtils.toMergePatch(validBodyObject)).thenReturn(mergePatch);
         when(productRepository.findProductById("prod-test"))
                 .thenReturn(Uni.createFrom().item(current));
+        current.setDescription("update description");
 
-        Product patched = new Product();
-        when(jsonUtils.mergePatch(eq(mergePatch), eq(current), eq(Product.class)))
-                .thenReturn(patched);
+        when(productMapperRequest.toPatch(patchRequest, current)).thenReturn(current);
 
         when(productRepository.persist(any(Product.class))).thenReturn(Uni.createFrom().item(current));
 
-        ProductResponse mapped = new ProductResponse();
-        when(productMapperResponse.toProductResponse(any(Product.class))).thenReturn(mapped);
+        when(productMapperResponse.toProductResponse(current))
+                .thenAnswer(inv -> {
+                    ProductResponse r = new ProductResponse();
+                    r.setId(current.getId());
+                    r.setProductId(current.getProductId());
+                    r.setDescription(current.getDescription());
+                    r.setAlias(current.getAlias());
+                    r.setStatus(current.getStatus());
+                    r.setVersion(current.getVersion());
+                    return r;
+                });
 
         // when
-        ProductResponse out = productService.patchProductById("prod-test", validBodyObject).await().indefinitely();
+        ProductResponse out = productService.patchProductById("prod-test", patchRequest).await().indefinitely();
 
         // then
-        assertThat(out).isSameAs(mapped);
         verify(productRepository).findProductById("prod-test");
+        assertEquals(out.getDescription(), "update description");
         verify(productRepository).persist(any(Product.class));
         verify(productMapperResponse).toProductResponse(any(Product.class));
         verifyNoMoreInteractions(productRepository, productMapperResponse);
