@@ -227,7 +227,7 @@ Feature: Product API end-to-end onboarding and lifecycle
         "title": "Prod TEST 2 - Patched"
       }
     """
-    When I send a PATCH request to "/product/{productId}" with content type "application/merge-patch+json"
+    When I send a PATCH request to "/product/{productId}" with content type "application/json"
     Then The status code is 200
     And The response body contains:
       | productId   | prod-test                     |

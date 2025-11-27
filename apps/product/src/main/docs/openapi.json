@@ -697,8 +697,8 @@
     },
     "/product/{productId}" : {
       "patch" : {
-        "summary" : "Partially update a product by ID (JSON Merge Patch)",
-        "description" : "Applies a JSON Merge Patch document to partially update an existing product identified by its productId.",
+        "summary" : "Partially update a product by ID",
+        "description" : "Partially updates an existing product identified by its productId. Only the non-null fields provided in the request body will be updated; all other fields will remain unchanged.",
         "operationId" : "patchProductById",
         "tags" : [ "Product", "external-v2", "external-pnpg" ],
         "parameters" : [ {
