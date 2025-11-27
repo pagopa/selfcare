@@ -1,9 +1,6 @@
 package it.pagopa.selfcare.product.controller.base;
 
-import it.pagopa.selfcare.product.model.BackOfficeConfigurations;
-import it.pagopa.selfcare.product.model.ContractTemplate;
-import it.pagopa.selfcare.product.model.EmailTemplate;
-import it.pagopa.selfcare.product.model.UserRolePermission;
+import it.pagopa.selfcare.product.model.*;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.model.enums.UserRole;
 import jakarta.validation.constraints.NotBlank;
@@ -13,7 +10,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -23,18 +19,16 @@ import java.util.Map;
 @SuperBuilder
 public class ProductBaseFields {
 
-    private String alias;
-
     @NotBlank
     private String productId;
+
+    private String alias;
 
     private List<String> allowedInstitutionTaxCode;
 
     private Map<String, BackOfficeConfigurations> backOfficeEnvironmentConfigurations;
 
     private List<String> consumers;
-
-    private Instant createdAt;
 
     private String createdBy;
 
@@ -70,10 +64,14 @@ public class ProductBaseFields {
 
     private Map<String, ContractTemplate> institutionAggregatorContractMappings;
     private Map<String, ContractTemplate> institutionContractMappings;
+
     private Map<String, ContractTemplate> userAggregatorContractMappings;
     private Map<String, ContractTemplate> userContractMappings;
 
     private boolean invoiceable;
 
-    private Integer version;
+    private List<OriginEntry> institutionOrigins;
+
+    private boolean allowIndividualOnboarding;
+    private boolean allowCompanyOnboarding;
 }

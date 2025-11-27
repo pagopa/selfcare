@@ -84,10 +84,9 @@
           }
         }
       },
-      "Instant" : {
+      "InstitutionType" : {
         "type" : "string",
-        "format" : "date-time",
-        "examples" : [ "2022-03-10T16:15:50Z" ]
+        "enum" : [ "PA", "PG", "GSP", "SA", "PT", "SCP", "PSP", "AS", "REC", "CON", "PRV", "PRV_PF", "GPU", "SCEC" ]
       },
       "JsonValue" : {
         "type" : "object",
@@ -100,6 +99,24 @@
       "OnboardingStatus" : {
         "type" : "string",
         "enum" : [ "REQUEST", "TOBEVALIDATED", "PENDING", "COMPLETED", "FAILED", "REJECTED", "DELETED" ]
+      },
+      "Origin" : {
+        "type" : "string",
+        "enum" : [ "IPA", "SELC", "ANAC", "ADE", "INFOCAMERE", "IVASS", "PDND_INFOCAMERE" ]
+      },
+      "OriginEntry" : {
+        "type" : "object",
+        "properties" : {
+          "institutionType" : {
+            "$ref" : "#/components/schemas/InstitutionType"
+          },
+          "origin" : {
+            "$ref" : "#/components/schemas/Origin"
+          },
+          "labelKey" : {
+            "type" : "string"
+          }
+        }
       },
       "Problem" : {
         "type" : "object",
@@ -138,13 +155,14 @@
       },
       "ProductCreateRequest" : {
         "type" : "object",
+        "required" : [ "productId", "description", "title" ],
         "properties" : {
-          "alias" : {
-            "type" : "string"
-          },
           "productId" : {
             "type" : "string",
             "pattern" : "\\S"
+          },
+          "alias" : {
+            "type" : "string"
           },
           "allowedInstitutionTaxCode" : {
             "type" : "array",
@@ -163,9 +181,6 @@
             "items" : {
               "type" : "string"
             }
-          },
-          "createdAt" : {
-            "$ref" : "#/components/schemas/Instant"
           },
           "createdBy" : {
             "type" : "string"
@@ -255,22 +270,41 @@
           "invoiceable" : {
             "type" : "boolean"
           },
-          "version" : {
-            "type" : "integer",
-            "format" : "int32"
+          "institutionOrigins" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OriginEntry"
+            }
+          },
+          "allowIndividualOnboarding" : {
+            "type" : "boolean"
+          },
+          "allowCompanyOnboarding" : {
+            "type" : "boolean"
           }
-        },
-        "required" : [ "productId", "description", "title" ]
+        }
+      },
+      "ProductOriginResponse" : {
+        "type" : "object",
+        "properties" : {
+          "origins" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OriginEntry"
+            }
+          }
+        }
       },
       "ProductResponse" : {
         "type" : "object",
+        "required" : [ "productId", "description", "title" ],
         "properties" : {
-          "alias" : {
-            "type" : "string"
-          },
           "productId" : {
             "type" : "string",
             "pattern" : "\\S"
+          },
+          "alias" : {
+            "type" : "string"
           },
           "allowedInstitutionTaxCode" : {
             "type" : "array",
@@ -289,12 +323,6 @@
             "items" : {
               "type" : "string"
             }
-          },
-          "createdAt" : {
-            "$ref" : "#/components/schemas/Instant"
-          },
-          "createdBy" : {
-            "type" : "string"
           },
           "delegable" : {
             "type" : "boolean"
@@ -381,15 +409,29 @@
           "invoiceable" : {
             "type" : "boolean"
           },
-          "version" : {
-            "type" : "integer",
-            "format" : "int32"
+          "institutionOrigins" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OriginEntry"
+            }
+          },
+          "allowIndividualOnboarding" : {
+            "type" : "boolean"
+          },
+          "allowCompanyOnboarding" : {
+            "type" : "boolean"
           },
           "id" : {
             "type" : "string"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int32"
           }
-        },
-        "required" : [ "productId", "description", "title" ]
+        }
       },
       "ProductRole" : {
         "type" : "object",
@@ -712,6 +754,63 @@
               "application/problem+json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Product not found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/product/{productId}/origins" : {
+      "get" : {
+        "summary" : "Get product origins by productId",
+        "description" : "Retrieve the list of institution origins for the given product.",
+        "operationId" : "getProductOriginsById",
+        "tags" : [ "Product", "external-v2", "external-pnpg" ],
+        "parameters" : [ {
+          "name" : "productId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Origins found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductOriginResponse"
                 }
               }
             }

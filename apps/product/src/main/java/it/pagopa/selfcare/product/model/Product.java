@@ -47,8 +47,6 @@ public class Product {
 
     private String description;
 
-    private Map<String, Map<String, List<EmailTemplate>>> emailTemplates;
-
     private boolean enabled;
 
     @Builder.Default
@@ -70,9 +68,16 @@ public class Product {
 
     private Map<String, ContractTemplate> institutionAggregatorContractMappings;
     private Map<String, ContractTemplate> institutionContractMappings;
+
     private Map<String, ContractTemplate> userAggregatorContractMappings;
     private Map<String, ContractTemplate> userContractMappings;
 
+    private Map<String, Map<String, List<EmailTemplate>>> emailTemplates;
+
     private boolean invoiceable;
 
+    private List<OriginEntry> institutionOrigins;
+
+    private boolean allowIndividualOnboarding;
+    private boolean allowCompanyOnboarding;
 }

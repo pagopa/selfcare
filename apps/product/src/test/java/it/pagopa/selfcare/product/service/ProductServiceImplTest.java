@@ -5,10 +5,14 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.controller.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.controller.response.ProductResponse;
 import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
 import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
+import it.pagopa.selfcare.product.model.OriginEntry;
 import it.pagopa.selfcare.product.model.Product;
+import it.pagopa.selfcare.product.model.enums.InstitutionType;
+import it.pagopa.selfcare.product.model.enums.Origin;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.repository.ProductRepository;
 import it.pagopa.selfcare.product.util.JsonUtils;
@@ -21,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -174,6 +179,7 @@ class ProductServiceImplTest {
 
     @Test
     void getProductById_ok() {
+        // given
         Product product = Product.builder()
                 .id("6fb47c97-73ca-4864-9b81-566a4d90efee")
                 .productId("prod-test")
@@ -194,8 +200,10 @@ class ProductServiceImplTest {
                     return r;
                 });
 
+        // when
         ProductResponse productResponse = productService.getProductById("prod-test").await().indefinitely();
 
+        // then
         assertNotNull(productResponse);
         assertEquals("6fb47c97-73ca-4864-9b81-566a4d90efee", productResponse.getId());
         assertEquals("prod-test", productResponse.getProductId());
@@ -400,5 +408,57 @@ class ProductServiceImplTest {
         verify(productRepository, times(1)).update(any(Product.class));
         verifyNoInteractions(productMapperResponse);
     }
+
+    @Test
+    void getProductOriginsById_ok() {
+        // given
+        Product product = Product.builder()
+                .id("6fb47c97-73ca-4864-9b81-566a4d90efee")
+                .productId("prod-test")
+                .status(ProductStatus.ACTIVE)
+                .institutionOrigins(List.of(OriginEntry.builder().institutionType(InstitutionType.PA).labelKey("pa").origin(Origin.IPA).build()))
+                .version(7)
+                .build();
+
+        when(productRepository.findProductById("prod-test"))
+                .thenReturn(Uni.createFrom().item(product));
+
+        when(productMapperResponse.toProductOriginResponse(product))
+                .thenAnswer(inv -> ProductOriginResponse.builder().origins(product.getInstitutionOrigins()).build());
+
+        // when
+        ProductOriginResponse productOriginResponse =
+                productService.getProductOriginsById("prod-test").await().indefinitely();
+
+        // then
+        assertNotNull(productOriginResponse);
+        List<OriginEntry> origins = productOriginResponse.getOrigins();
+        assertEquals(1, origins.size());
+        assertEquals("PA", origins.get(0).getInstitutionType().name());
+        assertEquals("pa", origins.get(0).getLabelKey());
+        assertEquals("IPA", origins.get(0).getOrigin().name());
+    }
+
+    @Test
+    void getProductOriginsById_whenThrowsException() {
+        // when
+        assertThrows(IllegalArgumentException.class,
+                () -> productService.getProductOriginsById(StringUtils.EMPTY).await().indefinitely());
+
+        // then
+        verify(productRepository, never()).findProductById(anyString());
+    }
+
+    @Test
+    void getProductOriginsById_notFound_throws404() {
+        // given
+        when(productRepository.findProductById("prod-test"))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        // when
+        assertThrows(NotFoundException.class,
+                () -> productService.getProductOriginsById("prod-test").await().indefinitely());
+    }
+
 
 }

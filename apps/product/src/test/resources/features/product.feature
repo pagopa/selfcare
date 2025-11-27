@@ -65,7 +65,26 @@ Feature: Product API end-to-end onboarding and lifecycle
         "urlBO": "http://localhost:8080",
         "urlPublic": "http://localhost:8080",
         "userAggregatorContractMappings": {},
-        "userContractMappings": {}
+        "userContractMappings": {},
+        "institutionOrigins": [
+          {
+            "institutionType": "PA",
+            "origin": "IPA",
+            "labelKey": "pa"
+          },
+          {
+            "institutionType": "GSP",
+            "origin": "IPA",
+            "labelKey": "gsp"
+          },
+          {
+            "institutionType": "SCP",
+            "origin": "SELC",
+            "labelKey": "scp"
+          }
+        ],
+        "allowCompanyOnboarding": true,
+        "allowIndividualOnboarding": false
       }
     """
     When I send a POST request to "/product"
@@ -84,6 +103,17 @@ Feature: Product API end-to-end onboarding and lifecycle
       | productId | prod-test |
       | status    | TESTING   |
       | version   | 1         |
+
+  Scenario: GET /product/{productId}/origins - successfully retrieve origins
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | productId | prod-test |
+    When I send a GET request to "/product/{productId}/origins"
+    Then The status code is 200
+    And The response body contains:
+      | origins[0].institutionType | PA  |
+      | origins[0].labelKey        | pa  |
+      | origins[0].origin          | IPA |
 
   Scenario: POST /product - successfully upsert existing product to ACTIVE state
     Given User login with username "j.doe" and password "test"
@@ -150,7 +180,26 @@ Feature: Product API end-to-end onboarding and lifecycle
         "urlBO": "http://localhost:8080",
         "urlPublic": "http://localhost:8080",
         "userAggregatorContractMappings": {},
-        "userContractMappings": {}
+        "userContractMappings": {},
+        "institutionOrigins": [
+          {
+            "institutionType": "PA",
+            "origin": "IPA",
+            "labelKey": "pa"
+          },
+          {
+            "institutionType": "GSP",
+            "origin": "IPA",
+            "labelKey": "gsp"
+          },
+          {
+            "institutionType": "SCP",
+            "origin": "SELC",
+            "labelKey": "scp"
+          }
+        ],
+        "allowCompanyOnboarding": true,
+        "allowIndividualOnboarding": false
       }
     """
     When I send a POST request to "/product"
