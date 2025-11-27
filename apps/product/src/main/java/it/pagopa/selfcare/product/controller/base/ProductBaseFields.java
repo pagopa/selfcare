@@ -20,18 +20,16 @@ import java.util.Map;
 @SuperBuilder
 public class ProductBaseFields {
 
-    private String alias;
-
     @NotBlank
     private String productId;
+
+    private String alias;
 
     private List<String> allowedInstitutionTaxCode;
 
     private Map<String, BackOfficeConfigurations> backOfficeEnvironmentConfigurations;
 
     private List<String> consumers;
-
-    private Instant createdAt;
 
     private String createdBy;
 
@@ -76,6 +74,4 @@ public class ProductBaseFields {
 
     private boolean allowIndividualOnboarding;
     private boolean allowCompanyOnboarding;
-
-    private Integer version;
 }
