@@ -1,10 +1,12 @@
 package it.pagopa.selfcare.product.mapper;
 
 import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
+import it.pagopa.selfcare.product.controller.request.ProductPatchRequest;
 import it.pagopa.selfcare.product.model.Product;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = "cdi")
 public interface ProductMapperRequest {
@@ -13,4 +15,7 @@ public interface ProductMapperRequest {
 
     @BeanMapping(ignoreByDefault = false)
     Product cloneObject(@MappingTarget Product target, Product source);
+
+    @BeanMapping(nullValuePropertyMappingStrategy =  NullValuePropertyMappingStrategy.IGNORE)
+    Product toPatch(ProductPatchRequest source, @MappingTarget Product target);
 }
