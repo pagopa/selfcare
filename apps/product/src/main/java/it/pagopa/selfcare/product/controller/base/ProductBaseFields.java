@@ -10,7 +10,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -65,6 +64,7 @@ public class ProductBaseFields {
 
     private Map<String, ContractTemplate> institutionAggregatorContractMappings;
     private Map<String, ContractTemplate> institutionContractMappings;
+
     private Map<String, ContractTemplate> userAggregatorContractMappings;
     private Map<String, ContractTemplate> userContractMappings;
 
