@@ -36,7 +36,7 @@ components:
         enabled:
           type: boolean
         institutionType:
-          type: string
+          $ref: "#/components/schemas/InstitutionType"
         path:
           type: string
         version:
@@ -62,7 +62,7 @@ components:
         type:
           $ref: "#/components/schemas/WorkflowType"
         institutionType:
-          type: string
+          $ref: "#/components/schemas/InstitutionType"
         path:
           type: string
         version:
@@ -111,6 +111,7 @@ components:
       - PRV_PF
       - GPU
       - SCEC
+      - DEFAULT
     OnboardingStatus:
       type: string
       enum:

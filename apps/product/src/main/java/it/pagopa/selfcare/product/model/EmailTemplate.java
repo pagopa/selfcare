@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.product.model;
 
+import it.pagopa.selfcare.product.model.enums.InstitutionType;
 import it.pagopa.selfcare.product.model.enums.OnboardingStatus;
 import it.pagopa.selfcare.product.model.enums.WorkflowType;
 import lombok.AllArgsConstructor;
@@ -13,7 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class EmailTemplate {
     private WorkflowType type;
-    private String institutionType;
+    private InstitutionType institutionType;
     private String path;
     private String version;
     private OnboardingStatus status;

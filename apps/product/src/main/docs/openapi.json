@@ -53,7 +53,7 @@
             "type" : "boolean"
           },
           "institutionType" : {
-            "type" : "string"
+            "$ref" : "#/components/schemas/InstitutionType"
           },
           "path" : {
             "type" : "string"
@@ -92,7 +92,7 @@
             "$ref" : "#/components/schemas/WorkflowType"
           },
           "institutionType" : {
-            "type" : "string"
+            "$ref" : "#/components/schemas/InstitutionType"
           },
           "path" : {
             "type" : "string"
@@ -142,7 +142,7 @@
       },
       "InstitutionType" : {
         "type" : "string",
-        "enum" : [ "PA", "PG", "GSP", "SA", "PT", "SCP", "PSP", "AS", "REC", "CON", "PRV", "PRV_PF", "GPU", "SCEC" ]
+        "enum" : [ "PA", "PG", "GSP", "SA", "PT", "SCP", "PSP", "AS", "REC", "CON", "PRV", "PRV_PF", "GPU", "SCEC", "DEFAULT" ]
       },
       "OnboardingStatus" : {
         "type" : "string",
