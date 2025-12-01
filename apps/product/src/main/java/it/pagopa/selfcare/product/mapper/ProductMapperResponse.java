@@ -6,8 +6,9 @@ import it.pagopa.selfcare.product.controller.response.ProductResponse;
 import it.pagopa.selfcare.product.model.Product;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "cdi")
+@Mapper(componentModel = "cdi", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ProductMapperResponse {
 
     ProductResponse toProductResponse(Product product);
