@@ -225,7 +225,7 @@ class ProductControllerTest {
     void patchProductTest_shouldReturn200_whenOk() {
         // given
         String productId = "prod-test";
-        ProductBaseResponse updated = mock(ProductBaseResponse.class);
+        ProductResponse updated = mock(ProductResponse.class);
 
         when(productService.patchProductById(eq(productId), any(ProductPatchRequest.class)))
                 .thenReturn(Uni.createFrom().item(updated));

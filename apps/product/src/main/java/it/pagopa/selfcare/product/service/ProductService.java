@@ -16,7 +16,7 @@ public interface ProductService {
 
     Uni<ProductBaseResponse> deleteProductById(String productId);
 
-    Uni<ProductBaseResponse> patchProductById(String productId, ProductPatchRequest productPatchRequest);
+    Uni<ProductResponse> patchProductById(String productId, ProductPatchRequest productPatchRequest);
 
     Uni<ProductOriginResponse> getProductOriginsById(String productId);
 }

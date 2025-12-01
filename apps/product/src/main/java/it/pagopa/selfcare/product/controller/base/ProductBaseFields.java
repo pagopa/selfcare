@@ -2,6 +2,7 @@ package it.pagopa.selfcare.product.controller.base;
 
 import it.pagopa.selfcare.product.model.*;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -13,7 +14,9 @@ import java.util.List;
 @NoArgsConstructor
 public class ProductBaseFields {
 
+    @NotBlank
     private String productId;
+
     private String alias;
     private String title;
     private String description;

@@ -106,7 +106,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Uni<ProductBaseResponse> patchProductById(String productId, ProductPatchRequest productPatchRequest) {
+    public Uni<ProductResponse> patchProductById(String productId, ProductPatchRequest productPatchRequest) {
         String sanitizedProductId = Encode.forJava(productId);
         log.info("Update product configuration by productId: {}", sanitizedProductId);
 
@@ -133,7 +133,7 @@ public class ProductServiceImpl implements ProductService {
                                     current.setVersion(current.getVersion() + 1);
 
                                     return productRepository.persist(current)
-                                            .map(productMapperResponse::toProductBaseResponse);
+                                            .map(productMapperResponse::toProductResponse);
                                 })
                 );
     }
