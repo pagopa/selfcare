@@ -132,8 +132,8 @@ Feature: Product API end-to-end onboarding and lifecycle
      {
       "productId": "prod-test",
       "alias": "prod-test",
-      "title": "Prod TEST",
-      "description": "Product description",
+      "title": "Prod TEST 2 - Patched",
+      "description": "Description updated via PATCH",
       "status": "ACTIVE",
       "version": 1,
       "consumers": [
@@ -151,7 +151,7 @@ Feature: Product API end-to-end onboarding and lifecycle
         "delegable": false,
         "invoiceable": true,
         "expirationDays": 30,
-        "enabled": true
+        "enabled": false
       },
       "roleMappings": [
         {
@@ -246,7 +246,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     """
       {
         "description": "Description updated via PATCH",
-        "enabled": false,
+        "features[0].enabled": false,
         "title": "Prod TEST 2 - Patched"
       }
     """
@@ -255,7 +255,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The response body contains:
       | productId   | prod-test                     |
       | description | Description updated via PATCH |
-      | enabled     | false                         |
+      | features.enabled | false                         |
       | title       | Prod TEST 2 - Patched         |
 
   Scenario: GET /product/{productId} - successfully retrieve product after patch
@@ -267,7 +267,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The response body contains:
       | productId   | prod-test                     |
       | description | Description updated via PATCH |
-      | enabled     | false                         |
+      | features.enabled | false                         |
 
   Scenario: DELETE /product/{productId} - successfully mark product as DELETED
     Given User login with username "j.doe" and password "test"
@@ -296,8 +296,7 @@ Feature: Product API end-to-end onboarding and lifecycle
       {
         "alias": "prod-missing-id",
         "status": "TESTING",
-        "title": "Without ID",
-        "enabled": true
+        "title": "Without ID"
       }
     """
     When I send a POST request to "/product"

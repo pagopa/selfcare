@@ -53,7 +53,7 @@
             "type" : "boolean"
           },
           "institutionType" : {
-            "$ref" : "#/components/schemas/InstitutionType"
+            "type" : "string"
           },
           "path" : {
             "type" : "string"
@@ -92,7 +92,7 @@
             "$ref" : "#/components/schemas/WorkflowType"
           },
           "institutionType" : {
-            "$ref" : "#/components/schemas/InstitutionType"
+            "type" : "string"
           },
           "path" : {
             "type" : "string"
@@ -493,7 +493,7 @@
   "paths" : {
     "/product" : {
       "post" : {
-        "summary" : "Create or update a product configuration (upsert)",
+        "summary" : "Create or update a product configuration",
         "description" : "Creates a new product configuration or updates the existing one when a match is found",
         "operationId" : "createProduct",
         "tags" : [ "Product", "external-v2", "external-pnpg" ],

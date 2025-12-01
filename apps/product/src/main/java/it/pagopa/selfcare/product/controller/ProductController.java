@@ -53,7 +53,7 @@ public class ProductController {
     @Tag(name = "Product")
     @Tag(name = "external-v2")
     @Tag(name = "external-pnpg")
-    @Operation(summary = "Create or update a product configuration (upsert)", description = "Creates a new product configuration or updates the existing one when a match is found")
+    @Operation(summary = "Create or update a product configuration", description = "Creates a new product configuration or updates the existing one when a match is found")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Created",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProductBaseResponse.class))),
