@@ -9,43 +9,16 @@
   } ],
   "components" : {
     "schemas" : {
-      "AttachmentTemplate" : {
+      "BackOfficeEnvironmentConfiguration" : {
         "type" : "object",
         "properties" : {
-          "templatePath" : {
+          "env" : {
             "type" : "string"
           },
-          "templateVersion" : {
+          "urlPublic" : {
             "type" : "string"
           },
-          "name" : {
-            "type" : "string"
-          },
-          "mandatory" : {
-            "type" : "boolean"
-          },
-          "generated" : {
-            "type" : "boolean"
-          },
-          "workflowType" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/WorkflowType"
-            }
-          },
-          "workflowState" : {
-            "$ref" : "#/components/schemas/OnboardingStatus"
-          },
-          "order" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        }
-      },
-      "BackOfficeConfigurations" : {
-        "type" : "object",
-        "properties" : {
-          "url" : {
+          "urlBO" : {
             "type" : "string"
           },
           "identityTokenAudience" : {
@@ -53,19 +26,61 @@
           }
         }
       },
+      "BackOfficeRole" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          }
+        }
+      },
       "ContractTemplate" : {
         "type" : "object",
         "properties" : {
-          "contractTemplatePath" : {
+          "contractId" : {
             "type" : "string"
           },
-          "contractTemplateVersion" : {
+          "onboardingType" : {
+            "$ref" : "#/components/schemas/OnboardingType"
+          },
+          "enabled" : {
+            "type" : "boolean"
+          },
+          "institutionType" : {
+            "$ref" : "#/components/schemas/InstitutionType"
+          },
+          "path" : {
             "type" : "string"
           },
-          "attachments" : {
+          "version" : {
+            "type" : "string"
+          },
+          "order" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "generated" : {
+            "type" : "boolean"
+          },
+          "mandatory" : {
+            "type" : "boolean"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "workflowState" : {
+            "type" : "string"
+          },
+          "workflowType" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/AttachmentTemplate"
+              "$ref" : "#/components/schemas/WorkflowType"
             }
           }
         }
@@ -73,6 +88,12 @@
       "EmailTemplate" : {
         "type" : "object",
         "properties" : {
+          "type" : {
+            "$ref" : "#/components/schemas/WorkflowType"
+          },
+          "institutionType" : {
+            "$ref" : "#/components/schemas/InstitutionType"
+          },
           "path" : {
             "type" : "string"
           },
@@ -84,6 +105,41 @@
           }
         }
       },
+      "Features" : {
+        "type" : "object",
+        "properties" : {
+          "allowCompanyOnboarding" : {
+            "type" : "boolean"
+          },
+          "allowIndividualOnboarding" : {
+            "type" : "boolean"
+          },
+          "allowedInstitutionTaxCode" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "delegable" : {
+            "type" : "boolean"
+          },
+          "invoiceable" : {
+            "type" : "boolean"
+          },
+          "expirationDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "enabled" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "Instant" : {
+        "type" : "string",
+        "format" : "date-time",
+        "examples" : [ "2022-03-10T16:15:50Z" ]
+      },
       "InstitutionType" : {
         "type" : "string",
         "enum" : [ "PA", "PG", "GSP", "SA", "PT", "SCP", "PSP", "AS", "REC", "CON", "PRV", "PRV_PF", "GPU", "SCEC" ]
@@ -91,6 +147,10 @@
       "OnboardingStatus" : {
         "type" : "string",
         "enum" : [ "REQUEST", "TOBEVALIDATED", "PENDING", "COMPLETED", "FAILED", "REJECTED", "DELETED" ]
+      },
+      "OnboardingType" : {
+        "type" : "string",
+        "enum" : [ "INSTITUTION", "USER" ]
       },
       "Origin" : {
         "type" : "string",
@@ -147,7 +207,7 @@
       },
       "ProductCreateRequest" : {
         "type" : "object",
-        "required" : [ "productId", "description", "title" ],
+        "required" : [ "productId" ],
         "properties" : {
           "productId" : {
             "type" : "string",
@@ -156,17 +216,14 @@
           "alias" : {
             "type" : "string"
           },
-          "allowedInstitutionTaxCode" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
+          "title" : {
+            "type" : "string"
           },
-          "backOfficeEnvironmentConfigurations" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "$ref" : "#/components/schemas/BackOfficeConfigurations"
-            }
+          "description" : {
+            "type" : "string"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/ProductStatus"
           },
           "consumers" : {
             "type" : "array",
@@ -174,90 +231,23 @@
               "type" : "string"
             }
           },
-          "createdBy" : {
-            "type" : "string"
+          "visualConfiguration" : {
+            "$ref" : "#/components/schemas/VisualConfiguration"
           },
-          "delegable" : {
-            "type" : "boolean"
-          },
-          "depictImageUrl" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string",
-            "pattern" : "\\S"
-          },
-          "emailTemplates" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "type" : "array",
-              "items" : {
-                "$ref" : "#/components/schemas/EmailTemplate"
-              }
-            }
-          },
-          "enabled" : {
-            "type" : "boolean"
-          },
-          "expirationDate" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "identityTokenAudience" : {
-            "type" : "string"
-          },
-          "logo" : {
-            "type" : "string"
-          },
-          "logoBgColor" : {
-            "type" : "string",
-            "pattern" : "^#([A-Fa-f0-9]{6})$"
+          "features" : {
+            "$ref" : "#/components/schemas/Features"
           },
           "roleMappings" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "$ref" : "#/components/schemas/UserRolePermission"
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleMapping"
             }
           },
-          "status" : {
-            "$ref" : "#/components/schemas/ProductStatus"
-          },
-          "title" : {
-            "type" : "string",
-            "pattern" : "\\S"
-          },
-          "urlBO" : {
-            "type" : "string"
-          },
-          "urlPublic" : {
-            "type" : "string"
-          },
-          "institutionAggregatorContractMappings" : {
-            "type" : "object",
-            "additionalProperties" : {
+          "contracts" : {
+            "type" : "array",
+            "items" : {
               "$ref" : "#/components/schemas/ContractTemplate"
             }
-          },
-          "institutionContractMappings" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "$ref" : "#/components/schemas/ContractTemplate"
-            }
-          },
-          "userAggregatorContractMappings" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "$ref" : "#/components/schemas/ContractTemplate"
-            }
-          },
-          "userContractMappings" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "$ref" : "#/components/schemas/ContractTemplate"
-            }
-          },
-          "invoiceable" : {
-            "type" : "boolean"
           },
           "institutionOrigins" : {
             "type" : "array",
@@ -265,11 +255,28 @@
               "$ref" : "#/components/schemas/OriginEntry"
             }
           },
-          "allowIndividualOnboarding" : {
-            "type" : "boolean"
+          "emailTemplates" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/EmailTemplate"
+            }
           },
-          "allowCompanyOnboarding" : {
-            "type" : "boolean"
+          "backOfficeEnvironmentConfigurations" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BackOfficeEnvironmentConfiguration"
+            }
+          }
+        }
+      },
+      "ProductMetadata" : {
+        "type" : "object",
+        "properties" : {
+          "createdAt" : {
+            "$ref" : "#/components/schemas/Instant"
+          },
+          "createdBy" : {
+            "type" : "string"
           }
         }
       },
@@ -286,127 +293,7 @@
       },
       "ProductPatchRequest" : {
         "type" : "object",
-        "properties" : {
-          "alias" : {
-            "type" : "string"
-          },
-          "allowedInstitutionTaxCode" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "backOfficeEnvironmentConfigurations" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "$ref" : "#/components/schemas/BackOfficeConfigurations"
-            }
-          },
-          "consumers" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "createdBy" : {
-            "type" : "string"
-          },
-          "delegable" : {
-            "type" : "boolean"
-          },
-          "depictImageUrl" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "emailTemplates" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "type" : "array",
-              "items" : {
-                "$ref" : "#/components/schemas/EmailTemplate"
-              }
-            }
-          },
-          "enabled" : {
-            "type" : "boolean"
-          },
-          "expirationDate" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "identityTokenAudience" : {
-            "type" : "string"
-          },
-          "logo" : {
-            "type" : "string"
-          },
-          "logoBgColor" : {
-            "type" : "string"
-          },
-          "roleMappings" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "$ref" : "#/components/schemas/UserRolePermission"
-            }
-          },
-          "status" : {
-            "$ref" : "#/components/schemas/ProductStatus"
-          },
-          "title" : {
-            "type" : "string"
-          },
-          "urlBO" : {
-            "type" : "string"
-          },
-          "urlPublic" : {
-            "type" : "string"
-          },
-          "institutionAggregatorContractMappings" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "$ref" : "#/components/schemas/ContractTemplate"
-            }
-          },
-          "institutionContractMappings" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "$ref" : "#/components/schemas/ContractTemplate"
-            }
-          },
-          "userAggregatorContractMappings" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "$ref" : "#/components/schemas/ContractTemplate"
-            }
-          },
-          "userContractMappings" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "$ref" : "#/components/schemas/ContractTemplate"
-            }
-          },
-          "invoiceable" : {
-            "type" : "boolean"
-          },
-          "institutionOrigins" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/OriginEntry"
-            }
-          },
-          "allowIndividualOnboarding" : {
-            "type" : "boolean"
-          },
-          "allowCompanyOnboarding" : {
-            "type" : "boolean"
-          }
-        }
-      },
-      "ProductResponse" : {
-        "type" : "object",
-        "required" : [ "productId", "description", "title" ],
+        "required" : [ "productId" ],
         "properties" : {
           "productId" : {
             "type" : "string",
@@ -415,17 +302,14 @@
           "alias" : {
             "type" : "string"
           },
-          "allowedInstitutionTaxCode" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
+          "title" : {
+            "type" : "string"
           },
-          "backOfficeEnvironmentConfigurations" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "$ref" : "#/components/schemas/BackOfficeConfigurations"
-            }
+          "description" : {
+            "type" : "string"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/ProductStatus"
           },
           "consumers" : {
             "type" : "array",
@@ -433,87 +317,23 @@
               "type" : "string"
             }
           },
-          "delegable" : {
-            "type" : "boolean"
+          "visualConfiguration" : {
+            "$ref" : "#/components/schemas/VisualConfiguration"
           },
-          "depictImageUrl" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string",
-            "pattern" : "\\S"
-          },
-          "emailTemplates" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "type" : "array",
-              "items" : {
-                "$ref" : "#/components/schemas/EmailTemplate"
-              }
-            }
-          },
-          "enabled" : {
-            "type" : "boolean"
-          },
-          "expirationDate" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "identityTokenAudience" : {
-            "type" : "string"
-          },
-          "logo" : {
-            "type" : "string"
-          },
-          "logoBgColor" : {
-            "type" : "string",
-            "pattern" : "^#([A-Fa-f0-9]{6})$"
+          "features" : {
+            "$ref" : "#/components/schemas/Features"
           },
           "roleMappings" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "$ref" : "#/components/schemas/UserRolePermission"
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleMapping"
             }
           },
-          "status" : {
-            "$ref" : "#/components/schemas/ProductStatus"
-          },
-          "title" : {
-            "type" : "string",
-            "pattern" : "\\S"
-          },
-          "urlBO" : {
-            "type" : "string"
-          },
-          "urlPublic" : {
-            "type" : "string"
-          },
-          "institutionAggregatorContractMappings" : {
-            "type" : "object",
-            "additionalProperties" : {
+          "contracts" : {
+            "type" : "array",
+            "items" : {
               "$ref" : "#/components/schemas/ContractTemplate"
             }
-          },
-          "institutionContractMappings" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "$ref" : "#/components/schemas/ContractTemplate"
-            }
-          },
-          "userAggregatorContractMappings" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "$ref" : "#/components/schemas/ContractTemplate"
-            }
-          },
-          "userContractMappings" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "$ref" : "#/components/schemas/ContractTemplate"
-            }
-          },
-          "invoiceable" : {
-            "type" : "boolean"
           },
           "institutionOrigins" : {
             "type" : "array",
@@ -521,11 +341,81 @@
               "$ref" : "#/components/schemas/OriginEntry"
             }
           },
-          "allowIndividualOnboarding" : {
-            "type" : "boolean"
+          "emailTemplates" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/EmailTemplate"
+            }
           },
-          "allowCompanyOnboarding" : {
-            "type" : "boolean"
+          "backOfficeEnvironmentConfigurations" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BackOfficeEnvironmentConfiguration"
+            }
+          }
+        }
+      },
+      "ProductResponse" : {
+        "type" : "object",
+        "required" : [ "productId" ],
+        "properties" : {
+          "productId" : {
+            "type" : "string",
+            "pattern" : "\\S"
+          },
+          "alias" : {
+            "type" : "string"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/ProductStatus"
+          },
+          "consumers" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "visualConfiguration" : {
+            "$ref" : "#/components/schemas/VisualConfiguration"
+          },
+          "features" : {
+            "$ref" : "#/components/schemas/Features"
+          },
+          "roleMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleMapping"
+            }
+          },
+          "contracts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ContractTemplate"
+            }
+          },
+          "institutionOrigins" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OriginEntry"
+            }
+          },
+          "emailTemplates" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/EmailTemplate"
+            }
+          },
+          "backOfficeEnvironmentConfigurations" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BackOfficeEnvironmentConfiguration"
+            }
           },
           "id" : {
             "type" : "string"
@@ -536,23 +426,9 @@
           "version" : {
             "type" : "integer",
             "format" : "int32"
-          }
-        }
-      },
-      "ProductRole" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "string"
           },
-          "label" : {
-            "type" : "string"
-          },
-          "productLabel" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
+          "metadata" : {
+            "$ref" : "#/components/schemas/ProductMetadata"
           }
         }
       },
@@ -560,13 +436,13 @@
         "type" : "string",
         "enum" : [ "TESTING", "ACTIVE", "DELETED", "SUSPEND" ]
       },
-      "UserRolePermission" : {
+      "RoleMapping" : {
         "type" : "object",
         "properties" : {
-          "multiroleAllowed" : {
-            "type" : "boolean"
+          "role" : {
+            "type" : "string"
           },
-          "skipUserCreation" : {
+          "multiroleAllowed" : {
             "type" : "boolean"
           },
           "phasesAdditionAllowed" : {
@@ -575,11 +451,28 @@
               "type" : "string"
             }
           },
-          "roles" : {
+          "skipUserCreation" : {
+            "type" : "boolean"
+          },
+          "backOfficeRoles" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/ProductRole"
+              "$ref" : "#/components/schemas/BackOfficeRole"
             }
+          }
+        }
+      },
+      "VisualConfiguration" : {
+        "type" : "object",
+        "properties" : {
+          "logoUrl" : {
+            "type" : "string"
+          },
+          "depictImageUrl" : {
+            "type" : "string"
+          },
+          "logoBgColor" : {
+            "type" : "string"
           }
         }
       },
