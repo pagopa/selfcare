@@ -102,7 +102,7 @@ jobs:
           subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
 
       - name: Download Terraform Plan as Artifact
-        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
+        uses: actions/download-artifact@6be3a5f85b45e4ee8a50b98c9e1bd4f2883555ee # v4.1.3
         with:
           name: tfplan
           path: ${{ inputs.dir }}
