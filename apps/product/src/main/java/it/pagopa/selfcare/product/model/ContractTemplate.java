@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.product.model;
 
 import it.pagopa.selfcare.product.model.enums.InstitutionType;
+import it.pagopa.selfcare.product.model.enums.OnboardingType;
 import it.pagopa.selfcare.product.model.enums.WorkflowType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,7 +13,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ContractTemplate {
-    private String type;
+    private String contractId;
+    private OnboardingType onboardingType;
+    private boolean enabled;
     private InstitutionType institutionType;
     private String path;
     private String version;
