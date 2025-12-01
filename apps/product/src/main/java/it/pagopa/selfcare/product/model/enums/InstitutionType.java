@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.product.model.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -20,6 +21,7 @@ public enum InstitutionType {
     SCEC,
     DEFAULT;
 
+    @JsonCreator
     public static InstitutionType from(String value) {
         if (value == null || value.isBlank()) {
             log.debug("InstitutionType is null or blank, set DEFAULT");
