@@ -11,6 +11,7 @@ import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.repository.ProductRepository;
+import it.pagopa.selfcare.product.util.ProductUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
@@ -20,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.codehaus.plexus.util.StringUtils;
 import org.owasp.encoder.Encode;
 
-import java.time.Instant;
 import java.util.UUID;
 
 @Slf4j
@@ -37,8 +37,8 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapperRequest productMapperRequest;
     private final ProductMapperResponse productMapperResponse;
 
-    //VALIDATOR
-    //private final UserValidator userValidator;
+    //UTILS
+    private final ProductUtils productUtils;
 
     @Override
     public Uni<String> ping() {
@@ -60,7 +60,7 @@ public class ProductServiceImpl implements ProductService {
             requestProduct.setStatus(ProductStatus.TESTING);
         }
 
-        requestProduct.setCreatedAt(Instant.now());
+        requestProduct.setMetadata(productUtils.buildProductMetadata());
 
         return productRepository.findProductById(productId).onItem().ifNotNull().transformToUni(currentProduct -> {
                     int nextVersion = currentProduct.getVersion() + 1;
@@ -106,7 +106,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Uni<ProductResponse> patchProductById(String productId, ProductPatchRequest productPatchRequest) {
+    public Uni<ProductBaseResponse> patchProductById(String productId, ProductPatchRequest productPatchRequest) {
         String sanitizedProductId = Encode.forJava(productId);
         log.info("Update product configuration by productId: {}", sanitizedProductId);
 
@@ -129,11 +129,11 @@ public class ProductServiceImpl implements ProductService {
 
                                     current.setId(UUID.randomUUID().toString());
                                     current.setProductId(current.getProductId());
-                                    current.setCreatedAt(Instant.now());
+                                    current.setMetadata(productUtils.buildProductMetadata());
                                     current.setVersion(current.getVersion() + 1);
 
                                     return productRepository.persist(current)
-                                            .map(productMapperResponse::toProductResponse);
+                                            .map(productMapperResponse::toProductBaseResponse);
                                 })
                 );
     }
