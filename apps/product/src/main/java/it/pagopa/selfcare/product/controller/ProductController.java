@@ -2,12 +2,12 @@ package it.pagopa.selfcare.product.controller;
 
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
-import it.pagopa.selfcare.product.controller.request.ProductPatchRequest;
-import it.pagopa.selfcare.product.controller.response.Problem;
-import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
-import it.pagopa.selfcare.product.controller.response.ProductOriginResponse;
-import it.pagopa.selfcare.product.controller.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
+import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
+import it.pagopa.selfcare.product.model.dto.response.Problem;
+import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;

@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.product.controller.base;
+package it.pagopa.selfcare.product.model.dto.base;
 
 import it.pagopa.selfcare.product.model.*;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;

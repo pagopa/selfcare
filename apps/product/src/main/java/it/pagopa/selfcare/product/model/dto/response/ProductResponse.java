@@ -1,6 +1,6 @@
-package it.pagopa.selfcare.product.controller.response;
+package it.pagopa.selfcare.product.model.dto.response;
 
-import it.pagopa.selfcare.product.controller.base.ProductBase;
+import it.pagopa.selfcare.product.model.dto.base.ProductBase;
 import it.pagopa.selfcare.product.model.ProductMetadata;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

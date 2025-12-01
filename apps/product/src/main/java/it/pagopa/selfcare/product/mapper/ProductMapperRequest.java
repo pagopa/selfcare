@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.product.mapper;
 
-import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
-import it.pagopa.selfcare.product.controller.request.ProductPatchRequest;
+import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
+import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
 import it.pagopa.selfcare.product.model.Product;
 import org.mapstruct.*;
 

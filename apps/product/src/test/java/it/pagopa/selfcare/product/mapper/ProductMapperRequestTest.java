@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.product.mapper;
 
 import io.quarkus.test.junit.QuarkusTest;
-import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
+import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import org.junit.Test;

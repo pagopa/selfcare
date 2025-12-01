@@ -1,5 +1,6 @@
-package it.pagopa.selfcare.product.controller.base;
+package it.pagopa.selfcare.product.model.dto.request;
 
+import it.pagopa.selfcare.product.model.dto.base.ProductBaseFields;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -11,8 +12,5 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-public class ProductBase extends ProductBaseFields {
-    private String id;
-    private String createdBy;
-    private Integer version;
+public class ProductPatchRequest extends ProductBaseFields {
 }
