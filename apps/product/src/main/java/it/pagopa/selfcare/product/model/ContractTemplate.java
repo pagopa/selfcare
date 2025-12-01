@@ -4,16 +4,22 @@ import it.pagopa.selfcare.product.model.enums.InstitutionType;
 import it.pagopa.selfcare.product.model.enums.OnboardingType;
 import it.pagopa.selfcare.product.model.enums.WorkflowType;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.UUID;
 
+@Builder
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class ContractTemplate {
-    private String contractId;
+
+    @Builder.Default
+    private String contractId = UUID.randomUUID().toString();
+
     private OnboardingType onboardingType;
     private boolean enabled;
     private InstitutionType institutionType;
