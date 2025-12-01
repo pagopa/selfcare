@@ -8,9 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bson.codecs.pojo.annotations.BsonId;
 
-import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -24,60 +22,32 @@ public class Product {
     @Builder.Default
     private String id = UUID.randomUUID().toString();
 
+    private String productId;
     private String alias;
 
-    private String productId;
+    private String title;
+    private String description;
 
-    private List<String> allowedInstitutionTaxCode;
-
-    private Map<String, BackOfficeConfigurations> backOfficeEnvironmentConfigurations;
-
-    private List<String> consumers;
-
-    private Instant createdAt;
-
-    private String createdBy;
+    private ProductStatus status;
 
     @Builder.Default
     private int version = 1;
 
-    private boolean delegable;
+    private List<String> consumers;
 
-    private String depictImageUrl;
+    private VisualConfiguration visualConfiguration;
 
-    private String description;
+    private Features features;
 
-    private boolean enabled;
+    private List<RoleMapping> roleMappings;
 
-    @Builder.Default
-    private int expirationDate = 30;
-
-    private String identityTokenAudience;
-
-    private String logo;
-    private String logoBgColor;
-
-    private Map<String, UserRolePermission> roleMappings;
-
-    private ProductStatus status;
-
-    private String title;
-
-    private String urlBO;
-    private String urlPublic;
-
-    private Map<String, ContractTemplate> institutionAggregatorContractMappings;
-    private Map<String, ContractTemplate> institutionContractMappings;
-
-    private Map<String, ContractTemplate> userAggregatorContractMappings;
-    private Map<String, ContractTemplate> userContractMappings;
-
-    private Map<String, List<EmailTemplate>> emailTemplates;
-
-    private boolean invoiceable;
+    private List<ContractTemplate> contracts;
 
     private List<OriginEntry> institutionOrigins;
 
-    private boolean allowIndividualOnboarding;
-    private boolean allowCompanyOnboarding;
+    private List<EmailTemplate> emailTemplates;
+
+    private List<BackOfficeEnvironmentConfiguration> backOfficeEnvironmentConfigurations;
+
+    private ProductMetadata metadata;
 }
