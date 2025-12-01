@@ -88,14 +88,6 @@
         "type" : "string",
         "enum" : [ "PA", "PG", "GSP", "SA", "PT", "SCP", "PSP", "AS", "REC", "CON", "PRV", "PRV_PF", "GPU", "SCEC" ]
       },
-      "JsonValue" : {
-        "type" : "object",
-        "properties" : {
-          "valueType" : {
-            "$ref" : "#/components/schemas/ValueType"
-          }
-        }
-      },
       "OnboardingStatus" : {
         "type" : "string",
         "enum" : [ "REQUEST", "TOBEVALIDATED", "PENDING", "COMPLETED", "FAILED", "REJECTED", "DELETED" ]
@@ -198,12 +190,9 @@
           "emailTemplates" : {
             "type" : "object",
             "additionalProperties" : {
-              "type" : "object",
-              "additionalProperties" : {
-                "type" : "array",
-                "items" : {
-                  "$ref" : "#/components/schemas/EmailTemplate"
-                }
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/components/schemas/EmailTemplate"
               }
             }
           },
@@ -295,6 +284,126 @@
           }
         }
       },
+      "ProductPatchRequest" : {
+        "type" : "object",
+        "properties" : {
+          "alias" : {
+            "type" : "string"
+          },
+          "allowedInstitutionTaxCode" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "backOfficeEnvironmentConfigurations" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/BackOfficeConfigurations"
+            }
+          },
+          "consumers" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "delegable" : {
+            "type" : "boolean"
+          },
+          "depictImageUrl" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "emailTemplates" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/components/schemas/EmailTemplate"
+              }
+            }
+          },
+          "enabled" : {
+            "type" : "boolean"
+          },
+          "expirationDate" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "identityTokenAudience" : {
+            "type" : "string"
+          },
+          "logo" : {
+            "type" : "string"
+          },
+          "logoBgColor" : {
+            "type" : "string"
+          },
+          "roleMappings" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/UserRolePermission"
+            }
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/ProductStatus"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "urlBO" : {
+            "type" : "string"
+          },
+          "urlPublic" : {
+            "type" : "string"
+          },
+          "institutionAggregatorContractMappings" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/ContractTemplate"
+            }
+          },
+          "institutionContractMappings" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/ContractTemplate"
+            }
+          },
+          "userAggregatorContractMappings" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/ContractTemplate"
+            }
+          },
+          "userContractMappings" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/ContractTemplate"
+            }
+          },
+          "invoiceable" : {
+            "type" : "boolean"
+          },
+          "institutionOrigins" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OriginEntry"
+            }
+          },
+          "allowIndividualOnboarding" : {
+            "type" : "boolean"
+          },
+          "allowCompanyOnboarding" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "ProductResponse" : {
         "type" : "object",
         "required" : [ "productId", "description", "title" ],
@@ -337,12 +446,9 @@
           "emailTemplates" : {
             "type" : "object",
             "additionalProperties" : {
-              "type" : "object",
-              "additionalProperties" : {
-                "type" : "array",
-                "items" : {
-                  "$ref" : "#/components/schemas/EmailTemplate"
-                }
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/components/schemas/EmailTemplate"
               }
             }
           },
@@ -477,10 +583,6 @@
           }
         }
       },
-      "ValueType" : {
-        "type" : "string",
-        "enum" : [ "ARRAY", "OBJECT", "STRING", "NUMBER", "TRUE", "FALSE", "NULL" ]
-      },
       "WorkflowType" : {
         "type" : "string",
         "enum" : [ "CONTRACT_REGISTRATION", "FOR_APPROVE", "FOR_APPROVE_PT", "FOR_APPROVE_GPU", "CONFIRMATION", "USERS", "USERS_IMPORT", "IMPORT", "IMPORT_AGGREGATION", "CONTRACT_REGISTRATION_AGGREGATOR", "CONFIRMATION_AGGREGATE", "INCREMENT_REGISTRATION_AGGREGATOR", "CONFIRMATION_AGGREGATOR", "USERS_PG", "USERS_EA" ]
@@ -595,8 +697,8 @@
     },
     "/product/{productId}" : {
       "patch" : {
-        "summary" : "Partially update a product by ID (JSON Merge Patch)",
-        "description" : "Applies a JSON Merge Patch document to partially update an existing product identified by its productId.",
+        "summary" : "Partially update a product by ID",
+        "description" : "Partially updates an existing product identified by its productId. Only the non-null fields provided in the request body will be updated; all other fields will remain unchanged.",
         "operationId" : "patchProductById",
         "tags" : [ "Product", "external-v2", "external-pnpg" ],
         "parameters" : [ {
@@ -609,9 +711,9 @@
         } ],
         "requestBody" : {
           "content" : {
-            "application/merge-patch+json" : {
+            "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/JsonValue"
+                "$ref" : "#/components/schemas/ProductPatchRequest"
               }
             }
           },

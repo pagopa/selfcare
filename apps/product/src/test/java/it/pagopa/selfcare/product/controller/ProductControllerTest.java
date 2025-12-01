@@ -15,6 +15,7 @@ import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
+import it.pagopa.selfcare.product.controller.request.ProductPatchRequest;
 import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.controller.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.controller.response.ProductResponse;
@@ -224,14 +225,16 @@ class ProductControllerTest {
     void patchProductTest_shouldReturn200_whenOk() {
         // given
         String productId = "prod-test";
-        var updated = mock(ProductResponse.class);
-        when(productService.patchProductById(eq(productId), any()))
+        ProductResponse updated = mock(ProductResponse.class);
+
+        when(productService.patchProductById(eq(productId), any(ProductPatchRequest.class)))
                 .thenReturn(Uni.createFrom().item(updated));
+
         String patchDoc = "{\"status\":\"TESTING\"}";
 
         // when
         given()
-                .contentType("application/merge-patch+json")
+                .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(patchDoc)
                 .when()
@@ -241,7 +244,7 @@ class ProductControllerTest {
                 .contentType(ContentType.JSON);
 
         // then
-        verify(productService, times(1)).patchProductById(eq(productId), any());
+        verify(productService, times(1)).patchProductById(eq(productId), any(ProductPatchRequest.class));
         verifyNoMoreInteractions(productService);
     }
 
@@ -250,13 +253,15 @@ class ProductControllerTest {
     void patchProductTest_shouldReturn400_whenInvalidProductId() {
         // given
         String productId = " ";
-        when(productService.patchProductById(eq(productId), any()))
+
+        when(productService.patchProductById(eq(productId), any(ProductPatchRequest.class)))
                 .thenReturn(Uni.createFrom().failure(new IllegalArgumentException()));
+
         String patchDoc = "{\"status\":\"TESTING\"}";
 
         // when
         given()
-                .contentType("application/merge-patch+json")
+                .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(patchDoc)
                 .when()
@@ -270,7 +275,7 @@ class ProductControllerTest {
                 .body("instance", equalTo("/products/" + productId));
 
         // then
-        verify(productService, times(1)).patchProductById(eq(productId), any());
+        verify(productService, times(1)).patchProductById(eq(productId), any(ProductPatchRequest.class));
         verifyNoMoreInteractions(productService);
     }
 
@@ -279,13 +284,15 @@ class ProductControllerTest {
     void patchProductTest_shouldReturn404_whenProductNotFound() {
         // given
         String productId = "prod-test";
-        when(productService.patchProductById(eq(productId), any()))
+
+        when(productService.patchProductById(eq(productId), any(ProductPatchRequest.class)))
                 .thenReturn(Uni.createFrom().failure(new NotFoundException()));
+
         String patchDoc = "{\"productId\":\"prod-test\"}";
 
         // when
         given()
-                .contentType("application/merge-patch+json")
+                .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(patchDoc)
                 .when()
@@ -299,7 +306,7 @@ class ProductControllerTest {
                 .body("instance", equalTo("/products/" + productId));
 
         // then
-        verify(productService, times(1)).patchProductById(eq(productId), any());
+        verify(productService, times(1)).patchProductById(eq(productId), any(ProductPatchRequest.class));
         verifyNoMoreInteractions(productService);
     }
 
@@ -308,13 +315,15 @@ class ProductControllerTest {
     void patchProductTest_shouldReturn500_whenRuntimeError() {
         // given
         String productId = "prod-test";
-        when(productService.patchProductById(eq(productId), any()))
+
+        when(productService.patchProductById(eq(productId), any(ProductPatchRequest.class)))
                 .thenReturn(Uni.createFrom().failure(new RuntimeException()));
+
         String patchDoc = "{}";
 
         // when
         given()
-                .contentType("application/merge-patch+json")
+                .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(patchDoc)
                 .when()
@@ -327,7 +336,7 @@ class ProductControllerTest {
                 .body("instance", equalTo("/products/" + productId));
 
         // then
-        verify(productService, times(1)).patchProductById(eq(productId), any());
+        verify(productService, times(1)).patchProductById(eq(productId), any(ProductPatchRequest.class));
         verifyNoMoreInteractions(productService);
     }
 
@@ -338,12 +347,14 @@ class ProductControllerTest {
         String productId = "prod-test";
         String invalidPayload = "{}";
 
-        when(productService.patchProductById(eq(productId), any()))
-                .thenReturn(Uni.createFrom().failure(new BadRequestException("Invalid merge patch document")));
+        when(productService.patchProductById(eq(productId), any(ProductPatchRequest.class)))
+                .thenReturn(Uni.createFrom().failure(
+                        new BadRequestException("Invalid patch payload or field constraints violated")
+                ));
 
         // when
         given()
-                .contentType("application/merge-patch+json")
+                .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(invalidPayload)
                 .when()
@@ -357,7 +368,7 @@ class ProductControllerTest {
                 .body("instance", equalTo("/products/" + productId));
 
         // then
-        verify(productService, times(1)).patchProductById(eq(productId), any());
+        verify(productService, times(1)).patchProductById(eq(productId), any(ProductPatchRequest.class));
         verifyNoMoreInteractions(productService);
     }
 

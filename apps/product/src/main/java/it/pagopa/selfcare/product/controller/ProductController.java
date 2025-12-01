@@ -3,13 +3,13 @@ package it.pagopa.selfcare.product.controller;
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
+import it.pagopa.selfcare.product.controller.request.ProductPatchRequest;
 import it.pagopa.selfcare.product.controller.response.Problem;
 import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.controller.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.controller.response.ProductResponse;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
-import jakarta.json.JsonValue;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -191,8 +191,10 @@ public class ProductController {
     @Tag(name = "external-pnpg")
     @Path("/{productId}")
     @Operation(
-            summary = "Partially update a product by ID (JSON Merge Patch)",
-            description = "Applies a JSON Merge Patch document to partially update an existing product identified by its productId."
+            summary = "Partially update a product by ID",
+            description = "Partially updates an existing product identified by its productId. "
+                    + "Only the non-null fields provided in the request body will be updated; "
+                    + "all other fields will remain unchanged."
     )
     @APIResponses(value = {
             @APIResponse(
@@ -228,12 +230,12 @@ public class ProductController {
                     )
             )
     })
-    @Consumes("application/merge-patch+json")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> patchProductById(@PathParam("productId") String productId,
-                                          JsonValue updateBody) {
+                                          ProductPatchRequest productPatchRequest) {
 
-        return productService.patchProductById(productId, updateBody)
+        return productService.patchProductById(productId, productPatchRequest)
                 .map(updated -> Response.ok(updated).build())
                 .onFailure(IllegalArgumentException.class).recoverWithItem(() ->
                         Response.status(Response.Status.BAD_REQUEST)

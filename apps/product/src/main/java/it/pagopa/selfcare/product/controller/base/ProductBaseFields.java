@@ -32,16 +32,16 @@ public class ProductBaseFields {
 
     private String createdBy;
 
-    private boolean delegable;
+    private Boolean delegable;
 
     private String depictImageUrl;
 
     @NotBlank
     private String description;
 
-    private Map<String, Map<String, List<EmailTemplate>>> emailTemplates;
+    private Map<String, List<EmailTemplate>> emailTemplates;
 
-    private boolean enabled;
+    private Boolean enabled;
 
     private Integer expirationDate;
 
@@ -68,10 +68,10 @@ public class ProductBaseFields {
     private Map<String, ContractTemplate> userAggregatorContractMappings;
     private Map<String, ContractTemplate> userContractMappings;
 
-    private boolean invoiceable;
+    private Boolean invoiceable;
 
     private List<OriginEntry> institutionOrigins;
 
-    private boolean allowIndividualOnboarding;
-    private boolean allowCompanyOnboarding;
+    private Boolean allowIndividualOnboarding;
+    private Boolean allowCompanyOnboarding;
 }

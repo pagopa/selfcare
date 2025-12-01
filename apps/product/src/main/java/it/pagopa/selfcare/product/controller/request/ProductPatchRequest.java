@@ -1,32 +1,25 @@
-package it.pagopa.selfcare.product.model;
+package it.pagopa.selfcare.product.controller.request;
 
-import io.quarkus.mongodb.panache.common.MongoEntity;
+import it.pagopa.selfcare.product.model.*;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import it.pagopa.selfcare.product.model.enums.UserRole;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.bson.codecs.pojo.annotations.BsonId;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
+@ToString(callSuper = true)
 @Data
-@Builder(toBuilder = true)
+@SuperBuilder
 @NoArgsConstructor
-@AllArgsConstructor
-@MongoEntity(collection = "products")
-public class Product {
-
-    @BsonId
-    @Builder.Default
-    private String id = UUID.randomUUID().toString();
+public class ProductPatchRequest {
 
     private String alias;
-
-    private String productId;
 
     private List<String> allowedInstitutionTaxCode;
 
@@ -34,30 +27,27 @@ public class Product {
 
     private List<String> consumers;
 
-    private Instant createdAt;
-
     private String createdBy;
 
-    @Builder.Default
-    private int version = 1;
-
-    private boolean delegable;
+    private Boolean delegable;
 
     private String depictImageUrl;
 
     private String description;
 
-    private boolean enabled;
+    private Map<String, List<EmailTemplate>> emailTemplates;
 
-    @Builder.Default
-    private int expirationDate = 30;
+    private Boolean enabled;
+
+    private Integer expirationDate;
 
     private String identityTokenAudience;
 
     private String logo;
+
     private String logoBgColor;
 
-    private Map<String, UserRolePermission> roleMappings;
+    private Map<UserRole, UserRolePermission> roleMappings;
 
     private ProductStatus status;
 
@@ -72,12 +62,10 @@ public class Product {
     private Map<String, ContractTemplate> userAggregatorContractMappings;
     private Map<String, ContractTemplate> userContractMappings;
 
-    private Map<String, List<EmailTemplate>> emailTemplates;
-
-    private boolean invoiceable;
+    private Boolean invoiceable;
 
     private List<OriginEntry> institutionOrigins;
 
-    private boolean allowIndividualOnboarding;
-    private boolean allowCompanyOnboarding;
+    private Boolean allowIndividualOnboarding;
+    private Boolean allowCompanyOnboarding;
 }

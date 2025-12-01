@@ -21,7 +21,6 @@ Feature: Product API end-to-end onboarding and lifecycle
         "depictImageUrl": "http://localhost:8080",
         "description": "Product description",
         "emailTemplates": {
-          "default": {
             "IMPORT": [
               {
                 "path": "contracts/template/mail/import-massivo-io/1.0.0.json",
@@ -29,7 +28,6 @@ Feature: Product API end-to-end onboarding and lifecycle
                 "version": "1.0.0"
               }
             ]
-          }
         },
         "enabled": true,
         "expirationDate": 30,
@@ -136,7 +134,6 @@ Feature: Product API end-to-end onboarding and lifecycle
         "depictImageUrl": "http://localhost:8080",
         "description": "Product description 2",
         "emailTemplates": {
-          "default": {
             "IMPORT": [
               {
                 "path": "contracts/template/mail/import-massivo-io/1.0.0.json",
@@ -144,7 +141,6 @@ Feature: Product API end-to-end onboarding and lifecycle
                 "version": "1.0.0"
               }
             ]
-          }
         },
         "enabled": true,
         "expirationDate": 30,
@@ -231,7 +227,7 @@ Feature: Product API end-to-end onboarding and lifecycle
         "title": "Prod TEST 2 - Patched"
       }
     """
-    When I send a PATCH request to "/product/{productId}" with content type "application/merge-patch+json"
+    When I send a PATCH request to "/product/{productId}" with content type "application/json"
     Then The status code is 200
     And The response body contains:
       | productId   | prod-test                     |
@@ -288,11 +284,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | productId | prod-unknown |
-    And The following request body:
-    """
-      {}
-    """
-    When I send a PATCH request to "/product/{productId}" with content type "application/merge-patch+json"
+    When I send a PATCH request to "/product/{productId}" with content type "application/json"
     Then The status code is 400
     And The response body contains:
       | title  | Bad Request |
