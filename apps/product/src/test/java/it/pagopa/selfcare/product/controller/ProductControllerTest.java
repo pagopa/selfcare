@@ -14,21 +14,26 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
-import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
-import it.pagopa.selfcare.product.controller.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
+import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
+import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
+import it.pagopa.selfcare.product.model.OriginEntry;
+import it.pagopa.selfcare.product.model.enums.InstitutionType;
+import it.pagopa.selfcare.product.model.enums.Origin;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
+import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
@@ -220,14 +225,16 @@ class ProductControllerTest {
     void patchProductTest_shouldReturn200_whenOk() {
         // given
         String productId = "prod-test";
-        var updated = mock(ProductResponse.class);
-        when(productService.patchProductById(eq(productId), any()))
+        ProductResponse updated = mock(ProductResponse.class);
+
+        when(productService.patchProductById(eq(productId), any(ProductPatchRequest.class)))
                 .thenReturn(Uni.createFrom().item(updated));
+
         String patchDoc = "{\"status\":\"TESTING\"}";
 
         // when
         given()
-                .contentType("application/merge-patch+json")
+                .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(patchDoc)
                 .when()
@@ -237,7 +244,7 @@ class ProductControllerTest {
                 .contentType(ContentType.JSON);
 
         // then
-        verify(productService, times(1)).patchProductById(eq(productId), any());
+        verify(productService, times(1)).patchProductById(eq(productId), any(ProductPatchRequest.class));
         verifyNoMoreInteractions(productService);
     }
 
@@ -246,13 +253,15 @@ class ProductControllerTest {
     void patchProductTest_shouldReturn400_whenInvalidProductId() {
         // given
         String productId = " ";
-        when(productService.patchProductById(eq(productId), any()))
+
+        when(productService.patchProductById(eq(productId), any(ProductPatchRequest.class)))
                 .thenReturn(Uni.createFrom().failure(new IllegalArgumentException()));
+
         String patchDoc = "{\"status\":\"TESTING\"}";
 
         // when
         given()
-                .contentType("application/merge-patch+json")
+                .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(patchDoc)
                 .when()
@@ -266,7 +275,7 @@ class ProductControllerTest {
                 .body("instance", equalTo("/products/" + productId));
 
         // then
-        verify(productService, times(1)).patchProductById(eq(productId), any());
+        verify(productService, times(1)).patchProductById(eq(productId), any(ProductPatchRequest.class));
         verifyNoMoreInteractions(productService);
     }
 
@@ -275,13 +284,15 @@ class ProductControllerTest {
     void patchProductTest_shouldReturn404_whenProductNotFound() {
         // given
         String productId = "prod-test";
-        when(productService.patchProductById(eq(productId), any()))
+
+        when(productService.patchProductById(eq(productId), any(ProductPatchRequest.class)))
                 .thenReturn(Uni.createFrom().failure(new NotFoundException()));
+
         String patchDoc = "{\"productId\":\"prod-test\"}";
 
         // when
         given()
-                .contentType("application/merge-patch+json")
+                .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(patchDoc)
                 .when()
@@ -295,7 +306,7 @@ class ProductControllerTest {
                 .body("instance", equalTo("/products/" + productId));
 
         // then
-        verify(productService, times(1)).patchProductById(eq(productId), any());
+        verify(productService, times(1)).patchProductById(eq(productId), any(ProductPatchRequest.class));
         verifyNoMoreInteractions(productService);
     }
 
@@ -304,13 +315,15 @@ class ProductControllerTest {
     void patchProductTest_shouldReturn500_whenRuntimeError() {
         // given
         String productId = "prod-test";
-        when(productService.patchProductById(eq(productId), any()))
+
+        when(productService.patchProductById(eq(productId), any(ProductPatchRequest.class)))
                 .thenReturn(Uni.createFrom().failure(new RuntimeException()));
+
         String patchDoc = "{}";
 
         // when
         given()
-                .contentType("application/merge-patch+json")
+                .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(patchDoc)
                 .when()
@@ -323,7 +336,7 @@ class ProductControllerTest {
                 .body("instance", equalTo("/products/" + productId));
 
         // then
-        verify(productService, times(1)).patchProductById(eq(productId), any());
+        verify(productService, times(1)).patchProductById(eq(productId), any(ProductPatchRequest.class));
         verifyNoMoreInteractions(productService);
     }
 
@@ -334,12 +347,14 @@ class ProductControllerTest {
         String productId = "prod-test";
         String invalidPayload = "{}";
 
-        when(productService.patchProductById(eq(productId), any()))
-                .thenReturn(Uni.createFrom().failure(new BadRequestException("Invalid merge patch document")));
+        when(productService.patchProductById(eq(productId), any(ProductPatchRequest.class)))
+                .thenReturn(Uni.createFrom().failure(
+                        new BadRequestException("Invalid patch payload or field constraints violated")
+                ));
 
         // when
         given()
-                .contentType("application/merge-patch+json")
+                .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(invalidPayload)
                 .when()
@@ -353,9 +368,62 @@ class ProductControllerTest {
                 .body("instance", equalTo("/products/" + productId));
 
         // then
-        verify(productService, times(1)).patchProductById(eq(productId), any());
+        verify(productService, times(1)).patchProductById(eq(productId), any(ProductPatchRequest.class));
         verifyNoMoreInteractions(productService);
     }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void getProductOriginsById_shouldReturnOk() {
+        // given
+        String productId = "prod-test";
+        ProductOriginResponse response = ProductOriginResponse.builder().origins(List.of(OriginEntry.builder().institutionType(InstitutionType.PA).labelKey("pa").origin(Origin.IPA).build())).build();
+
+        when(productService.getProductOriginsById(productId))
+                .thenReturn(Uni.createFrom().item(response));
+
+        // when
+        given()
+                .accept(ContentType.JSON)
+                .when()
+                .get("/" + productId + "/origins")
+                .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .body("origins[0].institutionType", equalTo(InstitutionType.PA.name()))
+                .body("origins[0].labelKey", equalTo("pa"))
+                .body("origins[0].origin", equalTo(Origin.IPA.name()));
+
+        // then
+        verify(productService, times(1)).getProductOriginsById(productId);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void getProductOriginsById_whenNotFound_shouldReturnKO() {
+        // given
+        String missing = "prod-test";
+
+        when(productService.getProductOriginsById(missing))
+                .thenReturn(Uni.createFrom().failure(new NotFoundException()));
+
+        // when
+        given()
+                .accept(ContentType.JSON)
+                .when()
+                .get("/" + missing + "/origins")
+                .then()
+                .statusCode(404)
+                .contentType(ContentType.JSON)
+                .body("title", equalTo("Product not found"))
+                .body("status", equalTo(404))
+                .body("detail", containsString(missing))
+                .body("instance", equalTo("/products/" + missing + "/origins"));
+
+        // then
+        verify(productService, times(1)).getProductOriginsById(missing);
+    }
+
 
     // UTILS
     private ProductCreateRequest getProductCreateRequest() {

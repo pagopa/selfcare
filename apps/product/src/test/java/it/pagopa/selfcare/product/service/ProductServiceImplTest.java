@@ -3,17 +3,22 @@ package it.pagopa.selfcare.product.service;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
-import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
-import it.pagopa.selfcare.product.controller.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
+import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
+import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
 import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
 import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
+import it.pagopa.selfcare.product.model.OriginEntry;
 import it.pagopa.selfcare.product.model.Product;
+import it.pagopa.selfcare.product.model.ProductMetadata;
+import it.pagopa.selfcare.product.model.enums.InstitutionType;
+import it.pagopa.selfcare.product.model.enums.Origin;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.repository.ProductRepository;
 import it.pagopa.selfcare.product.util.JsonUtils;
 import jakarta.inject.Inject;
-import jakarta.json.Json;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import org.apache.commons.lang3.StringUtils;
@@ -21,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -87,7 +93,7 @@ class ProductServiceImplTest {
         assertEquals("prod-test", productPersisted.getProductId());
         assertEquals(ProductStatus.TESTING, productPersisted.getStatus());
         assertEquals(1, productPersisted.getVersion());
-        assertNotNull(productPersisted.getCreatedAt());
+        assertNotNull(productPersisted.getMetadata().getCreatedAt());
         assertDoesNotThrow(() -> UUID.fromString(productPersisted.getId()));
     }
 
@@ -110,7 +116,7 @@ class ProductServiceImplTest {
                 .productId("prod-test")
                 .status(ProductStatus.ACTIVE)
                 .version(2)
-                .createdAt(Instant.now().minusSeconds(3600))
+                .metadata(ProductMetadata.builder().createdAt(Instant.now().minusSeconds(3600)).build())
                 .build();
 
         when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(current));
@@ -174,6 +180,7 @@ class ProductServiceImplTest {
 
     @Test
     void getProductById_ok() {
+        // given
         Product product = Product.builder()
                 .id("6fb47c97-73ca-4864-9b81-566a4d90efee")
                 .productId("prod-test")
@@ -194,8 +201,10 @@ class ProductServiceImplTest {
                     return r;
                 });
 
+        // when
         ProductResponse productResponse = productService.getProductById("prod-test").await().indefinitely();
 
+        // then
         assertNotNull(productResponse);
         assertEquals("6fb47c97-73ca-4864-9b81-566a4d90efee", productResponse.getId());
         assertEquals("prod-test", productResponse.getProductId());
@@ -223,13 +232,24 @@ class ProductServiceImplTest {
     }
 
     @Test
+    void patchProductByIdTest_whenMissingPatchRequest_thenBadRequest() {
+        // when
+        Throwable thrown = catchThrowable(() ->
+                productService.patchProductById("prod-test", null).await().indefinitely());
+
+        // then
+        assertThat(thrown).isInstanceOf(BadRequestException.class)
+                .hasMessage("Missing request patch object into body");
+    }
+
+    @Test
     void patchProductByIdTest_whenMissingProductIdOnStorage_thenBadRequest() {
         // given
-        var validBodyObject = Json.createObjectBuilder().add("productId", "prod-test").build();
+        var patchRequest = ProductPatchRequest.builder().build();
 
         // when
         Throwable thrown = catchThrowable(() ->
-                productService.patchProductById(" ", validBodyObject).await().indefinitely());
+                productService.patchProductById(" ", patchRequest).await().indefinitely());
 
         // then
         assertThat(thrown).isInstanceOf(BadRequestException.class)
@@ -238,42 +258,16 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void patchProductByIdTest_whenParsingFails_thenBadRequest() {
-        // given
-        var validBodyObject = Json.createValue("broken");
-
-        Product current = new Product();
-        current.setProductId("prod-test");
-        current.setVersion(2);
-
-        when(productRepository.findProductById("prod-test"))
-                .thenReturn(Uni.createFrom().item(current));
-
-        when(jsonUtils.toMergePatch(validBodyObject)).thenThrow(new BadRequestException("Invalid merge patch document"));
-
-        // when
-        Throwable thrown = catchThrowable(() ->
-                productService.patchProductById("prod-test", validBodyObject).await().indefinitely());
-
-        // then
-        assertThat(thrown).isInstanceOf(BadRequestException.class)
-                .hasMessage("Invalid merge patch document");
-        verifyNoInteractions(productRepository);
-    }
-
-    @Test
     void patchProductByIdTest_whenRepositoryReturnsNull_thenNotFound() {
         // given
-        var validBodyObject = Json.createObjectBuilder().add("productId", "prod-test").build();
-        var mergePatch = Json.createMergePatch(validBodyObject);
+        var patchRequest = ProductPatchRequest.builder().build();
 
-        when(jsonUtils.toMergePatch(validBodyObject)).thenReturn(mergePatch);
         when(productRepository.findProductById("prod-test"))
                 .thenReturn(Uni.createFrom().nullItem());
 
         // when
         Throwable thrown = catchThrowable(() ->
-                productService.patchProductById("prod-test", validBodyObject).await().indefinitely());
+                productService.patchProductById("prod-test", patchRequest).await().indefinitely());
 
         // then
         assertThat(thrown).isInstanceOf(NotFoundException.class)
@@ -285,32 +279,38 @@ class ProductServiceImplTest {
     @Test
     void patchProductByIdTest_whenPersistingBody_thenReturnResponse() {
         // given
-        var validBodyObject = Json.createObjectBuilder().add("productId", "prod-test").build();
-        var mergePatch = Json.createMergePatch(validBodyObject);
+        var patchRequest = ProductPatchRequest.builder().description("update description").build();
 
         Product current = new Product();
         current.setProductId("prod-test");
         current.setVersion(2);
 
-        when(jsonUtils.toMergePatch(validBodyObject)).thenReturn(mergePatch);
         when(productRepository.findProductById("prod-test"))
                 .thenReturn(Uni.createFrom().item(current));
+        current.setDescription("update description");
 
-        Product patched = new Product();
-        when(jsonUtils.mergePatch(eq(mergePatch), eq(current), eq(Product.class)))
-                .thenReturn(patched);
+        when(productMapperRequest.toPatch(patchRequest, current)).thenReturn(current);
 
         when(productRepository.persist(any(Product.class))).thenReturn(Uni.createFrom().item(current));
 
-        ProductResponse mapped = new ProductResponse();
-        when(productMapperResponse.toProductResponse(any(Product.class))).thenReturn(mapped);
+        when(productMapperResponse.toProductResponse(current))
+                .thenAnswer(inv -> {
+                    ProductResponse r = new ProductResponse();
+                    r.setId(current.getId());
+                    r.setProductId(current.getProductId());
+                    r.setDescription(current.getDescription());
+                    r.setAlias(current.getAlias());
+                    r.setStatus(current.getStatus());
+                    r.setVersion(current.getVersion());
+                    return r;
+                });
 
         // when
-        ProductResponse out = productService.patchProductById("prod-test", validBodyObject).await().indefinitely();
+        ProductResponse out = productService.patchProductById("prod-test", patchRequest).await().indefinitely();
 
         // then
-        assertThat(out).isSameAs(mapped);
         verify(productRepository).findProductById("prod-test");
+        assertEquals(out.getDescription(), "update description");
         verify(productRepository).persist(any(Product.class));
         verify(productMapperResponse).toProductResponse(any(Product.class));
         verifyNoMoreInteractions(productRepository, productMapperResponse);
@@ -400,5 +400,57 @@ class ProductServiceImplTest {
         verify(productRepository, times(1)).update(any(Product.class));
         verifyNoInteractions(productMapperResponse);
     }
+
+    @Test
+    void getProductOriginsById_ok() {
+        // given
+        Product product = Product.builder()
+                .id("6fb47c97-73ca-4864-9b81-566a4d90efee")
+                .productId("prod-test")
+                .status(ProductStatus.ACTIVE)
+                .institutionOrigins(List.of(OriginEntry.builder().institutionType(InstitutionType.PA).labelKey("pa").origin(Origin.IPA).build()))
+                .version(7)
+                .build();
+
+        when(productRepository.findProductById("prod-test"))
+                .thenReturn(Uni.createFrom().item(product));
+
+        when(productMapperResponse.toProductOriginResponse(product))
+                .thenAnswer(inv -> ProductOriginResponse.builder().origins(product.getInstitutionOrigins()).build());
+
+        // when
+        ProductOriginResponse productOriginResponse =
+                productService.getProductOriginsById("prod-test").await().indefinitely();
+
+        // then
+        assertNotNull(productOriginResponse);
+        List<OriginEntry> origins = productOriginResponse.getOrigins();
+        assertEquals(1, origins.size());
+        assertEquals("PA", origins.get(0).getInstitutionType().name());
+        assertEquals("pa", origins.get(0).getLabelKey());
+        assertEquals("IPA", origins.get(0).getOrigin().name());
+    }
+
+    @Test
+    void getProductOriginsById_whenThrowsException() {
+        // when
+        assertThrows(IllegalArgumentException.class,
+                () -> productService.getProductOriginsById(StringUtils.EMPTY).await().indefinitely());
+
+        // then
+        verify(productRepository, never()).findProductById(anyString());
+    }
+
+    @Test
+    void getProductOriginsById_notFound_throws404() {
+        // given
+        when(productRepository.findProductById("prod-test"))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        // when
+        assertThrows(NotFoundException.class,
+                () -> productService.getProductOriginsById("prod-test").await().indefinitely());
+    }
+
 
 }

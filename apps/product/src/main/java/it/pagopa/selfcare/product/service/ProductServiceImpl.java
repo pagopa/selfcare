@@ -1,18 +1,19 @@
 package it.pagopa.selfcare.product.service;
 
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
-import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
-import it.pagopa.selfcare.product.controller.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
+import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
+import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
 import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
 import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.repository.ProductRepository;
-import it.pagopa.selfcare.product.util.JsonUtils;
+import it.pagopa.selfcare.product.util.ProductUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.json.JsonValue;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -20,13 +21,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.codehaus.plexus.util.StringUtils;
 import org.owasp.encoder.Encode;
 
-import java.time.Instant;
 import java.util.UUID;
 
 @Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor(onConstructor_ = {@Inject})
 public class ProductServiceImpl implements ProductService {
+
+    public static final String GETTING_INFO_FROM_PRODUCT = "Getting info from product {}";
 
     //JPA
     private final ProductRepository productRepository;
@@ -35,11 +37,8 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapperRequest productMapperRequest;
     private final ProductMapperResponse productMapperResponse;
 
-    //VALIDATOR
-    //private final UserValidator userValidator;
-
     //UTILS
-    private final JsonUtils jsonUtils;
+    private final ProductUtils productUtils;
 
     @Override
     public Uni<String> ping() {
@@ -61,7 +60,7 @@ public class ProductServiceImpl implements ProductService {
             requestProduct.setStatus(ProductStatus.TESTING);
         }
 
-        requestProduct.setCreatedAt(Instant.now());
+        requestProduct.setMetadata(productUtils.buildProductMetadata());
 
         return productRepository.findProductById(productId).onItem().ifNotNull().transformToUni(currentProduct -> {
                     int nextVersion = currentProduct.getVersion() + 1;
@@ -80,7 +79,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Uni<ProductResponse> getProductById(String productId) {
         String sanitizedProductId = Encode.forJava(productId);
-        log.info("Getting info from product {}", sanitizedProductId);
+        log.info(GETTING_INFO_FROM_PRODUCT, sanitizedProductId);
         if (StringUtils.isBlank(sanitizedProductId)) {
             return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by productId: %s", sanitizedProductId)));
         }
@@ -107,28 +106,49 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Uni<ProductResponse> patchProductById(String productId, JsonValue body) {
+    public Uni<ProductResponse> patchProductById(String productId, ProductPatchRequest productPatchRequest) {
         String sanitizedProductId = Encode.forJava(productId);
         log.info("Update product configuration by productId: {}", sanitizedProductId);
+
         return Uni.createFrom().item(() -> {
                     if (StringUtils.isBlank(productId)) {
                         throw new BadRequestException("Missing productId");
                     }
-                    return jsonUtils.toMergePatch(body);
+                    if (productPatchRequest == null) {
+                        throw new BadRequestException("Missing request patch object into body");
+                    }
+                    return productPatchRequest;
                 })
-                .onItem().transformToUni(patch ->
+                .onItem().transformToUni(patchRequest ->
                         productRepository.findProductById(productId)
-                                .onItem().ifNull().failWith(() -> new NotFoundException("Product " + productId + " not found"))
+                                .onItem().ifNull().failWith(() ->
+                                        new NotFoundException("Product " + productId + " not found"))
                                 .onItem().transformToUni(current -> {
-                                    Product candidate = jsonUtils.mergePatch(patch, current, Product.class);
-                                    candidate.setId(UUID.randomUUID().toString());
-                                    candidate.setProductId(current.getProductId());
-                                    candidate.setCreatedAt(Instant.now());
-                                    candidate.setVersion(current.getVersion() + 1);
-                                    return productRepository.persist(candidate)
+
+                                    current = productMapperRequest.toPatch(patchRequest, current);
+
+                                    current.setId(UUID.randomUUID().toString());
+                                    current.setProductId(current.getProductId());
+                                    current.setMetadata(productUtils.buildProductMetadata());
+                                    current.setVersion(current.getVersion() + 1);
+
+                                    return productRepository.persist(current)
                                             .map(productMapperResponse::toProductResponse);
                                 })
                 );
+    }
+
+    @Override
+    public Uni<ProductOriginResponse> getProductOriginsById(String productId) {
+        String sanitizedProductId = Encode.forJava(productId);
+        log.info(GETTING_INFO_FROM_PRODUCT, sanitizedProductId);
+        if (StringUtils.isBlank(sanitizedProductId)) {
+            return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by productId: %s", sanitizedProductId)));
+        }
+
+        return productRepository.findProductById(sanitizedProductId)
+                .onItem().ifNull().failWith(() -> new NotFoundException("Product " + sanitizedProductId + " not found"))
+                .map(productMapperResponse::toProductOriginResponse);
     }
 
 }

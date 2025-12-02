@@ -6,65 +6,112 @@ tags:
 - name: external-v2
 components:
   schemas:
-    AttachmentTemplate:
+    BackOfficeEnvironmentConfiguration:
       type: object
       properties:
-        templatePath:
+        env:
           type: string
-        templateVersion:
+        urlPublic:
           type: string
-        name:
-          type: string
-        mandatory:
-          type: boolean
-        generated:
-          type: boolean
-        workflowType:
-          type: array
-          items:
-            $ref: "#/components/schemas/WorkflowType"
-        workflowState:
-          $ref: "#/components/schemas/OnboardingStatus"
-        order:
-          type: integer
-          format: int32
-    BackOfficeConfigurations:
-      type: object
-      properties:
-        url:
+        urlBO:
           type: string
         identityTokenAudience:
+          type: string
+    BackOfficeRole:
+      type: object
+      properties:
+        code:
+          type: string
+        label:
+          type: string
+        description:
           type: string
     ContractTemplate:
       type: object
       properties:
-        contractTemplatePath:
+        contractId:
           type: string
-        contractTemplateVersion:
+        onboardingType:
+          $ref: "#/components/schemas/OnboardingType"
+        enabled:
+          type: boolean
+        institutionType:
+          $ref: "#/components/schemas/InstitutionType"
+        path:
           type: string
-        attachments:
+        version:
+          type: string
+        order:
+          type: integer
+          format: int32
+        generated:
+          type: boolean
+        mandatory:
+          type: boolean
+        name:
+          type: string
+        workflowState:
+          type: string
+        workflowType:
           type: array
           items:
-            $ref: "#/components/schemas/AttachmentTemplate"
+            $ref: "#/components/schemas/WorkflowType"
     EmailTemplate:
       type: object
       properties:
+        type:
+          $ref: "#/components/schemas/WorkflowType"
+        institutionType:
+          $ref: "#/components/schemas/InstitutionType"
         path:
           type: string
         version:
           type: string
         status:
           $ref: "#/components/schemas/OnboardingStatus"
+    Features:
+      type: object
+      properties:
+        allowCompanyOnboarding:
+          type: boolean
+        allowIndividualOnboarding:
+          type: boolean
+        allowedInstitutionTaxCode:
+          type: array
+          items:
+            type: string
+        delegable:
+          type: boolean
+        invoiceable:
+          type: boolean
+        expirationDays:
+          type: integer
+          format: int32
+        enabled:
+          type: boolean
     Instant:
       type: string
       format: date-time
       examples:
       - 2022-03-10T16:15:50Z
-    JsonValue:
-      type: object
-      properties:
-        valueType:
-          $ref: "#/components/schemas/ValueType"
+    InstitutionType:
+      type: string
+      enum:
+      - PA
+      - PG
+      - GSP
+      - SA
+      - PT
+      - SCP
+      - PSP
+      - AS
+      - REC
+      - CON
+      - PRV
+      - PRV_PF
+      - GPU
+      - SCEC
+      - DEFAULT
     OnboardingStatus:
       type: string
       enum:
@@ -75,6 +122,30 @@ components:
       - FAILED
       - REJECTED
       - DELETED
+    OnboardingType:
+      type: string
+      enum:
+      - INSTITUTION
+      - USER
+    Origin:
+      type: string
+      enum:
+      - IPA
+      - SELC
+      - ANAC
+      - ADE
+      - INFOCAMERE
+      - IVASS
+      - PDND_INFOCAMERE
+    OriginEntry:
+      type: object
+      properties:
+        institutionType:
+          $ref: "#/components/schemas/InstitutionType"
+        origin:
+          $ref: "#/components/schemas/Origin"
+        labelKey:
+          type: string
     Problem:
       type: object
       properties:
@@ -100,195 +171,159 @@ components:
           $ref: "#/components/schemas/ProductStatus"
     ProductCreateRequest:
       type: object
+      required:
+      - productId
       properties:
-        alias:
-          type: string
         productId:
           type: string
           pattern: \S
-        allowedInstitutionTaxCode:
-          type: array
-          items:
-            type: string
-        backOfficeEnvironmentConfigurations:
-          type: object
-          additionalProperties:
-            $ref: "#/components/schemas/BackOfficeConfigurations"
+        alias:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: "#/components/schemas/ProductStatus"
         consumers:
           type: array
           items:
             type: string
+        visualConfiguration:
+          $ref: "#/components/schemas/VisualConfiguration"
+        features:
+          $ref: "#/components/schemas/Features"
+        roleMappings:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoleMapping"
+        contracts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContractTemplate"
+        institutionOrigins:
+          type: array
+          items:
+            $ref: "#/components/schemas/OriginEntry"
+        emailTemplates:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmailTemplate"
+        backOfficeEnvironmentConfigurations:
+          type: array
+          items:
+            $ref: "#/components/schemas/BackOfficeEnvironmentConfiguration"
+    ProductMetadata:
+      type: object
+      properties:
         createdAt:
           $ref: "#/components/schemas/Instant"
         createdBy:
           type: string
-        delegable:
-          type: boolean
-        depictImageUrl:
+    ProductOriginResponse:
+      type: object
+      properties:
+        origins:
+          type: array
+          items:
+            $ref: "#/components/schemas/OriginEntry"
+    ProductPatchRequest:
+      type: object
+      required:
+      - productId
+      properties:
+        productId:
+          type: string
+          pattern: \S
+        alias:
+          type: string
+        title:
           type: string
         description:
           type: string
-          pattern: \S
-        emailTemplates:
-          type: object
-          additionalProperties:
-            type: object
-            additionalProperties:
-              type: array
-              items:
-                $ref: "#/components/schemas/EmailTemplate"
-        enabled:
-          type: boolean
-        expirationDate:
-          type: integer
-          format: int32
-        identityTokenAudience:
-          type: string
-        logo:
-          type: string
-        logoBgColor:
-          type: string
-          pattern: "^#([A-Fa-f0-9]{6})$"
-        roleMappings:
-          type: object
-          additionalProperties:
-            $ref: "#/components/schemas/UserRolePermission"
         status:
           $ref: "#/components/schemas/ProductStatus"
-        title:
-          type: string
-          pattern: \S
-        urlBO:
-          type: string
-        urlPublic:
-          type: string
-        institutionAggregatorContractMappings:
-          type: object
-          additionalProperties:
+        consumers:
+          type: array
+          items:
+            type: string
+        visualConfiguration:
+          $ref: "#/components/schemas/VisualConfiguration"
+        features:
+          $ref: "#/components/schemas/Features"
+        roleMappings:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoleMapping"
+        contracts:
+          type: array
+          items:
             $ref: "#/components/schemas/ContractTemplate"
-        institutionContractMappings:
-          type: object
-          additionalProperties:
-            $ref: "#/components/schemas/ContractTemplate"
-        userAggregatorContractMappings:
-          type: object
-          additionalProperties:
-            $ref: "#/components/schemas/ContractTemplate"
-        userContractMappings:
-          type: object
-          additionalProperties:
-            $ref: "#/components/schemas/ContractTemplate"
-        invoiceable:
-          type: boolean
-        version:
-          type: integer
-          format: int32
-      required:
-      - productId
-      - description
-      - title
+        institutionOrigins:
+          type: array
+          items:
+            $ref: "#/components/schemas/OriginEntry"
+        emailTemplates:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmailTemplate"
+        backOfficeEnvironmentConfigurations:
+          type: array
+          items:
+            $ref: "#/components/schemas/BackOfficeEnvironmentConfiguration"
     ProductResponse:
       type: object
+      required:
+      - productId
       properties:
-        alias:
-          type: string
         productId:
           type: string
           pattern: \S
-        allowedInstitutionTaxCode:
-          type: array
-          items:
-            type: string
-        backOfficeEnvironmentConfigurations:
-          type: object
-          additionalProperties:
-            $ref: "#/components/schemas/BackOfficeConfigurations"
+        alias:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: "#/components/schemas/ProductStatus"
         consumers:
           type: array
           items:
             type: string
-        createdAt:
-          $ref: "#/components/schemas/Instant"
+        visualConfiguration:
+          $ref: "#/components/schemas/VisualConfiguration"
+        features:
+          $ref: "#/components/schemas/Features"
+        roleMappings:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoleMapping"
+        contracts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContractTemplate"
+        institutionOrigins:
+          type: array
+          items:
+            $ref: "#/components/schemas/OriginEntry"
+        emailTemplates:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmailTemplate"
+        backOfficeEnvironmentConfigurations:
+          type: array
+          items:
+            $ref: "#/components/schemas/BackOfficeEnvironmentConfiguration"
+        id:
+          type: string
         createdBy:
           type: string
-        delegable:
-          type: boolean
-        depictImageUrl:
-          type: string
-        description:
-          type: string
-          pattern: \S
-        emailTemplates:
-          type: object
-          additionalProperties:
-            type: object
-            additionalProperties:
-              type: array
-              items:
-                $ref: "#/components/schemas/EmailTemplate"
-        enabled:
-          type: boolean
-        expirationDate:
-          type: integer
-          format: int32
-        identityTokenAudience:
-          type: string
-        logo:
-          type: string
-        logoBgColor:
-          type: string
-          pattern: "^#([A-Fa-f0-9]{6})$"
-        roleMappings:
-          type: object
-          additionalProperties:
-            $ref: "#/components/schemas/UserRolePermission"
-        status:
-          $ref: "#/components/schemas/ProductStatus"
-        title:
-          type: string
-          pattern: \S
-        urlBO:
-          type: string
-        urlPublic:
-          type: string
-        institutionAggregatorContractMappings:
-          type: object
-          additionalProperties:
-            $ref: "#/components/schemas/ContractTemplate"
-        institutionContractMappings:
-          type: object
-          additionalProperties:
-            $ref: "#/components/schemas/ContractTemplate"
-        userAggregatorContractMappings:
-          type: object
-          additionalProperties:
-            $ref: "#/components/schemas/ContractTemplate"
-        userContractMappings:
-          type: object
-          additionalProperties:
-            $ref: "#/components/schemas/ContractTemplate"
-        invoiceable:
-          type: boolean
         version:
           type: integer
           format: int32
-        id:
-          type: string
-      required:
-      - productId
-      - description
-      - title
-    ProductRole:
-      type: object
-      properties:
-        code:
-          type: string
-        label:
-          type: string
-        productLabel:
-          type: string
-        description:
-          type: string
+        metadata:
+          $ref: "#/components/schemas/ProductMetadata"
     ProductStatus:
       type: string
       enum:
@@ -296,31 +331,32 @@ components:
       - ACTIVE
       - DELETED
       - SUSPEND
-    UserRolePermission:
+    RoleMapping:
       type: object
       properties:
+        role:
+          type: string
         multiroleAllowed:
-          type: boolean
-        skipUserCreation:
           type: boolean
         phasesAdditionAllowed:
           type: array
           items:
             type: string
-        roles:
+        skipUserCreation:
+          type: boolean
+        backOfficeRoles:
           type: array
           items:
-            $ref: "#/components/schemas/ProductRole"
-    ValueType:
-      type: string
-      enum:
-      - ARRAY
-      - OBJECT
-      - STRING
-      - NUMBER
-      - "TRUE"
-      - "FALSE"
-      - "NULL"
+            $ref: "#/components/schemas/BackOfficeRole"
+    VisualConfiguration:
+      type: object
+      properties:
+        logoUrl:
+          type: string
+        depictImageUrl:
+          type: string
+        logoBgColor:
+          type: string
     WorkflowType:
       type: string
       enum:
@@ -348,11 +384,12 @@ components:
 paths:
   /product:
     post:
-      summary: Create or update a product configuration (upsert)
+      summary: Create or update a product configuration
       description: Creates a new product configuration or updates the existing one
         when a match is found
       operationId: createProduct
       tags:
+      - Product
       - external-v2
       - external-pnpg
       requestBody:
@@ -413,11 +450,13 @@ paths:
       - SecurityScheme: []
   /product/{productId}:
     patch:
-      summary: Partially update a product by ID (JSON Merge Patch)
-      description: Applies a JSON Merge Patch document to partially update an existing
-        product identified by its productId.
+      summary: Partially update a product by ID
+      description: Partially updates an existing product identified by its productId.
+        Only the non-null fields provided in the request body will be updated; all
+        other fields will remain unchanged.
       operationId: patchProductById
       tags:
+      - Product
       - external-v2
       - external-pnpg
       parameters:
@@ -428,9 +467,9 @@ paths:
           type: string
       requestBody:
         content:
-          application/merge-patch+json:
+          application/json:
             schema:
-              $ref: "#/components/schemas/JsonValue"
+              $ref: "#/components/schemas/ProductPatchRequest"
         required: true
       responses:
         "200":
@@ -470,6 +509,7 @@ paths:
       description: Retrieve a product by its unique identifier.
       operationId: getProductById
       tags:
+      - Product
       - external-v2
       - external-pnpg
       parameters:
@@ -508,6 +548,7 @@ paths:
       description: Marks the product as DELETED if it exists.
       operationId: deleteProductById
       tags:
+      - Product
       - external-v2
       - external-pnpg
       parameters:
@@ -529,6 +570,46 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+        "404":
+          description: Product not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /product/{productId}/origins:
+    get:
+      summary: Get product origins by productId
+      description: Retrieve the list of institution origins for the given product.
+      operationId: getProductOriginsById
+      tags:
+      - Product
+      - external-v2
+      - external-pnpg
+      parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Origins found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductOriginResponse"
         "404":
           description: Product not found
           content:

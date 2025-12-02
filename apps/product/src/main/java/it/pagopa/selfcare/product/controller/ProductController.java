@@ -2,13 +2,14 @@ package it.pagopa.selfcare.product.controller;
 
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
-import it.pagopa.selfcare.product.controller.response.Problem;
-import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
-import it.pagopa.selfcare.product.controller.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
+import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
+import it.pagopa.selfcare.product.model.dto.response.Problem;
+import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
-import jakarta.json.JsonValue;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -49,9 +50,10 @@ public class ProductController {
     }
 
     @POST
+    @Tag(name = "Product")
     @Tag(name = "external-v2")
     @Tag(name = "external-pnpg")
-    @Operation(summary = "Create or update a product configuration (upsert)", description = "Creates a new product configuration or updates the existing one when a match is found")
+    @Operation(summary = "Create or update a product configuration", description = "Creates a new product configuration or updates the existing one when a match is found")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Created",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ProductBaseResponse.class))),
@@ -75,6 +77,7 @@ public class ProductController {
     }
 
     @GET
+    @Tag(name = "Product")
     @Tag(name = "external-v2")
     @Tag(name = "external-pnpg")
     @Path("/{productId}")
@@ -121,6 +124,7 @@ public class ProductController {
     }
 
     @DELETE
+    @Tag(name = "Product")
     @Tag(name = "external-v2")
     @Tag(name = "external-pnpg")
     @Path("/{productId}")
@@ -182,12 +186,15 @@ public class ProductController {
     }
 
     @PATCH
+    @Tag(name = "Product")
     @Tag(name = "external-v2")
     @Tag(name = "external-pnpg")
     @Path("/{productId}")
     @Operation(
-            summary = "Partially update a product by ID (JSON Merge Patch)",
-            description = "Applies a JSON Merge Patch document to partially update an existing product identified by its productId."
+            summary = "Partially update a product by ID",
+            description = "Partially updates an existing product identified by its productId. "
+                    + "Only the non-null fields provided in the request body will be updated; "
+                    + "all other fields will remain unchanged."
     )
     @APIResponses(value = {
             @APIResponse(
@@ -223,12 +230,12 @@ public class ProductController {
                     )
             )
     })
-    @Consumes("application/merge-patch+json")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> patchProductById(@PathParam("productId") String productId,
-                                          JsonValue updateBody) {
+                                          ProductPatchRequest productPatchRequest) {
 
-        return productService.patchProductById(productId, updateBody)
+        return productService.patchProductById(productId, productPatchRequest)
                 .map(updated -> Response.ok(updated).build())
                 .onFailure(IllegalArgumentException.class).recoverWithItem(() ->
                         Response.status(Response.Status.BAD_REQUEST)
@@ -274,6 +281,59 @@ public class ProductController {
                                     .build())
                             .build();
                 });
+    }
+    
+    @GET
+    @Tag(name = "Product")
+    @Tag(name = "external-v2")
+    @Tag(name = "external-pnpg")
+    @Path("/{productId}/origins")
+    @Operation(
+            summary = "Get product origins by productId",
+            description = "Retrieve the list of institution origins for the given product.",
+            operationId = "getProductOriginsById"
+    )
+    @APIResponses(value = {
+            @APIResponse(
+                    responseCode = "200",
+                    description = "Origins found",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = ProductOriginResponse.class)
+                    )
+            ),
+            @APIResponse(
+                    responseCode = "404",
+                    description = "Product not found",
+                    content = @Content(
+                            mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class)
+                    )
+            ),
+            @APIResponse(
+                    responseCode = "500",
+                    description = "Internal Server Error",
+                    content = @Content(
+                            mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class)
+                    )
+            )
+    })
+    public Uni<Response> getProductOriginsById(@PathParam("productId") String productId) {
+        return productService.getProductOriginsById(productId)
+                .onItem().transform(originsResponse ->
+                        Response.ok(originsResponse).build()
+                )
+                .onFailure(NotFoundException.class).recoverWithItem(() ->
+                        Response.status(Response.Status.NOT_FOUND)
+                                .entity(Problem.builder()
+                                        .title("Product not found")
+                                        .detail("No product found with productId=" + productId)
+                                        .status(Response.Status.NOT_FOUND.getStatusCode())
+                                        .instance("/products/" + productId + "/origins")
+                                        .build())
+                                .build()
+                );
     }
 
 }

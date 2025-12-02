@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.product.exception.handler;
 
-import it.pagopa.selfcare.product.controller.response.Problem;
+import it.pagopa.selfcare.product.model.dto.response.Problem;
 import it.pagopa.selfcare.product.exception.*;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
