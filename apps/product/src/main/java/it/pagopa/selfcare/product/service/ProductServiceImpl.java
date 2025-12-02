@@ -1,16 +1,17 @@
 package it.pagopa.selfcare.product.service;
 
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
-import it.pagopa.selfcare.product.controller.request.ProductPatchRequest;
-import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
-import it.pagopa.selfcare.product.controller.response.ProductOriginResponse;
-import it.pagopa.selfcare.product.controller.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
+import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
+import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
 import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
 import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.repository.ProductRepository;
+import it.pagopa.selfcare.product.util.ProductUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
@@ -20,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.codehaus.plexus.util.StringUtils;
 import org.owasp.encoder.Encode;
 
-import java.time.Instant;
 import java.util.UUID;
 
 @Slf4j
@@ -37,8 +37,8 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapperRequest productMapperRequest;
     private final ProductMapperResponse productMapperResponse;
 
-    //VALIDATOR
-    //private final UserValidator userValidator;
+    //UTILS
+    private final ProductUtils productUtils;
 
     @Override
     public Uni<String> ping() {
@@ -60,7 +60,7 @@ public class ProductServiceImpl implements ProductService {
             requestProduct.setStatus(ProductStatus.TESTING);
         }
 
-        requestProduct.setCreatedAt(Instant.now());
+        requestProduct.setMetadata(productUtils.buildProductMetadata());
 
         return productRepository.findProductById(productId).onItem().ifNotNull().transformToUni(currentProduct -> {
                     int nextVersion = currentProduct.getVersion() + 1;
@@ -129,7 +129,7 @@ public class ProductServiceImpl implements ProductService {
 
                                     current.setId(UUID.randomUUID().toString());
                                     current.setProductId(current.getProductId());
-                                    current.setCreatedAt(Instant.now());
+                                    current.setMetadata(productUtils.buildProductMetadata());
                                     current.setVersion(current.getVersion() + 1);
 
                                     return productRepository.persist(current)

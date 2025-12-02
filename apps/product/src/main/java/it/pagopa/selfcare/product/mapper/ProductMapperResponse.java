@@ -1,13 +1,14 @@
 package it.pagopa.selfcare.product.mapper;
 
-import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
-import it.pagopa.selfcare.product.controller.response.ProductOriginResponse;
-import it.pagopa.selfcare.product.controller.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
 import it.pagopa.selfcare.product.model.Product;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "cdi")
+@Mapper(componentModel = "cdi", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ProductMapperResponse {
 
     ProductResponse toProductResponse(Product product);

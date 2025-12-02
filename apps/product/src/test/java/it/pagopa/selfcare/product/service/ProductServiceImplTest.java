@@ -3,15 +3,16 @@ package it.pagopa.selfcare.product.service;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.product.controller.request.ProductCreateRequest;
-import it.pagopa.selfcare.product.controller.request.ProductPatchRequest;
-import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
-import it.pagopa.selfcare.product.controller.response.ProductOriginResponse;
-import it.pagopa.selfcare.product.controller.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
+import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
+import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
 import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
 import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
 import it.pagopa.selfcare.product.model.OriginEntry;
 import it.pagopa.selfcare.product.model.Product;
+import it.pagopa.selfcare.product.model.ProductMetadata;
 import it.pagopa.selfcare.product.model.enums.InstitutionType;
 import it.pagopa.selfcare.product.model.enums.Origin;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
@@ -92,7 +93,7 @@ class ProductServiceImplTest {
         assertEquals("prod-test", productPersisted.getProductId());
         assertEquals(ProductStatus.TESTING, productPersisted.getStatus());
         assertEquals(1, productPersisted.getVersion());
-        assertNotNull(productPersisted.getCreatedAt());
+        assertNotNull(productPersisted.getMetadata().getCreatedAt());
         assertDoesNotThrow(() -> UUID.fromString(productPersisted.getId()));
     }
 
@@ -115,7 +116,7 @@ class ProductServiceImplTest {
                 .productId("prod-test")
                 .status(ProductStatus.ACTIVE)
                 .version(2)
-                .createdAt(Instant.now().minusSeconds(3600))
+                .metadata(ProductMetadata.builder().createdAt(Instant.now().minusSeconds(3600)).build())
                 .build();
 
         when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(current));

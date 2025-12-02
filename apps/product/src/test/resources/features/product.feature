@@ -4,86 +4,98 @@ Feature: Product API end-to-end onboarding and lifecycle
     Given User login with username "j.doe" and password "test"
     And The following request body:
     """
-      {
-        "alias": "prod-test",
-        "allowedInstitutionTaxCode": [],
-        "backOfficeEnvironmentConfigurations": {
-          "Locale": {
-            "identityTokenAudience": "locale",
-            "url": "http://localhost:8080"
-          }
-        },
-        "consumers": [
-          "Standard"
-        ],
-        "createdBy": "user-apim-name",
-        "delegable": false,
+     {
+      "productId": "prod-test",
+      "alias": "prod-test",
+      "title": "Prod TEST",
+      "description": "Product description",
+      "status": "TESTING",
+      "version": 1,
+      "consumers": [
+        "Standard"
+      ],
+      "visualConfiguration": {
+        "logoUrl": "http://localhost:8080",
         "depictImageUrl": "http://localhost:8080",
-        "description": "Product description",
-        "emailTemplates": {
-            "IMPORT": [
-              {
-                "path": "contracts/template/mail/import-massivo-io/1.0.0.json",
-                "status": "PENDING",
-                "version": "1.0.0"
-              }
-            ]
-        },
-        "enabled": true,
-        "expirationDate": 30,
-        "identityTokenAudience": "http://localhost:8080",
-        "institutionAggregatorContractMappings": {},
-        "institutionContractMappings": {
-          "default": {
-            "attachments": [],
-            "contractTemplatePath": "contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html",
-            "contractTemplateVersion": "2.4.6"
-          }
-        },
-        "invoiceable": true,
-        "logo": "http://localhost:8080",
-        "logoBgColor": "#0B3EE3",
-        "productId": "prod-test",
-        "roleMappings": {
-          "OPERATOR": {
-            "multiroleAllowed": false,
-            "phasesAdditionAllowed": [],
-            "roles": [
-              {
-                "code": "referente operativo",
-                "description": "Operatore",
-                "label": "Operatore"
-              }
-            ],
-            "skipUserCreation": false
-          }
-        },
-        "status": "TESTING",
-        "title": "Prod TEST",
-        "urlBO": "http://localhost:8080",
-        "urlPublic": "http://localhost:8080",
-        "userAggregatorContractMappings": {},
-        "userContractMappings": {},
-        "institutionOrigins": [
-          {
-            "institutionType": "PA",
-            "origin": "IPA",
-            "labelKey": "pa"
-          },
-          {
-            "institutionType": "GSP",
-            "origin": "IPA",
-            "labelKey": "gsp"
-          },
-          {
-            "institutionType": "SCP",
-            "origin": "SELC",
-            "labelKey": "scp"
-          }
-        ],
+        "logoBgColor": "#0B3EE3"
+      },
+      "features": {
         "allowCompanyOnboarding": true,
-        "allowIndividualOnboarding": false
+        "allowIndividualOnboarding": false,
+        "allowedInstitutionTaxCode": [],
+        "delegable": false,
+        "invoiceable": true,
+        "expirationDays": 30,
+        "enabled": true
+      },
+
+      "roleMappings": [
+        {
+          "role": "OPERATOR",
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [],
+          "skipUserCreation": false,
+          "backOfficeRoles": [
+            {
+              "code": "referente operativo",
+              "label": "Operatore",
+              "description": "Operatore"
+            }
+          ]
+        }
+      ],
+      "contracts": [
+        {
+          "type": "institution",
+          "institutionType": "default",
+          "path": "contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html",
+          "version": "2.4.6",
+          "order": 10,
+          "generated": true,
+          "mandatory": true,
+          "name": "Accordo di adesione IO",
+          "workflowState": "REQUEST",
+          "workflowType": []
+        }
+      ],
+      "institutionOrigins": [
+        {
+          "institutionType": "PA",
+          "origin": "IPA",
+          "labelKey": "pa"
+        },
+        {
+          "institutionType": "GSP",
+          "origin": "IPA",
+          "labelKey": "gsp"
+        },
+        {
+          "institutionType": "SCP",
+          "origin": "SELC",
+          "labelKey": "scp"
+        }
+      ],
+      "emailTemplates": [
+        {
+          "type": "IMPORT",
+          "institutionType": "default",
+          "path": "contracts/template/mail/import-massivo-io/1.0.0.json",
+          "version": "1.0.0",
+          "status": "PENDING"
+        }
+      ],
+      "backOfficeEnvironmentConfigurations": [
+        {
+          "env": "Locale",
+          "urlPublic": "http://localhost:8080",
+          "urlBO": "http://localhost:8080",
+          "identityTokenAudience": "locale"
+        }
+      ],
+      "metadata": {
+        "createdBy": "user-apim-name"
       }
+    }
     """
     When I send a POST request to "/product"
     Then The status code is 201
@@ -117,86 +129,97 @@ Feature: Product API end-to-end onboarding and lifecycle
     Given User login with username "j.doe" and password "test"
     And The following request body:
     """
-      {
-        "alias": "prod-test",
-        "allowedInstitutionTaxCode": [],
-        "backOfficeEnvironmentConfigurations": {
-          "Locale": {
-            "identityTokenAudience": "locale",
-            "url": "http://localhost:8080"
-          }
-        },
-        "consumers": [
-          "Standard"
-        ],
-        "createdBy": "user-apim-name",
-        "delegable": false,
+     {
+      "productId": "prod-test",
+      "alias": "prod-test",
+      "title": "Prod TEST 2 - Patched",
+      "description": "Description updated via PATCH",
+      "status": "ACTIVE",
+      "version": 1,
+      "consumers": [
+        "Standard"
+      ],
+      "visualConfiguration": {
+        "logoUrl": "http://localhost:8080",
         "depictImageUrl": "http://localhost:8080",
-        "description": "Product description 2",
-        "emailTemplates": {
-            "IMPORT": [
-              {
-                "path": "contracts/template/mail/import-massivo-io/1.0.0.json",
-                "status": "PENDING",
-                "version": "1.0.0"
-              }
-            ]
-        },
-        "enabled": true,
-        "expirationDate": 30,
-        "identityTokenAudience": "http://localhost:8080",
-        "institutionAggregatorContractMappings": {},
-        "institutionContractMappings": {
-          "default": {
-            "attachments": [],
-            "contractTemplatePath": "contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html",
-            "contractTemplateVersion": "2.4.6"
-          }
-        },
-        "invoiceable": true,
-        "logo": "http://localhost:8080",
-        "logoBgColor": "#0B3EE3",
-        "productId": "prod-test",
-        "roleMappings": {
-          "OPERATOR": {
-            "multiroleAllowed": false,
-            "phasesAdditionAllowed": [],
-            "roles": [
-              {
-                "code": "referente operativo",
-                "description": "Operatore",
-                "label": "Operatore"
-              }
-            ],
-            "skipUserCreation": false
-          }
-        },
-        "status": "ACTIVE",
-        "title": "Prod TEST 2",
-        "urlBO": "http://localhost:8080",
-        "urlPublic": "http://localhost:8080",
-        "userAggregatorContractMappings": {},
-        "userContractMappings": {},
-        "institutionOrigins": [
-          {
-            "institutionType": "PA",
-            "origin": "IPA",
-            "labelKey": "pa"
-          },
-          {
-            "institutionType": "GSP",
-            "origin": "IPA",
-            "labelKey": "gsp"
-          },
-          {
-            "institutionType": "SCP",
-            "origin": "SELC",
-            "labelKey": "scp"
-          }
-        ],
+        "logoBgColor": "#0B3EE3"
+      },
+      "features": {
         "allowCompanyOnboarding": true,
-        "allowIndividualOnboarding": false
+        "allowIndividualOnboarding": false,
+        "allowedInstitutionTaxCode": [],
+        "delegable": false,
+        "invoiceable": true,
+        "expirationDays": 30,
+        "enabled": false
+      },
+      "roleMappings": [
+        {
+          "role": "OPERATOR",
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [],
+          "skipUserCreation": false,
+          "backOfficeRoles": [
+            {
+              "code": "referente operativo",
+              "label": "Operatore",
+              "description": "Operatore"
+            }
+          ]
+        }
+      ],
+      "contracts": [
+        {
+          "type": "institution",
+          "institutionType": "default",
+          "path": "contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html",
+          "version": "2.4.6",
+          "order": 10,
+          "generated": true,
+          "mandatory": true,
+          "name": "Accordo di adesione IO",
+          "workflowState": "REQUEST",
+          "workflowType": []
+        }
+      ],
+      "institutionOrigins": [
+        {
+          "institutionType": "PA",
+          "origin": "IPA",
+          "labelKey": "pa"
+        },
+        {
+          "institutionType": "GSP",
+          "origin": "IPA",
+          "labelKey": "gsp"
+        },
+        {
+          "institutionType": "SCP",
+          "origin": "SELC",
+          "labelKey": "scp"
+        }
+      ],
+      "emailTemplates": [
+        {
+          "type": "IMPORT",
+          "institutionType": "default",
+          "path": "contracts/template/mail/import-massivo-io/1.0.0.json",
+          "version": "1.0.0",
+          "status": "PENDING"
+        }
+      ],
+      "backOfficeEnvironmentConfigurations": [
+        {
+          "env": "Locale",
+          "urlPublic": "http://localhost:8080",
+          "urlBO": "http://localhost:8080",
+          "identityTokenAudience": "locale"
+        }
+      ],
+      "metadata": {
+        "createdBy": "user-apim-name"
       }
+    }
     """
     When I send a POST request to "/product"
     Then The status code is 201
@@ -223,7 +246,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     """
       {
         "description": "Description updated via PATCH",
-        "enabled": false,
+        "features[0].enabled": false,
         "title": "Prod TEST 2 - Patched"
       }
     """
@@ -232,7 +255,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The response body contains:
       | productId   | prod-test                     |
       | description | Description updated via PATCH |
-      | enabled     | false                         |
+      | features.enabled | false                         |
       | title       | Prod TEST 2 - Patched         |
 
   Scenario: GET /product/{productId} - successfully retrieve product after patch
@@ -244,7 +267,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The response body contains:
       | productId   | prod-test                     |
       | description | Description updated via PATCH |
-      | enabled     | false                         |
+      | features.enabled | false                         |
 
   Scenario: DELETE /product/{productId} - successfully mark product as DELETED
     Given User login with username "j.doe" and password "test"
@@ -273,8 +296,7 @@ Feature: Product API end-to-end onboarding and lifecycle
       {
         "alias": "prod-missing-id",
         "status": "TESTING",
-        "title": "Without ID",
-        "enabled": true
+        "title": "Without ID"
       }
     """
     When I send a POST request to "/product"

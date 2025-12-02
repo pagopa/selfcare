@@ -1,8 +1,8 @@
 package it.pagopa.selfcare.product.mapper;
 
 import io.quarkus.test.junit.QuarkusTest;
-import it.pagopa.selfcare.product.controller.response.ProductBaseResponse;
-import it.pagopa.selfcare.product.controller.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
 import it.pagopa.selfcare.product.model.Product;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
