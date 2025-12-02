@@ -88,6 +88,32 @@ public interface ProductMapper {
     return list.stream()
       .collect(Collectors.toMap(this::getPartyRole, this::toRoleResource));
   }
+
+  @Named("mapEmailTemplates")
+  default Map<String, Map<String, List<it.pagopa.selfcare.product.entity.EmailTemplate>>> mapEmailTemplates(List<it.pagopa.selfcare.product.model.EmailTemplate> emailTemplates) {
+    if (emailTemplates == null) {
+      return Collections.emptyMap();
+    }
+    
+    Map<String, Map<String, List<it.pagopa.selfcare.product.entity.EmailTemplate>>> result = new HashMap<>();
+    
+    for (it.pagopa.selfcare.product.model.EmailTemplate template : emailTemplates) {
+      String institutionType = template.getInstitutionType() != null ? template.getInstitutionType().name() : "default";
+      String workflowType = template.getType() != null ? template.getType().name() : "default";
+
+      result.computeIfAbsent(institutionType, k -> new HashMap<>())
+            .computeIfAbsent(workflowType, k -> new java.util.ArrayList<>())
+            .add(toEmailTemplateResource(template));
+    }
+    
+    return result;
+  }
+
+  it.pagopa.selfcare.product.entity.EmailTemplate toEmailTemplateResource(it.pagopa.selfcare.product.model.EmailTemplate template);
+
+
+  }
+
   default Map<String, it.pagopa.selfcare.product.entity.ContractTemplate> mapContracts(List<ContractTemplate> contracts, OnboardingType type) {
     if (contracts == null) return Collections.emptyMap();
 
