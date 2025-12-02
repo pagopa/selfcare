@@ -1,0 +1,245 @@
+on:
+  workflow_call:
+    inputs:
+      dir:
+        type: string
+        required: true
+      environment:
+        type: string
+        required: true
+      tf_environment:
+        type: string
+        required: false
+      dockerfile_path:
+        type: string
+        required: false
+        default: './Dockerfile.new'
+      dockerfile_context:
+        type: string
+        required: false
+        default: '.'
+      docker_image_name:
+        type: string
+        required: false
+        default: ${{ github.repository }}
+      path_openapi_docs:
+        type: string
+        required: false
+        description: 'Path to the OpenAPI documentation'
+        default: app/src/main/resources/swagger/api-docs.json
+      upload_openapi_enabled:
+        type: boolean
+        required: false
+        description: 'Set to False if workflow must not upload openapi on storage'
+        default: true
+
+env:
+  ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+  ARM_USE_OIDC: true
+  ARM_USE_AZUREAD: true
+  ARM_STORAGE_USE_AZUREAD: true
+
+jobs:
+
+  build_push_docker:
+    name: 'Build and Push Docker'
+    runs-on: ubuntu-24.04
+    environment: ${{ inputs.environment }}-cd
+    permissions:
+      packages: write
+
+    steps:
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        name: Checkout
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker Meta
+        id: meta
+        uses: docker/metadata-action@dbef88086f6cef02e264edb7dbf63250c17cef6c # v5.5.0
+        with:
+          images: ghcr.io/${{ inputs.docker_image_name }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=sha
+          labels:
+            org.opencontainers.image.title=${{ inputs.docker_image_name }}
+            org.opencontainers.image.description=${{ github.repository }} microservice image
+            org.opencontainers.image.authors=PagoPA
+            org.opencontainers.image.url=github.com/pagopa/${{ github.repository }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+
+      - name: Build and Push Image
+        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56 # v5.1.0
+        with:
+          context: ${{ inputs.dockerfile_context }}
+          file: ${{ inputs.dockerfile_path }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=min
+          build-args: |
+            REPO_ONBOARDING=selfcare-onboarding
+            REPO_SELFCARE=selfcare
+            REPO_USERNAME=${{ github.actor }}
+            REPO_PASSWORD=${{ secrets.GITHUB_TOKEN }}
+
+  tf_plan:
+    name: 'Terraform Plan'
+    runs-on: ubuntu-24.04
+    environment: ${{ inputs.environment }}-ci
+    permissions:
+      id-token: write
+      contents: read
+    outputs:
+      terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version}}
+      image_tag: ${{ steps.setsha.outputs.short_sha }}
+
+    steps:
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        name: Checkout
+
+      - name: Set Short Git Commit SHA
+        id: setsha
+        run: |
+          calculatedSha=$(git rev-parse --short ${{ github.sha }})
+          echo "short_sha=sha-$calculatedSha" >> $GITHUB_OUTPUT
+
+      - name: Set Terraform Version
+        id: set-terraform-version
+        run: |
+          echo "terraform_version=$(cat .terraform-version)" >> $GITHUB_OUTPUT
+
+      - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # v3.0.0
+        name: Setup Terraform
+        with:
+          terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version}}
+
+      - name: Terraform Plan
+        uses: pagopa/terraform-preapply-azure-action@54ded8cda3437c3f6a9f46baf69cb321ce82f5cd
+        with:
+          client_id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant_id: ${{ vars.ARM_TENANT_ID }}
+          subscription_id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+          dir: ${{ inputs.dir }}
+          azure_environment: ${{ inputs.tf_environment }}
+        env:
+          TF_VAR_image_tag: ${{ steps.setsha.outputs.short_sha }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Upload Terraform Plan as Artifact"
+        uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
+        with:
+          name: tfplan
+          path: ${{ inputs.dir }}/tfplan-${{ inputs.tf_environment }}-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: 'Release'
+    runs-on: ubuntu-24.04
+    needs: [ build_push_docker, tf_plan ]
+    environment: ${{ inputs.environment }}-cd
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        name: Checkout
+
+      - name: Azure Login
+        uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ vars.ARM_TENANT_ID }}
+          subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+
+      - name: Download Terraform Plan as Artifact
+        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
+        with:
+          name: tfplan
+          path: ${{ inputs.dir }}
+
+      - name: Retrieve Terraform Modules from Cache
+        id: cache-terraform-modules
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        with:
+          path: ${{ inputs.dir }}/.terraform
+          key: terraform-${{ inputs.dir }}-${{ github.sha }}
+          restore-keys: |
+            terraform-${{ inputs.dir }}
+
+      - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # v3.0.0
+        name: Setup Terraform
+        with:
+          terraform_version: ${{ needs.tf_plan.outputs.terraform_version }}
+
+      - name: Terraform Init
+        shell: bash
+        working-directory: ${{ inputs.dir }}
+        run: |
+          bash ./terraform.sh init ${{ inputs.tf_environment }}
+
+      - name: Terraform Apply
+        shell: bash
+        working-directory: ${{ inputs.dir }}
+        run: |
+          terraform apply -lock-timeout=3000s -auto-approve -input=false tfplan-${{ inputs.tf_environment }}-${{ github.sha }}
+        env:
+          TF_VAR_image_tag: ${{ needs.tf_plan.outputs.image_tag }}
+
+  upload_openapi:
+    name: 'Upload OpenAPI'
+    runs-on: ubuntu-24.04
+    needs: [ release ]
+    if: ${{ inputs.upload_openapi_enabled }}
+    environment: ${{ inputs.environment }}-cd
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        name: Checkout
+
+      - name: Azure Login
+        uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ vars.ARM_TENANT_ID }}
+          subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+
+      - name: Extract environment short
+        id: extract_env_short
+        run: |
+          env=${{ inputs.environment }}
+          echo "env_short=${env:0:1}" >> $GITHUB_OUTPUT
+
+      - name: Upload to blob storage
+        uses: azure/CLI@965c8d7571d2231a54e321ddd07f7b10317f34d9 # v2
+        with:
+          inlineScript: |
+            az storage blob upload --auth-mode key -f  ${{ inputs.path_openapi_docs }} --account-name selc${{ steps.extract_env_short.outputs.env_short }}checkoutsa  -c selc-openapi -n ${{ inputs.docker_image_name }}/openapi.json --overwrite
+
