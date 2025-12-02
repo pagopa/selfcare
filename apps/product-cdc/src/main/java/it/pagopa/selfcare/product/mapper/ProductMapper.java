@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.product.mapper;
 
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.model.BackOfficeEnvironmentConfiguration;
 import it.pagopa.selfcare.product.model.ContractTemplate;
 import it.pagopa.selfcare.product.model.Product;
@@ -45,7 +46,22 @@ public interface ProductMapper {
 
   @Mapping(target = "institutionAggregatorContractMappings", ignore = true)
   @Mapping(target = "userAggregatorContractMappings", ignore = true)
+  
+  @Mapping(target = "status", source = "status", qualifiedByName = "mapProductStatus")
   it.pagopa.selfcare.product.entity.Product toResource(Product entity);
+
+  @Named("mapProductStatus")
+  default it.pagopa.selfcare.product.entity.ProductStatus mapProductStatus(it.pagopa.selfcare.product.model.enums.ProductStatus status) {
+    if (status == null) {
+      return null;
+    }
+    return switch (status) {
+      case ACTIVE -> it.pagopa.selfcare.product.entity.ProductStatus.ACTIVE;
+      case INACTIVE -> it.pagopa.selfcare.product.entity.ProductStatus.INACTIVE;
+      case TESTING -> it.pagopa.selfcare.product.entity.ProductStatus.TESTING;
+      default -> it.pagopa.selfcare.product.entity.ProductStatus.PHASE_OUT;
+    };
+  }
 
   it.pagopa.selfcare.product.entity.BackOfficeConfigurations toBackOfficeResource(BackOfficeEnvironmentConfiguration entity);
 
@@ -70,10 +86,7 @@ public interface ProductMapper {
   default Map<PartyRole, it.pagopa.selfcare.product.entity.ProductRoleInfo> mapRoleMappings(List<RoleMapping> list) {
     if (list == null) return null;
     return list.stream()
-      .collect(Collectors.toMap(
-        RoleMapping::getRole, //(es. MANAGER)
-        this::toRoleResource
-      ));
+      .collect(Collectors.toMap(this::getPartyRole, this::toRoleResource));
   }
   default Map<String, it.pagopa.selfcare.product.entity.ContractTemplate> mapContracts(List<ContractTemplate> contracts, OnboardingType type) {
     if (contracts == null) return Collections.emptyMap();
@@ -93,5 +106,15 @@ public interface ProductMapper {
       }
     }
     return result;
+  }
+
+  default PartyRole getPartyRole(RoleMapping role) {
+    return switch (role.getRole()) {
+      case "MANAGER" -> PartyRole.MANAGER;
+      case "DELEGATE" -> PartyRole.DELEGATE;
+      case "SUB_DELEGATE" -> PartyRole.SUB_DELEGATE;
+      case "ADMIN_EA" -> PartyRole.ADMIN_EA;
+      default -> PartyRole.OPERATOR;
+    };
   }
 }
