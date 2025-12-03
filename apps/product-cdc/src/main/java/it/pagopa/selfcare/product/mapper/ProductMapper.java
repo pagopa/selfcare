@@ -1,10 +1,7 @@
 package it.pagopa.selfcare.product.mapper;
 
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.product.model.BackOfficeEnvironmentConfiguration;
-import it.pagopa.selfcare.product.model.ContractTemplate;
-import it.pagopa.selfcare.product.model.Product;
-import it.pagopa.selfcare.product.model.RoleMapping;
+import it.pagopa.selfcare.product.model.*;
 import it.pagopa.selfcare.product.model.enums.OnboardingType;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -36,14 +33,10 @@ public interface ProductMapper {
   @Mapping(target = "allowedInstitutionTaxCode", source = "features.allowedInstitutionTaxCode")
   @Mapping(target = "enabled", source = "features.enabled")
   @Mapping(target = "expirationDate", source = "features.expirationDays")
-
   @Mapping(target = "backOfficeEnvironmentConfigurations", source = "backOfficeEnvironmentConfigurations", qualifiedByName = "mapBackOfficeConfigs")
-
   @Mapping(target = "roleMappings", source = "roleMappings", qualifiedByName = "mapRoleMappings")
-
   @Mapping(target = "institutionContractMappings", expression = "java(mapContracts(entity.getContracts(), it.pagopa.selfcare.product.model.enums.OnboardingType.INSTITUTION))")
   @Mapping(target = "userContractMappings", expression = "java(mapContracts(entity.getContracts(), it.pagopa.selfcare.product.model.enums.OnboardingType.USER))")
-
   @Mapping(target = "institutionAggregatorContractMappings", ignore = true)
   @Mapping(target = "userAggregatorContractMappings", ignore = true)
   @Mapping(target = "emailTemplates", expression = "java(mapEmailTemplates(entity.getEmailTemplates()))")
@@ -65,8 +58,11 @@ public interface ProductMapper {
 
   it.pagopa.selfcare.product.entity.BackOfficeConfigurations toBackOfficeResource(BackOfficeEnvironmentConfiguration entity);
 
-  it.pagopa.selfcare.product.entity.ProductRoleInfo toRoleResource(RoleMapping entity);
 
+  @Mapping(target = "roles", source = "backOfficeRoles", qualifiedByName = "mapRoleResource")
+  it.pagopa.selfcare.product.entity.ProductRoleInfo toRoleResource(RoleMapping entity);
+  @Named("mapRoleResource")
+  it.pagopa.selfcare.product.entity.ProductRole toRoleResource(BackOfficeRole roles);
   @Mapping(target = "institutionType", source = "institutionType", qualifiedByName = "mapInstitutionType")
   it.pagopa.selfcare.product.entity.OriginEntry toOriginEntryResource(it.pagopa.selfcare.product.model.OriginEntry entity);
 

@@ -1,0 +1,149 @@
+{
+    "alias": "prod-x",
+    "allowCompanyOnboarding": true,
+    "allowedInstitutionTaxCode": [],
+    "allowIndividualOnboarding": false,
+    "backOfficeEnvironmentConfigurations": {
+      "Locale": {
+        "identityTokenAudience": "locale",
+        "url": "http://localhost:3999/idp/selfcare/resolve-identity?id=<IdentityToken>;env=locale"
+      }
+    },
+    "consumers": ["Standard", "SAP"],
+    "createdAt": "2021-12-15T15:54:55.190Z",
+    "createdBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8",
+    "delegable": false,
+    "depictImageUrl": "https://selcdcheckoutsa.z6.web.core.windows.net/resources/products/prod-io/depict-image.jpeg",
+    "description": "Offri ai cittadini i servizi del tuo ente in un unico canale",
+    "emailTemplates": {
+      "default": {
+        "IMPORT": [
+          {
+            "path": "contracts/template/mail/import-massivo-io/1.0.0.json",
+            "status": "PENDING",
+            "version": "1.0.0"
+          }
+        ],
+        "IMPORT_AGGREGATION": [
+          {
+            "path": "contracts/template/mail/import-massivo-io/1.0.0.json",
+            "status": "PENDING",
+            "version": "1.0.0"
+          }
+        ]
+      }
+    },
+    "enabled": true,
+    "expirationDate": 30,
+    "id": "prod-io",
+    "identityTokenAudience": "api.io.selfcare.pagopa.it",
+    "institutionAggregatorContractMappings": {
+      "default": {
+        "attachments": [],
+        "contractTemplatePath": "contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html",
+        "contractTemplateVersion": "2.4.6"
+      }
+    },
+    "institutionContractMappings": {
+      "default": {
+        "attachments": [],
+        "contractTemplatePath": "contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html",
+        "contractTemplateVersion": "2.4.6"
+      }
+    },
+    "institutionOrigins": [
+      {
+        "institutionType": "PA",
+        "origin": "IPA",
+        "labelKey": "pa"
+      },
+      {
+        "institutionType": "GSP",
+        "origin": "IPA",
+        "labelKey": "gsp"
+      },
+      {
+        "institutionType": "SCP",
+        "origin": "SELC",
+        "labelKey": "scp"
+      }
+    ],
+    "invoiceable": true,
+    "logo": "https://selcdcheckoutsa.z6.web.core.windows.net/resources/products/prod-io/logo.svg",
+    "logoBgColor": "#0B3EE3",
+    "modifiedAt": "2022-11-18T17:59:27.744Z",
+    "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "roleMappings": {
+      "ADMIN_EA": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": ["onboarding"],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": ["onboarding"],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": ["onboarding"],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": ["dashboard"],
+        "roles": [
+          {
+            "code": "referente operativo",
+            "description": "Operatore",
+            "label": "Operatore"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": ["dashboard-async", "dashboard-aggregator"],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "title": "X",
+    "urlBO": "https://api.io.selfcare.pagopa.it/idp/selfcare/resolve-identity?id=<IdentityToken>",
+    "urlPublic": "https://io.italia.it/",
+    "userAggregatorContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/io/user/1.0.0/io-aggiunta-amministratore-v.1.0.html",
+        "contractTemplateVersion": "1.0.0"
+      }
+    },
+    "userContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/io/user/1.0.0/io-aggiunta-amministratore-v.1.0.html",
+        "contractTemplateVersion": "1.0.0"
+      }
+    }
+  }

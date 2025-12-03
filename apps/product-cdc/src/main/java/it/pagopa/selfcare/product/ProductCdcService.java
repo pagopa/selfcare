@@ -46,12 +46,13 @@ public class ProductCdcService {
   private final ProductService productService;
   private final AzureBlobClient azureBlobClient;
   private final ProductMapper productMapper;
+  private final String collectionName;
 
-  @ConfigProperty(name = "quarkus.mongodb.collection") String collectionName;
-  @ConfigProperty(name = "product-cdc.blob-storage.product-filepath") String productsFilePath;
+  @ConfigProperty(name = "product-cdc.blob-storage.filepath-product") String productsFilePath;
 
   public ProductCdcService(ReactiveMongoClient mongoClient,
                            @ConfigProperty(name = "quarkus.mongodb.database") String mongodbDatabase,
+                           @ConfigProperty(name = "quarkus.mongodb.collection") String collectionName,
                            TelemetryClient telemetryClient,
                            TableClient tableClient,
                            ProductService productService,
@@ -59,6 +60,7 @@ public class ProductCdcService {
                            ProductMapper productMapper) {
     this.mongoClient = mongoClient;
     this.mongodbDatabase = mongodbDatabase;
+    this.collectionName = collectionName;
     this.telemetryClient = telemetryClient;
     this.tableClient = tableClient;
     this.productService = productService;
