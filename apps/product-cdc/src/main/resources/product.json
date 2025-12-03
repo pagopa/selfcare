@@ -108,7 +108,7 @@
       "workflowType": []
     },
     {
-      "onboardingType": "INSTITUTION",
+      "onboardingType": "INSTITUTION_AGGREGATOR",
       "institutionType": "DEFAULT",
       "contractType": "CONTRACT",
       "path": "contracts/template/x/2.4.6/accordo_di_adesione-v.2.4.6.html",
@@ -162,10 +162,10 @@
       "workflowType": []
     },
     {
-      "onboardingType": "USER",
+      "onboardingType": "USER_AGGREGATOR",
       "institutionType": "DEFAULT",
       "contractType": "CONTRACT",
-      "path": "contracts/template/x/user/1.0.0/x-aggiunta-amministratore-v.1.0.html",
+      "path": "contracts/template/x/user/1.0.0/x-aggiunta-aggregatore-amministratore-v.1.0.html",
       "version": "1.0.0",
       "order": 10,
       "generated": true,

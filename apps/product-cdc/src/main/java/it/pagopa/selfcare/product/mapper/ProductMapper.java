@@ -38,9 +38,9 @@ public interface ProductMapper {
   @Mapping(target = "backOfficeEnvironmentConfigurations", source = "backOfficeEnvironmentConfigurations", qualifiedByName = "mapBackOfficeConfigs")
   @Mapping(target = "roleMappings", source = "roleMappings", qualifiedByName = "mapRoleMappings")
   @Mapping(target = "institutionContractMappings", expression = "java(mapContracts(entity.getContracts(), it.pagopa.selfcare.product.model.enums.OnboardingType.INSTITUTION))")
+  @Mapping(target = "institutionAggregatorContractMappings", expression = "java(mapContracts(entity.getContracts(), it.pagopa.selfcare.product.model.enums.OnboardingType.INSTITUTION_AGGREGATOR))")
   @Mapping(target = "userContractMappings", expression = "java(mapContracts(entity.getContracts(), it.pagopa.selfcare.product.model.enums.OnboardingType.USER))")
-  @Mapping(target = "institutionAggregatorContractMappings", ignore = true)
-  @Mapping(target = "userAggregatorContractMappings", ignore = true)
+  @Mapping(target = "userAggregatorContractMappings", expression = "java(mapContracts(entity.getContracts(), it.pagopa.selfcare.product.model.enums.OnboardingType.USER_AGGREGATOR))")
   @Mapping(target = "emailTemplates", expression = "java(mapEmailTemplates(entity.getEmailTemplates()))")
   @Mapping(target = "status", source = "status", qualifiedByName = "mapProductStatus")
   @Mapping(target = "urlBO", expression = "java(mapBackOfficeConfigsProdurlBOurl(entity.getBackOfficeEnvironmentConfigurations()))")
@@ -130,7 +130,7 @@ public interface ProductMapper {
 
   @Mapping(target = "contractTemplatePath", source = "path")
   @Mapping(target = "contractTemplateVersion", source = "version")
-  @Mapping(target = "attachments", expression = "java(List.of())")
+  @Mapping(target = "attachments", expression = "java(new ArrayList<>())")
   it.pagopa.selfcare.product.entity.ContractTemplate toContractResource(ContractTemplate entity);
 
 

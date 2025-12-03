@@ -49,6 +49,22 @@
         "attachments": [],
         "contractTemplatePath": "contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html",
         "contractTemplateVersion": "2.4.6"
+      },
+      "GPU": {
+        "attachments": [
+          {
+            "generated": true,
+            "mandatory": true,
+            "name": "Dichiarazione_sostitutiva_certificazione",
+            "order": 1,
+            "templatePath": "contracts/template/pagopa/attachments/1.0.0/pagopa-checklist-v1.0.0.html",
+            "templateVersion": "1.0.0",
+            "workflowState": "REQUEST",
+            "workflowType": ["FOR_APPROVE_GPU"]
+          }
+        ],
+        "contractTemplatePath": "contracts/template/pagopa/1.0.5/pagopa-accordo_di_adesione_prv-v.1.0.5.html",
+        "contractTemplateVersion": "1.0.5"
       }
     },
     "institutionOrigins": [
