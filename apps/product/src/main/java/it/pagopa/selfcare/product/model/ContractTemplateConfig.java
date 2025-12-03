@@ -15,7 +15,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ContractTemplate {
+public class ContractTemplateConfig {
 
     @Builder.Default
     private String contractId = UUID.randomUUID().toString();

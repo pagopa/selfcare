@@ -26,7 +26,7 @@ components:
           type: string
         description:
           type: string
-    ContractTemplate:
+    ContractTemplateConfig:
       type: object
       properties:
         contractId:
@@ -56,7 +56,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/WorkflowType"
-    EmailTemplate:
+    EmailTemplateConfig:
       type: object
       properties:
         type:
@@ -200,7 +200,7 @@ components:
         contracts:
           type: array
           items:
-            $ref: "#/components/schemas/ContractTemplate"
+            $ref: "#/components/schemas/ContractTemplateConfig"
         institutionOrigins:
           type: array
           items:
@@ -208,7 +208,7 @@ components:
         emailTemplates:
           type: array
           items:
-            $ref: "#/components/schemas/EmailTemplate"
+            $ref: "#/components/schemas/EmailTemplateConfig"
         backOfficeEnvironmentConfigurations:
           type: array
           items:
@@ -258,7 +258,7 @@ components:
         contracts:
           type: array
           items:
-            $ref: "#/components/schemas/ContractTemplate"
+            $ref: "#/components/schemas/ContractTemplateConfig"
         institutionOrigins:
           type: array
           items:
@@ -266,7 +266,7 @@ components:
         emailTemplates:
           type: array
           items:
-            $ref: "#/components/schemas/EmailTemplate"
+            $ref: "#/components/schemas/EmailTemplateConfig"
         backOfficeEnvironmentConfigurations:
           type: array
           items:
@@ -302,7 +302,7 @@ components:
         contracts:
           type: array
           items:
-            $ref: "#/components/schemas/ContractTemplate"
+            $ref: "#/components/schemas/ContractTemplateConfig"
         institutionOrigins:
           type: array
           items:
@@ -310,7 +310,7 @@ components:
         emailTemplates:
           type: array
           items:
-            $ref: "#/components/schemas/EmailTemplate"
+            $ref: "#/components/schemas/EmailTemplateConfig"
         backOfficeEnvironmentConfigurations:
           type: array
           items:
