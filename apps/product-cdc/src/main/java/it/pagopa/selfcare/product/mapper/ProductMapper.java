@@ -46,7 +46,7 @@ public interface ProductMapper {
 
   @Mapping(target = "institutionAggregatorContractMappings", ignore = true)
   @Mapping(target = "userAggregatorContractMappings", ignore = true)
-  
+  @Mapping(target = "emailTemplates", expression = "java(mapEmailTemplates(entity.getEmailTemplates()))")
   @Mapping(target = "status", source = "status", qualifiedByName = "mapProductStatus")
   it.pagopa.selfcare.product.entity.Product toResource(Product entity);
 
@@ -67,14 +67,42 @@ public interface ProductMapper {
 
   it.pagopa.selfcare.product.entity.ProductRoleInfo toRoleResource(RoleMapping entity);
 
-  @Mapping(target = "contractTemplatePath", source = "path")
+  @Mapping(target = "institutionType", source = "institutionType", qualifiedByName = "mapInstitutionType")
+  it.pagopa.selfcare.product.entity.OriginEntry toOriginEntryResource(it.pagopa.selfcare.product.model.OriginEntry entity);
+
+  @Named("mapInstitutionType")
+  default it.pagopa.selfcare.onboarding.common.InstitutionType mapInstitutionType(it.pagopa.selfcare.product.model.enums.InstitutionType institutionType) {
+    return switch (institutionType) {
+      case PA -> it.pagopa.selfcare.onboarding.common.InstitutionType.PA;
+      case GSP -> it.pagopa.selfcare.onboarding.common.InstitutionType.GSP;
+      case PG -> it.pagopa.selfcare.onboarding.common.InstitutionType.PG;
+      case SA -> it.pagopa.selfcare.onboarding.common.InstitutionType.SA;
+      case PT -> it.pagopa.selfcare.onboarding.common.InstitutionType.PT;
+      case SCP -> it.pagopa.selfcare.onboarding.common.InstitutionType.SCP;
+      case PSP -> it.pagopa.selfcare.onboarding.common.InstitutionType.PSP;
+      case AS -> it.pagopa.selfcare.onboarding.common.InstitutionType.AS;
+      case REC -> it.pagopa.selfcare.onboarding.common.InstitutionType.REC;
+      case CON -> it.pagopa.selfcare.onboarding.common.InstitutionType.CON;
+      case PRV -> it.pagopa.selfcare.onboarding.common.InstitutionType.PRV;
+      case PRV_PF -> it.pagopa.selfcare.onboarding.common.InstitutionType.PRV_PF;
+      case GPU -> it.pagopa.selfcare.onboarding.common.InstitutionType.GPU;
+      case SCEC -> it.pagopa.selfcare.onboarding.common.InstitutionType.SCEC;
+      default -> null;
+    };
+
+  }
+
+
+    @Mapping(target = "contractTemplatePath", source = "path")
   @Mapping(target = "contractTemplateVersion", source = "version")
   @Mapping(target = "attachments", ignore = true) // Gli attachment in ContractTemplate non ci sono nel file sorgente inviato, logica custom se serve
   it.pagopa.selfcare.product.entity.ContractTemplate toContractResource(ContractTemplate entity);
 
   @Named("mapBackOfficeConfigs")
   default Map<String, it.pagopa.selfcare.product.entity.BackOfficeConfigurations> mapBackOfficeConfigs(List<BackOfficeEnvironmentConfiguration> list) {
-    if (list == null) return null;
+    if (list == null) {
+      return null;
+    }
     return list.stream()
       .collect(Collectors.toMap(
         BackOfficeEnvironmentConfiguration::getEnv,
@@ -84,7 +112,9 @@ public interface ProductMapper {
 
   @Named("mapRoleMappings")
   default Map<PartyRole, it.pagopa.selfcare.product.entity.ProductRoleInfo> mapRoleMappings(List<RoleMapping> list) {
-    if (list == null) return null;
+    if (list == null) {
+      return null;
+    }
     return list.stream()
       .collect(Collectors.toMap(this::getPartyRole, this::toRoleResource));
   }
@@ -111,8 +141,6 @@ public interface ProductMapper {
 
   it.pagopa.selfcare.product.entity.EmailTemplate toEmailTemplateResource(it.pagopa.selfcare.product.model.EmailTemplate template);
 
-
-  }
 
   default Map<String, it.pagopa.selfcare.product.entity.ContractTemplate> mapContracts(List<ContractTemplate> contracts, OnboardingType type) {
     if (contracts == null) return Collections.emptyMap();

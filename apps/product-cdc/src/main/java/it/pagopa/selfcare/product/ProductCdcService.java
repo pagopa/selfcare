@@ -138,7 +138,7 @@ public class ProductCdcService {
     return Uni.createFrom().item(productService.getProducts(false, true))
       .onItem().transform(products -> {
         List<it.pagopa.selfcare.product.entity.Product> updateProducts = new ArrayList<>(products.stream().filter(p -> !p.getId().equals(product.getId())).toList());
-        updateProducts.add(productMapper.fromModel(product));
+        updateProducts.add(productMapper.toResource(product));
         return updateProducts;
       })
       .onItem().transformToUni(products -> Uni.createFrom().item(azureBlobClient.uploadFilePath(productsFilePath, convertListToJsonBytes(products))));
