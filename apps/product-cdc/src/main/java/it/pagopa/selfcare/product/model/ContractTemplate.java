@@ -23,6 +23,7 @@ public class ContractTemplate {
     private OnboardingType onboardingType;
     private boolean enabled;
     private InstitutionType institutionType;
+    private ContractType contractType;
     private String path;
     private String version;
     private int order;

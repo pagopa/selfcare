@@ -61,11 +61,12 @@ public interface ProductMapper {
   @Mapping(target = "url", source = "urlBO")
   it.pagopa.selfcare.product.entity.BackOfficeConfigurations toBackOfficeResource(BackOfficeEnvironmentConfiguration entity);
 
-
   @Mapping(target = "roles", source = "backOfficeRoles", qualifiedByName = "mapRoleResource")
   it.pagopa.selfcare.product.entity.ProductRoleInfo toRoleResource(RoleMapping entity);
+
   @Named("mapRoleResource")
   it.pagopa.selfcare.product.entity.ProductRole toRoleResource(BackOfficeRole roles);
+
   @Mapping(target = "institutionType", source = "institutionType", qualifiedByName = "mapInstitutionType")
   it.pagopa.selfcare.product.entity.OriginEntry toOriginEntryResource(it.pagopa.selfcare.product.model.OriginEntry entity);
 
@@ -96,6 +97,10 @@ public interface ProductMapper {
   @Mapping(target = "attachments", expression = "java(List.of())")
   it.pagopa.selfcare.product.entity.ContractTemplate toContractResource(ContractTemplate entity);
 
+
+  @Mapping(target = "templatePath", source = "path")
+  @Mapping(target = "templateVersion", source = "version")
+  it.pagopa.selfcare.product.entity.AttachmentTemplate toAttachmentResource(ContractTemplate entity);
 
   @Named("mapBackOfficeConfigsProdurlBOurl")
   default String mapBackOfficeConfigsProdurlBOurl(List<BackOfficeEnvironmentConfiguration> list) {
@@ -132,8 +137,7 @@ public interface ProductMapper {
     if (list == null) {
       return null;
     }
-    return list.stream()
-      .collect(Collectors.toMap(this::getPartyRole, this::toRoleResource));
+    return list.stream().collect(Collectors.toMap(this::getPartyRole, this::toRoleResource));
   }
 
   @Named("mapEmailTemplates")
@@ -160,20 +164,32 @@ public interface ProductMapper {
 
 
   default Map<String, it.pagopa.selfcare.product.entity.ContractTemplate> mapContracts(List<ContractTemplate> contracts, OnboardingType type) {
-    if (contracts == null) return Collections.emptyMap();
+    if (contracts == null) {
+      return Collections.emptyMap();
+    }
 
     Map<String, it.pagopa.selfcare.product.entity.ContractTemplate> result = new HashMap<>();
 
     for (ContractTemplate contract : contracts) {
       //(INSTITUTION o USER)
-      if (contract.getOnboardingType() == type) {
-
+      if (contract.getOnboardingType() == type && contract.getContractType() == ContractType.CONTRACT) {
         //  (es. "PA", "GSP" o "default")
         String key = (contract.getInstitutionType() != null)
           ? contract.getInstitutionType().name()
           : "default";
 
         result.put(key, toContractResource(contract));
+      }
+    }
+    for (ContractTemplate contract : contracts) {
+      //(INSTITUTION o USER)
+      if (contract.getOnboardingType() == type && contract.getContractType() == ContractType.ATTACHMENT) {
+        //  (es. "PA", "GSP" o "default")
+        String key = (contract.getInstitutionType() != null)
+          ? contract.getInstitutionType().name()
+          : "default";
+
+        result.get(key).getAttachments().add(toAttachmentResource(contract));
       }
     }
     return result;

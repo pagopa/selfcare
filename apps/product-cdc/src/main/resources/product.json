@@ -30,7 +30,8 @@
         {
           "code": "referente amministrativo",
           "description": "Amministratore",
-          "label": "Amministratore"
+          "label": "Amministratore",
+          "productLabel": "Amministratore"
         }
       ]
     },
@@ -43,7 +44,8 @@
         {
           "code": "referente amministrativo",
           "description": "Amministratore",
-          "label": "Amministratore"
+          "label": "Amministratore",
+          "productLabel": "Amministratore"
         }
       ]
     },
@@ -56,7 +58,8 @@
         {
           "code": "referente amministrativo",
           "description": "Amministratore",
-          "label": "Amministratore"
+          "label": "Amministratore",
+          "productLabel": "Amministratore"
         }
       ]
     },
@@ -69,7 +72,8 @@
         {
           "code": "referente operativo",
           "description": "Operatore",
-          "label": "Operatore"
+          "label": "Operatore",
+          "productLabel": "Referente Tecnico"
         }
       ]
     },
@@ -82,7 +86,8 @@
         {
           "code": "referente amministrativo",
           "description": "Amministratore",
-          "label": "Amministratore"
+          "label": "Amministratore",
+          "productLabel": "Amministratore"
         }
       ]
     }
@@ -91,6 +96,7 @@
     {
       "onboardingType": "INSTITUTION",
       "institutionType": "DEFAULT",
+      "type": "CONTRACT",
       "enabled": true,
       "path": "contracts/template/x/2.4.6/accordo_di_adesione-v.2.4.6.html",
       "version": "2.4.6",
@@ -104,6 +110,7 @@
     {
       "onboardingType": "INSTITUTION",
       "institutionType": "DEFAULT",
+      "type": "CONTRACT",
       "path": "contracts/template/x/2.4.6/accordo_di_adesione-v.2.4.6.html",
       "version": "2.4.6",
       "order": 10,
@@ -114,8 +121,37 @@
       "workflowType": []
     },
     {
+      "onboardingType": "INSTITUTION",
+      "institutionType": "GPU",
+      "type": "CONTRACT",
+      "enabled": true,
+      "path": "contracts/template/x/1.1.1/accordo_di_adesione-GPU-v.1.1.1.html",
+      "version": "1.1.1",
+      "order": 10,
+      "generated": true,
+      "mandatory": true,
+      "name": "Accordo di adesione X",
+      "workflowState": "REQUEST",
+      "workflowType": []
+    },
+    {
+      "onboardingType": "INSTITUTION",
+      "institutionType": "GPU",
+      "type": "ATTACHMENT",
+      "enabled": true,
+      "path": "contracts/template/x/attachments/1.0.0/x-v1.0.0.html",
+      "version": "1.0.0",
+      "order": 1,
+      "generated": true,
+      "mandatory": true,
+      "name": "Dichiarazione_sostitutiva_certificazione",
+      "workflowState": "REQUEST",
+      "workflowType": ["FOR_APPROVE_GPU"]
+    },
+    {
       "onboardingType": "USER",
       "institutionType": "DEFAULT",
+      "type": "CONTRACT",
       "path": "contracts/template/x/user/1.0.0/x-aggiunta-amministratore-v.1.0.html",
       "version": "1.0.0",
       "order": 10,
@@ -128,6 +164,7 @@
     {
       "onboardingType": "USER",
       "institutionType": "DEFAULT",
+      "type": "CONTRACT",
       "path": "contracts/template/x/user/1.0.0/x-aggiunta-amministratore-v.1.0.html",
       "version": "1.0.0",
       "order": 10,
