@@ -158,14 +158,14 @@
   "emailTemplates": [
     {
       "type": "IMPORT",
-      "institutionType": "DEFAULT",
+      "institutionType": "default",
       "path": "contracts/template/mail/import-massivo-x/1.0.0.json",
       "version": "1.0.0",
       "status": "PENDING"
     },
     {
       "type": "IMPORT_AGGREGATION",
-      "institutionType": "DEFAULT",
+      "institutionType": "default",
       "path": "contracts/template/mail/import-massivo-x/1.0.0.json",
       "version": "1.0.0",
       "status": "PENDING"
@@ -179,7 +179,7 @@
       "identityTokenAudience": "identity.it"
     },
     {
-      "env": "locale",
+      "env": "Locale",
       "urlBO": "http://localhost:3999/idp/selfcare/resolve-identity?id=<IdentityToken>;env=locale",
       "urlPublic": "https://baseurl.it/",
       "identityTokenAudience": "identity.it"

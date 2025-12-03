@@ -41,6 +41,8 @@ public interface ProductMapper {
   @Mapping(target = "userAggregatorContractMappings", ignore = true)
   @Mapping(target = "emailTemplates", expression = "java(mapEmailTemplates(entity.getEmailTemplates()))")
   @Mapping(target = "status", source = "status", qualifiedByName = "mapProductStatus")
+  @Mapping(target = "urlBO", expression = "java(mapBackOfficeConfigsProdurlBOurl(entity.getBackOfficeEnvironmentConfigurations()))")
+  @Mapping(target = "urlPublic", expression = "java(mapBackOfficeConfigsProdurlBOurlPublic(entity.getBackOfficeEnvironmentConfigurations()))")
   it.pagopa.selfcare.product.entity.Product toResource(Product entity);
 
   @Named("mapProductStatus")
@@ -56,6 +58,7 @@ public interface ProductMapper {
     };
   }
 
+  @Mapping(target = "url", source = "urlBO")
   it.pagopa.selfcare.product.entity.BackOfficeConfigurations toBackOfficeResource(BackOfficeEnvironmentConfiguration entity);
 
 
@@ -88,11 +91,29 @@ public interface ProductMapper {
 
   }
 
-
-    @Mapping(target = "contractTemplatePath", source = "path")
+  @Mapping(target = "contractTemplatePath", source = "path")
   @Mapping(target = "contractTemplateVersion", source = "version")
-  @Mapping(target = "attachments", ignore = true) // Gli attachment in ContractTemplate non ci sono nel file sorgente inviato, logica custom se serve
+  @Mapping(target = "attachments", expression = "java(List.of())")
   it.pagopa.selfcare.product.entity.ContractTemplate toContractResource(ContractTemplate entity);
+
+
+  @Named("mapBackOfficeConfigsProdurlBOurl")
+  default String mapBackOfficeConfigsProdurlBOurl(List<BackOfficeEnvironmentConfiguration> list) {
+    if (list == null) {
+      return null;
+    }
+    return list.stream().filter(config -> config.getEnv().equals("PROD"))
+      .findFirst().map(BackOfficeEnvironmentConfiguration::getUrlBO).orElse(null);
+  }
+
+  @Named("mapBackOfficeConfigsProdurlBOurlPublic")
+  default String mapBackOfficeConfigsProdurlBOurlPublic(List<BackOfficeEnvironmentConfiguration> list) {
+    if (list == null) {
+      return null;
+    }
+    return list.stream().filter(config -> config.getEnv().equals("PROD"))
+      .findFirst().map(BackOfficeEnvironmentConfiguration::getUrlPublic).orElse(null);
+  }
 
   @Named("mapBackOfficeConfigs")
   default Map<String, it.pagopa.selfcare.product.entity.BackOfficeConfigurations> mapBackOfficeConfigs(List<BackOfficeEnvironmentConfiguration> list) {
