@@ -136,7 +136,7 @@ public class ProductCdcService {
     log.info("End consumerOnboardingEvent ... ");
   }
 
-  private Uni<Object> invokeCreationDocument(Product product) {
+  public Uni<Object> invokeCreationDocument(Product product) {
     return Uni.createFrom().item(productService.getProducts(false, true))
       .onItem().transform(products -> {
         List<it.pagopa.selfcare.product.entity.Product> updateProducts = new ArrayList<>(products.stream().filter(p -> !p.getId().equals(product.getId())).toList());

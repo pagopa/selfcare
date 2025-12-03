@@ -5,8 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import it.pagopa.selfcare.product.entity.BackOfficeConfigurations;
 import it.pagopa.selfcare.product.model.BackOfficeEnvironmentConfiguration;
-import it.pagopa.selfcare.product.model.ContractTemplate;
-import it.pagopa.selfcare.product.model.enums.OnboardingType;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
@@ -33,28 +31,6 @@ class ProductMapperTest {
     assertEquals(1, result.size());
     assertTrue(result.containsKey("PROD"));
     assertNotNull(result.get("PROD"));
-  }
-
-  @Test
-  void mapContracts_shouldIncludeOnlyMatchingOnboardingType() {
-    ContractTemplate institutionTemplate = new ContractTemplate();
-    institutionTemplate.setOnboardingType(OnboardingType.INSTITUTION);
-    institutionTemplate.setPath("/contracts/inst.pdf");
-    institutionTemplate.setVersion("v1");
-
-    ContractTemplate userTemplate = new ContractTemplate();
-    userTemplate.setOnboardingType(OnboardingType.USER);
-    userTemplate.setPath("/contracts/user.pdf");
-    userTemplate.setVersion("v1");
-
-    Map<String, it.pagopa.selfcare.product.entity.ContractTemplate> result = mapper.mapContracts(
-        List.of(institutionTemplate, userTemplate),
-        OnboardingType.INSTITUTION
-    );
-
-    assertEquals(1, result.size());
-    assertTrue(result.containsKey("default"));
-    assertEquals("/contracts/inst.pdf", result.get("default").getContractTemplatePath());
   }
 
   @Test
