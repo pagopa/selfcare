@@ -1,9 +1,5 @@
 ---
 openapi: 3.1.0
-tags:
-- name: Product
-- name: external-pnpg
-- name: external-v2
 components:
   schemas:
     BackOfficeEnvironmentConfiguration:
@@ -56,6 +52,46 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/WorkflowType"
+    ContractTemplateResponse:
+      type: object
+      properties:
+        contractTemplateId:
+          type: string
+        contractTemplateVersion:
+          type: string
+        productId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        createdAt:
+          $ref: "#/components/schemas/Instant"
+        createdBy:
+          type: string
+    ContractTemplateUploadRequest:
+      type: object
+      required:
+      - productId
+      - file
+      - name
+      - version
+      properties:
+        productId:
+          type: string
+        file:
+          type: string
+          format: binary
+        name:
+          type: string
+          pattern: "^[a-zA-Z0-9 ]+$"
+        version:
+          type: string
+          pattern: ^\d+\.\d+\.\d+$
+        description:
+          type: string
+        createdBy:
+          type: string
     EmailTemplateConfig:
       type: object
       properties:
@@ -382,6 +418,133 @@ components:
       bearerFormat: JWT
       description: Authentication
 paths:
+  /contract-template:
+    post:
+      summary: Upload a new contract template version
+      description: Upload an html file as a new contract template version to be used
+        in product configuration
+      operationId: upload
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/ContractTemplateUploadRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractTemplateResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "409":
+          description: Conflict
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+      tags:
+      - Contract Template Controller
+    get:
+      summary: List contract templates available
+      description: List and filter all the contract templates available
+      operationId: list
+      parameters:
+      - name: name
+        in: query
+        schema:
+          type: string
+      - name: productId
+        in: query
+        schema:
+          type: string
+      - name: version
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream: {}
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+      tags:
+      - Contract Template Controller
+  /contract-template/{contractTemplateId}:
+    get:
+      summary: Download a contract template version
+      description: Download the html file of a specific contract template version
+      operationId: download
+      parameters:
+      - name: contractTemplateId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: productId
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream: {}
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+      tags:
+      - Contract Template Controller
   /product:
     post:
       summary: Create or update a product configuration
@@ -628,6 +791,10 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
+tags:
+- name: Product
+- name: external-pnpg
+- name: external-v2
 info:
   title: Product API
   version: 1.0.0

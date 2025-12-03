@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+    <style>
+        @import url(https://themes.googleusercontent.com/fonts/css?kit=-lTUqgJg2dxbe4D7B5DEIA3jn2WilaVUapNOYl4762s);
+    
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Montserrat", sans-serif;
+            font-size: 10pt;
+            font-weight: normal;
+            line-height: 1.8;
+            color: black;
+        }
+    
+        b {
+            font-weight: bold;
+        }
+    
+        body {
+            margin: 0 auto;
+            padding: 10mm;
+            max-width: 200mm;
+            text-align: justify;
+        }
+    
+        header {
+            margin-bottom: 5mm;
+            overflow: hidden;
+        }
+    
+        footer {
+            margin-top: 5mm;
+            overflow: hidden;
+        }
+    
+        section {
+            margin-top: 2.5mm;
+            margin-bottom: 2.5mm;
+            overflow: hidden;
+        }
+    
+        p {
+            margin-top: 1mm;
+            margin-bottom: 1mm;
+        }
+    
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-weight: bold;
+        }
+    
+        h1 {
+            font-size: 14pt;
+            text-align: center;
+            margin-top: 3mm;
+            margin-bottom: 3mm;
+        }
+    
+        h2 {
+            font-size: 13pt;
+            margin-top: 1.5mm;
+            margin-bottom: 1.5mm;
+        }
+    
+        h3 {
+            font-size: 12pt;
+            margin-top: 1mm;
+            margin-bottom: 1mm;
+        }
+    
+        h4 {
+            font-size: 11pt;
+            margin-top: 0.8mm;
+            margin-bottom: 0.8mm;
+        }
+    
+        h5 {
+            font-size: 10pt;
+            margin-top: 0.7mm;
+            margin-bottom: 0.7mm;
+        }
+    
+        h6 {
+            font-size: 10pt;
+            margin-top: 0.5mm;
+            margin-bottom: 0.5mm;
+        }
+    
+        hr {
+            position: relative;
+            height: 12pt;
+            border: 0;
+            margin-top: 2mm;
+            margin-bottom: 2mm;
+        }
+    
+        hr::before {
+            content: "***";
+            display: block;
+            text-align: center;
+            font-size: 12pt;
+        }
+    
+        ul,
+        ol {
+            list-style: none;
+            margin: 0;
+            padding-left: 5mm;
+        }
+    
+        ul li,
+        ol li {
+            padding: 0.8mm 0;
+        }
+    
+        .pagopa-header-logo {
+            width: 150px;
+            height: auto;
+            float: left;
+        }
+    
+        .product-header-logo {
+            width: 64px;
+            height: auto;
+            float: right;
+        }
+    
+        .pagopa-footer-info {
+            font-size: 6pt;
+            float: left;
+        }
+    
+        .pagopa-footer-logo {
+            width: 64px;
+            height: auto;
+            float: right;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div>
+        <img class="pagopa-header-logo" src="https://selfcare.pagopa.it/assets/logo_pagopacorp.png">
+        <img class="product-header-logo" src="${contractTemplateLogo}">
+    </div>
+</header>
+
+<main>
+${contractTemplateFragment}
+</main>
+
+<footer>
+    <div>
+        <p class="pagopa-footer-info">
+            PagoPA S.p.A.<br>
+            società per azioni con socio unico<br>
+            capitale sociale di euro 1,000,000 interamente versato<br>
+            sede legale in Roma, Piazza Colonna 370, CAP 00187<br>
+            n. di iscrizione a Registro Imprese di Roma, CF e P.IVA 15376371009<br>
+        </p>
+        <img class="pagopa-footer-logo" src="https://selfcare.pagopa.it/assets/icon_pagopacorp_rounded_primary.png">
+    </div>
+</footer>
+</body>
+
+</html>
