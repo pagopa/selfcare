@@ -4,6 +4,7 @@ import com.azure.data.tables.TableClient;
 import com.azure.data.tables.models.TableEntity;
 import com.azure.data.tables.models.TableServiceException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.microsoft.applicationinsights.TelemetryClient;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
@@ -119,27 +120,27 @@ public class ProductCdcService {
     assert document.getFullDocument() != null;
     assert document.getDocumentKey() != null;
 
-    log.info("Starting consumerOnboardingEvent ... ");
-    log.info("Sending Onboarding notification having id {}", document.getFullDocument().getId());
+    log.info("Starting consumerProductEvent ... ");
+    log.info("Product CDC update products having id {}", document.getFullDocument().getId());
 
     invokeCreationDocument(document.getFullDocument())
       .subscribe().with(
         result -> {
-          log.info("Onboarding notification having id: {} successfully sent", document.getDocumentKey().toJson());
+          log.info("Product CDC update products having id: {} successfull", document.getDocumentKey().toJson());
           updateLastResumeToken(document.getResumeToken());
           constructMapAndTrackEvent(document.getDocumentKey().toJson(), "TRUE", ProductConstant.PRODUCT_SUCCESS_MECTRICS);
         },
         failure -> {
-          log.error("Error during send Onboarding notifiction having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
+          log.error("Product CDC update products having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
           constructMapAndTrackEvent(document.getDocumentKey().toJson(), "FALSE", ProductConstant.PRODUCT_FAILURE_MECTRICS);
         });
-    log.info("End consumerOnboardingEvent ... ");
+    log.info("End consumerProductEvent ... ");
   }
 
   public Uni<Object> invokeCreationDocument(Product product) {
     return Uni.createFrom().item(productService.getProducts(false, true))
       .onItem().transform(products -> {
-        List<it.pagopa.selfcare.product.entity.Product> updateProducts = new ArrayList<>(products.stream().filter(p -> !p.getId().equals(product.getId())).toList());
+        List<it.pagopa.selfcare.product.entity.Product> updateProducts = new ArrayList<>(products.stream().filter(p -> !p.getId().equals(product.getProductId())).toList());
         updateProducts.add(productMapper.toResource(product));
         return updateProducts;
       })
@@ -182,7 +183,8 @@ public class ProductCdcService {
   public byte[] convertListToJsonBytes(List<it.pagopa.selfcare.product.entity.Product> products) {
     try {
       ObjectMapper mapper = new ObjectMapper();
-      return mapper.writeValueAsBytes(products);
+      mapper.registerModule(new JavaTimeModule());
+      return mapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(products);
     } catch (Exception e) {
       throw new RuntimeException("Error during JSON serialization", e);
     }

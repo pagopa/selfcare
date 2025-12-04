@@ -28,6 +28,7 @@ public interface ProductMapper {
   @Mapping(target = "modifiedBy", source = "metadata.createdBy")
 
   // Flattening delle Features
+  @Mapping(target = "id", source = "productId")
   @Mapping(target = "allowCompanyOnboarding", source = "features.allowCompanyOnboarding")
   @Mapping(target = "allowIndividualOnboarding", source = "features.allowIndividualOnboarding")
   @Mapping(target = "delegable", source = "features.delegable")
@@ -45,6 +46,7 @@ public interface ProductMapper {
   @Mapping(target = "status", source = "status", qualifiedByName = "mapProductStatus")
   @Mapping(target = "urlBO", expression = "java(mapBackOfficeConfigsProdurlBOurl(entity.getBackOfficeEnvironmentConfigurations()))")
   @Mapping(target = "urlPublic", expression = "java(mapBackOfficeConfigsProdurlBOurlPublic(entity.getBackOfficeEnvironmentConfigurations()))")
+  @Mapping(target = "identityTokenAudience", expression = "java(mapBackOfficeConfigsIdentityTokenAudience(entity.getBackOfficeEnvironmentConfigurations()))")
   it.pagopa.selfcare.product.entity.Product toResource(Product entity);
 
   @Named("mapProductStatus")
@@ -145,7 +147,7 @@ public interface ProductMapper {
     if (list == null) {
       return null;
     }
-    return list.stream().filter(config -> config.getEnv().equals("PROD"))
+    return list.stream().filter(config -> config.getEnv().equalsIgnoreCase("prod"))
       .findFirst().map(BackOfficeEnvironmentConfiguration::getUrlBO).orElse(null);
   }
 
@@ -154,7 +156,16 @@ public interface ProductMapper {
     if (list == null) {
       return null;
     }
-    return list.stream().filter(config -> config.getEnv().equals("PROD"))
+    return list.stream().filter(config -> config.getEnv().equalsIgnoreCase("prod"))
+      .findFirst().map(BackOfficeEnvironmentConfiguration::getIdentityTokenAudience).orElse(null);
+  }
+
+  @Named("mapBackOfficeConfigsIdentityTokenAudience")
+  default String mapBackOfficeConfigsIdentityTokenAudience(List<BackOfficeEnvironmentConfiguration> list) {
+    if (list == null) {
+      return null;
+    }
+    return list.stream().filter(config -> config.getEnv().equalsIgnoreCase("prod"))
       .findFirst().map(BackOfficeEnvironmentConfiguration::getUrlPublic).orElse(null);
   }
 
@@ -209,7 +220,7 @@ public interface ProductMapper {
     Map<String, it.pagopa.selfcare.product.entity.ContractTemplate> result = new HashMap<>();
 
     for (ContractTemplate contract : contracts) {
-      //(INSTITUTION o USER)
+      //(INSTITUTION or USER)
       if (contract.getOnboardingType() == type && contract.getContractType() == ContractType.CONTRACT) {
         //  (es. "PA", "GSP" o "default")
         String key = (contract.getInstitutionType() != null)
@@ -220,7 +231,7 @@ public interface ProductMapper {
       }
     }
     for (ContractTemplate contract : contracts) {
-      //(INSTITUTION o USER)
+      //(INSTITUTION or USER)
       if (contract.getOnboardingType() == type && contract.getContractType() == ContractType.ATTACHMENT) {
         //  (es. "PA", "GSP" o "default")
         String key = (contract.getInstitutionType() != null)
