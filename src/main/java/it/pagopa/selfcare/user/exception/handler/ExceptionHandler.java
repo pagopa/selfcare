@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.user.exception.handler;
 
+import it.pagopa.selfcare.user.exception.ConflictException;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import jakarta.ws.rs.core.Response;
@@ -34,5 +35,12 @@ public class ExceptionHandler {
         LOGGER.warn(PREFIX_LOGGER, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
         Problem problem = new Problem(exception.getMessage(), null, null, HttpStatus.SC_NOT_FOUND, exception.getMessage(), null);
         return Response.status(Response.Status.NOT_FOUND).entity(problem).build();
+    }
+
+    @ServerExceptionMapper
+    public Response toResponse(ConflictException exception) {
+        LOGGER.warn(PREFIX_LOGGER, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
+        Problem problem = new Problem(exception.getMessage(), null, null, HttpStatus.SC_CONFLICT, exception.getMessage(), null);
+        return Response.status(Response.Status.CONFLICT).entity(problem).build();
     }
 }

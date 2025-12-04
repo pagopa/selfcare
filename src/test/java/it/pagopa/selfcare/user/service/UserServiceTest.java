@@ -25,6 +25,7 @@ import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
+import it.pagopa.selfcare.user.exception.ConflictException;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.exception.UserRoleAlreadyPresentException;
@@ -849,6 +850,46 @@ class UserServiceTest {
         verify(userInstitutionService).persistOrUpdate(any());
         verify(userInstitutionService).findByUserIdAndInstitutionId(any(), any());
         verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void testCreateOrUpdateUser_ByFiscalCode_ConflictException() {
+        // Prepare test data
+        final String fiscalCode = "fiscalCode";
+        CreateUserDto createUserDto = new CreateUserDto();
+        CreateUserDto.User user = new CreateUserDto.User();
+        user.setFiscalCode(fiscalCode + " ");
+        CreateUserDto.Product createUserProduct = new CreateUserDto.Product();
+        createUserProduct.setProductId("prod-io");
+        createUserProduct.setProductRoles(List.of("admin2"));
+        createUserDto.setUser(user);
+        createUserDto.setProduct(createUserProduct);
+        LoggedUser loggedUser = LoggedUser.builder().build();
+
+        Product product = new Product();
+        product.setDescription("description");
+
+        UserToNotify userToNotify = new UserToNotify();
+        userToNotify.setUserId(userId.toString());
+
+        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
+        userNotificationToSend.setUser(userToNotify);
+
+        // Mock external dependencies
+        when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.findByUserIdAndInstitutionId(any(), any())).thenReturn(Uni.createFrom().item(createUserInstitution()));
+        when(userRegistryApi.updateUsingPATCH(any(), any())).thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("Not Found")));
+        when(userRegistryApi.saveUsingPATCH(any())).thenReturn(Uni.createFrom().failure(new ConflictException("Conflict")));
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(createUserInstitution()));
+
+        // Call the method
+        UniAssertSubscriber<CreateOrUpdateUserByFiscalCodeResponse> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(ConflictException.class);
+        verify(userRegistryApi).updateUsingPATCH(any(), any());
+        verify(userRegistryApi).saveUsingPATCH(any());
+        verify(userInstitutionService, never()).persistOrUpdate(any());
     }
 
     @Test

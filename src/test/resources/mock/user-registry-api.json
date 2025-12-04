@@ -424,6 +424,23 @@
   {
     "httpRequest": {
       "method": "PATCH",
+      "path": "/user-registry-mock/v1/users",
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "VRDMRA22T71F205B"
+        },
+        "matchType": "ONLY_MATCHING_FIELDS"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":409}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "PATCH",
       "path": "/user-registry-mock/v1/users/{id}",
       "pathParameters": {
         "id": [

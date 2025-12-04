@@ -3945,6 +3945,48 @@ Feature: User
     Then The status code is 200
     And The response body contains the list "" of size 0
 
+  @RemoveUserInstitutionWithMockUser3
+  Scenario: Unsuccessfully create a new user or update an existing one (conflict)
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 0
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+      {
+          "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
+          "user": {
+            "fiscalCode": "VRDMRA22T71F205B",
+            "institutionEmail": "prova@email.com"
+          },
+          "product": {
+              "productId": "prod-io",
+              "role": "DELEGATE",
+              "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+              "productRoles": [
+                  "referente amministrativo"
+              ]
+          },
+          "institutionDescription": "Comune di Bergamo",
+          "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+      }
+      """
+    When I send a POST request to "users/"
+    Then The status code is 409
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 0
+
   Scenario: Unsuccessfully create a new user or update an existing one (without institutionId)
     Given User login with username "j.doe" and password "test"
     And The following request body:
@@ -4054,9 +4096,9 @@ Feature: User
     When I send a POST request to "users/"
     Then The status code is 401
 
-  ######################### END POST / #########################
+  ######################## END POST / #########################
 
-  ######################### BEGIN GET /{userId}/institution/{institutionId} #########################
+  ######################## BEGIN GET /{userId}/institution/{institutionId} #########################
 
   Scenario: Successfully retrieve a list of users with optional filters and permissions with personId
     Given User login with username "j.doe" and password "test"

@@ -17,6 +17,7 @@ import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
+import it.pagopa.selfcare.user.exception.ConflictException;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.exception.UserRoleAlreadyPresentException;
@@ -455,6 +456,7 @@ public class UserServiceImpl implements UserService {
         workContacts.put(mailUuid, UserUtils.buildWorkContact(userDto.getUser().getInstitutionEmail()));
         return userRegistryService.saveUsingPATCH(userMapper.toSaveUserDto(userDto.getUser(), workContacts))
             .onFailure(UserUtils::isConflictOnUserRegistry).retry().withBackOff(Duration.ofSeconds(2)).atMost(3)
+                .onFailure(UserUtils::isConflictOnUserRegistry).recoverWithUni(throwable -> Uni.createFrom().failure(new ConflictException(throwable.getMessage())))
             .onFailure().invoke(exception -> log.error("Error during create user on userRegistry: {} ", exception.getMessage(), exception))
             .onItem().invoke(userResource -> log.info("User created with id {}", userResource.getId()))
             .onItem().transform(userResource -> userResource.getId().toString())
