@@ -41,4 +41,13 @@ The application requires the following configurations to function correctly:
 2.  MongoDB records the change and emits a change stream event.
 3.  This module consumes the event.
 4.  The module fetches the latest product data, converts it to the standard JSON format.
-5.  The `products.json
+5.  The `products.json` file is regenerated with the latest product data and uploaded to the configured Blob Storage container, replacing the previous version.
+6.  Other services and applications can now consume the updated `products.json` file from Blob Storage, ensuring they have access to the most current product information.
+
+## 🧩 Error Handling & Logging
+
+The module includes error handling to manage issues such as failed uploads, connectivity problems, or malformed data. All significant events and errors are logged for monitoring and troubleshooting purposes.
+
+## 📚 Further Reading
+
+For more details on configuration, deployment, and integration, refer to the [docs](../docs/product-cdc.md).
