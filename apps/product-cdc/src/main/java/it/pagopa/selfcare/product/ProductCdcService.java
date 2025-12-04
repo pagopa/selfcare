@@ -103,7 +103,7 @@ public class ProductCdcService {
       this::consumerEvent,
       failure -> {
         log.error("Error during subscribe collection, exception: {} , message: {}", failure.toString(), failure.getMessage());
-        constructMapAndTrackEvent(failure.getClass().toString(), "FALSE", ProductConstant.PRODUCT_FAILURE_MECTRICS);
+        constructMapAndTrackEvent(failure.getClass().toString(), "FALSE", ProductConstant.PRODUCT_FAILURE_METRICS);
         Quarkus.asyncExit();
       });
 
@@ -128,11 +128,11 @@ public class ProductCdcService {
         result -> {
           log.info("Product CDC update products having id: {} successfull", document.getDocumentKey().toJson());
           updateLastResumeToken(document.getResumeToken());
-          constructMapAndTrackEvent(document.getDocumentKey().toJson(), "TRUE", ProductConstant.PRODUCT_SUCCESS_MECTRICS);
+          constructMapAndTrackEvent(document.getDocumentKey().toJson(), "TRUE", ProductConstant.PRODUCT_SUCCESS_METRICS);
         },
         failure -> {
           log.error("Product CDC update products having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
-          constructMapAndTrackEvent(document.getDocumentKey().toJson(), "FALSE", ProductConstant.PRODUCT_FAILURE_MECTRICS);
+          constructMapAndTrackEvent(document.getDocumentKey().toJson(), "FALSE", ProductConstant.PRODUCT_FAILURE_METRICS);
         });
     log.info("End consumerProductEvent ... ");
   }
