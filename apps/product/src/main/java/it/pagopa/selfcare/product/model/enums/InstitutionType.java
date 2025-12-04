@@ -38,4 +38,9 @@ public enum InstitutionType {
         log.warn("Unknown InstitutionType '{}', using DEFAULT", value);
         return DEFAULT;
     }
+
+    @JsonValue
+    public String toJson() {
+        return this.name().toUpperCase();
+    }
 }
