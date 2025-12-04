@@ -11,8 +11,11 @@ import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.ComposeContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 
+import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 
 @Slf4j
 @TestProfile(CucumberTestProfile.class)
@@ -42,13 +45,13 @@ public class CucumberSuiteTest extends CucumberQuarkusTest {
     RestAssured.port = 8081;
     tokenTest = ConfigProvider.getConfig().getValue(JWT_BEARER_TOKEN_ENV, String.class);
     log.info("Starting test containers...");
-//    composeContainer = new ComposeContainer(new File("docker-compose.yml"))
-//      .withLocalCompose(true).withPull(true)
-//      .waitingFor("mongodb", Wait.forListeningPort())
-//      .withStartupTimeout(Duration.ofMinutes(5));
-//
-//    composeContainer.start();
-//    Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
+    composeContainer = new ComposeContainer(new File("docker-compose.yml"))
+      .withLocalCompose(true).withPull(true)
+      .waitingFor("mongodb", Wait.forListeningPort())
+      .withStartupTimeout(Duration.ofMinutes(5));
+
+    composeContainer.start();
+    Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
     log.info("Test containers started successfully");
     log.info("\nLANGUAGE: {}\nCOUNTRY: {}\nTIMEZONE: {}\n", System.getProperty("user.language"), System.getProperty("user.country"), System.getProperty("user.timezone"));
   }

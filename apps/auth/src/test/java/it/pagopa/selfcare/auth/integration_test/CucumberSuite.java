@@ -7,10 +7,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.ComposeContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Scanner;
 
 @Slf4j
@@ -44,17 +47,17 @@ public class CucumberSuite extends CucumberQuarkusTest {
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = 8081;
 
-//        composeContainer = new ComposeContainer(new File("docker-compose.yml")).withLocalCompose(true).withPull(true)
-//                .withExposedService("userms", 8080)
-//                .waitingFor("mongodb", Wait.forListeningPort())
-//                .waitingFor("userms", Wait.forHttp("/q/health/ready").forPort(8080).forStatusCode(200))
-//                .waitingFor("institutionms", Wait.forLogMessage(".*Started SelfCareCoreApplication.*\\n", 1))
-//                .waitingFor("externalms", Wait.forLogMessage(".*Started SelfCareExternalAPIApplication.*\\n", 1))
-//                .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1))
-//                .withStartupTimeout(Duration.ofMinutes(5));
-//
-//        composeContainer.start();
-//        Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
+        composeContainer = new ComposeContainer(new File("docker-compose.yml")).withLocalCompose(true).withPull(true)
+                .withExposedService("userms", 8080)
+                .waitingFor("mongodb", Wait.forListeningPort())
+                .waitingFor("userms", Wait.forHttp("/q/health/ready").forPort(8080).forStatusCode(200))
+                .waitingFor("institutionms", Wait.forLogMessage(".*Started SelfCareCoreApplication.*\\n", 1))
+                .waitingFor("externalms", Wait.forLogMessage(".*Started SelfCareExternalAPIApplication.*\\n", 1))
+                .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1))
+                .withStartupTimeout(Duration.ofMinutes(5));
+
+        composeContainer.start();
+        Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
 
         log.info("\nLANGUAGE: {}\nCOUNTRY: {}\nTIMEZONE: {}\n", System.getProperty("user.language"), System.getProperty("user.country"), System.getProperty("user.timezone"));
     }
