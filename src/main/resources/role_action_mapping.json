@@ -34,7 +34,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:ViewContract"
     ],
     "prod-pn": [
       "Selc:UploadLogo",
@@ -348,7 +349,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:ViewContract"
     ],
     "prod-pn": [
       "Selc:UploadLogo",
@@ -662,7 +664,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:ViewContract"
     ],
     "prod-pn": [
       "Selc:UploadLogo",
@@ -965,7 +968,8 @@
       "Selc:ListProductUsers",
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:ViewContract"
     ],
     "default": [
       "Selc:UploadLogo",
