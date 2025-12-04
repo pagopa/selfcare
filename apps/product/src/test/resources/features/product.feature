@@ -98,8 +98,8 @@ Feature: Product API end-to-end onboarding and lifecycle
     }
     """
     And The following query params:
-      | productId | prod-test   |
-      | createdBy | utente-test |
+      | productId | prod-test |
+      | createdBy | user-test |
     When I send a POST request to "/product"
     Then The status code is 201
     And The response body contains:
@@ -225,8 +225,8 @@ Feature: Product API end-to-end onboarding and lifecycle
     }
     """
     And The following query params:
-      | productId | prod-test   |
-      | createdBy | utente-test |
+      | productId | prod-test |
+      | createdBy | user-test |
     When I send a POST request to "/product"
     Then The status code is 201
     And The response body contains:
@@ -236,8 +236,8 @@ Feature: Product API end-to-end onboarding and lifecycle
   Scenario: GET /product - successfully retrieve product after upsert
     Given User login with username "j.doe" and password "test"
     And The following query params:
-      | productId | prod-test   |
-      | createdBy | utente-test |
+      | productId | prod-test |
+      | createdBy | user-test |
     When I send a GET request to "/product"
     Then The status code is 200
     And The response body contains:
@@ -248,8 +248,8 @@ Feature: Product API end-to-end onboarding and lifecycle
   Scenario: PATCH /product - successfully update product fields
     Given User login with username "j.doe" and password "test"
     And The following query params:
-      | productId | prod-test   |
-      | createdBy | utente-test |
+      | productId | prod-test |
+      | createdBy | user-test |
     And The following request body:
     """
       {
@@ -261,10 +261,10 @@ Feature: Product API end-to-end onboarding and lifecycle
     When I send a PATCH request to "/product" with content type "application/json"
     Then The status code is 200
     And The response body contains:
-      | productId   | prod-test                     |
-      | description | Description updated via PATCH |
+      | productId        | prod-test                     |
+      | description      | Description updated via PATCH |
       | features.enabled | false                         |
-      | title       | Prod TEST 2 - Patched         |
+      | title            | Prod TEST 2 - Patched         |
 
   Scenario: GET /product - successfully retrieve product after patch
     Given User login with username "j.doe" and password "test"
@@ -273,8 +273,8 @@ Feature: Product API end-to-end onboarding and lifecycle
     When I send a GET request to "/product"
     Then The status code is 200
     And The response body contains:
-      | productId   | prod-test                     |
-      | description | Description updated via PATCH |
+      | productId        | prod-test                     |
+      | description      | Description updated via PATCH |
       | features.enabled | false                         |
 
   Scenario: DELETE /product - successfully mark product as DELETED

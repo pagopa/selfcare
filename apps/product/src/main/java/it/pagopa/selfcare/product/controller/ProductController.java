@@ -30,7 +30,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @Slf4j
 public class ProductController {
 
-    //SERVICE
+    // SERVICE
     private final ProductService productService;
 
     @Operation(
