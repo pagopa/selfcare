@@ -1,14 +1,14 @@
 package it.pagopa.selfcare.product.service;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
+import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
+import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
-import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
-import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
-import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.repository.ProductRepository;
 import it.pagopa.selfcare.product.util.ProductUtils;
@@ -46,21 +46,22 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Uni<ProductBaseResponse> createProduct(ProductCreateRequest productCreateRequest) {
-        Product requestProduct = productMapperRequest.toProduct(productCreateRequest);
-
-        String productId = requestProduct.getProductId();
-
+    public Uni<ProductBaseResponse> createProduct(String productId, String createdBy, ProductCreateRequest productCreateRequest) {
+        log.info("Adding product {} action by {}", productId, createdBy);
         if (StringUtils.isBlank(productId)) {
             throw new BadRequestException(String.format("Missing product by id: %s", productId));
         }
+
+        Product requestProduct = productMapperRequest.toProduct(productCreateRequest);
+
+        requestProduct.setProductId(productId);
 
         if (requestProduct.getStatus() == null) {
             log.info("Product status missing - default TESTING");
             requestProduct.setStatus(ProductStatus.TESTING);
         }
 
-        requestProduct.setMetadata(productUtils.buildProductMetadata());
+        requestProduct.setMetadata(productUtils.buildProductMetadata(createdBy));
 
         return productRepository.findProductById(productId).onItem().ifNotNull().transformToUni(currentProduct -> {
                     int nextVersion = currentProduct.getVersion() + 1;
@@ -106,9 +107,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Uni<ProductResponse> patchProductById(String productId, ProductPatchRequest productPatchRequest) {
+    public Uni<ProductResponse> patchProductById(String productId, String createdBy, ProductPatchRequest productPatchRequest) {
         String sanitizedProductId = Encode.forJava(productId);
-        log.info("Update product configuration by productId: {}", sanitizedProductId);
+        String sanitizedCreatedBy = Encode.forJava(createdBy);
+        log.info("Update product configuration by productId: {} by user {}", sanitizedProductId, sanitizedCreatedBy);
 
         return Uni.createFrom().item(() -> {
                     if (StringUtils.isBlank(productId)) {
@@ -129,7 +131,7 @@ public class ProductServiceImpl implements ProductService {
 
                                     current.setId(UUID.randomUUID().toString());
                                     current.setProductId(current.getProductId());
-                                    current.setMetadata(productUtils.buildProductMetadata());
+                                    current.setMetadata(productUtils.buildProductMetadata(sanitizedCreatedBy));
                                     current.setVersion(current.getVersion() + 1);
 
                                     return productRepository.persist(current)

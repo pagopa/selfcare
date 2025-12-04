@@ -10,13 +10,13 @@ import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
 public interface ProductService {
     Uni<String> ping();
 
-    Uni<ProductBaseResponse> createProduct(ProductCreateRequest product);
+    Uni<ProductBaseResponse> createProduct(String productId, String createdBy, ProductCreateRequest product);
 
     Uni<ProductResponse> getProductById(String productId);
 
     Uni<ProductBaseResponse> deleteProductById(String productId);
 
-    Uni<ProductResponse> patchProductById(String productId, ProductPatchRequest productPatchRequest);
+    Uni<ProductResponse> patchProductById(String productId, String createdBy, ProductPatchRequest productPatchRequest);
 
     Uni<ProductOriginResponse> getProductOriginsById(String productId);
 }

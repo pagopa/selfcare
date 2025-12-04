@@ -3,16 +3,16 @@ package it.pagopa.selfcare.product.service;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
-import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
-import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
-import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
-import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
 import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
 import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
 import it.pagopa.selfcare.product.model.OriginEntry;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.ProductMetadata;
+import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
+import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
+import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
 import it.pagopa.selfcare.product.model.enums.InstitutionType;
 import it.pagopa.selfcare.product.model.enums.Origin;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
@@ -80,7 +80,7 @@ class ProductServiceImplTest {
                 });
 
         // when
-        ProductBaseResponse productBaseResponse = productService.createProduct(productCreateRequest).await().indefinitely();
+        ProductBaseResponse productBaseResponse = productService.createProduct("prod-test", "createdBy", productCreateRequest).await().indefinitely();
 
         // then
         assertNotNull(productBaseResponse);
@@ -144,7 +144,7 @@ class ProductServiceImplTest {
                 });
 
         // when
-        ProductBaseResponse res = productService.createProduct(productCreateRequest).await().indefinitely();
+        ProductBaseResponse res = productService.createProduct("prod-test", "createdBy", productCreateRequest).await().indefinitely();
 
         // then
         assertNotNull(res);
@@ -171,7 +171,7 @@ class ProductServiceImplTest {
 
         // when
         BadRequestException ex = assertThrows(BadRequestException.class,
-                () -> productService.createProduct(productCreateRequest).await().indefinitely());
+                () -> productService.createProduct(" ", "createdBy", productCreateRequest).await().indefinitely());
 
         // then
         assertTrue(ex.getMessage().contains("Missing product"));
@@ -235,7 +235,7 @@ class ProductServiceImplTest {
     void patchProductByIdTest_whenMissingPatchRequest_thenBadRequest() {
         // when
         Throwable thrown = catchThrowable(() ->
-                productService.patchProductById("prod-test", null).await().indefinitely());
+                productService.patchProductById("prod-test", "createdBy", null).await().indefinitely());
 
         // then
         assertThat(thrown).isInstanceOf(BadRequestException.class)
@@ -249,7 +249,7 @@ class ProductServiceImplTest {
 
         // when
         Throwable thrown = catchThrowable(() ->
-                productService.patchProductById(" ", patchRequest).await().indefinitely());
+                productService.patchProductById(" ", "createdBy", patchRequest).await().indefinitely());
 
         // then
         assertThat(thrown).isInstanceOf(BadRequestException.class)
@@ -267,7 +267,7 @@ class ProductServiceImplTest {
 
         // when
         Throwable thrown = catchThrowable(() ->
-                productService.patchProductById("prod-test", patchRequest).await().indefinitely());
+                productService.patchProductById("prod-test", "createdBy", patchRequest).await().indefinitely());
 
         // then
         assertThat(thrown).isInstanceOf(NotFoundException.class)
@@ -306,7 +306,7 @@ class ProductServiceImplTest {
                 });
 
         // when
-        ProductResponse out = productService.patchProductById("prod-test", patchRequest).await().indefinitely();
+        ProductResponse out = productService.patchProductById("prod-test", "createdBy", patchRequest).await().indefinitely();
 
         // then
         verify(productRepository).findProductById("prod-test");
