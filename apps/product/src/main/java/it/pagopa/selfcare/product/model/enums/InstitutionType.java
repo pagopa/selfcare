@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.product.model.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
