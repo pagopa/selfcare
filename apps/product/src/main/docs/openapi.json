@@ -37,6 +37,9 @@
           },
           "description" : {
             "type" : "string"
+          },
+          "productLabel" : {
+            "type" : "string"
           }
         }
       },
@@ -54,6 +57,9 @@
           },
           "institutionType" : {
             "$ref" : "#/components/schemas/InstitutionType"
+          },
+          "contractType" : {
+            "$ref" : "#/components/schemas/ContractType"
           },
           "path" : {
             "type" : "string"
@@ -84,6 +90,10 @@
             }
           }
         }
+      },
+      "ContractType" : {
+        "type" : "string",
+        "enum" : [ "CONTRACT", "ATTACHMENT" ]
       },
       "EmailTemplate" : {
         "type" : "object",
@@ -150,7 +160,7 @@
       },
       "OnboardingType" : {
         "type" : "string",
-        "enum" : [ "INSTITUTION", "USER" ]
+        "enum" : [ "INSTITUTION", "INSTITUTION_AGGREGATOR", "USER", "USER_AGGREGATOR" ]
       },
       "Origin" : {
         "type" : "string",

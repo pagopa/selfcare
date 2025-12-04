@@ -26,6 +26,8 @@ components:
           type: string
         description:
           type: string
+        productLabel:
+          type: string
     ContractTemplate:
       type: object
       properties:
@@ -37,6 +39,8 @@ components:
           type: boolean
         institutionType:
           $ref: "#/components/schemas/InstitutionType"
+        contractType:
+          $ref: "#/components/schemas/ContractType"
         path:
           type: string
         version:
@@ -56,6 +60,11 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/WorkflowType"
+    ContractType:
+      type: string
+      enum:
+      - CONTRACT
+      - ATTACHMENT
     EmailTemplate:
       type: object
       properties:
@@ -126,7 +135,9 @@ components:
       type: string
       enum:
       - INSTITUTION
+      - INSTITUTION_AGGREGATOR
       - USER
+      - USER_AGGREGATOR
     Origin:
       type: string
       enum:

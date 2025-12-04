@@ -2,5 +2,7 @@ package it.pagopa.selfcare.product.model.enums;
 
 public enum OnboardingType {
     INSTITUTION,
-    USER
+    INSTITUTION_AGGREGATOR,
+    USER,
+    USER_AGGREGATOR;
 }
