@@ -57,7 +57,7 @@ public class ProductServiceImpl implements ProductService {
 
         Product requestProduct = productMapperRequest.toProduct(productCreateRequest);
 
-        requestProduct.setProductId(productId);
+        requestProduct.setProductId(sanitizedProductId);
 
         if (requestProduct.getStatus() == null) {
             log.info("Product status missing - default TESTING");
@@ -66,7 +66,7 @@ public class ProductServiceImpl implements ProductService {
 
         requestProduct.setMetadata(productUtils.buildProductMetadata(createdBy));
 
-        return productRepository.findProductById(productId).onItem().ifNotNull().transformToUni(currentProduct -> {
+        return productRepository.findProductById(sanitizedProductId).onItem().ifNotNull().transformToUni(currentProduct -> {
                     int nextVersion = currentProduct.getVersion() + 1;
                     requestProduct.setVersion(nextVersion);
                     log.info("Updating configuration of product {} with version {}", productId, nextVersion);
