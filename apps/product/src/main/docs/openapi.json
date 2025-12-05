@@ -84,6 +84,9 @@
           "contractTemplateId" : {
             "type" : "string"
           },
+          "contractTemplatePath" : {
+            "type" : "string"
+          },
           "contractTemplateVersion" : {
             "type" : "string"
           },
@@ -681,6 +684,13 @@
           "required" : true,
           "schema" : {
             "type" : "string"
+          }
+        }, {
+          "name" : "fileType",
+          "in" : "query",
+          "schema" : {
+            "type" : "string",
+            "default" : "HTML"
           }
         }, {
           "name" : "productId",

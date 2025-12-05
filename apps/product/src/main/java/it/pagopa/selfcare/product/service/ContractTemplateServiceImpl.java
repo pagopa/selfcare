@@ -8,11 +8,11 @@ import it.pagopa.selfcare.product.model.ContractTemplate;
 import it.pagopa.selfcare.product.model.ContractTemplateFile;
 import it.pagopa.selfcare.product.model.dto.request.ContractTemplateUploadRequest;
 import it.pagopa.selfcare.product.model.dto.response.ContractTemplateResponse;
+import it.pagopa.selfcare.product.model.enums.ContractTemplateFileType;
 import it.pagopa.selfcare.product.repository.ContractTemplateRepository;
 import it.pagopa.selfcare.product.storage.ContractTemplateStorage;
 import it.pagopa.selfcare.product.util.HtmlUtils;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
@@ -52,6 +52,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
     public Uni<ContractTemplateResponse> upload(ContractTemplateUploadRequest request) {
         final ContractTemplate contractTemplate = contractTemplateMapper.toContractTemplate(request);
         final ContractTemplateFile contractTemplateFile = buildContractTemplateFile(request.getFile());
+        contractTemplate.setFileType(contractTemplateFile.getType());
         return contractTemplateRepository.countWithFilters(request.getProductId(), request.getName(), request.getVersion())
                 .onItem().transformToUni(count -> {
                     if (count > 0) {
@@ -67,29 +68,34 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
                                 .onFailure().call(t -> contractTemplateRepository.deleteById(ct.getId())
                                         .onFailure().invoke(rt -> log.error("Error rolling back database entry for contract template with id {}", ct.getId(), rt))
                                 )
-                                .onItem().transform(v -> contractTemplateMapper.toContractTemplateResponse(ct))
+                                .onItem().transform(v -> contractTemplateMapper.toContractTemplateResponse(ct,
+                                        contractTemplateStorage.getContractTemplatePath(ct.getProductId(), ct.getId(), ct.getFileType().getExtension())))
                 );
     }
 
     @Override
-    public Uni<ContractTemplateFile> download(String productId, String contractTemplateId) {
-        return contractTemplateStorage.download(productId, contractTemplateId);
+    public Uni<ContractTemplateFile> download(String productId, String contractTemplateId, ContractTemplateFileType fileType) {
+        return contractTemplateStorage.download(productId, contractTemplateId, fileType);
     }
 
     @Override
     public Uni<List<ContractTemplateResponse>> list(String productId, String name, String version) {
         return contractTemplateRepository.listWithFilters(productId, name, version)
-                .onItem().transform(contractTemplateMapper::toContractTemplateResponseList);
+                .onItem().transform(l -> l.stream()
+                        .map(ct -> contractTemplateMapper.toContractTemplateResponse(ct,
+                                contractTemplateStorage.getContractTemplatePath(ct.getProductId(), ct.getId(), ct.getFileType().getExtension())))
+                        .toList());
     }
 
     private ContractTemplateFile buildContractTemplateFile(FileUpload fileUpload) {
-        if (fileUpload.contentType().equals(MediaType.TEXT_HTML)) {
+        if (fileUpload.contentType().equals(ContractTemplateFileType.HTML.getContentType())) {
             return buildContractTemplateFileFromHTML(fileUpload);
+        } else if (fileUpload.contentType().equals(ContractTemplateFileType.PDF.getContentType())) {
+            return ContractTemplateFile.builder().file(fileUpload.uploadedFile().toFile())
+                    .type(ContractTemplateFileType.PDF).build();
+        } else {
+            throw new InternalException("Unsupported contract template file type: " + fileUpload.contentType(), "500");
         }
-        return ContractTemplateFile.builder()
-                .file(fileUpload.uploadedFile().toFile())
-                .contentType(fileUpload.contentType())
-                .build();
     }
 
     private ContractTemplateFile buildContractTemplateFileFromHTML(FileUpload fileUpload) {
@@ -98,7 +104,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
             html = html.replace(BASE_TEMPLATE_LOGO_PLACEHOLDER, ""); // TODO
             return ContractTemplateFile.builder()
                     .data(html.getBytes(StandardCharsets.UTF_8))
-                    .contentType(MediaType.TEXT_HTML)
+                    .type(ContractTemplateFileType.HTML)
                     .build();
         }).orElseThrow(() -> new InternalException("Unable to generate a contract template from the provided file", "500"));
     }

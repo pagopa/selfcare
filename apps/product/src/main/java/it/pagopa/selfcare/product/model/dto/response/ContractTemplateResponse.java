@@ -11,6 +11,8 @@ public class ContractTemplateResponse {
 
     private String contractTemplateId;
 
+    private String contractTemplatePath;
+
     private String contractTemplateVersion;
 
     private String productId;

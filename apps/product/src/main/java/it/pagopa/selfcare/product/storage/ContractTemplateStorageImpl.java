@@ -12,6 +12,7 @@ import it.pagopa.selfcare.product.exception.ConflictException;
 import it.pagopa.selfcare.product.exception.InternalException;
 import it.pagopa.selfcare.product.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.product.model.ContractTemplateFile;
+import it.pagopa.selfcare.product.model.enums.ContractTemplateFileType;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -23,7 +24,8 @@ import java.nio.ByteBuffer;
 @Slf4j
 public class ContractTemplateStorageImpl implements ContractTemplateStorage {
 
-    private static final String DST_FILE_PATH = "contract-templates/%s/%s";
+    // file path pattern: contract-templates/{productId}/{contractTemplateId}.{contractTemplateExtension}
+    private static final String DST_FILE_PATH = "contract-templates/%s/%s.%s";
 
     private final String containerName;
     private final BlobServiceAsyncClient blobClient;
@@ -39,10 +41,10 @@ public class ContractTemplateStorageImpl implements ContractTemplateStorage {
     @Override
     public Uni<Void> upload(String productId, String contractTemplateId, ContractTemplateFile contractTemplateFile) {
         final BlobContainerAsyncClient blobContainer = blobClient.getBlobContainerAsyncClient(containerName);
-        final String filePath = String.format(DST_FILE_PATH, productId, contractTemplateId);
+        final String filePath = getContractTemplatePath(productId, contractTemplateId, contractTemplateFile.getType().getExtension());
         final BlobAsyncClient blob = blobContainer.getBlobAsyncClient(filePath);
         final BlobHttpHeaders headers = new BlobHttpHeaders();
-        headers.setContentType(contractTemplateFile.getContentType());
+        headers.setContentType(contractTemplateFile.getType().getContentType());
         return Uni.createFrom()
                 .completionStage(contractTemplateFile.getFile() != null ?
                         blob.uploadFromFile(contractTemplateFile.getFile().getAbsolutePath(), null, headers, null, null, null).toFuture()
@@ -62,9 +64,9 @@ public class ContractTemplateStorageImpl implements ContractTemplateStorage {
     }
 
     @Override
-    public Uni<ContractTemplateFile> download(String productId, String contractTemplateId) {
+    public Uni<ContractTemplateFile> download(String productId, String contractTemplateId, ContractTemplateFileType fileType) {
         final BlobContainerAsyncClient blobContainer = blobClient.getBlobContainerAsyncClient(containerName);
-        final String filePath = String.format(DST_FILE_PATH, productId, contractTemplateId);
+        final String filePath = getContractTemplatePath(productId, contractTemplateId, fileType.getExtension());
         final BlobAsyncClient blob = blobContainer.getBlobAsyncClient(filePath);
         final DownloadRetryOptions retryOptions = new DownloadRetryOptions();
         retryOptions.setMaxRetryRequests(3);
@@ -72,10 +74,11 @@ public class ContractTemplateStorageImpl implements ContractTemplateStorage {
                 .completionStage(blob.downloadContentWithResponse(retryOptions, null).toFuture())
                 .onItem().transform(r -> {
                     byte[] data = r.getValue().toBytes();
-                    String contentType = r.getDeserializedHeaders().getContentType();
+                    // In the future, when the file type is no longer required in the request, it can be read from the header.
+                    //String contentType = r.getDeserializedHeaders().getContentType();
                     return ContractTemplateFile.builder()
                             .data(data)
-                            .contentType(contentType)
+                            .type(fileType)
                             .build();
                 })
                 .onItem().invoke(bd -> log.info("Contract template downloaded from blob storage: {}", filePath))
@@ -87,6 +90,11 @@ public class ContractTemplateStorageImpl implements ContractTemplateStorage {
                     log.error("Error downloading contract template from blob storage at path {}", filePath, t);
                     return new InternalException("Error downloading contract template", "500");
                 });
+    }
+
+    @Override
+    public String getContractTemplatePath(String productId, String contractTemplateId, String contractTemplateExtension) {
+        return String.format(DST_FILE_PATH, productId, contractTemplateId, contractTemplateExtension);
     }
 
 }

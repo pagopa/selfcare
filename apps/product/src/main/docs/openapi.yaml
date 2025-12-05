@@ -57,6 +57,8 @@ components:
       properties:
         contractTemplateId:
           type: string
+        contractTemplatePath:
+          type: string
         contractTemplateVersion:
           type: string
         productId:
@@ -516,6 +518,11 @@ paths:
         required: true
         schema:
           type: string
+      - name: fileType
+        in: query
+        schema:
+          type: string
+          default: HTML
       - name: productId
         in: query
         schema:

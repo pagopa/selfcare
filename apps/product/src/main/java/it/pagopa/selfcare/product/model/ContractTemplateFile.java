@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.product.model;
 
+import it.pagopa.selfcare.product.model.enums.ContractTemplateFileType;
 import lombok.*;
 
 import java.io.File;
@@ -15,6 +16,6 @@ public class ContractTemplateFile {
 
     private byte[] data;
 
-    private String contentType;
+    private ContractTemplateFileType type;
 
 }

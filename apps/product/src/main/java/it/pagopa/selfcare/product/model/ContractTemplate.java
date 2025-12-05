@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.product.model;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
+import it.pagopa.selfcare.product.model.enums.ContractTemplateFileType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,6 +29,8 @@ public class ContractTemplate {
     private String version;
 
     private String description;
+
+    private ContractTemplateFileType fileType;
 
     @Builder.Default
     private Instant createdAt = Instant.now();

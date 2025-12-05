@@ -5,6 +5,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.model.dto.request.ContractTemplateUploadRequest;
 import it.pagopa.selfcare.product.model.dto.response.ContractTemplateResponse;
 import it.pagopa.selfcare.product.model.dto.response.Problem;
+import it.pagopa.selfcare.product.model.enums.ContractTemplateFileType;
 import it.pagopa.selfcare.product.service.ContractTemplateService;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -43,7 +44,6 @@ public class ContractTemplateController {
     }
 
     @GET
-    @Produces(MediaType.WILDCARD)
     @Path("/{contractTemplateId}")
     @Operation(summary = "Download a contract template version", description = "Download the html file of a specific contract template version")
     @APIResponses(value = {
@@ -53,9 +53,10 @@ public class ContractTemplateController {
             @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class)))
     })
     public Uni<Response> download(@QueryParam("productId") String productId,
+                                  @QueryParam("fileType") @DefaultValue("HTML") String fileType,
                                   @PathParam("contractTemplateId") String contractTemplateId) {
-        return contractTemplateService.download(productId, contractTemplateId)
-                .onItem().transform(r -> Response.ok(r.getData()).type(r.getContentType()).build());
+        return contractTemplateService.download(productId, contractTemplateId, ContractTemplateFileType.from(fileType))
+                .onItem().transform(r -> Response.ok(r.getData()).type(r.getType().getContentType()).build());
     }
 
     @GET
