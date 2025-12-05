@@ -8,7 +8,7 @@ tags = {
   CreatedBy   = "Terraform"
   Environment = "Dev"
   Owner       = "SelfCare"
-  Source      = "https://github.com/pagopa/selfcare/apps/product"
+  Source      = "https://github.com/pagopa/selfcare/apps/product-cdc"
   CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
 }
 
