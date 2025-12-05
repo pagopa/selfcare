@@ -30,6 +30,9 @@
           },
           "description" : {
             "type" : "string"
+          },
+          "productLabel" : {
+            "type" : "string"
           }
         }
       },
@@ -47,6 +50,9 @@
           },
           "institutionType" : {
             "$ref" : "#/components/schemas/InstitutionType"
+          },
+          "contractType" : {
+            "$ref" : "#/components/schemas/ContractType"
           },
           "path" : {
             "type" : "string"
@@ -134,6 +140,10 @@
           }
         }
       },
+      "ContractType" : {
+        "type" : "string",
+        "enum" : [ "CONTRACT", "ATTACHMENT" ]
+      },
       "EmailTemplateConfig" : {
         "type" : "object",
         "properties" : {
@@ -199,7 +209,7 @@
       },
       "OnboardingType" : {
         "type" : "string",
-        "enum" : [ "INSTITUTION", "USER" ]
+        "enum" : [ "INSTITUTION", "INSTITUTION_AGGREGATOR", "USER", "USER_AGGREGATOR" ]
       },
       "Origin" : {
         "type" : "string",
@@ -741,112 +751,21 @@
       }
     },
     "/product" : {
-      "post" : {
-        "summary" : "Create or update a product configuration",
-        "description" : "Creates a new product configuration or updates the existing one when a match is found",
-        "operationId" : "createProduct",
-        "tags" : [ "Product", "external-v2", "external-pnpg" ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/ProductCreateRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Created",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProductBaseResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/product/ping" : {
-      "get" : {
-        "summary" : "Ping endpoint",
-        "operationId" : "ping",
-        "tags" : [ "Product" ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/product/{productId}" : {
       "patch" : {
         "summary" : "Partially update a product by ID",
         "description" : "Partially updates an existing product identified by its productId. Only the non-null fields provided in the request body will be updated; all other fields will remain unchanged.",
         "operationId" : "patchProductById",
         "tags" : [ "Product", "external-v2", "external-pnpg" ],
         "parameters" : [ {
+          "name" : "createdBy",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "productId",
-          "in" : "path",
           "required" : true,
+          "in" : "query",
           "schema" : {
             "type" : "string"
           }
@@ -920,8 +839,8 @@
         "tags" : [ "Product", "external-v2", "external-pnpg" ],
         "parameters" : [ {
           "name" : "productId",
-          "in" : "path",
           "required" : true,
+          "in" : "query",
           "schema" : {
             "type" : "string"
           }
@@ -975,8 +894,8 @@
         "tags" : [ "Product", "external-v2", "external-pnpg" ],
         "parameters" : [ {
           "name" : "productId",
-          "in" : "path",
           "required" : true,
+          "in" : "query",
           "schema" : {
             "type" : "string"
           }
@@ -1032,9 +951,80 @@
         "security" : [ {
           "SecurityScheme" : [ ]
         } ]
+      },
+      "post" : {
+        "summary" : "Create or update a product configuration",
+        "description" : "Creates a new product configuration or updates the existing one when a match is found",
+        "operationId" : "createProduct",
+        "tags" : [ "Product", "external-v2", "external-pnpg" ],
+        "parameters" : [ {
+          "name" : "createdBy",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productId",
+          "required" : true,
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ProductCreateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductBaseResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
-    "/product/{productId}/origins" : {
+    "/product/origins" : {
       "get" : {
         "summary" : "Get product origins by productId",
         "description" : "Retrieve the list of institution origins for the given product.",
@@ -1042,8 +1032,8 @@
         "tags" : [ "Product", "external-v2", "external-pnpg" ],
         "parameters" : [ {
           "name" : "productId",
-          "in" : "path",
           "required" : true,
+          "in" : "query",
           "schema" : {
             "type" : "string"
           }
@@ -1065,6 +1055,44 @@
               "application/problem+json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/product/ping" : {
+      "get" : {
+        "summary" : "Ping endpoint",
+        "operationId" : "ping",
+        "tags" : [ "Product" ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "string"
                 }
               }
             }

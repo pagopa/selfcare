@@ -26,11 +26,12 @@ on:
           - auth
           - iam
           - product
+          - product-cdc
         required: true
         default: auth
 
 jobs:
-  code_review:
+  release:
     uses: ./.github/workflows/call_release_app.yml
     name: Call Release App
     secrets: inherit

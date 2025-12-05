@@ -11,7 +11,7 @@ import java.time.Instant;
 @RequiredArgsConstructor(onConstructor_ = {@Inject})
 public class ProductUtils {
 
-    public ProductMetadata buildProductMetadata() {
-        return ProductMetadata.builder().createdAt(Instant.now()).build();
+    public ProductMetadata buildProductMetadata(String createdBy) {
+        return ProductMetadata.builder().createdAt(Instant.now()).createdBy(createdBy).build();
     }
 }

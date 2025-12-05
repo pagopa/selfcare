@@ -46,6 +46,17 @@
                 <module>product</module>
             </modules>
         </profile>
+        <profile>
+            <id>product-cdc</id>
+            <activation>
+                <file>
+                    <exists>product-cdc/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>product-cdc</module>
+            </modules>
+        </profile>
     </profiles>
     <properties>
         <maven.compiler.source>23</maven.compiler.source>

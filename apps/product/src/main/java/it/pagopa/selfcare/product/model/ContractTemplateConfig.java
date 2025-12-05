@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.product.model;
 
+import it.pagopa.selfcare.product.model.enums.ContractType;
 import it.pagopa.selfcare.product.model.enums.InstitutionType;
 import it.pagopa.selfcare.product.model.enums.OnboardingType;
 import it.pagopa.selfcare.product.model.enums.WorkflowType;
@@ -23,6 +24,7 @@ public class ContractTemplateConfig {
     private OnboardingType onboardingType;
     private boolean enabled;
     private InstitutionType institutionType;
+    private ContractType contractType;
     private String path;
     private String version;
     private int order;

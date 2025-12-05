@@ -97,28 +97,31 @@ Feature: Product API end-to-end onboarding and lifecycle
       }
     }
     """
+    And The following query params:
+      | productId | prod-test |
+      | createdBy | user-test |
     When I send a POST request to "/product"
     Then The status code is 201
     And The response body contains:
       | productId | prod-test |
       | status    | TESTING   |
 
-  Scenario: GET /product/{productId} - successfully retrieve product after creation
+  Scenario: GET /product - successfully retrieve product after creation
     Given User login with username "j.doe" and password "test"
-    And The following path params:
+    And The following query params:
       | productId | prod-test |
-    When I send a GET request to "/product/{productId}"
+    When I send a GET request to "/product"
     Then The status code is 200
     And The response body contains:
       | productId | prod-test |
       | status    | TESTING   |
       | version   | 1         |
 
-  Scenario: GET /product/{productId}/origins - successfully retrieve origins
+  Scenario: GET /product/origins - successfully retrieve origins
     Given User login with username "j.doe" and password "test"
-    And The following path params:
+    And The following query params:
       | productId | prod-test |
-    When I send a GET request to "/product/{productId}/origins"
+    When I send a GET request to "/product/origins"
     Then The status code is 200
     And The response body contains:
       | origins[0].institutionType | PA  |
@@ -221,27 +224,32 @@ Feature: Product API end-to-end onboarding and lifecycle
       }
     }
     """
+    And The following query params:
+      | productId | prod-test |
+      | createdBy | user-test |
     When I send a POST request to "/product"
     Then The status code is 201
     And The response body contains:
       | productId | prod-test |
       | status    | ACTIVE    |
 
-  Scenario: GET /product/{productId} - successfully retrieve product after upsert
+  Scenario: GET /product - successfully retrieve product after upsert
     Given User login with username "j.doe" and password "test"
-    And The following path params:
+    And The following query params:
       | productId | prod-test |
-    When I send a GET request to "/product/{productId}"
+      | createdBy | user-test |
+    When I send a GET request to "/product"
     Then The status code is 200
     And The response body contains:
       | productId | prod-test |
       | status    | ACTIVE    |
       | version   | 2         |
 
-  Scenario: PATCH /product/{productId} - successfully update product fields
+  Scenario: PATCH /product - successfully update product fields
     Given User login with username "j.doe" and password "test"
-    And The following path params:
+    And The following query params:
       | productId | prod-test |
+      | createdBy | user-test |
     And The following request body:
     """
       {
@@ -250,40 +258,40 @@ Feature: Product API end-to-end onboarding and lifecycle
         "title": "Prod TEST 2 - Patched"
       }
     """
-    When I send a PATCH request to "/product/{productId}" with content type "application/json"
+    When I send a PATCH request to "/product" with content type "application/json"
     Then The status code is 200
     And The response body contains:
-      | productId   | prod-test                     |
-      | description | Description updated via PATCH |
+      | productId        | prod-test                     |
+      | description      | Description updated via PATCH |
       | features.enabled | false                         |
-      | title       | Prod TEST 2 - Patched         |
+      | title            | Prod TEST 2 - Patched         |
 
-  Scenario: GET /product/{productId} - successfully retrieve product after patch
+  Scenario: GET /product - successfully retrieve product after patch
     Given User login with username "j.doe" and password "test"
-    And The following path params:
+    And The following query params:
       | productId | prod-test |
-    When I send a GET request to "/product/{productId}"
+    When I send a GET request to "/product"
     Then The status code is 200
     And The response body contains:
-      | productId   | prod-test                     |
-      | description | Description updated via PATCH |
+      | productId        | prod-test                     |
+      | description      | Description updated via PATCH |
       | features.enabled | false                         |
 
-  Scenario: DELETE /product/{productId} - successfully mark product as DELETED
+  Scenario: DELETE /product - successfully mark product as DELETED
     Given User login with username "j.doe" and password "test"
-    And The following path params:
+    And The following query params:
       | productId | prod-test |
-    When I send a DELETE request to "/product/{productId}"
+    When I send a DELETE request to "/product"
     Then The status code is 200
     And The response body contains:
       | productId | prod-test |
       | status    | DELETED   |
 
-  Scenario: GET /product/{productId} - return 404 when product not found
+  Scenario: GET /product - return 404 when product not found
     Given User login with username "j.doe" and password "test"
-    And The following path params:
+    And The following query params:
       | productId | prod-unknown |
-    When I send a GET request to "/product/{productId}"
+    When I send a GET request to "/product"
     Then The status code is 404
     And The response body contains:
       | title  | Product not found |
@@ -302,21 +310,21 @@ Feature: Product API end-to-end onboarding and lifecycle
     When I send a POST request to "/product"
     Then The status code is 400
 
-  Scenario: PATCH /product/{productId} - return 400 when payload is invalid
+  Scenario: PATCH /product - return 400 when payload is invalid
     Given User login with username "j.doe" and password "test"
-    And The following path params:
+    And The following query params:
       | productId | prod-unknown |
-    When I send a PATCH request to "/product/{productId}" with content type "application/json"
+    When I send a PATCH request to "/product" with content type "application/json"
     Then The status code is 400
     And The response body contains:
       | title  | Bad Request |
       | status | 400         |
 
-  Scenario: DELETE /product/{productId} - return 404 when product not found
+  Scenario: DELETE /product - return 404 when product not found
     Given User login with username "j.doe" and password "test"
-    And The following path params:
+    And The following query params:
       | productId | prod-unknown |
-    When I send a DELETE request to "/product/{productId}"
+    When I send a DELETE request to "/product"
     Then The status code is 404
     And The response body contains:
       | title  | Product not found |

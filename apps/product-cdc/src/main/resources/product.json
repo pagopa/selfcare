@@ -1,0 +1,229 @@
+ {
+  "productId": "prod-x",
+  "alias": "prod-x",
+  "status": "ACTIVE",
+  "title": "X",
+  "description": "Offri ai cittadini i servizi del tuo ente in un unico canale",
+  "version": "1",
+  "consumers": ["Standard", "SAP"],
+  "visualConfiguration": {
+    "logoUrl": "https://storage/resources/products/prod-x/logo.svg",
+    "logoBgColor": "#0B3EE3",
+    "depictImageUrl": "https://storage/resources/products/prod-x/depict-image.jpeg"
+  },
+  "features": {
+    "allowCompanyOnboarding": true,
+    "allowedInstitutionTaxCode": [],
+    "allowIndividualOnboarding": false,
+    "delegable": false,
+    "invoiceable": true,
+    "expirationDays": 30,
+    "enabled": true
+  },
+  "roleMappings": [
+    {
+     "role": "ADMIN_EA",
+     "multiroleAllowed":false,
+      "phasesAdditionAllowed":["onboarding"],
+      "skipUserCreation": false,
+      "backOfficeRoles": [
+        {
+          "code": "referente amministrativo",
+          "description": "Amministratore",
+          "label": "Amministratore",
+          "productLabel": "Amministratore"
+        }
+      ]
+    },
+    {
+     "role": "DELEGATE",
+     "multiroleAllowed":false,
+      "phasesAdditionAllowed":["onboarding"],
+      "skipUserCreation": false,
+      "backOfficeRoles": [
+        {
+          "code": "referente amministrativo",
+          "description": "Amministratore",
+          "label": "Amministratore",
+          "productLabel": "Amministratore"
+        }
+      ]
+    },
+    {
+     "role": "MANAGER",
+     "multiroleAllowed":false,
+      "phasesAdditionAllowed":["onboarding"],
+      "skipUserCreation": false,
+      "backOfficeRoles": [
+        {
+          "code": "referente amministrativo",
+          "description": "Amministratore",
+          "label": "Amministratore",
+          "productLabel": "Amministratore"
+        }
+      ]
+    },
+    {
+     "role": "OPERATOR",
+     "multiroleAllowed":false,
+      "phasesAdditionAllowed":["dashboard"],
+      "skipUserCreation": false,
+      "backOfficeRoles": [
+        {
+          "code": "referente operativo",
+          "description": "Operatore",
+          "label": "Operatore",
+          "productLabel": "Referente Tecnico"
+        }
+      ]
+    },
+    {
+     "role": "SUB_DELEGATE",
+     "multiroleAllowed":false,
+      "phasesAdditionAllowed":["dashboard-async", "dashboard-aggregator"],
+      "skipUserCreation": false,
+      "backOfficeRoles": [
+        {
+          "code": "referente amministrativo",
+          "description": "Amministratore",
+          "label": "Amministratore",
+          "productLabel": "Amministratore"
+        }
+      ]
+    }
+  ],
+  "contracts": [
+    {
+      "onboardingType": "INSTITUTION",
+      "institutionType": "DEFAULT",
+      "contractType": "CONTRACT",
+      "enabled": true,
+      "path": "contracts/template/x/2.4.6/accordo_di_adesione-v.2.4.6.html",
+      "version": "2.4.6",
+      "order": 10,
+      "generated": true,
+      "mandatory": true,
+      "name": "Accordo di adesione X",
+      "workflowState": "REQUEST",
+      "workflowType": []
+    },
+    {
+      "onboardingType": "INSTITUTION_AGGREGATOR",
+      "institutionType": "DEFAULT",
+      "contractType": "CONTRACT",
+      "path": "contracts/template/x/2.4.6/accordo_di_adesione-v.2.4.6.html",
+      "version": "2.4.6",
+      "order": 10,
+      "generated": true,
+      "mandatory": true,
+      "name": "Accordo di adesione X (aggregatore)",
+      "workflowState": "REQUEST",
+      "workflowType": []
+    },
+    {
+      "onboardingType": "INSTITUTION",
+      "institutionType": "GPU",
+      "contractType": "CONTRACT",
+      "enabled": true,
+      "path": "contracts/template/x/1.1.1/accordo_di_adesione-GPU-v.1.1.1.html",
+      "version": "1.1.1",
+      "order": 10,
+      "generated": true,
+      "mandatory": true,
+      "name": "Accordo di adesione X",
+      "workflowState": "REQUEST",
+      "workflowType": []
+    },
+    {
+      "onboardingType": "INSTITUTION",
+      "institutionType": "GPU",
+      "contractType": "ATTACHMENT",
+      "enabled": true,
+      "path": "contracts/template/x/attachments/1.0.0/x-v1.0.0.html",
+      "version": "1.0.0",
+      "order": 1,
+      "generated": true,
+      "mandatory": true,
+      "name": "Dichiarazione_sostitutiva_certificazione",
+      "workflowState": "REQUEST",
+      "workflowType": ["FOR_APPROVE_GPU"]
+    },
+    {
+      "onboardingType": "USER",
+      "institutionType": "DEFAULT",
+      "contractType": "CONTRACT",
+      "path": "contracts/template/x/user/1.0.0/x-aggiunta-amministratore-v.1.0.html",
+      "version": "1.0.0",
+      "order": 10,
+      "generated": true,
+      "mandatory": true,
+      "name": "Accordo di adesione utente",
+      "workflowState": "REQUEST",
+      "workflowType": []
+    },
+    {
+      "onboardingType": "USER_AGGREGATOR",
+      "institutionType": "DEFAULT",
+      "contractType": "CONTRACT",
+      "path": "contracts/template/x/user/1.0.0/x-aggiunta-aggregatore-amministratore-v.1.0.html",
+      "version": "1.0.0",
+      "order": 10,
+      "generated": true,
+      "mandatory": true,
+      "name": "Accordo di adesione utente X aggregatore",
+      "workflowState": "REQUEST",
+      "workflowType": []
+    }
+  ],
+  "institutionOrigins": [
+    {
+      "institutionType": "PA",
+      "origin": "IPA",
+      "labelKey": "pa"
+    },
+    {
+      "institutionType": "GSP",
+      "origin": "IPA",
+      "labelKey": "gsp"
+    },
+    {
+      "institutionType": "SCP",
+      "origin": "SELC",
+      "labelKey": "scp"
+    }
+  ],
+  "emailTemplates": [
+    {
+      "type": "IMPORT",
+      "institutionType": "default",
+      "path": "contracts/template/mail/import-massivo-x/1.0.0.json",
+      "version": "1.0.0",
+      "status": "PENDING"
+    },
+    {
+      "type": "IMPORT_AGGREGATION",
+      "institutionType": "default",
+      "path": "contracts/template/mail/import-massivo-x/1.0.0.json",
+      "version": "1.0.0",
+      "status": "PENDING"
+    }
+  ],
+  "backOfficeEnvironmentConfigurations": [
+    {
+      "env": "PROD",
+      "urlBO": "https://baseurl.it/idp/selfcare/resolve-identity?id=<IdentityToken>",
+      "urlPublic": "https://baseurl.it/",
+      "identityTokenAudience": "identity.it"
+    },
+    {
+      "env": "Locale",
+      "urlBO": "http://localhost:3999/idp/selfcare/resolve-identity?id=<IdentityToken>;env=locale",
+      "urlPublic": "https://baseurl.it/",
+      "identityTokenAudience": "identity.it"
+    }
+  ],
+  "metadata": {
+    "createdAt": "2021-12-15T15:54:55.190Z",
+    "createdBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8"
+  }
+}
