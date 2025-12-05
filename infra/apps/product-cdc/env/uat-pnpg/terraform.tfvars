@@ -41,7 +41,7 @@ app_settings = [
   },
   {
     name  = "APPLICATIONINSIGHTS_ROLE_NAME"
-    value = "pnpg-product-ms",
+    value = "pnpg-product-cdc",
   },
   {
     name  = "SHARED_ACCESS_KEY_NAME"

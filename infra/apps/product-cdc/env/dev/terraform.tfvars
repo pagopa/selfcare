@@ -12,7 +12,7 @@ tags = {
   CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
 }
 
-private_dns_name = "selc-d-product-ms-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+private_dns_name = "selc-d-product-cdc-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
 
 container_app = {
   min_replicas = 0
@@ -42,35 +42,36 @@ app_settings = [
   },
   {
     name  = "APPLICATIONINSIGHTS_ROLE_NAME"
-    value = "product-ms",
+    value = "product-cdc",
   },
   {
     name  = "SHARED_ACCESS_KEY_NAME"
     value = "selfcare-wo"
   },
   {
-    name  = "IAM_MS_RETRY_MIN_BACKOFF"
-    value = 5
-  },
-  {
-    name  = "IAM_MS_RETRY_MAX_BACKOFF"
-    value = 60
-  },
-  {
-    name  = "IAM_MS_RETRY"
-    value = 3
-  },
-  {
     name  = "MONGODB_DATABASE_NAME"
     value = "selcProduct"
+  },
+  {
+    name  = "MONGODB_COLLECTION_NAME"
+    value = "products"
+  },
+  {
+    name  = "PRODUCT-CDC-MONGODB-WATCH-ENABLED"
+    value = true
+  },
+  {
+    name  = "STORAGE_CONTAINER_PRODUCT"
+    value = "selc-d-product"
   }
 ]
 
 secrets_names = {
+  "BLOB_STORAGE_CONN_STRING_PRODUCT"      = "blob-storage-product-connection-string"
+  "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
   "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
   "SELFCARE_DATA_ENCRIPTION_KEY"          = "selfcare-data-encryption-key"
   "SELFCARE_DATA_ENCRIPTION_IV"           = "selfcare-data-encryption-iv"
   "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
-  "JWT_PUBLIC_KEY"                        = "jwt-public-key"
 }
 

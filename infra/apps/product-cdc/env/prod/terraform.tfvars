@@ -42,7 +42,7 @@ app_settings = [
   },
   {
     name  = "APPLICATIONINSIGHTS_ROLE_NAME"
-    value = "product-ms",
+    value = "product-cdc",
   },
   {
     name  = "SHARED_ACCESS_KEY_NAME"

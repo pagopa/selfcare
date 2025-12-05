@@ -1,4 +1,4 @@
 resource_group_name  = "terraform-state-rg"
 storage_account_name = "tfappprodselfcare"
 container_name       = "terraform-state"
-key                  = "selfcare-product-ms.product-pnpg-app.tfstate"
+key                  = "selfcare-product-cdc.product-pnpg-app.tfstate"
