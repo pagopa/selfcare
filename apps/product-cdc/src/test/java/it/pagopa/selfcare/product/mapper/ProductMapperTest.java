@@ -50,7 +50,7 @@ class ProductMapperTest {
           it.pagopa.selfcare.product.entity.Product productEntity = mapper.toResource(product);
 
           assertNotNull(productEntity);
-          assertEquals(product.getId(), productEntity.getId());
+          assertEquals(product.getProductId(), productEntity.getId());
           assertEquals(product.getDescription(), productEntity.getDescription());
           String jsonEntity = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(productEntity);
           System.out.println("Mapped Product Entity:");
