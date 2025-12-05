@@ -23,7 +23,7 @@ container_app = {
         metadata = {
           "desiredReplicas" = "1"
           "start"           = "0 8 * * MON-FRI"
-          "end"             = "0 19 * * MON-FRI"
+          "end"             = "0 20 * * MON-FRI"
           "timezone"        = "Europe/Rome"
         }
         type = "cron"
@@ -61,6 +61,10 @@ app_settings = [
   {
     name  = "STORAGE_CONTAINER_PRODUCT"
     value = "selc-d-product"
+  },
+  {
+    name  = "TEST"
+    value = "1"
   }
 ]
 

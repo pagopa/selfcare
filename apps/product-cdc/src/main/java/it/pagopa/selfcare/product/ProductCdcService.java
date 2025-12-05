@@ -83,6 +83,7 @@ public class ProductCdcService {
         if (Objects.nonNull(cdcStartAtEntity)){
           resumeToken = (String) cdcStartAtEntity.getProperty(ProductConstant.CDC_START_AT_PROPERTY);
         }
+        log.info("Table StartAt: {}", resumeToken);
       } catch (TableServiceException e) {
         if (e.getResponse() != null && e.getResponse().getStatusCode() == 404) {
             log.warn("Table StartAt not found (404), starting from now. This is expected on first run.");
