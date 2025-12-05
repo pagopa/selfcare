@@ -80,10 +80,16 @@ public class ProductCdcService {
     if (!ConfigUtils.getProfiles().contains("test")) {
       try {
         TableEntity cdcStartAtEntity = tableClient.getEntity(ProductConstant.CDC_START_AT_PARTITION_KEY, ProductConstant.CDC_START_AT_ROW_KEY);
-        if (Objects.nonNull(cdcStartAtEntity))
+        if (Objects.nonNull(cdcStartAtEntity)){
           resumeToken = (String) cdcStartAtEntity.getProperty(ProductConstant.CDC_START_AT_PROPERTY);
+        }
       } catch (TableServiceException e) {
-        log.warn("Table StartAt not found, it is starting from now ...");
+        if (e.getResponse() != null && e.getResponse().getStatusCode() == 404) {
+            log.warn("Table StartAt not found (404), starting from now. This is expected on first run.");
+        } else {
+            // Altrimenti è un errore vero (es. 403 Forbidden, Connection Refused)
+            log.error("Error connecting to Table Storage. Code: {}, Message: {}", e.getResponse() != null ? e.getResponse().getStatusCode() : "N/A", e.getMessage(), e);
+        }
       }
     }
 

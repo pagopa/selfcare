@@ -35,6 +35,8 @@ container_app = {
   memory = "1Gi"
 }
 
+workload_profile_name = "Consumption"
+
 app_settings = [
   {
     name  = "JAVA_TOOL_OPTIONS"
@@ -43,10 +45,6 @@ app_settings = [
   {
     name  = "APPLICATIONINSIGHTS_ROLE_NAME"
     value = "product-cdc",
-  },
-  {
-    name  = "SHARED_ACCESS_KEY_NAME"
-    value = "selfcare-wo"
   },
   {
     name  = "MONGODB_DATABASE_NAME"
@@ -70,7 +68,6 @@ secrets_names = {
   "BLOB_STORAGE_CONN_STRING_PRODUCT"      = "blob-storage-product-connection-string"
   "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
   "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-  "SELFCARE_DATA_ENCRIPTION_KEY"          = "selfcare-data-encryption-key"
-  "SELFCARE_DATA_ENCRIPTION_IV"           = "selfcare-data-encryption-iv"
   "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
+  "JWT_PUBLIC_KEY"                        = "jwt-public-key"
 }
