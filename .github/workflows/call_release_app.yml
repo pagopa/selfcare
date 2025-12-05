@@ -41,7 +41,7 @@ env:
 jobs:
 
   release_dev:
-    uses: .github/workflows/call_release_docker.yml
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
     name: ${{ inputs.target == 'selc' && '[Dev]' || '[Dev-PNPG]' }} - ${{ inputs.app }} Release
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     secrets: inherit
@@ -54,7 +54,7 @@ jobs:
       path_openapi_docs: ./${{ inputs.APP_PATH }}/src/main/docs/openapi.json
 
   release_uat:
-    uses: .github/workflows/call_release_docker.yml
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
     name: ${{ inputs.target == 'selc' && '[Uat]' || '[Uat-PNPG]' }} - ${{ inputs.app }} Release
     if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
     secrets: inherit
@@ -67,7 +67,7 @@ jobs:
       path_openapi_docs: ./${{ inputs.APP_PATH }}/src/main/docs/openapi.json
 
   release_prod:
-    uses: .github/workflows/call_release_docker.yml
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
     name: ${{ inputs.target == 'selc' && '[Prod]' || '[Prod-PNPG]' }} - ${{ inputs.app }} Release
     if: ${{ inputs.env == 'prod' }}
     secrets: inherit
