@@ -410,6 +410,7 @@ paths:
         schema:
           type: string
       - name: productId
+        required: true
         in: query
         schema:
           type: string
@@ -462,6 +463,7 @@ paths:
       - external-pnpg
       parameters:
       - name: productId
+        required: true
         in: query
         schema:
           type: string
@@ -500,6 +502,7 @@ paths:
       - external-pnpg
       parameters:
       - name: productId
+        required: true
         in: query
         schema:
           type: string
@@ -549,6 +552,7 @@ paths:
         schema:
           type: string
       - name: productId
+        required: true
         in: query
         schema:
           type: string
@@ -594,6 +598,7 @@ paths:
       - external-pnpg
       parameters:
       - name: productId
+        required: true
         in: query
         schema:
           type: string

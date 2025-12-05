@@ -515,6 +515,7 @@
           }
         }, {
           "name" : "productId",
+          "required" : true,
           "in" : "query",
           "schema" : {
             "type" : "string"
@@ -589,6 +590,7 @@
         "tags" : [ "Product", "external-v2", "external-pnpg" ],
         "parameters" : [ {
           "name" : "productId",
+          "required" : true,
           "in" : "query",
           "schema" : {
             "type" : "string"
@@ -643,6 +645,7 @@
         "tags" : [ "Product", "external-v2", "external-pnpg" ],
         "parameters" : [ {
           "name" : "productId",
+          "required" : true,
           "in" : "query",
           "schema" : {
             "type" : "string"
@@ -713,6 +716,7 @@
           }
         }, {
           "name" : "productId",
+          "required" : true,
           "in" : "query",
           "schema" : {
             "type" : "string"
@@ -779,6 +783,7 @@
         "tags" : [ "Product", "external-v2", "external-pnpg" ],
         "parameters" : [ {
           "name" : "productId",
+          "required" : true,
           "in" : "query",
           "schema" : {
             "type" : "string"

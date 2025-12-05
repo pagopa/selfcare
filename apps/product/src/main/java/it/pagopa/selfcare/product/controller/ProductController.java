@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
@@ -69,6 +70,10 @@ public class ProductController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> createProduct(
+            @Parameter(
+                    name = "productId",
+                    required = true
+            )
             @QueryParam("productId") String productId,
             @QueryParam("createdBy") String createdBy,
             @Valid ProductCreateRequest productCreateRequest) {
@@ -108,7 +113,12 @@ public class ProductController {
                             schema = @Schema(implementation = Problem.class))
             )
     })
-    public Uni<Response> getProductById(@QueryParam("productId") String productId) {
+    public Uni<Response> getProductById(
+            @Parameter(
+                    name = "productId",
+                    required = true
+            )
+            @QueryParam("productId") String productId) {
         return productService.getProductById(productId)
                 .onItem().transform(product ->
                         Response.ok(product).build()
@@ -161,7 +171,12 @@ public class ProductController {
                             schema = @Schema(implementation = Problem.class))
             )
     })
-    public Uni<Response> deleteProductById(@QueryParam("productId") String productId) {
+    public Uni<Response> deleteProductById(
+            @Parameter(
+                    name = "productId",
+                    required = true
+            )
+            @QueryParam("productId") String productId) {
         return productService.deleteProductById(productId)
                 .map(product -> Response.ok(product).build())
                 .onFailure(IllegalArgumentException.class).recoverWithItem(() ->
@@ -232,8 +247,13 @@ public class ProductController {
     })
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Response> patchProductById(@QueryParam("productId") String productId, @QueryParam("createdBy") String createdBy,
-                                          ProductPatchRequest productPatchRequest) {
+    public Uni<Response> patchProductById(
+            @Parameter(
+                    name = "productId",
+                    required = true
+            )
+            @QueryParam("productId") String productId, @QueryParam("createdBy") String createdBy,
+            ProductPatchRequest productPatchRequest) {
 
         return productService.patchProductById(productId, createdBy, productPatchRequest)
                 .map(updated -> Response.ok(updated).build())
@@ -250,13 +270,13 @@ public class ProductController {
                 .onFailure(BadRequestException.class).recoverWithItem(t -> {
                     log.error("Unexpected error occurred while while parsing data for {}", productId, t);
                     return Response.status(Response.Status.BAD_REQUEST)
-                                .type("application/problem+json")
-                                .entity(Problem.builder()
-                                        .title("Bad Request")
-                                        .detail("Invalid patch payload or field constraints violated")
-                                        .status(400)
-                                        .instance("/products/" + productId)
-                                        .build())
+                            .type("application/problem+json")
+                            .entity(Problem.builder()
+                                    .title("Bad Request")
+                                    .detail("Invalid patch payload or field constraints violated")
+                                    .status(400)
+                                    .instance("/products/" + productId)
+                                    .build())
                             .build();
                 })
                 .onFailure(NotFoundException.class).recoverWithItem(() ->
@@ -319,7 +339,12 @@ public class ProductController {
                     )
             )
     })
-    public Uni<Response> getProductOriginsById(@QueryParam("productId") String productId) {
+    public Uni<Response> getProductOriginsById(
+            @Parameter(
+                    name = "productId",
+                    required = true
+            )
+            @QueryParam("productId") String productId) {
         return productService.getProductOriginsById(productId)
                 .onItem().transform(originsResponse ->
                         Response.ok(originsResponse).build()
