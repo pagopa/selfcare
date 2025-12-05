@@ -46,24 +46,29 @@ app_settings = [
     value = "selfcare-wo"
   },
   {
-    name  = "IAM_MS_RETRY_MIN_BACKOFF"
-    value = 5
+    name  = "MONGODB_DATABASE_NAME"
+    value = "selcProduct"
   },
   {
-    name  = "IAM_MS_RETRY_MAX_BACKOFF"
-    value = 60
+    name  = "MONGODB_COLLECTION_NAME"
+    value = "products"
   },
   {
-    name  = "IAM_MS_RETRY"
-    value = 3
+    name  = "PRODUCT-CDC-MONGODB-WATCH-ENABLED"
+    value = false
+  },
+  {
+    name  = "STORAGE_CONTAINER_PRODUCT"
+    value = "selc-d-product"
   }
 ]
 
 secrets_names = {
+  "BLOB_STORAGE_CONN_STRING_PRODUCT"      = "blob-storage-product-connection-string"
+  "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
   "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
   "SELFCARE_DATA_ENCRIPTION_KEY"          = "selfcare-data-encryption-key"
   "SELFCARE_DATA_ENCRIPTION_IV"           = "selfcare-data-encryption-iv"
   "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
-  "JWT_PUBLIC_KEY"                        = "jwt-public-key"
 }
 
