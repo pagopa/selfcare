@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
@@ -30,7 +31,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @Slf4j
 public class ProductController {
 
-    //SERVICE
+    // SERVICE
     private final ProductService productService;
 
     @Operation(
@@ -68,8 +69,15 @@ public class ProductController {
     })
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Response> createProduct(@Valid ProductCreateRequest productCreateRequest) {
-        return productService.createProduct(productCreateRequest)
+    public Uni<Response> createProduct(
+            @Parameter(
+                    name = "productId",
+                    required = true
+            )
+            @QueryParam("productId") String productId,
+            @QueryParam("createdBy") String createdBy,
+            @Valid ProductCreateRequest productCreateRequest) {
+        return productService.createProduct(productId, createdBy, productCreateRequest)
                 .onItem().transform(productResponse ->
                         Response.status(Response.Status.CREATED)
                                 .entity(productResponse)
@@ -80,7 +88,6 @@ public class ProductController {
     @Tag(name = "Product")
     @Tag(name = "external-v2")
     @Tag(name = "external-pnpg")
-    @Path("/{productId}")
     @Operation(
             summary = "Get product by productId",
             description = "Retrieve a product by its unique identifier.",
@@ -106,7 +113,12 @@ public class ProductController {
                             schema = @Schema(implementation = Problem.class))
             )
     })
-    public Uni<Response> getProductById(@PathParam("productId") String productId) {
+    public Uni<Response> getProductById(
+            @Parameter(
+                    name = "productId",
+                    required = true
+            )
+            @QueryParam("productId") String productId) {
         return productService.getProductById(productId)
                 .onItem().transform(product ->
                         Response.ok(product).build()
@@ -127,7 +139,6 @@ public class ProductController {
     @Tag(name = "Product")
     @Tag(name = "external-v2")
     @Tag(name = "external-pnpg")
-    @Path("/{productId}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Cancel product by ID",
@@ -160,7 +171,12 @@ public class ProductController {
                             schema = @Schema(implementation = Problem.class))
             )
     })
-    public Uni<Response> deleteProductById(@PathParam("productId") String productId) {
+    public Uni<Response> deleteProductById(
+            @Parameter(
+                    name = "productId",
+                    required = true
+            )
+            @QueryParam("productId") String productId) {
         return productService.deleteProductById(productId)
                 .map(product -> Response.ok(product).build())
                 .onFailure(IllegalArgumentException.class).recoverWithItem(() ->
@@ -189,7 +205,6 @@ public class ProductController {
     @Tag(name = "Product")
     @Tag(name = "external-v2")
     @Tag(name = "external-pnpg")
-    @Path("/{productId}")
     @Operation(
             summary = "Partially update a product by ID",
             description = "Partially updates an existing product identified by its productId. "
@@ -232,10 +247,15 @@ public class ProductController {
     })
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Response> patchProductById(@PathParam("productId") String productId,
-                                          ProductPatchRequest productPatchRequest) {
+    public Uni<Response> patchProductById(
+            @Parameter(
+                    name = "productId",
+                    required = true
+            )
+            @QueryParam("productId") String productId, @QueryParam("createdBy") String createdBy,
+            ProductPatchRequest productPatchRequest) {
 
-        return productService.patchProductById(productId, productPatchRequest)
+        return productService.patchProductById(productId, createdBy, productPatchRequest)
                 .map(updated -> Response.ok(updated).build())
                 .onFailure(IllegalArgumentException.class).recoverWithItem(() ->
                         Response.status(Response.Status.BAD_REQUEST)
@@ -250,13 +270,13 @@ public class ProductController {
                 .onFailure(BadRequestException.class).recoverWithItem(t -> {
                     log.error("Unexpected error occurred while while parsing data for {}", productId, t);
                     return Response.status(Response.Status.BAD_REQUEST)
-                                .type("application/problem+json")
-                                .entity(Problem.builder()
-                                        .title("Bad Request")
-                                        .detail("Invalid patch payload or field constraints violated")
-                                        .status(400)
-                                        .instance("/products/" + productId)
-                                        .build())
+                            .type("application/problem+json")
+                            .entity(Problem.builder()
+                                    .title("Bad Request")
+                                    .detail("Invalid patch payload or field constraints violated")
+                                    .status(400)
+                                    .instance("/products/" + productId)
+                                    .build())
                             .build();
                 })
                 .onFailure(NotFoundException.class).recoverWithItem(() ->
@@ -282,12 +302,12 @@ public class ProductController {
                             .build();
                 });
     }
-    
+
     @GET
     @Tag(name = "Product")
     @Tag(name = "external-v2")
     @Tag(name = "external-pnpg")
-    @Path("/{productId}/origins")
+    @Path("/origins")
     @Operation(
             summary = "Get product origins by productId",
             description = "Retrieve the list of institution origins for the given product.",
@@ -319,7 +339,12 @@ public class ProductController {
                     )
             )
     })
-    public Uni<Response> getProductOriginsById(@PathParam("productId") String productId) {
+    public Uni<Response> getProductOriginsById(
+            @Parameter(
+                    name = "productId",
+                    required = true
+            )
+            @QueryParam("productId") String productId) {
         return productService.getProductOriginsById(productId)
                 .onItem().transform(originsResponse ->
                         Response.ok(originsResponse).build()
