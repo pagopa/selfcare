@@ -47,17 +47,18 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Uni<ProductBaseResponse> createProduct(String productId, String createdBy, ProductCreateRequest productCreateRequest) {
+
+        if (StringUtils.isBlank(productId)) {
+            throw new BadRequestException(String.format("Invalid productId: %s", productId));
+        }
+
         String sanitizedProductId = Encode.forJava(productId);
         String sanitizedCreatedBy = Encode.forJava(createdBy);
 
         log.info("Adding product {} action by {}", sanitizedProductId, sanitizedCreatedBy);
-        if (StringUtils.isBlank(productId)) {
-            throw new BadRequestException(String.format("Missing product by id: %s", productId));
-        }
 
         Product requestProduct = productMapperRequest.toProduct(productCreateRequest);
-
-        requestProduct.setProductId(sanitizedProductId);
+        requestProduct.setProductId(productId);
 
         if (requestProduct.getStatus() == null) {
             log.info("Product status missing - default TESTING");
@@ -66,41 +67,51 @@ public class ProductServiceImpl implements ProductService {
 
         requestProduct.setMetadata(productUtils.buildProductMetadata(createdBy));
 
-        return productRepository.findProductById(sanitizedProductId).onItem().ifNotNull().transformToUni(currentProduct -> {
+        return productRepository.findProductById(productId)
+                .onItem().ifNotNull().transformToUni(currentProduct -> {
                     int nextVersion = currentProduct.getVersion() + 1;
                     requestProduct.setVersion(nextVersion);
-                    log.info("Updating configuration of product {} with version {}", productId, nextVersion);
-                    return productRepository.persist(productMapperRequest.cloneObject(currentProduct, requestProduct)).replaceWith(requestProduct);
+                    log.info("Updating configuration of product {} with version {}", sanitizedProductId, nextVersion);
+                    return productRepository.persist(productMapperRequest.cloneObject(currentProduct, requestProduct))
+                            .replaceWith(requestProduct);
                 }).onItem().ifNull().switchTo(() -> {
-                    log.info("Adding new config of product {}", productId);
+                    log.info("Adding new config of product {}", sanitizedProductId);
                     return productRepository.persist(requestProduct).replaceWith(requestProduct);
                 })
                 .map(productUpdated -> productMapperResponse.toProductBaseResponse(
-                        Product.builder().id(productUpdated.getId()).productId(productUpdated.getProductId()).status(productUpdated.getStatus()).build()
+                        Product.builder()
+                                .id(productUpdated.getId())
+                                .productId(productUpdated.getProductId())
+                                .status(productUpdated.getStatus())
+                                .build()
                 ));
     }
 
-    @Override
     public Uni<ProductResponse> getProductById(String productId) {
-        String sanitizedProductId = Encode.forJava(productId);
-        log.info(GETTING_INFO_FROM_PRODUCT, sanitizedProductId);
-        if (StringUtils.isBlank(sanitizedProductId)) {
-            return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by productId: %s", sanitizedProductId)));
+        if (StringUtils.isBlank(productId)) {
+            return Uni.createFrom().failure(
+                    new IllegalArgumentException(String.format("Missing product by productId: %s", productId))
+            );
         }
 
-        return productRepository.findProductById(sanitizedProductId)
-                .onItem().ifNull().failWith(() -> new NotFoundException("Product " + sanitizedProductId + " not found"))
+        String sanitizedProductId = Encode.forJava(productId);
+        log.info(GETTING_INFO_FROM_PRODUCT, sanitizedProductId);
+
+        return productRepository.findProductById(productId)
+                .onItem().ifNull().failWith(() -> new NotFoundException("Product " + productId + " not found"))
                 .map(productMapperResponse::toProductResponse);
     }
 
     @Override
     public Uni<ProductBaseResponse> deleteProductById(String productId) {
+        if (StringUtils.isBlank(productId)) {
+            return Uni.createFrom().failure(
+                    new IllegalArgumentException(String.format("Missing product by productId: %s", productId))
+            );
+        }
+
         String sanitizedProductId = Encode.forJava(productId);
         log.info("Delete product configuration by productId: {}", sanitizedProductId);
-
-        if (StringUtils.isBlank(productId)) {
-            return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by productId: %s", sanitizedProductId)));
-        }
 
         return productRepository.findProductById(sanitizedProductId)
                 .onItem().ifNull().failWith(() -> new NotFoundException("Product " + sanitizedProductId + " not found"))
@@ -134,7 +145,7 @@ public class ProductServiceImpl implements ProductService {
 
                                     current.setId(UUID.randomUUID().toString());
                                     current.setProductId(current.getProductId());
-                                    current.setMetadata(productUtils.buildProductMetadata(sanitizedCreatedBy));
+                                    current.setMetadata(productUtils.buildProductMetadata(createdBy));
                                     current.setVersion(current.getVersion() + 1);
 
                                     return productRepository.persist(current)
@@ -145,13 +156,14 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Uni<ProductOriginResponse> getProductOriginsById(String productId) {
-        String sanitizedProductId = Encode.forJava(productId);
-        log.info(GETTING_INFO_FROM_PRODUCT, sanitizedProductId);
-        if (StringUtils.isBlank(sanitizedProductId)) {
-            return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by productId: %s", sanitizedProductId)));
+        if (StringUtils.isBlank(productId)) {
+            return Uni.createFrom().failure(new IllegalArgumentException(String.format("Missing product by productId: %s", productId)));
         }
 
-        return productRepository.findProductById(sanitizedProductId)
+        String sanitizedProductId = Encode.forJava(productId);
+        log.info(GETTING_INFO_FROM_PRODUCT, sanitizedProductId);
+
+        return productRepository.findProductById(productId)
                 .onItem().ifNull().failWith(() -> new NotFoundException("Product " + sanitizedProductId + " not found"))
                 .map(productMapperResponse::toProductOriginResponse);
     }
