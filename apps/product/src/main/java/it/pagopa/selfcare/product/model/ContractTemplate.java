@@ -1,36 +1,40 @@
 package it.pagopa.selfcare.product.model;
 
-import it.pagopa.selfcare.product.model.enums.ContractType;
-import it.pagopa.selfcare.product.model.enums.InstitutionType;
-import it.pagopa.selfcare.product.model.enums.OnboardingType;
-import it.pagopa.selfcare.product.model.enums.WorkflowType;
+import io.quarkus.mongodb.panache.common.MongoEntity;
+import it.pagopa.selfcare.product.model.enums.ContractTemplateFileType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.bson.codecs.pojo.annotations.BsonId;
 
-import java.util.List;
+import java.time.Instant;
 import java.util.UUID;
 
-@Builder
 @Data
-@NoArgsConstructor
+@Builder
+@MongoEntity(collection = "contractTemplates")
 @AllArgsConstructor
+@NoArgsConstructor
 public class ContractTemplate {
 
+    @BsonId
     @Builder.Default
-    private String contractId = UUID.randomUUID().toString();
+    private String id = UUID.randomUUID().toString();
 
-    private OnboardingType onboardingType;
-    private boolean enabled;
-    private InstitutionType institutionType;
-    private ContractType contractType;
-    private String path;
-    private String version;
-    private int order;
-    private boolean generated;
-    private boolean mandatory;
+    private String productId;
+
     private String name;
-    private String workflowState;
-    private List<WorkflowType> workflowType;
+
+    private String version;
+
+    private String description;
+
+    private ContractTemplateFileType fileType;
+
+    @Builder.Default
+    private Instant createdAt = Instant.now();
+
+    private String createdBy;
+
 }

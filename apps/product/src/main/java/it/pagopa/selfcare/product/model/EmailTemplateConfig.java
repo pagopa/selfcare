@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmailTemplate {
+public class EmailTemplateConfig {
     private WorkflowType type;
     private InstitutionType institutionType;
     private String path;
