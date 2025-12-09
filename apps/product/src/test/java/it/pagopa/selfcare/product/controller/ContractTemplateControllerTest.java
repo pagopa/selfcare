@@ -225,7 +225,8 @@ public class ContractTemplateControllerTest {
         .then()
             .statusCode(400);
 
-        Mockito.verify(contractTemplateService, Mockito.times(0));
+        Mockito.verify(contractTemplateService, Mockito.times(0))
+                .download(Mockito.any(), Mockito.any(), Mockito.any());
     }
 
     @Test
