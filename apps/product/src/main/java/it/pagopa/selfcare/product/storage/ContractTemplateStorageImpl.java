@@ -14,6 +14,7 @@ import it.pagopa.selfcare.product.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.product.model.ContractTemplateFile;
 import it.pagopa.selfcare.product.model.enums.ContractTemplateFileType;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import reactor.core.publisher.Flux;
@@ -30,12 +31,18 @@ public class ContractTemplateStorageImpl implements ContractTemplateStorage {
     private final String containerName;
     private final BlobServiceAsyncClient blobClient;
 
+    @Inject
     public ContractTemplateStorageImpl(@ConfigProperty(name = "product-ms.blob-storage.container-contract-template") String containerName,
                                        @ConfigProperty(name = "product-ms.blob-storage.connection-string-contract-template") String connectionString) {
         this.containerName = containerName;
         this.blobClient = new BlobServiceClientBuilder()
                 .connectionString(connectionString)
                 .buildAsyncClient();
+    }
+
+    public ContractTemplateStorageImpl(String containerName, BlobServiceAsyncClient blobClient) {
+        this.containerName = containerName;
+        this.blobClient = blobClient;
     }
 
     @Override
