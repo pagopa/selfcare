@@ -45,10 +45,6 @@ app_settings = [
     value = "product-cdc",
   },
   {
-    name  = "SHARED_ACCESS_KEY_NAME"
-    value = "selfcare-wo"
-  },
-  {
     name  = "MONGODB_DATABASE_NAME"
     value = "selcProduct"
   },
@@ -70,7 +66,5 @@ secrets_names = {
   "BLOB_STORAGE_CONN_STRING_PRODUCT"      = "blob-storage-product-connection-string"
   "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
   "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-  "SELFCARE_DATA_ENCRIPTION_KEY"          = "selfcare-data-encryption-key"
-  "SELFCARE_DATA_ENCRIPTION_IV"           = "selfcare-data-encryption-iv"
   "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
 }

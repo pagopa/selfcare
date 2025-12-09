@@ -61,10 +61,6 @@ app_settings = [
   {
     name  = "STORAGE_CONTAINER_PRODUCT"
     value = "selc-d-product"
-  },
-  {
-    name  = "TEST"
-    value = "1"
   }
 ]
 
@@ -73,5 +69,4 @@ secrets_names = {
   "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
   "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
   "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
-  "JWT_PUBLIC_KEY"                        = "jwt-public-key"
 }
