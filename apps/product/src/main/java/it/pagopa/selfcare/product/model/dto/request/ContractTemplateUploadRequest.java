@@ -35,7 +35,7 @@ public class ContractTemplateUploadRequest {
     @RestForm("description")
     private String description;
 
-    @RestForm("createdBy")
+    @QueryParam("createdBy")
     private String createdBy;
 
 }

@@ -20,8 +20,11 @@ public class AllowedFileTypesValidator implements ConstraintValidator<AllowedFil
 
     @Override
     public boolean isValid(FileUpload fileUpload, ConstraintValidatorContext constraintValidatorContext) {
-        final String contentType = fileUpload.contentType();
+        if (fileUpload == null) {
+            return true; // Null values are handled by @NotNull if needed
+        }
 
+        final String contentType = fileUpload.contentType();
         if (!allowedTypes.contains(contentType)) {
             return false;
         }

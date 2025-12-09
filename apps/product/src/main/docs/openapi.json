@@ -557,7 +557,7 @@
         "operationId" : "upload",
         "requestBody" : {
           "content" : {
-            "multipart/form-data" : {
+            "application/json" : {
               "schema" : {
                 "$ref" : "#/components/schemas/ContractTemplateUploadRequest"
               }
@@ -596,16 +596,6 @@
               }
             }
           },
-          "404" : {
-            "description" : "Not Found",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
           "500" : {
             "description" : "Internal Server Error",
             "content" : {
@@ -615,9 +605,18 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
-        "tags" : [ "Contract Template Controller" ]
+        "tags" : [ "Contract Template Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       },
       "get" : {
         "summary" : "List contract templates available",
@@ -659,16 +658,6 @@
               }
             }
           },
-          "404" : {
-            "description" : "Not Found",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
           "500" : {
             "description" : "Internal Server Error",
             "content" : {
@@ -678,9 +667,18 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
-        "tags" : [ "Contract Template Controller" ]
+        "tags" : [ "Contract Template Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/contract-template/{contractTemplateId}" : {
@@ -745,9 +743,18 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
-        "tags" : [ "Contract Template Controller" ]
+        "tags" : [ "Contract Template Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/product" : {

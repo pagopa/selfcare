@@ -439,7 +439,7 @@ paths:
       operationId: upload
       requestBody:
         content:
-          multipart/form-data:
+          application/json:
             schema:
               $ref: "#/components/schemas/ContractTemplateUploadRequest"
         required: true
@@ -462,20 +462,20 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-        "404":
-          description: Not Found
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
         "500":
           description: Internal Server Error
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       tags:
       - Contract Template Controller
+      security:
+      - SecurityScheme: []
     get:
       summary: List contract templates available
       description: List and filter all the contract templates available
@@ -504,20 +504,20 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-        "404":
-          description: Not Found
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
         "500":
           description: Internal Server Error
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       tags:
       - Contract Template Controller
+      security:
+      - SecurityScheme: []
   /contract-template/{contractTemplateId}:
     get:
       summary: Download a contract template version
@@ -561,8 +561,14 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       tags:
       - Contract Template Controller
+      security:
+      - SecurityScheme: []
   /product:
     patch:
       summary: Partially update a product by ID

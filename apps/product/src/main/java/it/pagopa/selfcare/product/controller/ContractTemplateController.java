@@ -28,14 +28,12 @@ public class ContractTemplateController {
     }
 
     @POST
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Upload a new contract template version", description = "Upload an html file as a new contract template version to be used in product configuration")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Created", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ContractTemplateResponse.class))),
             @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class))),
             @APIResponse(responseCode = "409", description = "Conflict", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class))),
-            @APIResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class))),
             @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class)))
     })
     public Uni<Response> upload(@Valid ContractTemplateUploadRequest uploadRequest) {
@@ -65,7 +63,6 @@ public class ContractTemplateController {
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)),
             @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class))),
-            @APIResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class))),
             @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class)))
     })
     public Uni<Response> list(@QueryParam("productId") String productId,

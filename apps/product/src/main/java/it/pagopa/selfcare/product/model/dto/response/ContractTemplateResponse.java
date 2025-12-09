@@ -1,12 +1,14 @@
 package it.pagopa.selfcare.product.model.dto.response;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.Instant;
 
 @Getter
 @Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ContractTemplateResponse {
 
     private String contractTemplateId;
