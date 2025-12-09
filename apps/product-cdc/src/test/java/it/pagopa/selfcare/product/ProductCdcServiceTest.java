@@ -2,6 +2,7 @@ package it.pagopa.selfcare.product;
 
 import com.azure.data.tables.TableClient;
 import com.azure.data.tables.models.TableEntity;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.applicationinsights.TelemetryClient;
 import com.microsoft.applicationinsights.extensibility.context.OperationContext;
 import com.microsoft.applicationinsights.telemetry.TelemetryContext;
@@ -18,6 +19,7 @@ import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.product.constant.ProductConstant;
 import it.pagopa.selfcare.product.mapper.ProductMapper;
 import it.pagopa.selfcare.product.model.Product;
+import it.pagopa.selfcare.product.model.ProductMetadata;
 import it.pagopa.selfcare.product.service.ProductService;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
@@ -26,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,6 +48,7 @@ class ProductCdcServiceTest {
     private ProductService productService;
     private AzureBlobClient azureBlobClient;
     private ProductMapper productMapper;
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
@@ -56,6 +60,7 @@ class ProductCdcServiceTest {
         productService = mock(ProductService.class);
         azureBlobClient = mock(AzureBlobClient.class);
         productMapper = mock(ProductMapper.class);
+        objectMapper = new ObjectMapper();
 
         // Mock MongoDB structure
         when(mongoClient.getDatabase(anyString())).thenReturn(mongoDatabase);
@@ -79,7 +84,8 @@ class ProductCdcServiceTest {
                 tableClient,
                 productService,
                 azureBlobClient,
-                productMapper
+                productMapper,
+                objectMapper
         );
 
         // Inject the config property manually since we are instantiating the class directly
@@ -93,6 +99,8 @@ class ProductCdcServiceTest {
         Product product = new Product();
         product.setProductId(productId);
         product.setTitle("IO");
+
+        product.setMetadata(ProductMetadata.builder().createdAt(Instant.now()).build());
 
         it.pagopa.selfcare.product.entity.Product entityProduct = new it.pagopa.selfcare.product.entity.Product();
         entityProduct.setId(productId);
