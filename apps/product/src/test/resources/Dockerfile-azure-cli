@@ -1,0 +1,2 @@
+FROM mcr.microsoft.com/azure-cli
+CMD ["/bin/sh", "-c", "/blobStorage/initAzurite.sh"]
