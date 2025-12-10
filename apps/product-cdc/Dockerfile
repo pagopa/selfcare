@@ -13,9 +13,9 @@ COPY --link ./apps/pom.xml .
 WORKDIR /src/libs
 COPY --link ./libs/ .
 
-WORKDIR /src/apps/product
-COPY --link ./apps/product/pom.xml .
-COPY ./apps/product/src/main/ ./src/main/
+WORKDIR /src/apps/product-cdc
+COPY --link ./apps/product-cdc/pom.xml .
+COPY ./apps/product-cdc/src/main/ ./src/main/
 
 WORKDIR /src
 
@@ -39,7 +39,7 @@ ARG REPO_ONBOARDING
 ARG REPO_USERNAME
 ARG REPO_PASSWORD
 
-RUN mvn --global-settings settings.xml --projects :product -DrepositoryId=${REPO_SELFCARE} -DselfcareOnboardingId=${REPO_ONBOARDING} -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} --also-make clean package -DskipTests
+RUN mvn --global-settings settings.xml --projects :product-cdc -DrepositoryId=${REPO_SELFCARE} -DselfcareOnboardingId=${REPO_ONBOARDING} -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} --also-make clean package -DskipTests
 
 FROM openjdk:17-jdk@sha256:528707081fdb9562eb819128a9f85ae7fe000e2fbaeaf9f87662e7b3f38cb7d8 AS runtime
 
@@ -48,10 +48,10 @@ ENV JAVA_OPTIONS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jb
 
 WORKDIR /app
 
-COPY --from=builder /src/apps/product/target/quarkus-app/lib/ ./lib/
-COPY --from=builder /src/apps/product/target/quarkus-app/*.jar ./
-COPY --from=builder /src/apps/product/target/quarkus-app/app/ ./app/
-COPY --from=builder /src/apps/product/target/quarkus-app/quarkus/ ./quarkus/
+COPY --from=builder /src/apps/product-cdc/target/quarkus-app/lib/ ./lib/
+COPY --from=builder /src/apps/product-cdc/target/quarkus-app/*.jar ./
+COPY --from=builder /src/apps/product-cdc/target/quarkus-app/app/ ./app/
+COPY --from=builder /src/apps/product-cdc/target/quarkus-app/quarkus/ ./quarkus/
 
 ADD https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.2.11/applicationinsights-agent-3.2.11.jar ./applicationinsights-agent.jar
 RUN chmod 755 ./applicationinsights-agent.jar
