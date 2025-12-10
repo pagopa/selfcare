@@ -1,10 +1,9 @@
 package it.pagopa.selfcare.product.mapper;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import it.pagopa.selfcare.product.conf.JacksonConfiguration;
 import it.pagopa.selfcare.product.entity.BackOfficeConfigurations;
 import it.pagopa.selfcare.product.model.BackOfficeEnvironmentConfiguration;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
@@ -18,7 +17,13 @@ import static org.junit.jupiter.api.Assertions.*;
 class ProductMapperTest {
 
   private final ProductMapper mapper = Mappers.getMapper(ProductMapper.class);
-  private final ObjectMapper objectMapper = new ObjectMapper();
+
+  private static JacksonConfiguration jacksonConfiguration;
+
+  @BeforeAll
+  static void setup(){
+      jacksonConfiguration = new JacksonConfiguration();
+  }
 
   @Test
   void mapBackOfficeConfigs_shouldMapEntriesByEnvironment() {
@@ -35,15 +40,11 @@ class ProductMapperTest {
 
   @Test
   void mapContracts_shouldConvertModel() throws IOException {
-    
-      objectMapper.registerModule(new JavaTimeModule());
-      objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
       try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("product.json")) {
           assertNotNull(inputStream, "File product.json not found  in src/test/resources");
 
           it.pagopa.selfcare.product.model.Product product =
-              objectMapper.readValue(inputStream, it.pagopa.selfcare.product.model.Product.class);
+                  jacksonConfiguration.objectMapper().readValue(inputStream, it.pagopa.selfcare.product.model.Product.class);
 
           assertNotNull(product);
 
@@ -52,7 +53,7 @@ class ProductMapperTest {
           assertNotNull(productEntity);
           assertEquals(product.getProductId(), productEntity.getId());
           assertEquals(product.getDescription(), productEntity.getDescription());
-          String jsonEntity = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(productEntity);
+          String jsonEntity = jacksonConfiguration.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(productEntity);
           System.out.println("Mapped Product Entity:");
           System.out.println(jsonEntity);
       }

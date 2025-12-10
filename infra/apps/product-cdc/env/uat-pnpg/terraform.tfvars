@@ -66,4 +66,5 @@ secrets_names = {
   "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
   "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
   "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
+  "JWT_PUBLIC_KEY"                        = "jwt-public-key"
 }
