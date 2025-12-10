@@ -75,6 +75,7 @@ class ProductCdcServiceTest {
                 mongoClient,
                 "test-db",
                 "test-collection",
+                true,
                 telemetryClient,
                 tableClient,
                 productService,
