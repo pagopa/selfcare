@@ -4,13 +4,15 @@ import it.pagopa.selfcare.product.validator.AllowedFileTypes;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.ws.rs.QueryParam;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 @Getter
 @Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ContractTemplateUploadRequest {
 
     @QueryParam("productId")
