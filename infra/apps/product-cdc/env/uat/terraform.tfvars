@@ -54,7 +54,7 @@ app_settings = [
   },
   {
     name  = "PRODUCT-CDC-MONGODB-WATCH-ENABLED"
-    value = true
+    value = false
   },
   {
     name  = "STORAGE_CONTAINER_PRODUCT"

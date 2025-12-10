@@ -4,6 +4,7 @@ import com.azure.data.tables.TableClient;
 import com.azure.data.tables.models.TableEntity;
 import com.azure.data.tables.models.TableServiceException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.microsoft.applicationinsights.TelemetryClient;
 import com.mongodb.client.model.Aggregates;
@@ -19,12 +20,15 @@ import io.quarkus.runtime.configuration.ConfigUtils;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
+import it.pagopa.selfcare.product.conf.JacksonConfiguration;
 import it.pagopa.selfcare.product.constant.ProductConstant;
 import it.pagopa.selfcare.product.mapper.ProductMapper;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.TrackEventInput;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.BsonDocument;
 import org.bson.conversions.Bson;
@@ -48,17 +52,19 @@ public class ProductCdcService {
   private final AzureBlobClient azureBlobClient;
   private final ProductMapper productMapper;
   private final String collectionName;
+  private final ObjectMapper objectMapper;
 
   @ConfigProperty(name = "product-cdc.blob-storage.filepath-product") String productsFilePath;
 
   public ProductCdcService(ReactiveMongoClient mongoClient,
                            @ConfigProperty(name = "quarkus.mongodb.database") String mongodbDatabase,
                            @ConfigProperty(name = "quarkus.mongodb.collection") String collectionName,
+                           @ConfigProperty(name = "product-cdc.mongodb.watch.enabled") Boolean cdcEnable,
                            TelemetryClient telemetryClient,
                            TableClient tableClient,
                            ProductService productService,
                            AzureBlobClient azureBlobClient,
-                           ProductMapper productMapper) {
+                           ProductMapper productMapper, ObjectMapper objectMapper) {
     this.mongoClient = mongoClient;
     this.mongodbDatabase = mongodbDatabase;
     this.collectionName = collectionName;
@@ -67,8 +73,12 @@ public class ProductCdcService {
     this.productService = productService;
     this.azureBlobClient = azureBlobClient;
     this.productMapper = productMapper;
+    this.objectMapper = objectMapper;
     telemetryClient.getContext().getOperation().setName(ProductConstant.OPERATION_NAME);
-    initOrderStream();
+    if (cdcEnable) {
+      initOrderStream();
+    }
+
   }
 
   private void initOrderStream() {
@@ -88,7 +98,6 @@ public class ProductCdcService {
         if (e.getResponse() != null && e.getResponse().getStatusCode() == 404) {
             log.warn("Table StartAt not found (404), starting from now. This is expected on first run.");
         } else {
-            // Altrimenti è un errore vero (es. 403 Forbidden, Connection Refused)
             log.error("Error connecting to Table Storage. Code: {}, Message: {}", e.getResponse() != null ? e.getResponse().getStatusCode() : "N/A", e.getMessage(), e);
         }
       }
@@ -103,7 +112,7 @@ public class ProductCdcService {
 
     Bson match = Aggregates.match(Filters.in("operationType", asList("update", "replace", "insert")));
     Bson project = Aggregates.project(fields(include("_id", "ns", "documentKey", "fullDocument")));
-    List<Bson> pipeline = Arrays.asList(match, project);
+    List<Bson> pipeline = asList(match, project);
 
     Multi<ChangeStreamDocument<Product>> publisher = dataCollection.watch(pipeline, Product.class, options);
     publisher.subscribe().with(
@@ -189,9 +198,7 @@ public class ProductCdcService {
 
   public byte[] convertListToJsonBytes(List<it.pagopa.selfcare.product.entity.Product> products) {
     try {
-      ObjectMapper mapper = new ObjectMapper();
-      mapper.registerModule(new JavaTimeModule());
-      return mapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(products);
+      return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(products);
     } catch (Exception e) {
       throw new RuntimeException("Error during JSON serialization", e);
     }
