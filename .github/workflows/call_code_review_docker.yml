@@ -1,0 +1,58 @@
+on:
+  workflow_call:
+    inputs:
+      dockerfile_path:
+        type: string
+        required: false
+        default: './Dockerfile.new'
+      dockerfile_context:
+        type: string
+        required: false
+        default: '.'
+
+jobs:
+
+  docker_build:
+    name: 'Build Docker image'
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+    env:
+      DOCKERFILE_CONTEXT: ${{ inputs.dockerfile_context }}
+      DOCKERFILE_PATH: ${{ inputs.dockerfile_path }}
+
+    steps:
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
+        name: Checkout
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
+
+      - name: Validate Dockerfile context and path
+        run: |
+          # Reject context or path containing any suspicious shell metacharacters or line breaks
+          if [[ "$DOCKERFILE_CONTEXT" =~ [;&|`$<>] || "$DOCKERFILE_PATH" =~ [;&|`$<>] ]]; then
+            echo "Error: Dockerfile context or path contains forbidden characters."
+            exit 1
+          fi
+          # Optionally check for newlines or non-printable characters
+          if [[ "$DOCKERFILE_CONTEXT" =~ [[:cntrl:]] || "$DOCKERFILE_PATH" =~ [[:cntrl:]] ]]; then
+            echo "Error: Dockerfile context or path contains control characters."
+            exit 1
+          fi
+
+      - name: Build Image
+        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56 #v5.1.0
+        with:
+          context: ${{ env.DOCKERFILE_CONTEXT }}
+          file: ${{ env.DOCKERFILE_PATH }}
+          push: false
+          secrets: |
+            GH_TOKEN=${{ secrets.READ_PACKAGES_TOKEN }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=min
+          build-args: |
+            REPO_ONBOARDING=selfcare-onboarding
+            REPO_USERNAME=${{ github.actor }}
+            REPO_PASSWORD=${{ secrets.GITHUB_TOKEN }}

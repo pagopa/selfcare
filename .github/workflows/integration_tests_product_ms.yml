@@ -1,0 +1,51 @@
+name: "Integration Tests (product-ms)"
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+    branches:
+      - main
+      - releases/*
+    paths:
+      - "apps/product/**"
+      - ".github/workflows/integration_tests_product_ms.yml"
+  workflow_dispatch:
+
+jobs:
+  integration_tests_ms:
+    name: 'Integration Tests (product)'
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Set missing library
+        run: |
+          wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+          sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+
+      - name: Setup Maven Action
+        uses: s4u/setup-maven-action@fa2c7e4517ed008b1f73e7e0195a9eecf5582cd4
+        with:
+          checkout-fetch-depth: 0
+          java-version: 17
+          java-distribution: 'temurin'
+          maven-version: '3.9.5'
+          cache-enabled: true
+
+      - uses: s4u/maven-settings-action@60912582505985be4cc55d2b890eb32767f8de5f # pin@v2.8.0
+        with:
+          servers: '[{"id": "selfcare-onboarding", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}, {"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
+
+      - name: Run Integration Tests
+        id: int_tests
+        run: mvn --projects :product --also-make test -Dtest=CucumberSuiteTest -Dsurefire.failIfNoSpecifiedTests=false
+        shell: bash
+
+      - name: Upload Test Results
+        if: always() && (steps.int_tests.conclusion == 'success' || steps.int_tests.conclusion == 'failure')
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cucumber-report
+          path: apps/product/target/cucumber-report/cucumber.html

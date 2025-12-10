@@ -29,6 +29,10 @@
     },
     {
       "name": "Onboarding Controller"
+    },
+    {
+      "name": "UserGroup",
+      "description": "User group endpoint CRUD operations"
     }
   ],
   "paths": {
@@ -93,7 +97,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -113,6 +119,16 @@
             "description": "The internal identifier of the institution",
             "required": true,
             "style": "simple",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "productId",
+            "in": "query",
+            "description": "productId",
+            "required": false,
+            "style": "form",
             "schema": {
               "type": "string"
             }
@@ -152,7 +168,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -223,7 +241,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -329,7 +349,62 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
+    "/users/{userId}/onboarding": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Check if the user is manager or Update/create a user by userId with a new role",
+        "description": "Checks if the user is already a manager for the specified product and, if not, creates or updates the user with a new role.",
+        "operationId": "createUserByUserId",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddUserRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The user is already onboarded for the specified product.",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "201": {
+            "description": "The user has been created or updated with a new role."
+          },
+          "401": {
+            "description": "Not Authorized"
+          },
+          "403": {
+            "description": "Not Allowed"
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -389,7 +464,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -438,7 +515,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -498,7 +577,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -620,7 +701,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -687,7 +770,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -766,7 +851,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -833,7 +920,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -922,7 +1011,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -935,6 +1026,18 @@
         "summary": "getUserInfo",
         "description": "Service to retrieve user info including institutions and products linked to him, this service retrives 100 institutions at most",
         "operationId": "V2getUserInfoUsingGET",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "query",
+            "description": "productId",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -988,7 +1091,285 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
+    "/delegations": {
+      "get": {
+        "tags": [
+          "Delegation"
+        ],
+        "summary": "Retrieve institution's delegations with pagination",
+        "description": "Retrieve institution's delegations with pagination",
+        "operationId": "getDelegationsUsingGET_1",
+        "parameters": [
+          {
+            "name": "institutionId",
+            "in": "query",
+            "description": "The internal identifier of the institution",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "brokerId",
+            "in": "query",
+            "description": "The internal identifier of the institution",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "productId",
+            "in": "query",
+            "description": "Product's unique identifier",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Description ente",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "taxCode",
+            "in": "query",
+            "description": "Institution's tax code",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Order to show response NONE, ASC, DESC",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC",
+                "NONE"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "page",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "size",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DelegationWithPaginationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
+    "/delegations/delegations-with-pagination": {
+      "get": {
+        "tags": [
+          "Delegation"
+        ],
+        "summary": "Retrieve institution's delegations with pagination",
+        "description": "Retrieve institution's delegations with pagination",
+        "operationId": "getDelegationsUsingGET_2",
+        "parameters": [
+          {
+            "name": "institutionId",
+            "in": "query",
+            "description": "The internal identifier of the institution",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "brokerId",
+            "in": "query",
+            "description": "The internal identifier of the institution",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "productId",
+            "in": "query",
+            "description": "Product's unique identifier",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Description ente",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "taxCode",
+            "in": "query",
+            "description": "Institution's tax code",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Order to show response NONE, ASC, DESC",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC",
+                "NONE"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "page",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "size",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DelegationWithPaginationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -1022,7 +1403,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -1066,7 +1449,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -1108,7 +1493,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -1181,10 +1568,62 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ],
         "x-legacy-api": "true"
+      }
+    },
+    "/onboarding/institutions/{institutionId}": {
+      "get": {
+        "tags": [],
+        "summary": "Get onboarding COMPLETED by institutionId and productId.",
+        "description": "Retrieve an onboarding record given institutionId and productId",
+        "operationId": "getOnboardingProduct",
+        "parameters": [
+          {
+            "name": "institutionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "productId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingGet"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not Authorized"
+          },
+          "403": {
+            "description": "Not Allowed"
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
       }
     },
     "/onboarding/pa/completion": {
@@ -1224,7 +1663,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -1266,7 +1707,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -1308,7 +1751,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -1345,7 +1790,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -1400,7 +1847,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -1457,7 +1906,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -1498,7 +1949,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -1548,7 +2001,129 @@
         },
         "security": [
           {
-            "api_key": []
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
+    "/user-groups/members": {
+      "put": {
+        "tags": [
+          "UserGroup"
+        ],
+        "summary": "addMembersToUserGroupWithParentInstitutionId",
+        "description": "Service to add a members to a specific UserGroup entity by its institutionId, parentInstitutionId and productId",
+        "operationId": "addMembersToUserGroupWithParentInstitutionIdUsingPUT",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddMembersToUserGroupDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "UserGroup"
+        ],
+        "summary": "deleteMembersFromUserGroupWithParentInstitutionId",
+        "description": "Service to delete members from a specific UserGroup entity by its institutionId, parentInstitutionId and productId",
+        "operationId": "deleteMembersFromUserGroupWithParentInstitutionIdUsingDELETE",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteMembersFromUserGroupDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
           }
         ]
       }
@@ -1590,6 +2165,9 @@
           },
           "institutionType": {
             "type": "string"
+          },
+          "isTest": {
+            "type": "boolean"
           },
           "productId": {
             "type": "string"
@@ -1779,6 +2357,9 @@
           "istatCode": {
             "type": "string"
           },
+          "legalForm": {
+            "type": "string"
+          },
           "logo": {
             "type": "string"
           },
@@ -1893,10 +2474,12 @@
               "PA",
               "PG",
               "PRV",
+              "PRV_PF",
               "PSP",
               "PT",
               "REC",
               "SA",
+              "SCEC",
               "SCP"
             ]
           },
@@ -2049,6 +2632,67 @@
         ],
         "type": "string"
       },
+      "AddUserRoleDto": {
+        "required": [
+          "institutionId",
+          "product"
+        ],
+        "type": "object",
+        "properties": {
+          "institutionId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "product": {
+            "$ref": "#/components/schemas/Product"
+          },
+          "institutionDescription": {
+            "type": "string"
+          },
+          "institutionRootName": {
+            "type": "string"
+          },
+          "userMailUuid": {
+            "type": "string"
+          },
+          "hasToSendEmail": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Product": {
+        "required": [
+          "productId",
+          "role",
+          "productRoles"
+        ],
+        "type": "object",
+        "properties": {
+          "productId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "role": {
+            "description": "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
+            "type": "string"
+          },
+          "tokenId": {
+            "type": "string"
+          },
+          "productRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "delegationId": {
+            "type": "string"
+          },
+          "toAddOnAggregates": {
+            "type": "boolean"
+          }
+        }
+      },
       "UOResource": {
         "type": "object",
         "properties": {
@@ -2169,6 +2813,12 @@
           "businessStatus": {
             "type": "string"
           },
+          "vatNumber": {
+            "type": "string"
+          },
+          "legalForm": {
+            "type": "string"
+          },
           "city": {
             "type": "string"
           },
@@ -2182,6 +2832,24 @@
             "type": "string"
           },
           "digitalAddress": {
+            "type": "string"
+          },
+          "atecoCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "disabledStateInstitution": {
+            "type": "string"
+          },
+          "descriptionStateInstitution": {
+            "type": "string"
+          },
+          "statusCompanyRI": {
+            "type": "string"
+          },
+          "statusCompanyRD": {
             "type": "string"
           },
           "nrea": {
@@ -2398,10 +3066,12 @@
               "PA",
               "PG",
               "PRV",
+              "PRV_PF",
               "PSP",
               "PT",
               "REC",
               "SA",
+              "SCEC",
               "SCP"
             ]
           },
@@ -2409,6 +3079,10 @@
             "type": "boolean",
             "description": "True if institution is an aggregator",
             "example": false
+          },
+          "istatCode": {
+            "type": "string",
+            "description": "Location code of institution"
           },
           "origin": {
             "type": "string",
@@ -2993,10 +3667,12 @@
               "PA",
               "PG",
               "PRV",
+              "PRV_PF",
               "PSP",
               "PT",
               "REC",
               "SA",
+              "SCEC",
               "SCP"
             ]
           },
@@ -3153,10 +3829,12 @@
               "PA",
               "PG",
               "PRV",
+              "PRV_PF",
               "PSP",
               "PT",
               "REC",
               "SA",
+              "SCEC",
               "SCP"
             ]
           },
@@ -3254,20 +3932,35 @@
         "title": "OnboardingInstitutionUsersRequest",
         "type": "object",
         "properties": {
+          "institutionId": {
+            "type": "string",
+            "description": "The institution ID where users will be added. This takes precedence over the tax code"
+          },
           "institutionSubunitCode": {
-            "type": "string"
+            "type": "string",
+            "description": "Add users to the institution via subunit code. Can be used in combination with institutionTaxCode"
           },
           "institutionTaxCode": {
-            "type": "string"
+            "type": "string",
+            "description": "Add users to the institution via tax code. Can be used in combination with institutionSubunitCode"
           },
           "productId": {
-            "type": "string"
+            "type": "string",
+            "description": "Product to add roles to"
           },
           "sendCreateUserNotificationEmail": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Send an email notification to the user. By default it's set to true",
+            "example": false
+          },
+          "toAddOnAggregates": {
+            "type": "boolean",
+            "description": "Enable automatic management of group assignment",
+            "example": false
           },
           "users": {
             "type": "array",
+            "description": "List of users to add",
             "items": {
               "$ref": "#/components/schemas/Person"
             }
@@ -3279,10 +3972,12 @@
         "type": "object",
         "properties": {
           "email": {
-            "type": "string"
+            "type": "string",
+            "description": "The email address of the user to add / create. If id is present, the field is ignored"
           },
           "env": {
             "type": "string",
+            "description": "Environment. The field is currently not used to create users. It's only returned in response",
             "enum": [
               "COLL",
               "DEV",
@@ -3291,16 +3986,20 @@
             ]
           },
           "id": {
-            "type": "string"
+            "type": "string",
+            "description": "User ID of a user already in the registry. A role will be added to the institution/product for the user. It takes precedence over taxCode"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "The name of the user to add / create. If id is present, the field is ignored"
           },
           "productRole": {
-            "type": "string"
+            "type": "string",
+            "description": "The product role to assign to the user based on the product specifications"
           },
           "role": {
             "type": "string",
+            "description": "The role to assign to the user",
             "enum": [
               "ADMIN_EA",
               "DELEGATE",
@@ -3310,13 +4009,20 @@
             ]
           },
           "roleLabel": {
-            "type": "string"
+            "type": "string",
+            "description": "The product role label based on the product specifications. The field is currently not used to create users"
           },
           "surname": {
-            "type": "string"
+            "type": "string",
+            "description": "The surname of the user to add / create. If id is present, the field is ignored"
           },
           "taxCode": {
-            "type": "string"
+            "type": "string",
+            "description": "The tax code of the user to add / create. If id is present, the field is ignored"
+          },
+          "userMailUuid": {
+            "type": "string",
+            "description": "The email ID of the user already in the registry to be assigned to the institution/product. This field is only used when adding a user by ID"
           }
         }
       },
@@ -3368,10 +4074,12 @@
               "PA",
               "PG",
               "PRV",
+              "PRV_PF",
               "PSP",
               "PT",
               "REC",
               "SA",
+              "SCEC",
               "SCP"
             ]
           },
@@ -3422,6 +4130,43 @@
                 "TOBEVALIDATED"
               ]
             }
+          }
+        }
+      },
+      "DelegationWithPaginationResponse": {
+        "title": "DelegationWithPaginationResponse",
+        "type": "object",
+        "properties": {
+          "delegations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DelegationResponse"
+            }
+          },
+          "pageInfo": {
+            "$ref": "#/components/schemas/PageInfo"
+          }
+        }
+      },
+      "PageInfo": {
+        "title": "PageInfo",
+        "type": "object",
+        "properties": {
+          "pageNo": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -3549,6 +4294,15 @@
           },
           "dataProtectionOfficer": {
             "$ref": "#/components/schemas/DataProtectionOfficerRequest1"
+          },
+          "atecoCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "legalForm": {
+            "type": "string"
           }
         }
       },
@@ -3744,6 +4498,9 @@
           "signContract": {
             "type": "boolean"
           },
+          "soleTrader": {
+            "type": "boolean"
+          },
           "institution": {
             "$ref": "#/components/schemas/InstitutionBaseRequest"
           },
@@ -3755,6 +4512,9 @@
           },
           "gpuData": {
             "$ref": "#/components/schemas/GPUData1"
+          },
+          "payment": {
+            "$ref": "#/components/schemas/PaymentRequestDto"
           }
         }
       },
@@ -3908,6 +4668,9 @@
           "istatCode": {
             "type": "string"
           },
+          "legalForm": {
+            "type": "string"
+          },
           "geographicTaxonomies": {
             "type": "array",
             "items": {
@@ -3931,6 +4694,12 @@
           },
           "imported": {
             "type": "boolean"
+          },
+          "atecoCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -3997,6 +4766,18 @@
           }
         }
       },
+      "PaymentRequestDto": {
+        "type": "object",
+        "properties": {
+          "iban": {
+            "pattern": "^IT\\d{2}[A-Z]\\d{5}\\d{5}[0-9A-Z]{12}$",
+            "type": "string"
+          },
+          "holder": {
+            "type": "string"
+          }
+        }
+      },
       "OnboardingStatus": {
         "enum": [
           "REQUEST",
@@ -4008,6 +4789,108 @@
           "DELETED"
         ],
         "type": "string"
+      },
+      "OnboardingGet": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "workflowType": {
+            "type": "string"
+          },
+          "institution": {
+            "$ref": "#/components/schemas/InstitutionResponse1"
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserResponse1"
+            }
+          },
+          "pricingPlan": {
+            "type": "string"
+          },
+          "billing": {
+            "$ref": "#/components/schemas/BillingResponse2"
+          },
+          "payment": {
+            "$ref": "#/components/schemas/PaymentResponse"
+          },
+          "signContract": {
+            "type": "boolean"
+          },
+          "additionalInformations": {
+            "$ref": "#/components/schemas/AdditionalInformationsDto1"
+          },
+          "createdAt": {
+            "$ref": "#/components/schemas/LocalDateTime"
+          },
+          "updatedAt": {
+            "$ref": "#/components/schemas/LocalDateTime"
+          },
+          "expiringDate": {
+            "$ref": "#/components/schemas/LocalDateTime"
+          },
+          "activatedAt": {
+            "$ref": "#/components/schemas/LocalDateTime"
+          },
+          "status": {
+            "type": "string"
+          },
+          "userRequestUid": {
+            "type": "string"
+          },
+          "reasonForReject": {
+            "type": "string"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "UserResponse1": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "taxCode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "surname": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/PartyRole"
+          },
+          "productRole": {
+            "type": "string"
+          }
+        }
+      },
+      "PaymentResponse": {
+        "type": "object",
+        "properties": {
+          "iban": {
+            "type": "string"
+          },
+          "holder": {
+            "type": "string"
+          }
+        }
       },
       "OnboardingPaRequest": {
         "required": [
@@ -4039,6 +4922,9 @@
             "type": "string"
           },
           "signContract": {
+            "type": "boolean"
+          },
+          "soleTrader": {
             "type": "boolean"
           },
           "institution": {
@@ -4230,6 +5116,9 @@
           "signContract": {
             "type": "boolean"
           },
+          "soleTrader": {
+            "type": "boolean"
+          },
           "institution": {
             "$ref": "#/components/schemas/InstitutionPspRequest"
           },
@@ -4292,6 +5181,9 @@
           "istatCode": {
             "type": "string"
           },
+          "legalForm": {
+            "type": "string"
+          },
           "geographicTaxonomies": {
             "type": "array",
             "items": {
@@ -4316,6 +5208,12 @@
           "imported": {
             "type": "boolean"
           },
+          "atecoCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "paymentServiceProvider": {
             "$ref": "#/components/schemas/PaymentServiceProviderRequest1"
           },
@@ -4331,10 +5229,86 @@
             "type": "boolean"
           }
         }
+      },
+      "AddMembersToUserGroupDto": {
+        "title": "AddMembersToUserGroupDto",
+        "required": [
+          "description",
+          "institutionId",
+          "members",
+          "name",
+          "parentInstitutionId",
+          "productId"
+        ],
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Users group's description"
+          },
+          "institutionId": {
+            "type": "string",
+            "description": "Users group's institutionId"
+          },
+          "members": {
+            "uniqueItems": true,
+            "type": "array",
+            "description": "List of all the members of the group",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "name": {
+            "type": "string",
+            "description": "Users group's name"
+          },
+          "parentInstitutionId": {
+            "type": "string",
+            "description": "Users group's parent institutionId"
+          },
+          "productId": {
+            "type": "string",
+            "description": "Users group's productId"
+          }
+        }
+      },
+      "DeleteMembersFromUserGroupDto": {
+        "title": "DeleteMembersFromUserGroupDto",
+        "required": [
+          "institutionId",
+          "members",
+          "parentInstitutionId",
+          "productId"
+        ],
+        "type": "object",
+        "properties": {
+          "institutionId": {
+            "type": "string",
+            "description": "Users group's institutionId"
+          },
+          "members": {
+            "uniqueItems": true,
+            "type": "array",
+            "description": "List of all the members of the group",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "parentInstitutionId": {
+            "type": "string",
+            "description": "Users group's parent institutionId"
+          },
+          "productId": {
+            "type": "string",
+            "description": "Users group's productId"
+          }
+        }
       }
     },
     "securitySchemes": {
-      "api_key": {
+      "apiKeyHeader": {
         "type": "apiKey",
         "name": "Ocp-Apim-Subscription-Key",
         "in": "header"

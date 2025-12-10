@@ -1,0 +1,63 @@
+{
+  "id": "prod-test_id",
+  "productId": "prod-test",
+  "alias": "prod-test",
+  "title": "PROD TEST",
+  "description": "Descrizione prodotto",
+  "status": "TESTING",
+  "version": 1,
+  "consumers": [],
+
+  "visualConfiguration": {
+    "logoUrl": "",
+    "depictImageUrl": "",
+    "logoBgColor": "#0B3EE3"
+  },
+
+  "features": {
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
+    "allowedInstitutionTaxCode": [],
+    "delegable": false,
+    "invoiceable": true,
+    "expirationDays": 30,
+    "enabled": true
+  },
+
+  "roleMappings": [],
+  "contracts": [],
+
+  "institutionOrigins": [
+    {
+      "institutionType": "PA",
+      "origin": "IPA",
+      "labelKey": "pa"
+    },
+    {
+      "institutionType": "GSP",
+      "origin": "IPA",
+      "labelKey": "gsp"
+    },
+    {
+      "institutionType": "SCP",
+      "origin": "SELC",
+      "labelKey": "scp"
+    }
+  ],
+
+  "emailTemplates": [],
+
+  "backOfficeEnvironmentConfigurations": [
+    {
+      "env": "prod",
+      "urlPublic": "",
+      "urlBO": "",
+      "identityTokenAudience": ""
+    }
+  ],
+
+  "metadata": {
+    "createdAt": "2025-12-01T09:00:00.000Z",
+    "createdBy": "test"
+  }
+}

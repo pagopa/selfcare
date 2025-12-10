@@ -36,14 +36,25 @@
             </modules>
         </profile>
         <profile>
-            <id>webhook</id>
+            <id>product</id>
             <activation>
                 <file>
-                    <exists>webhook/pom.xml</exists>
+                    <exists>product/pom.xml</exists>
                 </file>
             </activation>
             <modules>
-                <module>webhook</module>
+                <module>product</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>product-cdc</id>
+            <activation>
+                <file>
+                    <exists>product-cdc/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>product-cdc</module>
             </modules>
         </profile>
     </profiles>
