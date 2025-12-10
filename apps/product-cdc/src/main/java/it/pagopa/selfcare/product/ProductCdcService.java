@@ -54,6 +54,7 @@ public class ProductCdcService {
   public ProductCdcService(ReactiveMongoClient mongoClient,
                            @ConfigProperty(name = "quarkus.mongodb.database") String mongodbDatabase,
                            @ConfigProperty(name = "quarkus.mongodb.collection") String collectionName,
+                           @ConfigProperty(name = "product-cdc.mongodb.watch.enabled") Boolean cdcEnable,
                            TelemetryClient telemetryClient,
                            TableClient tableClient,
                            ProductService productService,
@@ -68,7 +69,9 @@ public class ProductCdcService {
     this.azureBlobClient = azureBlobClient;
     this.productMapper = productMapper;
     telemetryClient.getContext().getOperation().setName(ProductConstant.OPERATION_NAME);
-    initOrderStream();
+    if (cdcEnable) {
+      initOrderStream();
+    }
   }
 
   private void initOrderStream() {
