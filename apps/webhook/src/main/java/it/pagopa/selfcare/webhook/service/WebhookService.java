@@ -65,13 +65,13 @@ public class WebhookService {
     }
     
     public Uni<WebhookResponse> getWebhook(String id) {
-        return webhookRepository.findByIdOptional(id)
+        return webhookRepository.findByIdOptional(sanitizeString(id))
                 .map(webhook -> webhook != null ? toResponse(webhook) : null);
     }
     
     public Uni<WebhookResponse> updateWebhook(String id, WebhookRequest request) {
-        return webhookRepository.findByIdOptional(id)
-                .onItem().ifNull().failWith(() -> new IllegalArgumentException("Webhook not found: " + id))
+        return webhookRepository.findByIdOptional(sanitizeString(id))
+                .onItem().ifNull().failWith(() -> new IllegalArgumentException("Webhook not found: " + sanitizeString(id)))
                 .invoke(webhook -> {
                     webhook.setName(request.getName());
                     webhook.setDescription(request.getDescription());
@@ -91,15 +91,15 @@ public class WebhookService {
                     }
                 })
                 .call(webhook -> webhookRepository.update(webhook))
-                .invoke(() -> log.info("Updated webhook with ID: {}", id))
+                .invoke(() -> log.info("Updated webhook with ID: {}", sanitizeString(id)))
                 .map(this::toResponse);
     }
     
     public Uni<Boolean> deleteWebhook(String id) {
         return webhookRepository.findByIdOptional(id)
-                .onItem().ifNull().failWith(() -> new IllegalArgumentException("Webhook not found: " + id))
-                .call(webhook -> webhookRepository.deleteByIdSafe(id))
-                .invoke(() -> log.info("Deleted webhook with ID: {}", id))
+                .onItem().ifNull().failWith(() -> new IllegalArgumentException("Webhook not found: " + sanitizeString(id)))
+                .call(webhook -> webhookRepository.deleteByIdSafe(sanitizeString(id)))
+                .invoke(() -> log.info("Deleted webhook with ID: {}", sanitizeString(id)))
                 .replaceWith(true);
     }
     
@@ -107,9 +107,9 @@ public class WebhookService {
         return webhookRepository.findActiveWebhooksByProduct(request.getProductId())
                 .invoke(webhooks -> {
                     if (webhooks.isEmpty()) {
-                        log.warn("No active webhooks found for product: {}", request.getProductId());
+                        log.warn("No active webhooks found for product: {}", sanitizeString(request.getProductId()));
                     } else {
-                        log.info("Found {} active webhook(s) for product: {}", webhooks.size(), request.getProductId());
+                        log.info("Found {} active webhook(s) for product: {}", webhooks.size(), sanitizeString(request.getProductId()));
                     }
                 })
                 .onItem().transformToMulti(webhooks -> io.smallrye.mutiny.Multi.createFrom().iterable(webhooks))
@@ -123,7 +123,7 @@ public class WebhookService {
                     
                     return notificationRepository.persist(notification)
                             .invoke(() -> log.info("Created notification with ID: {} for webhook: {} (product: {})",
-                                    notification.getId(), webhook.getId(), request.getProductId()))
+                                    notification.getId(), webhook.getId(), sanitizeString(request.getProductId())))
                             .call(n -> notificationService.processNotification(n, webhook));
                 })
                 .collect().asList()
@@ -153,5 +153,12 @@ public class WebhookService {
         }
         
         return response;
+    }
+
+    private String sanitizeString(String input) {
+        if (input == null) {
+            return null;
+        }
+        return input.replaceAll("[\\r\\n]", "");
     }
 }
