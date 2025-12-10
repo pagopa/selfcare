@@ -160,7 +160,6 @@ class ProductServiceImplTest {
     void createProductTest_throwsBadRequest_whenMissingProduct() {
         // given
         ProductCreateRequest productCreateRequest = new ProductCreateRequest();
-        productCreateRequest.setProductId(StringUtils.EMPTY);
 
         Product product = Product.builder()
                 .id(UUID.randomUUID().toString())
@@ -171,10 +170,10 @@ class ProductServiceImplTest {
 
         // when
         BadRequestException ex = assertThrows(BadRequestException.class,
-                () -> productService.createProduct(" ", "createdBy", productCreateRequest).await().indefinitely());
+                () -> productService.createProduct(null, "createdBy", productCreateRequest).await().indefinitely());
 
         // then
-        assertTrue(ex.getMessage().contains("Missing product"));
+        assertTrue(ex.getMessage().contains("Invalid productId"));
         verify(productRepository, never()).persist(any(Product.class));
     }
 

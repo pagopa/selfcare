@@ -19,13 +19,12 @@ public class JacksonConfiguration {
     @Produces
     public ObjectMapper objectMapper() {
         ObjectMapper mapper = DatabindCodec.mapper();
-        mapper.registerModule(new ParameterNamesModule(JsonCreator.Mode.DELEGATING)); // mandatory config
-
+        mapper.registerModule(new ParameterNamesModule(JsonCreator.Mode.DELEGATING));
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);// custom config
-        mapper.registerModule(new JavaTimeModule());                               // custom config
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);            // custom config
-        mapper.registerModule(new Jdk8Module());                                   // custom config
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        mapper.registerModule(new Jdk8Module());
         return mapper;
     }
 
