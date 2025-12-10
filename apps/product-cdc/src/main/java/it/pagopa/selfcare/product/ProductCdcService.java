@@ -4,8 +4,6 @@ import com.azure.data.tables.TableClient;
 import com.azure.data.tables.models.TableEntity;
 import com.azure.data.tables.models.TableServiceException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.microsoft.applicationinsights.TelemetryClient;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
@@ -20,15 +18,12 @@ import io.quarkus.runtime.configuration.ConfigUtils;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
-import it.pagopa.selfcare.product.conf.JacksonConfiguration;
 import it.pagopa.selfcare.product.constant.ProductConstant;
 import it.pagopa.selfcare.product.mapper.ProductMapper;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.TrackEventInput;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.BsonDocument;
 import org.bson.conversions.Bson;
@@ -58,7 +53,7 @@ public class ProductCdcService {
 
   public ProductCdcService(ReactiveMongoClient mongoClient,
                            @ConfigProperty(name = "quarkus.mongodb.database") String mongodbDatabase,
-                           @ConfigProperty(name = "quarkus.mongodb.collection") String collectionName,
+                           @ConfigProperty(name = "product-cdc.mongodb.collection") String collectionName,
                            @ConfigProperty(name = "product-cdc.mongodb.watch.enabled") Boolean cdcEnable,
                            TelemetryClient telemetryClient,
                            TableClient tableClient,
