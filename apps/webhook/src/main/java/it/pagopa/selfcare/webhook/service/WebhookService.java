@@ -31,10 +31,10 @@ public class WebhookService {
     
     public Uni<WebhookResponse> createWebhook(WebhookRequest request) {
         Webhook webhook = new Webhook();
-        webhook.setName(request.getName());
-        webhook.setDescription(request.getDescription());
-        webhook.setUrl(request.getUrl());
-        webhook.setHttpMethod(request.getHttpMethod());
+        webhook.setName(sanitizeString(request.getName()));
+        webhook.setDescription(sanitizeString(request.getDescription()));
+        webhook.setUrl(sanitizeString(request.getUrl()));
+        webhook.setHttpMethod(sanitizeString(request.getHttpMethod()));
         webhook.setHeaders(request.getHeaders());
         webhook.setProducts(request.getProducts());
         webhook.setStatus(Webhook.WebhookStatus.ACTIVE);

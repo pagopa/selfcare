@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.webhook.resource;
+package it.pagopa.selfcare.webhook.controller;
 
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.webhook.dto.NotificationRequest;
@@ -19,7 +19,7 @@ import java.util.List;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Webhook Management", description = "API for webhook configuration management")
-public class WebhookResource {
+public class WebhookController {
     
     @Inject
     WebhookService webhookService;
