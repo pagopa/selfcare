@@ -63,6 +63,10 @@ app_settings = [
   {
     name  = "MONGODB_DATABASE_NAME"
     value = "selcProduct"
+  },
+  {
+    name  = "BLOB_STORAGE_CONTAINER_CONTRACT_TEMPLATE"
+    value = "sc-d-documents-blob"
   }
 ]
 
