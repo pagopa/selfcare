@@ -33,6 +33,7 @@ public class ContractTemplateController {
     }
 
     @POST
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     @Tag(name = "ContractTemplate")
     @Tag(name = "external-v2")
