@@ -16,6 +16,9 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.owasp.encoder.Encode;
+
+import java.util.Optional;
 
 @Authenticated
 @Path("/contract-template")
@@ -53,6 +56,9 @@ public class ContractTemplateController {
     public Uni<Response> download(@QueryParam("productId") String productId,
                                   @QueryParam("fileType") @DefaultValue("HTML") String fileType,
                                   @PathParam("contractTemplateId") String contractTemplateId) {
+        productId = Optional.ofNullable(productId).map(Encode::forJava).orElse(null);
+        fileType = Optional.ofNullable(fileType).map(Encode::forJava).orElse(null);
+        contractTemplateId = Optional.ofNullable(contractTemplateId).map(Encode::forJava).orElse(null);
         return contractTemplateService.download(productId, contractTemplateId, ContractTemplateFileType.from(fileType))
                 .onItem().transform(r -> Response.ok(r.getData()).type(r.getType().getContentType()).build());
     }
