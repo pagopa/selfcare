@@ -1,5 +1,10 @@
 ---
 openapi: 3.1.0
+tags:
+- name: ContractTemplate
+- name: Product
+- name: external-pnpg
+- name: external-v2
 components:
   schemas:
     BackOfficeEnvironmentConfiguration:
@@ -437,6 +442,9 @@ paths:
       description: Upload an html file as a new contract template version to be used
         in product configuration
       operationId: upload
+      tags:
+      - ContractTemplate
+      - external-v2
       requestBody:
         content:
           application/json:
@@ -472,14 +480,15 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      tags:
-      - Contract Template Controller
       security:
       - SecurityScheme: []
     get:
       summary: List contract templates available
       description: List and filter all the contract templates available
       operationId: list
+      tags:
+      - ContractTemplate
+      - external-v2
       parameters:
       - name: name
         in: query
@@ -514,8 +523,6 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      tags:
-      - Contract Template Controller
       security:
       - SecurityScheme: []
   /contract-template/{contractTemplateId}:
@@ -523,6 +530,9 @@ paths:
       summary: Download a contract template version
       description: Download the html file of a specific contract template version
       operationId: download
+      tags:
+      - ContractTemplate
+      - external-v2
       parameters:
       - name: contractTemplateId
         in: path
@@ -565,8 +575,6 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      tags:
-      - Contract Template Controller
       security:
       - SecurityScheme: []
   /product:
@@ -828,10 +836,6 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
-tags:
-- name: Product
-- name: external-pnpg
-- name: external-v2
 info:
   title: Product API
   version: 1.0.0

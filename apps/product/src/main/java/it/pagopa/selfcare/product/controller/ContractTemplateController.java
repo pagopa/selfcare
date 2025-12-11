@@ -16,12 +16,14 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.owasp.encoder.Encode;
 
 import java.util.Optional;
 
 @Authenticated
 @Path("/contract-template")
+@Tag(name = "ContractTemplate")
 public class ContractTemplateController {
 
     private final ContractTemplateService contractTemplateService;
@@ -32,6 +34,8 @@ public class ContractTemplateController {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @Tag(name = "ContractTemplate")
+    @Tag(name = "external-v2")
     @Operation(summary = "Upload a new contract template version", description = "Upload an html file as a new contract template version to be used in product configuration")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Created", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ContractTemplateResponse.class))),
@@ -46,6 +50,8 @@ public class ContractTemplateController {
 
     @GET
     @Path("/{contractTemplateId}")
+    @Tag(name = "ContractTemplate")
+    @Tag(name = "external-v2")
     @Operation(summary = "Download a contract template version", description = "Download the html file of a specific contract template version")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)),
@@ -65,6 +71,8 @@ public class ContractTemplateController {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @Tag(name = "ContractTemplate")
+    @Tag(name = "external-v2")
     @Operation(summary = "List contract templates available", description = "List and filter all the contract templates available")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)),

@@ -1,5 +1,14 @@
 {
   "openapi" : "3.1.0",
+  "tags" : [ {
+    "name" : "ContractTemplate"
+  }, {
+    "name" : "Product"
+  }, {
+    "name" : "external-pnpg"
+  }, {
+    "name" : "external-v2"
+  } ],
   "components" : {
     "schemas" : {
       "BackOfficeEnvironmentConfiguration" : {
@@ -555,6 +564,7 @@
         "summary" : "Upload a new contract template version",
         "description" : "Upload an html file as a new contract template version to be used in product configuration",
         "operationId" : "upload",
+        "tags" : [ "ContractTemplate", "external-v2" ],
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -613,7 +623,6 @@
             "description" : "Not Allowed"
           }
         },
-        "tags" : [ "Contract Template Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
         } ]
@@ -622,6 +631,7 @@
         "summary" : "List contract templates available",
         "description" : "List and filter all the contract templates available",
         "operationId" : "list",
+        "tags" : [ "ContractTemplate", "external-v2" ],
         "parameters" : [ {
           "name" : "name",
           "in" : "query",
@@ -675,7 +685,6 @@
             "description" : "Not Allowed"
           }
         },
-        "tags" : [ "Contract Template Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
         } ]
@@ -686,6 +695,7 @@
         "summary" : "Download a contract template version",
         "description" : "Download the html file of a specific contract template version",
         "operationId" : "download",
+        "tags" : [ "ContractTemplate", "external-v2" ],
         "parameters" : [ {
           "name" : "contractTemplateId",
           "in" : "path",
@@ -751,7 +761,6 @@
             "description" : "Not Allowed"
           }
         },
-        "tags" : [ "Contract Template Controller" ],
         "security" : [ {
           "SecurityScheme" : [ ]
         } ]
@@ -1127,13 +1136,6 @@
       }
     }
   },
-  "tags" : [ {
-    "name" : "Product"
-  }, {
-    "name" : "external-pnpg"
-  }, {
-    "name" : "external-v2"
-  } ],
   "info" : {
     "title" : "Product API",
     "version" : "1.0.0"
