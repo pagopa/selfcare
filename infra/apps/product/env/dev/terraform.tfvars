@@ -63,14 +63,19 @@ app_settings = [
   {
     name  = "MONGODB_DATABASE_NAME"
     value = "selcProduct"
+  },
+  {
+    name  = "BLOB_STORAGE_CONTAINER_CONTRACT_TEMPLATE"
+    value = "sc-d-documents-blob"
   }
 ]
 
 secrets_names = {
-  "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-  "SELFCARE_DATA_ENCRIPTION_KEY"          = "selfcare-data-encryption-key"
-  "SELFCARE_DATA_ENCRIPTION_IV"           = "selfcare-data-encryption-iv"
-  "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
-  "JWT_PUBLIC_KEY"                        = "jwt-public-key"
+  "APPLICATIONINSIGHTS_CONNECTION_STRING"               = "appinsights-connection-string"
+  "SELFCARE_DATA_ENCRIPTION_KEY"                        = "selfcare-data-encryption-key"
+  "SELFCARE_DATA_ENCRIPTION_IV"                         = "selfcare-data-encryption-iv"
+  "MONGODB_CONNECTION_STRING"                           = "mongodb-connection-string"
+  "JWT_PUBLIC_KEY"                                      = "jwt-public-key"
+  "BLOB_STORAGE_CONNECTION_STRING_CONTRACT_TEMPLATE"    = "documents-storage-connection-string"
 }
 

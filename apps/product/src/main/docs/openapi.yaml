@@ -1,6 +1,7 @@
 ---
 openapi: 3.1.0
 tags:
+- name: ContractTemplate
 - name: Product
 - name: external-pnpg
 - name: external-v2
@@ -28,7 +29,7 @@ components:
           type: string
         productLabel:
           type: string
-    ContractTemplate:
+    ContractTemplateConfig:
       type: object
       properties:
         contractId:
@@ -60,12 +61,54 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/WorkflowType"
+    ContractTemplateResponse:
+      type: object
+      properties:
+        contractTemplateId:
+          type: string
+        contractTemplatePath:
+          type: string
+        contractTemplateVersion:
+          type: string
+        productId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        createdAt:
+          $ref: "#/components/schemas/Instant"
+        createdBy:
+          type: string
+    ContractTemplateUploadRequest:
+      type: object
+      required:
+      - productId
+      - file
+      - name
+      - version
+      properties:
+        productId:
+          type: string
+        file:
+          type: string
+          format: binary
+        name:
+          type: string
+          pattern: "^[a-zA-Z0-9 ]+$"
+        version:
+          type: string
+          pattern: ^\d+\.\d+\.\d+$
+        description:
+          type: string
+        createdBy:
+          type: string
     ContractType:
       type: string
       enum:
       - CONTRACT
       - ATTACHMENT
-    EmailTemplate:
+    EmailTemplateConfig:
       type: object
       properties:
         type:
@@ -211,7 +254,7 @@ components:
         contracts:
           type: array
           items:
-            $ref: "#/components/schemas/ContractTemplate"
+            $ref: "#/components/schemas/ContractTemplateConfig"
         institutionOrigins:
           type: array
           items:
@@ -219,7 +262,7 @@ components:
         emailTemplates:
           type: array
           items:
-            $ref: "#/components/schemas/EmailTemplate"
+            $ref: "#/components/schemas/EmailTemplateConfig"
         backOfficeEnvironmentConfigurations:
           type: array
           items:
@@ -269,7 +312,7 @@ components:
         contracts:
           type: array
           items:
-            $ref: "#/components/schemas/ContractTemplate"
+            $ref: "#/components/schemas/ContractTemplateConfig"
         institutionOrigins:
           type: array
           items:
@@ -277,7 +320,7 @@ components:
         emailTemplates:
           type: array
           items:
-            $ref: "#/components/schemas/EmailTemplate"
+            $ref: "#/components/schemas/EmailTemplateConfig"
         backOfficeEnvironmentConfigurations:
           type: array
           items:
@@ -313,7 +356,7 @@ components:
         contracts:
           type: array
           items:
-            $ref: "#/components/schemas/ContractTemplate"
+            $ref: "#/components/schemas/ContractTemplateConfig"
         institutionOrigins:
           type: array
           items:
@@ -321,7 +364,7 @@ components:
         emailTemplates:
           type: array
           items:
-            $ref: "#/components/schemas/EmailTemplate"
+            $ref: "#/components/schemas/EmailTemplateConfig"
         backOfficeEnvironmentConfigurations:
           type: array
           items:
@@ -393,6 +436,147 @@ components:
       bearerFormat: JWT
       description: Authentication
 paths:
+  /contract-template:
+    post:
+      summary: Upload a new contract template version
+      description: Upload an html file as a new contract template version to be used
+        in product configuration
+      operationId: upload
+      tags:
+      - ContractTemplate
+      - external-v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContractTemplateUploadRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractTemplateResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "409":
+          description: Conflict
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+    get:
+      summary: List contract templates available
+      description: List and filter all the contract templates available
+      operationId: list
+      tags:
+      - ContractTemplate
+      - external-v2
+      parameters:
+      - name: name
+        in: query
+        schema:
+          type: string
+      - name: productId
+        in: query
+        schema:
+          type: string
+      - name: version
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream: {}
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /contract-template/{contractTemplateId}:
+    get:
+      summary: Download a contract template version
+      description: Download the html file of a specific contract template version
+      operationId: download
+      tags:
+      - ContractTemplate
+      - external-v2
+      parameters:
+      - name: contractTemplateId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: fileType
+        in: query
+        schema:
+          type: string
+          default: HTML
+      - name: productId
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream: {}
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
   /product:
     patch:
       summary: Partially update a product by ID

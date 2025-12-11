@@ -15,21 +15,16 @@ import io.restassured.response.Response;
 import it.pagopa.selfcare.cucumber.utils.model.FileDescriptor;
 import it.pagopa.selfcare.cucumber.utils.model.JwtData;
 import jakarta.enterprise.context.ApplicationScoped;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Assertions;
+
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Assertions;
 
 @Slf4j
 @ApplicationScoped
@@ -92,6 +87,20 @@ public class CommonSteps {
         sharedStepData.setQueryParams(queryParams);
     }
 
+    @And("The following form data:")
+    public void setFormData(Map<String, String> formData) {
+        sharedStepData.setFormData(formData);
+    }
+
+    @And("Upload the file at path {string} with form key {string} and content type {string}")
+    public void setFileToUpload(String filePath, String formKey, String contentType) {
+        sharedStepData.setFileUpload(FileDescriptor.builder()
+                .filePathReference(filePath)
+                .keyParamRequest(formKey)
+                .mediaType(contentType)
+                .build());
+    }
+
     @When("I send a GET request to {string}")
     public void sendGetRequest(String url) {
         final String token = sharedStepData.getToken();
@@ -118,6 +127,28 @@ public class CommonSteps {
             .pathParams(Optional.ofNullable(sharedStepData.getPathParams()).orElse(Collections.emptyMap()))
             .queryParams(Optional.ofNullable(sharedStepData.getQueryParams()).orElse(Collections.emptyMap()))
             .body(Optional.ofNullable(sharedStepData.getRequestBody()).orElse(""))
+            .when()
+            .post(url)
+            .then()
+            .extract()
+        );
+    }
+
+    @When("I send a POST request to {string} with form data and multi-part file")
+    public void sendPostRequestWithFormDataAndFileUpload(String url) {
+        final String token = sharedStepData.getToken();
+        sharedStepData.setResponse(RestAssured
+            .given()
+            .contentType(ContentType.MULTIPART)
+            .header("Authorization", "Bearer " + token)
+            .pathParams(Optional.ofNullable(sharedStepData.getPathParams()).orElse(Collections.emptyMap()))
+            .queryParams(Optional.ofNullable(sharedStepData.getQueryParams()).orElse(Collections.emptyMap()))
+            .formParams(Optional.ofNullable(sharedStepData.getFormData()).orElse(Collections.emptyMap()))
+            .multiPart(
+                sharedStepData.getFileUpload().getKeyParamRequest(),
+                new File(getClass().getClassLoader().getResource(sharedStepData.getFileUpload().getFilePathReference()).getFile()),
+                sharedStepData.getFileUpload().getMediaType()
+            )
             .when()
             .post(url)
             .then()
@@ -205,6 +236,14 @@ public class CommonSteps {
         Assertions.assertEquals(expectedStatusCode, sharedStepData.getResponse().statusCode());
     }
 
+    @And("The response header contains:")
+    public void checkResponseHeader(Map<String, String> expectedKeyValues) {
+        expectedKeyValues.forEach((expectedKey, expectedValue) -> {
+            final String value = sharedStepData.getResponse().header(expectedKey);
+            Assertions.assertEquals(expectedValue, value, String.format("The header field %s does not contain the expected value", expectedKey));
+        });
+    }
+
     @And("The response body contains:")
     public void checkResponseBody(Map<String, String> expectedKeyValues) {
         expectedKeyValues.forEach((expectedKey, expectedValue) -> {
@@ -222,6 +261,13 @@ public class CommonSteps {
         });
     }
 
+    @And("The response body contains the string {string}")
+    public void checkResponseBodyTextContains(String string) {
+        final String currentValue = sharedStepData.getResponse().body().asString();
+        Assertions.assertTrue(currentValue.contains(string), String.format("The body %s does not contain the expected value", currentValue));
+    }
+
+    // FIXME: il check non fa un "contains" ma un "equals"
     @And("The response body contains string:")
     public void checkResponseBody(String string) {
         final String currentValue = sharedStepData.getResponse().body().asString();

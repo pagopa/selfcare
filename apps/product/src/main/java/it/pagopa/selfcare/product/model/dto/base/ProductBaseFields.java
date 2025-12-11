@@ -28,8 +28,8 @@ public class ProductBaseFields {
     private Features features;
 
     private List<RoleMapping> roleMappings;
-    private List<ContractTemplate> contracts;
+    private List<ContractTemplateConfig> contracts;
     private List<OriginEntry> institutionOrigins;
-    private List<EmailTemplate> emailTemplates;
+    private List<EmailTemplateConfig> emailTemplates;
     private List<BackOfficeEnvironmentConfiguration> backOfficeEnvironmentConfigurations;
 }
