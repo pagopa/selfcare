@@ -36,7 +36,11 @@ public class ContractTemplateController {
     @Produces(MediaType.APPLICATION_JSON)
     @Tag(name = "ContractTemplate")
     @Tag(name = "external-v2")
-    @Operation(summary = "Upload a new contract template version", description = "Upload an html file as a new contract template version to be used in product configuration")
+    @Operation(
+            summary = "Upload a new contract template version",
+            description = "Upload an html file as a new contract template version to be used in product configuration",
+            operationId = "uploadContractTemplate"
+    )
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Created", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ContractTemplateResponse.class))),
             @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class))),
@@ -52,7 +56,11 @@ public class ContractTemplateController {
     @Path("/{contractTemplateId}")
     @Tag(name = "ContractTemplate")
     @Tag(name = "external-v2")
-    @Operation(summary = "Download a contract template version", description = "Download the html file of a specific contract template version")
+    @Operation(
+            summary = "Download a contract template version",
+            description = "Download the html file of a specific contract template version",
+            operationId = "downloadContractTemplate"
+    )
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)),
             @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class))),
@@ -73,7 +81,11 @@ public class ContractTemplateController {
     @Produces(MediaType.APPLICATION_JSON)
     @Tag(name = "ContractTemplate")
     @Tag(name = "external-v2")
-    @Operation(summary = "List contract templates available", description = "List and filter all the contract templates available")
+    @Operation(
+            summary = "List contract templates available",
+            description = "List and filter all the contract templates available",
+            operationId = "listContractTemplates"
+    )
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)),
             @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class))),
