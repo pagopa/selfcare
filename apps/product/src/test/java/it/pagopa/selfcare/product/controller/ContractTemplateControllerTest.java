@@ -93,12 +93,14 @@ public class ContractTemplateControllerTest {
     @TestSecurity(user = "userJwt")
     void upload_shouldReturnBadRequest() throws URISyntaxException {
         given()
+            .contentType("multipart/form-data")
         .when()
             .post()
         .then()
             .statusCode(400);
 
         given()
+            .contentType("multipart/form-data")
             .queryParam("productId", "prod-test")
         .when()
             .post()
