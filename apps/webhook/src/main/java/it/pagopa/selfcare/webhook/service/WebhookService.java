@@ -155,10 +155,15 @@ public class WebhookService {
         return response;
     }
 
+    /**
+     * Sanitize user input for safe logging: remove line breaks, control characters,
+     * and allow only alphanumerics plus minimal punctuation (underscore, dash).
+     */
     private String sanitizeString(String input) {
         if (input == null) {
             return null;
         }
-        return input.replaceAll("[\\r\\n]", "");
+        // Remove all non-alphanumerics, dash, and underscore
+        return input.replaceAll("[^A-Za-z0-9_-]", "");
     }
 }
