@@ -18,11 +18,9 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @ApplicationScoped
@@ -34,11 +32,21 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
     private static final String BASE_TEMPLATE_LOGO_PLACEHOLDER = "${contractTemplateLogo}";
     private static final String BASE_TEMPLATE_LOGO_PATH = "%s/%s/logo.png"; // {contractTemplateLogoBaseUrl}/{productId}/logo.png
 
+    private static final String BASE_TEMPLATE_HTML;
+    static {
+        try (InputStream is = ContractTemplateServiceImpl.class.getClassLoader().getResourceAsStream(BASE_TEMPLATE_FILE)) {
+            BASE_TEMPLATE_HTML = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            log.info("Base contract template HTML loaded successfully");
+        } catch (Exception ex) {
+            log.error("Unable to load base contract template HTML", ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
     private final ContractTemplateRepository contractTemplateRepository;
     private final ContractTemplateStorage contractTemplateStorage;
     private final ContractTemplateMapper contractTemplateMapper;
     private final String contractTemplateLogoBaseUrl;
-    private final String contractTemplateBaseHTML;
 
     public ContractTemplateServiceImpl(ContractTemplateRepository contractTemplateRepository,
                                        ContractTemplateStorage contractTemplateStorage,
@@ -49,9 +57,6 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
         this.contractTemplateStorage = contractTemplateStorage;
         this.contractTemplateMapper = contractTemplateMapper;
         this.contractTemplateLogoBaseUrl = contractTemplateLogoBaseUrl;
-        this.contractTemplateBaseHTML = Files.readString(Path.of(
-            Objects.requireNonNull(getClass().getClassLoader().getResource(BASE_TEMPLATE_FILE)).getPath()
-        ));
     }
 
     @Override
@@ -106,7 +111,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
 
     private ContractTemplateFile buildContractTemplateFileFromHTML(String productId, FileUpload fileUpload) {
         return Optional.ofNullable(HtmlUtils.getCleanHTML(fileUpload.uploadedFile().toFile())).map(htmlFragment -> {
-            String html = contractTemplateBaseHTML.replace(BASE_TEMPLATE_FRAGMENT_PLACEHOLDER, htmlFragment);
+            String html = BASE_TEMPLATE_HTML.replace(BASE_TEMPLATE_FRAGMENT_PLACEHOLDER, htmlFragment);
             html = html.replace(BASE_TEMPLATE_LOGO_PLACEHOLDER, String.format(BASE_TEMPLATE_LOGO_PATH, contractTemplateLogoBaseUrl, productId));
             return ContractTemplateFile.builder()
                     .data(html.getBytes(StandardCharsets.UTF_8))
