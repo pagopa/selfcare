@@ -61,7 +61,7 @@ class WebhookServiceTest {
 
         WebhookResponse response = subscriber.awaitItem().getItem();
         assertNotNull(response.getId());
-        assertEquals("Test Webhook", response.getName());
+        assertEquals("TestWebhook", response.getName());
         assertEquals("ACTIVE", response.getStatus());
         assertNotNull(response.getRetryPolicy());
         assertEquals(3, response.getRetryPolicy().getMaxAttempts());
