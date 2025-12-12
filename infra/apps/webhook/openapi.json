@@ -1,0 +1,81 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Generic Logger API",
+    "description": "API to receive generic JSON payloads.",
+    "version": "1.0.0"
+  },
+  "tags": [],
+  "paths": {
+    "/echo": {
+      "post": {
+        "summary": "Webhook log",
+        "description": "Webhook log",
+        "operationId": "webhookEcho",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "A free-form JSON object",
+                "example": {
+                  "event": "user_login",
+                  "timestamp": "2023-10-27T10:00:00Z",
+                  "details": {
+                    "browser": "Chrome",
+                    "os": "Windows"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Log successfully received",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "received"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Auto generated value"
+    },
+    {
+      "url": "http://0.0.0.0:8080",
+      "description": "Auto generated value"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "apiKeyHeader": {
+        "type": "apiKey",
+        "name": "Ocp-Apim-Subscription-Key",
+        "in": "header"
+      }
+    }
+  }
+}

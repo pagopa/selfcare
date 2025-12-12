@@ -12,7 +12,7 @@ tags = {
   CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
 }
 
-private_dns_name = "selc-d-webhook-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+private_dns_name = "TOBEDEFINED"
 
 container_app = {
   min_replicas = 0
