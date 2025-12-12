@@ -1,0 +1,74 @@
+# syntax=docker/dockerfile:1.6
+FROM maven:3-eclipse-temurin-17 AS builder
+
+WORKDIR /src
+COPY pom.xml .
+
+WORKDIR /src/test-coverage
+COPY ./test-coverage/pom.xml .
+
+WORKDIR /src/apps
+COPY ./apps/pom.xml .
+
+WORKDIR /src/libs
+COPY ./libs/pom.xml .
+
+WORKDIR /src/libs/selfcare-sdk-security
+COPY ./libs/selfcare-sdk-security/pom.xml .
+COPY ./libs/selfcare-sdk-security/src ./src
+
+WORKDIR /src/libs/selfcare-sdk-pom
+COPY ./libs/selfcare-sdk-pom/pom.xml .
+
+WORKDIR /src/apps/webhook
+COPY ./apps/webhook/pom.xml .
+COPY ./apps/webhook/src/main/ ./src/main/
+
+WORKDIR /src
+
+RUN echo "<settings>\n" \
+         "<servers>\n" \
+         "<server>\n" \
+         "<id>\${repositoryId}</id>\n" \
+         "<username>\${repoLogin}</username>\n" \
+         "<password>\${repoPwd}</password>\n" \
+         "</server>\n" \
+         "<server>\n" \
+         "<id>\${selfcareOnboardingId}</id>\n" \
+         "<username>\${repoLogin}</username>\n" \
+         "<password>\${repoPwd}</password>\n" \
+         "</server>\n" \
+         "</servers>\n" \
+         "</settings>\n" > settings.xml
+
+ARG REPO_SELFCARE
+ARG REPO_ONBOARDING
+ARG REPO_USERNAME
+ARG REPO_PASSWORD
+
+RUN mvn --global-settings settings.xml --projects :webhook \
+    -DrepositoryId=${REPO_SELFCARE} \
+    -DselfcareOnboardingId=${REPO_ONBOARDING} \
+    -DrepoLogin=${REPO_USERNAME} \
+    -DrepoPwd=${REPO_PASSWORD} \
+    --also-make clean package -DskipTests
+
+FROM openjdk:17-jdk AS runtime
+
+ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
+ENV JAVA_OPTIONS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+
+WORKDIR /app
+
+COPY --from=builder /src/apps/webhook/target/quarkus-app/lib/ ./lib/
+COPY --from=builder /src/apps/webhook/target/quarkus-app/*.jar ./
+COPY --from=builder /src/apps/webhook/target/quarkus-app/app/ ./app/
+COPY --from=builder /src/apps/webhook/target/quarkus-app/quarkus/ ./quarkus/
+
+ADD https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.2.11/applicationinsights-agent-3.2.11.jar ./applicationinsights-agent.jar
+RUN chmod 755 ./applicationinsights-agent.jar
+
+EXPOSE 8083
+USER 1001
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTIONS -jar /app/quarkus-run.jar"]
