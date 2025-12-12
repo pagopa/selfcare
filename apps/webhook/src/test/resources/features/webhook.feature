@@ -4,11 +4,11 @@ Feature: Webhook Management
     Given the database is empty
 
   Scenario: Create a new webhook
-    Given I have a webhook request with name "Test Webhook" and url "http://example.com"
+    Given I have a webhook request with name "TestWebhook" and url "http://example.com"
     When I create the webhook
     Then the response status code should be 201
     And the response should contain "id"
-    And the response should contain "name" with value "Test Webhook"
+    And the response should contain "name" with value "TestWebhook"
 
   Scenario: List webhooks
     Given I have created a webhook with name "Webhook 1"
@@ -18,10 +18,10 @@ Feature: Webhook Management
     And the response list should contain 2 items
 
   Scenario: Get webhook by ID
-    Given I have created a webhook with name "My Webhook"
+    Given I have created a webhook with name "MyWebhook"
     When I get the webhook by its ID
     Then the response status code should be 200
-    And the response should contain "name" with value "My Webhook"
+    And the response should contain "name" with value "MyWebhook"
 
   Scenario: Update webhook
     Given I have created a webhook with name "Old Name"
@@ -33,7 +33,7 @@ Feature: Webhook Management
     Given I have created a webhook with name "To Delete"
     When I delete the webhook by its ID
     Then the response status code should be 204
-    And when I get the webhook by its ID
+    And I get the webhook by its ID
     Then the response status code should be 404
 
   Scenario: Send notification

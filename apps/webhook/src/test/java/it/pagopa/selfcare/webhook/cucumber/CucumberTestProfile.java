@@ -78,6 +78,6 @@ public class CucumberTestProfile implements QuarkusTestProfile {
       new ConnectionString(
         ConfigProvider.getConfig().getValue("quarkus.mongodb.connection-string", String.class));
     MongoClient mongoClient = MongoClients.create(connectionString);
-    return mongoClient.getDatabase("selcIam");
+    return mongoClient.getDatabase("selcProduct");
   }
 }

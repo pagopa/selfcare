@@ -31,6 +31,6 @@ public class IntegrationProfile implements QuarkusTestProfile {
       new ConnectionString(
         ConfigProvider.getConfig().getValue("quarkus.mongodb.connection-string", String.class));
     MongoClient mongoClient = MongoClients.create(connectionString);
-    return mongoClient.getDatabase("testIam");
+    return mongoClient.getDatabase("testProduct");
   }
 }
