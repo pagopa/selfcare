@@ -1,14 +1,13 @@
 package it.pagopa.selfcare.webhook.entity;
 
-import java.time.LocalDateTime;
-
-import org.bson.types.ObjectId;
-
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import lombok.Data;
+import org.bson.types.ObjectId;
+
+import java.time.LocalDateTime;
 
 @Data
-@MongoEntity(collection = "webhook_notifications")
+@MongoEntity(collection = "webhookNotifications")
 public class WebhookNotification {
     
     private ObjectId id;
