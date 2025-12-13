@@ -14,11 +14,11 @@ WORKDIR /src/libs
 COPY --link ./libs/ .
 
 WORKDIR /src/libs/selfcare-sdk-security
-COPY -link ./libs/selfcare-sdk-security/pom.xml .
+COPY --link ./libs/selfcare-sdk-security/pom.xml .
 COPY ./libs/selfcare-sdk-security/src ./src
 
 WORKDIR /src/libs/selfcare-sdk-pom
-COPY -link ./libs/selfcare-sdk-pom/pom.xml .
+COPY --link ./libs/selfcare-sdk-pom/pom.xml .
 
 WORKDIR /src/apps/webhook
 COPY --link ./apps/webhook/pom.xml .
