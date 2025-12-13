@@ -2,7 +2,7 @@ locals {
   apim_name    = format("selc-%s-apim-v2", var.env_short)
   apim_rg      = format("selc-%s-api-v2-rg", var.env_short)
   api_name     = var.is_pnpg ? format("selc-%s-pnpg-api-webhook", var.env_short) : format("selc-%s-api-webhook", var.env_short)
-  display_name = var.is_pnpg ? "PNPG WEBHOOK API" : "WEBHOOK API"
+  display_name = var.is_pnpg ? "PNPG Webhook API" : "Webhook API"
   base_path    = var.is_pnpg ? "external/imprese/webhook" : "external/webhook"
 }
 
