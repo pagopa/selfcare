@@ -15,7 +15,7 @@ provider "azurerm" {
   features {}
 }
 
-module "container_app_webhook" {
+module "container_app_webhook_ms" {
   source = "github.com/pagopa/selfcare-commons//infra/terraform-modules/container_app_microservice?ref=v1.1.0"
 
   is_pnpg = var.is_pnpg
@@ -23,7 +23,7 @@ module "container_app_webhook" {
   env_short                      = var.env_short
   resource_group_name            = local.ca_resource_group_name
   container_app                  = var.container_app
-  container_app_name             = "webhook"
+  container_app_name             = "webhook-ms"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-webhook-ms"
   image_tag                      = var.image_tag

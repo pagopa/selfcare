@@ -44,7 +44,7 @@ app_settings = [
   },
   {
     name  = "APPLICATIONINSIGHTS_ROLE_NAME"
-    value = "webhook",
+    value = "webhook-ms",
   },
   {
     name  = "MONGODB_DATABASE_NAME"
