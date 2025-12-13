@@ -1,5 +1,4 @@
-# syntax=docker/dockerfile:1.6@sha256:ac85f380a63b13dfcefa89046420e1781752bab202122f8f50032edf31be0021
-FROM maven:3-eclipse-temurin-17@sha256:0d328fa6843bb26b60cf44d69833f241ffe96218fb29fa19df7a6603863eaae7 AS builder
+FROM maven:3-eclipse-temurin-17@sha256:e4a7ace3dc0d645ed97f8d9ad0b0d3f0b14fa8d150138f27f116d7105a639b82 AS builder
 
 WORKDIR /src
 COPY --link pom.xml .
@@ -12,13 +11,6 @@ COPY --link ./apps/pom.xml .
 
 WORKDIR /src/libs
 COPY --link ./libs/ .
-
-# WORKDIR /src/libs/selfcare-sdk-security
-# COPY --link ./libs/selfcare-sdk-security/pom.xml .
-# COPY ./libs/selfcare-sdk-security/src ./src
-#
-# WORKDIR /src/libs/selfcare-sdk-pom
-# COPY --link ./libs/selfcare-sdk-pom/pom.xml .
 
 WORKDIR /src/apps/webhook
 COPY --link ./apps/webhook/pom.xml .
