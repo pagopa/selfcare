@@ -12,7 +12,7 @@ tags = {
   CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
 }
 
-private_dns_name = "selc-d-webhook-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+private_dns_name = "selc-d-webhook-ms-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
 
 container_app = {
   min_replicas = 0
@@ -22,8 +22,8 @@ container_app = {
       custom = {
         metadata = {
           "desiredReplicas" = "1"
-          "start"           = "0 8 * * MON-FRI"
-          "end"             = "0 20 * * MON-FRI"
+          "start"           = "0 8 * * *"
+          "end"             = "0 23 * * *"
           "timezone"        = "Europe/Rome"
         }
         type = "cron"
@@ -44,30 +44,16 @@ app_settings = [
   },
   {
     name  = "APPLICATIONINSIGHTS_ROLE_NAME"
-    value = "webhook",
+    value = "webhook-ms",
   },
   {
     name  = "MONGODB_DATABASE_NAME"
-    value = "selcProduct"
-  },
-  {
-    name  = "MONGODB_COLLECTION_NAME"
-    value = "products"
-  },
-  {
-    name  = "PRODUCT-CDC-MONGODB-WATCH-ENABLED"
-    value = true
-  },
-  {
-    name  = "STORAGE_CONTAINER_PRODUCT"
-    value = "selc-d-product"
+    value = "selcWebhook"
   }
 ]
 
 secrets_names = {
-  "BLOB_STORAGE_CONN_STRING_PRODUCT"      = "blob-storage-product-connection-string"
-  "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
-  "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
   "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
   "JWT_PUBLIC_KEY"                        = "jwt-public-key"
+  "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
 }

@@ -15,7 +15,7 @@ provider "azurerm" {
   features {}
 }
 
-module "container_app_webhook" {
+module "container_app_webhook_ms" {
   source = "github.com/pagopa/selfcare-commons//infra/terraform-modules/container_app_microservice?ref=v1.1.0"
 
   is_pnpg = var.is_pnpg
@@ -23,7 +23,7 @@ module "container_app_webhook" {
   env_short                      = var.env_short
   resource_group_name            = local.ca_resource_group_name
   container_app                  = var.container_app
-  container_app_name             = "webhook"
+  container_app_name             = "webhook-ms"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-webhook-ms"
   image_tag                      = var.image_tag
@@ -37,7 +37,7 @@ module "container_app_webhook" {
   probes = [
     {
       httpGet = {
-        path   = "q/health/live"
+        path   = "/q/health/live"
         port   = 8080
         scheme = "HTTP"
       }
@@ -48,7 +48,7 @@ module "container_app_webhook" {
     },
     {
       httpGet = {
-        path   = "q/health/ready"
+        path   = "/q/health/ready"
         port   = 8080
         scheme = "HTTP"
       }
@@ -59,14 +59,14 @@ module "container_app_webhook" {
     },
     {
       httpGet = {
-        path   = "q/health/started"
+        path   = "/q/health/started"
         port   = 8080
         scheme = "HTTP"
       }
-      timeoutSeconds      = 5
-      failureThreshold    = 5
+      timeoutSeconds      = 15
+      failureThreshold    = 15
       type                = "Startup"
-      initialDelaySeconds = 5
+      initialDelaySeconds = 15
     }
   ]
 
