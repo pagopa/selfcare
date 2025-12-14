@@ -12,7 +12,7 @@ tags = {
   CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
 }
 
-private_dns_name = "https://selc-d-webhook-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+private_dns_name = "selc-d-webhook-ms-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
 
 container_app = {
   min_replicas = 0
@@ -23,7 +23,7 @@ container_app = {
         metadata = {
           "desiredReplicas" = "1"
           "start"           = "0 8 * * *"
-          "end"             = "0 20 * * *"
+          "end"             = "0 23 * * *"
           "timezone"        = "Europe/Rome"
         }
         type = "cron"
@@ -53,6 +53,7 @@ app_settings = [
 ]
 
 secrets_names = {
-  "MONGODB_CONNECTION_STRING" = "mongodb-connection-string"
-  "JWT_PUBLIC_KEY"            = "jwt-public-key"
+  "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
+  "JWT_PUBLIC_KEY"                        = "jwt-public-key"
+  "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
 }
