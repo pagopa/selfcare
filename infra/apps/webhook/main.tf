@@ -37,7 +37,7 @@ module "container_app_webhook_ms" {
   probes = [
     {
       httpGet = {
-        path   = "/q/health/live"
+        path   = "q/health/live"
         port   = 8080
         scheme = "HTTP"
       }
@@ -48,7 +48,7 @@ module "container_app_webhook_ms" {
     },
     {
       httpGet = {
-        path   = "/q/health/ready"
+        path   = "q/health/ready"
         port   = 8080
         scheme = "HTTP"
       }
@@ -59,7 +59,7 @@ module "container_app_webhook_ms" {
     },
     {
       httpGet = {
-        path   = "/q/health/started"
+        path   = "q/health/started"
         port   = 8080
         scheme = "HTTP"
       }
