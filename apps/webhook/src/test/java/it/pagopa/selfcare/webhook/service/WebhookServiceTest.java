@@ -26,7 +26,8 @@ import static org.mockito.Mockito.*;
 @QuarkusTest
 class WebhookServiceTest {
 
-    @Inject
+  private static final String PROD_TEST = "prod-test";
+  @Inject
     WebhookService webhookService;
 
     @InjectMock
@@ -41,11 +42,9 @@ class WebhookServiceTest {
     @Test
     void createWebhook_shouldCreateAndReturnWebhook() {
         WebhookRequest request = new WebhookRequest();
-        request.setName("Test Webhook");
         request.setUrl("http://example.com");
         request.setHttpMethod("POST");
-        request.setProducts(List.of("prod-io"));
-        
+
         WebhookRequest.RetryPolicyRequest retryPolicyRequest = new WebhookRequest.RetryPolicyRequest();
         retryPolicyRequest.setMaxAttempts(3);
         request.setRetryPolicy(retryPolicyRequest);
@@ -56,13 +55,14 @@ class WebhookServiceTest {
             return Uni.createFrom().item(webhook);
         });
 
-        UniAssertSubscriber<WebhookResponse> subscriber = webhookService.createWebhook(request)
+        UniAssertSubscriber<WebhookResponse> subscriber = webhookService.createWebhook(request, PROD_TEST)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         WebhookResponse response = subscriber.awaitItem().getItem();
-        assertNotNull(response.getId());
-        assertEquals("TestWebhook", response.getName());
+        assertEquals(PROD_TEST, response.getProductId());
         assertEquals("ACTIVE", response.getStatus());
+        assertEquals(1, response.getProducts().size());
+        assertEquals(PROD_TEST, response.getProducts().get(0));
         assertNotNull(response.getRetryPolicy());
         assertEquals(3, response.getRetryPolicy().getMaxAttempts());
         
@@ -73,7 +73,7 @@ class WebhookServiceTest {
     void listWebhooks_shouldReturnListOfWebhooks() {
         Webhook webhook = new Webhook();
         webhook.setId(new ObjectId());
-        webhook.setName("Test Webhook");
+        webhook.setProductId(PROD_TEST);
         webhook.setStatus(Webhook.WebhookStatus.ACTIVE);
 
         when(webhookRepository.listAll()).thenReturn(Uni.createFrom().item(List.of(webhook)));
@@ -83,7 +83,7 @@ class WebhookServiceTest {
 
         List<WebhookResponse> responses = subscriber.awaitItem().getItem();
         assertEquals(1, responses.size());
-        assertEquals("Test Webhook", responses.get(0).getName());
+        assertEquals(PROD_TEST, responses.get(0).getProductId());
     }
 
     @Test
@@ -91,7 +91,7 @@ class WebhookServiceTest {
         ObjectId id = new ObjectId();
         Webhook webhook = new Webhook();
         webhook.setId(id);
-        webhook.setName("Test Webhook");
+        webhook.setProductId(PROD_TEST);
         webhook.setStatus(Webhook.WebhookStatus.ACTIVE);
 
         when(webhookRepository.findByIdOptional(anyString())).thenReturn(Uni.createFrom().item(webhook));
@@ -101,7 +101,7 @@ class WebhookServiceTest {
 
         WebhookResponse response = subscriber.awaitItem().getItem();
         assertNotNull(response);
-        assertEquals(id.toHexString(), response.getId());
+        assertEquals(PROD_TEST, response.getProductId());
     }
 
     @Test
@@ -119,22 +119,21 @@ class WebhookServiceTest {
         ObjectId id = new ObjectId();
         Webhook existingWebhook = new Webhook();
         existingWebhook.setId(id);
-        existingWebhook.setName("Old Name");
+        existingWebhook.setProductId(PROD_TEST);
         existingWebhook.setStatus(Webhook.WebhookStatus.ACTIVE);
+        existingWebhook.setUrl("http://old-url.com");
 
         WebhookRequest request = new WebhookRequest();
-        request.setName("New Name");
         request.setUrl("http://new-url.com");
         request.setHttpMethod("PUT");
 
-        when(webhookRepository.findByIdOptional(anyString())).thenReturn(Uni.createFrom().item(existingWebhook));
+        when(webhookRepository.findWebhookByProduct(anyString())).thenReturn(Uni.createFrom().item(existingWebhook));
         when(webhookRepository.update(any(Webhook.class))).thenReturn(Uni.createFrom().item(existingWebhook));
 
-        UniAssertSubscriber<WebhookResponse> subscriber = webhookService.updateWebhook(id.toHexString(), request)
+        UniAssertSubscriber<WebhookResponse> subscriber = webhookService.updateWebhook(request, PROD_TEST)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         WebhookResponse response = subscriber.awaitItem().getItem();
-        assertEquals("New Name", response.getName());
         assertEquals("http://new-url.com", response.getUrl());
         
         verify(webhookRepository).update(any(Webhook.class));
@@ -143,11 +142,11 @@ class WebhookServiceTest {
     @Test
     void updateWebhook_shouldFail_whenNotFound() {
         WebhookRequest request = new WebhookRequest();
-        request.setName("New Name");
+        request.setUrl("http://404-url.com");
 
         when(webhookRepository.findByIdOptional(anyString())).thenReturn(Uni.createFrom().nullItem());
 
-        UniAssertSubscriber<WebhookResponse> subscriber = webhookService.updateWebhook(new ObjectId().toHexString(), request)
+        UniAssertSubscriber<WebhookResponse> subscriber = webhookService.updateWebhook(request, PROD_TEST)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         subscriber.awaitFailure();

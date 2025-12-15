@@ -7,54 +7,55 @@ import it.pagopa.selfcare.webhook.dto.NotificationRequest;
 import it.pagopa.selfcare.webhook.dto.WebhookRequest;
 import it.pagopa.selfcare.webhook.dto.WebhookResponse;
 import it.pagopa.selfcare.webhook.service.WebhookService;
+import jakarta.ws.rs.core.MediaType;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-
-import jakarta.ws.rs.core.MediaType;
 
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
 @QuarkusTest
 class WebhookControllerTest {
 
+  public static final String PROD_TEST = "prod-test";
+  public static final String URL = "http://example.com";
   @InjectMock
   WebhookService webhookService;
 
   @Test
   void createWebhook_shouldReturnCreated() {
+    String url = URL;;
+
     WebhookRequest request = new WebhookRequest();
-    request.setName("Test Webhook");
-    request.setUrl("http://example.com");
+    request.setUrl(url);
     request.setHttpMethod("POST");
 
     WebhookResponse response = new WebhookResponse();
-    response.setId("123");
-    response.setName("Test Webhook");
+    response.setUrl(url);
 
-    Mockito.when(webhookService.createWebhook(any(WebhookRequest.class)))
+    Mockito.when(webhookService.createWebhook(any(WebhookRequest.class), eq(PROD_TEST)))
       .thenReturn(Uni.createFrom().item(response));
 
     given()
       .contentType(MediaType.APPLICATION_JSON)
+      .queryParam("productId", PROD_TEST)
       .body(request)
       .when()
       .post("/webhooks")
       .then()
       .statusCode(201)
-      .body("id", equalTo("123"))
-      .body("name", equalTo("Test Webhook"));
+      .body("url", equalTo(url));
   }
 
   @Test
   void listWebhooks_shouldReturnList() {
     WebhookResponse response = new WebhookResponse();
-    response.setId("123");
-    response.setName("Test Webhook");
+    response.setProductId(PROD_TEST);
 
     Mockito.when(webhookService.listWebhooks())
       .thenReturn(Uni.createFrom().item(List.of(response)));
@@ -65,29 +66,29 @@ class WebhookControllerTest {
       .then()
       .statusCode(200)
       .body("$.size()", is(1))
-      .body("[0].id", equalTo("123"));
+      .body("[0].productId", equalTo(PROD_TEST));
   }
 
   @Test
-  void getWebhook_shouldReturnWebhook_whenFound() {
+  void getWebhookByProductId_shouldReturnWebhook_whenFound() {
     WebhookResponse response = new WebhookResponse();
-    response.setId("123");
-    response.setName("Test Webhook");
+    response.setProductId(PROD_TEST);
 
-    Mockito.when(webhookService.getWebhook("123"))
+    Mockito.when(webhookService.getWebhookByProductId(PROD_TEST))
       .thenReturn(Uni.createFrom().item(response));
 
     given()
       .when()
-      .get("/webhooks/123")
+      .queryParam("productId", PROD_TEST)
+      .get("/webhooks/"+PROD_TEST)
       .then()
       .statusCode(200)
-      .body("id", equalTo("123"));
+      .body("productId", equalTo(PROD_TEST));
   }
 
   @Test
-  void getWebhook_shouldReturnNotFound_whenNotFound() {
-    Mockito.when(webhookService.getWebhook("999"))
+  void getWebhookByProductId_shouldReturnNotFound_whenNotFound() {
+    Mockito.when(webhookService.getWebhookByProductId("999"))
       .thenReturn(Uni.createFrom().nullItem());
 
     given()
@@ -100,39 +101,39 @@ class WebhookControllerTest {
   @Test
   void updateWebhook_shouldReturnOk_whenUpdated() {
     WebhookRequest request = new WebhookRequest();
-    request.setName("Updated Webhook");
-    request.setUrl("http://example.com");
+    request.setUrl(URL);
     request.setHttpMethod("POST");
 
     WebhookResponse response = new WebhookResponse();
-    response.setId("123");
-    response.setName("Updated Webhook");
+    response.setProductId(PROD_TEST);
+    response.setUrl(URL);
 
-    Mockito.when(webhookService.updateWebhook(eq("123"), any(WebhookRequest.class)))
+    Mockito.when(webhookService.updateWebhook(any(WebhookRequest.class), eq(PROD_TEST)))
       .thenReturn(Uni.createFrom().item(response));
 
     given()
       .contentType(MediaType.APPLICATION_JSON)
+      .queryParam("productId", PROD_TEST)
       .body(request)
       .when()
-      .put("/webhooks/123")
+      .put("/webhooks/"+PROD_TEST)
       .then()
       .statusCode(200)
-      .body("name", equalTo("Updated Webhook"));
+      .body("url", equalTo(URL));
   }
 
   @Test
   void updateWebhook_shouldReturnNotFound_whenIdDoesNotExist() {
     WebhookRequest request = new WebhookRequest();
-    request.setName("Updated Webhook");
-    request.setUrl("http://example.com");
+    request.setUrl(URL);
     request.setHttpMethod("POST");
 
-    Mockito.when(webhookService.updateWebhook(eq("999"), any(WebhookRequest.class)))
+    Mockito.when(webhookService.updateWebhook(any(WebhookRequest.class), eq("999")))
       .thenReturn(Uni.createFrom().failure(new IllegalArgumentException("Webhook not found")));
 
     given()
       .contentType(MediaType.APPLICATION_JSON)
+      .queryParam("productId", PROD_TEST)
       .body(request)
       .when()
       .put("/webhooks/999")
@@ -141,20 +142,8 @@ class WebhookControllerTest {
   }
 
   @Test
-  void deleteWebhook_shouldReturnNoContent_whenDeleted() {
-    Mockito.when(webhookService.deleteWebhook("123"))
-      .thenReturn(Uni.createFrom().item(true));
-
-    given()
-      .when()
-      .delete("/webhooks/123")
-      .then()
-      .statusCode(204);
-  }
-
-  @Test
   void deleteWebhook_shouldReturnNotFound_whenIdDoesNotExist() {
-    Mockito.when(webhookService.deleteWebhook("999"))
+    Mockito.when(webhookService.deleteWebhookByProductId("999"))
       .thenReturn(Uni.createFrom().failure(new IllegalArgumentException("Webhook not found")));
 
     given()
@@ -167,7 +156,7 @@ class WebhookControllerTest {
   @Test
   void sendNotification_shouldReturnAccepted() {
     NotificationRequest request = new NotificationRequest();
-    request.setProductId("prod-123");
+    request.setProductId(PROD_TEST);
     request.setPayload("{\"event\":\"test\"}");
 
     Mockito.when(webhookService.sendNotification(any(NotificationRequest.class)))

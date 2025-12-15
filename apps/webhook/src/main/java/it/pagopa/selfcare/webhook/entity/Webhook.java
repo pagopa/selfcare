@@ -13,7 +13,7 @@ import java.util.Map;
 public class Webhook {
     
     private ObjectId id;
-    private String name;
+    private String productId;
     private String description;
     private String url;
     private String httpMethod;
