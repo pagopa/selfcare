@@ -26,7 +26,7 @@ public class ContractTemplateRepository implements ReactivePanacheMongoRepositor
 
     private Bson buildFilter(String productId, String name, String version) {
         final List<Bson> filters = new ArrayList<>();
-        filters.add(Filters.eq("productId", productId));
+        Optional.ofNullable(productId).ifPresent(p -> filters.add(Filters.regex("productId", Pattern.compile(Pattern.quote(p), Pattern.CASE_INSENSITIVE))));
         Optional.ofNullable(name).ifPresent(n -> filters.add(Filters.regex("name", Pattern.compile(Pattern.quote(n), Pattern.CASE_INSENSITIVE))));
         Optional.ofNullable(version).ifPresent(v -> filters.add(Filters.regex("version", Pattern.compile(Pattern.quote(v), Pattern.CASE_INSENSITIVE))));
         return Filters.and(filters);
