@@ -506,7 +506,7 @@ paths:
         "200":
           description: OK
           content:
-            application/octet-stream: {}
+            application/json: {}
         "400":
           description: Bad Request
           content:
@@ -552,7 +552,10 @@ paths:
         "200":
           description: OK
           content:
-            application/octet-stream: {}
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
         "400":
           description: Bad Request
           content:

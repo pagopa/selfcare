@@ -19,6 +19,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.owasp.encoder.Encode;
 
+import java.io.File;
 import java.util.Optional;
 
 @Authenticated
@@ -63,7 +64,7 @@ public class ContractTemplateController {
             operationId = "downloadContractTemplate"
     )
     @APIResponses(value = {
-            @APIResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)),
+            @APIResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM, schema = @Schema(implementation = File.class))),
             @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class))),
             @APIResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class))),
             @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class)))
@@ -88,7 +89,7 @@ public class ContractTemplateController {
             operationId = "listContractTemplates"
     )
     @APIResponses(value = {
-            @APIResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)),
+            @APIResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_JSON)),
             @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class))),
             @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class)))
     })
