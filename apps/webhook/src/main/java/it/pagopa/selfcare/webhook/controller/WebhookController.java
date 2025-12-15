@@ -30,6 +30,7 @@ public class WebhookController {
     summary = "Create a new webhook",
     description = "Create a new webhook configuration"
   )
+  @Tag(name = "external-v2")
   public Uni<Response> createWebhook(@Parameter(name = "productId", required = true)
                                      @QueryParam("productId") String productId,
                                      @Valid WebhookRequest request) {
@@ -52,6 +53,7 @@ public class WebhookController {
     summary = "Get webhook by ID",
     description = "Retrieve a specific webhook configuration"
   )
+  @Tag(name = "external-v2")
   public Uni<Response> getWebhook(@Parameter(name = "productId", required = true)
                                   @QueryParam("productId") String requesterProductId,
                                   @PathParam("productId") String productId) {
@@ -69,6 +71,7 @@ public class WebhookController {
     summary = "Update webhook",
     description = "Update an existing webhook configuration"
   )
+  @Tag(name = "external-v2")
   public Uni<Response> updateWebhook(@Parameter(name = "productId", required = true)
                                      @QueryParam("productId") String requesterProductId,
                                      @Valid WebhookRequest request,

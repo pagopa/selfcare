@@ -5,6 +5,7 @@ tags:
   description: System information
 - name: Webhook
   description: API for webhook configuration management
+- name: external-v2
 paths:
   /info/version:
     get:
@@ -40,7 +41,7 @@ paths:
       summary: Create a new webhook
       description: Create a new webhook configuration
       tags:
-      - Webhook
+      - external-v2
       parameters:
       - name: productId
         required: true
@@ -84,7 +85,7 @@ paths:
       summary: Update webhook
       description: Update an existing webhook configuration
       tags:
-      - Webhook
+      - external-v2
       parameters:
       - name: productId
         in: path
@@ -113,7 +114,7 @@ paths:
       summary: Get webhook by ID
       description: Retrieve a specific webhook configuration
       tags:
-      - Webhook
+      - external-v2
       parameters:
       - name: productId
         in: path

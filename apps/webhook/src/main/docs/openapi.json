@@ -6,6 +6,8 @@
   }, {
     "name" : "Webhook",
     "description" : "API for webhook configuration management"
+  }, {
+    "name" : "external-v2"
   } ],
   "paths" : {
     "/info/version" : {
@@ -54,7 +56,7 @@
       "post" : {
         "summary" : "Create a new webhook",
         "description" : "Create a new webhook configuration",
-        "tags" : [ "Webhook" ],
+        "tags" : [ "external-v2" ],
         "parameters" : [ {
           "name" : "productId",
           "required" : true,
@@ -118,7 +120,7 @@
       "put" : {
         "summary" : "Update webhook",
         "description" : "Update an existing webhook configuration",
-        "tags" : [ "Webhook" ],
+        "tags" : [ "external-v2" ],
         "parameters" : [ {
           "name" : "productId",
           "in" : "path",
@@ -159,7 +161,7 @@
       "get" : {
         "summary" : "Get webhook by ID",
         "description" : "Retrieve a specific webhook configuration",
-        "tags" : [ "Webhook" ],
+        "tags" : [ "external-v2" ],
         "parameters" : [ {
           "name" : "productId",
           "in" : "path",
