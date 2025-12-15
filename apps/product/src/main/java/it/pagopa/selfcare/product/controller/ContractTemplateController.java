@@ -4,6 +4,7 @@ import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.model.dto.request.ContractTemplateUploadRequest;
 import it.pagopa.selfcare.product.model.dto.response.ContractTemplateResponse;
+import it.pagopa.selfcare.product.model.dto.response.ContractTemplateResponseList;
 import it.pagopa.selfcare.product.model.dto.response.Problem;
 import it.pagopa.selfcare.product.model.enums.ContractTemplateFileType;
 import it.pagopa.selfcare.product.service.ContractTemplateService;
@@ -89,7 +90,7 @@ public class ContractTemplateController {
             operationId = "listContractTemplates"
     )
     @APIResponses(value = {
-            @APIResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_JSON)),
+            @APIResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ContractTemplateResponseList.class))),
             @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class))),
             @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class)))
     })

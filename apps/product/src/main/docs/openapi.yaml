@@ -80,6 +80,13 @@ components:
           $ref: "#/components/schemas/Instant"
         createdBy:
           type: string
+    ContractTemplateResponseList:
+      type: object
+      properties:
+        contractTemplateResponses:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContractTemplateResponse"
     ContractTemplateUploadRequest:
       type: object
       required:
@@ -506,7 +513,9 @@ paths:
         "200":
           description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractTemplateResponseList"
         "400":
           description: Bad Request
           content:
