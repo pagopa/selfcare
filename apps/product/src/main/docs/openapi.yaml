@@ -83,7 +83,7 @@ components:
     ContractTemplateResponseList:
       type: object
       properties:
-        contractTemplateResponses:
+        items:
           type: array
           items:
             $ref: "#/components/schemas/ContractTemplateResponse"

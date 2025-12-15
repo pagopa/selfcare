@@ -210,7 +210,7 @@ Feature: Contract Template API
       | version   | 0.0.3     |
     When I send a GET request to "/contract-template"
     Then The status code is 200
-    And The response body contains the list "" of size 1
+    And The response body contains the list "items" of size 1
     And The response body contains at path "" the following list of objects in any order:
       | contractTemplateId                   | productId | contractTemplateVersion | name                | description                        | createdBy | contractTemplatePath                                                  |
       | 76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6 | prod-test | 0.0.3                   | accordo di adesione | Accordo di adesione di esempio pdf |           | contract-templates/prod-test/76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6.pdf |

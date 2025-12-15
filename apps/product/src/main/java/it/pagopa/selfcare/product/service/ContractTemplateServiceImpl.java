@@ -94,7 +94,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
         return contractTemplateRepository.listWithFilters(productId, name, version)
                 .onItem().transform(l -> {
                     ContractTemplateResponseList response = new ContractTemplateResponseList();
-                    response.setContractTemplateResponses(
+                    response.setItems(
                             l.stream()
                                     .map(ct -> contractTemplateMapper.toContractTemplateResponse(
                                             ct,

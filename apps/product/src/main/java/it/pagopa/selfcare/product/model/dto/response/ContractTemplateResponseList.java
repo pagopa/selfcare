@@ -11,6 +11,6 @@ import java.util.List;
 @NoArgsConstructor
 public class ContractTemplateResponseList {
 
-    private List<ContractTemplateResponse> contractTemplateResponses;
+    private List<ContractTemplateResponse> items;
 
 }
