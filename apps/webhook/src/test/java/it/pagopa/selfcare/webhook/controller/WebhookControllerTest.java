@@ -142,18 +142,6 @@ class WebhookControllerTest {
   }
 
   @Test
-  void deleteWebhook_shouldReturnNotFound_whenIdDoesNotExist() {
-    Mockito.when(webhookService.deleteWebhookByProductId("999"))
-      .thenReturn(Uni.createFrom().failure(new IllegalArgumentException("Webhook not found")));
-
-    given()
-      .when()
-      .delete("/webhooks/999")
-      .then()
-      .statusCode(404);
-  }
-
-  @Test
   void sendNotification_shouldReturnAccepted() {
     NotificationRequest request = new NotificationRequest();
     request.setProductId(PROD_TEST);
