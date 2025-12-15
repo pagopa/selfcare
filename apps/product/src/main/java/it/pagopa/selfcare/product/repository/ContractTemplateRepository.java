@@ -6,6 +6,7 @@ import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoRepositoryBase;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.model.ContractTemplate;
 import jakarta.enterprise.context.ApplicationScoped;
+import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import java.util.ArrayList;
@@ -29,6 +30,9 @@ public class ContractTemplateRepository implements ReactivePanacheMongoRepositor
         Optional.ofNullable(productId).ifPresent(p -> filters.add(Filters.regex("productId", Pattern.compile(Pattern.quote(p), Pattern.CASE_INSENSITIVE))));
         Optional.ofNullable(name).ifPresent(n -> filters.add(Filters.regex("name", Pattern.compile(Pattern.quote(n), Pattern.CASE_INSENSITIVE))));
         Optional.ofNullable(version).ifPresent(v -> filters.add(Filters.regex("version", Pattern.compile(Pattern.quote(v), Pattern.CASE_INSENSITIVE))));
+        if (filters.isEmpty()) {
+            return new Document();
+        }
         return Filters.and(filters);
     }
 

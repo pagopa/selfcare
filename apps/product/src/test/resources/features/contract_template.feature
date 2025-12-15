@@ -219,4 +219,8 @@ Feature: Contract Template API
     Given User login with username "j.doe" and password "test"
     When I send a GET request to "/contract-template"
     Then The status code is 200
-    And The response body contains the list "" of size 0
+    And The response body contains the list "" of size 2
+    And The response body contains at path "" the following list of objects in any order:
+      | contractTemplateId                   | productId | contractTemplateVersion | name                | description                        | createdBy | contractTemplatePath                                                   |
+      | 5ca7f491-5770-40ba-baf0-6fe612bba14e | prod-test | 0.0.2                   | accordo di adesione |                                    | testuser  | contract-templates/prod-test/5ca7f491-5770-40ba-baf0-6fe612bba14e.html |
+      | 76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6 | prod-test | 0.0.3                   | accordo di adesione | Accordo di adesione di esempio pdf |           | contract-templates/prod-test/76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6.pdf  |
