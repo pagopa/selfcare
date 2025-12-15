@@ -4,4 +4,4 @@
   ___) |  __/ |  _| |__| (_| | | |  __/
  |____/ \___|_|_|  \____\__,_|_|  \___|
                                        
-Webhook Service v${quarkus.application.version}
+Webhook Service ${project.version}

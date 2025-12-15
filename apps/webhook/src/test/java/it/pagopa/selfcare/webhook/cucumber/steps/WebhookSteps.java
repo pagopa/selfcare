@@ -10,8 +10,6 @@ import it.pagopa.selfcare.webhook.dto.WebhookResponse;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
 import jakarta.inject.Inject;
 
-import java.util.List;
-
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
@@ -22,52 +20,48 @@ public class WebhookSteps {
 
     private WebhookRequest webhookRequest;
     private Response response;
-    private String lastWebhookId;
+    private String lastWebhookProductId;
 
     @Given("the database is empty")
     public void theDatabaseIsEmpty() {
         webhookRepository.deleteAll().await().indefinitely();
     }
 
-    @Given("I have a webhook request with name {string} and url {string}")
-    public void iHaveAWebhookRequest(String name, String url) {
+    @Given("I have a webhook request with url {string}")
+    public void iHaveAWebhookRequest(String url) {
         webhookRequest = new WebhookRequest();
-        webhookRequest.setName(name);
         webhookRequest.setUrl(url);
         webhookRequest.setHttpMethod("POST");
-        webhookRequest.setProducts(List.of("prod-io"));
     }
 
-    @Given("I have created a webhook with name {string}")
-    public void iHaveCreatedAWebhook(String name) {
+    @Given("I have created a webhook with url {string} and productId {string}")
+    public void iHaveCreatedAWebhook(String url, String productId) {
         WebhookRequest request = new WebhookRequest();
-        request.setName(name);
-        request.setUrl("http://example.com");
+        request.setUrl(url);
         request.setHttpMethod("POST");
-        request.setProducts(List.of("prod-io"));
 
         WebhookResponse created = given()
                 .contentType("application/json")
+                .queryParam("productId", productId)
                 .body(request)
                 .when()
                 .post("/webhooks")
                 .then()
                 .statusCode(201)
                 .extract().as(WebhookResponse.class);
-        
-        lastWebhookId = created.getId();
+
+        lastWebhookProductId = created.getProductId();
     }
 
     @Given("I have created a webhook for product {string}")
     public void iHaveCreatedAWebhookForProduct(String productId) {
         WebhookRequest request = new WebhookRequest();
-        request.setName("Webhook for " + productId);
         request.setUrl("http://example.com");
         request.setHttpMethod("POST");
-        request.setProducts(List.of(productId));
 
         WebhookResponse created = given()
                 .contentType("application/json")
+                .queryParam("productId", productId)
                 .body(request)
                 .when()
                 .post("/webhooks")
@@ -75,19 +69,20 @@ public class WebhookSteps {
                 .statusCode(201)
                 .extract().as(WebhookResponse.class);
         
-        lastWebhookId = created.getId();
+        lastWebhookProductId = created.getProductId();
     }
 
     @When("I create the webhook")
     public void iCreateTheWebhook() {
         response = given()
                 .contentType("application/json")
+                .queryParam("productId", "prod-test")
                 .body(webhookRequest)
                 .when()
                 .post("/webhooks");
         
         if (response.statusCode() == 201) {
-            lastWebhookId = response.jsonPath().getString("id");
+            lastWebhookProductId = response.jsonPath().getString("id");
         }
     }
 
@@ -102,29 +97,29 @@ public class WebhookSteps {
     public void iGetTheWebhookByItsID() {
         response = given()
                 .when()
-                .get("/webhooks/" + lastWebhookId);
+                .queryParam("productId", lastWebhookProductId)
+                .get("/webhooks/" + lastWebhookProductId);
     }
 
-    @When("I update the webhook with name {string}")
-    public void iUpdateTheWebhook(String newName) {
+    @When("I update the webhook with url {string}")
+    public void iUpdateTheWebhook(String url) {
         WebhookRequest updateRequest = new WebhookRequest();
-        updateRequest.setName(newName);
-        updateRequest.setUrl("http://example.com");
+        updateRequest.setUrl(url);
         updateRequest.setHttpMethod("POST");
-        updateRequest.setProducts(List.of("prod-io"));
 
         response = given()
                 .contentType("application/json")
+                .queryParam("productId", lastWebhookProductId)
                 .body(updateRequest)
                 .when()
-                .put("/webhooks/" + lastWebhookId);
+                .put("/webhooks/" + lastWebhookProductId);
     }
 
     @When("I delete the webhook by its ID")
     public void iDeleteTheWebhook() {
         response = given()
                 .when()
-                .delete("/webhooks/" + lastWebhookId);
+                .delete("/webhooks/" + lastWebhookProductId);
     }
 
     @When("I send a notification for product {string} with payload {string}")

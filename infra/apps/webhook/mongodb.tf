@@ -26,6 +26,10 @@ module "mongodb_collection_webhooks" {
       unique = true
     },
     {
+      keys   = ["name"]
+      unique = true
+    },
+    {
       keys   = ["products"]
       unique = false
     }

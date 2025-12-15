@@ -19,8 +19,9 @@ import java.util.List;
 @Slf4j
 @ApplicationScoped
 public class WebhookService {
-    
-    @Inject
+
+  public static final String DELETED_WEBHOOK_WITH_ID = "Deleted webhook with ID: {}";
+  @Inject
     WebhookRepository webhookRepository;
     
     @Inject
@@ -29,14 +30,14 @@ public class WebhookService {
     @Inject
     WebhookNotificationService notificationService;
     
-    public Uni<WebhookResponse> createWebhook(WebhookRequest request) {
+    public Uni<WebhookResponse> createWebhook(WebhookRequest request, String productId) {
         Webhook webhook = new Webhook();
-        webhook.setName(sanitizeString(request.getName()));
-        webhook.setDescription(sanitizeString(request.getDescription()));
-        webhook.setUrl(sanitizeString(request.getUrl()));
+        webhook.setUrl(request.getUrl());
         webhook.setHttpMethod(sanitizeString(request.getHttpMethod()));
         webhook.setHeaders(request.getHeaders());
-        webhook.setProducts(request.getProducts());
+        webhook.setProductId(productId);
+        webhook.setDescription("");
+        webhook.setProducts(List.of(productId));
         webhook.setStatus(Webhook.WebhookStatus.ACTIVE);
         webhook.setCreatedAt(LocalDateTime.now());
         webhook.setUpdatedAt(LocalDateTime.now());
@@ -68,17 +69,19 @@ public class WebhookService {
         return webhookRepository.findByIdOptional(sanitizeString(id))
                 .map(webhook -> webhook != null ? toResponse(webhook) : null);
     }
-    
-    public Uni<WebhookResponse> updateWebhook(String id, WebhookRequest request) {
-        return webhookRepository.findByIdOptional(sanitizeString(id))
-                .onItem().ifNull().failWith(() -> new IllegalArgumentException("Webhook not found: " + sanitizeString(id)))
+
+  public Uni<WebhookResponse> getWebhookByProductId(String productId) {
+    return webhookRepository.findWebhookByProduct(productId)
+      .map(webhook -> webhook != null ? toResponse(webhook) : null);
+  }
+
+    public Uni<WebhookResponse> updateWebhook(WebhookRequest request, String productId) {
+        return webhookRepository.findWebhookByProduct(productId)
+                .onItem().ifNull().failWith(() -> new IllegalArgumentException("Webhook not found: " + productId))
                 .invoke(webhook -> {
-                    webhook.setName(request.getName());
-                    webhook.setDescription(request.getDescription());
                     webhook.setUrl(request.getUrl());
                     webhook.setHttpMethod(request.getHttpMethod());
                     webhook.setHeaders(request.getHeaders());
-                    webhook.setProducts(request.getProducts());
                     webhook.setUpdatedAt(LocalDateTime.now());
                     
                     if (request.getRetryPolicy() != null) {
@@ -91,7 +94,7 @@ public class WebhookService {
                     }
                 })
                 .call(webhook -> webhookRepository.update(webhook))
-                .invoke(() -> log.info("Updated webhook with ID: {}", sanitizeString(id)))
+                .invoke(() -> log.info("Updated webhook with ID: {}", productId))
                 .map(this::toResponse);
     }
     
@@ -99,9 +102,21 @@ public class WebhookService {
         return webhookRepository.findByIdOptional(id)
                 .onItem().ifNull().failWith(() -> new IllegalArgumentException("Webhook not found: " + sanitizeString(id)))
                 .call(webhook -> webhookRepository.deleteByIdSafe(sanitizeString(id)))
-                .invoke(() -> log.info("Deleted webhook with ID: {}", sanitizeString(id)))
+                .invoke(() -> logDeleteWebhook(sanitizeString(id)))
                 .replaceWith(true);
     }
+
+  private void logDeleteWebhook(String id) {
+    log.info(DELETED_WEBHOOK_WITH_ID, sanitizeString(id));
+  }
+
+  public Uni<Boolean> deleteWebhookByProductId(String productId) {
+    return webhookRepository.findWebhookByProduct(productId)
+      .onItem().ifNull().failWith(() -> new IllegalArgumentException("Webhook not found: " + productId))
+      .call(webhook -> webhookRepository.deleteByIdSafe(webhook.getId().toString()))
+      .invoke(webhook -> logDeleteWebhook(webhook.getId().toString()))
+      .replaceWith(true);
+  }
     
     public Uni<Void> sendNotification(NotificationRequest request) {
         return webhookRepository.findActiveWebhooksByProduct(request.getProductId())
@@ -132,8 +147,8 @@ public class WebhookService {
     
     private WebhookResponse toResponse(Webhook webhook) {
         WebhookResponse response = new WebhookResponse();
-        response.setId(webhook.getId().toString());
-        response.setName(webhook.getName());
+//        response.setId(webhook.getId().toString());
+        response.setProductId(webhook.getProductId());
         response.setDescription(webhook.getDescription());
         response.setUrl(webhook.getUrl());
         response.setHttpMethod(webhook.getHttpMethod());
