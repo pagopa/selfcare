@@ -8,6 +8,7 @@ import it.pagopa.selfcare.product.model.ContractTemplate;
 import it.pagopa.selfcare.product.model.ContractTemplateFile;
 import it.pagopa.selfcare.product.model.dto.request.ContractTemplateUploadRequest;
 import it.pagopa.selfcare.product.model.dto.response.ContractTemplateResponse;
+import it.pagopa.selfcare.product.model.dto.response.ContractTemplateResponseList;
 import it.pagopa.selfcare.product.model.enums.ContractTemplateFileType;
 import it.pagopa.selfcare.product.repository.ContractTemplateRepository;
 import it.pagopa.selfcare.product.storage.ContractTemplateStorage;
@@ -20,7 +21,6 @@ import org.jboss.resteasy.reactive.multipart.FileUpload;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Optional;
 
 @ApplicationScoped
@@ -90,12 +90,22 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
     }
 
     @Override
-    public Uni<List<ContractTemplateResponse>> list(String productId, String name, String version) {
+    public Uni<ContractTemplateResponseList> list(String productId, String name, String version) {
         return contractTemplateRepository.listWithFilters(productId, name, version)
-                .onItem().transform(l -> l.stream()
-                        .map(ct -> contractTemplateMapper.toContractTemplateResponse(ct,
-                                contractTemplateStorage.getContractTemplatePath(ct.getProductId(), ct.getId(), ct.getFileType().getExtension())))
-                        .toList());
+                .onItem().transform(l -> {
+                    ContractTemplateResponseList response = new ContractTemplateResponseList();
+                    response.setItems(
+                            l.stream()
+                                    .map(ct -> contractTemplateMapper.toContractTemplateResponse(
+                                            ct,
+                                            contractTemplateStorage.getContractTemplatePath(
+                                                    ct.getProductId(),
+                                                    ct.getId(),
+                                                    ct.getFileType().getExtension())))
+                                    .toList()
+                    );
+                    return response;
+                });
     }
 
     private ContractTemplateFile buildContractTemplateFile(String productId, FileUpload fileUpload) {

@@ -27,6 +27,7 @@ on:
           - iam
           - product
           - product-cdc
+          - webhook
         required: true
         default: auth
 

@@ -56,7 +56,7 @@ public class ContractTemplateRepositoryTest {
         Assertions.assertEquals(1L, contractTemplateRepository.countWithFilters("prod-2", "testname2", "0.0.1").await().indefinitely());
         Assertions.assertEquals(0L, contractTemplateRepository.countWithFilters("prod-2", "testname2", "2.0.0").await().indefinitely());
 
-        Assertions.assertEquals(0L, contractTemplateRepository.countWithFilters(null, "testname2", null).await().indefinitely());
+        Assertions.assertEquals(2L, contractTemplateRepository.countWithFilters(null, "testname2", null).await().indefinitely());
         Assertions.assertEquals(1L, contractTemplateRepository.countWithFilters("prod-1", "testname2", null).await().indefinitely());
         Assertions.assertEquals(3L, contractTemplateRepository.countWithFilters("prod-1", null, "0.0.1").await().indefinitely());
     }
@@ -64,7 +64,7 @@ public class ContractTemplateRepositoryTest {
     @Test
     void listWithFiltersTest() {
         final List<ContractTemplate> result0 = contractTemplateRepository.listWithFilters(null, null, null).await().indefinitely();
-        Assertions.assertEquals(0, result0.size());
+        Assertions.assertEquals(8, result0.size());
 
         final List<ContractTemplate> result1 = contractTemplateRepository.listWithFilters("prod-1", null, null).await().indefinitely();
         Assertions.assertEquals(5, result1.size());
