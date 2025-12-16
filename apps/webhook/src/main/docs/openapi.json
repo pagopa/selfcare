@@ -36,6 +36,7 @@
       "get" : {
         "summary" : "List all webhooks",
         "description" : "Retrieve all webhook configurations",
+        "operationId" : "listWebhooks",
         "tags" : [ "Webhook" ],
         "responses" : {
           "200" : {
@@ -56,6 +57,7 @@
       "post" : {
         "summary" : "Create a new webhook",
         "description" : "Create a new webhook configuration",
+        "operationId" : "createWebhook",
         "tags" : [ "external-v2" ],
         "parameters" : [ {
           "name" : "productId",
@@ -92,6 +94,7 @@
       "post" : {
         "summary" : "Send notification",
         "description" : "Create and send a webhook notification",
+        "operationId" : "sendNotification",
         "tags" : [ "Webhook" ],
         "requestBody" : {
           "content" : {
@@ -120,6 +123,7 @@
       "put" : {
         "summary" : "Update webhook",
         "description" : "Update an existing webhook configuration",
+        "operationId" : "updateWebhookbyProductId",
         "tags" : [ "external-v2" ],
         "parameters" : [ {
           "name" : "productId",
@@ -161,6 +165,7 @@
       "get" : {
         "summary" : "Get webhook by ID",
         "description" : "Retrieve a specific webhook configuration",
+        "operationId" : "getWebhookbyProductId",
         "tags" : [ "external-v2" ],
         "parameters" : [ {
           "name" : "productId",
@@ -189,6 +194,7 @@
       "delete" : {
         "summary" : "Delete webhook",
         "description" : "Delete a webhook configuration",
+        "operationId" : "deleteWebhookbyProductId",
         "tags" : [ "Webhook" ],
         "parameters" : [ {
           "name" : "productId",
