@@ -42,7 +42,7 @@ public class WebhookSteps {
 
         WebhookResponse created = given()
                 .contentType("application/json")
-                .queryParam("productId", productId)
+                .queryParam("requesterProductId", productId)
                 .body(request)
                 .when()
                 .post("/webhooks")
@@ -61,7 +61,7 @@ public class WebhookSteps {
 
         WebhookResponse created = given()
                 .contentType("application/json")
-                .queryParam("productId", productId)
+                .queryParam("requesterProductId", productId)
                 .body(request)
                 .when()
                 .post("/webhooks")
@@ -76,7 +76,7 @@ public class WebhookSteps {
     public void iCreateTheWebhook() {
         response = given()
                 .contentType("application/json")
-                .queryParam("productId", "prod-test")
+                .queryParam("requesterProductId", "prod-test")
                 .body(webhookRequest)
                 .when()
                 .post("/webhooks");
@@ -97,7 +97,7 @@ public class WebhookSteps {
     public void iGetTheWebhookByItsID() {
         response = given()
                 .when()
-                .queryParam("productId", lastWebhookProductId)
+                .queryParam("requesterProductId", lastWebhookProductId)
                 .get("/webhooks/" + lastWebhookProductId);
     }
 
@@ -109,7 +109,7 @@ public class WebhookSteps {
 
         response = given()
                 .contentType("application/json")
-                .queryParam("productId", lastWebhookProductId)
+                .queryParam("requesterProductId", lastWebhookProductId)
                 .body(updateRequest)
                 .when()
                 .put("/webhooks/" + lastWebhookProductId);

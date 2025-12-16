@@ -43,7 +43,7 @@ class WebhookControllerTest {
 
     given()
       .contentType(MediaType.APPLICATION_JSON)
-      .queryParam("productId", PROD_TEST)
+      .queryParam("requesterProductId", PROD_TEST)
       .body(request)
       .when()
       .post("/webhooks")
@@ -79,7 +79,7 @@ class WebhookControllerTest {
 
     given()
       .when()
-      .queryParam("productId", PROD_TEST)
+      .queryParam("requesterProductId", PROD_TEST)
       .get("/webhooks/"+PROD_TEST)
       .then()
       .statusCode(200)
@@ -113,7 +113,7 @@ class WebhookControllerTest {
 
     given()
       .contentType(MediaType.APPLICATION_JSON)
-      .queryParam("productId", PROD_TEST)
+      .queryParam("requesterProductId", PROD_TEST)
       .body(request)
       .when()
       .put("/webhooks/"+PROD_TEST)
@@ -133,7 +133,7 @@ class WebhookControllerTest {
 
     given()
       .contentType(MediaType.APPLICATION_JSON)
-      .queryParam("productId", PROD_TEST)
+      .queryParam("requesterProductId", PROD_TEST)
       .body(request)
       .when()
       .put("/webhooks/999")
