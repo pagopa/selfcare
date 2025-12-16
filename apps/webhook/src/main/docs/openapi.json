@@ -60,7 +60,7 @@
         "operationId" : "createWebhook",
         "tags" : [ "external-v2" ],
         "parameters" : [ {
-          "name" : "productId",
+          "name" : "requesterProductId",
           "required" : true,
           "in" : "query",
           "schema" : {
@@ -133,7 +133,7 @@
             "type" : "string"
           }
         }, {
-          "name" : "productId",
+          "name" : "requesterProductId",
           "required" : true,
           "in" : "query",
           "schema" : {
@@ -175,7 +175,7 @@
             "type" : "string"
           }
         }, {
-          "name" : "productId",
+          "name" : "requesterProductId",
           "required" : true,
           "in" : "query",
           "schema" : {

@@ -32,10 +32,10 @@ public class WebhookController {
     operationId = "createWebhook"
   )
   @Tag(name = "external-v2")
-  public Uni<Response> createWebhook(@Parameter(name = "productId", required = true)
-                                     @QueryParam("productId") String productId,
+  public Uni<Response> createWebhook(@Parameter(name = "requesterProductId", required = true)
+                                     @QueryParam("requesterProductId") String requesterProductId,
                                      @Valid WebhookRequest request) {
-    return webhookService.createWebhook(request, productId)
+    return webhookService.createWebhook(request, requesterProductId)
       .map(response -> Response.status(Response.Status.CREATED).entity(response).build());
   }
 
@@ -57,8 +57,8 @@ public class WebhookController {
     operationId = "getWebhookbyProductId"
   )
   @Tag(name = "external-v2")
-  public Uni<Response> getWebhook(@Parameter(name = "productId", required = true)
-                                  @QueryParam("productId") String requesterProductId,
+  public Uni<Response> getWebhook(@Parameter(name = "requesterProductId", required = true)
+                                  @QueryParam("requesterProductId") String requesterProductId,
                                   @PathParam("productId") String productId) {
     return (productId.equals(requesterProductId)) ?
       webhookService.getWebhookByProductId(productId)
@@ -76,8 +76,8 @@ public class WebhookController {
     operationId = "updateWebhookbyProductId"
   )
   @Tag(name = "external-v2")
-  public Uni<Response> updateWebhook(@Parameter(name = "productId", required = true)
-                                     @QueryParam("productId") String requesterProductId,
+  public Uni<Response> updateWebhook(@Parameter(name = "requesterProductId", required = true)
+                                     @QueryParam("requesterProductId") String requesterProductId,
                                      @Valid WebhookRequest request,
                                      @PathParam("productId") String productId) {
     return (productId.equals(requesterProductId)) ?
