@@ -28,7 +28,8 @@ public class WebhookController {
   @POST
   @Operation(
     summary = "Create a new webhook",
-    description = "Create a new webhook configuration"
+    description = "Create a new webhook configuration",
+    operationId = "createWebhook"
   )
   @Tag(name = "external-v2")
   public Uni<Response> createWebhook(@Parameter(name = "productId", required = true)
@@ -41,7 +42,8 @@ public class WebhookController {
   @GET
   @Operation(
     summary = "List all webhooks",
-    description = "Retrieve all webhook configurations"
+    description = "Retrieve all webhook configurations",
+    operationId = "listWebhooks"
   )
   public Uni<List<WebhookResponse>> listWebhooks() {
     return webhookService.listWebhooks();
@@ -51,7 +53,8 @@ public class WebhookController {
   @Path("/{productId}")
   @Operation(
     summary = "Get webhook by ID",
-    description = "Retrieve a specific webhook configuration"
+    description = "Retrieve a specific webhook configuration",
+    operationId = "getWebhookbyProductId"
   )
   @Tag(name = "external-v2")
   public Uni<Response> getWebhook(@Parameter(name = "productId", required = true)
@@ -69,7 +72,8 @@ public class WebhookController {
   @Path("/{productId}")
   @Operation(
     summary = "Update webhook",
-    description = "Update an existing webhook configuration"
+    description = "Update an existing webhook configuration",
+    operationId = "updateWebhookbyProductId"
   )
   @Tag(name = "external-v2")
   public Uni<Response> updateWebhook(@Parameter(name = "productId", required = true)
@@ -88,7 +92,8 @@ public class WebhookController {
   @Path("/{productId}")
   @Operation(
     summary = "Delete webhook",
-    description = "Delete a webhook configuration"
+    description = "Delete a webhook configuration",
+    operationId = "deleteWebhookbyProductId"
   )
   public Uni<Response> deleteWebhook(@PathParam("productId") String productId) {
     return Uni.createFrom().item(Response.status(Response.Status.NOT_IMPLEMENTED).build());
@@ -102,7 +107,8 @@ public class WebhookController {
   @Path("/notify")
   @Operation(
     summary = "Send notification",
-    description = "Create and send a webhook notification"
+    description = "Create and send a webhook notification",
+    operationId = "sendNotification"
   )
   public Uni<Response> sendNotification(@Valid NotificationRequest request) {
     return webhookService.sendNotification(request)
