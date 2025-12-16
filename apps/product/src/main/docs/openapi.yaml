@@ -61,6 +61,11 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/WorkflowType"
+    ContractTemplateFileType:
+      type: string
+      enum:
+      - HTML
+      - PDF
     ContractTemplateResponse:
       type: object
       properties:
@@ -80,6 +85,8 @@ components:
           $ref: "#/components/schemas/Instant"
         createdBy:
           type: string
+        fileType:
+          $ref: "#/components/schemas/ContractTemplateFileType"
     ContractTemplateResponseList:
       type: object
       properties:
