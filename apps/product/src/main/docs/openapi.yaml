@@ -80,6 +80,13 @@ components:
           $ref: "#/components/schemas/Instant"
         createdBy:
           type: string
+    ContractTemplateResponseList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContractTemplateResponse"
     ContractTemplateUploadRequest:
       type: object
       required:
@@ -506,7 +513,9 @@ paths:
         "200":
           description: OK
           content:
-            application/octet-stream: {}
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractTemplateResponseList"
         "400":
           description: Bad Request
           content:
@@ -552,7 +561,10 @@ paths:
         "200":
           description: OK
           content:
-            application/octet-stream: {}
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
         "400":
           description: Bad Request
           content:

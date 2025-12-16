@@ -10,6 +10,7 @@ import it.pagopa.selfcare.product.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.product.model.ContractTemplateFile;
 import it.pagopa.selfcare.product.model.dto.request.ContractTemplateUploadRequest;
 import it.pagopa.selfcare.product.model.dto.response.ContractTemplateResponse;
+import it.pagopa.selfcare.product.model.dto.response.ContractTemplateResponseList;
 import it.pagopa.selfcare.product.model.enums.ContractTemplateFileType;
 import it.pagopa.selfcare.product.service.ContractTemplateService;
 import lombok.extern.slf4j.Slf4j;
@@ -235,7 +236,7 @@ public class ContractTemplateControllerTest {
     @TestSecurity(user = "userJwt")
     void list_shouldReturnOk() {
         Mockito.when(contractTemplateService.list("prod-test", "test", "1.0.0"))
-                .thenReturn(Uni.createFrom().item(List.of(
+                .thenReturn(Uni.createFrom().item(new ContractTemplateResponseList(List.of(
                         ContractTemplateResponse.builder()
                                 .contractTemplateId("123")
                                 .contractTemplatePath("contract-templates/prod-test/123.html")
@@ -256,7 +257,7 @@ public class ContractTemplateControllerTest {
                                 .createdAt(java.time.Instant.now())
                                 .createdBy("testuser")
                                 .build()
-                )));
+                ))));
 
         given()
             .queryParam("productId", "prod-test")
