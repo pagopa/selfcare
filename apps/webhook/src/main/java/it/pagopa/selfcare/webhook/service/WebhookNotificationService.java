@@ -53,7 +53,7 @@ public class WebhookNotificationService {
     }
   }
 
-  @Scheduled(every = "30s")
+  @Scheduled(every = "10s")
   public Uni<Void> processFailedNotifications() {
     init();
     // Lock notifications for 5 minutes - if processing takes longer, lock expires
