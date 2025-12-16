@@ -454,7 +454,7 @@ paths:
       - external-v2
       requestBody:
         content:
-          multipart/form-data:
+          application/json:
             schema:
               $ref: "#/components/schemas/ContractTemplateUploadRequest"
         required: true

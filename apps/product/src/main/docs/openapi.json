@@ -578,7 +578,7 @@
         "tags" : [ "ContractTemplate", "external-v2" ],
         "requestBody" : {
           "content" : {
-            "multipart/form-data" : {
+            "application/json" : {
               "schema" : {
                 "$ref" : "#/components/schemas/ContractTemplateUploadRequest"
               }
