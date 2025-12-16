@@ -93,6 +93,10 @@
           }
         }
       },
+      "ContractTemplateFileType" : {
+        "type" : "string",
+        "enum" : [ "HTML", "PDF" ]
+      },
       "ContractTemplateResponse" : {
         "type" : "object",
         "properties" : {
@@ -119,6 +123,9 @@
           },
           "createdBy" : {
             "type" : "string"
+          },
+          "fileType" : {
+            "$ref" : "#/components/schemas/ContractTemplateFileType"
           }
         }
       },
