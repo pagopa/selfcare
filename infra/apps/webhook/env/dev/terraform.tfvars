@@ -22,8 +22,8 @@ container_app = {
       custom = {
         metadata = {
           "desiredReplicas" = "1"
-          "start"           = "0 8 * * *"
-          "end"             = "0 23 * * *"
+          "start"           = "0 8 * * MON-FRI"
+          "end"             = "0 19 * * MON-FRI"
           "timezone"        = "Europe/Rome"
         }
         type = "cron"

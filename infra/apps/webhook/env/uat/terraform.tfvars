@@ -8,7 +8,7 @@ tags = {
   CreatedBy   = "Terraform"
   Environment = "Uat"
   Owner       = "SelfCare"
-  Source      = "https://github.com/pagopa/selfcare/apps/product"
+  Source      = "https://github.com/pagopa/selfcare/apps/webhook"
   CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
 }
 
@@ -42,30 +42,16 @@ app_settings = [
   },
   {
     name  = "APPLICATIONINSIGHTS_ROLE_NAME"
-    value = "webhook",
+    value = "webhook-ms",
   },
   {
     name  = "MONGODB_DATABASE_NAME"
-    value = "selcProduct"
-  },
-  {
-    name  = "MONGODB_COLLECTION_NAME"
-    value = "products"
-  },
-  {
-    name  = "PRODUCT-CDC-MONGODB-WATCH-ENABLED"
-    value = false
-  },
-  {
-    name  = "STORAGE_CONTAINER_PRODUCT"
-    value = "selc-u-product"
+    value = "selcWebhook"
   }
 ]
 
 secrets_names = {
-  "BLOB_STORAGE_CONN_STRING_PRODUCT"      = "blob-storage-product-connection-string"
-  "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
-  "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
   "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
   "JWT_PUBLIC_KEY"                        = "jwt-public-key"
+  "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
 }
