@@ -8,6 +8,8 @@
     "description" : "API for webhook configuration management"
   }, {
     "name" : "external-v2"
+  }, {
+    "name" : "internal-v1"
   } ],
   "paths" : {
     "/info/version" : {
@@ -37,7 +39,7 @@
         "summary" : "List all webhooks",
         "description" : "Retrieve all webhook configurations",
         "operationId" : "listWebhooks",
-        "tags" : [ "Webhook" ],
+        "tags" : [ "Webhook", "internal-v1" ],
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -58,7 +60,7 @@
         "summary" : "Create a new webhook",
         "description" : "Create a new webhook configuration",
         "operationId" : "createWebhook",
-        "tags" : [ "external-v2" ],
+        "tags" : [ "Webhook", "external-v2" ],
         "parameters" : [ {
           "name" : "requesterProductId",
           "required" : true,
@@ -95,7 +97,7 @@
         "summary" : "Send notification",
         "description" : "Create and send a webhook notification",
         "operationId" : "sendNotification",
-        "tags" : [ "Webhook" ],
+        "tags" : [ "Webhook", "internal-v1" ],
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -124,7 +126,7 @@
         "summary" : "Update webhook",
         "description" : "Update an existing webhook configuration",
         "operationId" : "updateWebhookbyProductId",
-        "tags" : [ "external-v2" ],
+        "tags" : [ "Webhook", "external-v2" ],
         "parameters" : [ {
           "name" : "productId",
           "in" : "path",
@@ -166,7 +168,7 @@
         "summary" : "Get webhook by ID",
         "description" : "Retrieve a specific webhook configuration",
         "operationId" : "getWebhookbyProductId",
-        "tags" : [ "external-v2" ],
+        "tags" : [ "Webhook", "external-v2" ],
         "parameters" : [ {
           "name" : "productId",
           "in" : "path",

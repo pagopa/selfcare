@@ -6,6 +6,7 @@ tags:
 - name: Webhook
   description: API for webhook configuration management
 - name: external-v2
+- name: internal-v1
 paths:
   /info/version:
     get:
@@ -29,6 +30,7 @@ paths:
       operationId: listWebhooks
       tags:
       - Webhook
+      - internal-v1
       responses:
         "200":
           description: OK
@@ -43,6 +45,7 @@ paths:
       description: Create a new webhook configuration
       operationId: createWebhook
       tags:
+      - Webhook
       - external-v2
       parameters:
       - name: requesterProductId
@@ -70,6 +73,7 @@ paths:
       operationId: sendNotification
       tags:
       - Webhook
+      - internal-v1
       requestBody:
         content:
           application/json:
@@ -89,6 +93,7 @@ paths:
       description: Update an existing webhook configuration
       operationId: updateWebhookbyProductId
       tags:
+      - Webhook
       - external-v2
       parameters:
       - name: productId
@@ -119,6 +124,7 @@ paths:
       description: Retrieve a specific webhook configuration
       operationId: getWebhookbyProductId
       tags:
+      - Webhook
       - external-v2
       parameters:
       - name: productId

@@ -31,6 +31,7 @@ public class WebhookController {
     description = "Create a new webhook configuration",
     operationId = "createWebhook"
   )
+  @Tag(name = "Webhook")
   @Tag(name = "external-v2")
   public Uni<Response> createWebhook(@Parameter(name = "requesterProductId", required = true)
                                      @QueryParam("requesterProductId") String requesterProductId,
@@ -45,6 +46,8 @@ public class WebhookController {
     description = "Retrieve all webhook configurations",
     operationId = "listWebhooks"
   )
+  @Tag(name = "Webhook")
+  @Tag(name = "internal-v1")
   public Uni<List<WebhookResponse>> listWebhooks() {
     return webhookService.listWebhooks();
   }
@@ -56,6 +59,7 @@ public class WebhookController {
     description = "Retrieve a specific webhook configuration",
     operationId = "getWebhookbyProductId"
   )
+  @Tag(name = "Webhook")
   @Tag(name = "external-v2")
   public Uni<Response> getWebhook(@Parameter(name = "requesterProductId", required = true)
                                   @QueryParam("requesterProductId") String requesterProductId,
@@ -75,6 +79,7 @@ public class WebhookController {
     description = "Update an existing webhook configuration",
     operationId = "updateWebhookbyProductId"
   )
+  @Tag(name = "Webhook")
   @Tag(name = "external-v2")
   public Uni<Response> updateWebhook(@Parameter(name = "requesterProductId", required = true)
                                      @QueryParam("requesterProductId") String requesterProductId,
@@ -105,6 +110,8 @@ public class WebhookController {
 
   @POST
   @Path("/notify")
+  @Tag(name = "Webhook")
+  @Tag(name = "internal-v1")
   @Operation(
     summary = "Send notification",
     description = "Create and send a webhook notification",
