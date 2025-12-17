@@ -7,7 +7,6 @@ Feature: Contract Template API
     And The following query params:
       | productId | prod-test |
       | createdBy | testuser  |
-    And The following form data:
       | name        | accordo di adesione |
       | version     | 0.0.1               |
       | description | Upload test         |
@@ -30,7 +29,6 @@ Feature: Contract Template API
     And The following query params:
       | productId | prod-test |
       | createdBy | testuser  |
-    And The following form data:
       | name        | accordo di adesione |
       | version     | 0.0.1               |
       | description | Upload test         |
@@ -43,7 +41,6 @@ Feature: Contract Template API
     And The following query params:
       | productId | prod-test |
       | createdBy | testuser  |
-    And The following form data:
       | name        | accordo di adesione |
       | version     | 0.0.1               |
       | description | Upload test         |
@@ -56,7 +53,6 @@ Feature: Contract Template API
     And The following query params:
       | productId | prod-test |
       | createdBy | testuser  |
-    And The following form data:
       | name        | accordo & adesione  |
       | version     | 0.0.1               |
       | description | Upload test         |
@@ -69,7 +65,6 @@ Feature: Contract Template API
     And The following query params:
       | productId | prod-test |
       | createdBy | testuser  |
-    And The following form data:
       | name        | accordo di adesione |
       | version     | v0.0.1              |
       | description | Upload test         |
@@ -81,7 +76,6 @@ Feature: Contract Template API
     Given User login with username "j.doe" and password "test"
     And The following query params:
       | createdBy | testuser  |
-    And The following form data:
       | description | Upload test |
     And Upload the file at path "blobStorage/contract-template.html" with form key "file" and content type "text/html"
     When I send a POST request to "/contract-template" with form data and multi-part file
@@ -92,7 +86,6 @@ Feature: Contract Template API
     And The following query params:
       | productId | prod-test |
       | createdBy | testuser  |
-    And The following form data:
       | name        | accordo di adesione |
       | version     | 0.0.2               |
       | description | Upload test         |

@@ -140,33 +140,6 @@
           }
         }
       },
-      "ContractTemplateUploadRequest" : {
-        "type" : "object",
-        "required" : [ "productId", "file", "name", "version" ],
-        "properties" : {
-          "productId" : {
-            "type" : "string"
-          },
-          "file" : {
-            "type" : "string",
-            "format" : "binary"
-          },
-          "name" : {
-            "type" : "string",
-            "pattern" : "^[a-zA-Z0-9 ]+$"
-          },
-          "version" : {
-            "type" : "string",
-            "pattern" : "^\\d+\\.\\d+\\.\\d+$"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "createdBy" : {
-            "type" : "string"
-          }
-        }
-      },
       "ContractType" : {
         "type" : "string",
         "enum" : [ "CONTRACT", "ATTACHMENT" ]
@@ -583,11 +556,54 @@
         "description" : "Upload an html file as a new contract template version to be used in product configuration",
         "operationId" : "uploadContractTemplate",
         "tags" : [ "ContractTemplate", "external-v2" ],
+        "parameters" : [ {
+          "name" : "createdBy",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "description",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "name",
+          "in" : "query",
+          "schema" : {
+            "type" : "string",
+            "pattern" : "^[a-zA-Z0-9 ]+$"
+          },
+          "required" : true
+        }, {
+          "name" : "productId",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          },
+          "required" : true
+        }, {
+          "name" : "version",
+          "in" : "query",
+          "schema" : {
+            "type" : "string",
+            "pattern" : "^\\d+\\.\\d+\\.\\d+$"
+          },
+          "required" : true
+        } ],
         "requestBody" : {
           "content" : {
             "multipart/form-data" : {
               "schema" : {
-                "$ref" : "#/components/schemas/ContractTemplateUploadRequest"
+                "type" : "object",
+                "required" : [ "file" ],
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                }
               }
             }
           },
