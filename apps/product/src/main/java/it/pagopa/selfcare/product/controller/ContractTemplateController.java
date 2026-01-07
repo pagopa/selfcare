@@ -67,7 +67,7 @@ public class ContractTemplateController {
                                 @QueryParam("createdBy")
                                 String createdBy,
                                 @RestForm("file") @NotNull
-                                @AllowedFileTypes(value = {AllowedFileTypes.HTML}, message = "Only static HTML files are allowed")
+                                @AllowedFileTypes(value = {AllowedFileTypes.HTML}, message = "Only static HTML files without images are allowed")
                                 FileUpload file) {
         return contractTemplateService.upload(ContractTemplateUploadRequest.builder()
                         .productId(productId)
