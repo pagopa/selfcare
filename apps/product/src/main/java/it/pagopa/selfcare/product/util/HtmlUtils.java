@@ -12,7 +12,8 @@ import java.io.File;
 public class HtmlUtils {
 
     private static final Safelist HTML_SAFELIST = Safelist.relaxed()
-            .addTags("section", "article", "hr");
+            .addTags("section", "article", "hr")
+            .removeTags("img");
 
     private HtmlUtils() {}
 
