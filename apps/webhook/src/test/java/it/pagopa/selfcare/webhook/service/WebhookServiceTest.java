@@ -44,6 +44,7 @@ class WebhookServiceTest {
         WebhookRequest request = new WebhookRequest();
         request.setUrl("http://example.com");
         request.setHttpMethod("POST");
+        request.setProductId(PROD_TEST);
 
         WebhookRequest.RetryPolicyRequest retryPolicyRequest = new WebhookRequest.RetryPolicyRequest();
         retryPolicyRequest.setMaxAttempts(3);
@@ -55,7 +56,7 @@ class WebhookServiceTest {
             return Uni.createFrom().item(webhook);
         });
 
-        UniAssertSubscriber<WebhookResponse> subscriber = webhookService.createWebhook(request, PROD_TEST)
+        UniAssertSubscriber<WebhookResponse> subscriber = webhookService.createWebhook(request)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         WebhookResponse response = subscriber.awaitItem().getItem();

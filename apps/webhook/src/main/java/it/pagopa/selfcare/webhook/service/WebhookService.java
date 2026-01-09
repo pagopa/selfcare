@@ -30,14 +30,14 @@ public class WebhookService {
     @Inject
     WebhookNotificationService notificationService;
     
-    public Uni<WebhookResponse> createWebhook(WebhookRequest request, String productId) {
+    public Uni<WebhookResponse> createWebhook(WebhookRequest request) {
         Webhook webhook = new Webhook();
         webhook.setUrl(request.getUrl());
         webhook.setHttpMethod(sanitizeString(request.getHttpMethod()));
         webhook.setHeaders(request.getHeaders());
-        webhook.setProductId(productId);
+        webhook.setProductId(request.getProductId());
         webhook.setDescription("");
-        webhook.setProducts(List.of(productId));
+        webhook.setProducts(List.of(request.getProductId()));
         webhook.setStatus(Webhook.WebhookStatus.ACTIVE);
         webhook.setCreatedAt(LocalDateTime.now());
         webhook.setUpdatedAt(LocalDateTime.now());

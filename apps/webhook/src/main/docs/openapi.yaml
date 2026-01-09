@@ -47,12 +47,6 @@ paths:
       tags:
       - Webhook
       - external-v2
-      parameters:
-      - name: requesterProductId
-        required: true
-        in: query
-        schema:
-          type: string
       requestBody:
         content:
           application/json:
@@ -101,11 +95,6 @@ paths:
         required: true
         schema:
           type: string
-      - name: requesterProductId
-        required: true
-        in: query
-        schema:
-          type: string
       requestBody:
         content:
           application/json:
@@ -130,11 +119,6 @@ paths:
       - name: productId
         in: path
         required: true
-        schema:
-          type: string
-      - name: requesterProductId
-        required: true
-        in: query
         schema:
           type: string
       responses:
@@ -212,9 +196,13 @@ components:
       type: object
       required:
       - url
+      - productId
       - httpMethod
       properties:
         url:
+          type: string
+          pattern: \S
+        productId:
           type: string
           pattern: \S
         httpMethod:

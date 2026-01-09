@@ -34,11 +34,12 @@ class WebhookControllerTest {
     WebhookRequest request = new WebhookRequest();
     request.setUrl(url);
     request.setHttpMethod("POST");
+    request.setProductId(PROD_TEST);
 
     WebhookResponse response = new WebhookResponse();
     response.setUrl(url);
 
-    Mockito.when(webhookService.createWebhook(any(WebhookRequest.class), eq(PROD_TEST)))
+    Mockito.when(webhookService.createWebhook(any(WebhookRequest.class)))
       .thenReturn(Uni.createFrom().item(response));
 
     given()
@@ -103,6 +104,7 @@ class WebhookControllerTest {
     WebhookRequest request = new WebhookRequest();
     request.setUrl(URL);
     request.setHttpMethod("POST");
+    request.setProductId(PROD_TEST);
 
     WebhookResponse response = new WebhookResponse();
     response.setProductId(PROD_TEST);
@@ -113,7 +115,6 @@ class WebhookControllerTest {
 
     given()
       .contentType(MediaType.APPLICATION_JSON)
-      .queryParam("requesterProductId", PROD_TEST)
       .body(request)
       .when()
       .put("/webhooks/"+PROD_TEST)
@@ -127,13 +128,13 @@ class WebhookControllerTest {
     WebhookRequest request = new WebhookRequest();
     request.setUrl(URL);
     request.setHttpMethod("POST");
+    request.setProductId(PROD_TEST);
 
     Mockito.when(webhookService.updateWebhook(any(WebhookRequest.class), eq("999")))
       .thenReturn(Uni.createFrom().failure(new IllegalArgumentException("Webhook not found")));
 
     given()
       .contentType(MediaType.APPLICATION_JSON)
-      .queryParam("requesterProductId", PROD_TEST)
       .body(request)
       .when()
       .put("/webhooks/999")
