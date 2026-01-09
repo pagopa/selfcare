@@ -11,7 +11,6 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.Operation;
-import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import java.util.List;
@@ -33,10 +32,8 @@ public class WebhookController {
   )
   @Tag(name = "Webhook")
   @Tag(name = "external-v2")
-  public Uni<Response> createWebhook(@Parameter(name = "requesterProductId", required = true)
-                                     @QueryParam("requesterProductId") String requesterProductId,
-                                     @Valid WebhookRequest request) {
-    return webhookService.createWebhook(request, requesterProductId)
+  public Uni<Response> createWebhook(@Valid WebhookRequest request) {
+    return webhookService.createWebhook(request)
       .map(response -> Response.status(Response.Status.CREATED).entity(response).build());
   }
 
@@ -61,15 +58,11 @@ public class WebhookController {
   )
   @Tag(name = "Webhook")
   @Tag(name = "external-v2")
-  public Uni<Response> getWebhook(@Parameter(name = "requesterProductId", required = true)
-                                  @QueryParam("requesterProductId") String requesterProductId,
-                                  @PathParam("productId") String productId) {
-    return (productId.equals(requesterProductId)) ?
-      webhookService.getWebhookByProductId(productId)
+  public Uni<Response> getWebhook(@PathParam("productId") String productId) {
+    return webhookService.getWebhookByProductId(productId)
         .map(response -> response != null
           ? Response.ok(response).build()
-          : Response.status(Response.Status.NOT_FOUND).build())
-      : Uni.createFrom().item(Response.status(Response.Status.NOT_FOUND).build());
+          : Response.status(Response.Status.NOT_FOUND).build());
   }
 
   @PUT
@@ -81,16 +74,12 @@ public class WebhookController {
   )
   @Tag(name = "Webhook")
   @Tag(name = "external-v2")
-  public Uni<Response> updateWebhook(@Parameter(name = "requesterProductId", required = true)
-                                     @QueryParam("requesterProductId") String requesterProductId,
-                                     @Valid WebhookRequest request,
+  public Uni<Response> updateWebhook(@Valid WebhookRequest request,
                                      @PathParam("productId") String productId) {
-    return (productId.equals(requesterProductId)) ?
-      webhookService.updateWebhook(request, requesterProductId)
+    return webhookService.updateWebhook(request, productId)
         .map(response -> Response.ok(response).build())
         .onFailure(IllegalArgumentException.class)
-        .recoverWithItem(Response.status(Response.Status.NOT_FOUND).build())
-      : Uni.createFrom().item(Response.status(Response.Status.NOT_FOUND).build());
+        .recoverWithItem(Response.status(Response.Status.NOT_FOUND).build());
   }
 
   @DELETE
