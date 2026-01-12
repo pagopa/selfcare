@@ -11,6 +11,9 @@ public class WebhookRequest {
     
     @NotBlank(message = "URL is required")
     private String url;
+
+    @NotBlank(message = "ProductId is required")
+    private String productId;
     
     @NotNull(message = "HTTP method is required")
     private String httpMethod;

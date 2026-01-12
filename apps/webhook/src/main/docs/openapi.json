@@ -61,14 +61,6 @@
         "description" : "Create a new webhook configuration",
         "operationId" : "createWebhook",
         "tags" : [ "Webhook", "external-v2" ],
-        "parameters" : [ {
-          "name" : "requesterProductId",
-          "required" : true,
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -134,13 +126,6 @@
           "schema" : {
             "type" : "string"
           }
-        }, {
-          "name" : "requesterProductId",
-          "required" : true,
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
-          }
         } ],
         "requestBody" : {
           "content" : {
@@ -173,13 +158,6 @@
           "name" : "productId",
           "in" : "path",
           "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "requesterProductId",
-          "required" : true,
-          "in" : "query",
           "schema" : {
             "type" : "string"
           }
@@ -282,9 +260,13 @@
       },
       "WebhookRequest" : {
         "type" : "object",
-        "required" : [ "url", "httpMethod" ],
+        "required" : [ "url", "productId", "httpMethod" ],
         "properties" : {
           "url" : {
+            "type" : "string",
+            "pattern" : "\\S"
+          },
+          "productId" : {
             "type" : "string",
             "pattern" : "\\S"
           },
