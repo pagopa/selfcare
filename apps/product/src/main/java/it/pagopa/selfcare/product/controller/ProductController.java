@@ -80,6 +80,7 @@ public class ProductController {
     }
 
     @GET
+    @Path("/{productId}")
     @Tag(name = "Product")
     @Tag(name = "external-v2")
     @Tag(name = "external-pnpg")
@@ -109,11 +110,7 @@ public class ProductController {
             )
     })
     public Uni<Response> getProductById(
-            @Parameter(
-                    name = "productId",
-                    required = true
-            )
-            @QueryParam("productId") String productId) {
+           @PathParam("productId") String productId) {
         return productService.getProductById(productId)
                 .onItem().transform(product ->
                         Response.ok(product).build()

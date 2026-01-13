@@ -141,11 +141,11 @@ class ProductControllerTest {
 
         // when
         given()
-                .queryParam("productId", "prod-test")
+//                .pathParam("productId", "prod-test")
                 .queryParam("createdBy", "createdBy")
                 .accept(ContentType.JSON)
                 .when()
-                .get()
+                .get("prod-test")
                 .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -165,11 +165,10 @@ class ProductControllerTest {
 
         // when
         given()
-                .queryParam("productId", missing)
                 .queryParam("createdBy", "createdBy")
                 .accept(ContentType.JSON)
                 .when()
-                .get()
+                .get(missing)
                 .then()
                 .statusCode(404)
                 .contentType(ContentType.JSON)
