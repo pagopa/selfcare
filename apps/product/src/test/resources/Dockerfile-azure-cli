@@ -1,2 +1,2 @@
-FROM mcr.microsoft.com/azure-cli
+FROM mcr.microsoft.com/azure-cli@sha256:ed67c5ef4d0a87396fe39a8114db69b6c351c4af3b17119ac205bb6c0ee3a185
 CMD ["/bin/sh", "-c", "/blobStorage/initAzurite.sh"]
