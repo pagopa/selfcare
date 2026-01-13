@@ -665,51 +665,6 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
-    delete:
-      summary: Cancel product by ID
-      description: Marks the product as DELETED if it exists.
-      operationId: deleteProductById
-      tags:
-      - Product
-      - external-v2
-      - external-pnpg
-      parameters:
-      - name: productId
-        required: true
-        in: query
-        schema:
-          type: string
-      responses:
-        "200":
-          description: Product cancelled
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ProductBaseResponse"
-        "400":
-          description: Bad request
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-        "404":
-          description: Product not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-        "500":
-          description: Internal Server Error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
     post:
       summary: Create or update a product configuration
       description: Creates a new product configuration or updates the existing one
@@ -842,6 +797,51 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProductResponse"
+        "404":
+          description: Product not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+    delete:
+      summary: Cancel product by ID
+      description: Marks the product as DELETED if it exists.
+      operationId: deleteProductById
+      tags:
+      - Product
+      - external-v2
+      - external-pnpg
+      parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Product cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductBaseResponse"
+        "400":
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "404":
           description: Product not found
           content:

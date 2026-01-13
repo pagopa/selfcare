@@ -194,11 +194,10 @@ class ProductControllerTest {
 
         // when
         given()
-                .queryParam("productId", productId)
                 .queryParam("createdBy", "createdBy")
                 .accept(ContentType.JSON)
                 .when()
-                .delete()
+                .delete(productId)
                 .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -220,11 +219,10 @@ class ProductControllerTest {
 
         // when
         given()
-                .queryParam("productId", "prod-test")
                 .queryParam("createdBy", "createdBy")
                 .accept(ContentType.JSON)
                 .when()
-                .delete()
+                .delete(productId)
                 .then()
                 .statusCode(400)
                 .contentType(ContentType.JSON)
@@ -249,11 +247,10 @@ class ProductControllerTest {
 
         // when
         given()
-                .queryParam("productId", productId)
                 .queryParam("createdBy", "createdBy")
                 .accept(ContentType.JSON)
                 .when()
-                .delete()
+                .delete(productId)
                 .then()
                 .statusCode(404)
                 .contentType(ContentType.JSON)
