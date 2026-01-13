@@ -117,6 +117,8 @@ Feature: Product API end-to-end onboarding and lifecycle
 
   Scenario: GET /product/origins - successfully retrieve origins
     Given User login with username "j.doe" and password "test"
+    And The following query params:
+      | productId | prod-test |
     When I send a GET request to "/product/origins"
     Then The status code is 200
     And The response body contains:
