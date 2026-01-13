@@ -70,14 +70,9 @@ public class ProductController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> createProduct(
-            @Parameter(
-                    name = "productId",
-                    required = true
-            )
-            @QueryParam("productId") String productId,
             @QueryParam("createdBy") String createdBy,
             @Valid ProductCreateRequest productCreateRequest) {
-        return productService.createProduct(productId, createdBy, productCreateRequest)
+        return productService.createProduct(productCreateRequest, createdBy)
                 .onItem().transform(productResponse ->
                         Response.status(Response.Status.CREATED)
                                 .entity(productResponse)

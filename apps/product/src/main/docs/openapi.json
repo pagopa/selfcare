@@ -1022,13 +1022,6 @@
           "schema" : {
             "type" : "string"
           }
-        }, {
-          "name" : "productId",
-          "required" : true,
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
-          }
         } ],
         "requestBody" : {
           "content" : {

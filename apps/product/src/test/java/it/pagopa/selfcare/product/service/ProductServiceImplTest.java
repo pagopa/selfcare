@@ -80,7 +80,7 @@ class ProductServiceImplTest {
                 });
 
         // when
-        ProductBaseResponse productBaseResponse = productService.createProduct("prod-test", "createdBy", productCreateRequest).await().indefinitely();
+        ProductBaseResponse productBaseResponse = productService.createProduct(productCreateRequest, "createdBy").await().indefinitely();
 
         // then
         assertNotNull(productBaseResponse);
@@ -144,7 +144,7 @@ class ProductServiceImplTest {
                 });
 
         // when
-        ProductBaseResponse res = productService.createProduct("prod-test", "createdBy", productCreateRequest).await().indefinitely();
+        ProductBaseResponse res = productService.createProduct(productCreateRequest, "createdBy").await().indefinitely();
 
         // then
         assertNotNull(res);
@@ -170,7 +170,7 @@ class ProductServiceImplTest {
 
         // when
         BadRequestException ex = assertThrows(BadRequestException.class,
-                () -> productService.createProduct(null, "createdBy", productCreateRequest).await().indefinitely());
+                () -> productService.createProduct(productCreateRequest, "createdBy").await().indefinitely());
 
         // then
         assertTrue(ex.getMessage().contains("Invalid productId"));

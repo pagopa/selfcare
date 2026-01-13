@@ -82,7 +82,7 @@ class ProductControllerTest {
 
         ProductBaseResponse productBaseResponse = ProductBaseResponse.builder().productId("prod-test").status(ProductStatus.TESTING).id("prod-test-id").build();
 
-        when(productService.createProduct(anyString(), anyString(), any(ProductCreateRequest.class))).thenReturn(Uni.createFrom().item(productBaseResponse));
+        when(productService.createProduct(any(ProductCreateRequest.class), anyString())).thenReturn(Uni.createFrom().item(productBaseResponse));
 
         // when
         given()
@@ -101,7 +101,7 @@ class ProductControllerTest {
 
         // then
         ArgumentCaptor<ProductCreateRequest> captor = ArgumentCaptor.forClass(ProductCreateRequest.class);
-        verify(productService, times(1)).createProduct(anyString(), anyString(), captor.capture());
+        verify(productService, times(1)).createProduct(captor.capture(), anyString());
         ProductCreateRequest passed = captor.getValue();
         Assertions.assertNotNull(captor);
         Assertions.assertEquals("prod-test", passed.getProductId());
@@ -115,7 +115,7 @@ class ProductControllerTest {
 
         ProductBaseResponse productBaseResponse = new ProductBaseResponse();
 
-        when(productService.createProduct(anyString(), anyString(), any(ProductCreateRequest.class))).thenReturn(Uni.createFrom().item(productBaseResponse));
+        when(productService.createProduct(any(ProductCreateRequest.class), anyString())).thenReturn(Uni.createFrom().item(productBaseResponse));
 
         // when
         given()
