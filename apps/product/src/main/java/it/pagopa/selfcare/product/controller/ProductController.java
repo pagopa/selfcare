@@ -191,6 +191,7 @@ public class ProductController {
     }
 
     @PATCH
+    @Path("/{productId}")
     @Tag(name = "Product")
     @Tag(name = "external-v2")
     @Tag(name = "external-pnpg")
@@ -237,11 +238,7 @@ public class ProductController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> patchProductById(
-            @Parameter(
-                    name = "productId",
-                    required = true
-            )
-            @QueryParam("productId") String productId, @QueryParam("createdBy") String createdBy,
+            @PathParam("productId") String productId, @QueryParam("createdBy") String createdBy,
             ProductPatchRequest productPatchRequest) {
 
         return productService.patchProductById(productId, createdBy, productPatchRequest)

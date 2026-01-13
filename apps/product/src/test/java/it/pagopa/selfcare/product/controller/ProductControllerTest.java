@@ -278,13 +278,12 @@ class ProductControllerTest {
 
         // when
         given()
-                .queryParam("productId", productId)
                 .queryParam("createdBy", "createdBy")
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(patchDoc)
                 .when()
-                .patch()
+                .patch(productId)
                 .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON);
@@ -307,23 +306,21 @@ class ProductControllerTest {
 
         // when
         given()
-                .queryParam("productId", productId)
                 .queryParam("createdBy", "createdBy")
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(patchDoc)
                 .when()
-                .patch()
+                .patch(productId)
                 .then()
-                .statusCode(400)
+                .statusCode(405)
                 .contentType(ContentType.JSON)
-                .body("title", equalTo("Invalid productId"))
-                .body("detail", equalTo("productId is required and must be non-blank"))
-                .body("status", equalTo(400))
-                .body("instance", equalTo("/products/" + productId));
+                .body("title", equalTo("HTTP 405 Method Not Allowed"))
+                .body("detail", equalTo("HTTP 405 Method Not Allowed"))
+                .body("status", equalTo(405));
 
         // then
-        verify(productService, times(1)).patchProductById(eq(productId), eq("createdBy"), any(ProductPatchRequest.class));
+        verify(productService, times(0)).patchProductById(eq(productId), eq("createdBy"), any(ProductPatchRequest.class));
         verifyNoMoreInteractions(productService);
     }
 
@@ -340,13 +337,12 @@ class ProductControllerTest {
 
         // when
         given()
-                .queryParam("productId", productId)
                 .queryParam("createdBy", "createdBy")
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(patchDoc)
                 .when()
-                .patch()
+                .patch(productId)
                 .then()
                 .statusCode(404)
                 .contentType(ContentType.JSON)
@@ -373,13 +369,12 @@ class ProductControllerTest {
 
         // when
         given()
-                .queryParam("productId", productId)
                 .queryParam("createdBy", "createdBy")
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(patchDoc)
                 .when()
-                .patch()
+                .patch(productId)
                 .then()
                 .statusCode(500)
                 .contentType(ContentType.JSON)
@@ -406,13 +401,12 @@ class ProductControllerTest {
 
         // when
         given()
-                .queryParam("productId", productId)
                 .queryParam("createdBy", "createdBy")
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(invalidPayload)
                 .when()
-                .patch()
+                .patch(productId)
                 .then()
                 .statusCode(400)
                 .contentType(ContentType.JSON)
