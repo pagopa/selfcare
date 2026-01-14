@@ -46,19 +46,19 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Uni<ProductBaseResponse> createProduct(String productId, String createdBy, ProductCreateRequest productCreateRequest) {
+    public Uni<ProductBaseResponse> createProduct(ProductCreateRequest productCreateRequest, String createdBy) {
 
-        if (StringUtils.isBlank(productId)) {
-            throw new BadRequestException(String.format("Invalid productId: %s", productId));
+        if (StringUtils.isBlank(productCreateRequest.getProductId())) {
+            throw new BadRequestException(String.format("Invalid productId: %s", productCreateRequest.getProductId()));
         }
 
-        String sanitizedProductId = Encode.forJava(productId);
+        String sanitizedProductId = Encode.forJava(productCreateRequest.getProductId());
         String sanitizedCreatedBy = Encode.forJava(createdBy);
 
         log.info("Adding product {} action by {}", sanitizedProductId, sanitizedCreatedBy);
 
         Product requestProduct = productMapperRequest.toProduct(productCreateRequest);
-        requestProduct.setProductId(productId);
+        requestProduct.setProductId(productCreateRequest.getProductId());
 
         if (requestProduct.getStatus() == null) {
             log.info("Product status missing - default TESTING");
@@ -67,7 +67,7 @@ public class ProductServiceImpl implements ProductService {
 
         requestProduct.setMetadata(productUtils.buildProductMetadata(createdBy));
 
-        return productRepository.findProductById(productId)
+        return productRepository.findProductById(productCreateRequest.getProductId())
                 .onItem().ifNotNull().transformToUni(currentProduct -> {
                     int nextVersion = currentProduct.getVersion() + 1;
                     requestProduct.setVersion(nextVersion);
