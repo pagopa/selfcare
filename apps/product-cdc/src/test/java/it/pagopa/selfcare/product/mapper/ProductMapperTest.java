@@ -53,6 +53,7 @@ class ProductMapperTest {
           assertNotNull(productEntity);
           assertEquals(product.getProductId(), productEntity.getId());
           assertEquals(product.getDescription(), productEntity.getDescription());
+          assertEquals("identity.it", productEntity.getIdentityTokenAudience());
           String jsonEntity = jacksonConfiguration.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(productEntity);
           System.out.println("Mapped Product Entity:");
           System.out.println(jsonEntity);
