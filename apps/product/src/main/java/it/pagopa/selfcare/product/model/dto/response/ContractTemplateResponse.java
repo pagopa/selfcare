@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.product.model.dto.response;
 
+import it.pagopa.selfcare.product.model.enums.ContractTemplateFileType;
 import lombok.*;
 
 import java.time.Instant;
@@ -26,5 +27,7 @@ public class ContractTemplateResponse {
     private Instant createdAt;
 
     private String createdBy;
+
+    private ContractTemplateFileType fileType;
 
 }

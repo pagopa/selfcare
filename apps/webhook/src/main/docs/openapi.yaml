@@ -6,6 +6,7 @@ tags:
 - name: Webhook
   description: API for webhook configuration management
 - name: external-v2
+- name: internal-v1
 paths:
   /info/version:
     get:
@@ -26,8 +27,10 @@ paths:
     get:
       summary: List all webhooks
       description: Retrieve all webhook configurations
+      operationId: listWebhooks
       tags:
       - Webhook
+      - internal-v1
       responses:
         "200":
           description: OK
@@ -40,14 +43,10 @@ paths:
     post:
       summary: Create a new webhook
       description: Create a new webhook configuration
+      operationId: createWebhook
       tags:
+      - Webhook
       - external-v2
-      parameters:
-      - name: productId
-        required: true
-        in: query
-        schema:
-          type: string
       requestBody:
         content:
           application/json:
@@ -65,8 +64,10 @@ paths:
     post:
       summary: Send notification
       description: Create and send a webhook notification
+      operationId: sendNotification
       tags:
       - Webhook
+      - internal-v1
       requestBody:
         content:
           application/json:
@@ -84,17 +85,14 @@ paths:
     put:
       summary: Update webhook
       description: Update an existing webhook configuration
+      operationId: updateWebhookbyProductId
       tags:
+      - Webhook
       - external-v2
       parameters:
       - name: productId
         in: path
         required: true
-        schema:
-          type: string
-      - name: productId
-        required: true
-        in: query
         schema:
           type: string
       requestBody:
@@ -113,17 +111,14 @@ paths:
     get:
       summary: Get webhook by ID
       description: Retrieve a specific webhook configuration
+      operationId: getWebhookbyProductId
       tags:
+      - Webhook
       - external-v2
       parameters:
       - name: productId
         in: path
         required: true
-        schema:
-          type: string
-      - name: productId
-        required: true
-        in: query
         schema:
           type: string
       responses:
@@ -134,6 +129,7 @@ paths:
     delete:
       summary: Delete webhook
       description: Delete a webhook configuration
+      operationId: deleteWebhookbyProductId
       tags:
       - Webhook
       parameters:
@@ -200,9 +196,13 @@ components:
       type: object
       required:
       - url
+      - productId
       - httpMethod
       properties:
         url:
+          type: string
+          pattern: \S
+        productId:
           type: string
           pattern: \S
         httpMethod:

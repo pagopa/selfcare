@@ -32,6 +32,7 @@ public class WebhookSteps {
         webhookRequest = new WebhookRequest();
         webhookRequest.setUrl(url);
         webhookRequest.setHttpMethod("POST");
+        webhookRequest.setProductId("prod-test");
     }
 
     @Given("I have created a webhook with url {string} and productId {string}")
@@ -39,10 +40,10 @@ public class WebhookSteps {
         WebhookRequest request = new WebhookRequest();
         request.setUrl(url);
         request.setHttpMethod("POST");
+        request.setProductId(productId);
 
         WebhookResponse created = given()
                 .contentType("application/json")
-                .queryParam("productId", productId)
                 .body(request)
                 .when()
                 .post("/webhooks")
@@ -58,10 +59,10 @@ public class WebhookSteps {
         WebhookRequest request = new WebhookRequest();
         request.setUrl("http://example.com");
         request.setHttpMethod("POST");
+        request.setProductId(productId);
 
         WebhookResponse created = given()
                 .contentType("application/json")
-                .queryParam("productId", productId)
                 .body(request)
                 .when()
                 .post("/webhooks")
@@ -76,7 +77,6 @@ public class WebhookSteps {
     public void iCreateTheWebhook() {
         response = given()
                 .contentType("application/json")
-                .queryParam("productId", "prod-test")
                 .body(webhookRequest)
                 .when()
                 .post("/webhooks");
@@ -97,7 +97,7 @@ public class WebhookSteps {
     public void iGetTheWebhookByItsID() {
         response = given()
                 .when()
-                .queryParam("productId", lastWebhookProductId)
+                .queryParam("requesterProductId", lastWebhookProductId)
                 .get("/webhooks/" + lastWebhookProductId);
     }
 
@@ -106,10 +106,10 @@ public class WebhookSteps {
         WebhookRequest updateRequest = new WebhookRequest();
         updateRequest.setUrl(url);
         updateRequest.setHttpMethod("POST");
+        updateRequest.setProductId(lastWebhookProductId);
 
         response = given()
                 .contentType("application/json")
-                .queryParam("productId", lastWebhookProductId)
                 .body(updateRequest)
                 .when()
                 .put("/webhooks/" + lastWebhookProductId);

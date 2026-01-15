@@ -11,7 +11,6 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.Operation;
-import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import java.util.List;
@@ -28,21 +27,24 @@ public class WebhookController {
   @POST
   @Operation(
     summary = "Create a new webhook",
-    description = "Create a new webhook configuration"
+    description = "Create a new webhook configuration",
+    operationId = "createWebhook"
   )
+  @Tag(name = "Webhook")
   @Tag(name = "external-v2")
-  public Uni<Response> createWebhook(@Parameter(name = "productId", required = true)
-                                     @QueryParam("productId") String productId,
-                                     @Valid WebhookRequest request) {
-    return webhookService.createWebhook(request, productId)
+  public Uni<Response> createWebhook(@Valid WebhookRequest request) {
+    return webhookService.createWebhook(request)
       .map(response -> Response.status(Response.Status.CREATED).entity(response).build());
   }
 
   @GET
   @Operation(
     summary = "List all webhooks",
-    description = "Retrieve all webhook configurations"
+    description = "Retrieve all webhook configurations",
+    operationId = "listWebhooks"
   )
+  @Tag(name = "Webhook")
+  @Tag(name = "internal-v1")
   public Uni<List<WebhookResponse>> listWebhooks() {
     return webhookService.listWebhooks();
   }
@@ -51,44 +53,41 @@ public class WebhookController {
   @Path("/{productId}")
   @Operation(
     summary = "Get webhook by ID",
-    description = "Retrieve a specific webhook configuration"
+    description = "Retrieve a specific webhook configuration",
+    operationId = "getWebhookbyProductId"
   )
+  @Tag(name = "Webhook")
   @Tag(name = "external-v2")
-  public Uni<Response> getWebhook(@Parameter(name = "productId", required = true)
-                                  @QueryParam("productId") String requesterProductId,
-                                  @PathParam("productId") String productId) {
-    return (productId.equals(requesterProductId)) ?
-      webhookService.getWebhookByProductId(productId)
+  public Uni<Response> getWebhook(@PathParam("productId") String productId) {
+    return webhookService.getWebhookByProductId(productId)
         .map(response -> response != null
           ? Response.ok(response).build()
-          : Response.status(Response.Status.NOT_FOUND).build())
-      : Uni.createFrom().item(Response.status(Response.Status.NOT_FOUND).build());
+          : Response.status(Response.Status.NOT_FOUND).build());
   }
 
   @PUT
   @Path("/{productId}")
   @Operation(
     summary = "Update webhook",
-    description = "Update an existing webhook configuration"
+    description = "Update an existing webhook configuration",
+    operationId = "updateWebhookbyProductId"
   )
+  @Tag(name = "Webhook")
   @Tag(name = "external-v2")
-  public Uni<Response> updateWebhook(@Parameter(name = "productId", required = true)
-                                     @QueryParam("productId") String requesterProductId,
-                                     @Valid WebhookRequest request,
+  public Uni<Response> updateWebhook(@Valid WebhookRequest request,
                                      @PathParam("productId") String productId) {
-    return (productId.equals(requesterProductId)) ?
-      webhookService.updateWebhook(request, requesterProductId)
+    return webhookService.updateWebhook(request, productId)
         .map(response -> Response.ok(response).build())
         .onFailure(IllegalArgumentException.class)
-        .recoverWithItem(Response.status(Response.Status.NOT_FOUND).build())
-      : Uni.createFrom().item(Response.status(Response.Status.NOT_FOUND).build());
+        .recoverWithItem(Response.status(Response.Status.NOT_FOUND).build());
   }
 
   @DELETE
   @Path("/{productId}")
   @Operation(
     summary = "Delete webhook",
-    description = "Delete a webhook configuration"
+    description = "Delete a webhook configuration",
+    operationId = "deleteWebhookbyProductId"
   )
   public Uni<Response> deleteWebhook(@PathParam("productId") String productId) {
     return Uni.createFrom().item(Response.status(Response.Status.NOT_IMPLEMENTED).build());
@@ -100,9 +99,12 @@ public class WebhookController {
 
   @POST
   @Path("/notify")
+  @Tag(name = "Webhook")
+  @Tag(name = "internal-v1")
   @Operation(
     summary = "Send notification",
-    description = "Create and send a webhook notification"
+    description = "Create and send a webhook notification",
+    operationId = "sendNotification"
   )
   public Uni<Response> sendNotification(@Valid NotificationRequest request) {
     return webhookService.sendNotification(request)

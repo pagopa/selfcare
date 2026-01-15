@@ -7,7 +7,6 @@ Feature: Contract Template API
     And The following query params:
       | productId | prod-test |
       | createdBy | testuser  |
-    And The following form data:
       | name        | accordo di adesione |
       | version     | 0.0.1               |
       | description | Upload test         |
@@ -22,6 +21,7 @@ Feature: Contract Template API
       | name                    | accordo di adesione |
       | description             | Upload test         |
       | createdBy               | testuser            |
+      | fileType                | HTML                |
     And Finally remove the uploaded contract template with name "accordo di adesione" and version "0.0.1" for product "prod-test"
 
   Scenario: Bad request when uploading a contract template with invalid tags
@@ -29,7 +29,6 @@ Feature: Contract Template API
     And The following query params:
       | productId | prod-test |
       | createdBy | testuser  |
-    And The following form data:
       | name        | accordo di adesione |
       | version     | 0.0.1               |
       | description | Upload test         |
@@ -42,7 +41,6 @@ Feature: Contract Template API
     And The following query params:
       | productId | prod-test |
       | createdBy | testuser  |
-    And The following form data:
       | name        | accordo di adesione |
       | version     | 0.0.1               |
       | description | Upload test         |
@@ -55,7 +53,6 @@ Feature: Contract Template API
     And The following query params:
       | productId | prod-test |
       | createdBy | testuser  |
-    And The following form data:
       | name        | accordo & adesione  |
       | version     | 0.0.1               |
       | description | Upload test         |
@@ -68,7 +65,6 @@ Feature: Contract Template API
     And The following query params:
       | productId | prod-test |
       | createdBy | testuser  |
-    And The following form data:
       | name        | accordo di adesione |
       | version     | v0.0.1              |
       | description | Upload test         |
@@ -80,7 +76,6 @@ Feature: Contract Template API
     Given User login with username "j.doe" and password "test"
     And The following query params:
       | createdBy | testuser  |
-    And The following form data:
       | description | Upload test |
     And Upload the file at path "blobStorage/contract-template.html" with form key "file" and content type "text/html"
     When I send a POST request to "/contract-template" with form data and multi-part file
@@ -91,7 +86,6 @@ Feature: Contract Template API
     And The following query params:
       | productId | prod-test |
       | createdBy | testuser  |
-    And The following form data:
       | name        | accordo di adesione |
       | version     | 0.0.2               |
       | description | Upload test         |
@@ -155,9 +149,9 @@ Feature: Contract Template API
     Then The status code is 200
     And The response body contains the list "items" of size 2
     And The response body contains at path "items" the following list of objects in any order:
-      | contractTemplateId                   | productId | contractTemplateVersion | name                | description                        | createdBy | contractTemplatePath                                                   |
-      | 5ca7f491-5770-40ba-baf0-6fe612bba14e | prod-test | 0.0.2                   | accordo di adesione |                                    | testuser  | contract-templates/prod-test/5ca7f491-5770-40ba-baf0-6fe612bba14e.html |
-      | 76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6 | prod-test | 0.0.3                   | accordo di adesione | Accordo di adesione di esempio pdf |           | contract-templates/prod-test/76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6.pdf  |
+      | contractTemplateId                   | productId | contractTemplateVersion | name                | description                        | createdBy | contractTemplatePath                                                   | fileType |
+      | 5ca7f491-5770-40ba-baf0-6fe612bba14e | prod-test | 0.0.2                   | accordo di adesione |                                    | testuser  | contract-templates/prod-test/5ca7f491-5770-40ba-baf0-6fe612bba14e.html | HTML     |
+      | 76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6 | prod-test | 0.0.3                   | accordo di adesione | Accordo di adesione di esempio pdf |           | contract-templates/prod-test/76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6.pdf  | PDF      |
 
   Scenario: Successfully list contract templates filtered by productId, name
     Given User login with username "j.doe" and password "test"
@@ -168,9 +162,9 @@ Feature: Contract Template API
     Then The status code is 200
     And The response body contains the list "items" of size 2
     And The response body contains at path "items" the following list of objects in any order:
-      | contractTemplateId                   | productId | contractTemplateVersion | name                | description                        | createdBy | contractTemplatePath                                                   |
-      | 5ca7f491-5770-40ba-baf0-6fe612bba14e | prod-test | 0.0.2                   | accordo di adesione |                                    | testuser  | contract-templates/prod-test/5ca7f491-5770-40ba-baf0-6fe612bba14e.html |
-      | 76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6 | prod-test | 0.0.3                   | accordo di adesione | Accordo di adesione di esempio pdf |           | contract-templates/prod-test/76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6.pdf  |
+      | contractTemplateId                   | productId | contractTemplateVersion | name                | description                        | createdBy | contractTemplatePath                                                   | fileType |
+      | 5ca7f491-5770-40ba-baf0-6fe612bba14e | prod-test | 0.0.2                   | accordo di adesione |                                    | testuser  | contract-templates/prod-test/5ca7f491-5770-40ba-baf0-6fe612bba14e.html | HTML     |
+      | 76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6 | prod-test | 0.0.3                   | accordo di adesione | Accordo di adesione di esempio pdf |           | contract-templates/prod-test/76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6.pdf  | PDF      |
 
   Scenario: Successfully list contract templates filtered by productId, name: no matches
     Given User login with username "j.doe" and password "test"
@@ -190,8 +184,8 @@ Feature: Contract Template API
     Then The status code is 200
     And The response body contains the list "items" of size 1
     And The response body contains at path "items" the following list of objects in any order:
-      | contractTemplateId                   | productId | contractTemplateVersion | name                | description | createdBy | contractTemplatePath                                                   |
-      | 5ca7f491-5770-40ba-baf0-6fe612bba14e | prod-test | 0.0.2                   | accordo di adesione |             | testuser  | contract-templates/prod-test/5ca7f491-5770-40ba-baf0-6fe612bba14e.html |
+      | contractTemplateId                   | productId | contractTemplateVersion | name                | description | createdBy | contractTemplatePath                                                   | fileType |
+      | 5ca7f491-5770-40ba-baf0-6fe612bba14e | prod-test | 0.0.2                   | accordo di adesione |             | testuser  | contract-templates/prod-test/5ca7f491-5770-40ba-baf0-6fe612bba14e.html | HTML     |
 
   Scenario: Successfully list contract templates filtered by productId, version: no matches
     Given User login with username "j.doe" and password "test"
@@ -212,8 +206,8 @@ Feature: Contract Template API
     Then The status code is 200
     And The response body contains the list "items" of size 1
     And The response body contains at path "items" the following list of objects in any order:
-      | contractTemplateId                   | productId | contractTemplateVersion | name                | description                        | createdBy | contractTemplatePath                                                  |
-      | 76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6 | prod-test | 0.0.3                   | accordo di adesione | Accordo di adesione di esempio pdf |           | contract-templates/prod-test/76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6.pdf |
+      | contractTemplateId                   | productId | contractTemplateVersion | name                | description                        | createdBy | contractTemplatePath                                                  | fileType |
+      | 76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6 | prod-test | 0.0.3                   | accordo di adesione | Accordo di adesione di esempio pdf |           | contract-templates/prod-test/76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6.pdf | PDF      |
 
   Scenario: Successfully list contract templates without filters
     Given User login with username "j.doe" and password "test"
@@ -221,6 +215,6 @@ Feature: Contract Template API
     Then The status code is 200
     And The response body contains the list "items" of size 2
     And The response body contains at path "items" the following list of objects in any order:
-      | contractTemplateId                   | productId | contractTemplateVersion | name                | description                        | createdBy | contractTemplatePath                                                   |
-      | 5ca7f491-5770-40ba-baf0-6fe612bba14e | prod-test | 0.0.2                   | accordo di adesione |                                    | testuser  | contract-templates/prod-test/5ca7f491-5770-40ba-baf0-6fe612bba14e.html |
-      | 76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6 | prod-test | 0.0.3                   | accordo di adesione | Accordo di adesione di esempio pdf |           | contract-templates/prod-test/76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6.pdf  |
+      | contractTemplateId                   | productId | contractTemplateVersion | name                | description                        | createdBy | contractTemplatePath                                                   | fileType |
+      | 5ca7f491-5770-40ba-baf0-6fe612bba14e | prod-test | 0.0.2                   | accordo di adesione |                                    | testuser  | contract-templates/prod-test/5ca7f491-5770-40ba-baf0-6fe612bba14e.html | HTML     |
+      | 76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6 | prod-test | 0.0.3                   | accordo di adesione | Accordo di adesione di esempio pdf |           | contract-templates/prod-test/76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6.pdf  | PDF      |

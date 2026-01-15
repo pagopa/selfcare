@@ -8,7 +8,9 @@ import it.pagopa.selfcare.product.model.dto.response.ContractTemplateResponseLis
 import it.pagopa.selfcare.product.model.dto.response.Problem;
 import it.pagopa.selfcare.product.model.enums.ContractTemplateFileType;
 import it.pagopa.selfcare.product.service.ContractTemplateService;
-import jakarta.validation.Valid;
+import it.pagopa.selfcare.product.validator.AllowedFileTypes;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -18,6 +20,8 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.owasp.encoder.Encode;
 
 import java.io.File;
@@ -50,8 +54,29 @@ public class ContractTemplateController {
             @APIResponse(responseCode = "409", description = "Conflict", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class))),
             @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = Problem.class)))
     })
-    public Uni<Response> upload(@Valid ContractTemplateUploadRequest uploadRequest) {
-        return contractTemplateService.upload(uploadRequest)
+    public Uni<Response> upload(@QueryParam("productId") @NotNull
+                                String productId,
+                                @QueryParam("name") @NotNull
+                                @Pattern(regexp = "^[a-zA-Z0-9 ]+$", message = "The field can only contain letters, numbers, and spaces")
+                                String name,
+                                @QueryParam("version") @NotNull
+                                @Pattern(regexp = "^\\d+\\.\\d+\\.\\d+$", message = "The format must be X.X.X where X is a number")
+                                String version,
+                                @QueryParam("description")
+                                String description,
+                                @QueryParam("createdBy")
+                                String createdBy,
+                                @RestForm("file") @NotNull
+                                @AllowedFileTypes(value = {AllowedFileTypes.HTML}, message = "Only static HTML files without images are allowed")
+                                FileUpload file) {
+        return contractTemplateService.upload(ContractTemplateUploadRequest.builder()
+                        .productId(productId)
+                        .name(name)
+                        .version(version)
+                        .description(description)
+                        .createdBy(createdBy)
+                        .file(file)
+                        .build())
                 .onItem().transform(r -> Response.status(Response.Status.CREATED).entity(r).build());
     }
 

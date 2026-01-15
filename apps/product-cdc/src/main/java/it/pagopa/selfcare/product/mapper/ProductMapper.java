@@ -166,7 +166,7 @@ public interface ProductMapper {
       return null;
     }
     return list.stream().filter(config -> config.getEnv().equalsIgnoreCase("prod"))
-      .findFirst().map(BackOfficeEnvironmentConfiguration::getUrlPublic).orElse(null);
+      .findFirst().map(BackOfficeEnvironmentConfiguration::getIdentityTokenAudience).orElse(null);
   }
 
   @Named("mapBackOfficeConfigs")

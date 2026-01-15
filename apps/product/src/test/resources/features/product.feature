@@ -108,9 +108,7 @@ Feature: Product API end-to-end onboarding and lifecycle
 
   Scenario: GET /product - successfully retrieve product after creation
     Given User login with username "j.doe" and password "test"
-    And The following query params:
-      | productId | prod-test |
-    When I send a GET request to "/product"
+    When I send a GET request to "/product/prod-test"
     Then The status code is 200
     And The response body contains:
       | productId | prod-test |
@@ -236,9 +234,8 @@ Feature: Product API end-to-end onboarding and lifecycle
   Scenario: GET /product - successfully retrieve product after upsert
     Given User login with username "j.doe" and password "test"
     And The following query params:
-      | productId | prod-test |
       | createdBy | user-test |
-    When I send a GET request to "/product"
+    When I send a GET request to "/product/prod-test"
     Then The status code is 200
     And The response body contains:
       | productId | prod-test |
@@ -248,7 +245,6 @@ Feature: Product API end-to-end onboarding and lifecycle
   Scenario: PATCH /product - successfully update product fields
     Given User login with username "j.doe" and password "test"
     And The following query params:
-      | productId | prod-test |
       | createdBy | user-test |
     And The following request body:
     """
@@ -258,7 +254,7 @@ Feature: Product API end-to-end onboarding and lifecycle
         "title": "Prod TEST 2 - Patched"
       }
     """
-    When I send a PATCH request to "/product" with content type "application/json"
+    When I send a PATCH request to "/product/prod-test" with content type "application/json"
     Then The status code is 200
     And The response body contains:
       | productId        | prod-test                     |
@@ -268,9 +264,7 @@ Feature: Product API end-to-end onboarding and lifecycle
 
   Scenario: GET /product - successfully retrieve product after patch
     Given User login with username "j.doe" and password "test"
-    And The following query params:
-      | productId | prod-test |
-    When I send a GET request to "/product"
+    When I send a GET request to "/product/prod-test"
     Then The status code is 200
     And The response body contains:
       | productId        | prod-test                     |
@@ -279,9 +273,7 @@ Feature: Product API end-to-end onboarding and lifecycle
 
   Scenario: DELETE /product - successfully mark product as DELETED
     Given User login with username "j.doe" and password "test"
-    And The following query params:
-      | productId | prod-test |
-    When I send a DELETE request to "/product"
+    When I send a DELETE request to "/product/prod-test"
     Then The status code is 200
     And The response body contains:
       | productId | prod-test |
@@ -289,9 +281,7 @@ Feature: Product API end-to-end onboarding and lifecycle
 
   Scenario: GET /product - return 404 when product not found
     Given User login with username "j.doe" and password "test"
-    And The following query params:
-      | productId | prod-unknown |
-    When I send a GET request to "/product"
+    When I send a GET request to "/product/prod-unknown"
     Then The status code is 404
     And The response body contains:
       | title  | Product not found |
@@ -312,9 +302,7 @@ Feature: Product API end-to-end onboarding and lifecycle
 
   Scenario: PATCH /product - return 400 when payload is invalid
     Given User login with username "j.doe" and password "test"
-    And The following query params:
-      | productId | prod-unknown |
-    When I send a PATCH request to "/product" with content type "application/json"
+    When I send a PATCH request to "/product/prod-unknown" with content type "application/json"
     Then The status code is 400
     And The response body contains:
       | title  | Bad Request |
@@ -322,9 +310,7 @@ Feature: Product API end-to-end onboarding and lifecycle
 
   Scenario: DELETE /product - return 404 when product not found
     Given User login with username "j.doe" and password "test"
-    And The following query params:
-      | productId | prod-unknown |
-    When I send a DELETE request to "/product"
+    When I send a DELETE request to "/product/prod-unknown"
     Then The status code is 404
     And The response body contains:
       | title  | Product not found |

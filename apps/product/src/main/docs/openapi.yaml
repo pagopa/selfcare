@@ -61,6 +61,11 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/WorkflowType"
+    ContractTemplateFileType:
+      type: string
+      enum:
+      - HTML
+      - PDF
     ContractTemplateResponse:
       type: object
       properties:
@@ -80,6 +85,8 @@ components:
           $ref: "#/components/schemas/Instant"
         createdBy:
           type: string
+        fileType:
+          $ref: "#/components/schemas/ContractTemplateFileType"
     ContractTemplateResponseList:
       type: object
       properties:
@@ -87,29 +94,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ContractTemplateResponse"
-    ContractTemplateUploadRequest:
-      type: object
-      required:
-      - productId
-      - file
-      - name
-      - version
-      properties:
-        productId:
-          type: string
-        file:
-          type: string
-          format: binary
-        name:
-          type: string
-          pattern: "^[a-zA-Z0-9 ]+$"
-        version:
-          type: string
-          pattern: ^\d+\.\d+\.\d+$
-        description:
-          type: string
-        createdBy:
-          type: string
     ContractType:
       type: string
       enum:
@@ -452,11 +436,43 @@ paths:
       tags:
       - ContractTemplate
       - external-v2
+      parameters:
+      - name: createdBy
+        in: query
+        schema:
+          type: string
+      - name: description
+        in: query
+        schema:
+          type: string
+      - name: name
+        in: query
+        schema:
+          type: string
+          pattern: "^[a-zA-Z0-9 ]+$"
+        required: true
+      - name: productId
+        in: query
+        schema:
+          type: string
+        required: true
+      - name: version
+        in: query
+        schema:
+          type: string
+          pattern: ^\d+\.\d+\.\d+$
+        required: true
       requestBody:
         content:
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/ContractTemplateUploadRequest"
+              type: object
+              required:
+              - file
+              properties:
+                file:
+                  type: string
+                  format: binary
         required: true
       responses:
         "201":
@@ -590,149 +606,6 @@ paths:
       security:
       - SecurityScheme: []
   /product:
-    patch:
-      summary: Partially update a product by ID
-      description: Partially updates an existing product identified by its productId.
-        Only the non-null fields provided in the request body will be updated; all
-        other fields will remain unchanged.
-      operationId: patchProductById
-      tags:
-      - Product
-      - external-v2
-      - external-pnpg
-      parameters:
-      - name: createdBy
-        in: query
-        schema:
-          type: string
-      - name: productId
-        required: true
-        in: query
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ProductPatchRequest"
-        required: true
-      responses:
-        "200":
-          description: Product successfully patched
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ProductBaseResponse"
-        "400":
-          description: "Bad Request - Invalid patch document, invalid productId, or\
-            \ field constraint violation"
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-        "404":
-          description: Not Found - No product found with the specified productId
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-        "500":
-          description: Internal Server Error - Unexpected error occurred while applying
-            the patch
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-    get:
-      summary: Get product by productId
-      description: Retrieve a product by its unique identifier.
-      operationId: getProductById
-      tags:
-      - Product
-      - external-v2
-      - external-pnpg
-      parameters:
-      - name: productId
-        required: true
-        in: query
-        schema:
-          type: string
-      responses:
-        "200":
-          description: Product found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ProductResponse"
-        "404":
-          description: Product not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-        "500":
-          description: Internal Server Error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-    delete:
-      summary: Cancel product by ID
-      description: Marks the product as DELETED if it exists.
-      operationId: deleteProductById
-      tags:
-      - Product
-      - external-v2
-      - external-pnpg
-      parameters:
-      - name: productId
-        required: true
-        in: query
-        schema:
-          type: string
-      responses:
-        "200":
-          description: Product cancelled
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ProductBaseResponse"
-        "400":
-          description: Bad request
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-        "404":
-          description: Product not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-        "500":
-          description: Internal Server Error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
     post:
       summary: Create or update a product configuration
       description: Creates a new product configuration or updates the existing one
@@ -744,11 +617,6 @@ paths:
       - external-pnpg
       parameters:
       - name: createdBy
-        in: query
-        schema:
-          type: string
-      - name: productId
-        required: true
         in: query
         schema:
           type: string
@@ -836,6 +704,150 @@ paths:
             application/problem+json:
               schema:
                 type: string
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /product/{productId}:
+    patch:
+      summary: Partially update a product by ID
+      description: Partially updates an existing product identified by its productId.
+        Only the non-null fields provided in the request body will be updated; all
+        other fields will remain unchanged.
+      operationId: patchProductById
+      tags:
+      - Product
+      - external-v2
+      - external-pnpg
+      parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: createdBy
+        in: query
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductPatchRequest"
+        required: true
+      responses:
+        "200":
+          description: Product successfully patched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductBaseResponse"
+        "400":
+          description: "Bad Request - Invalid patch document, invalid productId, or\
+            \ field constraint violation"
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found - No product found with the specified productId
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error - Unexpected error occurred while applying
+            the patch
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+    get:
+      summary: Get product by productId
+      description: Retrieve a product by its unique identifier.
+      operationId: getProductById
+      tags:
+      - Product
+      - external-v2
+      - external-pnpg
+      parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Product found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+        "404":
+          description: Product not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+    delete:
+      summary: Cancel product by ID
+      description: Marks the product as DELETED if it exists.
+      operationId: deleteProductById
+      tags:
+      - Product
+      - external-v2
+      - external-pnpg
+      parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Product cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductBaseResponse"
+        "400":
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Product not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "500":
           description: Internal Server Error
           content:

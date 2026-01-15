@@ -8,6 +8,8 @@
     "description" : "API for webhook configuration management"
   }, {
     "name" : "external-v2"
+  }, {
+    "name" : "internal-v1"
   } ],
   "paths" : {
     "/info/version" : {
@@ -36,7 +38,8 @@
       "get" : {
         "summary" : "List all webhooks",
         "description" : "Retrieve all webhook configurations",
-        "tags" : [ "Webhook" ],
+        "operationId" : "listWebhooks",
+        "tags" : [ "Webhook", "internal-v1" ],
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -56,15 +59,8 @@
       "post" : {
         "summary" : "Create a new webhook",
         "description" : "Create a new webhook configuration",
-        "tags" : [ "external-v2" ],
-        "parameters" : [ {
-          "name" : "productId",
-          "required" : true,
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
+        "operationId" : "createWebhook",
+        "tags" : [ "Webhook", "external-v2" ],
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -92,7 +88,8 @@
       "post" : {
         "summary" : "Send notification",
         "description" : "Create and send a webhook notification",
-        "tags" : [ "Webhook" ],
+        "operationId" : "sendNotification",
+        "tags" : [ "Webhook", "internal-v1" ],
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -120,18 +117,12 @@
       "put" : {
         "summary" : "Update webhook",
         "description" : "Update an existing webhook configuration",
-        "tags" : [ "external-v2" ],
+        "operationId" : "updateWebhookbyProductId",
+        "tags" : [ "Webhook", "external-v2" ],
         "parameters" : [ {
           "name" : "productId",
           "in" : "path",
           "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "productId",
-          "required" : true,
-          "in" : "query",
           "schema" : {
             "type" : "string"
           }
@@ -161,18 +152,12 @@
       "get" : {
         "summary" : "Get webhook by ID",
         "description" : "Retrieve a specific webhook configuration",
-        "tags" : [ "external-v2" ],
+        "operationId" : "getWebhookbyProductId",
+        "tags" : [ "Webhook", "external-v2" ],
         "parameters" : [ {
           "name" : "productId",
           "in" : "path",
           "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "productId",
-          "required" : true,
-          "in" : "query",
           "schema" : {
             "type" : "string"
           }
@@ -189,6 +174,7 @@
       "delete" : {
         "summary" : "Delete webhook",
         "description" : "Delete a webhook configuration",
+        "operationId" : "deleteWebhookbyProductId",
         "tags" : [ "Webhook" ],
         "parameters" : [ {
           "name" : "productId",
@@ -274,9 +260,13 @@
       },
       "WebhookRequest" : {
         "type" : "object",
-        "required" : [ "url", "httpMethod" ],
+        "required" : [ "url", "productId", "httpMethod" ],
         "properties" : {
           "url" : {
+            "type" : "string",
+            "pattern" : "\\S"
+          },
+          "productId" : {
             "type" : "string",
             "pattern" : "\\S"
           },
