@@ -145,13 +145,19 @@ public class IamServiceImpl implements IamService {
    * @return a list of filtered ProductRoles
    */
   public List<ProductRoles> setFilteredProductRoles(List<ProductRoles> productRoles, String productId) {
-    return Optional.ofNullable(productId).map(pid ->
-      Optional.ofNullable(productRoles)
-        .map(prs -> prs.stream()
-          .filter(pr -> pr.getProductId().equals(pid))
-          .toList())
-        .orElse(List.of())
-    ).orElse(productRoles);
+    return Optional.ofNullable(productRoles)
+            .map(roles -> Optional.ofNullable(productId)
+                    .map(pid -> {
+                      List<ProductRoles> exact = roles.stream()
+                              .filter(pr -> pr.getProductId().equals(pid))
+                              .toList();
+                      return exact.isEmpty()
+                              ? roles.stream().filter(pr -> "ALL".equals(pr.getProductId())).toList()
+                              : exact;
+                    })
+                    .orElse(roles)
+            )
+            .orElse(List.of());
   }
 
   /**

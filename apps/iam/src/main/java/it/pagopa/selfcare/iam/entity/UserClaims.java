@@ -75,10 +75,18 @@ public class UserClaims extends ReactivePanacheMongoEntityBase {
   }
 
   public static Uni<UserClaims> findByUidAndProductId(String uid, String productId) {
-    return Optional.ofNullable(productId).isPresent() ?
-      find("_id = ?1 and productRoles.productId = ?2", uid, productId)
-        .firstResult()
-        .map(entity -> (UserClaims) entity) :
-      findByUid(uid);
+    return Optional.ofNullable(productId)
+            .map(pid ->
+                    find("_id = ?1 and productRoles.productId = ?2", uid, pid)
+                            .firstResult()
+                            .map(entity -> (UserClaims) entity)
+                            .onItem().ifNull().switchTo(() ->
+                                    find("_id = ?1 and productRoles.productId = ?2", uid, "ALL")
+                                            .firstResult()
+                                            .map(entity -> (UserClaims) entity)
+                            )
+            )
+            .orElseGet(() -> findByUid(uid));
   }
+
 }
