@@ -272,6 +272,34 @@ class IamServiceImplTest {
   }
 
   @Test
+  void getUser_shouldReturnUser_whenUserExists_withProductALL() {
+    String userId = "user-123";
+    String productId = "productA";
+
+    UserClaims foundUser = UserClaims.builder()
+            .email("A11V/hS6EZS9LLSxMHgQJS6O1OStWkFnwpbN4fHhy0I6") //found@example.com
+            .uid(userId)
+            .productRoles(List.of(
+                    ProductRoles.builder().productId("ALL").roles(List.of("admin")).build()
+            ))
+            .test(false)
+            .build();
+
+    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
+      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
+      mockedStatic.when(() -> UserClaims.findByUidAndProductId(userId, productId))
+              .thenReturn(Uni.createFrom().item(foundUser));
+
+      UserClaims result = service.getUser(userId, productId).await().indefinitely();
+
+      assertNotNull(result);
+      assertEquals(userId, result.getUid());
+      assertEquals(1, result.getProductRoles().size());
+      assertEquals("ALL", result.getProductRoles().get(0).getProductId());
+    }
+  }
+
+  @Test
   void getUser_shouldThrowResourceNotFoundException_whenUserNotFound() {
     String userId = "non-existing-user";
     String productId = "productA";
