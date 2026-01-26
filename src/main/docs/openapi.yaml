@@ -1436,8 +1436,6 @@ components:
       - userMailUuid
       - institutionName
       - productId
-      - role
-      - userRequestUid
       type: object
       properties:
         userMailUuid:
@@ -1448,10 +1446,6 @@ components:
           type: string
         productId:
           minLength: 1
-          type: string
-        role:
-          $ref: "#/components/schemas/PartyRole"
-        userRequestUid:
           type: string
     UpdateDescriptionDto:
       required:

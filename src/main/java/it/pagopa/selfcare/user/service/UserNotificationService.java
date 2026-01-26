@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.user.service;
 
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.model.LoggedUser;
@@ -18,7 +17,7 @@ public interface UserNotificationService {
 
     Uni<Void> sendCreateUserNotification(String institutionDescription, List<String> roleLabels, UserResource userResource, UserInstitution userInstitution, Product product, LoggedUser loggedUser);
 
-    Uni<Void> buildDataModelRequestAndSendEmail(UserResource user, UserInstitution institution, Product product, PartyRole productRole, String loggedUserName, String loggedUserSurname);
+    Uni<Void> buildDataModelRequestAndSendEmail(UserResource user, UserInstitution institution, Product product);
 
     Uni<Void> sendOtpNotification(String institutionalEmail, String name, String otp);
 }

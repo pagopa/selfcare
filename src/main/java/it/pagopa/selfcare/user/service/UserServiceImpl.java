@@ -291,15 +291,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Uni<Void> sendMailUserRequest(String userId, String userMailUuid, String institutionName, String productId, PartyRole productRole, String loggedUserId) {
+    public Uni<Void> sendMailUserRequest(String userId, String userMailUuid, String institutionName, String productId) {
         PrepareNotificationData.PrepareNotificationDataBuilder prepareNotificationDataBuilder = PrepareNotificationData.builder();
         return Uni.createFrom().nullItem()
                 .onItem().transformToUni(unused -> retrieveUserFromUserRegistryAndAddToPrepareNotificationData(prepareNotificationDataBuilder, userId))
-                .onItem().transformToUni(unused -> retrieveLoggedUserFromUserRegistryAndAddToPrepareNotificationData(prepareNotificationDataBuilder, loggedUserId))
                 .onItem().transformToUni(builder -> retrieveUserInstitutionAndAddToPrepareNotificationDataRequest(builder, userId, userMailUuid, institutionName))
                 .onItem().transformToUni(builder -> retrieveProductAndAddToPrepareNotificationData(builder, productId))
                 .onItem().transform(PrepareNotificationData.PrepareNotificationDataBuilder::build)
-                .onItem().transformToUni(prepareNotificationData -> userNotificationService.buildDataModelRequestAndSendEmail(prepareNotificationData.getUserResource(), prepareNotificationData.getUserInstitution(), prepareNotificationData.getProduct(), productRole, prepareNotificationData.getLoggedUserResource().getName().getValue(), prepareNotificationData.getLoggedUserResource().getFamilyName().getValue())
+                .onItem().transformToUni(prepareNotificationData -> userNotificationService.buildDataModelRequestAndSendEmail(prepareNotificationData.getUserResource(), prepareNotificationData.getUserInstitution(), prepareNotificationData.getProduct())
                         .onFailure().recoverWithNull()
                         .replaceWith(prepareNotificationData))
                 .onFailure().invoke(throwable -> log.error("Error during update user status for userId: {}, institutionId: {}, productId:{} -> exception: {}", Encode.forJava(userId), Encode.forJava(institutionName), Encode.forJava(productId), throwable.getMessage(), throwable))

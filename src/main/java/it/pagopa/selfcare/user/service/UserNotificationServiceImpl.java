@@ -215,13 +215,10 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         return dataModel;
     }
 
-    private Map<String, String> buildEmailDataModelUserRequest(UserInstitution institution, Product product, PartyRole role, String loggedUserName, String loggedUserSurname) {
+    private Map<String, String> buildEmailDataModelUserRequest(UserInstitution institution, Product product) {
         Map<String, String> dataModel = new HashMap<>();
         dataModel.put(PRODUCT_NAME, Optional.ofNullable(product.getTitle()).orElse(""));
-        dataModel.put(PRODUCT_ROLE, evaluateRole(role));
         dataModel.put(INSTITUTION_NAME, Optional.ofNullable(institution.getInstitutionDescription()).orElse(""));
-        dataModel.put(REQUESTER_NAME, Optional.ofNullable(loggedUserName).orElse(""));
-        dataModel.put(REQUESTER_SURNAME, Optional.ofNullable(loggedUserSurname).orElse(""));
         return dataModel;
     }
 
@@ -240,9 +237,9 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     }
 
     @Override
-    public Uni<Void> buildDataModelRequestAndSendEmail(UserResource user, UserInstitution institution, Product product, PartyRole productRole, String loggedUserName, String loggedUserSurname) {
+    public Uni<Void> buildDataModelRequestAndSendEmail(UserResource user, UserInstitution institution, Product product) {
         String email = retrieveMail(user, institution);
-        Map<String, String> dataModel = buildEmailDataModelUserRequest(institution, product, productRole, loggedUserName, loggedUserSurname);
+        Map<String, String> dataModel = buildEmailDataModelUserRequest(institution, product);
         return this.sendEmailNotification(REQUEST_TEMPLATE, REQUEST_SUBJECT, email, dataModel);}
 
     private Uni<Void> sendEmailNotification(String templateName, String subject, String email, Map<String, String> dataModel) {

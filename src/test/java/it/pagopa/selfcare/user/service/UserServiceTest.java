@@ -63,7 +63,8 @@ import static it.pagopa.selfcare.user.constant.CustomError.*;
 import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_SUCCESS;
 import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_NAME;
 import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.*;
-import static it.pagopa.selfcare.user.service.UserServiceImpl.*;
+import static it.pagopa.selfcare.user.service.UserServiceImpl.USERS_FIELD_LIST_WITHOUT_FISCAL_CODE;
+import static it.pagopa.selfcare.user.service.UserServiceImpl.USERS_WORKS_FIELD_LIST;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -989,8 +990,6 @@ class UserServiceTest {
         UserResource loggedUser = new UserResource();
         loggedUser.setName(new NameCertifiableSchema(NameCertifiableSchema.CertificationEnum.SPID,"name"));
         loggedUser.setFamilyName(new FamilyNameCertifiableSchema(FamilyNameCertifiableSchema.CertificationEnum.SPID, "familyName"));
-        when(userRegistryApi.findByIdUsingGET(USER_FIELD_LIST_WITHOUT_WORK_CONTACTS, "loggedUserId"))
-                .thenReturn(Uni.createFrom().item(loggedUser));
 
         Product product = mock(Product.class);
         when(productService.getProduct(any())).thenReturn(product);
@@ -998,13 +997,10 @@ class UserServiceTest {
         when(userNotificationService.buildDataModelRequestAndSendEmail(
                 any(UserResource.class),
                 any(UserInstitution.class),
-                any(Product.class),
-                any(PartyRole.class),
-                anyString(),
-                anyString())
+                any(Product.class))
         ).thenReturn(Uni.createFrom().voidItem());
 
-        var subscriber = userService.sendMailUserRequest("userId", "userMailUuid", "institutionId", "productId", DELEGATE, "loggedUserId")
+        var subscriber = userService.sendMailUserRequest("userId", "userMailUuid", "institutionId", "productId")
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -1013,10 +1009,7 @@ class UserServiceTest {
         verify(userNotificationService, times(1)).buildDataModelRequestAndSendEmail(
                 any(UserResource.class),
                 any(UserInstitution.class),
-                any(Product.class),
-                any(PartyRole.class),
-                anyString(),
-                anyString()
+                any(Product.class)
         );
     }
 

@@ -784,7 +784,7 @@ class UserControllerTest {
                 .then()
                 .statusCode(204);
 
-        verify(userService, times(1)).sendMailUserRequest(anyString(), anyString(), anyString(), anyString(), any(), any());
+        verify(userService, times(1)).sendMailUserRequest(anyString(), anyString(), anyString(), anyString());
     }
 
     @Test
@@ -905,8 +905,6 @@ class UserControllerTest {
         sendMailDto.setUserMailUuid("mailUuid");
         sendMailDto.setInstitutionName("institutionName");
         sendMailDto.setProductId(PROD_PAGOPA.getValue());
-        sendMailDto.setRole(MANAGER);
-        sendMailDto.setUserRequestUid("loggedUserId");
         return sendMailDto;
     }
 

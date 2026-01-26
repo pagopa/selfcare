@@ -66,7 +66,7 @@ public interface UserService {
 
     Uni<Boolean> checkUser(String fiscalCode, String institutionId, String productId);
 
-    Uni<Void> sendMailUserRequest(String userId, String userMailUuid, String institutionName, String productId, PartyRole productRole, String loggedUser);
+    Uni<Void> sendMailUserRequest(String userId, String userMailUuid, String institutionName, String productId);
 
     Uni<Void> sendEmailOtp(String userId, String institutionalEmail, String otp);
 }

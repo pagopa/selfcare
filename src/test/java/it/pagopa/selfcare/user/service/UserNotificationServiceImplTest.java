@@ -499,8 +499,6 @@ class UserNotificationServiceImplTest {
 
     @Test
     void testSendMailNotificationForOnboardingRequest() throws IOException {
-        String loggedUserName = "loggedUserName";
-        String loggedUserSurname = "loggedUserSurname";
 
         Configuration freemarkerConfig = mock(Configuration.class);
         CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
@@ -513,10 +511,7 @@ class UserNotificationServiceImplTest {
         userNotificationServiceImpl.buildDataModelRequestAndSendEmail(
                         userResource,
                         userInstitution,
-                        product,
-                        PartyRole.MANAGER,
-                        loggedUserName,
-                        loggedUserSurname
+                        product
                 )
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())

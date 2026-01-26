@@ -1967,7 +1967,7 @@
         }
       },
       "SendMailDto" : {
-        "required" : [ "userMailUuid", "institutionName", "productId", "role", "userRequestUid" ],
+        "required" : [ "userMailUuid", "institutionName", "productId" ],
         "type" : "object",
         "properties" : {
           "userMailUuid" : {
@@ -1980,12 +1980,6 @@
           },
           "productId" : {
             "minLength" : 1,
-            "type" : "string"
-          },
-          "role" : {
-            "$ref" : "#/components/schemas/PartyRole"
-          },
-          "userRequestUid" : {
             "type" : "string"
           }
         }

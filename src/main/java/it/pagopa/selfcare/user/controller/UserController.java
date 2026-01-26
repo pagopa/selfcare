@@ -431,10 +431,8 @@ public class UserController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Void> sendMailRequest(@PathParam("userId") String userId,
-                                            @Valid SendMailDto sendMailDto,
-                                            @Context SecurityContext ctx) {
-        return readUserIdFromToken(ctx)
-                .onItem().transformToUni(loggedUser -> userService.sendMailUserRequest(userId, sendMailDto.getUserMailUuid(), sendMailDto.getInstitutionName(), sendMailDto.getProductId(), sendMailDto.getRole(), sendMailDto.getUserRequestUid()));
+                                            @Valid SendMailDto sendMailDto) {
+        return userService.sendMailUserRequest(userId, sendMailDto.getUserMailUuid(), sendMailDto.getInstitutionName(), sendMailDto.getProductId());
     }
 
     @APIResponses({
