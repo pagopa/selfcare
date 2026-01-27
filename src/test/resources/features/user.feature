@@ -4484,6 +4484,7 @@ Feature: User
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:ViewContract                 |
+      | Selc:UpdateGeoTaxonomy            |
 
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role MANAGER and prod-io-sign)
     Given User login with username "j.doe" and password "test"
@@ -4521,6 +4522,7 @@ Feature: User
       | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
+      | Selc:UpdateGeoTaxonomy            |
 
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role MANAGER and prod-pn-pg)
     Given User login with username "j.doe" and password "test"
@@ -4559,6 +4561,7 @@ Feature: User
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:UpdateInstitutionData        |
+      | Selc:UpdateGeoTaxonomy            |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role MANAGER and prod-idpay-merchant)
@@ -4580,7 +4583,7 @@ Feature: User
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
     And The response body doesn't contain field "products[0].roleId"
-    And The response body contains the list "products[0].userProductActions" of size 13
+    And The response body contains the list "products[0].userProductActions" of size 14
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4595,6 +4598,7 @@ Feature: User
       | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
+      | Selc:UpdateGeoTaxonomy            |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role DELEGATE and prod-idpay-merchant)
@@ -4616,7 +4620,7 @@ Feature: User
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
     And The response body doesn't contain field "products[0].roleId"
-    And The response body contains the list "products[0].userProductActions" of size 13
+    And The response body contains the list "products[0].userProductActions" of size 14
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4631,6 +4635,7 @@ Feature: User
       | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
+      | Selc:UpdateGeoTaxonomy            |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role SUB_DELEGATE and prod-idpay-merchant)
@@ -4652,7 +4657,7 @@ Feature: User
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
     And The response body doesn't contain field "products[0].roleId"
-    And The response body contains the list "products[0].userProductActions" of size 13
+    And The response body contains the list "products[0].userProductActions" of size 14
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4667,6 +4672,7 @@ Feature: User
       | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
+      | Selc:UpdateGeoTaxonomy            |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role OPERATOR and prod-idpay-merchant)
@@ -4715,7 +4721,7 @@ Feature: User
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
     And The response body doesn't contain field "products[0].roleId"
-    And The response body contains the list "products[0].userProductActions" of size 15
+    And The response body contains the list "products[0].userProductActions" of size 16
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4732,6 +4738,7 @@ Feature: User
       | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
+      | Selc:UpdateGeoTaxonomy            |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role DELEGATE and prod-registro-beni)
@@ -4753,7 +4760,7 @@ Feature: User
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
     And The response body doesn't contain field "products[0].roleId"
-    And The response body contains the list "products[0].userProductActions" of size 15
+    And The response body contains the list "products[0].userProductActions" of size 16
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4770,6 +4777,7 @@ Feature: User
       | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
+      | Selc:UpdateGeoTaxonomy            |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role SUB_DELEGATE and prod-registro-beni)
@@ -4791,7 +4799,7 @@ Feature: User
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
     And The response body doesn't contain field "products[0].roleId"
-    And The response body contains the list "products[0].userProductActions" of size 15
+    And The response body contains the list "products[0].userProductActions" of size 16
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4808,6 +4816,7 @@ Feature: User
       | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
+      | Selc:UpdateGeoTaxonomy            |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role OPERATOR and prod-registro-beni)
@@ -4900,6 +4909,7 @@ Feature: User
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:ViewContract                 |
+      | Selc:UpdateGeoTaxonomy            |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role SUB_DELEGATE)
@@ -4939,6 +4949,7 @@ Feature: User
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:ViewContract                 |
+      | Selc:UpdateGeoTaxonomy            |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role ADMIN_EA and prod pago-pa)
@@ -4974,6 +4985,7 @@ Feature: User
       | Selc:ListProductGroups            |
       | Selc:ViewInstitutionData          |
       | Selc:ViewContract                 |
+      | Selc:UpdateGeoTaxonomy            |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role ADMIN_EA and prod io)
@@ -5005,6 +5017,7 @@ Feature: User
       | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
+      | Selc:UpdateGeoTaxonomy            |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role ADMIN_EA and prod ciban)
@@ -5039,6 +5052,7 @@ Feature: User
       | Selc:ManageProductGroups          |
       | Selc:ListProductGroups            |
       | Selc:ViewInstitutionData          |
+      | Selc:UpdateGeoTaxonomy            |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role ADMIN_EA and prod ciban and correct productId filter)
@@ -5075,6 +5089,7 @@ Feature: User
       | Selc:ManageProductGroups          |
       | Selc:ListProductGroups            |
       | Selc:ViewInstitutionData          |
+      | Selc:UpdateGeoTaxonomy            |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Unsuccessfully retrieves userInstitution data with list of actions permitted for each user's product (with role ADMIN_EA and prod ciban and wrong productId filter)

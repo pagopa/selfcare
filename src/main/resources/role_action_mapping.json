@@ -16,7 +16,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pagopa": [
       "Selc:UploadLogo",
@@ -35,7 +36,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewContract",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn": [
       "Selc:UploadLogo",
@@ -53,7 +55,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-interop": [
       "Selc:UploadLogo",
@@ -71,7 +74,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg": [
       "Selc:UploadLogo",
@@ -90,7 +94,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-coll": [
       "Selc:UploadLogo",
@@ -109,7 +114,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-dev": [
       "Selc:UploadLogo",
@@ -128,7 +134,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-svil": [
       "Selc:UploadLogo",
@@ -147,7 +154,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-test": [
       "Selc:UploadLogo",
@@ -166,7 +174,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-uat-cert": [
       "Selc:UploadLogo",
@@ -185,7 +194,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-uat-coll": [
       "Selc:UploadLogo",
@@ -204,7 +214,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-uat-svil": [
       "Selc:UploadLogo",
@@ -223,7 +234,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-uat": [
       "Selc:UploadLogo",
@@ -242,7 +254,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-hotfix": [
       "Selc:UploadLogo",
@@ -261,7 +274,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-registro-beni": [
       "Selc:UploadLogo",
@@ -278,7 +292,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-idpay-merchant": [
       "Selc:UploadLogo",
@@ -293,7 +308,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "default": [
       "Selc:UploadLogo",
@@ -311,7 +327,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ]
   },
   "DELEGATE": {
@@ -331,7 +348,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pagopa": [
       "Selc:UploadLogo",
@@ -350,7 +368,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewContract",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn": [
       "Selc:UploadLogo",
@@ -368,7 +387,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-interop": [
       "Selc:UploadLogo",
@@ -386,7 +406,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg": [
       "Selc:UploadLogo",
@@ -405,7 +426,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-coll": [
       "Selc:UploadLogo",
@@ -424,7 +446,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-dev": [
       "Selc:UploadLogo",
@@ -443,7 +466,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-svil": [
       "Selc:UploadLogo",
@@ -462,7 +486,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-test": [
       "Selc:UploadLogo",
@@ -481,7 +506,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-uat-cert": [
       "Selc:UploadLogo",
@@ -500,7 +526,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-uat-coll": [
       "Selc:UploadLogo",
@@ -519,7 +546,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-uat-svil": [
       "Selc:UploadLogo",
@@ -538,7 +566,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-uat": [
       "Selc:UploadLogo",
@@ -557,7 +586,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-hotfix": [
       "Selc:UploadLogo",
@@ -576,7 +606,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-registro-beni": [
       "Selc:UploadLogo",
@@ -593,7 +624,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-idpay-merchant": [
       "Selc:UploadLogo",
@@ -608,7 +640,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "default": [
       "Selc:UploadLogo",
@@ -626,7 +659,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ]
   },
   "SUB_DELEGATE": {
@@ -646,7 +680,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pagopa": [
       "Selc:UploadLogo",
@@ -665,7 +700,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewContract",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn": [
       "Selc:UploadLogo",
@@ -683,7 +719,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-interop": [
       "Selc:UploadLogo",
@@ -701,7 +738,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg": [
       "Selc:UploadLogo",
@@ -720,7 +758,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-coll": [
       "Selc:UploadLogo",
@@ -739,7 +778,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-dev": [
       "Selc:UploadLogo",
@@ -758,7 +798,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-svil": [
       "Selc:UploadLogo",
@@ -777,7 +818,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-test": [
       "Selc:UploadLogo",
@@ -796,7 +838,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-uat-cert": [
       "Selc:UploadLogo",
@@ -815,7 +858,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-uat-coll": [
       "Selc:UploadLogo",
@@ -834,7 +878,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-uat-svil": [
       "Selc:UploadLogo",
@@ -853,7 +898,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-uat": [
       "Selc:UploadLogo",
@@ -872,7 +918,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pn-pg-hotfix": [
       "Selc:UploadLogo",
@@ -891,7 +938,8 @@
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
-      "Selc:UpdateInstitutionData"
+      "Selc:UpdateInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-registro-beni": [
       "Selc:UploadLogo",
@@ -908,7 +956,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-idpay-merchant": [
       "Selc:UploadLogo",
@@ -923,7 +972,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "default": [
       "Selc:UploadLogo",
@@ -941,7 +991,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ]
   },
   "ADMIN_EA": {
@@ -954,7 +1005,8 @@
       "Selc:ViewDelegations",
       "Selc:ListProductGroups",
       "Selc:CreateDelegation",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pagopa": [
       "Selc:UploadLogo",
@@ -969,7 +1021,8 @@
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
       "Selc:ViewInstitutionData",
-      "Selc:ViewContract"
+      "Selc:ViewContract",
+      "Selc:UpdateGeoTaxonomy"
     ],
     "default": [
       "Selc:UploadLogo",
@@ -983,7 +1036,8 @@
       "Selc:ListProductUsers",
       "Selc:ManageProductGroups",
       "Selc:ListProductGroups",
-      "Selc:ViewInstitutionData"
+      "Selc:ViewInstitutionData",
+      "Selc:UpdateGeoTaxonomy"
     ]
   },
   "OPERATOR": {

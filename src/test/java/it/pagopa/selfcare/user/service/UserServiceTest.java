@@ -2182,7 +2182,8 @@ class UserServiceTest {
                 "Selc:ManageProductGroups",
                 "Selc:ListProductGroups",
                 "Selc:CreateDelegation",
-                "Selc:ViewInstitutionData"));
+                "Selc:ViewInstitutionData",
+                "Selc:UpdateGeoTaxonomy"));
         userInstitutionWithActions.setInstitutionRootName("institutionRootName");
         userInstitutionWithActions.setUserMailUuid(workContractsKey);
         userInstitutionWithActions.setInstitutionId("institutionId");
@@ -2207,7 +2208,8 @@ class UserServiceTest {
                 "Selc:ViewDelegations",
                 "Selc:ListProductGroups",
                 "Selc:CreateDelegation",
-                "Selc:ViewInstitutionData"));
+                "Selc:ViewInstitutionData",
+                "Selc:UpdateGeoTaxonomy"));
         userInstitutionWithActions.setInstitutionRootName("institutionRootName");
         userInstitutionWithActions.setUserMailUuid(workContractsKey);
         userInstitutionWithActions.setInstitutionId("institutionId");
