@@ -85,7 +85,19 @@ public class IamServiceImpl implements IamService {
                 );
               existing.setProductRoles(mutableRoles);
               }),
-            () -> Optional.ofNullable(userClaims.getProductRoles()).ifPresent(existing::setProductRoles)
+            () -> Optional.ofNullable(userClaims.getProductRoles()).ifPresent(newRoles -> {
+                
+                List<ProductRoles> currentRoles = Optional.ofNullable(existing.getProductRoles())
+                        .map(ArrayList::new)
+                        .orElse(new ArrayList<>());
+                
+                newRoles.forEach(newRole -> {
+                    currentRoles.removeIf(cr -> cr.getProductId().equals(newRole.getProductId()));
+                    currentRoles.add(newRole);
+                });
+
+                existing.setProductRoles(currentRoles);
+            })
             );
           return existing;
           })
