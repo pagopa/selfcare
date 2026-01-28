@@ -223,6 +223,14 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         userGroupEntityFilter.setStatus(UserGroupStatus.valueOf(status));
     }
 
+    @Given("I have valid filters institutionId {string} productId {string} and parentInstitutionId {string}")
+    public void iHaveValidFiltersInstitutionProductAndParent(String institutionId, String productId, String parentInstitutionId) {
+        userGroupEntityFilter = new UserGroupEntity();
+        userGroupEntityFilter.setInstitutionId(institutionId);
+        userGroupEntityFilter.setProductId(productId);
+        userGroupEntityFilter.setParentInstitutionId(parentInstitutionId);
+    }
+
     @And("the response should contains groupIds {string}")
     public void theResponseShouldContainGroupIds(String ids) {
         List<String> idsList = Arrays.asList(ids.split(","));

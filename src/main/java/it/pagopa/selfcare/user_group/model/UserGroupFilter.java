@@ -19,9 +19,10 @@ public class UserGroupFilter {
     private String userId;
     private List<UserGroupStatus> status;
 
-    public UserGroupFilter(String institutionId, String productId, UUID userId, List<UserGroupStatus> status) {
+    public UserGroupFilter(String institutionId, String productId, UUID userId, List<UserGroupStatus> status, String parentInstitutionId) {
         this.institutionId = institutionId;
         this.productId = productId;
+        this.parentInstitutionId = parentInstitutionId;
         this.userId = userId != null ? userId.toString() : null;
         this.status = CollectionUtils.isEmpty(status) ? Collections.emptyList() : status;
     }

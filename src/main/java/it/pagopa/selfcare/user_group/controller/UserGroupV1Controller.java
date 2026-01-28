@@ -183,10 +183,13 @@ public class UserGroupV1Controller {
                                                  @ApiParam("${swagger.user-group.model.statusFilter}")
                                                  @RequestParam(value = "status", required = false)
                                                      List<UserGroupStatus> status,
+                                                 @ApiParam("${swagger.user-group.model.parentInstitutionId}")
+                                                 @RequestParam(value = "parentInstitutionId", required = false)
+                                                     String parentInstitutionId,
                                                  Pageable pageable) {
         log.trace("getUserGroups start");
         log.debug("getUserGroups institutionId = {}, productId = {}, pageable = {}, status = {}", Encode.forJava(institutionId), Encode.forJava(productId), pageable, status);
-        UserGroupFilter filter = new UserGroupFilter(institutionId, productId, memberId, status);
+        UserGroupFilter filter = new UserGroupFilter(institutionId, productId, memberId, status, parentInstitutionId);
         Page<UserGroupResource> result = PageMapper.map(groupService.getUserGroups(filter, pageable)
                 .map(userGroupMapper::toResource));
         log.debug("getUserGroups result = {}", result);

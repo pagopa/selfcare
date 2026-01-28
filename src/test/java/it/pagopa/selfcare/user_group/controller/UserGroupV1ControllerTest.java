@@ -293,6 +293,7 @@ class UserGroupV1ControllerTest {
         //given
         String institutionId = "institutionId";
         String productId = "productId";
+        String parentInstitutionId = "parentInstitutionId";
         String userId = randomUUID().toString();
         UserGroupStatus allowedStatus = UserGroupStatus.ACTIVE;
         final int page = 1;
@@ -315,6 +316,7 @@ class UserGroupV1ControllerTest {
                 .param("status", String.valueOf(allowedStatus))
                 .param("page", String.valueOf(page))
                 .param("size", String.valueOf(size))
+                .param("parentInstitutionId", parentInstitutionId)
                 .contentType(APPLICATION_JSON_VALUE)
                 .accept(APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk())
@@ -325,6 +327,7 @@ class UserGroupV1ControllerTest {
                 .andExpect(jsonPath("$.content", notNullValue()))
                 .andExpect(jsonPath("$.content[0].id", notNullValue()))
                 .andExpect(jsonPath("$.content[0].institutionId", notNullValue()))
+                .andExpect(jsonPath("$.content[0].parentInstitutionId", notNullValue()))
                 .andExpect(jsonPath("$.content[0].productId", notNullValue()))
                 .andExpect(jsonPath("$.content[0].name", notNullValue()))
                 .andExpect(jsonPath("$.content[0].description", notNullValue()))
@@ -341,6 +344,7 @@ class UserGroupV1ControllerTest {
         UserGroupFilter capturedFilter = filterCaptor.getValue();
         assertEquals(capturedFilter.getProductId(), productId);
         assertEquals(capturedFilter.getInstitutionId(), institutionId);
+        assertEquals(capturedFilter.getParentInstitutionId(), parentInstitutionId);
         assertEquals(capturedFilter.getUserId(), userId);
         Pageable capturedPageable = pageableCaptor.getValue();
         assertTrue(capturedPageable.getSort().isUnsorted());

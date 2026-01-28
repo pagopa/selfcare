@@ -31,6 +31,14 @@ Feature: Get User Group
     And the response should contain 1 item
     And the response should contain the group details
 
+  Scenario: Successfully retrieve user groups with valid filters with parentInstitutionId
+    Given [RETRIEVE] user login with username "j.doe" and password "test"
+    And I have valid filters institutionId "9c7ae123-d990-4400-b043-67a60aff31bc" productId "prod-test" and parentInstitutionId "5d1ae124-d870-4400-b043-67a60aff32cb"
+    When I send a GET request to "/v1/user-groups" to retrieve userGroups
+    Then [RETRIEVE] the response status should be 200
+    And the response should contain 1 item
+    And the response should contain the group details with parent institution
+
   Scenario: Successfully retrieve user groups without any filters
     Given [RETRIEVE] user login with username "j.doe" and password "test"
     And I have no filters

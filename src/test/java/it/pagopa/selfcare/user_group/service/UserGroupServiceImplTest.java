@@ -504,6 +504,29 @@ class UserGroupServiceImplTest {
     }
 
     @Test
+    void getUserGroups_withAllFilters() {
+        //given
+        UserGroupFilter filter = new UserGroupFilter();
+        filter.setProductId("productId");
+        filter.setInstitutionId("institutionId");
+        filter.setParentInstitutionId("parentInstitutionId");
+        filter.setUserId("userId");
+        filter.setStatus(List.of(UserGroupStatus.ACTIVE));
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("name"));
+        List<UserGroupEntity> userGroups = Collections.singletonList(mock(UserGroupEntity.class));
+        when(mongoTemplateMock.find(any(Query.class), eq(UserGroupEntity.class))).thenReturn(userGroups);
+        when(mongoTemplateMock.count(any(Query.class), eq(UserGroupEntity.class))).thenReturn((long) userGroups.size());
+        //when
+        Page<UserGroupOperations> result = groupService.getUserGroups(filter, pageable);
+        //then
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        verify(mongoTemplateMock).find(any(Query.class), eq(UserGroupEntity.class));
+        verify(mongoTemplateMock).count(any(Query.class), eq(UserGroupEntity.class));
+        verifyNoMoreInteractions(mongoTemplateMock, userGroupRepository);
+    }
+
+    @Test
     void getUserGroups_sortingNotAllowedWithoutProductIdOrInstitutionId() {
         //given
         UserGroupFilter filter = new UserGroupFilter();
