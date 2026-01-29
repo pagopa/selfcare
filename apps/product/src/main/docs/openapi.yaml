@@ -258,6 +258,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/BackOfficeEnvironmentConfiguration"
+        testEnvProductIds:
+          type: array
+          items:
+            type: string
     ProductMetadata:
       type: object
       properties:
@@ -316,6 +320,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/BackOfficeEnvironmentConfiguration"
+        testEnvProductIds:
+          type: array
+          items:
+            type: string
     ProductResponse:
       type: object
       required:
@@ -360,6 +368,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/BackOfficeEnvironmentConfiguration"
+        testEnvProductIds:
+          type: array
+          items:
+            type: string
         id:
           type: string
         createdBy:

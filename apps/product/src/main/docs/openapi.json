@@ -325,6 +325,12 @@
             "items" : {
               "$ref" : "#/components/schemas/BackOfficeEnvironmentConfiguration"
             }
+          },
+          "testEnvProductIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }
       },
@@ -411,6 +417,12 @@
             "items" : {
               "$ref" : "#/components/schemas/BackOfficeEnvironmentConfiguration"
             }
+          },
+          "testEnvProductIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }
       },
@@ -474,6 +486,12 @@
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/BackOfficeEnvironmentConfiguration"
+            }
+          },
+          "testEnvProductIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
             }
           },
           "id" : {
