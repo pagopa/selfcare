@@ -32,4 +32,5 @@ public class ProductBaseFields {
     private List<OriginEntry> institutionOrigins;
     private List<EmailTemplateConfig> emailTemplates;
     private List<BackOfficeEnvironmentConfiguration> backOfficeEnvironmentConfigurations;
+    private List<String> testEnvProductIds;
 }
