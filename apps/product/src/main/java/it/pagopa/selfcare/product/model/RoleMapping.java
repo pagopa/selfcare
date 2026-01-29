@@ -7,12 +7,15 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+import it.pagopa.selfcare.product.model.enums.InstitutionType;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class RoleMapping {
     private String role;
+    private InstitutionType institutionType;
     private boolean multiroleAllowed;
     private List<String> phasesAdditionAllowed;
     private boolean skipUserCreation;

@@ -105,6 +105,7 @@ class ProductControllerTest {
         ProductCreateRequest passed = captor.getValue();
         Assertions.assertNotNull(captor);
         Assertions.assertEquals("prod-test", passed.getProductId());
+        Assertions.assertEquals(10, passed.getRoleMappings().size());
     }
 
     @Test

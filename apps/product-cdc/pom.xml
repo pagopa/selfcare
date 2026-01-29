@@ -27,7 +27,7 @@
         <quarkus-openapi-generator.version>2.12.0</quarkus-openapi-generator.version>
         <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
         <cucumber-sdk.version>0.0.8</cucumber-sdk.version>
-        <selfcare-onboarding-sdk.version>0.13.0</selfcare-onboarding-sdk.version>
+        <selfcare-onboarding-sdk.version>0.15.1</selfcare-onboarding-sdk.version>
         <mapstruct.lombok.version>0.2.0</mapstruct.lombok.version>
     </properties>
     <dependencyManagement>
@@ -352,6 +352,12 @@
                 </configuration>
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
     </build>
     <profiles>
         <profile>

@@ -23,8 +23,145 @@
     "expirationDays": 30,
     "enabled": true
   },
+  "roleMappings": [
+    {
+      "role": "ADMIN_EA",
+      "institutionType": "GPU",
+      "multiroleAllowed": false,
+      "phasesAdditionAllowed": ["onboarding"],
+      "roles": [
+        {
+          "code": "admin",
+          "description": "Ha tutti i permessi e gestisce gli utenti",
+          "label": "Referente dei Pagamenti"
+        }
+      ]
+    },
+    {
+      "role": "DELEGATE",
+      "institutionType": "GPU",
+      "multiroleAllowed": false,
+      "phasesAdditionAllowed": ["onboarding"],
+      "roles": [
+        {
+          "code": "admin",
+          "description": "Ha tutti i permessi e gestisce gli utenti",
+          "label": "Referente dei Pagamenti"
+        }
+      ]
+    },
+    {
+      "role": "MANAGER",
+      "institutionType": "GPU",
+      "multiroleAllowed": false,
+      "phasesAdditionAllowed": ["onboarding"],
+      "roles": [
+        {
+          "code": "admin",
+          "description": "Stipula il contratto e identifica gli amministratori",
+          "label": "Referente dei Pagamenti"
+        }
+      ]
+    },
+    {
+      "role": "SUB_DELEGATE",
+      "institutionType": "GPU",
+      "multiroleAllowed": false,
+      "phasesAdditionAllowed": ["dashboard-async"],
+      "roles": [
+        {
+          "code": "admin",
+          "description": "Ha tutti i permessi e gestisce gli utenti",
+          "label": "Referente dei Pagamenti"
+        }
+      ]
+    },
+    {
+      "role": "OPERATOR",
+      "institutionType": "GPU",
+      "multiroleAllowed": false,
+      "phasesAdditionAllowed": ["dashboard"],
+      "roles": [
+        {
+          "code": "operator",
+          "description": "Gestisce l’integrazione tecnologica e/o l'operatività dei servizi",
+          "label": "Operatore",
+          "productLabel": "Referente Tecnico"
+        }
+      ]
+    },
+    {
+      "role": "ADMIN_EA",
+      "institutionType": "DEFAULT",
+      "multiroleAllowed": false,
+      "phasesAdditionAllowed": ["onboarding"],
+      "roles": [
+        {
+          "code": "admin",
+          "description": "Ha tutti i permessi e gestisce gli utenti",
+          "label": "Referente dei Pagamenti",
+          "productLabel": "Amministratore"
+        }
+      ]
+    },
+    {
+      "role": "DELEGATE",
+      "institutionType": "DEFAULT",
+      "multiroleAllowed": false,
+      "phasesAdditionAllowed": ["onboarding"],
+      "roles": [
+        {
+          "code": "admin",
+          "description": "Ha tutti i permessi e gestisce gli utenti",
+          "label": "Referente dei Pagamenti",
+          "productLabel": "Amministratore"
+        }
+      ]
+    },
+    {
+      "role": "MANAGER",
+      "institutionType": "DEFAULT",
+      "multiroleAllowed": false,
+      "phasesAdditionAllowed": ["onboarding"],
+      "roles": [
+        {
+          "code": "admin",
+          "description": "Stipula il contratto e identifica gli amministratori",
+          "label": "Referente dei Pagamenti",
+          "productLabel": "Amministratore"
+        }
+      ]
+    },
+    {
+      "role": "OPERATOR",
+      "institutionType": "DEFAULT",
+      "multiroleAllowed": false,
+      "phasesAdditionAllowed": ["dashboard"],
+      "roles": [
+        {
+          "code": "operator",
+          "description": "Gestisce l’integrazione tecnologica e/o l'operatività dei servizi",
+          "label": "Operatore",
+          "productLabel": "Referente Tecnico"
+        }
+      ]
+    },
+    {
+      "role": "SUB_DELEGATE",
+      "institutionType": "DEFAULT",
+      "multiroleAllowed": false,
+      "phasesAdditionAllowed": ["dashboard"],
+      "roles": [
+        {
+          "code": "admin",
+          "description": "Ha tutti i permessi e gestisce gli utenti",
+          "label": "Referente dei Pagamenti",
+          "productLabel": "Amministratore"
+        }
+      ]
+    }
 
-  "roleMappings": [],
+  ],
   "contracts": [],
 
   "institutionOrigins": [
