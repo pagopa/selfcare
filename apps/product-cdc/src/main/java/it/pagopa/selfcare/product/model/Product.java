@@ -49,5 +49,7 @@ public class Product {
 
     private List<BackOfficeEnvironmentConfiguration> backOfficeEnvironmentConfigurations;
 
+    private List<String> testEnvProductIds;
+
     private ProductMetadata metadata;
 }

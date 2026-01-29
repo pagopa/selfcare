@@ -501,6 +501,9 @@
           "role" : {
             "type" : "string"
           },
+          "institutionType" : {
+            "$ref" : "#/components/schemas/InstitutionType"
+          },
           "multiroleAllowed" : {
             "type" : "boolean"
           },
