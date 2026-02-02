@@ -29,6 +29,11 @@ Enable resource filtering in your module's `pom.xml` (e.g., `apps/webhook/pom.xm
 µs-name Service v${project.version}
 ```
 
+## 3. Add in `src/main/resources/application.properties`
+```shell
+quarkus.banner.path=banner.txt
+```
+
 ## 3. Build the Project
 Run a clean build to ensure resources are processed:
 ```shell
