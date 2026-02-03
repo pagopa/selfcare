@@ -5,7 +5,7 @@
 
     <artifactId>cucumber-sdk</artifactId>
     <packaging>jar</packaging>
-    <version>0.0.9</version>
+    <version>0.0.10</version>
     <groupId>it.pagopa.selfcare</groupId>
 
     <distributionManagement>
@@ -23,7 +23,7 @@
         <lombok.version>1.18.22</lombok.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <cucumber.version>7.20.1</cucumber.version>
-        <testcontainers.version>1.21.0</testcontainers.version>
+        <testcontainers.version>1.21.4</testcontainers.version>
         <restassured.version>5.3.0</restassured.version>
     </properties>
 
