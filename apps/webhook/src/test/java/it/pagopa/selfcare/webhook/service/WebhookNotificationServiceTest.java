@@ -1,5 +1,10 @@
 package it.pagopa.selfcare.webhook.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
@@ -15,30 +20,21 @@ import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
 import jakarta.inject.Inject;
+import java.lang.reflect.Field;
+import java.util.List;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.lang.reflect.Field;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
 @QuarkusTest
 class WebhookNotificationServiceTest {
 
-  @Inject
-  WebhookNotificationService notificationService;
+  @Inject WebhookNotificationService notificationService;
 
-  @InjectMock
-  WebhookRepository webhookRepository;
+  @InjectMock WebhookRepository webhookRepository;
 
-  @InjectMock
-  WebhookNotificationRepository notificationRepository;
+  @InjectMock WebhookNotificationRepository notificationRepository;
 
   Vertx vertx;
 
@@ -68,12 +64,16 @@ class WebhookNotificationServiceTest {
     Webhook webhook = createWebhook();
     WebhookNotification notification = createNotification(webhook.getId());
 
-    when(notificationRepository.update(any(WebhookNotification.class))).thenReturn(Uni.createFrom().item(notification));
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenReturn(Uni.createFrom().item(notification));
     when(httpRequest.sendBuffer(any())).thenReturn(Uni.createFrom().item(httpResponse));
     when(httpResponse.statusCode()).thenReturn(200);
 
-    UniAssertSubscriber<Void> subscriber = notificationService.processNotification(notification, webhook)
-      .subscribe().withSubscriber(UniAssertSubscriber.create());
+    UniAssertSubscriber<Void> subscriber =
+        notificationService
+            .processNotification(notification, webhook)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
 
     subscriber.awaitItem();
     ArgumentCaptor<WebhookNotification> captor = ArgumentCaptor.forClass(WebhookNotification.class);
@@ -88,11 +88,16 @@ class WebhookNotificationServiceTest {
     Webhook webhook = createWebhook();
     WebhookNotification notification = createNotification(webhook.getId());
 
-    when(notificationRepository.update(any(WebhookNotification.class))).thenReturn(Uni.createFrom().item(notification));
-    when(httpRequest.sendBuffer(any())).thenReturn(Uni.createFrom().failure(new RuntimeException("Connection refused")));
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(httpRequest.sendBuffer(any()))
+        .thenReturn(Uni.createFrom().failure(new RuntimeException("Connection refused")));
 
-    UniAssertSubscriber<Void> subscriber = notificationService.processNotification(notification, webhook)
-      .subscribe().withSubscriber(UniAssertSubscriber.create());
+    UniAssertSubscriber<Void> subscriber =
+        notificationService
+            .processNotification(notification, webhook)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
 
     subscriber.awaitItem();
 
@@ -102,7 +107,8 @@ class WebhookNotificationServiceTest {
 
     assertEquals(WebhookNotification.NotificationStatus.RETRY, captured.getStatus());
     assertEquals(1, captured.getAttemptCount());
-    org.junit.jupiter.api.Assertions.assertTrue(captured.getLastError().contains("Connection refused"));
+    org.junit.jupiter.api.Assertions.assertTrue(
+        captured.getLastError().contains("Connection refused"));
   }
 
   @Test
@@ -113,11 +119,16 @@ class WebhookNotificationServiceTest {
     WebhookNotification notification = createNotification(webhook.getId());
     notification.setAttemptCount(1); // Already tried once (this is the retry)
 
-    when(notificationRepository.update(any(WebhookNotification.class))).thenReturn(Uni.createFrom().item(notification));
-    when(httpRequest.sendBuffer(any())).thenReturn(Uni.createFrom().failure(new RuntimeException("Connection refused")));
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(httpRequest.sendBuffer(any()))
+        .thenReturn(Uni.createFrom().failure(new RuntimeException("Connection refused")));
 
-    UniAssertSubscriber<Void> subscriber = notificationService.processNotification(notification, webhook)
-      .subscribe().withSubscriber(UniAssertSubscriber.create());
+    UniAssertSubscriber<Void> subscriber =
+        notificationService
+            .processNotification(notification, webhook)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
 
     subscriber.awaitItem();
 
@@ -135,10 +146,14 @@ class WebhookNotificationServiceTest {
     webhook.setStatus(Webhook.WebhookStatus.INACTIVE);
     WebhookNotification notification = createNotification(webhook.getId());
 
-    when(notificationRepository.update(any(WebhookNotification.class))).thenReturn(Uni.createFrom().item(notification));
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenReturn(Uni.createFrom().item(notification));
 
-    UniAssertSubscriber<Void> subscriber = notificationService.processNotification(notification, webhook)
-      .subscribe().withSubscriber(UniAssertSubscriber.create());
+    UniAssertSubscriber<Void> subscriber =
+        notificationService
+            .processNotification(notification, webhook)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
 
     subscriber.awaitItem();
 
@@ -157,18 +172,25 @@ class WebhookNotificationServiceTest {
     WebhookNotification notification = createNotification(webhook.getId());
 
     when(notificationRepository.findAndLockPendingNotifications(anyInt(), anyInt()))
-      .thenReturn(Uni.createFrom().item(List.of(notification)));
+        .thenReturn(Uni.createFrom().item(List.of(notification)));
 
-    when(notificationRepository.findById(any(ObjectId.class))).thenReturn(Uni.createFrom().item(notification));
-    when(webhookRepository.findById(any(ObjectId.class))).thenReturn(Uni.createFrom().item(webhook));
-    when(notificationRepository.update(any(WebhookNotification.class))).thenReturn(Uni.createFrom().item(notification));
-    when(notificationRepository.releaseProcessingLock(any())).thenReturn(Uni.createFrom().item(notification));
+    when(notificationRepository.findById(any(ObjectId.class)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(webhookRepository.findById(any(ObjectId.class)))
+        .thenReturn(Uni.createFrom().item(webhook));
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(notificationRepository.releaseProcessingLock(any()))
+        .thenReturn(Uni.createFrom().item(notification));
 
     when(httpRequest.sendBuffer(any())).thenReturn(Uni.createFrom().item(httpResponse));
     when(httpResponse.statusCode()).thenReturn(200);
 
-    UniAssertSubscriber<Void> subscriber = notificationService.processFailedNotifications()
-      .subscribe().withSubscriber(UniAssertSubscriber.create());
+    UniAssertSubscriber<Void> subscriber =
+        notificationService
+            .processFailedNotifications()
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
 
     subscriber.awaitItem();
 

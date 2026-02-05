@@ -27,19 +27,18 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @Tag(name = "Webhook", description = "API for webhook configuration management")
 public class WebhookController {
 
-  @Inject
-  WebhookService webhookService;
+  @Inject WebhookService webhookService;
 
   @POST
   @Operation(
       summary = "Create a new webhook",
       description = "Create a new webhook configuration",
-      operationId = "createWebhook"
-  )
+      operationId = "createWebhook")
   @Tag(name = "Webhook")
   @Tag(name = "external-v2")
   public Uni<Response> createWebhook(@Valid WebhookRequest request) {
-    return webhookService.createWebhook(request)
+    return webhookService
+        .createWebhook(request)
         .map(response -> Response.status(Response.Status.CREATED).entity(response).build());
   }
 
@@ -47,8 +46,7 @@ public class WebhookController {
   @Operation(
       summary = "List all webhooks",
       description = "Retrieve all webhook configurations",
-      operationId = "listWebhooks"
-  )
+      operationId = "listWebhooks")
   @Tag(name = "Webhook")
   @Tag(name = "internal-v1")
   public Uni<List<WebhookResponse>> listWebhooks() {
@@ -60,15 +58,17 @@ public class WebhookController {
   @Operation(
       summary = "Get webhook by ID",
       description = "Retrieve a specific webhook configuration",
-      operationId = "getWebhookbyProductId"
-  )
+      operationId = "getWebhookbyProductId")
   @Tag(name = "Webhook")
   @Tag(name = "external-v2")
   public Uni<Response> getWebhook(@PathParam("productId") String productId) {
-    return webhookService.getWebhookByProductId(productId)
-        .map(response -> response != null
-            ? Response.ok(response).build()
-            : Response.status(Response.Status.NOT_FOUND).build());
+    return webhookService
+        .getWebhookByProductId(productId)
+        .map(
+            response ->
+                response != null
+                    ? Response.ok(response).build()
+                    : Response.status(Response.Status.NOT_FOUND).build());
   }
 
   @PUT
@@ -76,13 +76,13 @@ public class WebhookController {
   @Operation(
       summary = "Update webhook",
       description = "Update an existing webhook configuration",
-      operationId = "updateWebhookbyProductId"
-  )
+      operationId = "updateWebhookbyProductId")
   @Tag(name = "Webhook")
   @Tag(name = "external-v2")
-  public Uni<Response> updateWebhook(@Valid WebhookRequest request,
-      @PathParam("productId") String productId) {
-    return webhookService.updateWebhook(request, productId)
+  public Uni<Response> updateWebhook(
+      @Valid WebhookRequest request, @PathParam("productId") String productId) {
+    return webhookService
+        .updateWebhook(request, productId)
         .map(response -> Response.ok(response).build())
         .onFailure(IllegalArgumentException.class)
         .recoverWithItem(Response.status(Response.Status.NOT_FOUND).build());
@@ -93,14 +93,13 @@ public class WebhookController {
   @Operation(
       summary = "Delete webhook",
       description = "Delete a webhook configuration",
-      operationId = "deleteWebhookbyProductId"
-  )
+      operationId = "deleteWebhookbyProductId")
   public Uni<Response> deleteWebhook(@PathParam("productId") String productId) {
     return Uni.createFrom().item(Response.status(Response.Status.NOT_IMPLEMENTED).build());
-//    return webhookService.deleteWebhookByProductId(productId)
-//      .map(deleted -> Response.noContent().build())
-//      .onFailure(IllegalArgumentException.class)
-//      .recoverWithItem(Response.status(Response.Status.NOT_FOUND).build());
+    //    return webhookService.deleteWebhookByProductId(productId)
+    //      .map(deleted -> Response.noContent().build())
+    //      .onFailure(IllegalArgumentException.class)
+    //      .recoverWithItem(Response.status(Response.Status.NOT_FOUND).build());
   }
 
   @POST
@@ -110,10 +109,8 @@ public class WebhookController {
   @Operation(
       summary = "Send notification",
       description = "Create and send a webhook notification",
-      operationId = "sendNotification"
-  )
+      operationId = "sendNotification")
   public Uni<Response> sendNotification(@Valid NotificationRequest request) {
-    return webhookService.sendNotification(request)
-        .replaceWith(Response.accepted().build());
+    return webhookService.sendNotification(request).replaceWith(Response.accepted().build());
   }
 }

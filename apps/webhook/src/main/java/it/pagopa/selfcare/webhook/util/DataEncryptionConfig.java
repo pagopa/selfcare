@@ -44,10 +44,8 @@ public class DataEncryptionConfig {
       return Map.of();
     }
     return input.entrySet().stream()
-        .collect(Collectors.toUnmodifiableMap(
-            Map.Entry::getKey,
-            entry -> encrypt(entry.getValue())
-        ));
+        .collect(
+            Collectors.toUnmodifiableMap(Map.Entry::getKey, entry -> encrypt(entry.getValue())));
   }
 
   public static Map<String, String> decrypt(Map<String, String> input) {
@@ -55,9 +53,7 @@ public class DataEncryptionConfig {
       return Map.of();
     }
     return input.entrySet().stream()
-        .collect(Collectors.toUnmodifiableMap(
-            Map.Entry::getKey,
-            entry -> decrypt(entry.getValue())
-        ));
+        .collect(
+            Collectors.toUnmodifiableMap(Map.Entry::getKey, entry -> decrypt(entry.getValue())));
   }
 }

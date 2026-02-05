@@ -21,14 +21,11 @@ import lombok.extern.slf4j.Slf4j;
 public class WebhookService {
 
   public static final String DELETED_WEBHOOK_WITH_ID = "Deleted webhook with ID: {}";
-  @Inject
-  WebhookRepository webhookRepository;
+  @Inject WebhookRepository webhookRepository;
 
-  @Inject
-  WebhookNotificationRepository notificationRepository;
+  @Inject WebhookNotificationRepository notificationRepository;
 
-  @Inject
-  WebhookNotificationService notificationService;
+  @Inject WebhookNotificationService notificationService;
 
   public Uni<WebhookResponse> createWebhook(WebhookRequest request) {
     Webhook webhook = new Webhook();
@@ -53,55 +50,62 @@ public class WebhookService {
       webhook.setRetryPolicy(new RetryPolicy());
     }
 
-    return webhookRepository.persist(webhook)
+    return webhookRepository
+        .persist(webhook)
         .invoke(() -> log.info("Created webhook with ID: {}", webhook.getId()))
         .map(this::toResponse);
   }
 
   public Uni<List<WebhookResponse>> listWebhooks() {
-    return webhookRepository.listAll()
-        .map(webhooks -> webhooks.stream()
-            .map(this::toResponse)
-            .toList());
+    return webhookRepository
+        .listAll()
+        .map(webhooks -> webhooks.stream().map(this::toResponse).toList());
   }
 
   public Uni<WebhookResponse> getWebhook(String id) {
-    return webhookRepository.findByIdOptional(sanitizeString(id))
+    return webhookRepository
+        .findByIdOptional(sanitizeString(id))
         .map(webhook -> webhook != null ? toResponse(webhook) : null);
   }
 
   public Uni<WebhookResponse> getWebhookByProductId(String productId) {
-    return webhookRepository.findWebhookByProduct(productId)
+    return webhookRepository
+        .findWebhookByProduct(productId)
         .map(webhook -> webhook != null ? toResponse(webhook) : null);
   }
 
   public Uni<WebhookResponse> updateWebhook(WebhookRequest request, String productId) {
-    return webhookRepository.findWebhookByProduct(productId)
-        .onItem().ifNull()
+    return webhookRepository
+        .findWebhookByProduct(productId)
+        .onItem()
+        .ifNull()
         .failWith(() -> new IllegalArgumentException("Webhook not found: " + productId))
-        .invoke(webhook -> {
-          webhook.setUrl(request.getUrl());
-          webhook.setHttpMethod(request.getHttpMethod());
-          webhook.setHeaders(request.getHeaders());
-          webhook.setUpdatedAt(LocalDateTime.now());
+        .invoke(
+            webhook -> {
+              webhook.setUrl(request.getUrl());
+              webhook.setHttpMethod(request.getHttpMethod());
+              webhook.setHeaders(request.getHeaders());
+              webhook.setUpdatedAt(LocalDateTime.now());
 
-          if (request.getRetryPolicy() != null) {
-            RetryPolicy retryPolicy = new RetryPolicy();
-            retryPolicy.setMaxAttempts(request.getRetryPolicy().getMaxAttempts());
-            retryPolicy.setInitialDelayMs(request.getRetryPolicy().getInitialDelayMs());
-            retryPolicy.setMaxDelayMs(request.getRetryPolicy().getMaxDelayMs());
-            retryPolicy.setBackoffMultiplier(request.getRetryPolicy().getBackoffMultiplier());
-            webhook.setRetryPolicy(retryPolicy);
-          }
-        })
+              if (request.getRetryPolicy() != null) {
+                RetryPolicy retryPolicy = new RetryPolicy();
+                retryPolicy.setMaxAttempts(request.getRetryPolicy().getMaxAttempts());
+                retryPolicy.setInitialDelayMs(request.getRetryPolicy().getInitialDelayMs());
+                retryPolicy.setMaxDelayMs(request.getRetryPolicy().getMaxDelayMs());
+                retryPolicy.setBackoffMultiplier(request.getRetryPolicy().getBackoffMultiplier());
+                webhook.setRetryPolicy(retryPolicy);
+              }
+            })
         .call(webhook -> webhookRepository.update(webhook))
         .invoke(() -> log.info("Updated webhook with ID: {}", productId))
         .map(this::toResponse);
   }
 
   public Uni<Boolean> deleteWebhook(String id) {
-    return webhookRepository.findByIdOptional(id)
-        .onItem().ifNull()
+    return webhookRepository
+        .findByIdOptional(id)
+        .onItem()
+        .ifNull()
         .failWith(() -> new IllegalArgumentException("Webhook not found: " + sanitizeString(id)))
         .call(webhook -> webhookRepository.deleteByIdSafe(sanitizeString(id)))
         .invoke(() -> logDeleteWebhook(sanitizeString(id)))
@@ -113,8 +117,10 @@ public class WebhookService {
   }
 
   public Uni<Boolean> deleteWebhookByProductId(String productId) {
-    return webhookRepository.findWebhookByProduct(productId)
-        .onItem().ifNull()
+    return webhookRepository
+        .findWebhookByProduct(productId)
+        .onItem()
+        .ifNull()
         .failWith(() -> new IllegalArgumentException("Webhook not found: " + productId))
         .call(webhook -> webhookRepository.deleteByIdSafe(webhook.getId().toString()))
         .invoke(webhook -> logDeleteWebhook(webhook.getId().toString()))
@@ -122,40 +128,52 @@ public class WebhookService {
   }
 
   public Uni<Void> sendNotification(NotificationRequest request) {
-    return webhookRepository.findActiveWebhooksByProduct(request.getProductId())
-        .invoke(webhooks -> {
-          if (webhooks.isEmpty()) {
-            log.warn("No active webhooks found for product: {}",
-                sanitizeString(request.getProductId()));
-          } else {
-            log.info("Found {} active webhook(s) for product: {}", webhooks.size(),
-                sanitizeString(request.getProductId()));
-          }
-        })
+    return webhookRepository
+        .findActiveWebhooksByProduct(request.getProductId())
+        .invoke(
+            webhooks -> {
+              if (webhooks.isEmpty()) {
+                log.warn(
+                    "No active webhooks found for product: {}",
+                    sanitizeString(request.getProductId()));
+              } else {
+                log.info(
+                    "Found {} active webhook(s) for product: {}",
+                    webhooks.size(),
+                    sanitizeString(request.getProductId()));
+              }
+            })
         .onItem()
         .transformToMulti(webhooks -> io.smallrye.mutiny.Multi.createFrom().iterable(webhooks))
-        .onItem().call(webhook -> {
-          WebhookNotification notification = new WebhookNotification();
-          notification.setWebhookId(webhook.getId());
-          notification.setPayload(request.getPayload());
-          notification.setStatus(WebhookNotification.NotificationStatus.SENDING);
-          notification.setAttemptCount(0);
-          notification.setCreatedAt(LocalDateTime.now());
+        .onItem()
+        .call(
+            webhook -> {
+              WebhookNotification notification = new WebhookNotification();
+              notification.setWebhookId(webhook.getId());
+              notification.setPayload(request.getPayload());
+              notification.setStatus(WebhookNotification.NotificationStatus.SENDING);
+              notification.setAttemptCount(0);
+              notification.setCreatedAt(LocalDateTime.now());
 
-          return notificationRepository.persist(notification)
-              .invoke(
-                  () -> log.info("Created notification with ID: {} for webhook: {} (product: {})",
-                      notification.getId(), webhook.getId(),
-                      sanitizeString(request.getProductId())))
-              .call(n -> notificationService.processNotification(n, webhook));
-        })
-        .collect().asList()
+              return notificationRepository
+                  .persist(notification)
+                  .invoke(
+                      () ->
+                          log.info(
+                              "Created notification with ID: {} for webhook: {} (product: {})",
+                              notification.getId(),
+                              webhook.getId(),
+                              sanitizeString(request.getProductId())))
+                  .call(n -> notificationService.processNotification(n, webhook));
+            })
+        .collect()
+        .asList()
         .replaceWithVoid();
   }
 
   private WebhookResponse toResponse(Webhook webhook) {
     WebhookResponse response = new WebhookResponse();
-//        response.setId(webhook.getId().toString());
+    //        response.setId(webhook.getId().toString());
     response.setProductId(webhook.getProductId());
     response.setDescription(webhook.getDescription());
     response.setUrl(webhook.getUrl());
