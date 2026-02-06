@@ -63,12 +63,6 @@ public class CucumberSuite extends CucumberQuarkusTest {
             .withStartupTimeout(Duration.ofMinutes(5));
 
     composeContainer.start();
-    // Print logs for debugging
-    System.out.println(
-        composeContainer
-            .getContainerByServiceName("institutionms-1")
-            .map(c -> c.getLogs())
-            .orElse("Container not found"));
 
     Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
 

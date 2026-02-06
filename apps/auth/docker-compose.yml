@@ -69,17 +69,17 @@ services:
     networks:
       - develop-network
 
-    institutionms:
-      image: ghcr.io/pagopa/selfcare-institution-ms:latest
-      #    platform: linux/amd64
-      ports:
-        - '8083:8083'
-      env_file:
-        - "./src/test/resources/institutionenv"
-      networks:
-        - develop-network
-      depends_on:
-        - mongodb
+  institutionms:
+    image: ghcr.io/pagopa/selfcare-institution-ms:latest
+    #    platform: linux/amd64
+    ports:
+      - '8083:8083'
+    env_file:
+      - "./src/test/resources/institutionenv"
+    networks:
+      - develop-network
+    depends_on:
+      - mongodb
 
   iamms:
     image: ghcr.io/pagopa/selfcare-iam-ms:latest
