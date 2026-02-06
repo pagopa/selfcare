@@ -21,11 +21,14 @@ import lombok.extern.slf4j.Slf4j;
 public class WebhookService {
 
   public static final String DELETED_WEBHOOK_WITH_ID = "Deleted webhook with ID: {}";
-  @Inject WebhookRepository webhookRepository;
+  @Inject
+  WebhookRepository webhookRepository;
 
-  @Inject WebhookNotificationRepository notificationRepository;
+  @Inject
+  WebhookNotificationRepository notificationRepository;
 
-  @Inject WebhookNotificationService notificationService;
+  @Inject
+  WebhookNotificationService notificationService;
 
   public Uni<WebhookResponse> createWebhook(WebhookRequest request) {
     Webhook webhook = new Webhook();
@@ -84,7 +87,7 @@ public class WebhookService {
             webhook -> {
               webhook.setUrl(request.getUrl());
               webhook.setHttpMethod(request.getHttpMethod());
-              webhook.setHeaders(request.getHeaders());
+              webhook.setHeaders(DataEncryptionConfig.encrypt(request.getHeaders()));
               webhook.setUpdatedAt(LocalDateTime.now());
 
               if (request.getRetryPolicy() != null) {
@@ -178,7 +181,7 @@ public class WebhookService {
     response.setDescription(webhook.getDescription());
     response.setUrl(webhook.getUrl());
     response.setHttpMethod(webhook.getHttpMethod());
-    response.setHeaders(webhook.getHeaders());
+    webhook.setHeaders(DataEncryptionConfig.decrypt(webhook.getHeaders()));
     response.setProducts(webhook.getProducts());
     response.setStatus(webhook.getStatus().toString());
     response.setCreatedAt(webhook.getCreatedAt());

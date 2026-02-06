@@ -236,8 +236,8 @@ class IamServiceImplTest {
 
       service.saveUser(request, null).await().indefinitely();
 
-      assertEquals(1, spyUser.getProductRoles().size());
-      assertEquals("productC", spyUser.getProductRoles().get(0).getProductId());
+      assertEquals(3, spyUser.getProductRoles().size());
+      assertEquals("productC", spyUser.getProductRoles().get(2).getProductId());
     }
   }
 

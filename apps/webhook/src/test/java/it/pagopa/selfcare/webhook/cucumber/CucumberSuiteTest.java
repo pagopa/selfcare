@@ -45,7 +45,6 @@ public class CucumberSuiteTest extends CucumberQuarkusTest {
     tokenTest = ConfigProvider.getConfig().getValue(JWT_BEARER_TOKEN_ENV, String.class);
     log.info("Starting test containers...");
     composeContainer = new ComposeContainer(new File("docker-compose.yml"))
-        .withLocalCompose(true)
         .withPull(true)
         .waitingFor("mongodb", Wait.forListeningPort())
         .waitingFor("mockserver", Wait.forListeningPort())

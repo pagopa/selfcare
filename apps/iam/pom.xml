@@ -15,19 +15,19 @@
   <version>0.1.0-SNAPSHOT</version>
   <properties>
     <compiler-plugin.version>3.13.0</compiler-plugin.version>
-    <lombok.version>1.18.28</lombok.version>
-    <mapstruct.version>1.5.5.Final</mapstruct.version>
+    <lombok.version>1.18.42</lombok.version>
+    <mapstruct.version>1.6.3</mapstruct.version>
     <maven.compiler.release>17</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-    <quarkus.platform.version>3.28.3</quarkus.platform.version>
+    <quarkus.platform.version>3.31.2</quarkus.platform.version>
     <skipITs>true</skipITs>
-    <surefire-plugin.version>3.1.2</surefire-plugin.version>
-    <quarkus-openapi-generator.version>2.12.0</quarkus-openapi-generator.version>
+    <surefire-plugin.version>3.5.4</surefire-plugin.version>
+    <quarkus-openapi-generator.version>2.13.0</quarkus-openapi-generator.version>
     <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
-    <cucumber-sdk.version>0.0.10</cucumber-sdk.version>
+    <cucumber-sdk.version>0.0.11</cucumber-sdk.version>
     <security-sdk.version>0.2.3</security-sdk.version>
     <selfcare-onboarding-sdk.version>0.15.1</selfcare-onboarding-sdk.version>
   </properties>
