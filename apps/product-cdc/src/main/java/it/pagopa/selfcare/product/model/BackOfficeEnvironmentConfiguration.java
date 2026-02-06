@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BackOfficeEnvironmentConfiguration {
-    private String env;
-    private String urlPublic;
-    private String urlBO;
-    private String identityTokenAudience;
+  private String env;
+  private String urlPublic;
+  private String urlBO;
+  private String identityTokenAudience;
 }
