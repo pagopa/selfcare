@@ -5,6 +5,7 @@ import it.pagopa.selfcare.webhook.dto.NotificationRequest;
 import it.pagopa.selfcare.webhook.dto.WebhookRequest;
 import it.pagopa.selfcare.webhook.dto.WebhookResponse;
 import it.pagopa.selfcare.webhook.service.WebhookService;
+import it.pagopa.selfcare.webhook.util.Sanitizer;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
@@ -63,7 +64,7 @@ public class WebhookController {
   @Tag(name = "external-v2")
   public Uni<Response> getWebhook(@PathParam("productId") String productId) {
     return webhookService
-        .getWebhookByProductId(productId)
+        .getWebhookByProductId(Sanitizer.sanitizeString(productId))
         .map(
             response ->
                 response != null

@@ -10,6 +10,7 @@ import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
 import it.pagopa.selfcare.webhook.util.DataEncryptionConfig;
+import it.pagopa.selfcare.webhook.util.Sanitizer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.time.LocalDateTime;
@@ -30,9 +31,9 @@ public class WebhookService {
   public Uni<WebhookResponse> createWebhook(WebhookRequest request) {
     Webhook webhook = new Webhook();
     webhook.setUrl(request.getUrl());
-    webhook.setHttpMethod(sanitizeString(request.getHttpMethod()));
+    webhook.setHttpMethod(Sanitizer.sanitizeString(request.getHttpMethod()));
     webhook.setHeaders(DataEncryptionConfig.encrypt(request.getHeaders()));
-    webhook.setProductId(request.getProductId());
+    webhook.setProductId(Sanitizer.sanitizeString(request.getProductId()));
     webhook.setDescription("");
     webhook.setProducts(List.of(request.getProductId()));
     webhook.setStatus(Webhook.WebhookStatus.ACTIVE);
@@ -64,7 +65,7 @@ public class WebhookService {
 
   public Uni<WebhookResponse> getWebhook(String id) {
     return webhookRepository
-        .findByIdOptional(sanitizeString(id))
+        .findByIdOptional(Sanitizer.sanitizeString(id))
         .map(webhook -> webhook != null ? toResponse(webhook) : null);
   }
 
@@ -106,14 +107,16 @@ public class WebhookService {
         .findByIdOptional(id)
         .onItem()
         .ifNull()
-        .failWith(() -> new IllegalArgumentException("Webhook not found: " + sanitizeString(id)))
-        .call(webhook -> webhookRepository.deleteByIdSafe(sanitizeString(id)))
-        .invoke(() -> logDeleteWebhook(sanitizeString(id)))
+        .failWith(
+            () ->
+                new IllegalArgumentException("Webhook not found: " + Sanitizer.sanitizeString(id)))
+        .call(webhook -> webhookRepository.deleteByIdSafe(Sanitizer.sanitizeString(id)))
+        .invoke(() -> logDeleteWebhook(Sanitizer.sanitizeString(id)))
         .replaceWith(true);
   }
 
   private void logDeleteWebhook(String id) {
-    log.info(DELETED_WEBHOOK_WITH_ID, sanitizeString(id));
+    log.info(DELETED_WEBHOOK_WITH_ID, Sanitizer.sanitizeString(id));
   }
 
   public Uni<Boolean> deleteWebhookByProductId(String productId) {
@@ -135,12 +138,12 @@ public class WebhookService {
               if (webhooks.isEmpty()) {
                 log.warn(
                     "No active webhooks found for product: {}",
-                    sanitizeString(request.getProductId()));
+                    Sanitizer.sanitizeString(request.getProductId()));
               } else {
                 log.info(
                     "Found {} active webhook(s) for product: {}",
                     webhooks.size(),
-                    sanitizeString(request.getProductId()));
+                    Sanitizer.sanitizeString(request.getProductId()));
               }
             })
         .onItem()
@@ -163,7 +166,7 @@ public class WebhookService {
                               "Created notification with ID: {} for webhook: {} (product: {})",
                               notification.getId(),
                               webhook.getId(),
-                              sanitizeString(request.getProductId())))
+                              Sanitizer.sanitizeString(request.getProductId())))
                   .call(n -> notificationService.processNotification(n, webhook));
             })
         .collect()
@@ -178,7 +181,7 @@ public class WebhookService {
     response.setDescription(webhook.getDescription());
     response.setUrl(webhook.getUrl());
     response.setHttpMethod(webhook.getHttpMethod());
-    webhook.setHeaders(DataEncryptionConfig.decrypt(webhook.getHeaders()));
+    response.setHeaders(DataEncryptionConfig.decrypt(webhook.getHeaders()));
     response.setProducts(webhook.getProducts());
     response.setStatus(webhook.getStatus().toString());
     response.setCreatedAt(webhook.getCreatedAt());
@@ -194,17 +197,5 @@ public class WebhookService {
     }
 
     return response;
-  }
-
-  /**
-   * Sanitize user input for safe logging: remove line breaks, control characters, and allow only
-   * alphanumerics plus minimal punctuation (underscore, dash).
-   */
-  private String sanitizeString(String input) {
-    if (input == null) {
-      return null;
-    }
-    // Remove all non-alphanumerics, dash, and underscore
-    return input.replaceAll("[^A-Za-z0-9_-]", "");
   }
 }
