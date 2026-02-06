@@ -51,7 +51,8 @@ public class CucumberSuite extends CucumberQuarkusTest {
         new ComposeContainer(new File("docker-compose.yml"))
             .withPull(true)
             .withExposedService("userms", 8080)
-            .waitingFor("mongodb", Wait.forListeningPort())
+            .waitingFor("mongodb", Wait.forLogMessage(".*Waiting for connections.*\\n", 1))
+            //                        .waitingFor("mongodb", Wait.forListeningPort())
             .waitingFor("userms", Wait.forHttp("/q/health/ready").forPort(8080).forStatusCode(200))
             .waitingFor(
                 "institutionms", Wait.forLogMessage(".*Started SelfCareCoreApplication.*\\n", 1))
