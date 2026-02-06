@@ -63,7 +63,7 @@ services:
     image: ghcr.io/pagopa/selfcare-external-api-backend:latest
     #    platform: linux/amd64
     ports:
-      - '8082:8082'
+      - '8082:8080'
     env_file:
       - "./src/test/resources/externalenv"
     networks:
@@ -73,7 +73,7 @@ services:
     image: ghcr.io/pagopa/selfcare-institution-ms:latest
     #    platform: linux/amd64
     ports:
-      - '8083:8083'
+      - '8083:8080'
     env_file:
       - "./src/test/resources/institutionenv"
     networks:
@@ -85,7 +85,7 @@ services:
     image: ghcr.io/pagopa/selfcare-iam-ms:latest
     #    platform: linux/amd64
     ports:
-      - '8085:8085'
+      - '8085:8080'
     env_file:
       - "./src/test/resources/iamenv"
     networks:
