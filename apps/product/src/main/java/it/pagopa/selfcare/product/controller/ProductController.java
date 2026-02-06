@@ -48,20 +48,20 @@ public class ProductController {
   @Operation(summary = "Ping endpoint", operationId = "ping")
   @APIResponses(
       value = {
-          @APIResponse(
-              responseCode = "200",
-              description = "OK",
-              content =
-              @Content(
-                  schema = @Schema(implementation = String.class),
-                  mediaType = "application/problem+json")),
-          @APIResponse(
-              responseCode = "500",
-              description = "Internal Server Error",
-              content =
-              @Content(
-                  schema = @Schema(implementation = Problem.class),
-                  mediaType = "application/problem+json"))
+        @APIResponse(
+            responseCode = "200",
+            description = "OK",
+            content =
+                @Content(
+                    schema = @Schema(implementation = String.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json"))
       })
   @GET
   @Path(value = "/ping")
@@ -81,27 +81,27 @@ public class ProductController {
           "Creates a new product configuration or updates the existing one when a match is found")
   @APIResponses(
       value = {
-          @APIResponse(
-              responseCode = "201",
-              description = "Created",
-              content =
-              @Content(
-                  mediaType = MediaType.APPLICATION_JSON,
-                  schema = @Schema(implementation = ProductBaseResponse.class))),
-          @APIResponse(
-              responseCode = "400",
-              description = "Bad Request",
-              content =
-              @Content(
-                  mediaType = "application/problem+json",
-                  schema = @Schema(implementation = Problem.class))),
-          @APIResponse(
-              responseCode = "500",
-              description = "Internal Server Error",
-              content =
-              @Content(
-                  mediaType = "application/problem+json",
-                  schema = @Schema(implementation = Problem.class)))
+        @APIResponse(
+            responseCode = "201",
+            description = "Created",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ProductBaseResponse.class))),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class)))
       })
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
@@ -126,27 +126,27 @@ public class ProductController {
       operationId = "getProductById")
   @APIResponses(
       value = {
-          @APIResponse(
-              responseCode = "200",
-              description = "Product found",
-              content =
-              @Content(
-                  mediaType = MediaType.APPLICATION_JSON,
-                  schema = @Schema(implementation = ProductResponse.class))),
-          @APIResponse(
-              responseCode = "404",
-              description = "Product not found",
-              content =
-              @Content(
-                  mediaType = "application/problem+json",
-                  schema = @Schema(implementation = Problem.class))),
-          @APIResponse(
-              responseCode = "500",
-              description = "Internal Server Error",
-              content =
-              @Content(
-                  mediaType = "application/problem+json",
-                  schema = @Schema(implementation = Problem.class)))
+        @APIResponse(
+            responseCode = "200",
+            description = "Product found",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ProductResponse.class))),
+        @APIResponse(
+            responseCode = "404",
+            description = "Product not found",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> getProductById(@PathParam("productId") String productId) {
     return productService
@@ -179,34 +179,34 @@ public class ProductController {
       operationId = "deleteProductById")
   @APIResponses(
       value = {
-          @APIResponse(
-              responseCode = "200",
-              description = "Product cancelled",
-              content =
-              @Content(
-                  mediaType = MediaType.APPLICATION_JSON,
-                  schema = @Schema(implementation = ProductBaseResponse.class))),
-          @APIResponse(
-              responseCode = "400",
-              description = "Bad request",
-              content =
-              @Content(
-                  mediaType = "application/problem+json",
-                  schema = @Schema(implementation = Problem.class))),
-          @APIResponse(
-              responseCode = "404",
-              description = "Product not found",
-              content =
-              @Content(
-                  mediaType = "application/problem+json",
-                  schema = @Schema(implementation = Problem.class))),
-          @APIResponse(
-              responseCode = "500",
-              description = "Internal Server Error",
-              content =
-              @Content(
-                  mediaType = "application/problem+json",
-                  schema = @Schema(implementation = Problem.class)))
+        @APIResponse(
+            responseCode = "200",
+            description = "Product cancelled",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ProductBaseResponse.class))),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad request",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "404",
+            description = "Product not found",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> deleteProductById(@PathParam("productId") String productId) {
     return productService
@@ -251,36 +251,36 @@ public class ProductController {
               + "all other fields will remain unchanged.")
   @APIResponses(
       value = {
-          @APIResponse(
-              responseCode = "200",
-              description = "Product successfully patched",
-              content =
-              @Content(
-                  mediaType = MediaType.APPLICATION_JSON,
-                  schema = @Schema(implementation = ProductBaseResponse.class))),
-          @APIResponse(
-              responseCode = "400",
-              description =
-                  "Bad Request - Invalid patch document, invalid productId, or field constraint violation",
-              content =
-              @Content(
-                  mediaType = "application/problem+json",
-                  schema = @Schema(implementation = Problem.class))),
-          @APIResponse(
-              responseCode = "404",
-              description = "Not Found - No product found with the specified productId",
-              content =
-              @Content(
-                  mediaType = "application/problem+json",
-                  schema = @Schema(implementation = Problem.class))),
-          @APIResponse(
-              responseCode = "500",
-              description =
-                  "Internal Server Error - Unexpected error occurred while applying the patch",
-              content =
-              @Content(
-                  mediaType = "application/problem+json",
-                  schema = @Schema(implementation = Problem.class)))
+        @APIResponse(
+            responseCode = "200",
+            description = "Product successfully patched",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ProductBaseResponse.class))),
+        @APIResponse(
+            responseCode = "400",
+            description =
+                "Bad Request - Invalid patch document, invalid productId, or field constraint violation",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "404",
+            description = "Not Found - No product found with the specified productId",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "500",
+            description =
+                "Internal Server Error - Unexpected error occurred while applying the patch",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class)))
       })
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
@@ -310,8 +310,10 @@ public class ProductController {
         .onFailure(BadRequestException.class)
         .recoverWithItem(
             t -> {
-              log.error("Unexpected error occurred while while parsing data for {}",
-                  sanitizedProductId, t);
+              log.error(
+                  "Unexpected error occurred while while parsing data for {}",
+                  sanitizedProductId,
+                  t);
               return Response.status(Response.Status.BAD_REQUEST)
                   .type("application/problem+json")
                   .entity(
@@ -340,7 +342,8 @@ public class ProductController {
         .recoverWithItem(
             t -> {
               log.error(
-                  "Unexpected error occurred while patching product with id {}", sanitizedProductId,
+                  "Unexpected error occurred while patching product with id {}",
+                  sanitizedProductId,
                   t);
               return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                   .type("application/problem+json")
@@ -366,27 +369,27 @@ public class ProductController {
       operationId = "getProductOriginsById")
   @APIResponses(
       value = {
-          @APIResponse(
-              responseCode = "200",
-              description = "Origins found",
-              content =
-              @Content(
-                  mediaType = MediaType.APPLICATION_JSON,
-                  schema = @Schema(implementation = ProductOriginResponse.class))),
-          @APIResponse(
-              responseCode = "404",
-              description = "Product not found",
-              content =
-              @Content(
-                  mediaType = "application/problem+json",
-                  schema = @Schema(implementation = Problem.class))),
-          @APIResponse(
-              responseCode = "500",
-              description = "Internal Server Error",
-              content =
-              @Content(
-                  mediaType = "application/problem+json",
-                  schema = @Schema(implementation = Problem.class)))
+        @APIResponse(
+            responseCode = "200",
+            description = "Origins found",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ProductOriginResponse.class))),
+        @APIResponse(
+            responseCode = "404",
+            description = "Product not found",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> getProductOriginsById(
       @Parameter(name = "productId", required = true) @QueryParam("productId") String productId) {
