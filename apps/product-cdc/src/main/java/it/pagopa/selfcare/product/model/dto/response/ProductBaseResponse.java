@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductBaseResponse {
-    private String id;
-    private String productId;
-    private ProductStatus status;
+  private String id;
+  private String productId;
+  private ProductStatus status;
 }

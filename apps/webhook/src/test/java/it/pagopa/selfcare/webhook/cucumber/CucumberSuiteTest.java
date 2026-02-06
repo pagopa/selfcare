@@ -22,9 +22,9 @@ import org.testcontainers.containers.wait.strategy.Wait;
     features = "src/test/resources/features",
     glue = {"it.pagopa.selfcare.webhook.cucumber.steps", "it.pagopa.selfcare.webhook.util"},
     plugin = {
-        "pretty",
-        "html:target/cucumber-report/cucumber.html",
-        "json:target/cucumber-report/cucumber.json"
+      "pretty",
+      "html:target/cucumber-report/cucumber.html",
+      "json:target/cucumber-report/cucumber.json"
     })
 public class CucumberSuiteTest extends CucumberQuarkusTest {
 
@@ -44,11 +44,12 @@ public class CucumberSuiteTest extends CucumberQuarkusTest {
     RestAssured.port = 8081;
     tokenTest = ConfigProvider.getConfig().getValue(JWT_BEARER_TOKEN_ENV, String.class);
     log.info("Starting test containers...");
-    composeContainer = new ComposeContainer(new File("docker-compose.yml"))
-        .withPull(true)
-        .waitingFor("mongodb", Wait.forListeningPort())
-        .waitingFor("mockserver", Wait.forListeningPort())
-        .withStartupTimeout(Duration.ofMinutes(5));
+    composeContainer =
+        new ComposeContainer(new File("docker-compose.yml"))
+            .withPull(true)
+            .waitingFor("mongodb", Wait.forListeningPort())
+            .waitingFor("mockserver", Wait.forListeningPort())
+            .withStartupTimeout(Duration.ofMinutes(5));
 
     composeContainer.start();
     Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));

@@ -21,14 +21,11 @@ import lombok.extern.slf4j.Slf4j;
 public class WebhookService {
 
   public static final String DELETED_WEBHOOK_WITH_ID = "Deleted webhook with ID: {}";
-  @Inject
-  WebhookRepository webhookRepository;
+  @Inject WebhookRepository webhookRepository;
 
-  @Inject
-  WebhookNotificationRepository notificationRepository;
+  @Inject WebhookNotificationRepository notificationRepository;
 
-  @Inject
-  WebhookNotificationService notificationService;
+  @Inject WebhookNotificationService notificationService;
 
   public Uni<WebhookResponse> createWebhook(WebhookRequest request) {
     Webhook webhook = new Webhook();

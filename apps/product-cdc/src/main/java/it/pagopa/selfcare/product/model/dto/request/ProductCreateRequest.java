@@ -12,5 +12,4 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-public class ProductCreateRequest extends ProductBaseFields {
-}
+public class ProductCreateRequest extends ProductBaseFields {}
