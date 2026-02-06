@@ -50,20 +50,27 @@ public class CucumberSuite extends CucumberQuarkusTest {
     composeContainer =
         new ComposeContainer(new File("docker-compose.yml"))
             .withPull(true)
-            .withExposedService("userms", 8080)
+            .withExposedService("userms", 8084)
+            .withExposedService("iamms", 8085)
+            .withExposedService("institutionms", 8083)
+            .withExposedService("externalms", 8082)
             .waitingFor("mongodb", Wait.forLogMessage(".*Waiting for connections.*\\n", 1))
-            //                        .waitingFor("mongodb", Wait.forListeningPort())
-            .waitingFor("userms", Wait.forHttp("/q/health/ready").forPort(8084).forStatusCode(200))
-            .waitingFor("iamms", Wait.forHttp("/q/health/ready").forPort(8085).forStatusCode(200))
-            .waitingFor("institutionms", Wait.forListeningPorts(8083, 1))
-            .waitingFor("externalms", Wait.forListeningPorts(8082, 1))
-            //            .waitingFor(
-            //                "institutionms", Wait.forLogMessage(".*Started
-            //             SelfCareCoreApplication.*\\n", 1))
-            //            .waitingFor(
-            //                "externalms",
-            //                Wait.forLogMessage(".*Started SelfCareExternalAPIApplication.*\\n",
-            // 1))
+            .waitingFor(
+                "userms",
+                Wait.forHttp("/q/health/ready")
+                    .forPort(8084)
+                    .forStatusCode(200)
+                    .withStartupTimeout(Duration.ofMinutes(2)))
+            .waitingFor(
+                "iamms",
+                Wait.forHttp("/q/health/ready")
+                    .forPort(8085)
+                    .forStatusCode(200)
+                    .withStartupTimeout(Duration.ofMinutes(2)))
+            .waitingFor(
+                "institutionms", Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(3)))
+            .waitingFor(
+                "externalms", Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(3)))
             .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1))
             .withStartupTimeout(Duration.ofMinutes(5));
 
