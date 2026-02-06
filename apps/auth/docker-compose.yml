@@ -49,7 +49,7 @@ services:
 
   userms:
     image: ghcr.io/pagopa/selfcare-user-ms:latest@sha256:a1504119f731456c5a81961e41fb24a85a72c147240002130260aa558dfa50ca
-#    platform: linux/amd64
+    #    platform: linux/amd64
     ports:
       - '8084:8080'
     env_file:
@@ -61,7 +61,7 @@ services:
 
   externalms:
     image: ghcr.io/pagopa/selfcare-external-api-backend:latest@sha256:0a473c78f5fb339c62fe80661eba714b1eabd7140c925bbaa3f4d42eb078f130
-#    platform: linux/amd64
+    #    platform: linux/amd64
     ports:
       - '8082:8082'
     env_file:
@@ -69,21 +69,21 @@ services:
     networks:
       - develop-network
 
-  institutionms:
-    image: ghcr.io/pagopa/selfcare-institution-ms:latest@sha256:5ffca080d981e4848d3ac64310b1c754729da52fef79838c911ca31d272586db
-#    platform: linux/amd64
-    ports:
-      - '8083:8083'
-    env_file:
-      - "./src/test/resources/institutionenv"
-    networks:
-      - develop-network
-    depends_on:
-      - mongodb
+  #  institutionms:
+  #    image: ghcr.io/pagopa/selfcare-institution-ms:latest@sha256:5ffca080d981e4848d3ac64310b1c754729da52fef79838c911ca31d272586db
+  ##    platform: linux/amd64
+  #    ports:
+  #      - '8083:8083'
+  #    env_file:
+  #      - "./src/test/resources/institutionenv"
+  #    networks:
+  #      - develop-network
+  #    depends_on:
+  #      - mongodb
 
   iamms:
     image: ghcr.io/pagopa/selfcare-iam-ms:latest@sha256:cae184f2578f68619a827bb383fc3b9368a860100bcb7c43e660ba5a8c06aebb
-#    platform: linux/amd64
+    #    platform: linux/amd64
     ports:
       - '8085:8085'
     env_file:

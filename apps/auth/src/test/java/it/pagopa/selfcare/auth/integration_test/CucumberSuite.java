@@ -54,8 +54,9 @@ public class CucumberSuite extends CucumberQuarkusTest {
             .waitingFor("mongodb", Wait.forLogMessage(".*Waiting for connections.*\\n", 1))
             //                        .waitingFor("mongodb", Wait.forListeningPort())
             .waitingFor("userms", Wait.forHttp("/q/health/ready").forPort(8080).forStatusCode(200))
-            .waitingFor(
-                "institutionms", Wait.forLogMessage(".*Started SelfCareCoreApplication.*\\n", 1))
+            //            .waitingFor(
+            //                "institutionms", Wait.forLogMessage(".*Started
+            // SelfCareCoreApplication.*\\n", 1))
             .waitingFor(
                 "externalms",
                 Wait.forLogMessage(".*Started SelfCareExternalAPIApplication.*\\n", 1))
@@ -63,6 +64,13 @@ public class CucumberSuite extends CucumberQuarkusTest {
             .withStartupTimeout(Duration.ofMinutes(5));
 
     composeContainer.start();
+    // Print logs for debugging
+    System.out.println(
+        composeContainer
+            .getContainerByServiceName("institutionms-1")
+            .map(c -> c.getLogs())
+            .orElse("Container not found"));
+
     Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
 
     log.info(
