@@ -5,7 +5,4 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class OidcExchangeResponse {
-
-
-}
+public class OidcExchangeResponse {}

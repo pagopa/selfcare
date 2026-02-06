@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class OtpForbidden {
 
-    private OtpForbiddenCode otpForbiddenCode;
-    private Integer remainingAttempts;
-    private OtpStatus otpStatus;
+  private OtpForbiddenCode otpForbiddenCode;
+  private Integer remainingAttempts;
+  private OtpStatus otpStatus;
 }

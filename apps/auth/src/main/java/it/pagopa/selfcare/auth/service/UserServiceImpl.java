@@ -8,6 +8,9 @@ import it.pagopa.selfcare.auth.util.GeneralUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
+import java.time.Duration;
+import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -19,10 +22,6 @@ import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.SaveUserDto;
-
-import java.time.Duration;
-import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @ApplicationScoped

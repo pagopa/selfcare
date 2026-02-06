@@ -20,8 +20,8 @@ import org.testcontainers.containers.wait.strategy.Wait;
     features = "src/test/resources/features",
     glue = {"it.pagopa.selfcare.cucumber.utils", "it.pagopa.selfcare.auth.integration_test"},
     plugin = {
-        "html:target/cucumber-report/cucumber.html",
-        "json:target/cucumber-report/cucumber.json"
+      "html:target/cucumber-report/cucumber.html",
+      "json:target/cucumber-report/cucumber.json"
     })
 public class CucumberSuite extends CucumberQuarkusTest {
 
@@ -38,8 +38,8 @@ public class CucumberSuite extends CucumberQuarkusTest {
       if (inputStream == null) {
         throw new IOException("Public key file not found in classpath");
       }
-      String publicKey = new Scanner(inputStream, StandardCharsets.UTF_8.name()).useDelimiter("\\A")
-          .next();
+      String publicKey =
+          new Scanner(inputStream, StandardCharsets.UTF_8.name()).useDelimiter("\\A").next();
       System.setProperty("JWT-PUBLIC-KEY", publicKey);
     }
 
@@ -47,28 +47,32 @@ public class CucumberSuite extends CucumberQuarkusTest {
     RestAssured.baseURI = "http://localhost";
     RestAssured.port = 8081;
 
-    composeContainer = new ComposeContainer(new File("docker-compose.yml"))
-        .withPull(true)
-        .withExposedService("userms", 8080)
-        .waitingFor("mongodb", Wait.forListeningPort())
-        .waitingFor("userms", Wait.forHttp("/q/health/ready").forPort(8080).forStatusCode(200))
-        .waitingFor("institutionms",
-            Wait.forLogMessage(".*Started SelfCareCoreApplication.*\\n", 1))
-        .waitingFor("externalms",
-            Wait.forLogMessage(".*Started SelfCareExternalAPIApplication.*\\n", 1))
-        .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1))
-        .withStartupTimeout(Duration.ofMinutes(5));
+    composeContainer =
+        new ComposeContainer(new File("docker-compose.yml"))
+            .withPull(true)
+            .withExposedService("userms", 8080)
+            .waitingFor("mongodb", Wait.forListeningPort())
+            .waitingFor("userms", Wait.forHttp("/q/health/ready").forPort(8080).forStatusCode(200))
+            .waitingFor(
+                "institutionms", Wait.forLogMessage(".*Started SelfCareCoreApplication.*\\n", 1))
+            .waitingFor(
+                "externalms",
+                Wait.forLogMessage(".*Started SelfCareExternalAPIApplication.*\\n", 1))
+            .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1))
+            .withStartupTimeout(Duration.ofMinutes(5));
 
     composeContainer.start();
     Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
 
-    log.info("\nLANGUAGE: {}\nCOUNTRY: {}\nTIMEZONE: {}\n", System.getProperty("user.language"),
-        System.getProperty("user.country"), System.getProperty("user.timezone"));
+    log.info(
+        "\nLANGUAGE: {}\nCOUNTRY: {}\nTIMEZONE: {}\n",
+        System.getProperty("user.language"),
+        System.getProperty("user.country"),
+        System.getProperty("user.timezone"));
   }
 
   @AfterAll
   static void tearDown() {
     log.info("Cucumber tests are finished.");
   }
-
 }

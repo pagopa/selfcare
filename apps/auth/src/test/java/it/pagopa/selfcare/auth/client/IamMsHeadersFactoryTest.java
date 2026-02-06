@@ -1,5 +1,9 @@
 package it.pagopa.selfcare.auth.client;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import it.pagopa.selfcare.auth.context.TokenContext;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
@@ -9,17 +13,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 class IamMsHeadersFactoryTest {
 
-  @Mock
-  TokenContext tokenContext;
+  @Mock TokenContext tokenContext;
 
-  @InjectMocks
-  IamMsHeadersFactory headersFactory;
+  @InjectMocks IamMsHeadersFactory headersFactory;
 
   @BeforeEach
   void setUp() {

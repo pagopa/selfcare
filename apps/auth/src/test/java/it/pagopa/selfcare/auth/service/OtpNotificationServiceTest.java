@@ -10,12 +10,10 @@ import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.auth.client.InternalUserMsApi;
 import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.util.OtpUtils;
-
-import java.util.UUID;
-
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
+import java.util.UUID;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 
@@ -24,8 +22,7 @@ public class OtpNotificationServiceTest {
 
   @Inject OtpNotificationService otpNotificationService;
 
-  @RestClient @InjectMock
-  InternalUserMsApi internalUserApi;
+  @RestClient @InjectMock InternalUserMsApi internalUserApi;
 
   private UserClaims getUserClaims() {
     return UserClaims.builder()

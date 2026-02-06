@@ -10,12 +10,11 @@ import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
 @ApplicationScoped
 public class IamMsHeadersFactory implements ClientHeadersFactory {
 
-  @Inject
-  TokenContext tokenContext;
+  @Inject TokenContext tokenContext;
 
   @Override
-  public MultivaluedMap<String, String> update(MultivaluedMap<String, String> incoming,
-                                               MultivaluedMap<String, String> outgoing) {
+  public MultivaluedMap<String, String> update(
+      MultivaluedMap<String, String> incoming, MultivaluedMap<String, String> outgoing) {
     MultivaluedMap<String, String> result = new MultivaluedHashMap<>();
     result.putAll(outgoing);
     if (tokenContext.getToken() != null) {

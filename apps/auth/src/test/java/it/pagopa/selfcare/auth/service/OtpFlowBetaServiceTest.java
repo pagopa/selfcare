@@ -18,12 +18,10 @@ import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.model.otp.OtpInfo;
 import it.pagopa.selfcare.auth.profile.BetaFFTestProfile;
 import jakarta.inject.Inject;
-
+import jakarta.ws.rs.WebApplicationException;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
-
-import jakarta.ws.rs.WebApplicationException;
 import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

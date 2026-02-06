@@ -5,7 +5,6 @@ import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.exception.InvalidRequestException;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import jakarta.ws.rs.WebApplicationException;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;

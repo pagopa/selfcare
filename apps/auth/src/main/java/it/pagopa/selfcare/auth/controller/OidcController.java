@@ -25,28 +25,63 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @Slf4j
 public class OidcController {
 
-    private final OidcService oidcService;
+  private final OidcService oidcService;
 
-    @Operation(
-            description = "OIDC exchange endpoint provides a token exchange by accepting a valid authorization code and releasing a jwt session token",
-            summary = "OIDC exchange endpoint",
-            operationId = "oidcExchange"
-    )
-    @APIResponses(value = {
-            @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = OidcExchangeTokenResponse.class), mediaType = "application/problem+json")),
-            @APIResponse(responseCode = "201", description = "Created", content = @Content(schema = @Schema(implementation = OidcExchangeOtpResponse.class), mediaType = "application/problem+json")),
-            @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
-            @APIResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
-            @APIResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
-            @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
-    })
-    @POST
-    @Path(value = "/exchange")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Uni<OidcExchangeResponse> oidcExchange(@Valid OidcExchangeRequest oidcExchangeRequest) {
-        return oidcService.exchange(oidcExchangeRequest.code, oidcExchangeRequest.redirectUri);
-    }
-
+  @Operation(
+      description =
+          "OIDC exchange endpoint provides a token exchange by accepting a valid authorization code and releasing a jwt session token",
+      summary = "OIDC exchange endpoint",
+      operationId = "oidcExchange")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "OK",
+            content =
+                @Content(
+                    schema = @Schema(implementation = OidcExchangeTokenResponse.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "201",
+            description = "Created",
+            content =
+                @Content(
+                    schema = @Schema(implementation = OidcExchangeOtpResponse.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "403",
+            description = "Forbidden",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "404",
+            description = "Not Found",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json"))
+      })
+  @POST
+  @Path(value = "/exchange")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<OidcExchangeResponse> oidcExchange(@Valid OidcExchangeRequest oidcExchangeRequest) {
+    return oidcService.exchange(oidcExchangeRequest.code, oidcExchangeRequest.redirectUri);
+  }
 }
-

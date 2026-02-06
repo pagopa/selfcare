@@ -3,10 +3,9 @@ package it.pagopa.selfcare.auth.service;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import jakarta.inject.Inject;
+import java.util.Map;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.util.Map;
 
 @QuarkusTest
 public class JwtServiceTest {
@@ -36,6 +35,7 @@ public class JwtServiceTest {
         .extractClaimsFromJwtToken("")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
-        .assertFailed().assertFailedWith(Exception.class, "Parsed jwt is null");
+        .assertFailed()
+        .assertFailedWith(Exception.class, "Parsed jwt is null");
   }
 }

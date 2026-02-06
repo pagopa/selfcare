@@ -11,6 +11,10 @@ import it.pagopa.selfcare.auth.util.OtpUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.Base64;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -18,11 +22,6 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.one_identity_json.api.DefaultApi;
 import org.openapi.quarkus.one_identity_json.api.DefaultApi.CreateRequestTokenMultipartForm;
 import org.openapi.quarkus.one_identity_json.model.TokenData;
-
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.Base64;
 
 @Slf4j
 @ApplicationScoped
@@ -109,7 +108,7 @@ public class OidcServiceImpl implements OidcService {
                             new InternalException("Cannot Handle OTP Flow:" + failure.toString()))
                     .chain(
                         maybeOtpInfo ->
-                                maybeOtpInfo
+                            maybeOtpInfo
                                 .map(
                                     otpInfo ->
                                         Uni.createFrom().item(newOidcExchangeOtpResponse(otpInfo)))
@@ -133,6 +132,4 @@ public class OidcServiceImpl implements OidcService {
   private OidcExchangeResponse newOidcExchangeTokenResponse(String sessionToken) {
     return new OidcExchangeTokenResponse(sessionToken);
   }
-
-
 }

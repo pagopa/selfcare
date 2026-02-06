@@ -7,6 +7,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OtpInfo {
-    private String uuid;
-    private String institutionalEmail;
+  private String uuid;
+  private String institutionalEmail;
 }

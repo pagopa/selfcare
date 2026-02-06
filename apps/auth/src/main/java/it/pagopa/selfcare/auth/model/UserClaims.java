@@ -10,11 +10,11 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class UserClaims {
-    private String uid;
-    private String fiscalCode;
-    private String name;
-    private String familyName;
-    private String email;
-    private Boolean sameIdp = Boolean.TRUE;
-    private Boolean test = Boolean.FALSE;
+  private String uid;
+  private String fiscalCode;
+  private String name;
+  private String familyName;
+  private String email;
+  private Boolean sameIdp = Boolean.TRUE;
+  private Boolean test = Boolean.FALSE;
 }

@@ -3,10 +3,9 @@ package it.pagopa.selfcare.auth.util;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.model.OtpStatus;
+import java.time.OffsetDateTime;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.time.OffsetDateTime;
 
 @QuarkusTest
 public class OtpUtilsTest {

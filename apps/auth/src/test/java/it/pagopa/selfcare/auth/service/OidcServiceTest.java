@@ -1,32 +1,29 @@
 package it.pagopa.selfcare.auth.service;
 
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.jwt.auth.principal.ParseException;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.auth.controller.response.OidcExchangeOtpResponse;
-import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.exception.ForbiddenException;
 import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.model.otp.OtpInfo;
 import jakarta.inject.Inject;
-
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
+import java.util.Map;
+import java.util.Optional;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.one_identity_json.api.DefaultApi;
 import org.openapi.quarkus.one_identity_json.model.TokenData;
-
-import java.util.Map;
-import java.util.Optional;
-
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 @QuarkusTest
 public class OidcServiceTest {
