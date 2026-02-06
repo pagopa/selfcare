@@ -1,5 +1,9 @@
 package it.pagopa.selfcare.iam.controller;
 
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
@@ -13,24 +17,18 @@ import it.pagopa.selfcare.iam.exception.InvalidRequestException;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.iam.model.ProductRoles;
 import it.pagopa.selfcare.iam.service.IamServiceImpl;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.mockito.stubbing.OngoingStubbing;
-
-import java.util.List;
-
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
 
 @QuarkusTest
 @TestHTTPEndpoint(IamController.class)
 @TestSecurity(user = "userJwt")
 public class IamControllerTest {
 
-  @InjectMock
-  IamServiceImpl iamService;
+  @InjectMock IamServiceImpl iamService;
 
   @BeforeEach
   void setup() {
@@ -48,15 +46,15 @@ public class IamControllerTest {
     response.setEmail("john@example.com");
 
     Mockito.when(iamService.saveUser(Mockito.any(SaveUserRequest.class), Mockito.anyString()))
-      .thenReturn(Uni.createFrom().item(response));
-//
+        .thenReturn(Uni.createFrom().item(response));
+    //
     given()
-      .contentType(ContentType.JSON)
-      .body(request)
-      .when()
-      .patch("/users")
-      .then()
-      .statusCode(200);
+        .contentType(ContentType.JSON)
+        .body(request)
+        .when()
+        .patch("/users")
+        .then()
+        .statusCode(200);
   }
 
   @Test
@@ -64,18 +62,20 @@ public class IamControllerTest {
     SaveUserRequest request = new SaveUserRequest();
     request.setEmail(null);
 
-    Mockito.when(iamService.saveUser(Mockito.any(SaveUserRequest.class), Mockito.nullable(String.class)))
-      .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Email cannot be null")));
+    Mockito.when(
+            iamService.saveUser(Mockito.any(SaveUserRequest.class), Mockito.nullable(String.class)))
+        .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Email cannot be null")));
 
     given()
-      .contentType(ContentType.JSON)
-      .body(request)
-      .when()
-      .patch("/users")
-      .then()
-      .log().all()
-      .statusCode(400)
-      .body(containsString("Email cannot be null"));
+        .contentType(ContentType.JSON)
+        .body(request)
+        .when()
+        .patch("/users")
+        .then()
+        .log()
+        .all()
+        .statusCode(400)
+        .body(containsString("Email cannot be null"));
   }
 
   @Test
@@ -83,15 +83,17 @@ public class IamControllerTest {
     String userId = "non-existing-user";
     String productId = "product-1";
 
-    OngoingStubbing<Uni<UserClaims>> userNotFound = Mockito.when(iamService.getUser(userId, productId))
-      .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("User not found")));
+    OngoingStubbing<Uni<UserClaims>> userNotFound =
+        Mockito.when(iamService.getUser(userId, productId))
+            .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("User not found")));
 
     given()
-      .when()
-      .get("/users/{uid}?productId={productid}", userId, productId)
-      .then()
-      .log().all()
-      .statusCode(404);
+        .when()
+        .get("/users/{uid}?productId={productid}", userId, productId)
+        .then()
+        .log()
+        .all()
+        .statusCode(404);
   }
 
   @Test
@@ -107,14 +109,15 @@ public class IamControllerTest {
     userClaims.setProductRoles(List.of(productRoles));
 
     Mockito.when(iamService.getUser(userId, productId))
-      .thenReturn(Uni.createFrom().item(userClaims));
+        .thenReturn(Uni.createFrom().item(userClaims));
 
     given()
-      .when()
-      .get("/users/{uid}?productId={productid}", userId, productId)
-      .then()
-      .log().all()
-      .statusCode(200);
+        .when()
+        .get("/users/{uid}?productId={productid}", userId, productId)
+        .then()
+        .log()
+        .all()
+        .statusCode(200);
   }
 
   @Test
@@ -125,108 +128,128 @@ public class IamControllerTest {
     String institutionId = "inst-1";
 
     Mockito.when(iamService.hasPermission(uid, permission, productId, institutionId))
-      .thenReturn(Uni.createFrom().item(true));
+        .thenReturn(Uni.createFrom().item(true));
 
     given()
-      .accept(ContentType.JSON)
-      .when()
-      .get("/users/{uid}/permissions/{permission}?productId={productId}&institutionId={institutionId}",
-        uid, permission, productId, institutionId)
-      .then()
-      .statusCode(200)
-      .body(equalTo("true"));
+        .accept(ContentType.JSON)
+        .when()
+        .get(
+            "/users/{uid}/permissions/{permission}?productId={productId}&institutionId={institutionId}",
+            uid,
+            permission,
+            productId,
+            institutionId)
+        .then()
+        .statusCode(200)
+        .body(equalTo("true"));
   }
 
   @Test
   void hasPermission_shouldReturn200_false() {
     Mockito.when(iamService.hasPermission("user-2", "write:users", "productB", "inst-2"))
-      .thenReturn(Uni.createFrom().item(false));
+        .thenReturn(Uni.createFrom().item(false));
 
     given()
-      .accept(ContentType.JSON)
-      .when()
-      .get("/users/{uid}/permissions/{permission}?productId={productId}&institutionId={institutionId}",
-        "user-2", "write:users", "productB", "inst-2")
-      .then()
-      .statusCode(200)
-      .body(equalTo("false"));
+        .accept(ContentType.JSON)
+        .when()
+        .get(
+            "/users/{uid}/permissions/{permission}?productId={productId}&institutionId={institutionId}",
+            "user-2",
+            "write:users",
+            "productB",
+            "inst-2")
+        .then()
+        .statusCode(200)
+        .body(equalTo("false"));
   }
 
   @Test
   void hasPermission_shouldReturn400_invalidRequest() {
-    Mockito.when(iamService.hasPermission(Mockito.eq("user-3"), Mockito.eq("bad:perm"),
-        Mockito.eq("productC"), Mockito.eq("inst-3")))
-      .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Invalid permission")));
+    Mockito.when(
+            iamService.hasPermission(
+                Mockito.eq("user-3"),
+                Mockito.eq("bad:perm"),
+                Mockito.eq("productC"),
+                Mockito.eq("inst-3")))
+        .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Invalid permission")));
 
     given()
-      .accept(ContentType.JSON)
-      .when()
-      .get("/users/{uid}/permissions/{permission}?productId={productId}&institutionId={institutionId}",
-        "user-3", "bad:perm", "productC", "inst-3")
-      .then()
-      .statusCode(400)
-      .body(containsString("Invalid permission"));
+        .accept(ContentType.JSON)
+        .when()
+        .get(
+            "/users/{uid}/permissions/{permission}?productId={productId}&institutionId={institutionId}",
+            "user-3",
+            "bad:perm",
+            "productC",
+            "inst-3")
+        .then()
+        .statusCode(400)
+        .body(containsString("Invalid permission"));
   }
 
   @Test
   void hasPermission_shouldReturn404_userNotFound() {
     Mockito.when(iamService.hasPermission("missing-user", "read:users", "productD", "inst-4"))
-      .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("User not found")));
+        .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("User not found")));
 
     given()
-      .accept(ContentType.JSON)
-      .when()
-      .get("/users/{uid}/permissions/{permission}?productId={productId}&institutionId={institutionId}",
-        "missing-user", "read:users", "productD", "inst-4")
-      .then()
-      .statusCode(404)
-      .body(containsString("User not found"));
+        .accept(ContentType.JSON)
+        .when()
+        .get(
+            "/users/{uid}/permissions/{permission}?productId={productId}&institutionId={institutionId}",
+            "missing-user",
+            "read:users",
+            "productD",
+            "inst-4")
+        .then()
+        .statusCode(404)
+        .body(containsString("User not found"));
   }
 
   @Test
   void hasPermission_shouldHandleNullOptionalQueryParams() {
     Mockito.when(iamService.hasPermission("user-null", "read:users", null, null))
-      .thenReturn(Uni.createFrom().item(true));
+        .thenReturn(Uni.createFrom().item(true));
 
     given()
-      .accept(ContentType.JSON)
-      .when()
-      .get("/users/{uid}/permissions/{permission}", "user-null", "read:users")
-      .then()
-      .statusCode(200)
-      .body(equalTo("true"));
+        .accept(ContentType.JSON)
+        .when()
+        .get("/users/{uid}/permissions/{permission}", "user-null", "read:users")
+        .then()
+        .statusCode(200)
+        .body(equalTo("true"));
   }
 
-//  @Test
-//  void getProductRolePermissionsList_shouldReturn200() {
-//    String uid = "user-1";
-//    String productId = "productA";
-//
-//    Mockito.when(iamService.getProductRolePermissionsList(uid, productId))
-//            .thenReturn(Uni.createFrom().item(Mockito.any(ProductRolePermissionsList.class)));
-//
-//    given()
-//      .when()
-//      .get("/users/roles/{uid}", uid)
-//      .then()
-//      .log().all()
-//      .statusCode(200);
-//  }
-//
-//  @Test
-//  void getProductRolePermissionsList_shouldReturn500_serviceError() {
-//    String uid = "user-1";
-//    String productId = "productA";
-//
-//    Mockito.when(iamService.getProductRolePermissionsList(uid, productId))
-//            .thenReturn(Uni.createFrom().failure(
-//                    new InternalException("Database error")
-//            ));
-//
-//    given()
-//            .when()
-//            .get("/users/roles/{uid}", uid)
-//            .then()
-//            .statusCode(500);
-//  }
+  //  @Test
+  //  void getProductRolePermissionsList_shouldReturn200() {
+  //    String uid = "user-1";
+  //    String productId = "productA";
+  //
+  //    Mockito.when(iamService.getProductRolePermissionsList(uid, productId))
+  //            .thenReturn(Uni.createFrom().item(Mockito.any(ProductRolePermissionsList.class)));
+  //
+  //    given()
+  //      .when()
+  //      .get("/users/roles/{uid}", uid)
+  //      .then()
+  //      .log().all()
+  //      .statusCode(200);
+  //  }
+  //
+  //  @Test
+  //  void getProductRolePermissionsList_shouldReturn500_serviceError() {
+  //    String uid = "user-1";
+  //    String productId = "productA";
+  //
+  //    Mockito.when(iamService.getProductRolePermissionsList(uid, productId))
+  //            .thenReturn(Uni.createFrom().failure(
+  //                    new InternalException("Database error")
+  //            ));
+  //
+  //    given()
+  //            .when()
+  //            .get("/users/roles/{uid}", uid)
+  //            .then()
+  //            .statusCode(500);
+  //  }
 }

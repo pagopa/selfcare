@@ -6,11 +6,9 @@ import org.eclipse.microprofile.openapi.annotations.security.SecuritySchemes;
 
 @SecuritySchemes({
   @SecurityScheme(
-    securitySchemeName = "bearerAuth",
-    type = SecuritySchemeType.HTTP,
-    scheme = "bearer",
-    bearerFormat = "JWT"
-  )
+      securitySchemeName = "bearerAuth",
+      type = SecuritySchemeType.HTTP,
+      scheme = "bearer",
+      bearerFormat = "JWT")
 })
-public class OpenApiSecurityConfig {
-}
+public class OpenApiSecurityConfig {}

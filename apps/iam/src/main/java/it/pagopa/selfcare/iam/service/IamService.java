@@ -6,9 +6,14 @@ import it.pagopa.selfcare.iam.entity.UserClaims;
 import it.pagopa.selfcare.iam.model.ProductRolePermissionsList;
 
 public interface IamService {
-    Uni<String> ping();
-    Uni<UserClaims> saveUser(SaveUserRequest saveUserRequest, String productId);
-    Uni<UserClaims> getUser(String userId, String productId);
-    Uni<ProductRolePermissionsList> getProductRolePermissionsList(String userId, String productId);
-    Uni<Boolean> hasPermission(String userId, String permission, String productId, String institutionId);
+  Uni<String> ping();
+
+  Uni<UserClaims> saveUser(SaveUserRequest saveUserRequest, String productId);
+
+  Uni<UserClaims> getUser(String userId, String productId);
+
+  Uni<ProductRolePermissionsList> getProductRolePermissionsList(String userId, String productId);
+
+  Uni<Boolean> hasPermission(
+      String userId, String permission, String productId, String institutionId);
 }
