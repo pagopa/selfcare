@@ -17,8 +17,8 @@ import org.testcontainers.containers.wait.strategy.Wait;
     features = "src/test/resources/features",
     glue = {"it.pagopa.selfcare.cucumber.utils", "it.pagopa.selfcare.product.integrationTest"},
     plugin = {
-        "html:target/cucumber-report/cucumber.html",
-        "json:target/cucumber-report/cucumber.json"
+      "html:target/cucumber-report/cucumber.html",
+      "json:target/cucumber-report/cucumber.json"
     })
 @TestProfile(IntegrationProfile.class)
 public class CucumberSuiteTest extends CucumberQuarkusTest {
@@ -35,19 +35,22 @@ public class CucumberSuiteTest extends CucumberQuarkusTest {
 
     log.info("Starting test containers...");
 
-    var composeContainer = new ComposeContainer(new File("./src/test/resources/docker-compose.yml"))
-        .withLocalCompose(true)
-        .withPull(true)
-        .waitingFor("mongodb", Wait.forListeningPort())
-        .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1))
-        .withStartupTimeout(Duration.ofMinutes(5));
+    var composeContainer =
+        new ComposeContainer(new File("./src/test/resources/docker-compose.yml"))
+            .withPull(true)
+            .waitingFor("mongodb", Wait.forListeningPort())
+            .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1))
+            .withStartupTimeout(Duration.ofMinutes(5));
 
     composeContainer.start();
 
     Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
     log.info("Test containers started successfully");
-    log.info("\nLANGUAGE: {}\nCOUNTRY: {}\nTIMEZONE: {}\n", System.getProperty("user.language"),
-        System.getProperty("user.country"), System.getProperty("user.timezone"));
+    log.info(
+        "\nLANGUAGE: {}\nCOUNTRY: {}\nTIMEZONE: {}\n",
+        System.getProperty("user.language"),
+        System.getProperty("user.country"),
+        System.getProperty("user.timezone"));
   }
 
   @AfterAll

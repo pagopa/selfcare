@@ -6,10 +6,12 @@ import it.pagopa.selfcare.product.model.enums.ContractTemplateFileType;
 
 public interface ContractTemplateStorage {
 
-    Uni<Void> upload(String productId, String contractTemplateId, ContractTemplateFile contractTemplateFile);
+  Uni<Void> upload(
+      String productId, String contractTemplateId, ContractTemplateFile contractTemplateFile);
 
-    Uni<ContractTemplateFile> download(String productId, String contractTemplateId, ContractTemplateFileType fileType);
+  Uni<ContractTemplateFile> download(
+      String productId, String contractTemplateId, ContractTemplateFileType fileType);
 
-    String getContractTemplatePath(String productId, String contractTemplateId, String contractTemplateExtension);
-
+  String getContractTemplatePath(
+      String productId, String contractTemplateId, String contractTemplateExtension);
 }

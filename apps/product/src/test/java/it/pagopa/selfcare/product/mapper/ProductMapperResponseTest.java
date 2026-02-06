@@ -35,5 +35,4 @@ public class ProductMapperResponseTest {
     Assertions.assertNotNull(productResponse);
     Assertions.assertEquals(product.getProductId(), productResponse.getProductId());
   }
-
 }

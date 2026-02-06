@@ -1,8 +1,7 @@
 package it.pagopa.selfcare.product.model.dto.response;
 
-import lombok.*;
-
 import java.util.List;
+import lombok.*;
 
 @Getter
 @Setter
@@ -11,6 +10,5 @@ import java.util.List;
 @NoArgsConstructor
 public class ContractTemplateResponseList {
 
-    private List<ContractTemplateResponse> items;
-
+  private List<ContractTemplateResponse> items;
 }

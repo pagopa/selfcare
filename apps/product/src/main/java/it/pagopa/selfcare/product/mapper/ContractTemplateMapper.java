@@ -10,17 +10,17 @@ import org.mapstruct.Named;
 @Mapper(componentModel = "cdi")
 public interface ContractTemplateMapper {
 
-    @Mapping(target = "name", source = "name", qualifiedByName = "normalizeName")
-    ContractTemplate toContractTemplate(ContractTemplateUploadRequest request);
+  @Mapping(target = "name", source = "name", qualifiedByName = "normalizeName")
+  ContractTemplate toContractTemplate(ContractTemplateUploadRequest request);
 
-    @Mapping(target = "contractTemplateId", source = "contractTemplate.id")
-    @Mapping(target = "contractTemplateVersion", source = "contractTemplate.version")
-    @Mapping(target = "contractTemplatePath", source = "contractTemplatePath")
-    ContractTemplateResponse toContractTemplateResponse(ContractTemplate contractTemplate, String contractTemplatePath);
+  @Mapping(target = "contractTemplateId", source = "contractTemplate.id")
+  @Mapping(target = "contractTemplateVersion", source = "contractTemplate.version")
+  @Mapping(target = "contractTemplatePath", source = "contractTemplatePath")
+  ContractTemplateResponse toContractTemplateResponse(
+      ContractTemplate contractTemplate, String contractTemplatePath);
 
-    @Named("normalizeName")
-    default String normalizeName(String name) {
-        return name.trim().toLowerCase().replaceAll("\\s+", " ");
-    }
-
+  @Named("normalizeName")
+  default String normalizeName(String name) {
+    return name.trim().toLowerCase().replaceAll("\\s+", " ");
+  }
 }
