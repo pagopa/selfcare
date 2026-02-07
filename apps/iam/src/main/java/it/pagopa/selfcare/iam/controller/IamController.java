@@ -167,6 +167,14 @@ public class IamController {
         .transform(user -> Response.ok(user).build());
   }
 
+  @GET
+  @Path(value = "/users")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<Response> getUsers(@QueryParam("productId") String productId) {
+    return iamService.getUsers(productId).onItem().transform(user -> Response.ok(user).build());
+  }
+
   /**
    * Retrieves a list of product, role and permissions by user ID
    *

@@ -83,11 +83,8 @@ public class CucumberSuite extends CucumberQuarkusTest {
             .waitingFor("mongodb", Wait.forListeningPort())
             .waitingFor("userms", Wait.forHttp("/q/health/ready").forPort(8080).forStatusCode(200))
             .waitingFor("iamms", Wait.forHttp("/q/health/ready").forPort(8085).forStatusCode(200))
-            .waitingFor(
-                "institutionms", Wait.forLogMessage(".*Started SelfCareCoreApplication.*\\n", 1))
-            .waitingFor(
-                "externalms",
-                Wait.forLogMessage(".*Started SelfCareExternalAPIApplication.*\\n", 1))
+            .waitingFor("institutionms", Wait.forLogMessage(".*Running with Spring Boot.*\\n", 1))
+            .waitingFor("externalms", Wait.forLogMessage(".*Running with Spring Boot.*\\n", 1))
             .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1))
             .withStartupTimeout(Duration.ofMinutes(5));
 

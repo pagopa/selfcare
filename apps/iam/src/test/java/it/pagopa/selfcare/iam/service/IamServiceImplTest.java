@@ -531,4 +531,60 @@ class IamServiceImplTest {
 
     assertFalse(result);
   }
+
+  @Test
+  void getUsers_shouldReturnUsers_whenFound() {
+    String productId = "productA";
+
+    UserClaims u1 =
+        UserClaims.builder()
+            .email("A11V/hS6EZS9LLSxMHgQJS6O1OStWkFnwpbN4fHhy0I6")
+            .uid("u1")
+            .productRoles(
+                List.of(
+                    ProductRoles.builder().productId("productA").roles(List.of("admin")).build(),
+                    ProductRoles.builder().productId("productB").roles(List.of("viewer")).build()))
+            .build();
+
+    UserClaims u2 =
+        UserClaims.builder()
+            .email("BF5M0BWCFYGsLaHzNjker68nsqTr/pizCvinopNUlQ==")
+            .uid("u2")
+            .productRoles(
+                List.of(
+                    ProductRoles.builder()
+                        .productId("productA")
+                        .roles(List.of("operator"))
+                        .build()))
+            .build();
+
+    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
+      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
+      mockedStatic
+          .when(() -> UserClaims.findByProductId(productId))
+          .thenReturn(Uni.createFrom().item(List.of(u1, u2)));
+
+      List<UserClaims> result = service.getUsers(productId).await().indefinitely();
+
+      assertNotNull(result);
+      assertEquals(2, result.size());
+      assertEquals(1, result.get(0).getProductRoles().size());
+      assertEquals("productA", result.get(0).getProductRoles().get(0).getProductId());
+      assertEquals(1, result.get(1).getProductRoles().size());
+      assertEquals("productA", result.get(1).getProductRoles().get(0).getProductId());
+    }
+  }
+
+  @Test
+  void getUsers_shouldThrowResourceNotFoundException_whenNoUsersFound() {
+    String productId = "productA";
+    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
+      mockedStatic
+          .when(() -> UserClaims.findByProductId(productId))
+          .thenReturn(Uni.createFrom().item(List.of()));
+      assertThrows(
+          ResourceNotFoundException.class,
+          () -> service.getUsers(productId).await().indefinitely());
+    }
+  }
 }

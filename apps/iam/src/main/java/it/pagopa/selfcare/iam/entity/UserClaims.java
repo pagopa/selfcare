@@ -90,4 +90,21 @@ public class UserClaims extends ReactivePanacheMongoEntityBase {
                                 .map(entity -> (UserClaims) entity)))
         .orElseGet(() -> findByUid(uid));
   }
+
+  public static Uni<List<UserClaims>> findByProductId(String productId) {
+    return Optional.ofNullable(productId)
+        .map(
+            pid ->
+                find("productRoles.productId = ?1", pid)
+                    .list()
+                    .flatMap(
+                        list -> {
+                          if (list.isEmpty()) {
+                            return find("productRoles.productId = ?1", "ALL").list();
+                          }
+                          return Uni.createFrom().item(list);
+                        })
+                    .map(list -> list.stream().map(entity -> (UserClaims) entity).toList()))
+        .orElseGet(() -> Uni.createFrom().item(List.of()));
+  }
 }

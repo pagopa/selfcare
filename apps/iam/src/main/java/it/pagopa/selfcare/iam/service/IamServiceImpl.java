@@ -199,6 +199,35 @@ public class IamServiceImpl implements IamService {
   }
 
   /**
+   * Retrieves all users by their product ID.
+   *
+   * @param productId the ID of the product
+   * @return a Uni containing the UserClaims if found
+   * @throws ResourceNotFoundException if the user is not found
+   */
+  @Override
+  public Uni<List<UserClaims>> getUsers(String productId) {
+    return UserClaims.findByProductId(productId)
+        .map(
+            users -> {
+              if (users == null || users.isEmpty()) {
+                return null;
+              }
+              return users.stream()
+                  .map(
+                      user -> {
+                        user.setProductRoles(
+                            setFilteredProductRoles(user.getProductRoles(), productId));
+                        return decryptUser(user);
+                      })
+                  .toList();
+            })
+        .onItem()
+        .ifNull()
+        .failWith(() -> new ResourceNotFoundException("Users not found"));
+  }
+
+  /**
    * Retrieves a list of product, role and permissions by user ID and product ID.
    *
    * @param userId the ID of the user

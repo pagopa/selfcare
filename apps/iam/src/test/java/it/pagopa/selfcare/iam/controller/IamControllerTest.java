@@ -220,6 +220,46 @@ public class IamControllerTest {
         .body(equalTo("true"));
   }
 
+  @Test
+  void getUsers_product_shouldReturn200() {
+    String productId = "product-1";
+
+    UserClaims u1 = new UserClaims();
+    u1.setUid("u1");
+
+    UserClaims u2 = new UserClaims();
+    u2.setUid("u2");
+
+    Mockito.when(iamService.getUsers(productId)).thenReturn(Uni.createFrom().item(List.of(u1, u2)));
+
+    given()
+        .accept(ContentType.JSON)
+        .when()
+        .get("/users?productId={productId}", productId)
+        .then()
+        .statusCode(200);
+  }
+
+  @Test
+  void getUsers_shouldReturn200() {
+    String productId = "ALL";
+
+    UserClaims u1 = new UserClaims();
+    u1.setUid("u1");
+
+    UserClaims u2 = new UserClaims();
+    u2.setUid("u2");
+
+    Mockito.when(iamService.getUsers(productId)).thenReturn(Uni.createFrom().item(List.of(u1, u2)));
+
+    given()
+        .accept(ContentType.JSON)
+        .when()
+        .get("/users?productId={productId}", productId)
+        .then()
+        .statusCode(200);
+  }
+
   //  @Test
   //  void getProductRolePermissionsList_shouldReturn200() {
   //    String uid = "user-1";
