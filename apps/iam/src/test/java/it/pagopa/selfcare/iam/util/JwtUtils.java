@@ -2,9 +2,6 @@ package it.pagopa.selfcare.iam.util;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.security.KeyFactory;
@@ -13,8 +10,9 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
-import java.util.Objects;
 import java.util.Base64;
+import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JwtUtils {

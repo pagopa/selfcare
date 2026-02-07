@@ -1,5 +1,7 @@
 package it.pagopa.selfcare.auth.service;
 
+import static it.pagopa.selfcare.auth.util.SamlValidator.INTERNAL_ID;
+
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.client.IamMsApi;
 import it.pagopa.selfcare.auth.context.TokenContext;
@@ -10,16 +12,13 @@ import it.pagopa.selfcare.auth.util.SamlValidator;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
+import java.time.Duration;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.iam_json.model.SaveUserRequest;
-
-import java.time.Duration;
-import java.util.Map;
-
-import static it.pagopa.selfcare.auth.util.SamlValidator.INTERNAL_ID;
 
 @Slf4j
 @ApplicationScoped
@@ -59,34 +58,40 @@ public class SAMLServiceImpl implements SAMLService {
   @ConfigProperty(name = "auth-ms.retry")
   Integer maxRetry;
 
-  @Inject
-  SamlValidator samlValidator;
+  @Inject SamlValidator samlValidator;
 
-  @Inject
-  private final SessionService sessionService;
+  @Inject private final SessionService sessionService;
 
-  @Inject
-  TokenContext tokenContext;
+  @Inject TokenContext tokenContext;
 
-  @RestClient @Inject
-  IamMsApi iamApi;
+  @RestClient @Inject IamMsApi iamApi;
 
   @Override
   public Uni<String> generateSessionToken(String samlResponse) throws Exception {
-    return samlValidator.validateSamlResponseAsync(samlResponse, idpCert, timeInterval)
-        .onItem().transformToUni(this::createSessionToken);
+    return samlValidator
+        .validateSamlResponseAsync(samlResponse, idpCert, timeInterval)
+        .onItem()
+        .transformToUni(this::createSessionToken);
   }
 
   private Uni<String> createSessionToken(Map<String, String> attributes) {
-    return Uni.createFrom().item(attributes)
-      .onItem().transformToUni(this::createUserClaims)
-      .onItem().transformToUni(userClaims ->
-        sessionService.generateSessionTokenInternal(userClaims)
-          .onItem().transform(token -> tokenContext.setToken(token))
-          .onItem().transformToUni(token -> saveUser(userClaims.getEmail()))
-      )
-      .onItem().transformToUni(sessionService::generateSessionTokenInternal)
-      .onFailure().transform(failure -> new SamlSignatureException("SAML validation failed"));
+    return Uni.createFrom()
+        .item(attributes)
+        .onItem()
+        .transformToUni(this::createUserClaims)
+        .onItem()
+        .transformToUni(
+            userClaims ->
+                sessionService
+                    .generateSessionTokenInternal(userClaims)
+                    .onItem()
+                    .transform(token -> tokenContext.setToken(token))
+                    .onItem()
+                    .transformToUni(token -> saveUser(userClaims.getEmail())))
+        .onItem()
+        .transformToUni(sessionService::generateSessionTokenInternal)
+        .onFailure()
+        .transform(failure -> new SamlSignatureException("SAML validation failed"));
   }
 
   private Uni<UserClaims> createUserClaims(Map<String, String> attributes) {
@@ -103,27 +108,32 @@ public class SAMLServiceImpl implements SAMLService {
 
   @Override
   public Uni<UserClaims> saveUser(String email) {
-    return Uni.createFrom().item(email)
-      .onItem().transform(mail -> {
-      SaveUserRequest saveUserRequest = new SaveUserRequest();
-      saveUserRequest.setEmail(mail);
-      return saveUserRequest;
-      })
-      .onItem().transformToUni(saveUserRequest -> iamApi.saveIAMUser(saveUserRequest, null))
-      .onFailure(GeneralUtils::checkIfIsRetryableException)
-      .retry()
-      .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))
-      .atMost(maxRetry)
-      .onFailure(WebApplicationException.class)
-      .transform(GeneralUtils::extractExceptionFromWebAppException)
-      .onItem().transform(userClaims ->
-        UserClaims.builder()
-          .uid(userClaims.getUid())
-          .email(userClaims.getEmail())
-          .name(userClaims.getName())
-          .familyName(userClaims.getFamilyName())
-          .test(userClaims.getTest())
-          .build()
-      );
+    return Uni.createFrom()
+        .item(email)
+        .onItem()
+        .transform(
+            mail -> {
+              SaveUserRequest saveUserRequest = new SaveUserRequest();
+              saveUserRequest.setEmail(mail);
+              return saveUserRequest;
+            })
+        .onItem()
+        .transformToUni(saveUserRequest -> iamApi.saveIAMUser(saveUserRequest, null))
+        .onFailure(GeneralUtils::checkIfIsRetryableException)
+        .retry()
+        .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))
+        .atMost(maxRetry)
+        .onFailure(WebApplicationException.class)
+        .transform(GeneralUtils::extractExceptionFromWebAppException)
+        .onItem()
+        .transform(
+            userClaims ->
+                UserClaims.builder()
+                    .uid(userClaims.getUid())
+                    .email(userClaims.getEmail())
+                    .name(userClaims.getName())
+                    .familyName(userClaims.getFamilyName())
+                    .test(userClaims.getTest())
+                    .build());
   }
 }

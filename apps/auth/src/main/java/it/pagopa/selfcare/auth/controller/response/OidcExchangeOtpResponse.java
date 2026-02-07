@@ -6,13 +6,13 @@ import lombok.*;
 @Data
 public class OidcExchangeOtpResponse extends OidcExchangeResponse {
 
-    private Boolean requiresOtpFlow = Boolean.TRUE;
-    private String otpSessionUid;
-    private String maskedEmail;
+  private Boolean requiresOtpFlow = Boolean.TRUE;
+  private String otpSessionUid;
+  private String maskedEmail;
 
-    public OidcExchangeOtpResponse(String otpSessionUid, String maskedEmail) {
-        super();
-        this.otpSessionUid = otpSessionUid;
-        this.maskedEmail = maskedEmail;
-    }
+  public OidcExchangeOtpResponse(String otpSessionUid, String maskedEmail) {
+    super();
+    this.otpSessionUid = otpSessionUid;
+    this.maskedEmail = maskedEmail;
+  }
 }

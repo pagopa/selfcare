@@ -12,7 +12,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 public class ProductBase extends ProductBaseFields {
-    private String id;
-    private String createdBy;
-    private Integer version;
+  private String id;
+  private String createdBy;
+  private Integer version;
 }

@@ -20,17 +20,16 @@ import it.pagopa.selfcare.auth.util.OtpUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.bson.Document;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.bson.Document;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @Slf4j
 @ApplicationScoped
@@ -310,12 +309,9 @@ public class OtpFlowServiceImpl implements OtpFlowService {
     }
     return userService
         .getUserClaimsFromPdv(oldOtpFlow.getUserId())
-            .onFailure()
-            .transform(
-                    failure ->
-                            new InternalException(
-                                    "Cannot get User from PDV"
-                                            + failure.toString()))
+        .onFailure()
+        .transform(
+            failure -> new InternalException("Cannot get User from PDV" + failure.toString()))
         .chain(
             userClaims ->
                 userService
@@ -354,8 +350,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                                                                     .build())))
                                 .orElse(
                                     Uni.createFrom()
-                                        .failure(new ConflictException("User not found"))))
-        );
+                                        .failure(new ConflictException("User not found")))));
   }
 
   @Override

@@ -156,6 +156,27 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
+    get:
+      operationId: getUsers
+      tags:
+      - IAM
+      parameters:
+      - name: productId
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Users
+      security:
+      - SecurityScheme: []
   /iam/users/role/permissions/{uid}:
     get:
       summary: Get IAM user Product Role Permissions List

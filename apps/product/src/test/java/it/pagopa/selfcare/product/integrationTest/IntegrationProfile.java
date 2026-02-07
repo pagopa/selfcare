@@ -1,14 +1,13 @@
 package it.pagopa.selfcare.product.integrationTest;
 
 import io.quarkus.test.junit.QuarkusTestProfile;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Map;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @NoArgsConstructor
@@ -16,9 +15,7 @@ public class IntegrationProfile implements QuarkusTestProfile {
 
   @Override
   public Map<String, String> getConfigOverrides() {
-    return Map.of(
-        "mp.jwt.verify.publickey",
-        getPublicKey());
+    return Map.of("mp.jwt.verify.publickey", getPublicKey());
   }
 
   private String getPublicKey() {
@@ -31,5 +28,4 @@ public class IntegrationProfile implements QuarkusTestProfile {
     }
     return key;
   }
-
 }

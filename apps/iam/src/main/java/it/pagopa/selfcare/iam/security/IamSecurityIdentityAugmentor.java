@@ -7,7 +7,8 @@ import it.pagopa.selfcare.security.JWTSecurityIdentityAugmentor;
 
 public class IamSecurityIdentityAugmentor extends JWTSecurityIdentityAugmentor {
   @Override
-  public Uni<SecurityIdentity> augment(SecurityIdentity identity, AuthenticationRequestContext context) {
-    return super.augment(identity,context);
+  public Uni<SecurityIdentity> augment(
+      SecurityIdentity identity, AuthenticationRequestContext context) {
+    return super.augment(identity, context);
   }
 }

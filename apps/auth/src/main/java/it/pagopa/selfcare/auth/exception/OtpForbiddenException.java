@@ -6,15 +6,15 @@ import lombok.Getter;
 
 @Getter
 public class OtpForbiddenException extends RuntimeException {
-    private final OtpForbiddenCode code;
-    private final Integer remainingAttempts;
-    private final OtpStatus otpStatus;
+  private final OtpForbiddenCode code;
+  private final Integer remainingAttempts;
+  private final OtpStatus otpStatus;
 
-    public OtpForbiddenException(String message, OtpForbiddenCode code, Integer remainingAttempts, OtpStatus otpStatus) {
-        super(message);
-        this.code = code;
-        this.remainingAttempts = remainingAttempts;
-        this.otpStatus = otpStatus;
-    }
-
+  public OtpForbiddenException(
+      String message, OtpForbiddenCode code, Integer remainingAttempts, OtpStatus otpStatus) {
+    super(message);
+    this.code = code;
+    this.remainingAttempts = remainingAttempts;
+    this.otpStatus = otpStatus;
+  }
 }

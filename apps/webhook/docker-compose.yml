@@ -1,34 +1,34 @@
 version: '3.8'
 
 services:
-#  webhook:
-#    build:
-#      context: ../..
-#      dockerfile: apps/webhook/Dockerfile
-#      args:
-#        REPO_SELFCARE: selfcare
-#        REPO_ONBOARDING: selfcare-onboarding
-#        REPO_USERNAME: ${GITHUB_USERNAME}
-#        REPO_PASSWORD: ${GITHUB_TOKEN}
-#    ports:
-#      - "8083:8083"
-#    environment:
-#      - MONGODB_CONNECTION_STRING=mongodb://mongodb:27017
-#      - MONGODB_DATABASE=webhook
-#      - JWT_ISSUER=https://selfcare.pagopa.it
-#      - WEBHOOK_RETRY_MAX_ATTEMPTS=3
-#      - WEBHOOK_RETRY_INITIAL_DELAY=1000
-#      - WEBHOOK_RETRY_MAX_DELAY=10000
-#      - WEBHOOK_TIMEOUT_CONNECT=5000
-#      - WEBHOOK_TIMEOUT_READ=10000
-#    depends_on:
-#      - mongodb
-#    networks:
-#      - webhook-network
+  #  webhook:
+  #    build:
+  #      context: ../..
+  #      dockerfile: apps/webhook/Dockerfile_local
+  #      args:
+  #        REPO_SELFCARE: selfcare
+  #        REPO_ONBOARDING: selfcare-onboarding
+  #        REPO_USERNAME: ${GITHUB_USERNAME}
+  #        REPO_PASSWORD: ${GITHUB_TOKEN}
+  #    ports:
+  #      - "8083:8080"
+  #    environment:
+  #      - MONGODB_CONNECTION_STRING=mongodb://mongodb:27017
+  #      - MONGODB_DATABASE=webhook
+  #      - JWT_ISSUER=https://selfcare.pagopa.it
+  #      - WEBHOOK_RETRY_MAX_ATTEMPTS=3
+  #      - WEBHOOK_RETRY_INITIAL_DELAY=1000
+  #      - WEBHOOK_RETRY_MAX_DELAY=10000
+  #      - WEBHOOK_TIMEOUT_CONNECT=5000
+  #      - WEBHOOK_TIMEOUT_READ=10000
+  #      - JWT_PUBLIC_KEY=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA
+  #    depends_on:
+  #      - mongodb
+  #    networks:
+  #      - webhook-network
 
   mongodb:
     image: mongo:latest
-    container_name: webhook_db
     ports:
       - "27017:27017"
     volumes:

@@ -1,9 +1,8 @@
 package it.pagopa.selfcare.product.model;
 
 import it.pagopa.selfcare.product.model.enums.ContractTemplateFileType;
-import lombok.*;
-
 import java.io.File;
+import lombok.*;
 
 @Getter
 @Setter
@@ -12,10 +11,9 @@ import java.io.File;
 @AllArgsConstructor
 public class ContractTemplateFile {
 
-    private File file;
+  private File file;
 
-    private byte[] data;
+  private byte[] data;
 
-    private ContractTemplateFileType type;
-
+  private ContractTemplateFileType type;
 }

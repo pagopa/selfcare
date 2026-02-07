@@ -1,5 +1,10 @@
 package it.pagopa.selfcare.auth.controller;
 
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
@@ -14,11 +19,6 @@ import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import org.junit.jupiter.api.Test;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
-
 @QuarkusTest
 @TestHTTPEndpoint(OidcController.class)
 class OidcControllerTest {
@@ -30,7 +30,8 @@ class OidcControllerTest {
         Json.createObjectBuilder().add("code", "code").add("redirectUri", "redirect").build();
     when(oidcService.exchange(anyString(), anyString()))
         .thenReturn(
-            Uni.createFrom().item(OidcExchangeTokenResponse.builder().sessionToken("token").build()));
+            Uni.createFrom()
+                .item(OidcExchangeTokenResponse.builder().sessionToken("token").build()));
     given()
         .body(request.toString())
         .when()
@@ -47,7 +48,8 @@ class OidcControllerTest {
 
     when(oidcService.exchange(anyString(), anyString()))
         .thenReturn(
-            Uni.createFrom().item(OidcExchangeTokenResponse.builder().sessionToken("token").build()));
+            Uni.createFrom()
+                .item(OidcExchangeTokenResponse.builder().sessionToken("token").build()));
     given()
         .body(jsonObject.toString())
         .when()

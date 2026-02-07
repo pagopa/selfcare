@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BackOfficeRole {
-    private String code;
-    private String label;
-    private String description;
-    private String productLabel;
+  private String code;
+  private String label;
+  private String description;
+  private String productLabel;
 }

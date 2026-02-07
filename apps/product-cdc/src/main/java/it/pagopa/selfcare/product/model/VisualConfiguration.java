@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VisualConfiguration {
-    private String logoUrl;
-    private String depictImageUrl;
-    private String logoBgColor;
+  private String logoUrl;
+  private String depictImageUrl;
+  private String logoBgColor;
 }

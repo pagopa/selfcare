@@ -6,7 +6,6 @@ import it.pagopa.selfcare.auth.controller.response.TokenResponse;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.model.otp.OtpInfo;
-
 import java.util.Optional;
 
 public interface OtpFlowService {

@@ -9,28 +9,28 @@ import jakarta.enterprise.event.Observes;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-
 @Slf4j
 @ApplicationScoped
 public class CdcLifecycle {
-    
-    @ConfigProperty(name = "product-cdc.storage.connection-string") String storageConnectionString;
-    @ConfigProperty(name = "product-cdc.table.name") String tableName;
 
+  @ConfigProperty(name = "product-cdc.storage.connection-string")
+  String storageConnectionString;
 
-    void onStart(@Observes StartupEvent ev) {
+  @ConfigProperty(name = "product-cdc.table.name")
+  String tableName;
 
-        if(ConfigUtils.getProfiles().contains("test")) {
-            //Not perform any action when testing
-            return;
-        }
+  void onStart(@Observes StartupEvent ev) {
 
-        log.info("The application is starting...");
-
-        // Table CdCStartAt will be created
-        TableServiceClient tableServiceClient = new TableServiceClientBuilder()
-                .connectionString(storageConnectionString)
-                .buildClient();
-        tableServiceClient.createTableIfNotExists(tableName);
+    if (ConfigUtils.getProfiles().contains("test")) {
+      // Not perform any action when testing
+      return;
     }
+
+    log.info("The application is starting...");
+
+    // Table CdCStartAt will be created
+    TableServiceClient tableServiceClient =
+        new TableServiceClientBuilder().connectionString(storageConnectionString).buildClient();
+    tableServiceClient.createTableIfNotExists(tableName);
+  }
 }

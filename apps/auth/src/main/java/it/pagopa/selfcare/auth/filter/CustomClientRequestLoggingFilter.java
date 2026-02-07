@@ -2,11 +2,10 @@ package it.pagopa.selfcare.auth.filter;
 
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.ext.Provider;
+import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestContext;
 import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestFilter;
-
-import java.io.IOException;
 
 @Provider
 @Slf4j
