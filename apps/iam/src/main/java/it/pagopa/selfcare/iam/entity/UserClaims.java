@@ -97,13 +97,6 @@ public class UserClaims extends ReactivePanacheMongoEntityBase {
             pid ->
                 find("productRoles.productId = ?1", pid)
                     .list()
-                    .flatMap(
-                        list -> {
-                          if (list.isEmpty()) {
-                            return find("productRoles.productId = ?1", "ALL").list();
-                          }
-                          return Uni.createFrom().item(list);
-                        })
                     .map(list -> list.stream().map(entity -> (UserClaims) entity).toList()))
         .orElseGet(() -> Uni.createFrom().item(List.of()));
   }
