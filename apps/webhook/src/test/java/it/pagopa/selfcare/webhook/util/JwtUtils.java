@@ -2,8 +2,6 @@ package it.pagopa.selfcare.webhook.util;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.security.KeyFactory;
@@ -14,6 +12,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JwtUtils {
@@ -23,14 +22,14 @@ public class JwtUtils {
       try {
         File file = new File("src/test/resources/certs/sk-key.pem");
         Algorithm alg =
-          Algorithm.RSA256(getPrivateKey(new String(Files.readAllBytes(file.toPath()))));
+            Algorithm.RSA256(getPrivateKey(new String(Files.readAllBytes(file.toPath()))));
         String jwt =
-          JWT.create()
-            .withHeader(jwtData.getJwtHeader())
-            .withPayload(jwtData.getJwtPayload())
-            .withIssuedAt(Instant.now())
-            .withExpiresAt(Instant.now().plusSeconds(3600))
-            .sign(alg);
+            JWT.create()
+                .withHeader(jwtData.getJwtHeader())
+                .withPayload(jwtData.getJwtPayload())
+                .withIssuedAt(Instant.now())
+                .withExpiresAt(Instant.now().plusSeconds(3600))
+                .sign(alg);
         log.debug("Generated custom jwt token");
         return jwt;
 
@@ -43,10 +42,10 @@ public class JwtUtils {
 
   public static RSAPrivateKey getPrivateKey(String privateKey) {
     privateKey =
-      privateKey
-        .replace("-----BEGIN PRIVATE KEY-----", "")
-        .replace("-----END PRIVATE KEY-----", "")
-        .replaceAll("\\s+", "");
+        privateKey
+            .replace("-----BEGIN PRIVATE KEY-----", "")
+            .replace("-----END PRIVATE KEY-----", "")
+            .replaceAll("\\s+", "");
     byte[] pKeyEncoded = Base64.getDecoder().decode(privateKey);
     PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(pKeyEncoded);
     KeyFactory kf;
@@ -58,4 +57,3 @@ public class JwtUtils {
     }
   }
 }
-

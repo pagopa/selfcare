@@ -8,15 +8,16 @@ import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
 
 public interface ProductService {
-    Uni<String> ping();
+  Uni<String> ping();
 
-    Uni<ProductBaseResponse> createProduct(ProductCreateRequest product, String createdBy);
+  Uni<ProductBaseResponse> createProduct(ProductCreateRequest product, String createdBy);
 
-    Uni<ProductResponse> getProductById(String productId);
+  Uni<ProductResponse> getProductById(String productId);
 
-    Uni<ProductBaseResponse> deleteProductById(String productId);
+  Uni<ProductBaseResponse> deleteProductById(String productId);
 
-    Uni<ProductResponse> patchProductById(String productId, String createdBy, ProductPatchRequest productPatchRequest);
+  Uni<ProductResponse> patchProductById(
+      String productId, String createdBy, ProductPatchRequest productPatchRequest);
 
-    Uni<ProductOriginResponse> getProductOriginsById(String productId);
+  Uni<ProductOriginResponse> getProductOriginsById(String productId);
 }

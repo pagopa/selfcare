@@ -5,7 +5,6 @@ import it.pagopa.selfcare.iam.exception.InternalException;
 import it.pagopa.selfcare.iam.exception.InvalidRequestException;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
 import jakarta.ws.rs.WebApplicationException;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -14,6 +13,7 @@ import java.util.concurrent.TimeoutException;
 
 public class GeneralUtils {
 
+  public static final String PRODUCT_ALL = "ALL";
   private static final String DELIMITER = ",";
 
   private GeneralUtils() {}

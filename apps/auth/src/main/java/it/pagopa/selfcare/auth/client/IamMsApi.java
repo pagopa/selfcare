@@ -6,5 +6,4 @@ import org.openapi.quarkus.iam_json.api.IamApi;
 
 @RegisterRestClient(configKey = "iam.api")
 @RegisterClientHeaders(IamMsHeadersFactory.class)
-public interface IamMsApi extends IamApi {
-}
+public interface IamMsApi extends IamApi {}

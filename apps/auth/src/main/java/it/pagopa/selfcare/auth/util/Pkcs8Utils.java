@@ -1,14 +1,13 @@
 package it.pagopa.selfcare.auth.util;
 
-import io.smallrye.mutiny.Uni;
-import org.jboss.logging.Logger;
+import static io.quarkus.logging.Log.log;
 
+import io.smallrye.mutiny.Uni;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.*;
-
-import static io.quarkus.logging.Log.log;
+import org.jboss.logging.Logger;
 
 public class Pkcs8Utils {
 

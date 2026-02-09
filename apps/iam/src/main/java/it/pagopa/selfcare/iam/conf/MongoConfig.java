@@ -9,11 +9,11 @@ import org.bson.codecs.configuration.CodecRegistry;
 @ApplicationScoped
 public class MongoConfig {
 
-    @Produces
-    public CodecRegistry produceCodecRegistry() {
-        CodecRegistry defaultCodecRegistry = MongoClientSettings.getDefaultCodecRegistry();
-        CodecRegistry customCodecRegistry = CodecRegistries.fromCodecs(new DateCodec());
+  @Produces
+  public CodecRegistry produceCodecRegistry() {
+    CodecRegistry defaultCodecRegistry = MongoClientSettings.getDefaultCodecRegistry();
+    CodecRegistry customCodecRegistry = CodecRegistries.fromCodecs(new DateCodec());
 
-        return CodecRegistries.fromRegistries(customCodecRegistry, defaultCodecRegistry);
-    }
+    return CodecRegistries.fromRegistries(customCodecRegistry, defaultCodecRegistry);
+  }
 }

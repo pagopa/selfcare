@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class OtpResendRequest {
 
-    @NotEmpty(message = "otpUuid is required")
-    @NotNull(message = "otpUuid is required")
-    private String otpUuid;
+  @NotEmpty(message = "otpUuid is required")
+  @NotNull(message = "otpUuid is required")
+  private String otpUuid;
 }

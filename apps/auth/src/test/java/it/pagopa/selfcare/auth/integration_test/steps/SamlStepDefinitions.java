@@ -9,18 +9,15 @@ import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.service.SAMLService;
 import it.pagopa.selfcare.auth.service.SessionService;
 import jakarta.inject.Inject;
-import org.junit.jupiter.api.Assertions;
-
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
+import org.junit.jupiter.api.Assertions;
 
 public class SamlStepDefinitions {
-  @Inject
-  SAMLService samlService;
+  @Inject SAMLService samlService;
 
-  @Inject
-  SessionService sessionService;
+  @Inject SessionService sessionService;
 
   private String samlResponse;
   private Uni<String> tokenUni;
@@ -36,11 +33,10 @@ public class SamlStepDefinitions {
     UserClaims userClaims = new UserClaims();
     userClaims.setUid("123e4567-e89b-12d3-a456-426614174000");
     userClaims.setEmail("valid-user@example.com");
-//      buildFakeSaml("valid-user@example.com", Instant.now(), true);
+    //      buildFakeSaml("valid-user@example.com", Instant.now(), true);
     samlResponse = sessionService.generateSessionTokenInternal(userClaims).await().indefinitely();
     execute();
   }
-
 
   @When("I submit a SAML response with invalid signature")
   public void iSubmitASamlResponseWithInvalidSignature() {
@@ -50,7 +46,8 @@ public class SamlStepDefinitions {
 
   @When("I submit an expired SAML response")
   public void iSubmitAnExpiredSamlResponse() {
-    samlResponse = buildFakeSaml("expired-user@example.com", Instant.now().minusSeconds(10_000), true);
+    samlResponse =
+        buildFakeSaml("expired-user@example.com", Instant.now().minusSeconds(10_000), true);
     execute();
   }
 
@@ -84,10 +81,7 @@ public class SamlStepDefinitions {
     try {
       tokenUni = samlService.generateSessionToken(samlResponse);
       // Trigger resolution to capture failure
-      tokenUni.subscribe().with(
-        t -> {},
-        f -> failure = f
-      );
+      tokenUni.subscribe().with(t -> {}, f -> failure = f);
       // Wait briefly for async completion
       tokenUni.await().atMost(java.time.Duration.ofSeconds(2));
     } catch (Exception e) {
@@ -97,13 +91,15 @@ public class SamlStepDefinitions {
 
   private String buildFakeSaml(String internalId, Instant issueTime, boolean validSignature) {
     // Simplified fake SAML (replace with real XML if needed)
-    String xml = """
+    String xml =
+            """
       <Assertion>
         <Subject>%s</Subject>
         <IssueInstant>%s</IssueInstant>
         <Signature>%s</Signature>
       </Assertion>
-      """.formatted(internalId, issueTime.toString(), validSignature ? "VALID" : "INVALID");
+      """
+            .formatted(internalId, issueTime.toString(), validSignature ? "VALID" : "INVALID");
     return Base64.getEncoder().encodeToString(xml.getBytes(StandardCharsets.UTF_8));
   }
 }

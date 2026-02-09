@@ -26,33 +26,37 @@ public class ProductConf {
   @ConfigProperty(name = "product-cdc.blob-storage.connection-string-product")
   String connectionStringProduct;
 
-//  void onStart(@Observes StartupEvent ev) {
-//    log.info(String.format("Database %s is starting...", Product.mongoDatabase().getName()));
-//  }
+  //  void onStart(@Observes StartupEvent ev) {
+  //    log.info(String.format("Database %s is starting...", Product.mongoDatabase().getName()));
+  //  }
 
   @ApplicationScoped
-  public ProductService productService(){
+  public ProductService productService() {
     return new ProductServiceCacheable(connectionStringProduct, containerProduct, filepathProduct);
   }
 
   @ApplicationScoped
-  public AzureBlobClient azureBobClientContract(){
+  public AzureBlobClient azureBobClientContract() {
     return new AzureBlobClientDefault(connectionStringProduct, containerProduct);
   }
 
   @ApplicationScoped
-  public TelemetryClient telemetryClient(@ConfigProperty(name = "product-cdc.appinsights.connection-string") String appInsightsConnectionString) {
+  public TelemetryClient telemetryClient(
+      @ConfigProperty(name = "product-cdc.appinsights.connection-string")
+          String appInsightsConnectionString) {
     TelemetryConfiguration telemetryConfiguration = TelemetryConfiguration.createDefault();
     telemetryConfiguration.setConnectionString(appInsightsConnectionString);
     return new TelemetryClient(telemetryConfiguration);
   }
 
   @ApplicationScoped
-  public TableClient tableClient(@ConfigProperty(name = "product-cdc.storage.connection-string") String storageConnectionString,
-                                 @ConfigProperty(name = "product-cdc.table.name") String tableName){
+  public TableClient tableClient(
+      @ConfigProperty(name = "product-cdc.storage.connection-string")
+          String storageConnectionString,
+      @ConfigProperty(name = "product-cdc.table.name") String tableName) {
     return new TableClientBuilder()
-      .connectionString(storageConnectionString)
-      .tableName(tableName)
-      .buildClient();
+        .connectionString(storageConnectionString)
+        .tableName(tableName)
+        .buildClient();
   }
 }

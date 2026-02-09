@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OriginEntry {
-    private InstitutionType institutionType;
-    private Origin origin;
-    private String labelKey;
+  private InstitutionType institutionType;
+  private Origin origin;
+  private String labelKey;
 }

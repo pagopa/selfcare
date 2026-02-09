@@ -6,11 +6,11 @@ import lombok.Data;
 
 @Data
 public class OidcExchangeRequest {
-    @NotEmpty(message = "code is required")
-    @NotNull(message = "code is required")
-    public String code;
+  @NotEmpty(message = "code is required")
+  @NotNull(message = "code is required")
+  public String code;
 
-    @NotEmpty(message = "redirect_uri is required")
-    @NotNull(message = "redirect_uri is required")
-    public String redirectUri;
+  @NotEmpty(message = "redirect_uri is required")
+  @NotNull(message = "redirect_uri is required")
+  public String redirectUri;
 }

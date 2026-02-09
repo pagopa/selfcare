@@ -9,10 +9,10 @@ import it.pagopa.selfcare.product.model.enums.ContractTemplateFileType;
 
 public interface ContractTemplateService {
 
-    Uni<ContractTemplateResponse> upload(ContractTemplateUploadRequest request);
+  Uni<ContractTemplateResponse> upload(ContractTemplateUploadRequest request);
 
-    Uni<ContractTemplateFile> download(String productId, String contractTemplateId, ContractTemplateFileType fileType);
+  Uni<ContractTemplateFile> download(
+      String productId, String contractTemplateId, ContractTemplateFileType fileType);
 
-    Uni<ContractTemplateResponseList> list(String productId, String name, String version);
-
+  Uni<ContractTemplateResponseList> list(String productId, String name, String version);
 }

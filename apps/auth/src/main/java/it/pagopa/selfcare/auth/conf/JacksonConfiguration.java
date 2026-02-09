@@ -12,21 +12,20 @@ import io.vertx.core.json.jackson.DatabindCodec;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 
-
 @ApplicationScoped
 public class JacksonConfiguration {
 
-    @Produces
-    public ObjectMapper objectMapper() {
-        ObjectMapper mapper =  DatabindCodec.mapper();
-        mapper.registerModule(new ParameterNamesModule(JsonCreator.Mode.DELEGATING)); // mandatory config
+  @Produces
+  public ObjectMapper objectMapper() {
+    ObjectMapper mapper = DatabindCodec.mapper();
+    mapper.registerModule(
+        new ParameterNamesModule(JsonCreator.Mode.DELEGATING)); // mandatory config
 
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);// custom config
-        mapper.registerModule(new JavaTimeModule());                               // custom config
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);            // custom config
-        mapper.registerModule(new Jdk8Module());                                   // custom config
-        return mapper;
-    }
-
+    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL); // custom config
+    mapper.registerModule(new JavaTimeModule()); // custom config
+    mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // custom config
+    mapper.registerModule(new Jdk8Module()); // custom config
+    return mapper;
+  }
 }

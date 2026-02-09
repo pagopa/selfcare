@@ -7,11 +7,11 @@ import lombok.Data;
 @Data
 public class OtpVerifyRequest {
 
-    @NotEmpty(message = "otpUuid is required")
-    @NotNull(message = "otpUuid is required")
-    private String otpUuid;
+  @NotEmpty(message = "otpUuid is required")
+  @NotNull(message = "otpUuid is required")
+  private String otpUuid;
 
-    @NotEmpty(message = "otp value is required")
-    @NotNull(message = "otp value is required")
-    private String otp;
+  @NotEmpty(message = "otp value is required")
+  @NotNull(message = "otp value is required")
+  private String otp;
 }

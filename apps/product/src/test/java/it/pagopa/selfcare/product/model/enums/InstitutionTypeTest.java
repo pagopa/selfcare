@@ -7,53 +7,49 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 class InstitutionTypeTest {
 
-    @Test
-    void fromTest_shouldReturnDefault_whenValueIsNull() {
-        // given
-        String value = null;
+  @Test
+  void fromTest_shouldReturnDefault_whenValueIsNull() {
+    // given
+    String value = null;
 
-        // when
-        InstitutionType result = InstitutionType.from(value);
+    // when
+    InstitutionType result = InstitutionType.from(value);
 
-        // then
-        Assertions.assertEquals(InstitutionType.DEFAULT, result);
-    }
+    // then
+    Assertions.assertEquals(InstitutionType.DEFAULT, result);
+  }
 
-    @Test
-    void fromTest_shouldReturnDefault_whenValueIsBlank() {
-        // given
-        String value = "   ";
+  @Test
+  void fromTest_shouldReturnDefault_whenValueIsBlank() {
+    // given
+    String value = "   ";
 
-        // when
-        InstitutionType result = InstitutionType.from(value);
+    // when
+    InstitutionType result = InstitutionType.from(value);
 
-        // then
-        Assertions.assertEquals(InstitutionType.DEFAULT, result);
-    }
+    // then
+    Assertions.assertEquals(InstitutionType.DEFAULT, result);
+  }
 
-    @Test
-    void fromTest_shouldReturnDefault_whenValueIsUnknown() {
-        // given
-        String value = "UNKNOWN_TYPE";
+  @Test
+  void fromTest_shouldReturnDefault_whenValueIsUnknown() {
+    // given
+    String value = "UNKNOWN_TYPE";
 
-        // when
-        InstitutionType result = InstitutionType.from(value);
+    // when
+    InstitutionType result = InstitutionType.from(value);
 
-        // then
-        Assertions.assertEquals(InstitutionType.DEFAULT, result);
-    }
+    // then
+    Assertions.assertEquals(InstitutionType.DEFAULT, result);
+  }
 
-    @ParameterizedTest
-    @CsvSource({
-            "PA,PA",
-            "pa,PA",
-            "gSp,GSP"
-    })
-    void fromTest_shouldMatchValidTypesIgnoringCase(String input, InstitutionType expected) {
-        // when
-        InstitutionType result = InstitutionType.from(input);
+  @ParameterizedTest
+  @CsvSource({"PA,PA", "pa,PA", "gSp,GSP"})
+  void fromTest_shouldMatchValidTypesIgnoringCase(String input, InstitutionType expected) {
+    // when
+    InstitutionType result = InstitutionType.from(input);
 
-        // then
-        Assertions.assertEquals(expected, result);
-    }
+    // then
+    Assertions.assertEquals(expected, result);
+  }
 }
