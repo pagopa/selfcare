@@ -17,6 +17,7 @@ import it.pagopa.selfcare.iam.model.ProductRolePermissionsList;
 import it.pagopa.selfcare.iam.model.ProductRoles;
 import it.pagopa.selfcare.iam.model.UserPermissions;
 import it.pagopa.selfcare.iam.repository.UserPermissionsRepository;
+import it.pagopa.selfcare.iam.util.DataEncryptionConfig;
 import jakarta.inject.Inject;
 import java.util.Collections;
 import java.util.List;
@@ -350,6 +351,135 @@ class IamServiceImplTest {
 
       assertNotNull(result);
       assertEquals(2, result.getProductRoles().size());
+    }
+  }
+
+  // ========== getUserByEmail Tests ==========
+
+  @Test
+  void getUserByEmail_shouldReturnUser_whenUserExistsAndProductIdMatches() {
+    String email = "found@example.com";
+    String productId = "productA";
+    String encryptedEmail = "encrypted_found@example.com";
+
+    UserClaims foundUser =
+        UserClaims.builder()
+            .email(encryptedEmail)
+            .uid("user-123")
+            .productRoles(
+                List.of(
+                    ProductRoles.builder().productId("productA").roles(List.of("admin")).build(),
+                    ProductRoles.builder().productId("productB").roles(List.of("viewer")).build()))
+            .build();
+
+    try (MockedStatic<UserClaims> mockedUserClaims = Mockito.mockStatic(UserClaims.class);
+        MockedStatic<DataEncryptionConfig> mockedEncryption =
+            Mockito.mockStatic(DataEncryptionConfig.class)) {
+
+      mockedUserClaims.when(UserClaims::builder).thenCallRealMethod();
+
+      mockedEncryption.when(() -> DataEncryptionConfig.encrypt(email)).thenReturn(encryptedEmail);
+      mockedEncryption.when(() -> DataEncryptionConfig.decrypt(encryptedEmail)).thenReturn(email);
+
+      mockedUserClaims
+          .when(() -> UserClaims.findByEmail(encryptedEmail))
+          .thenReturn(Uni.createFrom().item(foundUser));
+
+      UserClaims result = service.getUserByEmail(email, productId).await().indefinitely();
+
+      assertNotNull(result);
+      assertEquals("user-123", result.getUid());
+      assertEquals(email, result.getEmail());
+      assertEquals(1, result.getProductRoles().size());
+      assertEquals("productA", result.getProductRoles().get(0).getProductId());
+    }
+  }
+
+  @Test
+  void getUserByEmail_shouldThrowResourceNotFound_whenProductIdDoesNotMatch() {
+    String email = "found@example.com";
+    String productId = "productC";
+    String encryptedEmail = "encrypted_found@example.com";
+
+    UserClaims foundUser =
+        UserClaims.builder()
+            .email(encryptedEmail)
+            .uid("user-123")
+            .productRoles(
+                List.of(
+                    ProductRoles.builder().productId("productA").roles(List.of("admin")).build()))
+            .build();
+
+    try (MockedStatic<UserClaims> mockedUserClaims = Mockito.mockStatic(UserClaims.class);
+        MockedStatic<DataEncryptionConfig> mockedEncryption =
+            Mockito.mockStatic(DataEncryptionConfig.class)) {
+
+      mockedEncryption.when(() -> DataEncryptionConfig.encrypt(email)).thenReturn(encryptedEmail);
+
+      mockedUserClaims
+          .when(() -> UserClaims.findByEmail(encryptedEmail))
+          .thenReturn(Uni.createFrom().item(foundUser));
+
+      assertThrows(
+          ResourceNotFoundException.class,
+          () -> service.getUserByEmail(email, productId).await().indefinitely());
+    }
+  }
+
+  @Test
+  void getUserByEmail_shouldReturnUser_whenUserHasProductAll() {
+    String email = "found@example.com";
+    String productId = "productC"; // Requested product C
+    String encryptedEmail = "encrypted_found@example.com";
+
+    UserClaims foundUser =
+        UserClaims.builder()
+            .email(encryptedEmail)
+            .uid("user-123")
+            .productRoles(
+                List.of(
+                    ProductRoles.builder().productId("ALL").roles(List.of("super-admin")).build()))
+            .build();
+
+    try (MockedStatic<UserClaims> mockedUserClaims = Mockito.mockStatic(UserClaims.class);
+        MockedStatic<DataEncryptionConfig> mockedEncryption =
+            Mockito.mockStatic(DataEncryptionConfig.class)) {
+
+      mockedUserClaims.when(UserClaims::builder).thenCallRealMethod();
+      mockedEncryption.when(() -> DataEncryptionConfig.encrypt(email)).thenReturn(encryptedEmail);
+      mockedEncryption.when(() -> DataEncryptionConfig.decrypt(encryptedEmail)).thenReturn(email);
+
+      mockedUserClaims
+          .when(() -> UserClaims.findByEmail(encryptedEmail))
+          .thenReturn(Uni.createFrom().item(foundUser));
+
+      UserClaims result = service.getUserByEmail(email, productId).await().indefinitely();
+
+      assertNotNull(result);
+      assertEquals(1, result.getProductRoles().size());
+      assertEquals("ALL", result.getProductRoles().get(0).getProductId());
+    }
+  }
+
+  @Test
+  void getUserByEmail_shouldThrowResourceNotFound_whenUserNotFound() {
+    String email = "missing@example.com";
+    String productId = "productA";
+    String encryptedEmail = "encrypted_missing@example.com";
+
+    try (MockedStatic<UserClaims> mockedUserClaims = Mockito.mockStatic(UserClaims.class);
+        MockedStatic<DataEncryptionConfig> mockedEncryption =
+            Mockito.mockStatic(DataEncryptionConfig.class)) {
+
+      mockedEncryption.when(() -> DataEncryptionConfig.encrypt(email)).thenReturn(encryptedEmail);
+
+      mockedUserClaims
+          .when(() -> UserClaims.findByEmail(encryptedEmail))
+          .thenReturn(Uni.createFrom().nullItem());
+
+      assertThrows(
+          ResourceNotFoundException.class,
+          () -> service.getUserByEmail(email, productId).await().indefinitely());
     }
   }
 

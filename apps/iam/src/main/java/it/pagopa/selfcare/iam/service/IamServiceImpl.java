@@ -1,5 +1,7 @@
 package it.pagopa.selfcare.iam.service;
 
+import static it.pagopa.selfcare.iam.util.GeneralUtils.PRODUCT_ALL;
+
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
 import it.pagopa.selfcare.iam.entity.UserClaims;
@@ -190,8 +192,38 @@ public class IamServiceImpl implements IamService {
         .transform(
             userClaims -> {
               userClaims.setProductRoles(
-                  setFilteredProductRoles(userClaims.getProductRoles(), productId));
+                  getFilteredProductRoles(userClaims.getProductRoles(), productId));
               return decryptUser(userClaims);
+            })
+        .onItem()
+        .ifNull()
+        .failWith(() -> new ResourceNotFoundException("User not found"));
+  }
+
+  /**
+   * Retrieves a user by their email and optionally filters by product ID.
+   *
+   * @param email the email of the user
+   * @param productId the ID of the product (optional)
+   * @return a Uni containing the UserClaims if found and matching criteria
+   * @throws ResourceNotFoundException if the user is not found or doesn't have the required product
+   */
+  @Override
+  public Uni<UserClaims> getUserByEmail(String email, String productId) {
+    return UserClaims.findByEmail(DataEncryptionConfig.encrypt(email))
+        .onItem()
+        .ifNotNull()
+        .transformToUni(
+            user -> {
+              List<ProductRoles> filteredRoles =
+                  getFilteredProductRoles(user.getProductRoles(), productId);
+
+              if (filteredRoles.isEmpty()) {
+                return Uni.createFrom().nullItem();
+              }
+
+              user.setProductRoles(filteredRoles);
+              return Uni.createFrom().item(decryptUser(user));
             })
         .onItem()
         .ifNull()
@@ -217,7 +249,7 @@ public class IamServiceImpl implements IamService {
                   .map(
                       user -> {
                         user.setProductRoles(
-                            setFilteredProductRoles(user.getProductRoles(), productId));
+                            getFilteredProductRoles(user.getProductRoles(), productId));
                         return decryptUser(user);
                       })
                   .toList();
@@ -257,11 +289,34 @@ public class IamServiceImpl implements IamService {
                 Optional.ofNullable(productId)
                     .map(
                         pid -> {
+                          return roles.stream()
+                              .filter(pr -> pr.getProductId().equals(pid))
+                              .toList();
+                        })
+                    .orElse(roles))
+        .orElse(List.of());
+  }
+
+  /**
+   * Filters the product roles for a specific product ID.
+   *
+   * @param productRoles the list of product roles
+   * @param productId the ID of the product
+   * @return a list of filtered ProductRoles
+   */
+  public List<ProductRoles> getFilteredProductRoles(
+      List<ProductRoles> productRoles, String productId) {
+    return Optional.ofNullable(productRoles)
+        .map(
+            roles ->
+                Optional.ofNullable(productId)
+                    .map(
+                        pid -> {
                           List<ProductRoles> exact =
                               roles.stream().filter(pr -> pr.getProductId().equals(pid)).toList();
                           return exact.isEmpty()
                               ? roles.stream()
-                                  .filter(pr -> "ALL".equals(pr.getProductId()))
+                                  .filter(pr -> PRODUCT_ALL.equals(pr.getProductId()))
                                   .toList()
                               : exact;
                         })

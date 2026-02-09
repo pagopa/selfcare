@@ -260,6 +260,47 @@ public class IamControllerTest {
         .statusCode(200);
   }
 
+  @Test
+  void getUserByEmail_shouldReturn200() {
+    String email = "test@example.com";
+    String productId = "product-1";
+
+    UserClaims userClaims = new UserClaims();
+    userClaims.setEmail(email);
+    userClaims.setUid("uid-123");
+
+    Mockito.when(iamService.getUserByEmail(email, productId))
+        .thenReturn(Uni.createFrom().item(userClaims));
+
+    given()
+        .accept(ContentType.JSON)
+        .queryParam("email", email)
+        .queryParam("productId", productId)
+        .when()
+        .get("/users/search")
+        .then()
+        .statusCode(200)
+        .body("email", equalTo(email))
+        .body("uid", equalTo("uid-123"));
+  }
+
+  @Test
+  void getUserByEmail_shouldReturn404_whenUserNotFound() {
+    String email = "missing@example.com";
+    String productId = "product-1";
+
+    Mockito.when(iamService.getUserByEmail(email, productId))
+        .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("User not found")));
+
+    given()
+        .accept(ContentType.JSON)
+        .queryParam("email", email)
+        .queryParam("productId", productId)
+        .when()
+        .get("/users/search")
+        .then()
+        .statusCode(404);
+  }
   //  @Test
   //  void getProductRolePermissionsList_shouldReturn200() {
   //    String uid = "user-1";

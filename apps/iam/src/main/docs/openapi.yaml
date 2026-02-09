@@ -214,6 +214,53 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
+  /iam/users/search:
+    get:
+      summary: Get IAM User by Email
+      description: Retrieves a user by their email.
+      operationId: getIAMUserByEmail
+      tags:
+      - external-v2
+      parameters:
+      - name: email
+        in: query
+        schema:
+          type: string
+      - name: productId
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserClaims"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
   /iam/users/{uid}:
     get:
       summary: Get IAM User

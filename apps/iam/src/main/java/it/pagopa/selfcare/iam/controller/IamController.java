@@ -167,6 +167,60 @@ public class IamController {
         .transform(user -> Response.ok(user).build());
   }
 
+  /**
+   * Retrieves a user by their email.
+   *
+   * @param email the email of the user
+   * @return a Uni containing the UserClaims if found
+   */
+  @Tag(name = "external-v2")
+  @Operation(
+      description = "Retrieves a user by their email.",
+      summary = "Get IAM User by Email",
+      operationId = "getIAMUserByEmail")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "OK",
+            content =
+                @Content(
+                    schema = @Schema(implementation = UserClaims.class),
+                    mediaType = "application/json")),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "404",
+            description = "Not Found",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json"))
+      })
+  @GET
+  @Path(value = "/users/search")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<Response> getUserByEmail(
+      @QueryParam("email") String email, @QueryParam("productId") String productId) {
+    return iamService
+        .getUserByEmail(email, productId)
+        .onItem()
+        .transform(user -> Response.ok(user).build());
+  }
+
   @GET
   @Path(value = "/users")
   @Consumes(MediaType.APPLICATION_JSON)

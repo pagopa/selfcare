@@ -13,6 +13,7 @@ import java.util.concurrent.TimeoutException;
 
 public class GeneralUtils {
 
+  public static final String PRODUCT_ALL = "ALL";
   private static final String DELIMITER = ",";
 
   private GeneralUtils() {}

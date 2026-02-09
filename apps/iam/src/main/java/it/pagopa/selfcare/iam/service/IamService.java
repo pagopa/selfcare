@@ -13,6 +13,8 @@ public interface IamService {
 
   Uni<UserClaims> getUser(String userId, String productId);
 
+  Uni<UserClaims> getUserByEmail(String email, String productId);
+
   Uni<List<UserClaims>> getUsers(String productId);
 
   Uni<ProductRolePermissionsList> getProductRolePermissionsList(String userId, String productId);
