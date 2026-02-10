@@ -140,11 +140,24 @@ jobs:
           TF_VAR_image_tag: ${{ steps.setsha.outputs.short_sha }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Encrypt Terraform Plan
+        working-directory: ${{ inputs.dir }}
+        env:
+          ENCRYPTION_PASSPHRASE: ${{ secrets.ARTIFACT_ENC_KEY }}
+        run: |
+          set -euo pipefail
+          PLAN_FILE="tfplan-${{ inputs.tf_environment }}-${{ github.sha }}"
+          openssl enc -aes-256-cbc -salt -pbkdf2 \
+            -in "$PLAN_FILE" \
+            -out "${PLAN_FILE}.enc" \
+            -pass env:ENCRYPTION_PASSPHRASE
+          rm -f "$PLAN_FILE"
+
       - name: "Upload Terraform Plan as Artifact"
         uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
         with:
           name: tfplan
-          path: ${{ inputs.dir }}/tfplan-${{ inputs.tf_environment }}-${{ github.sha }}
+          path: ${{ inputs.dir }}/tfplan-${{ inputs.tf_environment }}-${{ github.sha }}.enc
           if-no-files-found: error
           retention-days: 14
 
@@ -177,6 +190,19 @@ jobs:
         with:
           name: tfplan
           path: ${{ inputs.dir }}
+
+      - name: Decrypt Terraform Plan
+        working-directory: ${{ inputs.dir }}
+        env:
+          ENCRYPTION_PASSPHRASE: ${{ secrets.ARTIFACT_ENC_KEY }}
+        run: |
+          set -euo pipefail
+          PLAN_FILE="tfplan-${{ inputs.tf_environment }}-${{ github.sha }}"
+          openssl enc -aes-256-cbc -d -pbkdf2 \
+            -in "${PLAN_FILE}.enc" \
+            -out "$PLAN_FILE" \
+            -pass env:ENCRYPTION_PASSPHRASE
+          rm -f "${PLAN_FILE}.enc"
 
       - name: Retrieve Terraform Modules from Cache
         id: cache-terraform-modules
