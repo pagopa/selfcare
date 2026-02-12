@@ -28,7 +28,7 @@ terraform {
     resource_group_name  = "io-infra-rg"
     storage_account_name = "selcdstinfraterraform"
     container_name       = "azurermstate"
-    key                  = "selfcare-ar.infra.tfstate"
+    key                  = "selc.infra.core.dev.tfstate"
     use_azuread_auth     = true
   }
 }

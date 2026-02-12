@@ -151,10 +151,10 @@ module "app_gw" {
   public_ip_id = azurerm_public_ip.appgateway_public_ip.id
 
   # Configure backends
-  backends = local.backends
+  backends = var.backends
 
   # Configure listeners
-  listeners = local.listeners
+  listeners = var.listeners
 
   # maps listener to backend
   routes = {}

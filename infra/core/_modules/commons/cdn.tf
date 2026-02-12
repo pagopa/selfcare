@@ -48,7 +48,7 @@ locals {
 // public storage used to serve FE
 #tfsec:ignore:azure-storage-default-action-deny
 module "checkout_cdn" {
-  source = "github.com/pagopa/terraform-azurerm-v4.git//cdn?ref=v8.5.3"
+  source = "github.com/pagopa/terraform-azurerm-v4.git//cdn?ref=cdn_remove_custom_hostname"
 
   name                  = "checkout"
   prefix                = local.project

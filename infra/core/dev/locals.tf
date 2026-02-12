@@ -247,6 +247,10 @@ locals {
     { // piattaforma-unitaria
       ip_mask = "4.232.15.12",
       action  = "Allow"
+    },
+    { // p4pa
+      ip_mask = "4.232.131.72",
+      action  = "Allow"
     }
   ]
 
@@ -262,9 +266,9 @@ locals {
     partitions        = 30
     message_retention = 7
     consumers         = ["conservazione", "interceptor", "datalake", "piattaforma-unitaria", "selc-proxy"]
-    iam_roles = {
-      "ee71d0ec-0023-44ae-93dd-871d25ab7003" = "Azure Event Hubs Data Receiver" # io-p-sign-backoffice-func
-    }
+    # iam_roles = {
+    #   "ee71d0ec-0023-44ae-93dd-871d25ab7003" = "Azure Event Hubs Data Receiver" # io-p-sign-backoffice-func
+    # }
     keys = [
       {
         name   = "selfcare-wo"

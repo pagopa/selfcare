@@ -1103,3 +1103,35 @@ variable "storage_account_replication_type" {
   default     = "ZRS"
   description = "The storage account replication type (ZRS, GZRS, ...)"
 }
+
+variable "backends" {
+  type = map(object({
+    protocol                    = string                              # The Protocol which should be used. Possible values are Http and Https
+    host                        = string                              # The Hostname used for this Probe. If the Application Gateway is configured for a single site, by default the Host name should be specified as ‘127.0.0.1’, unless otherwise configured in custom probe. Cannot be set if pick_host_name_from_backend_http_settings is set to true
+    port                        = number                              # Custom port which will be used for probing the backend servers. The valid value ranges from 1 to 65535. In case not set, port from http settings will be used.
+    ip_addresses                = list(string)                        # A list of IP Addresses which should be part of the Backend Address Pool.
+    fqdns                       = list(string)                        # A list of FQDN's which should be part of the Backend Address Pool.
+    probe                       = string                              # The Path used for this Probe.
+    probe_name                  = string                              # The Name of the Probe.
+    probe_status_code           = optional(list(string), ["200-399"]) # The status codes accepted by the probe
+    request_timeout             = number                              # The Timeout used for this Probe, which indicates when a probe becomes unhealthy. Possible values range from 1 second to a maximum of 86,400 seconds.
+    pick_host_name_from_backend = bool                                # Whether the host header should be picked from the backend http settings
+  }))
+
+  description = "Obj that allow to configure: backend_address_pool, backend_http_settings, probe"
+}
+
+variable "listeners" {
+  type = map(object({
+    protocol           = string                     # The Protocol which should be used. Possible values are Http and Https
+    host               = string                     # The Hostname which should be used for this HTTP Listener. Setting this value changes Listener Type to 'Multi site'.
+    port               = number                     # The port used for this Frontend Port.
+    ssl_profile_name   = string                     # The name of the associated SSL Profile which should be used for this HTTP Listener.
+    firewall_policy_id = string                     # The ID of the Web Application Firewall Policy which should be used for this HTTP Listener.
+    type               = optional(string, "Public") # The type of Listener "Public" - "Private"
+    certificate = object({
+      name = string # The Name of the SSL certificate that is unique within this Application Gateway
+      id   = string # Secret Id of (base-64 encoded unencrypted pfx) Secret or Certificate object stored in Azure KeyVault. You need to enable soft delete for keyvault to use this feature. Required if data is not set.
+    })
+  }))
+}

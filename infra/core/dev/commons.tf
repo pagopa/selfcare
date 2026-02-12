@@ -54,4 +54,96 @@ module "commons" {
   eventhub_maximum_throughput_units = local.eventhub_maximum_throughput_units
   eventhubs                         = local.eventhubs
   eventhub_ip_rules                 = local.eventhub_ip_rules
+
+  backends = {
+    aks = {
+      protocol                    = "Https"
+      host                        = "selc.internal.${var.dns_zone_prefix}.${var.external_domain}"
+      port                        = 443
+      ip_addresses                = null
+      probe                       = "/health"
+      probe_name                  = "probe-aks"
+      request_timeout             = 60
+      fqdns                       = ["selc.internal.${var.dns_zone_prefix}.${var.external_domain}"]
+      pick_host_name_from_backend = false
+    }
+    apim = {
+      protocol                    = "Https"
+      host                        = trim(azurerm_dns_a_record.dns_a_api.fqdn, ".")
+      port                        = 443
+      ip_addresses                = data.azurerm_api_management.this.private_ip_addresses
+      probe                       = "/external/status"
+      probe_name                  = "probe-apim"
+      request_timeout             = 60
+      fqdns                       = null
+      pick_host_name_from_backend = false
+    }
+    platform-aks = {
+      protocol                    = "Https"
+      host                        = "${var.aks_platform_env}.pnpg.internal.${var.dns_zone_prefix}.${var.external_domain}"
+      port                        = 443
+      ip_addresses                = null
+      probe                       = "/pnpg/status"
+      probe_name                  = "probe-platform-aks"
+      request_timeout             = 60
+      fqdns                       = ["${var.aks_platform_env}.pnpg.internal.${var.dns_zone_prefix}.${var.external_domain}"]
+      pick_host_name_from_backend = false
+    }
+    auth-selc = {
+      protocol                    = "Https"
+      host                        = "selc-${var.env_short}-auth-ms-ca.${var.auth_ms_private_dns_suffix}"
+      port                        = 443
+      ip_addresses                = null
+      probe                       = "/q/health/live"
+      probe_name                  = "probe-auth-selc"
+      request_timeout             = 60
+      fqdns                       = ["selc-${var.env_short}-auth-ms-ca.${var.auth_ms_private_dns_suffix}"]
+      pick_host_name_from_backend = false
+    }
+    hub-spid-pnpg = {
+      protocol                    = "Https"
+      host                        = "selc-${var.env_short}-pnpg-hub-spid-login-ca.${var.ca_pnpg_suffix_dns_private_name}"
+      port                        = 443
+      ip_addresses                = null
+      probe                       = "/info"
+      probe_name                  = "probe-hub-spid-pnpg"
+      request_timeout             = 60
+      fqdns                       = ["selc-${var.env_short}-pnpg-hub-spid-login-ca.${var.ca_pnpg_suffix_dns_private_name}"]
+      pick_host_name_from_backend = false
+    }
+  }
+
+  listeners = {
+    api = {
+      protocol           = "Https"
+      host               = "api.${var.dns_zone_prefix}.${var.external_domain}"
+      port               = 443
+      ssl_profile_name   = null
+      firewall_policy_id = null
+
+      certificate = {
+        name = var.app_gateway_api_certificate_name
+        id = replace(
+          data.azurerm_key_vault_certificate.app_gw_platform.secret_id,
+          "/${data.azurerm_key_vault_certificate.app_gw_platform.version}",
+          ""
+        )
+      }
+    }
+    api-pnpg = {
+      protocol           = "Https"
+      host               = "api-pnpg.${var.dns_zone_prefix}.${var.external_domain}"
+      port               = 443
+      ssl_profile_name   = null
+      firewall_policy_id = null
+      certificate = {
+        name = var.app_gateway_api_pnpg_certificate_name
+        id = replace(
+          data.azurerm_key_vault_certificate.api_pnpg_selfcare_certificate.secret_id,
+          "/${data.azurerm_key_vault_certificate.api_pnpg_selfcare_certificate.version}",
+          ""
+        )
+      }
+    }
+  }
 }
