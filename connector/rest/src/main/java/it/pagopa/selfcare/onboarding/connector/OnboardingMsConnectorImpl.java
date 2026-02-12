@@ -14,8 +14,10 @@ import it.pagopa.selfcare.onboarding.connector.rest.client.*;
 import it.pagopa.selfcare.onboarding.connector.rest.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.*;
 import lombok.extern.slf4j.Slf4j;
+import org.owasp.encoder.Encode;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -250,6 +252,14 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
     @Override
     public void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName) {
         msOnboardingTokenApiClient._uploadAttachment(onboardingId, attachmentName, attachment);
+    }
+
+    @Override
+    public HttpStatusCode headAttachment(String onboardingId, String filename) {
+        log.info("headAttachment for onboardingId: {}, filename: {}", Encode.forJava(onboardingId), Encode.forJava(filename));
+        ResponseEntity<Void> responseEntity = msOnboardingTokenApiClient._headAttachment(onboardingId, filename);
+        log.info("headAttachment response status code: {}", responseEntity.getStatusCode());
+        return HttpStatus.resolve(responseEntity.getStatusCode().value());
     }
 
 }

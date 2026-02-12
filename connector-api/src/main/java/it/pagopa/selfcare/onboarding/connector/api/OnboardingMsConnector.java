@@ -6,6 +6,7 @@ import it.pagopa.selfcare.onboarding.connector.model.institutions.VerifyAggregat
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.CheckManagerData;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -59,4 +60,6 @@ public interface OnboardingMsConnector {
     List<OnboardingResult> onboardingWithFilter(String taxCode, String status);
 
     void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName);
+
+    HttpStatusCode headAttachment(String onboardingId, String filename);
 }

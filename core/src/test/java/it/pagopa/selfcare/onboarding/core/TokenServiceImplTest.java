@@ -1,22 +1,11 @@
 package it.pagopa.selfcare.onboarding.core;
 
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
-
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.connector.api.OnboardingMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.PartyConnector;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.User;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +14,19 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.mock.web.MockMultipartFile;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class TokenServiceImplTest {
@@ -152,6 +153,63 @@ public class TokenServiceImplTest {
         //then
         Mockito.verify(onboardingMsConnector, Mockito.times(1))
                 .getTemplateAttachment(onboardingId, filename);
+    }
+
+    @Test
+    void headAttachmentTest() {
+        //given
+        final String onboardingId = "onboardingId";
+        final String filename = "filename";
+
+        when(onboardingMsConnector.headAttachment(onboardingId, filename)).thenReturn(HttpStatusCode.valueOf(204));
+
+        // when
+        HttpStatusCode result = tokenService.headAttachment(onboardingId, filename);
+
+        //then
+        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+                .headAttachment(eq("onboardingId"), eq("filename"));
+        assertTrue(result.is2xxSuccessful());
+        assertFalse(result.is4xxClientError());
+        assertFalse(result.is5xxServerError());
+    }
+
+    @Test
+    void headAttachmentTest_shouldReturnFalse_whenFileNotExist() {
+        //given
+        final String onboardingId = "onboardingId";
+        final String filename = "filename";
+
+        when(onboardingMsConnector.headAttachment(onboardingId, filename)).thenReturn(HttpStatusCode.valueOf(404));
+
+        // when
+        HttpStatusCode result = tokenService.headAttachment(onboardingId, filename);
+
+        //then
+        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+                .headAttachment(eq("onboardingId"), eq("filename"));
+        assertFalse(result.is2xxSuccessful());
+        assertTrue(result.is4xxClientError());
+        assertFalse(result.is5xxServerError());
+    }
+
+    @Test
+    void headAttachmentTest_shouldReturnFalse_whenException() {
+        //given
+        final String onboardingId = "onboardingId";
+        final String filename = "filename";
+
+        when(onboardingMsConnector.headAttachment(onboardingId, filename)).thenReturn(HttpStatusCode.valueOf(500));
+
+        // when
+        HttpStatusCode result = tokenService.headAttachment(onboardingId, filename);
+
+        //then
+        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+                .headAttachment(eq("onboardingId"), eq("filename"));
+        assertFalse(result.is2xxSuccessful());
+        assertFalse(result.is4xxClientError());
+        assertTrue(result.is5xxServerError());
     }
 
     @Test

@@ -1,9 +1,5 @@
 package it.pagopa.selfcare.onboarding.connector;
 
-import static it.pagopa.selfcare.commons.utils.TestUtils.mockInstance;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.connector.model.OnboardingResult;
@@ -11,26 +7,31 @@ import it.pagopa.selfcare.onboarding.connector.model.RecipientCodeStatusResult;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.Institution;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.VerifyAggregateResult;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.*;
-import it.pagopa.selfcare.onboarding.connector.model.onboarding.UserRequester;
 import it.pagopa.selfcare.onboarding.connector.rest.client.*;
 import it.pagopa.selfcare.onboarding.connector.rest.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.connector.rest.mapper.OnboardingMapperImpl;
 import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.*;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static it.pagopa.selfcare.commons.utils.TestUtils.mockInstance;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ContextConfiguration(classes = {OnboardingMsConnectorImpl.class})
 @ExtendWith(MockitoExtension.class)
@@ -390,6 +391,42 @@ class OnboardingMsConnectorImplTest {
         verify(msOnboardingTokenApiClient, times(1))
                 ._getTemplateAttachment(onboardingId, filename);
         verifyNoMoreInteractions(msOnboardingTokenApiClient);
+    }
+
+    @Test
+    void headAttachment() {
+        // given
+        final String onboardingId = "onboardingId";
+        final String filename = "filename";
+
+        when(msOnboardingTokenApiClient._headAttachment(onboardingId, filename))
+                .thenReturn(ResponseEntity.status(HttpStatusCode.valueOf(204)).build());
+        // when
+        HttpStatusCode result = onboardingMsConnector.headAttachment(onboardingId, filename);
+
+        // then
+        verify(msOnboardingTokenApiClient, times(1))
+                ._headAttachment(onboardingId, filename);
+        verifyNoMoreInteractions(msOnboardingTokenApiClient);
+        assertEquals(result, HttpStatusCode.valueOf(204));
+    }
+
+    @Test
+    void headAttachment_shouldReturn404_whenNotFound() {
+        // given
+        final String onboardingId = "onboardingId";
+        final String filename = "filename";
+
+        when(msOnboardingTokenApiClient._headAttachment(onboardingId, filename))
+                .thenReturn(ResponseEntity.status(HttpStatusCode.valueOf(404)).build());
+        // when
+        HttpStatusCode result = onboardingMsConnector.headAttachment(onboardingId, filename);
+
+        // then
+        verify(msOnboardingTokenApiClient, times(1))
+                ._headAttachment(onboardingId, filename);
+        verifyNoMoreInteractions(msOnboardingTokenApiClient);
+        assertEquals(result, HttpStatusCode.valueOf(404));
     }
 
     @Test
