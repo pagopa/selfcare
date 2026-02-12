@@ -68,27 +68,16 @@ jobs:
           azure_environment: ${{ env.TERRAFORM_ENVIRONMENT }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Encrypt Terraform Plan
-        working-directory: ${{ inputs.dir }}
-        env:
-          ENCRYPTION_PASSPHRASE: ${{ secrets.ARTIFACT_ENC_KEY }}
-        run: |
-          set -euo pipefail
-          PLAN_FILE="tfplan-${{ env.TERRAFORM_ENVIRONMENT }}-${{ github.sha }}"
-          openssl enc -aes-256-cbc -salt -pbkdf2 \
-            -in "$PLAN_FILE" \
-            -out "${PLAN_FILE}.enc" \
-            -pass env:ENCRYPTION_PASSPHRASE
-          rm -f "$PLAN_FILE"
 
-      - name: "Upload Terraform Plan as Artifact"
-        uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
+      - name: Upload Terraform Plan as Artifact
+        uses: pagopa/dx/actions/terraform-plan-upload@main
+        env:
+          ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
         with:
-          name: tfplan
-          path: ${{ inputs.dir }}/tfplan-${{ env.TERRAFORM_ENVIRONMENT }}-${{ github.sha }}.enc
-          if-no-files-found: error
-          retention-days: 14
+          plan-file: tfplan-${{ env.TERRAFORM_ENVIRONMENT }}-${{ github.sha }}
+          working-directory: ${{ inputs.dir }}
+          artifact-name: terraform-plan
+          retention-days: 1
 
   apply:
     name: 'Terraform Apply'
@@ -115,23 +104,13 @@ jobs:
           subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
 
       - name: Download Terraform Plan as Artifact
-        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
-        with:
-          name: tfplan
-          path: ${{ inputs.dir }}
-      
-      - name: Decrypt Terraform Plan
-        working-directory: ${{ inputs.dir }}
+        uses: pagopa/dx/actions/terraform-plan-download@main
         env:
-          ENCRYPTION_PASSPHRASE: ${{ secrets.ARTIFACT_ENC_KEY }}
-        run: |
-          set -euo pipefail
-          PLAN_FILE="tfplan-${{ env.TERRAFORM_ENVIRONMENT }}-${{ github.sha }}"
-          openssl enc -aes-256-cbc -d -pbkdf2 \
-            -in "${PLAN_FILE}.enc" \
-            -out "$PLAN_FILE" \
-            -pass env:ENCRYPTION_PASSPHRASE
-          rm -f "${PLAN_FILE}.enc"
+          ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
+        with:
+          plan-file: tfplan-${{ env.TERRAFORM_ENVIRONMENT }}-${{ github.sha }}
+          working-directory: ${{ inputs.dir }}
+          artifact-name: terraform-plan
 
       - name: Retrieve Terraform Modules from Cache
         id: cache-terraform-modules
