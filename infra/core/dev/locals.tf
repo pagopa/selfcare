@@ -75,7 +75,7 @@ locals {
   redis_sku_name                 = "Basic"
   redis_family                   = "C"
   redis_capacity                 = 0
-  redis_private_endpoint_enabled = false
+  redis_private_endpoint_enabled = true
   redis_version                  = 6
 
   # aks

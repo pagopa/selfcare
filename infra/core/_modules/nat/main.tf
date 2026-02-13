@@ -1,3 +1,8 @@
+locals {
+  project     = "${var.prefix}-${var.env_short}"
+  app_name_fn = "${local.project}-onboarding-fn"
+}
+
 resource "azurerm_resource_group" "nat_rg" {
   name     = "${local.project}-nat-rg"
   location = var.location
@@ -12,11 +17,7 @@ resource "azurerm_public_ip" "pip_outbound" {
   sku_tier            = "Regional"
   allocation_method   = "Static"
 
-  zones = [
-    "1",
-    "2",
-    "3",
-  ]
+  zones = ["1", "2", "3"]
 
   tags = var.tags
 }
@@ -39,8 +40,3 @@ resource "azurerm_nat_gateway" "nat_gateway" {
   sku_name                = "Standard"
   idle_timeout_in_minutes = 10
 }
-
-# resource "azurerm_nat_gateway_public_ip_association" "pip_nat_gateway" {
-#   nat_gateway_id       = azurerm_nat_gateway.nat_gateway.id
-#   public_ip_address_id = azurerm_public_ip.aks_outbound_temp[0].id
-# } APZ

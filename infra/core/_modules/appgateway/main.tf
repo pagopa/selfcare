@@ -1,32 +1,6 @@
-## Application gateway public ip ##
-resource "azurerm_public_ip" "appgateway_public_ip" {
-  name                = "${local.project}-appgateway-pip"
-  resource_group_name = azurerm_resource_group.rg_vnet.name
-  location            = azurerm_resource_group.rg_vnet.location
-  sku                 = "Standard"
-  allocation_method   = "Static"
-  zones               = ["1", "2", "3"]
-  tags                = var.tags
-}
-
-data "azurerm_api_management" "this" {
-  name                = format("%s-apim-v2", local.project)
-  resource_group_name = format("%s-api-v2-rg", local.project)
-}
-
-# Subnet to host the application gateway
-module "appgateway_snet" {
-  source               = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v8.5.3"
-  name                 = "${local.project}-appgateway-snet"
-  address_prefixes     = var.cidr_subnet_appgateway
-  resource_group_name  = azurerm_resource_group.rg_vnet.name
-  virtual_network_name = module.vnet.name
-
-  private_endpoint_network_policies = var.private_endpoint_network_policies
-  service_endpoints                 = ["Microsoft.Web"]
-}
-
 locals {
+  project = "${var.prefix}-${var.env_short}"
+
   allowedIngressPathRegexps = [
     "/spid/*",
     "/spid-login/*",
@@ -52,7 +26,7 @@ locals {
     }
     apim = {
       protocol                    = "Https"
-      host                        = trim(azurerm_dns_a_record.dns_a_api.fqdn, ".")
+      host                        = "api.${var.dns_zone_prefix}.${var.external_domain}"
       port                        = 443
       ip_addresses                = data.azurerm_api_management.this.private_ip_addresses
       probe                       = "/external/status"
@@ -131,12 +105,46 @@ locals {
   }
 }
 
-# Application gateway: Multilistener configuraiton
+#
+# Data Sources
+#
+data "azurerm_api_management" "this" {
+  name                = format("%s-apim-v2", local.project)
+  resource_group_name = format("%s-api-v2-rg", local.project)
+}
+
+data "azurerm_key_vault_certificate" "app_gw_platform" {
+  name         = var.app_gateway_api_certificate_name
+  key_vault_id = var.key_vault_id
+}
+
+data "azurerm_key_vault_certificate" "api_pnpg_selfcare_certificate" {
+  name         = var.app_gateway_api_pnpg_certificate_name
+  key_vault_id = var.key_vault_id
+}
+
+#
+# Subnet
+#
+module "appgateway_snet" {
+  source               = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v8.5.3"
+  name                 = "${local.project}-appgateway-snet"
+  address_prefixes     = var.cidr_subnet_appgateway
+  resource_group_name  = var.rg_vnet_name
+  virtual_network_name = var.vnet_name
+
+  private_endpoint_network_policies = var.private_endpoint_network_policies
+  service_endpoints                 = ["Microsoft.Web"]
+}
+
+#
+# Application Gateway
+#
 module "app_gw" {
   source = "github.com/pagopa/terraform-azurerm-v4.git//app_gateway?ref=v8.5.3"
 
-  resource_group_name = azurerm_resource_group.rg_vnet.name
-  location            = azurerm_resource_group.rg_vnet.location
+  resource_group_name = var.rg_vnet_name
+  location            = var.rg_vnet_location
   name                = "${local.project}-app-gw"
 
   # SKU
@@ -148,13 +156,13 @@ module "app_gw" {
 
   # Networking
   subnet_id    = module.appgateway_snet.id
-  public_ip_id = azurerm_public_ip.appgateway_public_ip.id
+  public_ip_id = var.appgateway_public_ip_id
 
   # Configure backends
-  backends = var.backends
+  backends = local.backends
 
   # Configure listeners
-  listeners = var.listeners
+  listeners = local.listeners
 
   # maps listener to backend
   routes = {}
@@ -221,7 +229,7 @@ module "app_gw" {
     ssl_policy = {
       disabled_protocols = []
       policy_type        = "Custom"
-      policy_name        = "" # with Custom type set empty policy_name (not required by the provider)
+      policy_name        = ""
       cipher_suites = [
         "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
         "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
@@ -271,7 +279,6 @@ module "app_gw" {
         },
       ]
     },
-    //TODO: remove after one identity integration when hub-spid-login will be dismissed
     {
       name = "rewrite-rule-set-hub-spid-pnpg"
       rewrite_rules = [
@@ -286,7 +293,6 @@ module "app_gw" {
           }]
           request_header_configurations  = []
           response_header_configurations = []
-          ## set path only on azure portal
           url = {
             path         = "{var_uri_path_1}"
             query_string = ""
@@ -298,7 +304,7 @@ module "app_gw" {
   ]
 
   # TLS
-  identity_ids = [azurerm_user_assigned_identity.appgateway.id]
+  identity_ids = [var.appgateway_identity_id]
 
   # Scaling
   app_gateway_min_capacity = var.app_gateway_min_capacity
@@ -308,22 +314,20 @@ module "app_gw" {
 
   action = var.env_short == "x" ? [
     {
-      action_group_id    = azurerm_monitor_action_group.error_action_group[0].id
+      action_group_id    = var.action_group_error_id
       webhook_properties = null
     }
     ] : [
     {
-      action_group_id    = azurerm_monitor_action_group.slack.id
+      action_group_id    = var.action_group_slack_id
       webhook_properties = null
     },
     {
-      action_group_id    = azurerm_monitor_action_group.email.id
+      action_group_id    = var.action_group_email_id
       webhook_properties = null
     }
   ]
 
-  # metrics docs
-  # https://docs.microsoft.com/en-us/azure/azure-monitor/essentials/metrics-supported#microsoftnetworkapplicationgateways
   monitor_metric_alert_criteria = {
 
     compute_units_usage = {
@@ -332,8 +336,7 @@ module "app_gw" {
       window_size   = "PT5M"
       severity      = 2
       auto_mitigate = true
-
-      criteria = []
+      criteria      = []
       dynamic_criteria = [
         {
           aggregation              = "Average"
@@ -353,7 +356,6 @@ module "app_gw" {
       window_size   = "PT5M"
       severity      = 0
       auto_mitigate = true
-
       criteria = [
         {
           aggregation = "Average"
@@ -372,8 +374,7 @@ module "app_gw" {
       window_size   = "PT5M"
       severity      = 2
       auto_mitigate = true
-
-      criteria = []
+      criteria      = []
       dynamic_criteria = [
         {
           aggregation              = "Average"
@@ -393,8 +394,7 @@ module "app_gw" {
       window_size   = "PT15M"
       severity      = 3
       auto_mitigate = true
-
-      criteria = []
+      criteria      = []
       dynamic_criteria = [
         {
           aggregation              = "Total"
@@ -414,8 +414,7 @@ module "app_gw" {
       window_size   = "PT5M"
       severity      = 1
       auto_mitigate = true
-
-      criteria = []
+      criteria      = []
       dynamic_criteria = [
         {
           aggregation              = "Total"

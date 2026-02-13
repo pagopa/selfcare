@@ -1,149 +1,248 @@
-module "commons" {
-  source = "../_modules/commons"
+###############################################################################
+# network
+###############################################################################
+module "network" {
+  source = "../_modules/network"
 
-  env_short                                         = local.env_short
-  env                                               = local.env
-  location                                          = local.location
-  location_short                                    = local.location_short
-  location_pair                                     = local.location_pair
-  location_pair_short                               = local.location_pair_short
-  tags                                              = local.tags
-  cidr_vnet                                         = local.cidr_vnet
-  cidr_pair_vnet                                    = local.cidr_pair_vnet
-  cidr_aks_platform_vnet                            = local.cidr_aks_platform_vnet
-  cidr_subnet_k8s                                   = local.cidr_subnet_k8s
-  cidr_subnet_private_endpoints                     = local.cidr_subnet_private_endpoints
-  cidr_subnet_dns_forwarder                         = local.cidr_subnet_dns_forwarder
-  cidr_subnet_pair_dnsforwarder                     = local.cidr_subnet_pair_dnsforwarder
-  cidr_subnet_appgateway                            = local.cidr_subnet_appgateway
-  cidr_subnet_logs_storage                          = local.cidr_subnet_logs_storage
-  cidr_subnet_contract_storage                      = local.cidr_subnet_contract_storage
-  cidr_subnet_cosmosdb_mongodb                      = local.cidr_subnet_cosmosdb_mongodb
-  cidr_subnet_postgres                              = local.cidr_subnet_postgres
-  cidr_subnet_eventhub                              = local.cidr_subnet_eventhub
-  cidr_subnet_eventhub_rds                          = local.cidr_subnet_eventhub_rds
-  cidr_subnet_azdoa                                 = local.cidr_subnet_azdoa
-  cidr_subnet_vpn                                   = local.cidr_subnet_vpn
-  cidr_subnet_load_tests                            = local.cidr_subnet_load_tests
-  private_endpoint_network_policies                 = local.private_endpoint_network_policies
-  app_gateway_api_certificate_name                  = local.app_gateway_api_certificate_name
-  app_gateway_api_pnpg_certificate_name             = local.app_gateway_api_pnpg_certificate_name
-  auth_ms_private_dns_suffix                        = local.auth_ms_private_dns_suffix
-  ca_suffix_dns_private_name                        = local.ca_suffix_dns_private_name
-  ca_pnpg_suffix_dns_private_name                   = local.ca_pnpg_suffix_dns_private_name
-  private_dns_name                                  = local.private_dns_name
-  docker_registry                                   = local.docker_registry
-  aks_platform_env                                  = local.aks_platform_env
-  aks_kubernetes_version                            = local.aks_kubernetes_version
-  aks_system_node_pool_node_count_min               = local.aks_system_node_pool_node_count_min
-  aks_system_node_pool_node_count_max               = local.aks_system_node_pool_node_count_max
-  aks_system_node_pool_os_disk_type                 = local.aks_system_node_pool_os_disk_type
-  vnet_aks_ddos_protection_plan                     = local.vnet_aks_ddos_protection_plan
-  public_network_access_enabled                     = local.public_network_access_enabled
-  enable_azdoa                                      = local.enable_azdoa
-  eventhub_rds_vm                                   = local.eventhub_rds_vm
-  enable_load_tests_db                              = local.enable_load_tests_db
-  cae_zone_redundant                                = local.cae_zone_redundant
-  cae_zone_redundant_pnpg                           = local.cae_zone_redundant_pnpg
-  cosmosdb_mongodb_main_geo_location_zone_redundant = local.cosmosdb_mongodb_main_geo_location_zone_redundant
-  robots_indexed_paths                              = local.robots_indexed_paths
+  prefix              = "selc"
+  env_short           = local.env_short
+  location            = local.location
+  location_short      = local.location_short
+  location_pair       = local.location_pair
+  location_pair_short = local.location_pair_short
+  tags                = local.tags
 
+  cidr_vnet                         = local.cidr_vnet
+  cidr_pair_vnet                    = local.cidr_pair_vnet
+  cidr_aks_platform_vnet            = local.cidr_aks_platform_vnet
+  cidr_subnet_private_endpoints     = local.cidr_subnet_private_endpoints
+  private_endpoint_network_policies = local.private_endpoint_network_policies
+  ddos_protection_plan              = null
+  aks_platform_env                  = local.aks_platform_env
+}
+
+###############################################################################
+# key_vault
+###############################################################################
+module "key_vault" {
+  source = "../_modules/key_vault"
+
+  prefix    = "selc"
+  env_short = local.env_short
+  location  = local.location
+  tags      = local.tags
+
+  azdo_sp_tls_cert_enabled                         = local.azdo_sp_tls_cert_enabled
+  azuread_service_principal_azure_cdn_frontdoor_id = "f3b3f72f-4770-47a5-8c1e-aa298003be12"
+  app_gateway_api_certificate_name                 = local.app_gateway_api_certificate_name
+  app_gateway_api_pnpg_certificate_name            = local.app_gateway_api_pnpg_certificate_name
+}
+
+###############################################################################
+# dns_private
+###############################################################################
+module "dns_private" {
+  source = "../_modules/dns_private"
+
+  prefix    = "selc"
+  env_short = local.env_short
+  env       = local.env
+  tags      = local.tags
+
+  reverse_proxy_ip               = local.reverse_proxy_ip
+  redis_private_endpoint_enabled = local.redis_private_endpoint_enabled
+
+  rg_vnet_name           = module.network.rg_vnet_name
+  vnet_id                = module.network.vnet_id
+  vnet_name              = module.network.vnet_name
+  vnet_pair_id           = module.network.vnet_pair_id
+  vnet_pair_name         = module.network.vnet_pair_name
+  vnet_aks_platform_id   = module.network.vnet_aks_platform_id
+  vnet_aks_platform_name = module.network.vnet_aks_platform_name
+}
+
+###############################################################################
+# dns_public
+###############################################################################
+module "dns_public" {
+  source = "../_modules/dns_public"
+
+  prefix    = "selc"
+  env_short = local.env_short
+  tags      = local.tags
+
+  dns_zone_prefix         = local.dns_zone_prefix
+  external_domain         = local.external_domain
+  dns_zone_prefix_ar      = local.dns_zone_prefix_ar
+  dns_ns_interop_selfcare = local.dns_ns_interop_selfcare
+
+  rg_vnet_name                 = module.network.rg_vnet_name
+  appgateway_public_ip_address = module.network.appgateway_public_ip_address
+}
+
+###############################################################################
+# nat
+###############################################################################
+module "nat" {
+  source = "../_modules/nat"
+
+  prefix    = "selc"
+  env_short = local.env_short
+  location  = local.location
+  tags      = local.tags
+}
+
+###############################################################################
+# log_analytics (LAW + AppInsights - separate to break CDN/monitor cycle)
+###############################################################################
+module "log_analytics" {
+  source = "../_modules/log_analytics"
+
+  prefix    = "selc"
+  env_short = local.env_short
+  location  = local.location
+  tags      = local.tags
+
+  key_vault_id          = module.key_vault.key_vault_id
+  law_sku               = local.law_sku
+  law_retention_in_days = local.law_retention_in_days
+  law_daily_quota_gb    = local.law_daily_quota_gb
+}
+
+###############################################################################
+# cdn
+###############################################################################
+module "cdn" {
+  source = "../_modules/cdn"
+
+  prefix    = "selc"
+  env_short = local.env_short
+  location  = local.location
+  tags      = local.tags
+
+  dns_zone_prefix                  = local.dns_zone_prefix
+  external_domain                  = local.external_domain
+  robots_indexed_paths             = local.robots_indexed_paths
+  storage_account_replication_type = "LRS"
+
+  log_analytics_workspace_id    = module.log_analytics.log_analytics_workspace_id
+  key_vault_id                  = module.key_vault.key_vault_id
+  key_vault_name                = module.key_vault.key_vault_name
+  key_vault_resource_group_name = module.key_vault.key_vault_resource_group_name
+  subscription_id               = module.key_vault.subscription_id
+  rg_vnet_name                  = module.network.rg_vnet_name
+}
+
+###############################################################################
+# monitor (action groups, web tests, alerts)
+###############################################################################
+module "monitor" {
+  source = "../_modules/monitor"
+
+  prefix    = "selc"
+  env_short = local.env_short
+  location  = local.location
+  tags      = local.tags
+
+  subscription_id = module.key_vault.subscription_id
+  key_vault_id    = module.key_vault.key_vault_id
+
+  # From log_analytics module
+  monitor_rg_name           = module.log_analytics.monitor_rg_name
+  monitor_rg_location       = module.log_analytics.monitor_rg_location
+  application_insights_id   = module.log_analytics.application_insights_id
+  application_insights_name = module.log_analytics.application_insights_name
+
+  # Web test URLs
+  dns_a_api_fqdn      = module.dns_public.dns_a_api_fqdn
+  dns_a_api_pnpg_fqdn = module.dns_public.dns_a_api_pnpg_fqdn
+  cdn_fqdn            = module.cdn.fqdn
+
+  # Selfcare status secrets (from key_vault secrets query)
+  selfcare_status_dev_email = try(module.key_vault.secrets_selfcare_status_dev["alert-selfcare-status-dev-email"].value, "")
+  selfcare_status_dev_slack = try(module.key_vault.secrets_selfcare_status_dev["alert-selfcare-status-dev-slack"].value, "")
+}
+
+###############################################################################
+# events
+###############################################################################
+module "events" {
+  source = "../_modules/events"
+
+  prefix    = "selc"
+  env_short = local.env_short
+  location  = local.location
+  tags      = local.tags
+
+  private_endpoint_network_policies = local.private_endpoint_network_policies
+
+  rg_vnet_name = module.network.rg_vnet_name
+  vnet_id      = module.network.vnet_id
+  vnet_name    = module.network.vnet_name
+  key_vault_id = module.key_vault.key_vault_id
+
+  action_group_error_id = module.monitor.action_group_error_id
+  action_group_slack_id = module.monitor.action_group_slack_id
+  action_group_email_id = module.monitor.action_group_email_id
+
+  privatelink_servicebus_windows_net_ids   = [module.dns_private.privatelink_servicebus_windows_net_id]
+  privatelink_servicebus_windows_net_names = [module.dns_private.privatelink_servicebus_windows_net_name]
+
+  cidr_subnet_eventhub              = local.cidr_subnet_eventhub
   eventhub_auto_inflate_enabled     = local.eventhub_auto_inflate_enabled
   eventhub_sku_name                 = local.eventhub_sku_name
   eventhub_capacity                 = local.eventhub_capacity
   eventhub_maximum_throughput_units = local.eventhub_maximum_throughput_units
   eventhubs                         = local.eventhubs
   eventhub_ip_rules                 = local.eventhub_ip_rules
+  eventhub_alerts_enabled           = local.eventhub_alerts_enabled
+}
 
-  backends = {
-    aks = {
-      protocol                    = "Https"
-      host                        = "selc.internal.${var.dns_zone_prefix}.${var.external_domain}"
-      port                        = 443
-      ip_addresses                = null
-      probe                       = "/health"
-      probe_name                  = "probe-aks"
-      request_timeout             = 60
-      fqdns                       = ["selc.internal.${var.dns_zone_prefix}.${var.external_domain}"]
-      pick_host_name_from_backend = false
-    }
-    apim = {
-      protocol                    = "Https"
-      host                        = trim(azurerm_dns_a_record.dns_a_api.fqdn, ".")
-      port                        = 443
-      ip_addresses                = data.azurerm_api_management.this.private_ip_addresses
-      probe                       = "/external/status"
-      probe_name                  = "probe-apim"
-      request_timeout             = 60
-      fqdns                       = null
-      pick_host_name_from_backend = false
-    }
-    platform-aks = {
-      protocol                    = "Https"
-      host                        = "${var.aks_platform_env}.pnpg.internal.${var.dns_zone_prefix}.${var.external_domain}"
-      port                        = 443
-      ip_addresses                = null
-      probe                       = "/pnpg/status"
-      probe_name                  = "probe-platform-aks"
-      request_timeout             = 60
-      fqdns                       = ["${var.aks_platform_env}.pnpg.internal.${var.dns_zone_prefix}.${var.external_domain}"]
-      pick_host_name_from_backend = false
-    }
-    auth-selc = {
-      protocol                    = "Https"
-      host                        = "selc-${var.env_short}-auth-ms-ca.${var.auth_ms_private_dns_suffix}"
-      port                        = 443
-      ip_addresses                = null
-      probe                       = "/q/health/live"
-      probe_name                  = "probe-auth-selc"
-      request_timeout             = 60
-      fqdns                       = ["selc-${var.env_short}-auth-ms-ca.${var.auth_ms_private_dns_suffix}"]
-      pick_host_name_from_backend = false
-    }
-    hub-spid-pnpg = {
-      protocol                    = "Https"
-      host                        = "selc-${var.env_short}-pnpg-hub-spid-login-ca.${var.ca_pnpg_suffix_dns_private_name}"
-      port                        = 443
-      ip_addresses                = null
-      probe                       = "/info"
-      probe_name                  = "probe-hub-spid-pnpg"
-      request_timeout             = 60
-      fqdns                       = ["selc-${var.env_short}-pnpg-hub-spid-login-ca.${var.ca_pnpg_suffix_dns_private_name}"]
-      pick_host_name_from_backend = false
-    }
-  }
+###############################################################################
+# appgateway
+###############################################################################
+module "appgateway" {
+  source = "../_modules/appgateway"
 
-  listeners = {
-    api = {
-      protocol           = "Https"
-      host               = "api.${var.dns_zone_prefix}.${var.external_domain}"
-      port               = 443
-      ssl_profile_name   = null
-      firewall_policy_id = null
+  prefix    = "selc"
+  env_short = local.env_short
+  tags      = local.tags
 
-      certificate = {
-        name = var.app_gateway_api_certificate_name
-        id = replace(
-          data.azurerm_key_vault_certificate.app_gw_platform.secret_id,
-          "/${data.azurerm_key_vault_certificate.app_gw_platform.version}",
-          ""
-        )
-      }
-    }
-    api-pnpg = {
-      protocol           = "Https"
-      host               = "api-pnpg.${var.dns_zone_prefix}.${var.external_domain}"
-      port               = 443
-      ssl_profile_name   = null
-      firewall_policy_id = null
-      certificate = {
-        name = var.app_gateway_api_pnpg_certificate_name
-        id = replace(
-          data.azurerm_key_vault_certificate.api_pnpg_selfcare_certificate.secret_id,
-          "/${data.azurerm_key_vault_certificate.api_pnpg_selfcare_certificate.version}",
-          ""
-        )
-      }
-    }
-  }
+  dns_zone_prefix                       = local.dns_zone_prefix
+  external_domain                       = local.external_domain
+  aks_platform_env                      = local.aks_platform_env
+  auth_ms_private_dns_suffix            = local.auth_ms_private_dns_suffix
+  ca_pnpg_suffix_dns_private_name       = local.ca_pnpg_suffix_dns_private_name
+  app_gateway_api_certificate_name      = local.app_gateway_api_certificate_name
+  app_gateway_api_pnpg_certificate_name = local.app_gateway_api_pnpg_certificate_name
+  private_endpoint_network_policies     = local.private_endpoint_network_policies
+
+  rg_vnet_name            = module.network.rg_vnet_name
+  rg_vnet_location        = module.network.rg_vnet_location
+  vnet_name               = module.network.vnet_name
+  appgateway_public_ip_id = module.network.appgateway_public_ip_id
+  cidr_subnet_appgateway  = local.cidr_subnet_appgateway
+
+  key_vault_id           = module.key_vault.key_vault_id
+  appgateway_identity_id = module.key_vault.appgateway_identity_id
+
+  action_group_error_id = module.monitor.action_group_error_id
+  action_group_slack_id = module.monitor.action_group_slack_id
+  action_group_email_id = module.monitor.action_group_email_id
+}
+
+###############################################################################
+# storage
+###############################################################################
+module "storage" {
+  source = "../_modules/storage"
+
+  prefix    = "selc"
+  env_short = local.env_short
+  env       = local.env
+  location  = local.location
+  tags      = local.tags
+
+  adgroup_developers_object_id = module.key_vault.adgroup_developers_object_id
+  adgroup_admin_object_id      = module.key_vault.adgroup_admin_object_id
 }

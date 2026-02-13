@@ -1,23 +1,32 @@
+locals {
+  project = "${var.prefix}-${var.env_short}"
+}
+
+resource "azurerm_resource_group" "data" {
+  name     = "${local.project}-data-rg"
+  location = var.location
+  tags     = var.tags
+}
+
 data "azurerm_storage_account" "tfstate" {
   name                = "tfapp${var.env}selfcare"
   resource_group_name = "terraform-state-rg"
 }
 
-# Container per lo stato Terraform
 data "azurerm_storage_container" "tfstate" {
   name                 = "terraform-state"
   storage_account_name = data.azurerm_storage_account.tfstate.name
 }
 
-# # Assegna il ruolo al service principal corrente
+# Uncomment if needed:
 # resource "azurerm_role_assignment" "storage_blob_contributor" {
-#   scope              = data.azurerm_storage_account.tfstate.id
+#   scope                = data.azurerm_storage_account.tfstate.id
 #   role_definition_name = "Storage Blob Data Contributor"
-#   principal_id       = data.azuread_group.adgroup_developers.object_id
+#   principal_id         = var.adgroup_developers_object_id
 # }
 
 # resource "azurerm_role_assignment" "storage_blob_contributor_admin" {
-#   scope              = data.azurerm_storage_account.tfstate.id
+#   scope                = data.azurerm_storage_account.tfstate.id
 #   role_definition_name = "Storage Blob Data Contributor"
-#   principal_id       = data.azuread_group.adgroup_admin.object_id
+#   principal_id         = var.adgroup_admin_object_id
 # }

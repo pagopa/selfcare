@@ -1,19 +1,11 @@
-/**
- * Checkout resource group
- **/
-resource "azurerm_resource_group" "checkout_fe_rg" {
-  name     = format("%s-checkout-fe-rg", local.project)
-  location = var.location
-
-  tags = var.tags
-}
-
 locals {
+  project = "${var.prefix}-${var.env_short}"
+
   spa = [
     for i, spa in var.spa :
     {
       name  = replace(format("SPA-%s", spa), "-", "")
-      order = i + 3 // +3 required because the order start from 1: 1 is reserved for default application redirect; 2 is reserved for the https rewrite;
+      order = i + 3
       conditions = [
         {
           condition_type   = "url_path_condition"
@@ -37,15 +29,24 @@ locals {
       }
     }
   ]
+
   cors = {
     paths = ["/assets/"]
   }
 }
 
-/**
- * CDN
- */
-// public storage used to serve FE
+#
+# Resource Group
+#
+resource "azurerm_resource_group" "checkout_fe_rg" {
+  name     = format("%s-checkout-fe-rg", local.project)
+  location = var.location
+  tags     = var.tags
+}
+
+#
+# CDN
+#
 #tfsec:ignore:azure-storage-default-action-deny
 module "checkout_cdn" {
   source = "github.com/pagopa/terraform-azurerm-v4.git//cdn?ref=cdn_remove_custom_hostname"
@@ -56,41 +57,35 @@ module "checkout_cdn" {
   location              = var.location
   hostname              = "${var.dns_zone_prefix}.${var.external_domain}"
   https_rewrite_enabled = true
-  # lock_enabled          = var.lock_enable apz
 
   storage_account_replication_type = var.storage_account_replication_type
 
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.log_analytics_workspace.id
+  log_analytics_workspace_id = var.log_analytics_workspace_id
 
   index_document     = "index.html"
   error_404_document = "error.html"
 
-  # dns_zone_name                = azurerm_dns_zone.selfcare_public[0].name
-  # dns_zone_resource_group_name = azurerm_dns_zone.selfcare_public[0].resource_group_name
-  dns_zone_name                = "${var.dns_zone_prefix}.${var.external_domain}" #proposta copilot dev.selfcare.pagopa.it #apz
-  dns_zone_resource_group_name = azurerm_resource_group.rg_vnet.name             #apz
+  dns_zone_name                = "${var.dns_zone_prefix}.${var.external_domain}"
+  dns_zone_resource_group_name = var.rg_vnet_name
 
-  keyvault_resource_group_name = module.key_vault.resource_group_name
-  keyvault_subscription_id     = data.azurerm_subscription.current.subscription_id
-  keyvault_vault_name          = module.key_vault.name
+  keyvault_resource_group_name = var.key_vault_resource_group_name
+  keyvault_subscription_id     = var.subscription_id
+  keyvault_vault_name          = var.key_vault_name
 
   advanced_threat_protection_enabled = var.checkout_advanced_threat_protection_enabled
 
   querystring_caching_behaviour = "BypassCaching"
-
 
   global_delivery_rule = {
     cache_expiration_action       = []
     cache_key_query_string_action = []
     modify_request_header_action  = []
 
-    # HSTS
     modify_response_header_action = [{
       action = "Overwrite"
       name   = "Strict-Transport-Security"
       value  = "max-age=31536000"
       },
-      # Content-Security-Policy (in Report mode)
       {
         action = "Overwrite"
         name   = "Content-Security-Policy-Report-Only"
@@ -146,7 +141,6 @@ module "checkout_cdn" {
       name  = "robotsNoIndex"
       order = 3 + length(local.spa)
 
-      // conditions
       url_path_conditions = [{
         operator         = "Equal"
         match_values     = length(var.robots_indexed_paths) > 0 ? var.robots_indexed_paths : ["dummy"]
@@ -167,7 +161,6 @@ module "checkout_cdn" {
       url_file_extension_conditions = []
       url_file_name_conditions      = []
 
-      // actions
       modify_response_header_actions = [{
         action = "Overwrite"
         name   = "X-Robots-Tag"
@@ -183,7 +176,6 @@ module "checkout_cdn" {
       name  = "microcomponentsNoCache"
       order = 4 + length(local.spa)
 
-      // conditions
       url_path_conditions           = []
       cookies_conditions            = []
       device_conditions             = []
@@ -205,7 +197,6 @@ module "checkout_cdn" {
         transforms       = null
       }]
 
-      // actions
       modify_response_header_actions = [{
         action = "Overwrite"
         name   = "Cache-Control"
@@ -221,7 +212,6 @@ module "checkout_cdn" {
       name  = "cors"
       order = 5 + length(local.spa)
 
-      // conditions
       url_path_conditions = [{
         operator         = "BeginsWith"
         match_values     = local.cors.paths
@@ -242,7 +232,6 @@ module "checkout_cdn" {
       url_file_extension_conditions = []
       url_file_name_conditions      = []
 
-      // actions
       modify_response_header_actions = [{
         action = "Overwrite"
         name   = "Access-Control-Allow-Origin"
@@ -258,13 +247,15 @@ module "checkout_cdn" {
   tags = var.tags
 }
 
+#
+# Key Vault Secrets
+#
 #tfsec:ignore:azure-keyvault-ensure-secret-expiry
 resource "azurerm_key_vault_secret" "selc_web_storage_access_key" {
   name         = "web-storage-access-key"
   value        = module.checkout_cdn.storage_primary_access_key
   content_type = "text/plain"
-
-  key_vault_id = module.key_vault.id
+  key_vault_id = var.key_vault_id
 }
 
 #tfsec:ignore:azure-keyvault-ensure-secret-expiry
@@ -272,8 +263,7 @@ resource "azurerm_key_vault_secret" "selc_web_storage_connection_string" {
   name         = "web-storage-connection-string"
   value        = module.checkout_cdn.storage_primary_connection_string
   content_type = "text/plain"
-
-  key_vault_id = module.key_vault.id
+  key_vault_id = var.key_vault_id
 }
 
 #tfsec:ignore:azure-keyvault-ensure-secret-expiry
@@ -281,13 +271,5 @@ resource "azurerm_key_vault_secret" "selc_web_storage_blob_connection_string" {
   name         = "web-storage-blob-connection-string"
   value        = module.checkout_cdn.storage_primary_blob_connection_string
   content_type = "text/plain"
-
-  key_vault_id = module.key_vault.id
+  key_vault_id = var.key_vault_id
 }
-
-# resource "azurerm_management_lock" "checkout_cdn_management_lock" {
-#   name       = "selc-checkout-cdn-storage-lock"
-#   scope      = module.checkout_cdn.id
-#   lock_level = "CanNotDelete"
-#   notes      = "This items can't be deleted in this subscription!"
-# } APZ
