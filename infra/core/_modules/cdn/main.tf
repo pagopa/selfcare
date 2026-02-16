@@ -71,6 +71,7 @@ module "checkout_cdn" {
   keyvault_resource_group_name = var.key_vault_resource_group_name
   keyvault_subscription_id     = var.subscription_id
   keyvault_vault_name          = var.key_vault_name
+  custom_hostname_kv_enabled   = var.custom_hostname_kv_enabled
 
   advanced_threat_protection_enabled = var.checkout_advanced_threat_protection_enabled
 

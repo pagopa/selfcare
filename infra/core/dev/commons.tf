@@ -123,7 +123,8 @@ module "cdn" {
   dns_zone_prefix                  = local.dns_zone_prefix
   external_domain                  = local.external_domain
   robots_indexed_paths             = local.robots_indexed_paths
-  storage_account_replication_type = "LRS"
+  storage_account_replication_type = "ZRS"
+  custom_hostname_kv_enabled       = false
 
   log_analytics_workspace_id    = module.log_analytics.log_analytics_workspace_id
   key_vault_id                  = module.key_vault.key_vault_id

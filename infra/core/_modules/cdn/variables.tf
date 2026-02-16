@@ -77,3 +77,9 @@ variable "rg_vnet_name" {
   type        = string
   description = "VNet resource group name (for DNS zone)"
 }
+
+variable "custom_hostname_kv_enabled" {
+  type        = bool
+  default     = false
+  description = "Flag required to enable the association between KV certificate and CDN when the hostname is different from the APEX"
+}
