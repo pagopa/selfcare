@@ -309,7 +309,7 @@ class UserGroupV1ControllerTest {
                 });
         //when
         mvc.perform(MockMvcRequestBuilders
-                .get(BASE_URL + "/")
+                .get(BASE_URL)
                 .param("institutionId", institutionId)
                 .param("productId", productId)
                 .param("userId", userId)

@@ -3,9 +3,9 @@ package it.pagopa.selfcare.user_group.handler;
 import it.pagopa.selfcare.user_group.exception.ResourceAlreadyExistsException;
 import it.pagopa.selfcare.user_group.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user_group.exception.ResourceUpdateException;
-import it.pagopa.selfcare.commons.web.model.Problem;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,7 +24,7 @@ class UserGroupExceptionHandlerTest {
         Mockito.when(mockException.getMessage())
                 .thenReturn(DETAIL_MESSAGE);
         //when
-        ResponseEntity<Problem> responseEntity = handler.handleResourceNotFoundException(mockException);
+        ResponseEntity<ProblemDetail> responseEntity = handler.handleResourceNotFoundException(mockException);
         //then
         assertNotNull(responseEntity);
         assertEquals(NOT_FOUND, responseEntity.getStatusCode());
@@ -40,7 +40,7 @@ class UserGroupExceptionHandlerTest {
         Mockito.when(mockException.getMessage())
                 .thenReturn(DETAIL_MESSAGE);
         //when
-        ResponseEntity<Problem> responseEntity = handler.handleResourceAlreadyExistsException(mockException);
+        ResponseEntity<ProblemDetail> responseEntity = handler.handleResourceAlreadyExistsException(mockException);
         //then
         assertNotNull(responseEntity);
         assertEquals(CONFLICT, responseEntity.getStatusCode());
@@ -56,7 +56,7 @@ class UserGroupExceptionHandlerTest {
         Mockito.when(mockException.getMessage())
                 .thenReturn(DETAIL_MESSAGE);
         //when
-        ResponseEntity<Problem> responseEntity = handler.handleResourceUpdateException(mockException);
+        ResponseEntity<ProblemDetail> responseEntity = handler.handleResourceUpdateException(mockException);
         //then
         assertNotNull(responseEntity);
         assertEquals(BAD_REQUEST, responseEntity.getStatusCode());

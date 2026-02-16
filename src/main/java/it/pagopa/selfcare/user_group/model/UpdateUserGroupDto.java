@@ -1,27 +1,27 @@
 package it.pagopa.selfcare.user_group.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
 import java.util.Set;
 import java.util.UUID;
 
 @Data
 public class UpdateUserGroupDto {
-    @ApiModelProperty(value = "${swagger.user-group.model.name}", required = true)
+    @Schema(description = "${swagger.user-group.model.name}")
     @JsonProperty(required = true)
     @NotBlank
     private String name;
 
-    @ApiModelProperty(value = "${swagger.user-group.model.description}", required = true)
+    @Schema(description = "${swagger.user-group.model.description}")
     @JsonProperty(required = true)
     @NotBlank
     private String description;
 
-    @ApiModelProperty(value = "${swagger.user-group.model.members}", required = true)
+    @Schema(description = "${swagger.user-group.model.members}")
     @JsonProperty(required = true)
     @NotEmpty
     private Set<UUID> members;

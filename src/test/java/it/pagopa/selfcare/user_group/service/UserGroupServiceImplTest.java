@@ -33,7 +33,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import javax.validation.ValidationException;
+import jakarta.validation.ValidationException;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
