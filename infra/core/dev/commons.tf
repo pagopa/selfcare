@@ -4,7 +4,7 @@
 module "network" {
   source = "../_modules/network"
 
-  prefix              = "selc"
+  prefix              = local.prefix
   env_short           = local.env_short
   location            = local.location
   location_short      = local.location_short
@@ -27,7 +27,7 @@ module "network" {
 module "key_vault" {
   source = "../_modules/key_vault"
 
-  prefix    = "selc"
+  prefix    = local.prefix
   env_short = local.env_short
   location  = local.location
   tags      = local.tags
@@ -44,7 +44,7 @@ module "key_vault" {
 module "dns_private" {
   source = "../_modules/dns_private"
 
-  prefix    = "selc"
+  prefix    = local.prefix
   env_short = local.env_short
   env       = local.env
   tags      = local.tags
@@ -67,7 +67,7 @@ module "dns_private" {
 module "dns_public" {
   source = "../_modules/dns_public"
 
-  prefix    = "selc"
+  prefix    = local.prefix
   env_short = local.env_short
   tags      = local.tags
 
@@ -86,7 +86,7 @@ module "dns_public" {
 module "nat" {
   source = "../_modules/nat"
 
-  prefix    = "selc"
+  prefix    = local.prefix
   env_short = local.env_short
   location  = local.location
   tags      = local.tags
@@ -98,7 +98,7 @@ module "nat" {
 module "log_analytics" {
   source = "../_modules/log_analytics"
 
-  prefix    = "selc"
+  prefix    = local.prefix
   env_short = local.env_short
   location  = local.location
   tags      = local.tags
@@ -115,7 +115,7 @@ module "log_analytics" {
 module "cdn" {
   source = "../_modules/cdn"
 
-  prefix    = "selc"
+  prefix    = local.prefix
   env_short = local.env_short
   location  = local.location
   tags      = local.tags
@@ -140,7 +140,7 @@ module "cdn" {
 module "monitor" {
   source = "../_modules/monitor"
 
-  prefix    = "selc"
+  prefix    = local.prefix
   env_short = local.env_short
   location  = local.location
   tags      = local.tags
@@ -170,7 +170,7 @@ module "monitor" {
 module "events" {
   source = "../_modules/events"
 
-  prefix    = "selc"
+  prefix    = local.prefix
   env_short = local.env_short
   location  = local.location
   tags      = local.tags
@@ -205,7 +205,7 @@ module "events" {
 module "appgateway" {
   source = "../_modules/appgateway"
 
-  prefix    = "selc"
+  prefix    = local.prefix
   env_short = local.env_short
   tags      = local.tags
 
@@ -238,7 +238,7 @@ module "appgateway" {
 module "storage" {
   source = "../_modules/storage"
 
-  prefix    = "selc"
+  prefix    = local.prefix
   env_short = local.env_short
   env       = local.env
   location  = local.location
@@ -246,4 +246,93 @@ module "storage" {
 
   adgroup_developers_object_id = module.key_vault.adgroup_developers_object_id
   adgroup_admin_object_id      = module.key_vault.adgroup_admin_object_id
+}
+
+
+###############################################################################
+# one trust
+###############################################################################
+
+module "one_trust" {
+  source = "../_modules/one_trust"
+
+  env                            = local.env
+  cdn_name                       = module.cdn.name
+  checkout_fe_rg_name            = module.cdn.checkout_fe_rg_name
+  cdn_storage_primary_access_key = module.cdn.storage_primary_access_key
+}
+
+
+
+###############################################################################
+# vpn
+###############################################################################
+
+module "vpn" {
+  source = "../_modules/vpn"
+
+  env_short     = local.env_short
+  project       = local.project
+  project_pair  = local.project_pair
+  location      = local.location
+  location_pair = local.location_pair
+  tags          = local.tags
+
+  vnet_name    = module.network.vnet_name
+  rg_vnet_name = module.network.rg_vnet_name
+
+  rg_pair_vnet_name = module.network.rg_pair_vnet_name
+  vnet_pair_name    = module.network.vnet_pair_name
+
+  vpn_sku     = local.vpn_sku
+  vpn_pip_sku = local.vpn_pip_sku
+  vpn_snet_id = module.network.private_endpoints_subnet_id
+
+  cidr_subnet_vpn           = local.cidr_subnet_vpn
+  cidr_subnet_dns_forwarder = local.cidr_subnet_dns_forwarder
+
+  cidr_subnet_pair_dnsforwarder = local.cidr_subnet_pair_dnsforwarder
+
+  private_endpoint_network_policies = local.private_endpoint_network_policies
+
+  subscription_id   = module.key_vault.subscription_id
+  subscription_name = module.key_vault.subscription_name
+  tenant_id         = module.key_vault.tenant_id
+
+
+
+  sec_workspace_id = local.env_short == "p" ? module.key_vault.secrets_sec_workspace_id : null
+  sec_storage_id   = local.env_short == "p" ? module.key_vault.secrets_sec_storage_id : null
+}
+
+
+###############################################################################
+# cosmos db
+###############################################################################
+
+module "cosmos_db" {
+  source = "../_modules/cosmos_db"
+
+  prefix    = local.prefix
+  env_short = local.env_short
+  location  = local.location
+  tags      = local.tags
+  project   = local.project
+
+  external_domain = local.external_domain
+
+  # Network
+  rg_vnet_name                 = module.network.rg_vnet_name
+  vnet_name                    = module.network.vnet_name
+  cidr_subnet_cosmosdb_mongodb = local.cidr_subnet_cosmosdb_mongodb
+
+  # Key Vault
+  key_vault_id = module.key_vault.key_vault_id
+
+  # Private DNS
+  privatelink_mongo_cosmos_azure_com_id = module.dns_private.privatelink_mongo_cosmos_azure_com_id
+
+  # CosmosDB MongoDB
+  cosmosdb_mongodb_extra_capabilities               = local.cosmosdb_mongodb_extra_capabilities
+  cosmosdb_mongodb_main_geo_location_zone_redundant = local.cosmosdb_mongodb_main_geo_location_zone_redundant
 }

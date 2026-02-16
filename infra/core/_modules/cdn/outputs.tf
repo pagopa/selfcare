@@ -9,3 +9,11 @@ output "storage_primary_web_host" {
 output "checkout_fe_rg_name" {
   value = azurerm_resource_group.checkout_fe_rg.name
 }
+
+output "storage_primary_access_key" {
+  value = module.checkout_cdn.storage_primary_access_key
+}
+
+output "name" {
+  value = module.checkout_cdn.name
+}

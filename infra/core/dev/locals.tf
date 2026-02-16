@@ -1,11 +1,15 @@
 locals {
   # general
+  prefix              = "selc"
   env_short           = "d"
   env                 = "dev"
   location            = "westeurope"
   location_short      = "weu"
   location_pair       = "northeurope"
   location_pair_short = "neu"
+
+  project      = "${local.prefix}-${local.env_short}"
+  project_pair = "${local.prefix}-${local.env_short}-${local.location_pair_short}"
 
   tags = {
     CreatedBy   = "Terraform"
@@ -474,5 +478,8 @@ locals {
 
   auth_ms_private_dns_suffix = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
 
-  private_endpoint_network_policies = "Disabled"
+  vpn_sku     = "VpnGw1"
+  vpn_pip_sku = "Standard"
+
+  private_endpoint_network_policies = "Enabled"
 }
