@@ -115,23 +115,28 @@ module "log_analytics" {
 module "cdn" {
   source = "../_modules/cdn"
 
-  prefix    = local.prefix
-  env_short = local.env_short
-  location  = local.location
-  tags      = local.tags
+  prefix          = local.prefix
+  env_short       = local.env_short
+  location        = local.location
+  location_short  = local.location_short
+  tags            = local.tags
+  domain          = local.app_domain
+  app_name        = "checkout"
+  instance_number = "01"
 
-  dns_zone_prefix                  = local.dns_zone_prefix
-  external_domain                  = local.external_domain
-  robots_indexed_paths             = local.robots_indexed_paths
-  storage_account_replication_type = "ZRS"
-  custom_hostname_kv_enabled       = false
+  dns_zone_prefix      = local.dns_zone_prefix
+  external_domain      = local.external_domain
+  robots_indexed_paths = local.robots_indexed_paths
+  storage_use_case     = "development"
 
   log_analytics_workspace_id    = module.log_analytics.log_analytics_workspace_id
   key_vault_id                  = module.key_vault.key_vault_id
   key_vault_name                = module.key_vault.key_vault_name
   key_vault_resource_group_name = module.key_vault.key_vault_resource_group_name
-  subscription_id               = module.key_vault.subscription_id
+  cdn_certificate_name          = replace("${local.dns_zone_prefix}.${local.external_domain}", ".", "-")
+  vnet_name                     = module.network.vnet_name
   rg_vnet_name                  = module.network.rg_vnet_name
+  cidr_subnet_cdn               = local.cidr_subnet_cdn
 }
 
 ###############################################################################
@@ -157,7 +162,9 @@ module "monitor" {
   # Web test URLs
   dns_a_api_fqdn      = module.dns_public.dns_a_api_fqdn
   dns_a_api_pnpg_fqdn = module.dns_public.dns_a_api_pnpg_fqdn
-  cdn_fqdn            = module.cdn.fqdn
+  #fixme: these should be outputs from the cdn module, but that would create a cycle since the cdn module needs the monitor for log analytics workspace
+  cdn_fqdn = "dev.selfcare.pagopa.it"
+  # module.cdn.fqdn
 
   # Selfcare status secrets (from key_vault secrets query)
   selfcare_status_dev_email = try(module.key_vault.secrets_selfcare_status_dev["alert-selfcare-status-dev-email"].value, "")

@@ -7,11 +7,6 @@ variable "env_short" {
   type = string
 }
 
-variable "location_short" {
-  type    = string
-  default = "weu"
-}
-
 variable "location" {
   type    = string
   default = "westeurope"
@@ -22,16 +17,6 @@ variable "tags" {
   default = {}
 }
 
-variable "app_name" {
-  type        = string
-  description = "Application name"
-}
-
-variable "instance_number" {
-  type        = string
-  description = "Instance number for the application (e.g., 01, 02)"
-}
-
 variable "dns_zone_prefix" {
   type    = string
   default = "selfcare"
@@ -40,6 +25,11 @@ variable "dns_zone_prefix" {
 variable "external_domain" {
   type    = string
   default = "pagopa.it"
+}
+
+variable "spa" {
+  type    = list(string)
+  default = ["auth", "onboarding", "dashboard"]
 }
 
 variable "robots_indexed_paths" {
@@ -82,29 +72,4 @@ variable "cdn_certificate_name" {
 variable "rg_vnet_name" {
   type        = string
   description = "VNet resource group name (for DNS zone)"
-}
-
-variable "vnet_name" {
-  type        = string
-  description = "VNet name (for DNS zone)"
-}
-
-variable "domain" {
-  type        = string
-  description = "Logic domain (e.g., ar, pg)"
-}
-
-variable "cidr_subnet_cdn" {
-  type        = list(string)
-  description = "Storage CDN address space."
-}
-
-variable "spa" {
-  type        = list(string)
-  description = "spa root dirs"
-  default = [
-    "auth",
-    "onboarding",
-    "dashboard"
-  ]
 }
