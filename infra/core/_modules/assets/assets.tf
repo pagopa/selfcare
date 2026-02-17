@@ -6,14 +6,14 @@ resource "null_resource" "upload_assets" {
     command = <<EOT
               az storage blob sync \
                 --container '$web' \
-                --account-name ${replace(replace(module.checkout_cdn.name, "-cdn-endpoint", "-sa"), "-", "")} \
-                --account-key ${module.checkout_cdn.storage_primary_access_key} \
+                --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
+                --account-key ${var.checkout_cdn_storage_primary_access_key} \
                 --source "./assets" \
                 --destination 'assets/'
               az cdn endpoint purge \
-                --resource-group ${azurerm_resource_group.checkout_fe_rg.name} \
-                --name ${module.checkout_cdn.name} \
-                --profile-name ${replace(module.checkout_cdn.name, "-cdn-endpoint", "-cdn-profile")}  \
+                --resource-group ${var.checkout_fe_rg_name} \
+                --name ${var.checkout_cdn_name} \
+                --profile-name ${replace(var.checkout_cdn_name, "-cdn-endpoint", "-cdn-profile")}  \
                 --content-paths "/assets/*" \
                 --no-wait
           EOT
@@ -30,16 +30,16 @@ resource "null_resource" "upload_alert_message" {
     command = <<EOT
               az storage blob upload \
                 --container '$web' \
-                --account-name ${replace(replace(module.checkout_cdn.name, "-cdn-endpoint", "-sa"), "-", "")} \
-                --account-key ${module.checkout_cdn.storage_primary_access_key} \
+                --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
+                --account-key ${var.checkout_cdn_storage_primary_access_key} \
                 --file "./env/${var.env}/assets/login-alert-message.json" \
                 --overwrite true \
                 --name 'assets/login-alert-message.json'
 
               az cdn endpoint purge \
-                --resource-group ${azurerm_resource_group.checkout_fe_rg.name} \
-                --name ${module.checkout_cdn.name} \
-                --profile-name ${replace(module.checkout_cdn.name, "-cdn-endpoint", "-cdn-profile")}  \
+                --resource-group ${var.checkout_fe_rg_name} \
+                --name ${var.checkout_cdn_name} \
+                --profile-name ${replace(var.checkout_cdn_name, "-cdn-endpoint", "-cdn-profile")}  \
                 --content-paths "/assets/login-alert-message.json" \
                 --no-wait
           EOT
@@ -56,16 +56,16 @@ resource "null_resource" "upload_spid_idp_status" {
     command = <<EOT
               az storage blob upload \
                 --container '$web' \
-                --account-name ${replace(replace(module.checkout_cdn.name, "-cdn-endpoint", "-sa"), "-", "")} \
-                --account-key ${module.checkout_cdn.storage_primary_access_key} \
+                --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
+                --account-key ${var.checkout_cdn_storage_primary_access_key} \
                 --file "./env/${var.env}/assets/spid_idp_status.json" \
                 --overwrite true \
                 --name 'assets/spid_idp_status.json'
 
               az cdn endpoint purge \
-                --resource-group ${azurerm_resource_group.checkout_fe_rg.name} \
-                --name ${module.checkout_cdn.name} \
-                --profile-name ${replace(module.checkout_cdn.name, "-cdn-endpoint", "-cdn-profile")}  \
+                --resource-group ${var.checkout_fe_rg_name} \
+                --name ${var.checkout_cdn_name} \
+                --profile-name ${replace(var.checkout_cdn_name, "-cdn-endpoint", "-cdn-profile")}  \
                 --content-paths "/assets/spid_idp_status.json" \
                 --no-wait
           EOT
@@ -81,16 +81,16 @@ resource "null_resource" "upload_config" {
     command = <<EOT
               az storage blob upload \
                 --container '$web' \
-                --account-name ${replace(replace(module.checkout_cdn.name, "-cdn-endpoint", "-sa"), "-", "")} \
-                --account-key ${module.checkout_cdn.storage_primary_access_key} \
+                --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
+                --account-key ${var.checkout_cdn_storage_primary_access_key} \
                 --file "./env/${var.env}/assets/config.json" \
                 --overwrite true \
                 --name 'assets/config.json'
 
               az cdn endpoint purge \
-                --resource-group ${azurerm_resource_group.checkout_fe_rg.name} \
-                --name ${module.checkout_cdn.name} \
-                --profile-name ${replace(module.checkout_cdn.name, "-cdn-endpoint", "-cdn-profile")}  \
+                --resource-group ${var.checkout_fe_rg_name} \
+                --name ${var.checkout_cdn_name} \
+                --profile-name ${replace(var.checkout_cdn_name, "-cdn-endpoint", "-cdn-profile")}  \
                 --content-paths "/assets/config.json" \
                 --no-wait
           EOT

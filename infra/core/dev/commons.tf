@@ -336,3 +336,53 @@ module "cosmos_db" {
   cosmosdb_mongodb_extra_capabilities               = local.cosmosdb_mongodb_extra_capabilities
   cosmosdb_mongodb_main_geo_location_zone_redundant = local.cosmosdb_mongodb_main_geo_location_zone_redundant
 }
+
+
+###############################################################################
+# default_roleassignment_rg
+###############################################################################
+
+module "default_roleassignment" {
+  source = "../_modules/roles"
+
+  location = local.location
+  tags     = local.tags
+}
+
+
+###############################################################################
+# resources
+###############################################################################
+
+# module "resources" {
+#   source = "../_modules/resources"
+
+#   env = local.env
+
+#   # CDN
+#   checkout_cdn_name                       = module.cdn.name
+#   checkout_cdn_storage_primary_access_key = module.cdn.storage_primary_access_key
+#   checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
+
+#   # Contract Storage — TODO: expose these from the appropriate module
+#   selc_contracts_storage_name               = "" # module.<contracts_storage>.name
+#   selc_contracts_storage_primary_access_key = "" # module.<contracts_storage>.primary_access_key
+#   selc_contracts_container_name             = "" # <contracts_container>.name
+# }
+
+
+###############################################################################
+# assets
+###############################################################################
+
+module "assets" {
+  source = "../_modules/assets"
+
+  env = local.env
+
+  # CDN
+  checkout_cdn_name                       = module.cdn.name
+  checkout_cdn_storage_primary_access_key = module.cdn.storage_primary_access_key
+  checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
+}
+
