@@ -110,3 +110,8 @@ output "hub_docker_pwd" {
   value     = data.azurerm_key_vault_secret.hub_docker_pwd.value
   sensitive = true
 }
+
+output "appgateway_tenant_id" {
+  value     = azurerm_user_assigned_identity.appgateway.tenant_id
+  sensitive = true
+}

@@ -110,34 +110,52 @@ module "log_analytics" {
 }
 
 ###############################################################################
-# cdn
+# cdn (Front Door — migrated from CDN Classic)
 ###############################################################################
 module "cdn" {
-  source = "../_modules/cdn"
+  source = "../_modules/cdn_fd"
 
-  prefix          = local.prefix
-  env_short       = local.env_short
-  location        = local.location
-  location_short  = local.location_short
-  tags            = local.tags
-  domain          = local.app_domain
-  app_name        = "checkout"
-  instance_number = "01"
+  prefix    = local.prefix
+  env_short = local.env_short
+  location  = local.location
+  tags      = local.tags
 
   dns_zone_prefix      = local.dns_zone_prefix
   external_domain      = local.external_domain
   robots_indexed_paths = local.robots_indexed_paths
-  storage_use_case     = "development"
 
-  log_analytics_workspace_id    = module.log_analytics.log_analytics_workspace_id
-  key_vault_id                  = module.key_vault.key_vault_id
-  key_vault_name                = module.key_vault.key_vault_name
-  key_vault_resource_group_name = module.key_vault.key_vault_resource_group_name
-  cdn_certificate_name          = replace("${local.dns_zone_prefix}.${local.external_domain}", ".", "-")
-  vnet_name                     = module.network.vnet_name
-  rg_vnet_name                  = module.network.rg_vnet_name
-  cidr_subnet_cdn               = local.cidr_subnet_cdn
+  log_analytics_workspace_id = module.log_analytics.log_analytics_workspace_id
+  key_vault_id               = module.key_vault.key_vault_id
+  tenant_id                  = module.key_vault.tenant_id
+  rg_vnet_name               = module.network.rg_vnet_name
 }
+
+# module "cdn" { bk dx
+#   source = "../_modules/cdn"
+
+#   prefix          = local.prefix
+#   env_short       = local.env_short
+#   location        = local.location
+#   location_short  = local.location_short
+#   tags            = local.tags
+#   domain          = local.app_domain
+#   app_name        = "checkout"
+#   instance_number = "01"
+
+#   dns_zone_prefix      = local.dns_zone_prefix
+#   external_domain      = local.external_domain
+#   robots_indexed_paths = local.robots_indexed_paths
+#   storage_use_case     = "development"
+
+#   log_analytics_workspace_id    = module.log_analytics.log_analytics_workspace_id
+#   key_vault_id                  = module.key_vault.key_vault_id
+#   key_vault_name                = module.key_vault.key_vault_name
+#   key_vault_resource_group_name = module.key_vault.key_vault_resource_group_name
+#   cdn_certificate_name          = replace("${local.dns_zone_prefix}.${local.external_domain}", ".", "-")
+#   vnet_name                     = module.network.vnet_name
+#   rg_vnet_name                  = module.network.rg_vnet_name
+#   cidr_subnet_cdn               = local.cidr_subnet_cdn
+# }
 
 ###############################################################################
 # monitor (action groups, web tests, alerts)
