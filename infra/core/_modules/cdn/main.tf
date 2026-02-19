@@ -64,15 +64,6 @@ resource "azurerm_resource_group" "checkout_fe_rg" {
   tags     = var.tags
 }
 
-# resource "azurerm_resource_group" "example" {
-#   name = provider::dx::resource_name(merge(local.naming_config, {
-#     name          = "cdn-checkout",
-#     resource_type = "resource_group"
-#   }))
-#   location = local.environment.location
-#   tags     = var.tags
-# }
-
 resource "azurerm_subnet" "cdn_snet" {
   name                 = "${local.project}-${local.environment.app_name}-snet"
   virtual_network_name = var.vnet_name
@@ -186,7 +177,7 @@ module "checkout_cdn" {
 
 # Rule 1: Default application rewrite — / → /dashboard/index.html
 resource "azurerm_cdn_frontdoor_rule" "default_application" {
-  name                      = "${local.basename}fecdnfdrule"
+  name                      = "${local.basename}cdnfdrule"
   cdn_frontdoor_rule_set_id = module.checkout_cdn.rule_set_id
   order                     = 1
   behavior_on_match         = "Continue"

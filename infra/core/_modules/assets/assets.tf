@@ -1,6 +1,6 @@
 resource "null_resource" "upload_assets" {
   triggers = {
-    dir_sha1 = sha1(join("", [for f in fileset("${path.module}/assets", "**") : filesha1("${path.module}/assets/${f}")]))
+    dir_sha1 = sha1(join("", [for f in fileset("${path.module}/../../assets", "**") : filesha1("${path.module}/../../assets/${f}")]))
   }
   provisioner "local-exec" {
     command = <<EOT
@@ -8,7 +8,7 @@ resource "null_resource" "upload_assets" {
                 --container '$web' \
                 --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
                 --account-key ${var.checkout_cdn_storage_primary_access_key} \
-                --source "./assets" \
+                --source "${path.module}/../../assets" \
                 --destination 'assets/'
               az cdn endpoint purge \
                 --resource-group ${var.checkout_fe_rg_name} \
@@ -23,7 +23,7 @@ resource "null_resource" "upload_assets" {
 
 resource "null_resource" "upload_alert_message" {
   triggers = {
-    file_sha1 = filesha1("./env/${var.env}/assets/login-alert-message.json")
+    file_sha1 = filesha1("${path.module}/../../${var.env}/assets/login-alert-message.json")
   }
 
   provisioner "local-exec" {
@@ -32,7 +32,7 @@ resource "null_resource" "upload_alert_message" {
                 --container '$web' \
                 --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
                 --account-key ${var.checkout_cdn_storage_primary_access_key} \
-                --file "./env/${var.env}/assets/login-alert-message.json" \
+                --file "${path.module}/../../${var.env}/assets/login-alert-message.json" \
                 --overwrite true \
                 --name 'assets/login-alert-message.json'
 
@@ -49,7 +49,7 @@ resource "null_resource" "upload_alert_message" {
 
 resource "null_resource" "upload_spid_idp_status" {
   triggers = {
-    file_sha1 = filesha1("./env/${var.env}/assets/spid_idp_status.json")
+    file_sha1 = filesha1("${path.module}/../../${var.env}/assets/spid_idp_status.json")
   }
 
   provisioner "local-exec" {
@@ -58,23 +58,22 @@ resource "null_resource" "upload_spid_idp_status" {
                 --container '$web' \
                 --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
                 --account-key ${var.checkout_cdn_storage_primary_access_key} \
-                --file "./env/${var.env}/assets/spid_idp_status.json" \
+                --file "${path.module}/../../${var.env}/assets/spid_idp_status.json" \
                 --overwrite true \
                 --name 'assets/spid_idp_status.json'
 
-              az cdn endpoint purge \
+                az afd endpoint purge \
                 --resource-group ${var.checkout_fe_rg_name} \
-                --name ${var.checkout_cdn_name} \
-                --profile-name ${replace(var.checkout_cdn_name, "-cdn-endpoint", "-cdn-profile")}  \
-                --content-paths "/assets/spid_idp_status.json" \
-                --no-wait
+                --profile-name ${replace(var.checkout_cdn_name, "-cdn-endpoint", "-cdn-profile")} \
+                --endpoint-name ${var.checkout_cdn_name} \
+                --content-paths "/assets/spid_idp_status.json"
           EOT
   }
 }
 
 resource "null_resource" "upload_config" {
   triggers = {
-    file_sha1 = filesha1("./env/${var.env}/assets/config.json")
+    file_sha1 = filesha1("${path.module}/../../${var.env}/assets/config.json")
   }
 
   provisioner "local-exec" {
@@ -83,16 +82,19 @@ resource "null_resource" "upload_config" {
                 --container '$web' \
                 --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
                 --account-key ${var.checkout_cdn_storage_primary_access_key} \
-                --file "./env/${var.env}/assets/config.json" \
+                --file "${path.module}/../../${var.env}/assets/config.json" \
                 --overwrite true \
                 --name 'assets/config.json'
-
-              az cdn endpoint purge \
-                --resource-group ${var.checkout_fe_rg_name} \
-                --name ${var.checkout_cdn_name} \
-                --profile-name ${replace(var.checkout_cdn_name, "-cdn-endpoint", "-cdn-profile")}  \
-                --content-paths "/assets/config.json" \
-                --no-wait
+            
+              az afd endpoint purge \
+                  --resource-group ${var.checkout_fe_rg_name} \
+                  --name ${var.checkout_cdn_name} \
+                  --profile-name ${replace(var.checkout_cdn_name, "-cdn-endpoint", "-cdn-profile")}  \
+                  --content-paths "/assets/config.json" \
+                  --no-wait
           EOT
   }
 }
+
+
+              
