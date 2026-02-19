@@ -1,15 +1,6 @@
 locals {
   project = "${var.prefix}-${var.env_short}"
 
-  # naming_config = {
-  #   prefix          = var.prefix,
-  #   environment     = var.env_short,
-  #   location        = var.location
-  #   domain          = var.domain,
-  #   name            = var.app_name,
-  #   instance_number = tonumber(var.instance_number)
-  # }
-
   environment = {
     prefix          = var.prefix
     env_short       = var.env_short
@@ -380,3 +371,13 @@ resource "azurerm_key_vault_secret" "selc_web_storage_blob_connection_string" {
   key_vault_id = var.key_vault_id
   depends_on   = [module.cdn_storage_account]
 }
+
+###############################################################################
+# TMP OLD Storage Account
+###############################################################################
+
+data "azurerm_storage_account" "old_cdn_storage_account" {
+  name                = "${var.prefix}${var.env_short}checkoutsa"
+  resource_group_name = "${var.prefix}-${var.env_short}-checkout-fe-rg"
+}
+
