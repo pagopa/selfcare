@@ -112,23 +112,23 @@ module "log_analytics" {
 ###############################################################################
 # cdn (Front Door — migrated from CDN Classic)
 ###############################################################################
-module "cdn_fd" {
-  source = "../_modules/cdn_fd"
+# module "cdn_fd" {
+#   source = "../_modules/cdn_fd"
 
-  prefix    = local.prefix
-  env_short = local.env_short
-  location  = local.location
-  tags      = local.tags
+#   prefix    = local.prefix
+#   env_short = local.env_short
+#   location  = local.location
+#   tags      = local.tags
 
-  dns_zone_prefix      = local.dns_zone_prefix
-  external_domain      = local.external_domain
-  robots_indexed_paths = local.robots_indexed_paths
+#   dns_zone_prefix      = local.dns_zone_prefix
+#   external_domain      = local.external_domain
+#   robots_indexed_paths = local.robots_indexed_paths
 
-  log_analytics_workspace_id = module.log_analytics.log_analytics_workspace_id
-  key_vault_id               = module.key_vault.key_vault_id
-  tenant_id                  = module.key_vault.tenant_id
-  rg_vnet_name               = module.network.rg_vnet_name
-}
+#   log_analytics_workspace_id = module.log_analytics.log_analytics_workspace_id
+#   key_vault_id               = module.key_vault.key_vault_id
+#   tenant_id                  = module.key_vault.tenant_id
+#   rg_vnet_name               = module.network.rg_vnet_name
+# }
 
 module "cdn" {
   source = "../_modules/cdn"
@@ -422,7 +422,8 @@ module "assets" {
   env = local.env
 
   # CDN
-  checkout_cdn_name                       = module.cdn.name
+  checkout_cdn_name                       = module.cdn.storage_name
+  checkout_endpoint_name                  = module.cdn.name
   checkout_cdn_storage_primary_access_key = module.cdn.storage_primary_access_key
   checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
 }

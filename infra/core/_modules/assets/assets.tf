@@ -10,10 +10,10 @@ resource "null_resource" "upload_assets" {
                 --account-key ${var.checkout_cdn_storage_primary_access_key} \
                 --source "${path.module}/../../assets" \
                 --destination 'assets/'
-              az cdn endpoint purge \
-                --resource-group ${var.checkout_fe_rg_name} \
-                --name ${var.checkout_cdn_name} \
-                --profile-name ${replace(var.checkout_cdn_name, "-cdn-endpoint", "-cdn-profile")}  \
+              az afd endpoint purge \
+                  --resource-group ${var.checkout_fe_rg_name} \
+                  --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
+                  --profile-name ${replace(var.checkout_endpoint_name, "-cdn-endpoint", "-cdn-profile")}  \
                 --content-paths "/assets/*" \
                 --no-wait
           EOT
@@ -36,10 +36,10 @@ resource "null_resource" "upload_alert_message" {
                 --overwrite true \
                 --name 'assets/login-alert-message.json'
 
-              az cdn endpoint purge \
-                --resource-group ${var.checkout_fe_rg_name} \
-                --name ${var.checkout_cdn_name} \
-                --profile-name ${replace(var.checkout_cdn_name, "-cdn-endpoint", "-cdn-profile")}  \
+              az afd endpoint purge \
+                  --resource-group ${var.checkout_fe_rg_name} \
+                  --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
+                  --profile-name ${replace(var.checkout_endpoint_name, "-cdn-endpoint", "-cdn-profile")}  \
                 --content-paths "/assets/login-alert-message.json" \
                 --no-wait
           EOT
@@ -63,18 +63,19 @@ resource "null_resource" "upload_spid_idp_status" {
                 --name 'assets/spid_idp_status.json'
 
                 az afd endpoint purge \
-                --resource-group ${var.checkout_fe_rg_name} \
-                --profile-name ${replace(var.checkout_cdn_name, "-cdn-endpoint", "-cdn-profile")} \
-                --endpoint-name ${var.checkout_cdn_name} \
-                --content-paths "/assets/spid_idp_status.json"
+                  --resource-group ${var.checkout_fe_rg_name} \
+                  --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
+                  --profile-name ${replace(var.checkout_endpoint_name, "-cdn-endpoint", "-cdn-profile")}  \
+                  --content-paths "/assets/spid_idp_status.json" \
+                  --no-wait
           EOT
   }
 }
 
 resource "null_resource" "upload_config" {
-  triggers = {
-    file_sha1 = filesha1("${path.module}/../../${var.env}/assets/config.json")
-  }
+  # triggers = {
+  #   file_sha1 = filesha1("${path.module}/../../${var.env}/assets/config.json")
+  # }
 
   provisioner "local-exec" {
     command = <<EOT
@@ -88,8 +89,8 @@ resource "null_resource" "upload_config" {
             
               az afd endpoint purge \
                   --resource-group ${var.checkout_fe_rg_name} \
-                  --name ${var.checkout_cdn_name} \
-                  --profile-name ${replace(var.checkout_cdn_name, "-cdn-endpoint", "-cdn-profile")}  \
+                  --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
+                  --profile-name ${replace(var.checkout_endpoint_name, "-cdn-endpoint", "-cdn-profile")}  \
                   --content-paths "/assets/config.json" \
                   --no-wait
           EOT

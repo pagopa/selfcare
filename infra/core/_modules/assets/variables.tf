@@ -20,3 +20,8 @@ variable "checkout_fe_rg_name" {
   type        = string
   description = "Checkout frontend resource group name"
 }
+
+variable "checkout_endpoint_name" {
+  type        = string
+  description = "Checkout frontend endpoint name"
+}
