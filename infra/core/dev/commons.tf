@@ -327,7 +327,6 @@ module "vpn" {
 
   vpn_sku     = local.vpn_sku
   vpn_pip_sku = local.vpn_pip_sku
-  vpn_snet_id = module.network.private_endpoints_subnet_id
 
   cidr_subnet_vpn           = local.cidr_subnet_vpn
   cidr_subnet_dns_forwarder = local.cidr_subnet_dns_forwarder

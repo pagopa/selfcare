@@ -69,11 +69,6 @@ variable "vpn_pip_sku" {
   description = "SKU for the VPN Public IP"
 }
 
-variable "vpn_snet_id" {
-  type        = string
-  description = "ID of the VPN subnet"
-}
-
 variable "cidr_subnet_vpn" {
   type        = list(string)
   description = "CIDR block for the VPN subnet"
