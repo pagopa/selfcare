@@ -484,4 +484,8 @@ locals {
   vpn_pip_sku = "Standard"
 
   private_endpoint_network_policies = "Enabled"
+
+  contracts_enable_versioning          = false
+  contracts_advanced_threat_protection = false
+  contracts_delete_retention_days      = 0
 }

@@ -427,3 +427,29 @@ module "assets" {
   checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
 }
 
+###############################################################################
+# Contract storage
+###############################################################################
+
+module "contracts_storage" {
+  source = "../_modules/deprecate/storage"
+
+  prefix    = local.prefix
+  env_short = local.env_short
+  env       = local.env
+  location  = local.location
+  tags      = local.tags
+
+  rg_vnet_name = module.network.rg_vnet_name
+  vnet_name    = module.network.vnet_name
+  project      = local.project
+  key_vault_id = module.key_vault.key_vault_id
+
+  contracts_enable_versioning          = local.contracts_enable_versioning
+  contracts_advanced_threat_protection = local.contracts_advanced_threat_protection
+  contracts_delete_retention_days      = local.contracts_delete_retention_days
+
+  cidr_subnet_contract_storage      = local.cidr_subnet_contract_storage
+  private_endpoint_network_policies = local.private_endpoint_network_policies
+  private_dns_zone_ids              = [module.dns_private.privatelink_blob_core_windows_net_id]
+}
