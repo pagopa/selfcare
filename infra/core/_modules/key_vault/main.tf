@@ -195,3 +195,8 @@ data "azurerm_key_vault_secret" "hub_docker_pwd" {
   name         = "hub-docker-pwd"
   key_vault_id = module.key_vault.id
 }
+
+data "azurerm_key_vault_secret" "selc_documents_storage_connection_string" {
+  name         = "documents-storage-connection-string"
+  key_vault_id = module.key_vault.id
+}

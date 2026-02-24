@@ -1,15 +1,27 @@
 variable "env" {
-  type = string
+  type        = string
+  description = "Environment name (e.g. dev, uat, prod)"
 }
 
-variable "cdn_name" {
-  type = string
+# CDN\\
+variable "checkout_cdn_name" {
+  type        = string
+  description = "CDN endpoint name"
 }
 
-variable "cdn_storage_primary_access_key" {
-  type = string
+variable "checkout_cdn_storage_primary_access_key" {
+  type        = string
+  sensitive   = true
+  description = "CDN storage account primary access key"
 }
 
+# Resource Group
 variable "checkout_fe_rg_name" {
-  type = string
+  type        = string
+  description = "Checkout frontend resource group name"
+}
+
+variable "checkout_endpoint_name" {
+  type        = string
+  description = "Checkout frontend endpoint name"
 }

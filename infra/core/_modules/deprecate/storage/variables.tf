@@ -81,3 +81,38 @@ variable "private_dns_zone_ids" {
   description = "List of private DNS zone IDs to associate with the storage private endpoint"
   default     = []
 }
+
+variable "logs_account_replication_type" {
+  type        = string
+  description = "logs replication type"
+  default     = "ZRS"
+}
+
+variable "logs_enable_versioning" {
+  type        = bool
+  description = "Enable logs versioning"
+  default     = false
+}
+
+variable "logs_advanced_threat_protection" {
+  type        = bool
+  description = "Enable logs threat advanced protection"
+  default     = false
+}
+
+variable "cosmosdb_mongodb_public_network_access_enabled" {
+  type        = bool
+  description = "Whether or not public network access is allowed for this CosmosDB account"
+  default     = false
+}
+
+variable "logs_delete_retention_days" {
+  type        = number
+  description = "Number of days to retain deleted logs"
+  default     = 1
+}
+
+variable "cidr_subnet_logs_storage" {
+  type        = list(string)
+  description = "Logs storage address space."
+}

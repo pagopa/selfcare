@@ -289,22 +289,6 @@ module "storage" {
   adgroup_admin_object_id      = module.key_vault.adgroup_admin_object_id
 }
 
-
-###############################################################################
-# one trust
-###############################################################################
-
-module "one_trust" {
-  source = "../_modules/one_trust"
-
-  env                            = local.env
-  cdn_name                       = module.cdn.name
-  checkout_fe_rg_name            = module.cdn.checkout_fe_rg_name
-  cdn_storage_primary_access_key = module.cdn.storage_primary_access_key
-}
-
-
-
 ###############################################################################
 # vpn
 ###############################################################################
@@ -419,8 +403,22 @@ module "assets" {
   source = "../_modules/assets"
 
   env = local.env
-
   # CDN
+  checkout_cdn_name                       = module.cdn.storage_name
+  checkout_endpoint_name                  = module.cdn.name
+  checkout_cdn_storage_primary_access_key = module.cdn.storage_primary_access_key
+  checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
+}
+
+
+###############################################################################
+# one trust
+###############################################################################
+
+module "one_trust" {
+  source = "../_modules/one_trust"
+
+  env                                     = local.env
   checkout_cdn_name                       = module.cdn.storage_name
   checkout_endpoint_name                  = module.cdn.name
   checkout_cdn_storage_primary_access_key = module.cdn.storage_primary_access_key
@@ -452,4 +450,33 @@ module "contracts_storage" {
   cidr_subnet_contract_storage      = local.cidr_subnet_contract_storage
   private_endpoint_network_policies = local.private_endpoint_network_policies
   private_dns_zone_ids              = [module.dns_private.privatelink_blob_core_windows_net_id]
+
+  logs_delete_retention_days = 1
+  cidr_subnet_logs_storage   = local.cidr_subnet_logs_storage
+}
+
+
+###############################################################################
+# Azure DevOps Agent
+###############################################################################
+module "azure_devops_agent" {
+  source = "../_modules/azure_devops_agent"
+
+  project  = local.project
+  location = local.location
+  tags     = local.tags
+
+  enable_azdoa                 = true
+  enable_iac_pipeline          = true
+  enable_app_projects_pipeline = true
+
+  cidr_subnet_azdoa = local.cidr_subnet_azdoa
+  rg_vnet_name      = module.network.rg_vnet_name
+  vnet_name         = module.network.vnet_name
+  subscription_id   = module.key_vault.subscription_id
+  env_short         = local.env_short
+  key_vault_id      = module.key_vault.key_vault_id
+  tenant_id         = module.key_vault.tenant_id
+
+  private_endpoint_network_policies = local.private_endpoint_network_policies
 }
