@@ -79,20 +79,19 @@ resource "null_resource" "upload_config" {
 
   provisioner "local-exec" {
     command = <<EOT
-              az storage blob upload \
-                --container '$web' \
-                --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
-                --account-key ${var.checkout_cdn_storage_primary_access_key} \
-                --file "${path.module}/../../${var.env}/assets/config.json" \
-                --overwrite true \
-                --name 'assets/config.json'
-            
-              az afd endpoint purge \
-                --content-paths "/assets/config.json" \
-                --resource-group ${var.checkout_fe_rg_name} \
-                --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \ 
-                --profile-name ${var.checkout_endpoint_name}  \
-                --no-wait
-          EOT
+      az storage blob upload \
+        --container '$web' \
+        --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
+        --account-key ${var.checkout_cdn_storage_primary_access_key} \
+        --file "${path.module}/../../${var.env}/assets/config.json" \
+        --overwrite true \
+        --name 'assets/config.json'
+      az afd endpoint purge \
+        --content-paths "/assets/config.json" \
+        --resource-group ${var.checkout_fe_rg_name} \
+        --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
+        --profile-name ${var.checkout_endpoint_name}  \
+        --no-wait
+    EOT
   }
 }
