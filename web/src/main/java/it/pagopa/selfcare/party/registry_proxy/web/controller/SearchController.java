@@ -32,6 +32,7 @@ public class SearchController {
 
   @Tag(name = "external-v2")
   @Tag(name = "support")
+  @Tag(name = "institution")
   @GetMapping("/institutions")
   @PreAuthorize("hasPermission(new it.pagopa.selfcare.party.registry_proxy.web.security.FilterAuthorityDomain('PAGOPA'), 'Selc:SearchInstitutions')")
   @Operation(summary = "${swagger.api.search.institutions.summary}",
