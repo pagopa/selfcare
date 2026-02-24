@@ -37,10 +37,10 @@ resource "null_resource" "upload_alert_message" {
                 --name 'assets/login-alert-message.json'
 
               az afd endpoint purge \
-                  --resource-group ${var.checkout_fe_rg_name} \
-                  --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
-                  --profile-name ${replace(var.checkout_endpoint_name, "-cdn-endpoint", "-cdn-profile")}  \
                 --content-paths "/assets/login-alert-message.json" \
+                --resource-group ${var.checkout_fe_rg_name} \
+                --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
+                --profile-name ${var.checkout_endpoint_name}  \
                 --no-wait
           EOT
   }
@@ -63,19 +63,19 @@ resource "null_resource" "upload_spid_idp_status" {
                 --name 'assets/spid_idp_status.json'
 
                 az afd endpoint purge \
+                  --content-paths "/assets/spid_idp_status.json" \
                   --resource-group ${var.checkout_fe_rg_name} \
                   --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
-                  --profile-name ${replace(var.checkout_endpoint_name, "-cdn-endpoint", "-cdn-profile")}  \
-                  --content-paths "/assets/spid_idp_status.json" \
+                  --profile-name ${var.checkout_endpoint_name}  \
                   --no-wait
           EOT
   }
 }
 
 resource "null_resource" "upload_config" {
-  # triggers = {
-  #   file_sha1 = filesha1("${path.module}/../../${var.env}/assets/config.json")
-  # }
+  triggers = {
+    file_sha1 = filesha1("${path.module}/../../${var.env}/assets/config.json")
+  }
 
   provisioner "local-exec" {
     command = <<EOT
@@ -88,14 +88,11 @@ resource "null_resource" "upload_config" {
                 --name 'assets/config.json'
             
               az afd endpoint purge \
-                  --resource-group ${var.checkout_fe_rg_name} \
-                  --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
-                  --profile-name ${replace(var.checkout_endpoint_name, "-cdn-endpoint", "-cdn-profile")}  \
-                  --content-paths "/assets/config.json" \
-                  --no-wait
+                --content-paths "/assets/config.json" \
+                --resource-group ${var.checkout_fe_rg_name} \
+                --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \ 
+                --profile-name ${var.checkout_endpoint_name}  \
+                --no-wait
           EOT
   }
 }
-
-
-              
