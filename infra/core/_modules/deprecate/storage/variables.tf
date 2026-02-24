@@ -116,3 +116,9 @@ variable "cidr_subnet_logs_storage" {
   type        = list(string)
   description = "Logs storage address space."
 }
+
+variable "logs_public_network_access_enabled" {
+  type        = bool
+  description = "Whether or not public network access is allowed for this storage account"
+  default     = false
+}

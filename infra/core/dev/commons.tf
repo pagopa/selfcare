@@ -453,6 +453,8 @@ module "contracts_storage" {
 
   logs_delete_retention_days = 1
   cidr_subnet_logs_storage   = local.cidr_subnet_logs_storage
+
+  logs_public_network_access_enabled = true
 }
 
 
