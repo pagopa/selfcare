@@ -446,13 +446,15 @@ module "contracts_storage" {
   contracts_enable_versioning          = local.contracts_enable_versioning
   contracts_advanced_threat_protection = local.contracts_advanced_threat_protection
   contracts_delete_retention_days      = local.contracts_delete_retention_days
+  contracts_account_replication_type   = "LRS"
 
   cidr_subnet_contract_storage      = local.cidr_subnet_contract_storage
   private_endpoint_network_policies = local.private_endpoint_network_policies
   private_dns_zone_ids              = [module.dns_private.privatelink_blob_core_windows_net_id]
 
-  logs_delete_retention_days = 1
-  cidr_subnet_logs_storage   = local.cidr_subnet_logs_storage
+  logs_account_replication_type = "LRS"
+  logs_delete_retention_days    = 1
+  cidr_subnet_logs_storage      = local.cidr_subnet_logs_storage
 
   logs_public_network_access_enabled = true
 }

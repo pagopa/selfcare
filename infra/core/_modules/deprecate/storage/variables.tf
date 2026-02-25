@@ -58,7 +58,7 @@ variable "private_endpoint_network_policies" {
 variable "contracts_account_replication_type" {
   type        = string
   description = "Contracts replication type"
-  default     = "LRS"
+  default     = "ZRS"
 }
 
 variable "rg_vnet_name" {
