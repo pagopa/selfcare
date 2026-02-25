@@ -11,6 +11,7 @@ import it.pagopa.selfcare.user_group.model.CriteriaBuilder;
 import it.pagopa.selfcare.user_group.model.UserGroupEntity;
 import it.pagopa.selfcare.user_group.model.UserGroupFilter;
 import it.pagopa.selfcare.user_group.model.UserGroupStatus;
+import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import jakarta.validation.ValidationException;
 import java.util.*;
 import java.util.function.Function;
 
@@ -338,7 +338,7 @@ public class UserGroupServiceImpl implements UserGroupService {
                 createActiveGroupQuery(id),
                 new Update().pull(UserGroupEntity.Fields.members, memberId)
                         .set(UserGroupEntity.Fields.modifiedBy, auditorAware.getCurrentAuditor().orElse(null))
-                        .currentTimestamp(UserGroupEntity.Fields.modifiedAt),
+                        .currentDate(UserGroupEntity.Fields.modifiedAt),
                 UserGroupEntity.class);
         if (updateResult.getModifiedCount() == 0) {
             throw new ResourceUpdateException(COULD_NOT_UPDATE_MESSAGE);
@@ -356,7 +356,7 @@ public class UserGroupServiceImpl implements UserGroupService {
                         .and(UserGroupEntity.Fields.productId).is(productId)),
                 new Update().pull(UserGroupEntity.Fields.members, memberId)
                         .set(UserGroupEntity.Fields.modifiedBy, auditorAware.getCurrentAuditor().orElse(null))
-                        .currentTimestamp(UserGroupEntity.Fields.modifiedAt),
+                        .currentDate(UserGroupEntity.Fields.modifiedAt),
                 UserGroupEntity.class);
         if (updateResult.getModifiedCount() == 0) {
             log.warn("No user to delete from UserGroup");
@@ -434,7 +434,7 @@ public class UserGroupServiceImpl implements UserGroupService {
                 Query.query(Criteria.where(UserGroupEntity.Fields.ID).is(id)),
                 Update.update(UserGroupEntity.Fields.status, status)
                         .set(UserGroupEntity.Fields.modifiedBy, auditorAware.getCurrentAuditor().orElse(null))
-                        .currentTimestamp(UserGroupEntity.Fields.modifiedAt),
+                        .currentDate(UserGroupEntity.Fields.modifiedAt),
                 UserGroupEntity.class);
         if (updateResult.getMatchedCount() == 0) {
             throw new ResourceNotFoundException();

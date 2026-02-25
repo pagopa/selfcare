@@ -12,12 +12,17 @@ import io.restassured.response.ExtractableResponse;
 import io.restassured.specification.RequestSpecification;
 import it.pagopa.selfcare.user_group.model.UserGroupEntity;
 import org.apache.commons.lang3.StringUtils;
+import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Assertions;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
+
+import static com.mongodb.client.model.Filters.eq;
 
 public class UpdateUserGroupSteps extends UserGroupSteps {
 
@@ -147,6 +152,17 @@ public class UpdateUserGroupSteps extends UserGroupSteps {
             Assertions.assertNotEquals(Set.of("75003d64-7b8c-4768-b20c-cf66467d44c7"), updatedUserGroupEntity.getMembers());
             Assertions.assertNotNull(updatedUserGroupEntity.getModifiedAt());
             Assertions.assertNotNull(updatedUserGroupEntity.getModifiedBy());
+
+            Document raw = mongoTemplate
+                    .getCollection("UserGroups")   // nome collection
+                    .find(eq("_id", new ObjectId(userGroupId)))
+                    .first();
+
+            assert raw != null;
+
+            Object modifiedAtRaw = raw.get("modifiedAt");
+
+            Assertions.assertInstanceOf(Date.class, modifiedAtRaw, "modifiedAt is not stored as a Date");
         }
     }
 
@@ -167,6 +183,18 @@ public class UpdateUserGroupSteps extends UserGroupSteps {
             Assertions.assertEquals(changedStatus, updatedUserGroupEntity.getStatus().name());
             Assertions.assertNotNull(updatedUserGroupEntity.getModifiedAt());
             Assertions.assertNotNull(updatedUserGroupEntity.getModifiedBy());
+
+            Document raw = mongoTemplate
+                    .getCollection("UserGroups")   // nome collection
+                    .find(eq("_id", new ObjectId(userGroupId)))
+                    .first();
+
+            assert raw != null;
+
+            Object modifiedAtRaw = raw.get("modifiedAt");
+
+            Assertions.assertInstanceOf(Date.class, modifiedAtRaw, "modifiedAt is not stored as a Date");
+
         }
     }
 
