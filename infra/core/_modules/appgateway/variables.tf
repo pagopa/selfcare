@@ -108,10 +108,6 @@ variable "key_vault_id" {
   type = string
 }
 
-variable "appgateway_identity_id" {
-  type = string
-}
-
 # From monitor module
 variable "action_group_error_id" {
   type    = string
@@ -124,4 +120,19 @@ variable "action_group_slack_id" {
 
 variable "action_group_email_id" {
   type = string
+}
+
+variable "sec_rg_name" {
+  type        = string
+  description = "KV resource group name, used to store appgateway secrets for sec environment"
+}
+
+variable "sec_rg_location" {
+  type        = string
+  description = "KV resource group location, used to store appgateway secrets for sec environment"
+}
+
+variable "tenant_id" {
+  type        = string
+  description = "Tenant Id"
 }

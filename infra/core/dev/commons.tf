@@ -27,16 +27,28 @@ module "network" {
 module "key_vault" {
   source = "../_modules/key_vault"
 
-  prefix    = local.prefix
+  project   = "${local.prefix}-${local.env_short}"
   env_short = local.env_short
   location  = local.location
   tags      = local.tags
 
   azdo_sp_tls_cert_enabled                         = local.azdo_sp_tls_cert_enabled
   azuread_service_principal_azure_cdn_frontdoor_id = "f3b3f72f-4770-47a5-8c1e-aa298003be12"
-  app_gateway_api_certificate_name                 = local.app_gateway_api_certificate_name
-  app_gateway_api_pnpg_certificate_name            = local.app_gateway_api_pnpg_certificate_name
 }
+
+
+###############################################################################
+# azure_key_vault_items
+###############################################################################
+module "azure_key_vault_items" {
+  source = "../_modules/data/azure_key_vault_items"
+
+  env_short                             = local.env_short
+  key_vault_id                          = module.key_vault.key_vault_id
+  app_gateway_api_certificate_name      = local.app_gateway_api_certificate_name
+  app_gateway_api_pnpg_certificate_name = local.app_gateway_api_pnpg_certificate_name
+}
+
 
 ###############################################################################
 # dns_private
@@ -259,14 +271,17 @@ module "appgateway" {
   app_gateway_api_pnpg_certificate_name = local.app_gateway_api_pnpg_certificate_name
   private_endpoint_network_policies     = local.private_endpoint_network_policies
 
-  rg_vnet_name            = module.network.rg_vnet_name
-  rg_vnet_location        = module.network.rg_vnet_location
+  rg_vnet_name     = module.network.rg_vnet_name
+  rg_vnet_location = module.network.rg_vnet_location
+  sec_rg_name      = module.key_vault.sec_rg_name
+  sec_rg_location  = module.key_vault.sec_rg_location
+
   vnet_name               = module.network.vnet_name
   appgateway_public_ip_id = module.network.appgateway_public_ip_id
   cidr_subnet_appgateway  = local.cidr_subnet_appgateway
 
-  key_vault_id           = module.key_vault.key_vault_id
-  appgateway_identity_id = module.key_vault.appgateway_identity_id
+  key_vault_id = module.key_vault.key_vault_id
+  tenant_id    = module.key_vault.tenant_id
 
   action_group_error_id = module.monitor.action_group_error_id
   action_group_slack_id = module.monitor.action_group_slack_id

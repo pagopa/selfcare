@@ -105,6 +105,27 @@ locals {
   }
 }
 
+## User assigned identity: (application gateway)
+resource "azurerm_user_assigned_identity" "appgateway" {
+  resource_group_name = var.sec_rg_name
+  location            = var.sec_rg_location
+  name                = "${local.project}-appgateway-identity"
+  tags                = var.tags
+}
+
+## App gateway policy
+resource "azurerm_key_vault_access_policy" "app_gateway_policy" {
+  key_vault_id = var.key_vault_id
+  tenant_id    = var.tenant_id
+  object_id    = azurerm_user_assigned_identity.appgateway.principal_id
+
+  key_permissions         = []
+  secret_permissions      = ["Get", "List"]
+  certificate_permissions = ["Get", "List"]
+  storage_permissions     = []
+}
+
+
 #
 # Data Sources
 #
@@ -304,7 +325,7 @@ module "app_gw" {
   ]
 
   # TLS
-  identity_ids = [var.appgateway_identity_id]
+  identity_ids = [azurerm_user_assigned_identity.appgateway.id]
 
   # Scaling
   app_gateway_min_capacity = var.app_gateway_min_capacity

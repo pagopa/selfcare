@@ -1,65 +1,41 @@
-locals {
-  project = "${var.prefix}-${var.env_short}"
-}
-
 data "azurerm_subscription" "current" {}
 data "azurerm_client_config" "current" {}
 
-data "azurerm_api_management" "apim" {
-  name                = "${local.project}-apim-v2"
-  resource_group_name = "${local.project}-api-v2-rg"
-}
+# data "azurerm_api_management" "apim" {
+#   name                = "${var.project}-apim-v2"
+#   resource_group_name = "${var.project}-api-v2-rg"
+# }
 
 resource "azurerm_resource_group" "sec_rg" {
-  name     = "${local.project}-sec-rg"
+  name     = "${var.project}-sec-rg"
   location = var.location
   tags     = var.tags
 }
 
 module "key_vault" {
   source              = "github.com/pagopa/terraform-azurerm-v4.git//key_vault?ref=v8.5.3"
-  name                = "${local.project}-kv"
+  name                = "${var.project}-kv"
   location            = azurerm_resource_group.sec_rg.location
   resource_group_name = azurerm_resource_group.sec_rg.name
   tenant_id           = data.azurerm_client_config.current.tenant_id
   tags                = var.tags
 }
 
-## User assigned identity: (application gateway)
-resource "azurerm_user_assigned_identity" "appgateway" {
-  resource_group_name = azurerm_resource_group.sec_rg.name
-  location            = azurerm_resource_group.sec_rg.location
-  name                = "${local.project}-appgateway-identity"
-  tags                = var.tags
-}
-
-## App gateway policy
-resource "azurerm_key_vault_access_policy" "app_gateway_policy" {
-  key_vault_id = module.key_vault.id
-  tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = azurerm_user_assigned_identity.appgateway.principal_id
-
-  key_permissions         = []
-  secret_permissions      = ["Get", "List"]
-  certificate_permissions = ["Get", "List"]
-  storage_permissions     = []
-}
-
 # Azure AD Groups
 data "azuread_group" "adgroup_admin" {
-  display_name = "${local.project}-adgroup-admin"
+  display_name = "${var.project}-adgroup-admin"
 }
 
 data "azuread_group" "adgroup_developers" {
-  display_name = "${local.project}-adgroup-developers"
+  display_name = "${var.project}-adgroup-developers"
 }
 
 data "azuread_group" "adgroup_externals" {
-  display_name = "${local.project}-adgroup-externals"
+  display_name = "${var.project}-adgroup-externals"
 }
 
 data "azuread_group" "adgroup_security" {
-  display_name = "${local.project}-adgroup-security"
+  display_name = "${var.project}-adgroup-security"
 }
 
 resource "azurerm_key_vault_access_policy" "adgroup_admin_policy" {
@@ -111,7 +87,7 @@ resource "azurerm_key_vault_access_policy" "adgroup_security_policy" {
 # Azure DevOps SP
 data "azuread_service_principal" "azdo_sp_tls_cert" {
   count        = var.azdo_sp_tls_cert_enabled ? 1 : 0
-  display_name = "azdo-sp-${local.project}-tls-cert"
+  display_name = "azdo-sp-${var.project}-tls-cert"
 }
 
 resource "azurerm_key_vault_access_policy" "azdo_sp_tls_cert" {
@@ -130,6 +106,21 @@ resource "azurerm_key_vault_access_policy" "azure_cdn_frontdoor_policy" {
 
   secret_permissions      = ["Get"]
   certificate_permissions = ["Get"]
+}
+
+# azure devops policy
+data "azuread_service_principal" "iac_principal" {
+  display_name = format("pagopaspa-selfcare-iac-projects-%s", data.azurerm_subscription.current.subscription_id)
+}
+
+resource "azurerm_key_vault_access_policy" "azdevops_iac_policy" {
+  key_vault_id = module.key_vault.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = data.azuread_service_principal.iac_principal.object_id
+
+  secret_permissions      = ["Get", "List", "Set", ]
+  certificate_permissions = ["SetIssuers", "DeleteIssuers", "Purge", "List", "Get"]
+  storage_permissions     = []
 }
 
 # Secrets query modules
@@ -157,46 +148,4 @@ module "secrets_selfcare_status_uat" {
     "alert-selfcare-status-uat-email",
     "alert-selfcare-status-uat-slack",
   ]
-}
-
-# Key Vault certificates (consumed by appgateway)
-data "azurerm_key_vault_certificate" "app_gw_platform" {
-  name         = var.app_gateway_api_certificate_name
-  key_vault_id = module.key_vault.id
-}
-
-data "azurerm_key_vault_certificate" "api_pnpg_selfcare_certificate" {
-  name         = var.app_gateway_api_pnpg_certificate_name
-  key_vault_id = module.key_vault.id
-}
-data "azurerm_key_vault_secret" "apim_publisher_email" {
-  name         = "apim-publisher-email"
-  key_vault_id = module.key_vault.id
-}
-
-data "azurerm_key_vault_secret" "sec_workspace_id" {
-  count        = var.env_short == "p" ? 1 : 0
-  name         = "sec-workspace-id"
-  key_vault_id = module.key_vault.id
-}
-
-data "azurerm_key_vault_secret" "sec_storage_id" {
-  count        = var.env_short == "p" ? 1 : 0
-  name         = "sec-storage-id"
-  key_vault_id = module.key_vault.id
-}
-
-data "azurerm_key_vault_secret" "hub_docker_user" {
-  name         = "hub-docker-user"
-  key_vault_id = module.key_vault.id
-}
-
-data "azurerm_key_vault_secret" "hub_docker_pwd" {
-  name         = "hub-docker-pwd"
-  key_vault_id = module.key_vault.id
-}
-
-data "azurerm_key_vault_secret" "selc_documents_storage_connection_string" {
-  name         = "documents-storage-connection-string"
-  key_vault_id = module.key_vault.id
 }
