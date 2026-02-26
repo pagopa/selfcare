@@ -3,6 +3,12 @@ variable "project" {
   description = "The name of the project for eg. selc-d or selc-d-pnpg"
 }
 
+variable "prefix" {
+  type        = string
+  description = "The prefix for the project, e.g., selc"
+  default     = "selc"
+}
+
 variable "env_short" {
   type = string
 }
