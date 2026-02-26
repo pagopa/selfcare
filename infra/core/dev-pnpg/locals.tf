@@ -16,7 +16,7 @@ locals {
   tags = {
     CreatedBy   = "Terraform"
     Environment = "Dev"
-    Owner       = "SelfCare"
+    Owner       = "Selfcare"
     Source      = "https://github.com/pagopa/selfcare-infra"
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
     Application = "PNPG"
@@ -42,7 +42,10 @@ locals {
   cidr_subnet_pnpg_cosmosdb_mongodb = ["10.1.140.0/24"] #this is a place holder for pnpg mongo
   cidr_subnet_private_endpoints     = ["10.1.141.0/24"]
   cidr_subnet_load_tests            = ["10.1.142.0/24"]
+  cidr_subnet_pnpg_redis            = ["10.1.143.0/29"]
+  cidr_subnet_pnpg_logs_storage     = ["10.1.143.8/29"]
   cidr_subnet_eventhub_rds          = ["10.1.153.0/26"]
+
 
   cidr_subnet_selc      = ["10.1.148.0/23"]
   cidr_subnet_selc_pnpg = ["10.1.150.0/23"]
@@ -82,7 +85,7 @@ locals {
   redis_sku_name                 = "Basic"
   redis_family                   = "C"
   redis_capacity                 = 0
-  redis_private_endpoint_enabled = true
+  redis_private_endpoint_enabled = false
   redis_version                  = 6
 
   # aks

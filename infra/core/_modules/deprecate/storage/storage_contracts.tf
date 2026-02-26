@@ -95,3 +95,4 @@ resource "azurerm_private_endpoint" "contracts_storage" {
 
 
 
+  

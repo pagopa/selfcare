@@ -1,10 +1,10 @@
 ## Database subnet
 module "redis_snet" {
   source                            = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v6.6.0"
-  name                              = format("%s-redis-snet", local.project)
+  name                              = "${var.project}-redis-snet"
   address_prefixes                  = var.cidr_subnet_redis
-  resource_group_name               = azurerm_resource_group.rg_vnet.name
-  virtual_network_name              = module.vnet.name
+  resource_group_name               = var.rg_vnet_name
+  virtual_network_name              = var.vnet_name
   private_endpoint_network_policies = var.private_endpoint_network_policies
 
   service_endpoints = [
@@ -14,9 +14,9 @@ module "redis_snet" {
 
 module "redis" {
   source                        = "github.com/pagopa/terraform-azurerm-v4.git//redis_cache?ref=v6.6.0"
-  name                          = format("%s-redis", local.project)
-  resource_group_name           = azurerm_resource_group.data.name
-  location                      = azurerm_resource_group.data.location
+  name                          = "${var.project}-redis"
+  resource_group_name           = var.rg_redis
+  location                      = var.location
   capacity                      = var.redis_capacity
   redis_version                 = var.redis_version
   family                        = var.redis_family
@@ -25,9 +25,9 @@ module "redis" {
 
   private_endpoint = {
     enabled              = var.redis_private_endpoint_enabled
-    virtual_network_id   = azurerm_resource_group.rg_vnet.id
+    virtual_network_id   = var.vnet_id
     subnet_id            = module.redis_snet.id
-    private_dns_zone_ids = var.redis_private_endpoint_enabled ? [azurerm_private_dns_zone.privatelink_redis_cache_windows_net[0].id] : []
+    private_dns_zone_ids = var.redis_private_endpoint_enabled ? var.privatelink_redis_cache_windows_net_ids : []
   }
 
   // when azure can apply patch?
@@ -63,5 +63,5 @@ resource "azurerm_key_vault_secret" "redis_primary_access_key" {
   value        = module.redis.primary_access_key
   content_type = "text/plain"
 
-  key_vault_id = module.key_vault.id
+  key_vault_id = var.key_vault_id
 }

@@ -345,6 +345,34 @@ module "vpn" {
 }
 
 
+
+###############################################################################
+# redis
+###############################################################################
+module "redis" {
+  source = "../_modules/redis"
+
+  project  = "${local.prefix}-${local.env_short}"
+  location = local.location
+
+  rg_redis                          = "${local.prefix}-${local.env_short}-data-rg"
+  rg_vnet_name                      = module.network.rg_vnet_name
+  vnet_name                         = module.network.vnet_name
+  vnet_id                           = module.network.vnet_id
+  cidr_subnet_redis                 = local.cidr_subnet_redis
+  tags                              = local.tags
+  redis_private_endpoint_enabled    = local.redis_private_endpoint_enabled
+  private_endpoint_network_policies = "Disabled"
+  key_vault_id                      = module.key_vault.key_vault_id
+
+  redis_sku_name = local.redis_sku_name
+  redis_family   = local.redis_family
+  redis_capacity = local.redis_capacity
+  redis_version  = local.redis_version
+
+  privatelink_redis_cache_windows_net_ids = [module.dns_private.privatelink_redis_cache_windows_net_id]
+}
+
 ###############################################################################
 # cosmos db
 ###############################################################################
