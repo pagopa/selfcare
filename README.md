@@ -32,6 +32,5 @@ An orchestrator for the onboarding process
 
 #### Core Configurations
 
-| **Property** | **Enviroment Variable** | **Pattern** | **Default** | **Required** |
-|--------------|-------------------------|-----------------|-------------|:------------:|
-|onboarding.institutions-allowed-list|ONBOARDING_ALLOWED_INSTITUTIONS_PRODUCTS|<code>{'\<PROD_ID<sub>1</sub>\>':{'\*'&#124;'\<INST_EXT_ID<sub>1</sub>\>', &hellip; ,'\<INST_EXT_ID<sub>n</sub>\>'}, &hellip; ,'\<PROD_ID<sub>m</sub>\>':{'\*'&#124;'\<INST_EXT_ID<sub>1</sub>\>', &hellip; ,'\<INST_EXT_ID<sub>n</sub>\>'}}</code>|<a name= "default property"></a>[default_property](https://github.com/pagopa/selfcare-onboarding-backend/blob/main/core/src/main/resources/config/core-config.properties)| no |
+| **Property** | **Enviroment Variable** | **Default** | **Required** |
+|--------------|-------------------------|-------------|:------------:|

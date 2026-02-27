@@ -23,7 +23,6 @@ import it.pagopa.selfcare.onboarding.connector.model.user.mapper.UserMapper;
 import it.pagopa.selfcare.onboarding.core.exception.OnboardingNotAllowedException;
 import it.pagopa.selfcare.onboarding.core.exception.UpdateNotAllowedException;
 import it.pagopa.selfcare.onboarding.core.mapper.InstitutionInfoMapper;
-import it.pagopa.selfcare.onboarding.core.strategy.OnboardingValidationStrategy;
 import it.pagopa.selfcare.onboarding.core.utils.PgManagerVerifier;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
@@ -74,7 +73,6 @@ class InstitutionServiceImpl implements InstitutionService {
     private final ProductsConnector productsConnector;
     private final UserRegistryConnector userConnector;
     private final OnboardingFunctionsConnector onboardingFunctionsConnector;
-    private final OnboardingValidationStrategy onboardingValidationStrategy;
     private final PartyRegistryProxyConnector partyRegistryProxyConnector;
     private final InstitutionInfoMapper institutionMapper;
     private final PgManagerVerifier pgManagerVerifier;
@@ -88,7 +86,6 @@ class InstitutionServiceImpl implements InstitutionService {
                            UserRegistryConnector userConnector,
                            OnboardingFunctionsConnector onboardingFunctionsConnector,
                            PartyRegistryProxyConnector partyRegistryProxyConnector,
-                           OnboardingValidationStrategy onboardingValidationStrategy,
                            InstitutionInfoMapper institutionMapper,
                            PgManagerVerifier pgManagerVerifier
     ) {
@@ -99,7 +96,6 @@ class InstitutionServiceImpl implements InstitutionService {
         this.partyRegistryProxyConnector = partyRegistryProxyConnector;
         this.productsConnector = productsConnector;
         this.userConnector = userConnector;
-        this.onboardingValidationStrategy = onboardingValidationStrategy;
         this.institutionMapper = institutionMapper;
         this.pgManagerVerifier = pgManagerVerifier;
     }
@@ -277,7 +273,7 @@ class InstitutionServiceImpl implements InstitutionService {
                         onboardingData.getTaxCode(),
                         baseProduct.getId()));
             }
-            validateOnboarding(onboardingData.getTaxCode(), baseProduct.getId());
+            validateOnboardingByProductOrInstitutionTaxCode(onboardingData.getTaxCode(), baseProduct.getId());
             try {
                 partyConnector.verifyOnboarding(baseProduct.getId(), null, onboardingData.getTaxCode(), onboardingData.getOrigin(), null, onboardingData.getSubunitCode());
             } catch (RuntimeException e) {
@@ -288,7 +284,7 @@ class InstitutionServiceImpl implements InstitutionService {
             }
             roleMappings = baseProduct.getRoleMappings(onboardingData.getProductId());
         } else {
-            validateOnboarding(onboardingData.getTaxCode(), product.getId());
+            validateOnboardingByProductOrInstitutionTaxCode(onboardingData.getTaxCode(), product.getId());
             roleMappings = product.getRoleMappings(onboardingData.getProductId());
         }
 
@@ -472,7 +468,7 @@ class InstitutionServiceImpl implements InstitutionService {
     public void verifyOnboarding(String externalInstitutionId, String productId) {
         log.trace("verifyOnboarding start");
         log.debug("verifyOnboarding externalInstitutionId = {}", externalInstitutionId);
-        validateOnboarding(externalInstitutionId, productId);
+        validateOnboardingByProductOrInstitutionTaxCode(externalInstitutionId, productId);
         partyConnector.verifyOnboarding(externalInstitutionId, productId);
         log.trace("verifyOnboarding end");
     }
@@ -483,7 +479,7 @@ class InstitutionServiceImpl implements InstitutionService {
         log.trace("verifyOnboardingSubunit start");
         validateParameter(taxCode, origin, originId, subunitCode);
         log.debug("verifyOnboardingSubunit taxCode = {}", taxCode);
-        validateOnboarding(taxCode, productId);
+        validateOnboardingByProductOrInstitutionTaxCode(taxCode, productId);
         onboardingMsConnector.verifyOnboarding(productId, taxCode, origin, originId, subunitCode, institutionType);
         log.trace("verifyOnboardingSubunit end");
     }
@@ -503,8 +499,14 @@ class InstitutionServiceImpl implements InstitutionService {
         log.trace("checkOrganization end");
     }
 
-    private void validateOnboarding(String externalInstitutionId, String productId) {
-        if (!onboardingValidationStrategy.validate(productId, externalInstitutionId)) {
+    public void validateOnboardingByProductOrInstitutionTaxCode(String externalInstitutionId, String productId) {
+        log.trace("validate start");
+        log.debug("validate productId = {}, externalInstitutionId = {}", productId, externalInstitutionId);
+        boolean productEnabled = productService.isProductEnabled(productId);
+        boolean institutionAllowed = productService.verifyAllowedByInstitutionTaxCode(productId, externalInstitutionId);
+        log.debug("validate result = {}", productEnabled || institutionAllowed);
+        log.trace("validate end");
+        if (!productEnabled && !institutionAllowed) {
             throw new OnboardingNotAllowedException(String.format(ONBOARDING_NOT_ALLOWED_ERROR_MESSAGE_TEMPLATE,
                     externalInstitutionId,
                     productId));

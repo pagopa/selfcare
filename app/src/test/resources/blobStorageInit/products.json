@@ -1330,6 +1330,47 @@
     "urlBO": "https://mock.url/test-product/bo"
   },
   {
+    "alias": "test-product-2",
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2022-11-17T10:01:22.070Z",
+    "createdBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "depictImageUrl": "https://mock.url/test-product/depict-image",
+    "description": "string",
+    "enabled": false,
+    "id": "test-product-2",
+    "identityTokenAudience": "string",
+    "institutionContractMappings": {
+      "DEFAULT": {
+        "contractTemplatePath": "string",
+        "contractTemplateVersion": "string",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/test-product/logo",
+    "modifiedAt": "2022-11-17T10:14:36.626Z",
+    "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "roleMappings": {
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "string",
+            "description": "string",
+            "label": "string"
+          }
+        ]
+      }
+    },
+    "status": "TESTING",
+    "title": "test_prod2",
+    "urlBO": "https://mock.url/test-product/bo"
+  },
+  {
     "alias": "test-test",
     "consumers": [
       "Standard"
