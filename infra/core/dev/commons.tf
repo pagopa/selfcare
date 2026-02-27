@@ -471,37 +471,71 @@ module "one_trust" {
 ###############################################################################
 # Contract storage
 ###############################################################################
-
 module "contracts_storage" {
-  source = "../_modules/deprecate/storage"
+  source = "../_modules/storage_account_template"
 
-  prefix    = local.prefix
-  env_short = local.env_short
-  env       = local.env
-  location  = local.location
-  tags      = local.tags
+  project              = "${local.prefix}-${local.env_short}"
+  location             = local.location
+  tags                 = local.tags
+  name                 = "contracts"
+  storage_account_name = "${local.prefix}-${local.env_short}-contracts-storage"
 
+  account_replication_type      = "LRS"
+  enable_versioning             = local.contracts_enable_versioning
+  advanced_threat_protection    = local.contracts_advanced_threat_protection
+  delete_retention_days         = local.contracts_delete_retention_days
+  public_network_access_enabled = false
+
+  key_vault_id = module.key_vault.key_vault_id
   rg_vnet_name = module.network.rg_vnet_name
   vnet_name    = module.network.vnet_name
-  project      = local.project
+
+  cidr_subnet                       = local.cidr_subnet_contract_storage
+  private_endpoint_network_policies = local.private_endpoint_network_policies
+  private_dns_zone_ids              = [module.dns_private.privatelink_blob_core_windows_net_id]
+}
+
+###############################################################################
+# Logs storage
+###############################################################################
+
+module "logs_storage" {
+  source = "../_modules/storage_account_template"
+
+  project              = "${local.prefix}-${local.env_short}"
+  location             = local.location
+  tags                 = local.tags
+  name                 = "logs"
+  storage_account_name = "${local.prefix}-${local.env_short}-st-logs"
+
+  account_replication_type      = "LRS"
+  enable_versioning             = false
+  advanced_threat_protection    = false
+  delete_retention_days         = 1
+  public_network_access_enabled = true
+
   key_vault_id = module.key_vault.key_vault_id
+  rg_vnet_name = module.network.rg_vnet_name
+  vnet_name    = module.network.vnet_name
 
-  contracts_enable_versioning          = local.contracts_enable_versioning
-  contracts_advanced_threat_protection = local.contracts_advanced_threat_protection
-  contracts_delete_retention_days      = local.contracts_delete_retention_days
-  contracts_account_replication_type   = "LRS"
-
-  cidr_subnet_contract_storage      = local.cidr_subnet_contract_storage
+  cidr_subnet                       = local.cidr_subnet_logs_storage
   private_endpoint_network_policies = local.private_endpoint_network_policies
   private_dns_zone_ids              = [module.dns_private.privatelink_blob_core_windows_net_id]
 
-  logs_account_replication_type = "LRS"
-  logs_delete_retention_days    = 1
-  cidr_subnet_logs_storage      = local.cidr_subnet_logs_storage
-
-  logs_public_network_access_enabled = true
+  enable_management_lock           = true
+  enable_spid_logs_encryption_keys = true
 }
 
+###############################################################################
+# Spid
+###############################################################################
+
+module "spid_logs_encryption_keys" {
+  source = "../_modules/spid_logs_encryption_keys"
+
+  key_vault_id = module.key_vault.key_vault_id
+  tags         = local.tags
+}
 
 ###############################################################################
 # Azure DevOps Agent
