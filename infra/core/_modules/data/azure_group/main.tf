@@ -2,8 +2,8 @@ locals {
   project = "${var.prefix}-${var.env_short}"
 }
 
-# data "azurerm_subscription" "current" {}
-# data "azurerm_client_config" "current" {}
+data "azurerm_subscription" "current" {}
+data "azurerm_client_config" "current" {}
 
 # Azure AD Groups
 data "azuread_group" "adgroup_admin" {
