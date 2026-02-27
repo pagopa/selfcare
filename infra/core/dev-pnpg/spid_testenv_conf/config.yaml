@@ -18,6 +18,7 @@ metadata:
   remote:
     - "https://api-pnpg.dev.selfcare.pagopa.it/spid/v1/metadata"
 
+
 # Application configuration
 ###########################
 

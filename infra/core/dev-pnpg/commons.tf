@@ -115,7 +115,6 @@ module "spid_logs_encryption_keys" {
   tags         = local.tags
 }
 
-
 ###############################################################################
 # Spid Test Environment
 ###############################################################################
@@ -137,3 +136,46 @@ module "spid_test_env" {
 }
 
 
+
+###############################################################################
+# cosmos db
+###############################################################################
+
+module "cosmos_db" {
+  source = "../_modules/cosmos_db"
+
+  prefix    = local.prefix
+  env_short = local.env_short
+  location  = local.location
+  tags      = local.tags
+  project   = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}"
+
+  external_domain = local.external_domain
+
+  # Network
+  rg_vnet_name                 = data.azurerm_virtual_network.vnet.resource_group_name
+  vnet_name                    = data.azurerm_virtual_network.vnet.name
+  cidr_subnet_cosmosdb_mongodb = local.cidr_subnet_pnpg_cosmosdb_mongodb
+
+  # Key Vault
+  key_vault_id = module.key_vault.key_vault_id
+
+  # Private DNS
+  privatelink_mongo_cosmos_azure_com_id = module.network.privatelink_mongo_cosmos_azure_com.id
+
+  # CosmosDB MongoDB
+  cosmosdb_mongodb_extra_capabilities               = local.cosmosdb_mongodb_extra_capabilities
+  cosmosdb_mongodb_main_geo_location_zone_redundant = local.cosmosdb_mongodb_main_geo_location_zone_redundant
+
+  cosmosdb_mongodb_offer_type                    = local.cosmosdb_mongodb_offer_type
+  cosmosdb_mongodb_public_network_access_enabled = local.cosmosdb_mongodb_public_network_access_enabled
+
+  cosmosdb_mongodb_additional_geo_locations = local.cosmosdb_mongodb_additional_geo_locations
+  cosmosdb_mongodb_throughput               = local.cosmosdb_mongodb_throughput
+  cosmosdb_mongodb_max_throughput           = local.cosmosdb_mongodb_max_throughput
+  cosmosdb_mongodb_enable_autoscaling       = local.cosmosdb_mongodb_enable_autoscaling
+  cosmosdb_mongodb_private_endpoint_enabled = local.cosmosdb_mongodb_private_endpoint_enabled
+  cosmosdb_mongodb_consistency_policy       = local.cosmosdb_mongodb_consistency_policy
+
+  cosmosdb_mongodb_enable_free_tier = false
+}
