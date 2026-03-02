@@ -112,6 +112,21 @@ Feature: User
       | workContacts.ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1               | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
       | workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375           | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
 
+  Scenario: Successfully get user info given userId, institutionId and child productId
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | id                                                                      | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+    And The following query params:
+      | institutionId                                                           | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | productId                                                               | prod-dashboard-psp                            |
+    When I send a GET request to "users/{id}"
+    Then The status code is 200
+    And The response body contains:
+      | id                                                                      | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | workContacts.ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e           | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it  |
+      | workContacts.ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1               | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it  |
+      | workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375           | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
+
   Scenario: Unsuccessfully get user info given userId and wrong institutionId
     Given User login with username "j.doe" and password "test"
     And The following path params:
@@ -740,6 +755,47 @@ Feature: User
       | DELETED                                                                           |
     And The response body doesn't contain field "[0].products[0].roleId"
 
+      # Cancellazione riuscita con productId figlio
+  @RemoveUserInstitutionAndUserInfoAfterScenario
+  Scenario: Successfully delete logically the association institution and child product
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa"
+    And A mock userInfo with id "d0d28367-1695-4c50-a260-6fda526e9aab", institutionName "Comune di Milano", status "ACTIVE", role "SUB_DELEGATE" to userInfo document with id "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
+    And The following path params:
+      | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
+    And The following query params:
+      | userId                     | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                 |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].id                     | 65a4b6c7d8e9f01234567890                             |
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | status                      |
+      | ACTIVE                      |
+    And The response body doesn't contain field "[0].products[0].roleId"
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId                     | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                 |
+      | institutionId              | d0d28367-1695-4c50-a260-6fda526e9aab                 |
+      | productId                  | prod-dashboard-psp                                   |
+    When I send a DELETE request to "users/{userId}/institutions/{institutionId}/products/{productId}"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
+    And The following query params:
+      | userId                     | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                 |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].id                     | 65a4b6c7d8e9f01234567890                             |
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | status    | productId   |
+      | DELETED   | prod-pagopa |
+    And The response body doesn't contain field "[0].products[0].roleId"
+
   # Cancellazione di prodotto già cancellato
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Unsuccessfully delete logically the association institution and product because product is already deleted
@@ -791,7 +847,7 @@ Feature: User
     And The following path params:
       | userId                     | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                |
       | institutionId              | f2e4d6c8-9876-5432-ba10-abcdef123456                |
-      | productId                  | prod-wrongproductid                                 |
+      | productId                  | prod-interop-coll                                   |
     When I send a DELETE request to "users/{userId}/institutions/{institutionId}/products/{productId}"
     Then The status code is 404
     And The response body contains:
@@ -1052,6 +1108,89 @@ Feature: User
     And The following query params:
       | status          | DELETED                                                     |
       | productId       | prod-pagopa                                                 |
+    When I send a PUT request to "users/{id}/status"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+      | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription    | Comune di Milano                              |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | role         | status     |
+      | prod-pagopa                   | SUB_DELEGATE | DELETED    |
+    And The response body doesn't contain field "[0].products[0].roleId"
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+      | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+      | [0].institutionDescription    | Comune di Lucca                               |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | role         | status     |
+      | prod-io                       | MANAGER      | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
+
+  # Cambio stato con filtro productId figlio
+  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  Scenario: Successfully update user status with status (from ACTIVE to DELETED with multiple userInstitution and child productId filter)
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
+    And A mock userInstitution with id "78a2342c31599e1812b1819a" and onboardedProductState "ACTIVE" and role "MANAGER" and productId "prod-io" and institutionId "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21" and institutionDescription "Comune di Lucca" and unused user
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | d0d28367-1695-4c50-a260-6fda526e9aab          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+      | [0].institutionId             | d0d28367-1695-4c50-a260-6fda526e9aab          |
+      | [0].institutionDescription    | Comune di Milano                              |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | role         | status     |
+      | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+      | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+      | [0].institutionDescription    | Comune di Lucca                               |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | role         | status     |
+      | prod-io                       | MANAGER      | ACTIVE     |
+    And The response body doesn't contain field "[0].products[0].roleId"
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | id              | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                        |
+    And The following query params:
+      | status          | DELETED                                                     |
+      | productId       | prod-dashboard-psp                                          |
     When I send a PUT request to "users/{id}/status"
     Then The status code is 204
     Given User login with username "j.doe" and password "test"
@@ -1595,11 +1734,11 @@ Feature: User
       | id              |  6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                       |
     And The following query params:
       | status          | DELETED                                                     |
-      | productId          | wrongProduct                                                     |
+      | productId       | prod-interop-coll                                           |
     When I send a PUT request to "users/{id}/status"
     Then The status code is 500
     And The response body contains string:
-      | Something has gone wrong in the server                                                        |
+      | Something has gone wrong in the server                                        |
 
   Scenario: Unsuccessfully update user status with wrong userId
     Given User login with username "j.doe" and password "test"
@@ -1761,7 +1900,7 @@ Feature: User
   Scenario: Successfully retrieve all SC-User for DataLake with wrong productId filter
     Given User login with username "j.doe" and password "test"
     And The following query params:
-      | productId                                                       | prod-wrongproduct                           |
+      | productId | prod-interop-coll |
     When I send a GET request to "users/notification"
     Then The status code is 200
     And The response body contains the list "users" of size 0
@@ -2751,12 +2890,12 @@ Feature: User
     And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
-  Scenario: Unsuccessfully update user product status with wrong institutionId
+  Scenario: Unsuccessfully update user product status with wrong productId
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id                         | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                 |
       | institutionId              | d0d28367-1695-4c50-a260-6fda526e9aab                 |
-      | productId                  | prod-wrongProd                                       |
+      | productId                  | prod-interop                                         |
     And The following query params:
       | status                     | DELETED                                              |
     When I send a PUT request to "users/{id}/institution/{institutionId}/product/{productId}/status"
@@ -2876,6 +3015,48 @@ Feature: User
           "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
           "product": {
               "productId": "prod-io",
+              "role": "DELEGATE",
+              "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+              "productRoles": [
+                  "referente amministrativo"
+              ]
+          },
+          "institutionDescription": "Comune di Bergamo",
+          "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+      }
+      """
+    And The following path params:
+      | userId                        | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+    When I send a POST request to "users/{userId}"
+    Then The status code is 201
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 |  e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21         |
+    And The following query params:
+      | userId                        | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                    | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+      | [0].institutionId             | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+      | [0].institutionDescription    | Comune di Bergamo                             |
+      | [0].userMailUuid              | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1  |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                     | tokenId                                       | role         | productRole               | status     |
+      | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE     | referente amministrativo  | ACTIVE     |
+    And The response body contains field "[0].products[0].roleId"
+
+  @RemoveUserInstitutionAfterCreateFromAPI
+  Scenario: Successfully update or create a user by userId with a new role with a child product
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+      {
+          "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
+          "product": {
+              "productId": "prod-io-premium",
               "role": "DELEGATE",
               "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
               "productRoles": [
@@ -3555,6 +3736,61 @@ Feature: User
       | productId                      | productRole                                   | role         | status | tokenId                                |
       | prod-io                        | referente amministrativo                      | DELEGATE     | ACTIVE | 7a3df825-8317-4601-9fea-12283b7ed97f   |
     And The response body contains field "[0].products[0].roleId"
+
+  @RemoveUserInstitutionWithMockUser3
+  Scenario: Successfully create a new user or update an existing one with child product
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 0
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+        {
+            "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
+            "hasToSendEmail": false,
+            "user": {
+              "fiscalCode": "VRDMRA22T71F205A",
+              "institutionEmail": "prova@email.com"
+            },
+            "product": {
+                "productId": "prod-dashboard-psp",
+                "role": "DELEGATE",
+                "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+                "productRoles": [
+                    "referente amministrativo"
+                ]
+            },
+            "institutionDescription": "Comune di Bergamo",
+            "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+        }
+      """
+    When I send a POST request to "users/"
+    Then The status code is 201
+    And The response body contains string:
+      | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b             |
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+    And The following query params:
+      | userId                        | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].userId                     | 6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b          |
+      | [0].institutionId              | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
+      | [0].institutionDescription     | Comune di Bergamo                             |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId                      | productRole                                   | role         | status | tokenId                                |
+      | prod-pagopa                    | referente amministrativo                      | DELEGATE     | ACTIVE | 7a3df825-8317-4601-9fea-12283b7ed97f   |
+    And The response body contains field "[0].products[0].roleId"
+
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully create a new user or update an existing one (existing userInstitution with new product)

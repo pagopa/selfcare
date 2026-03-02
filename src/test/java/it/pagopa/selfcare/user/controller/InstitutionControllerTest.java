@@ -73,7 +73,7 @@ class InstitutionControllerTest {
     }
 
     /**
-     * Method under test: {@link InstitutionController#retrieveUsers(String, String, List, List, List, List))}
+     * Method under test: {@link InstitutionController#retrieveUserInstitutions(String, String, List, List, List, List)}
      */
     @Test
     void testGetUserInstitutionsNotAuthorized() {
@@ -88,7 +88,7 @@ class InstitutionControllerTest {
     }
 
     /**
-     * Method under test: {@link InstitutionController#retrieveUsers(String, String, List, List, List, List))}
+     * Method under test: {@link InstitutionController#retrieveUserInstitutions(String, String, List, List, List, List)}
      */
     @Test
     @TestSecurity(user = "userJwt")
@@ -113,7 +113,7 @@ class InstitutionControllerTest {
     void updateUserProductCreatedAt() {
 
         var institutionId = "institutionId";
-        var productId = "productId";
+        var productId = "prod-io";
         var now = OffsetDateTime.now();
         Mockito.when(userService.updateUserProductCreatedAt(institutionId, List.of("userId"), productId, now))
                 .thenReturn(Uni.createFrom().nullItem());
@@ -135,7 +135,7 @@ class InstitutionControllerTest {
     void updateUserProductCreatedAt_NotAuthorized() {
 
         var institutionId = "institutionId";
-        var productId = "productId";
+        var productId = "prod-pagopa";
         var now = OffsetDateTime.now();
         given()
                 .when()
@@ -155,7 +155,7 @@ class InstitutionControllerTest {
     void updateUserProductCreatedAt_UserNotFound() {
         final OffsetDateTime now = OffsetDateTime.now();
         final String institutionId = "institutionId";
-        final String productId = "productId";
+        final String productId = "prod-io";
         final String userId = "userId";
         Mockito.when(userService.updateUserProductCreatedAt(institutionId, List.of(userId), productId, now))
                 .thenThrow(new ResourceNotFoundException("user non trovato"));
@@ -215,7 +215,7 @@ class InstitutionControllerTest {
     @TestSecurity(user = "userJwt")
     void getUsersCount() {
         final String institutionId = "institutionId";
-        final String productId = "productId";
+        final String productId = "prod-pagopa";
         final List<PartyRole> roles = List.of(PartyRole.MANAGER, PartyRole.DELEGATE);
         final List<OnboardedProductState> status = List.of(OnboardedProductState.ACTIVE, OnboardedProductState.PENDING);
 
@@ -237,7 +237,7 @@ class InstitutionControllerTest {
     @Test
     void getUsersCount_NotAuthorized() {
         final String institutionId = "institutionId";
-        final String productId = "productId";
+        final String productId = "prod-io";
         final List<String> roles = List.of("role1", "role2");
         final List<String> status = List.of("status1", "status2");
 
@@ -257,7 +257,7 @@ class InstitutionControllerTest {
     @TestSecurity(user = "userJwt")
     void deleteUserInstitutionProductUsers() {
         final String institutionId = "institutionId";
-        final String productId = "productId";
+        final String productId = "prod-io";
 
         Mockito.when(userService.deleteUserInstitutionProductUsers(institutionId, productId))
                 .thenReturn(Uni.createFrom().item(new DeletedUserCountResponse(institutionId, productId, 1L)));
@@ -275,7 +275,7 @@ class InstitutionControllerTest {
     @Test
     void deleteUserInstitutionProductUsers_NotAuthorized() {
         final String institutionId = "institutionId";
-        final String productId = "productId";
+        final String productId = "prod-pagopa";
 
         given()
                 .when()
@@ -292,7 +292,7 @@ class InstitutionControllerTest {
     void checkUser() {
         final String fiscalCode = "fiscalCode";
         final String institutionId = "institutionId";
-        final String productId = "productId";
+        final String productId = "prod-pagopa";
 
         Mockito.when(userService.checkUser(fiscalCode, institutionId, productId))
                 .thenReturn(Uni.createFrom().item(Boolean.TRUE));
@@ -312,7 +312,7 @@ class InstitutionControllerTest {
     void checkUser_NotAuthorized() {
         final String fiscalCode = "fiscalCode";
         final String institutionId = "institutionId";
-        final String productId = "productId";
+        final String productId = "prod-pagopa";
 
         given()
                 .when()

@@ -13,6 +13,7 @@ import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserService;
 import it.pagopa.selfcare.user.util.GeneralUtils;
+import it.pagopa.selfcare.user.util.product.ProductId;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -86,7 +87,7 @@ public class InstitutionController {
     @Path(value = "/{institutionId}/products/{productId}/users/count")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<UsersCountResponse> getUsersCount(@PathParam(value = "institutionId") String institutionId,
-                                                 @PathParam(value = "productId") String productId,
+                                                 @ProductId @PathParam(value = "productId") String productId,
                                                  @QueryParam(value = "roles") List<String> roles,
                                                  @QueryParam(value = "status") List<String> status) {
         final List<PartyRole> roleList = GeneralUtils.parseEnumList(roles, PartyRole.class);
@@ -102,7 +103,7 @@ public class InstitutionController {
     @Path(value = "/{institutionId}/products/{productId}/created-at")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> updateUserProductCreatedAt(@PathParam(value = "institutionId") String institutionId,
-                                                    @PathParam(value = "productId") String productId,
+                                                    @ProductId @PathParam(value = "productId") String productId,
                                                     @NotNull @QueryParam(value = "userIds") List<String> userIds,
                                                     @NotNull @QueryParam(value = "createdAt") OffsetDateTime createdAt) {
         return userService.updateUserProductCreatedAt(institutionId, userIds, productId, createdAt)
@@ -141,7 +142,7 @@ public class InstitutionController {
     @Path(value = "/{institutionId}/products/{productId}/users")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<DeletedUserCountResponse> deleteUserInstitutionProductUsers(@PathParam(value = "institutionId") String institutionId,
-                                                                           @PathParam(value = "productId") String productId) {
+                                                                           @ProductId @PathParam(value = "productId") String productId) {
         return userService.deleteUserInstitutionProductUsers(institutionId.replaceAll("[^a-zA-Z0-9-_]", ""),
                         productId.replaceAll("[^a-zA-Z0-9-_]", ""));
     }
@@ -162,7 +163,7 @@ public class InstitutionController {
     @Path(value = "/{institutionId}/product/{productId}/check-user")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Boolean> checkUser(@PathParam(value = "institutionId") String institutionId,
-                                  @PathParam(value = "productId") String productId,
+                                  @ProductId @PathParam(value = "productId") String productId,
                                   @Valid SearchUserDto searchUserDto) {
         return userService.checkUser(searchUserDto.getFiscalCode(), institutionId, productId);
     }

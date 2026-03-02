@@ -1,5 +1,7 @@
 package it.pagopa.selfcare.user.controller.request;
 
+import it.pagopa.selfcare.user.util.product.ProductId;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -17,6 +19,7 @@ public class CreateUserDto {
     private User user;
 
     @NotNull(message = "product is required")
+    @Valid
     private Product product;
 
     private String institutionDescription;
@@ -41,6 +44,7 @@ public class CreateUserDto {
     public static class Product {
 
         @NotEmpty(message = "productId is required")
+        @ProductId
         private String productId;
 
         @NotNull(message = "role is required")

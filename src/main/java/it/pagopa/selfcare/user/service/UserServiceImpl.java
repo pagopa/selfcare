@@ -286,7 +286,7 @@ public class UserServiceImpl implements UserService {
                 .onItem().transformToUni(prepareNotificationData -> userNotificationService.sendEmailNotification(prepareNotificationData.getUserResource(), prepareNotificationData.getUserInstitution(), prepareNotificationData.getProduct(), status, productRole, loggedUser.getName(), loggedUser.getFamilyName())
                         .onFailure().recoverWithNull()
                         .replaceWith(prepareNotificationData))
-                .onFailure().invoke(throwable -> log.error("Error during update user status for userId: {}, institutionId: {}, productId:{} -> exception: {}", userId, institutionId, productId, throwable.getMessage(), throwable))
+                .onFailure().invoke(throwable -> log.error("Error during update user status for userId: {}, institutionId: {}, productId:{} -> exception: {}", Encode.forJava(userId), Encode.forJava(institutionId), Encode.forJava(productId), throwable.getMessage(), throwable))
                 .replaceWithVoid();
     }
 

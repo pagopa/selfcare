@@ -3,6 +3,7 @@ package it.pagopa.selfcare.user.integration_test;
 import io.quarkiverse.cucumber.CucumberOptions;
 import io.quarkiverse.cucumber.CucumberQuarkusTest;
 import io.restassured.RestAssured;
+import it.pagopa.selfcare.user.util.product.ProductIdNormalizer;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -50,6 +51,9 @@ public class CucumberSuite extends CucumberQuarkusTest {
                 .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1));
         composeContainer.start();
         Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
+
+        // Quarkus scheduler disabled in tests, we manually update parent ids when blob storage is ready
+        ProductIdNormalizer.updateParentIds();
 
         log.info("\nLANGUAGE: {}\nCOUNTRY: {}\nTIMEZONE: {}\n", System.getProperty("user.language"), System.getProperty("user.country"), System.getProperty("user.timezone"));
     }

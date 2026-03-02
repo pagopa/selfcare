@@ -12,7 +12,6 @@ import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
-
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -33,7 +32,7 @@ class UserPermissionControllerTest {
     private final String institutionIdField = "institutionId";
     private final String productIdField = "productId";
     private final String institutionId = UUID.randomUUID().toString();
-    private final  String productId = "prod-io";
+    private final String productId = "prod-io";
     private final String userId = UUID.randomUUID().toString();
 
     @Test

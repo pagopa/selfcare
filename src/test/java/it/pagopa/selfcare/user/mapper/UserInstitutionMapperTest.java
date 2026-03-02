@@ -33,7 +33,7 @@ class UserInstitutionMapperTest {
     void toNewOnboardedProduct_returnsOnboardedProducts_whenProductRolesIsNotEmpty() {
         CreateUserDto.Product product = new CreateUserDto.Product();
         product.setProductRoles(Arrays.asList("role1", "role2"));
-        product.setProductId("productId");
+        product.setProductId("prod-io");
         product.setTokenId("tokenId");
         product.setToAddOnAggregates(true);
         product.setRole(PartyRole.MANAGER.name());
@@ -41,7 +41,7 @@ class UserInstitutionMapperTest {
         List<OnboardedProduct> result = mapper.toNewOnboardedProduct(product);
 
         assertEquals(2, result.size());
-        assertEquals("productId", result.get(0).getProductId());
+        assertEquals("prod-io", result.get(0).getProductId());
         assertEquals("tokenId", result.get(0).getTokenId());
         assertEquals("role1", result.get(0).getProductRole());
         assertEquals(true, result.get(0).getToAddOnAggregates());
@@ -55,7 +55,7 @@ class UserInstitutionMapperTest {
     void toNewOnboardedProductFromAddUserRole_returnsOnboardedProducts_whenProductRolesIsNotEmpty() {
         AddUserRoleDto.Product product = new AddUserRoleDto.Product();
         product.setProductRoles(Arrays.asList("role1", "role2"));
-        product.setProductId("productId");
+        product.setProductId("prod-io");
         product.setTokenId("tokenId");
         product.setToAddOnAggregates(true);
         product.setRole(PartyRole.MANAGER.name());
@@ -63,7 +63,7 @@ class UserInstitutionMapperTest {
         List<OnboardedProduct> result = mapper.toNewOnboardedProductFromAddUserRole(product);
 
         assertEquals(2, result.size());
-        assertEquals("productId", result.get(0).getProductId());
+        assertEquals("prod-io", result.get(0).getProductId());
         assertEquals("tokenId", result.get(0).getTokenId());
         assertEquals("role1", result.get(0).getProductRole());
         assertEquals(true, result.get(0).getToAddOnAggregates());

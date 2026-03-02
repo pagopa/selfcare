@@ -533,7 +533,7 @@ Feature: Institution
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
-      | productId                     | wrongProduct                                   |
+      | productId                     | prod-interop-coll                              |
     And The following query params:
       | createdAt                     | 2024-03-18T12:34:56Z                           |
       | userIds                       | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7           |

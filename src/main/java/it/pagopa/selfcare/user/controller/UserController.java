@@ -21,6 +21,7 @@ import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
 import it.pagopa.selfcare.user.service.utils.OPERATION_TYPE;
+import it.pagopa.selfcare.user.util.product.ProductId;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -68,7 +69,7 @@ public class UserController {
     @Path(value = "/emails")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<List<String>> getUsersEmailByInstitutionAndProduct(@NotNull @QueryParam(value = "institutionId") String institutionId,
-                                                                  @NotNull @QueryParam(value = "productId") String productId) {
+                                                                  @NotNull @ProductId @QueryParam(value = "productId") String productId) {
         return userService.getUsersEmails(institutionId, productId);
     }
 
@@ -99,7 +100,7 @@ public class UserController {
     @Tag(name = "external-pnpg")
     public Uni<UserResponse> getUserInfo(@PathParam(value = "id") String userId,
                                          @QueryParam(value = "institutionId") String institutionId,
-                                         @QueryParam(value = "productId") String productId) {
+                                         @ProductId @QueryParam(value = "productId") String productId) {
         return userService.retrievePerson(userId, productId, institutionId);
     }
 
@@ -156,7 +157,7 @@ public class UserController {
     @Path(value = "/{userId}/institutions/{institutionId}/products/{productId}")
     public Uni<Void> deleteProducts(@PathParam(value = "userId") String userId,
                                     @PathParam(value = "institutionId") String institutionId,
-                                    @PathParam(value = "productId") String productId) {
+                                    @ProductId @PathParam(value = "productId") String productId) {
         return userService.deleteUserInstitutionProduct(userId, institutionId, productId);
     }
 
@@ -186,7 +187,7 @@ public class UserController {
     @Tag(name = "internal-v1")
     public Uni<Response> updateUserStatus(@PathParam(value = "id") String userId,
                                           @QueryParam(value = "institutionId") String institutionId,
-                                          @QueryParam(value = "productId") String productId,
+                                          @ProductId @QueryParam(value = "productId") String productId,
                                           @Schema(description = "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA") @QueryParam(value = "role") String role,
                                           @QueryParam(value = "productRole") String productRole,
                                           @QueryParam(value = "status") OnboardedProductState status) {
@@ -218,7 +219,7 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<UsersNotificationResponse> getUsers(@QueryParam(value = "page") @DefaultValue("0") Integer page,
                                                    @QueryParam(value = "size") @DefaultValue("100") Integer size,
-                                                   @QueryParam(value = "productId") String productId) {
+                                                   @ProductId @QueryParam(value = "productId") String productId) {
         return userService.findPaginatedUserNotificationToSend(size, page, productId)
                 .map(userNotificationToSends -> {
                     UsersNotificationResponse usersNotificationResponse = new UsersNotificationResponse();
@@ -292,7 +293,7 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Void> updateUserProductStatus(@PathParam("id") String userId,
                                              @PathParam("institutionId") String institutionId,
-                                             @PathParam("productId") String productId,
+                                             @ProductId @PathParam("productId") String productId,
                                              @QueryParam("productRole") String productRole,
                                              @NotNull @QueryParam("status") OnboardedProductState status,
                                              @Context SecurityContext ctx) {
@@ -416,7 +417,7 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<UserInstitutionWithActions> getUserInstitutionWithPermission(@PathParam(value = "userId") String userId,
                                                                             @PathParam(value = "institutionId") String institutionId,
-                                                                            @QueryParam(value = "productId") String productId) {
+                                                                            @ProductId @QueryParam(value = "productId") String productId) {
         return userService.getUserInstitutionWithPermission(userId, institutionId, productId);
     }
 
