@@ -14,7 +14,7 @@ on:
       - reopened
       - ready_for_review
     paths:
-      - './infra/mongo/**'
+      - 'infra/mongo/**'
       - './.github/workflows/onboarding_pr_mongo_infra.yml'
       - './.github/workflows/onboarding_call_code_review_infra.yml'
 
@@ -26,7 +26,7 @@ jobs:
     secrets: inherit
     with:
       environment: dev
-      dir: ./infra/mongo
+      dir: infra/mongo
 
   code_review_uat:
     uses: ./.github/workflows/onboarding_call_code_review_infra.yml
@@ -34,4 +34,4 @@ jobs:
     secrets: inherit
     with:
       environment: uat
-      dir: ./infra/mongo
+      dir: infra/mongo

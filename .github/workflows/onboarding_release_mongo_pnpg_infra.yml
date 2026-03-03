@@ -6,7 +6,7 @@ on:
       - main
       - releases/*
     paths:
-      - './infra/mongo'
+      - 'infra/mongo'
 
   workflow_dispatch:
     inputs:
@@ -28,7 +28,7 @@ jobs:
     with:
       environment: dev
       tf_environment: dev-pnpg
-      dir: ./infra/mongo
+      dir: infra/mongo
 
   release_uat:
     uses: ./.github/workflows/onboarding_call_release_infra.yml
@@ -38,7 +38,7 @@ jobs:
     with:
       environment: uat
       tf_environment: uat-pnpg
-      dir: ./infra/mongo
+      dir: infra/mongo
 
   release_prod:
     uses: ./.github/workflows/onboarding_call_release_infra.yml
@@ -48,4 +48,4 @@ jobs:
     with:
       environment: prod
       tf_environment: prod-pnpg
-      dir: ./infra/mongo
+      dir: infra/mongo

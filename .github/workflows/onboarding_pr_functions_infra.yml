@@ -14,7 +14,7 @@ on:
       - reopened
       - ready_for_review
     paths:
-      - './infra/apps/onboarding-functions/**'
+      - 'infra/apps/onboarding-functions/**'
       - './.github/workflows/onboarding_pr_functions_infra.yml'
       - './.github/workflows/onboarding_call_code_review_infra.yml'
 
@@ -26,7 +26,7 @@ jobs:
     secrets: inherit
     with:
       environment: dev
-      dir: ./infra/apps/onboarding-functions
+      dir: infra/apps/onboarding-functions
 
   code_review_uat:
     uses: ./.github/workflows/onboarding_call_code_review_infra.yml
@@ -34,7 +34,7 @@ jobs:
     secrets: inherit
     with:
       environment: uat
-      dir: ./infra/apps/onboarding-functions
+      dir: infra/apps/onboarding-functions
 
   code_review_prod:
     uses: ./.github/workflows/onboarding_call_code_review_infra.yml
@@ -42,4 +42,4 @@ jobs:
     secrets: inherit
     with:
       environment: prod
-      dir: ./infra/apps/onboarding-functions
+      dir: infra/apps/onboarding-functions

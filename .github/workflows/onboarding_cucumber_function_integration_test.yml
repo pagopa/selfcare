@@ -70,7 +70,7 @@ jobs:
               --account-name selcdcheckoutsa \
               --container-name selc-d-product \
               --name products.json \
-              --file ./apps/onboarding-functions/src/test/resources/blobStorageInit/products.json \
+              --file apps/onboarding-functions/src/test/resources/blobStorageInit/products.json \
               --overwrite
 
       - name: Verify exist config file

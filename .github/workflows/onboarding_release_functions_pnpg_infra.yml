@@ -6,11 +6,11 @@ on:
       - main
       - releases/*
     paths:
-      - './infra/apps/onboarding-functions/env/dev-pnpg'
-      - './infra/apps/onboarding-functions/env/uat-pnpg'
-      - './infra/apps/onboarding-functions/env/prod-pnpg'
-      - '!./infra/apps/onboarding-functions/env/**'
-      - './infra/apps/onboarding-functions/**'
+      - 'infra/apps/onboarding-functions/env/dev-pnpg'
+      - 'infra/apps/onboarding-functions/env/uat-pnpg'
+      - 'infra/apps/onboarding-functions/env/prod-pnpg'
+      - '!infra/apps/onboarding-functions/env/**'
+      - 'infra/apps/onboarding-functions/**'
 
   workflow_dispatch:
     inputs:
@@ -32,7 +32,7 @@ jobs:
     with:
       environment: dev
       tf_environment: dev-pnpg
-      dir: ./infra/apps/onboarding-functions
+      dir: infra/apps/onboarding-functions
 
   release_uat:
     uses: ./.github/workflows/onboarding_call_release_infra.yml
@@ -42,7 +42,7 @@ jobs:
     with:
       environment: uat
       tf_environment: uat-pnpg
-      dir: ./infra/apps/onboarding-functions
+      dir: infra/apps/onboarding-functions
 
   release_prod:
     uses: ./.github/workflows/onboarding_call_release_infra.yml
@@ -52,4 +52,4 @@ jobs:
     with:
       environment: prod
       tf_environment: prod-pnpg
-      dir: ./infra/apps/onboarding-functions
+      dir: infra/apps/onboarding-functions

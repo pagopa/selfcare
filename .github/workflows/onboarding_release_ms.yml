@@ -32,9 +32,9 @@ jobs:
       environment: dev
       tf_environment: dev
       dir: 'infra/apps/onboarding-ms'
-      dockerfile_path: ./apps/onboarding-ms/Dockerfile
+      dockerfile_path: apps/onboarding-ms/Dockerfile
       docker_image_name: pagopa/selfcare-onboarding-ms
-      path_openapi_docs: ./apps/onboarding-ms/src/main/docs/openapi.json
+      path_openapi_docs: apps/onboarding-ms/src/main/docs/openapi.json
 
   release_uat:
     uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
@@ -45,9 +45,9 @@ jobs:
       environment: uat
       tf_environment: uat
       dir: 'infra/apps/onboarding-ms'
-      dockerfile_path: ./apps/onboarding-ms/Dockerfile
+      dockerfile_path: apps/onboarding-ms/Dockerfile
       docker_image_name: pagopa/selfcare-onboarding-ms
-      path_openapi_docs: ./apps/onboarding-ms/src/main/docs/openapi.json
+      path_openapi_docs: apps/onboarding-ms/src/main/docs/openapi.json
 
   release_prod:
     uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
@@ -58,9 +58,9 @@ jobs:
       environment: prod
       tf_environment: prod
       dir: 'infra/apps/onboarding-ms'
-      dockerfile_path: ./apps/onboarding-ms/Dockerfile
+      dockerfile_path: apps/onboarding-ms/Dockerfile
       docker_image_name: pagopa/selfcare-onboarding-ms
-      path_openapi_docs: ./apps/onboarding-ms/src/main/docs/openapi.json
+      path_openapi_docs: apps/onboarding-ms/src/main/docs/openapi.json
 
   promote_release:
     name: 'Promote prerelase release'

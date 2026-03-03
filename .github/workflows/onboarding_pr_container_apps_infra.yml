@@ -14,8 +14,8 @@ on:
       - reopened
       - ready_for_review
     paths:
-      - '!./infra/apps/onboarding-ms/env/**-pnpg'
-      - './infra/apps/onboarding-ms/**'
+      - '!infra/apps/onboarding-ms/env/**-pnpg'
+      - 'infra/apps/onboarding-ms/**'
       - './.github/workflows/onboarding_pr_container_apps_infra.yml'
       - './.github/workflows/onboarding_call_code_review_infra.yml'
 
@@ -27,7 +27,7 @@ jobs:
     secrets: inherit
     with:
       environment: dev
-      dir: ./infra/apps/onboarding-ms
+      dir: infra/apps/onboarding-ms
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
 
@@ -37,7 +37,7 @@ jobs:
     secrets: inherit
     with:
       environment: uat
-      dir: ./infra/apps/onboarding-ms
+      dir: infra/apps/onboarding-ms
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
 
@@ -47,6 +47,6 @@ jobs:
     secrets: inherit
     with:
       environment: prod
-      dir: ./infra/apps/onboarding-ms
+      dir: infra/apps/onboarding-ms
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
