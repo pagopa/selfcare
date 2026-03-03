@@ -4,7 +4,6 @@
 module "network" {
   source = "../_modules/network"
 
-  project             = "${local.prefix}-${local.env_short}"
   prefix              = local.prefix
   env_short           = local.env_short
   location            = local.location
@@ -146,6 +145,7 @@ module "log_analytics" {
 module "cdn" {
   source = "../_modules/cdn"
 
+  project         = "${local.prefix}-${local.env_short}"
   prefix          = local.prefix
   env_short       = local.env_short
   location        = local.location
@@ -171,6 +171,16 @@ module "cdn" {
   cidr_subnet_cdn               = local.cidr_subnet_cdn
 }
 
+
+###############################################################################
+# TMP OLD Storage Account
+###############################################################################
+
+data "azurerm_storage_account" "old_cdn_storage_account" {
+  name                = "${local.prefix}${local.env_short}checkoutsa"
+  resource_group_name = "${local.prefix}-${local.env_short}-checkout-fe-rg"
+}
+
 resource "null_resource" "cdn_storage_copy" {
   for_each = toset(["$web", "selc-${local.env_short}-product", "selc-openapi"])
 
@@ -180,8 +190,8 @@ resource "null_resource" "cdn_storage_copy" {
         --account-name "${module.cdn.storage_name}" \
         --account-key "${module.cdn.storage_primary_access_key}" \
         --destination-container '${each.value}' \
-        --source-account-name "${module.cdn.old_storage_account_name}" \
-        --source-account-key "${module.cdn.old_storage_account_primary_access_key}" \
+        --source-account-name "${data.azurerm_storage_account.old_cdn_storage_account.name}" \
+        --source-account-key "${data.azurerm_storage_account.old_cdn_storage_account.primary_access_key}" \
         --source-container '${each.value}'
     EOT
   }

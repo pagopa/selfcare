@@ -434,12 +434,4 @@ resource "azurerm_key_vault_secret" "selc_web_storage_blob_connection_string" {
   depends_on   = [module.cdn_storage_account]
 }
 
-###############################################################################
-# TMP OLD Storage Account
-###############################################################################
-
-data "azurerm_storage_account" "old_cdn_storage_account" {
-  name                = "${var.prefix}${var.env_short}checkoutsa"
-  resource_group_name = "${var.prefix}-${var.env_short}-checkout-fe-rg"
-}
 

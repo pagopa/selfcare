@@ -224,3 +224,29 @@ module "cdn" {
   rg_vnet_name    = module.network.vnet_core.resource_group_name
   cidr_subnet_cdn = local.cidr_subnet_cdn
 }
+
+###############################################################################
+# TMP OLD Storage Account
+###############################################################################
+
+data "azurerm_storage_account" "old_cdn_storage_account" {
+  name                = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutsa"
+  resource_group_name = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-checkout-fe-rg"
+}
+
+
+resource "null_resource" "cdn_storage_copy" {
+  for_each = toset(["$web", "selc-${local.env_short}-product"])
+
+  provisioner "local-exec" {
+    command = <<EOT
+        az storage blob copy start-batch \
+        --account-name "${module.cdn.storage_name}" \
+        --account-key "${module.cdn.storage_primary_access_key}" \
+        --destination-container '${each.value}' \
+        --source-account-name "${data.azurerm_storage_account.old_cdn_storage_account.name}" \
+        --source-account-key "${data.azurerm_storage_account.old_cdn_storage_account.primary_access_key}" \
+        --source-container '${each.value}'
+    EOT
+  }
+}
