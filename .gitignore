@@ -76,8 +76,8 @@ onboarding-functions/.mvn/
 **/node_modules/
 
 ### Docker ###
-docker-compose.fn.yml
-Dockerfile
+#docker-compose.fn.yml
+#Dockerfile
 
 ### Test resources / emulator data ###
 apps/onboarding-functions/src/test/resources/storagedata/
