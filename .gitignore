@@ -62,9 +62,6 @@ infra/cert/env/lib
 .run/product.run.xml
 .run/jvm-remote.run.xml
 
-### Local / IDE / tooling
-local.settings.json
-
 ### Build outputs ###
 bin/
 obj/
@@ -84,6 +81,8 @@ apps/onboarding-functions/src/test/resources/storagedata/
 apps/onboarding-functions/src/test/resources/storagedata/**
 apps/onboarding-functions/src/test/resources/azurite-data/
 apps/onboarding-functions/src/test/resources/azurite-data/**
+apps/onboarding-functions/local.settings.json
+!apps/onboarding-functions/src/test/resources/fn/**
 
 ### Project storage ###
 apps/onboarding-functions/storagedata/
