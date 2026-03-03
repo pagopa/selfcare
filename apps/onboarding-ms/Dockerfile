@@ -11,6 +11,9 @@ COPY --link ./libs/onboarding-sdk-common ./onboarding-sdk-common
 COPY --link ./libs/onboarding-sdk-azure-storage ./onboarding-sdk-azure-storage
 COPY --link ./libs/onboarding-sdk-product ./onboarding-sdk-product
 COPY --link ./libs/onboarding-sdk-crypto ./onboarding-sdk-crypto
+COPY --link ./libs/selfcare-sdk-pom ./selfcare-sdk-pom
+COPY --link ./libs/selfcare-sdk-security ./selfcare-sdk-security
+COPY --link ./libs/cucumber-sdk ./cucumber-sdk
 
 WORKDIR /src/test-coverage
 COPY --link ./test-coverage/pom.xml .
