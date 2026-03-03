@@ -53,7 +53,7 @@ jobs:
           file: ./apps/onboarding-ms/Dockerfile
           push: false
           secrets: |
-            GH_TOKEN=${{ secrets.READ_PACKAGES_TOKEN }}
+            GH_TOKEN: ${{ secrets.GH_PAT_VARIABLES }}
           cache-from: type=gha
           cache-to: type=gha,mode=min
           build-args: |
