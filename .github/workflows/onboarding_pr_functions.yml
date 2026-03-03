@@ -24,7 +24,7 @@ jobs:
     permissions:
       packages: read
     uses: ./.github/workflows/onboarding_call_code_review.yml
-    name: OnBoarding function Code Review
+    name: Onboarding function Code Review
     secrets: inherit
     with:
       pr_number: ${{ github.event.pull_request.number }}

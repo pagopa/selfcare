@@ -25,7 +25,7 @@ jobs:
 
   release_dev:
     uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
-    name: '[Dev] OnBoarding ms Release'
+    name: '[Dev] Onboarding ms Release'
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     secrets: inherit
     with:
@@ -38,7 +38,7 @@ jobs:
 
   release_uat:
     uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
-    name: '[UAT] OnBoarding ms Release'
+    name: '[UAT] Onboarding ms Release'
     if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
     secrets: inherit
     with:
@@ -51,7 +51,7 @@ jobs:
 
   release_prod:
     uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
-    name: '[Prod] OnBoarding ms Release'
+    name: '[Prod] Onboarding ms Release'
     if: ${{ inputs.env == 'prod' }}
     secrets: inherit
     with:

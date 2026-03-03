@@ -24,7 +24,7 @@ jobs:
 
   release_dev:
     uses: ./.github/workflows/onboarding_call_release_function.yml
-    name: '[Dev] OnBoarding function Release'
+    name: '[Dev] Onboarding function Release'
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     secrets: inherit
     with:
@@ -33,7 +33,7 @@ jobs:
 
   release_uat:
     uses: ./.github/workflows/onboarding_call_release_function.yml
-    name: '[UAT] OnBoarding function Release'
+    name: '[UAT] Onboarding function Release'
     if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
     secrets: inherit
     with:
@@ -42,7 +42,7 @@ jobs:
 
   release_prod:
     uses: ./.github/workflows/onboarding_call_release_function.yml
-    name: '[Prod] OnBoarding function Release'
+    name: '[Prod] Onboarding function Release'
     if: ${{ inputs.env == 'prod' }}
     secrets: inherit
     with:
