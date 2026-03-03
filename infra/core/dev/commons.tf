@@ -4,6 +4,7 @@
 module "network" {
   source = "../_modules/network"
 
+  project             = "${local.prefix}-${local.env_short}"
   prefix              = local.prefix
   env_short           = local.env_short
   location            = local.location
@@ -154,6 +155,7 @@ module "cdn" {
   app_name        = "checkout"
   instance_number = "01"
 
+  host_name            = "${local.dns_zone_prefix}.${local.external_domain}"
   dns_zone_prefix      = local.dns_zone_prefix
   external_domain      = local.external_domain
   robots_indexed_paths = local.robots_indexed_paths

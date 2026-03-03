@@ -104,6 +104,11 @@ variable "cidr_subnet_appgateway" {
 }
 
 # From key_vault module
+variable "key_vault_id" {
+  type = string
+}
+
+# From key_vault module
 # From monitor module
 variable "action_group_error_id" {
   type    = string

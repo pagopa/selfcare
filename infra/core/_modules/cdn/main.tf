@@ -1,5 +1,4 @@
 locals {
-  project = "${var.prefix}-${var.env_short}"
 
   environment = {
     prefix          = var.prefix
@@ -21,7 +20,7 @@ locals {
         {
           condition_type   = "url_path_condition"
           operator         = "BeginsWith"
-          match_values     = [format("/%s/", spa)]
+          match_values     = ["/${spa}/"]
           negate_condition = false
           transforms       = null
         },
@@ -34,8 +33,8 @@ locals {
         },
       ]
       url_rewrite_action = {
-        source_pattern          = format("/%s/", spa)
-        destination             = format("/%s/index.html", spa)
+        source_pattern          = "/${spa}/"
+        destination             = "/${spa}/index.html"
         preserve_unmatched_path = false
       }
     }
@@ -50,13 +49,13 @@ locals {
 # Resource Group
 #
 resource "azurerm_resource_group" "checkout_fe_rg" {
-  name     = format("%s-checkout-fe-rg", local.project)
+  name     = format("%s-checkout-fe-rg", var.project)
   location = var.location
   tags     = var.tags
 }
 
 resource "azurerm_subnet" "cdn_snet" {
-  name                 = "${local.project}-${local.environment.app_name}-snet"
+  name                 = "${var.project}-${local.environment.app_name}-snet"
   virtual_network_name = var.vnet_name
   resource_group_name  = var.rg_vnet_name
   address_prefixes     = var.cidr_subnet_cdn
@@ -111,6 +110,7 @@ data "azurerm_storage_account" "cdn" {
 
 # Key Vault certificate for custom domain (apex domain requires custom cert)
 data "azurerm_key_vault_certificate" "cdn" {
+  count        = var.cdn_certificate_name != null ? 1 : 0
   name         = var.cdn_certificate_name
   key_vault_id = var.key_vault_id
 }
@@ -139,15 +139,15 @@ module "checkout_cdn" {
 
   custom_domains = [
     {
-      host_name = "${var.dns_zone_prefix}.${var.external_domain}"
+      host_name = var.host_name
       dns = {
         zone_name                = "${var.dns_zone_prefix}.${var.external_domain}"
         zone_resource_group_name = var.rg_vnet_name
       }
       custom_certificate = {
-        key_vault_certificate_versionless_id = data.azurerm_key_vault_certificate.cdn.versionless_id
-        key_vault_name                       = var.key_vault_name
-        key_vault_resource_group_name        = var.key_vault_resource_group_name
+        key_vault_certificate_versionless_id = var.cdn_certificate_name != null ? data.azurerm_key_vault_certificate.cdn[0].versionless_id : null
+        key_vault_name                       = var.key_vault_name != null ? var.key_vault_name : null
+        key_vault_resource_group_name        = var.key_vault_resource_group_name != null ? var.key_vault_resource_group_name : null
         key_vault_has_rbac_support           = false
       }
     }
@@ -182,10 +182,10 @@ resource "azurerm_cdn_frontdoor_rule" "default_application" {
   }
 
   actions {
-    url_rewrite_action {
-      source_pattern          = "/"
-      destination             = "/dashboard/index.html"
-      preserve_unmatched_path = false
+    url_redirect_action {
+      redirect_type        = "Found"
+      destination_hostname = "${var.dns_zone_prefix}.${var.external_domain}"
+      destination_path     = "/dashboard/"
     }
   }
 }
@@ -310,11 +310,56 @@ resource "azurerm_cdn_frontdoor_rule" "hsts" {
   }
 }
 
+resource "azurerm_cdn_frontdoor_rule" "content_security_policy_mixpanel" {
+  name                      = "ContentSecurityPolicyMixpanel"
+  cdn_frontdoor_rule_set_id = module.checkout_cdn.rule_set_id
+  order                     = 2 + length(var.spa) + 5
+  behavior_on_match         = "Continue"
+
+  actions {
+    response_header_action {
+      header_action = "Overwrite"
+      header_name   = "Content-Security-Policy-Report-Only"
+      value         = "default-src 'self'; object-src 'none'; connect-src 'self' https://${var.prefix_api}.${var.dns_zone_prefix}.${var.external_domain}/ https://api-eu.mixpanel.com/track/; "
+    }
+  }
+}
+
+resource "azurerm_cdn_frontdoor_rule" "content_security_policy_fonts" {
+  name                      = "ContentSecurityPolicyFonts"
+  cdn_frontdoor_rule_set_id = module.checkout_cdn.rule_set_id
+  order                     = 2 + length(var.spa) + 6
+  behavior_on_match         = "Continue"
+
+  actions {
+    response_header_action {
+      header_action = "Append"
+      header_name   = "Content-Security-Policy-Report-Only"
+      value         = "script-src 'self'; style-src 'self' 'unsafe-inline' https://${var.host_name}/assets/font/selfhostedfonts.css; worker-src 'none'; font-src 'self' https://${var.host_name}/assets/font/; "
+    }
+  }
+}
+
+resource "azurerm_cdn_frontdoor_rule" "content_security_policy_io" {
+  name                      = "ContentSecurityPolicyIO"
+  cdn_frontdoor_rule_set_id = module.checkout_cdn.rule_set_id
+  order                     = 2 + length(var.spa) + 7
+  behavior_on_match         = "Continue"
+
+  actions {
+    response_header_action {
+      header_action = "Append"
+      header_name   = "Content-Security-Policy-Report-Only"
+      value         = "img-src 'self' https://assets.cdn.io.italia.it https://${var.host_name} data:; "
+    }
+  }
+}
+
 # X-Content-Type-Options
 resource "azurerm_cdn_frontdoor_rule" "x_content_type_options" {
   name                      = "xContentTypeOptions"
   cdn_frontdoor_rule_set_id = module.checkout_cdn.rule_set_id
-  order                     = 2 + length(var.spa) + 5
+  order                     = 2 + length(var.spa) + 8
   behavior_on_match         = "Continue"
 
   actions {
@@ -326,11 +371,28 @@ resource "azurerm_cdn_frontdoor_rule" "x_content_type_options" {
   }
 }
 
+
 # Content-Security-Policy frame-ancestors
+# Azure CDN Front Door rule that enforces Content Security Policy (CSP) headers
+# to restrict where this application can be embedded and sandboxed.
+#
+# Rule Details:
+# - name: Identifies the rule as CSP frame-ancestors policy
+# - order: Positioned after other rules (2 + number of SPAs + 6)
+# - behavior_on_match: "Continue" allows other rules to execute sequentially
+#
+# Security Headers Applied:
+# - frame-ancestors 'none': Prevents embedding in any frame/iframe by default
+# - object-src 'none': Disables plugins (Flash, Java, etc.)
+# - frame-src 'self' *.{dns_zone_prefix}.{external_domain}: Allows framing only 
+#   from same origin and subdomains within the configured external domain
+#
+# This protects against clickjacking attacks and ensures the application
+# can only be embedded within trusted internal subdomains.
 resource "azurerm_cdn_frontdoor_rule" "csp_frame_ancestors" {
   name                      = "cspFrameAncestors"
   cdn_frontdoor_rule_set_id = module.checkout_cdn.rule_set_id
-  order                     = 2 + length(var.spa) + 6
+  order                     = 2 + length(var.spa) + 9
   behavior_on_match         = "Continue"
 
   actions {

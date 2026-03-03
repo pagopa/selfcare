@@ -179,3 +179,48 @@ module "cosmos_db" {
 
   cosmosdb_mongodb_enable_free_tier = false
 }
+
+###############################################################################
+# Monitoring
+###############################################################################
+data "azurerm_resource_group" "monitor_rg" {
+  name = "${local.prefix}-${local.env_short}-monitor-rg"
+}
+
+data "azurerm_log_analytics_workspace" "log_analytics" {
+  name                = "${local.prefix}-${local.env_short}-law"
+  resource_group_name = data.azurerm_resource_group.monitor_rg.name
+}
+
+###############################################################################
+# CDN Front Door
+###############################################################################
+module "cdn" {
+  source = "../_modules/cdn"
+
+  project         = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}"
+  prefix          = local.prefix
+  env_short       = local.env_short
+  location        = local.location
+  location_short  = local.location_short
+  tags            = local.tags
+  domain          = local.app_domain
+  app_name        = "checkout"
+  instance_number = "01"
+  prefix_api      = "api-pnpg"
+  host_name       = "pnpg.${local.dns_zone_prefix}.${local.external_domain}"
+
+  dns_zone_prefix      = local.dns_zone_prefix
+  external_domain      = local.external_domain
+  robots_indexed_paths = local.robots_indexed_paths
+  storage_use_case     = "development" //uat and prod should use "default"
+
+  log_analytics_workspace_id    = data.azurerm_log_analytics_workspace.log_analytics.id
+  key_vault_id                  = module.key_vault.key_vault_id
+  key_vault_name                = module.key_vault.key_vault_name
+  key_vault_resource_group_name = module.key_vault.key_vault_resource_group_name
+  # cdn_certificate_name        = certificate managed
+  vnet_name       = module.network.vnet_core.name
+  rg_vnet_name    = module.network.vnet_core.resource_group_name
+  cidr_subnet_cdn = local.cidr_subnet_cdn
+}

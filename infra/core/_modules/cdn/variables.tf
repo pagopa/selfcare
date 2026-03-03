@@ -1,3 +1,8 @@
+variable "project" {
+  type        = string
+  description = "Project name for resource naming"
+}
+
 variable "prefix" {
   type    = string
   default = "selc"
@@ -30,6 +35,17 @@ variable "app_name" {
 variable "instance_number" {
   type        = string
   description = "Instance number for the application (e.g., 01, 02)"
+}
+
+variable "host_name" {
+  type        = string
+  description = "Hostname for the CDN custom domain eg. cdn.selfcare.pagopa.it"
+}
+
+variable "prefix_api" {
+  type        = string
+  description = "Prefix for custom domain endpoint for apim"
+  default     = "api"
 }
 
 variable "dns_zone_prefix" {
@@ -77,6 +93,7 @@ variable "key_vault_resource_group_name" {
 variable "cdn_certificate_name" {
   type        = string
   description = "Name of the Key Vault certificate for the custom domain"
+  default     = null
 }
 
 variable "rg_vnet_name" {
