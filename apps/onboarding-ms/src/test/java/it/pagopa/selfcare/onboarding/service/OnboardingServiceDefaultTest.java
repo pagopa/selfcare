@@ -43,7 +43,6 @@ import it.pagopa.selfcare.onboarding.model.FormItem;
 import it.pagopa.selfcare.onboarding.model.OnboardingGetFilters;
 import it.pagopa.selfcare.onboarding.service.impl.OnboardingServiceDefault;
 import it.pagopa.selfcare.onboarding.service.profile.OnboardingTestProfile;
-import it.pagopa.selfcare.onboarding.service.strategy.OnboardingValidationStrategy;
 import it.pagopa.selfcare.onboarding.service.util.OnboardingUtils;
 import it.pagopa.selfcare.product.entity.*;
 import it.pagopa.selfcare.product.exception.ProductNotFoundException;
@@ -144,9 +143,6 @@ class OnboardingServiceDefaultTest {
     @InjectMock
     @RestClient
     GeographicTaxonomiesApi geographicTaxonomiesApi;
-
-    @InjectMock
-    OnboardingValidationStrategy onboardingValidationStrategy;
 
     @Spy
     OnboardingMapper onboardingMapper = new OnboardingMapperImpl();
@@ -1555,6 +1551,7 @@ class OnboardingServiceDefaultTest {
         productResource.setTitle("title");
         productResource.setAllowIndividualOnboarding(allowIndividualOnboarding);
         productResource.setAllowCompanyOnboarding(allowCompanyOnboarding);
+        productResource.setEnabled(true);
 
         if (PROD_DASHBOARD_PSP.getValue().equals(productId)) {
             List<String> institutionTypeList = new ArrayList<>();
@@ -1639,8 +1636,8 @@ class OnboardingServiceDefaultTest {
         mockSimpleProductValidAssert(onboardingRequest.getProductId(), true, asserter, false, true);
 
         // mock verify allowed Map
-        asserter.execute(() -> when(onboardingValidationStrategy.validate(any()))
-                .thenReturn(true));
+        asserter.execute(() ->
+            when(productService.isProductEnabled(any())).thenReturn(true));
 
         PanacheMock.mock(Onboarding.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
@@ -1695,9 +1692,9 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(onboardingRequest.getProductId(), true, asserter, false, true);
 
-        // mock verify allowed Map
-        asserter.execute(() -> when(onboardingValidationStrategy.validate(any()))
-                .thenReturn(true));
+        // mock verify allowed product
+        asserter.execute(() ->
+            when(productService.isProductEnabled(anyString())).thenReturn(true));
 
         PanacheMock.mock(Onboarding.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
@@ -2254,8 +2251,8 @@ class OnboardingServiceDefaultTest {
         mockFindToken(asserter);
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
 
-        asserter.execute(() -> when(onboardingValidationStrategy.validate(onboarding.getProductId()))
-                .thenReturn(false));
+        asserter.execute(() ->
+            when(productService.isProductEnabled(anyString())).thenReturn(false));
 
         asserter.assertFailedWith(() -> onboardingService.completeOnboardingUsers(onboarding.getId(), TEST_FORM_ITEM),
                 OnboardingNotAllowedException.class);
@@ -2632,7 +2629,7 @@ class OnboardingServiceDefaultTest {
         when(orchestrationService.triggerOrchestration(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 
-        when(onboardingValidationStrategy.validate(onboarding.getProductId()))
+        when(productService.isProductEnabled(onboarding.getProductId()))
                 .thenReturn(true);
 
         UniAssertSubscriber<OnboardingGet> subscriber = onboardingService
@@ -2675,7 +2672,7 @@ class OnboardingServiceDefaultTest {
 
         mockVerifyOnboardingNotFound();
 
-        when(onboardingValidationStrategy.validate(onboarding.getProductId()))
+        when(productService.isProductEnabled(onboarding.getProductId()))
                 .thenReturn(true);
 
         UniAssertSubscriber<OnboardingGet> subscriber = onboardingService
@@ -3286,12 +3283,12 @@ class OnboardingServiceDefaultTest {
                 }));
     }
 
-    void mockVerifyAllowedProductList(String productId, UniAsserter asserter, boolean aspectedResult) {
-        asserter.execute(() -> when(onboardingValidationStrategy.validate(productId)).thenReturn(aspectedResult));
+    void mockVerifyAllowedProductList(String productId, UniAsserter asserter, boolean expectedResult) {
+        asserter.execute(() -> when(productService.isProductEnabled(productId)).thenReturn(expectedResult));
     }
 
-    void mockAllowedProductByInstitutionTaxCodeList(UniAsserter asserter, boolean aspectedResult) {
-        asserter.execute(() -> when(productService.verifyAllowedByInstitutionTaxCode(anyString(), anyString())).thenReturn(aspectedResult));
+    void mockAllowedProductByInstitutionTaxCodeList(UniAsserter asserter, boolean expectedResult) {
+        asserter.execute(() -> when(productService.verifyAllowedByInstitutionTaxCode(anyString(), anyString())).thenReturn(expectedResult));
     }
 
     private void mockUpdateOnboardingInfo(String onboardingId, Long updatedItemCount) {

@@ -130,16 +130,16 @@ public class ProductServiceDefault implements ProductService {
             throw new IllegalArgumentException(REQUIRED_PRODUCT_ID_MESSAGE);
         }
         Product product = Optional.ofNullable(productsMap.get(productId))
-                .orElseThrow(ProductNotFoundException::new);
+                .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + productId));
         if (filterValid && statusIsNotValid(product.getStatus())) {
-            throw new ProductNotFoundException();
+            throw new ProductNotFoundException(String.format("Product with id %s has status %s", productId, product.getStatus()));
         }
 
         if (product.getParentId() != null) {
             Product parent = Optional.ofNullable(productsMap.get(product.getParentId()))
-                    .orElseThrow(ProductNotFoundException::new);
+                 .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + product.getParentId()));
             if (filterValid && statusIsNotValid(parent.getStatus())) {
-                throw new ProductNotFoundException();
+                throw new ProductNotFoundException(String.format("Product with id %s has status %s", product.getParentId(), parent.getStatus()));
             }
 
             product.setParent(parent);
@@ -186,7 +186,7 @@ public class ProductServiceDefault implements ProductService {
      * The verification logic is as follows:
      * <ul>
      *   <li>If the product has no allowed institution tax codes (i.e., the list is {@code null} or empty),
-     *       the method returns {@code true} (all tax codes are considered valid).</li>
+     *       the method returns {@code false}.</li>
      *   <li>If the list of allowed institution tax codes is not empty, the method returns {@code true}
      *       only if the given {@code taxCode} matches (case-insensitive) one of the codes in the list.</li>
      *   <li>Otherwise, the method returns {@code false}.</li>
@@ -203,7 +203,7 @@ public class ProductServiceDefault implements ProductService {
         List<String> allowedInstitutionTaxCode = product.getAllowedInstitutionTaxCode();
 
         if (allowedInstitutionTaxCode == null || allowedInstitutionTaxCode.isEmpty()) {
-            return true;
+            return false;
         }
 
         return allowedInstitutionTaxCode.stream()
@@ -226,6 +226,25 @@ public class ProductServiceDefault implements ProductService {
         return Optional.ofNullable(getProductIsValid(productId))
                 .map(Product::getExpirationDate)
                 .orElse(DEFAULT_EXPIRATION_DATE);
+    }
+
+    /**
+     * Checks if the product identified by {@code productId} is enabled.
+     * A product is considered enabled if it exists, is valid, and has its
+     * enabled flag set to {@code true}.
+     * If the product is not valid or is not enabled this method returns {@code false}.
+     *
+     * @param productId the identifier of the product to check (must not be {@code null} or empty).
+     * @return {@code true} if the product is enabled; {@code false} otherwise.
+     *
+     * @throws IllegalArgumentException if {@code productId} is {@code null} or empty.
+     * @throws ProductNotFoundException if product is not found
+     */
+    @Override
+    public boolean isProductEnabled(String productId) {
+        return Optional.ofNullable(getProductIsValid(productId))
+                .map(Product::isEnabled)
+                .orElse(false);
     }
 
 }

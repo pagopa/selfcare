@@ -15,13 +15,6 @@ After the data is saved, it invokes the function implemented by onboarding-funct
 ````properties
 env ONBOARDING_ORCHESTRATION_ENABLED=false.
 ````
-### Allowed onboarding product with status TESTING
-
-ONBOARDING_ALLOWED_INSTITUTIONS_PRODUCTS property permits onboarding for product with status TESTING. It can contain a map of entry with product as key and a list of taxcode as value.
-
-````properties
-ONBOARDING_ALLOWED_INSTITUTIONS_PRODUCTS={'prod-interop': ['0123456789']}.
-````
 
 ## Configuration Properties
 
@@ -40,7 +33,6 @@ Before running you must set these properties as environment variables.
 | quarkus.rest-client."**.OrchestrationApi".url<br/>     | ONBOARDING_FUNCTIONS_URL                 |             |     yes      |
 | quarkus.rest-client."**.OrchestrationApi".api-key<br/> | ONBOARDING-FUNCTIONS-API-KEY             |             |     yes      |
 | quarkus.rest-client."**.InstitutionApi".url<br/>       | MS_USER_URL                              |             |     yes      |
-| onboarding.institutions-allowed-list<br/>              | ONBOARDING_ALLOWED_INSTITUTIONS_PRODUCTS |             |      no      |
 
 > **_NOTE:_**  properties that contains secret must have the same name of its secret as uppercase.
 

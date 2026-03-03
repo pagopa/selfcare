@@ -37,7 +37,6 @@ import it.pagopa.selfcare.onboarding.mapper.UserMapper;
 import it.pagopa.selfcare.onboarding.model.FormItem;
 import it.pagopa.selfcare.onboarding.model.OnboardingGetFilters;
 import it.pagopa.selfcare.onboarding.service.*;
-import it.pagopa.selfcare.onboarding.service.strategy.OnboardingValidationStrategy;
 import it.pagopa.selfcare.onboarding.service.util.OnboardingUtils;
 import it.pagopa.selfcare.onboarding.util.QueryUtils;
 import it.pagopa.selfcare.onboarding.util.SortEnum;
@@ -131,9 +130,6 @@ public class OnboardingServiceDefault implements OnboardingService {
 
     @Inject
     InstitutionMapper institutionMapper;
-
-    @Inject
-    OnboardingValidationStrategy onboardingValidationStrategy;
 
     @Inject
     ProductService productService;
@@ -995,7 +991,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     private boolean validateByProductOrInstitutionTaxCode(String productId, String taxCode) {
         log.info("Validate start");
         log.debug("Provided productId = {} and taxCode = {}", productId, taxCode);
-        boolean result = onboardingValidationStrategy.validate(productId) || productService.verifyAllowedByInstitutionTaxCode(productId, taxCode);
+        boolean result = productService.isProductEnabled(productId) || productService.verifyAllowedByInstitutionTaxCode(productId, taxCode);
         log.debug("Validate result = {}", result);
         log.info("Validate end");
         return result;

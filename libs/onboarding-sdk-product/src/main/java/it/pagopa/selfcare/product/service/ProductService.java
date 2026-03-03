@@ -24,4 +24,6 @@ public interface ProductService {
     boolean verifyAllowedByInstitutionTaxCode(String productId, String taxCode);
 
     Integer getProductExpirationDate(String productId);
+
+    boolean isProductEnabled(String productId);
 }

@@ -26,7 +26,7 @@ public class Product {
     private Map<PartyRole, ProductRoleInfo> roleMappings;
     private Map<String, Map<PartyRole, ProductRoleInfo>> roleMappingsByInstitutionType;
     private String roleManagementURL;
-    private boolean enabled = true;
+    private boolean enabled = false;
     private boolean delegable;
     private boolean invoiceable;
     private ProductStatus status;

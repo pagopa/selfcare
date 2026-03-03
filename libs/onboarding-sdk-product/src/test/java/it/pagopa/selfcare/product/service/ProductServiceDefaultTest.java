@@ -192,10 +192,10 @@ class ProductServiceDefaultTest {
         ProductServiceDefault productService = new ProductServiceDefault(PRODUCT_JSON_STRING);
 
         // when
-        boolean result = productService.verifyAllowedByInstitutionTaxCode("prod-test-parent", "taxCode");
+        boolean result = productService.verifyAllowedByInstitutionTaxCode("prod-test", "taxCode");
 
         // then
-        assertTrue(result);
+        assertFalse(result);
 
     }
 

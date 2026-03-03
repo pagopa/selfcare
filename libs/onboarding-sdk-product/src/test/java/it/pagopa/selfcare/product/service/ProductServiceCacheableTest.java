@@ -22,9 +22,10 @@ import static org.mockito.Mockito.*;
 
 class ProductServiceCacheableTest {
 
-    private static final String PRODUCT_JSON_STRING = "[{\"id\":\"prod-test-parent\",\"status\":\"ACTIVE\"}," +
-            "{\"id\":\"prod-test\", \"parentId\":\"prod-test-parent\",\"status\":\"ACTIVE\"}," +
-            "{\"id\":\"prod-inactive\",\"status\":\"INACTIVE\"}]";
+  private static final String PRODUCT_JSON_STRING =
+      "[{\"id\":\"prod-test-parent\",\"status\":\"ACTIVE\", \"allowedInstitutionTaxCode\":[\"exampleTaxCode\",\"taxCode2\"]},"
+          + "{\"id\":\"prod-test\", \"parentId\":\"prod-test-parent\",\"status\":\"ACTIVE\"},"
+          + "{\"id\":\"prod-inactive\",\"status\":\"INACTIVE\"}]";
 
     private static final String PRODUCT_JSON_STRING_WITH_ROLEMAPPING = "[{\"id\":\"prod-test-parent\",\"status\":\"ACTIVE\"}," +
             "{\"id\":\"prod-test\", \"parentId\":\"prod-test-parent\",\"status\":\"ACTIVE\", \"roleMappings\" : {\"MANAGER\":{\"roles\":[{\"code\":\"operatore\"}]}}}," +

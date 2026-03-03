@@ -122,4 +122,9 @@ public class IntegrationProductService implements ProductService {
     public Integer getProductExpirationDate(String productId) {
         return DEFAULT_EXPIRATION_DATE;
     }
+
+    @Override
+    public boolean isProductEnabled(String productId) {
+        return true;
+    }
 }

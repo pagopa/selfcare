@@ -51,10 +51,6 @@ app_settings = [
     value = "https://selc-u-pnpg-onboarding-fn.azurewebsites.net"
   },
   {
-    name  = "ONBOARDING_ALLOWED_INSTITUTIONS_PRODUCTS"
-    value = "prod-pn-pg"
-  },
-  {
     name  = "STORAGE_CONTAINER_PRODUCT"
     value = "selc-u-product"
   },

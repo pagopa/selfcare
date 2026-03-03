@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.exception.handler;
 import it.pagopa.selfcare.onboarding.exception.*;
 import it.pagopa.selfcare.onboarding.exception.model.Problem;
 import it.pagopa.selfcare.onboarding.exception.model.ProblemError;
+import it.pagopa.selfcare.product.exception.ProductNotFoundException;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.reactive.RestResponse;
@@ -36,6 +37,13 @@ public class ExceptionHandler {
         log.error(LOG_ERROR_SYNTAX, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
         return RestResponse.status(Response.Status.INTERNAL_SERVER_ERROR, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER);
     }
+
+    @ServerExceptionMapper
+    public RestResponse<String> toResponse(ProductNotFoundException exception) {
+        log.error(LOG_ERROR_SYNTAX, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
+        return RestResponse.status(Response.Status.INTERNAL_SERVER_ERROR, exception.getMessage());
+    }
+
     @ServerExceptionMapper
     public RestResponse<String> toResponse(ResourceNotFoundException exception) {
         log.error(LOG_ERROR_SYNTAX, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());

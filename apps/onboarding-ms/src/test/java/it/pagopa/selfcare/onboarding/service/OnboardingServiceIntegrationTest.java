@@ -32,7 +32,6 @@ import it.pagopa.selfcare.onboarding.entity.UserRequester;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapperImpl;
 import it.pagopa.selfcare.onboarding.service.impl.OnboardingServiceDefault;
-import it.pagopa.selfcare.onboarding.service.strategy.OnboardingValidationStrategy;
 import it.pagopa.selfcare.onboarding.steps.IntegrationProfile;
 import it.pagopa.selfcare.product.entity.PHASE_ADDITION_ALLOWED;
 import it.pagopa.selfcare.product.entity.Product;
@@ -90,8 +89,6 @@ class OnboardingServiceIntegrationTest {
     @InjectMock
     InstitutionService institutionService;
 
-    @InjectMock
-    OnboardingValidationStrategy onboardingValidationStrategy;
 
     @Spy
     OnboardingMapper onboardingMapper = new OnboardingMapperImpl();
@@ -189,7 +186,7 @@ class OnboardingServiceIntegrationTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), asserter);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter);
+        mockVerifyisProductEnabled(request.getProductId(), asserter);
 
         asserter.execute(() -> {
             when(userRegistryApi.updateUsingPATCH(any(), any()))
@@ -329,8 +326,8 @@ class OnboardingServiceIntegrationTest {
                 }));
     }
 
-    void mockVerifyAllowedProductList(String productId, UniAsserter asserter) {
-        asserter.execute(() -> when(onboardingValidationStrategy.validate(productId)).thenReturn(true));
+    void mockVerifyisProductEnabled(String productId, UniAsserter asserter) {
+        asserter.execute(() -> when(productService.isProductEnabled(productId)).thenReturn(true));
     }
 
 }

@@ -101,4 +101,9 @@ public class ProductServiceCacheable implements ProductService {
     return productService.getProductExpirationDate(productId);
   }
 
+  @Override
+  public boolean isProductEnabled(String productId) {
+    refreshProduct();
+    return productService.isProductEnabled(productId);
+  }
 }
