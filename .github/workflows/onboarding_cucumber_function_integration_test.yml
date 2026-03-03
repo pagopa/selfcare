@@ -1,0 +1,164 @@
+name: "Integration Tests (onboarding-functions)"
+
+permissions:
+  contents: read
+  actions: write
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+    paths:
+      - "apps/onboarding-functions/**"
+  workflow_dispatch:
+
+jobs:
+  integration_tests_functions_job:
+    name: "Integration Tests (onboarding-functions)"
+    runs-on: ubuntu-24.04
+    environment: dev-ci
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          fetch-depth: 0
+
+      - name: Setup Maven Action
+        uses: s4u/setup-maven-action@fa2c7e4517ed008b1f73e7e0195a9eecf5582cd4
+        with:
+          checkout-fetch-depth: 0
+          java-version: 17
+          java-distribution: "temurin"
+          maven-version: "3.9.5"
+          cache-enabled: false
+
+      - name: Add custom Maven settings
+        uses: s4u/maven-settings-action@60912582505985be4cc55d2b890eb32767f8de5f
+        with:
+          servers: >
+            [
+              {"id": "selfcare-onboarding", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"},
+              {"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}
+            ]
+
+      - name: Check Docker and Compose versions
+        run: |
+          docker --version
+          docker compose version
+
+      - name: Docker system prune
+        run: |
+          docker compose down -v --remove-orphans || true
+          docker system prune -af || true
+
+      - name: Azure Login
+        uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ vars.ARM_TENANT_ID }}
+          subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+
+      - name: Download config from blob-storage
+        uses: azure/CLI@965c8d7571d2231a54e321ddd07f7b10317f34d9 # v2
+        with:
+          inlineScript: |
+            az storage blob download \
+              --auth-mode key \
+              --account-name selcdcheckoutsa \
+              --container-name selc-d-product \
+              --name products.json \
+              --file ./apps/onboarding-functions/src/test/resources/blobStorageInit/products.json \
+              --overwrite
+
+      - name: Verify exist config file
+        working-directory: apps/onboarding-functions
+        run: |
+          ls -la src/test/resources/blobStorageInit
+          test -f src/test/resources/blobStorageInit/products.json && echo "products.json found" || (echo "products.json missing" && exit 1)
+
+      - name: Startup services
+        working-directory: apps/onboarding-functions
+        run: |
+          docker compose -f src/test/resources/docker-compose.yml pull
+          docker compose -f src/test/resources/docker-compose.yml up -d
+
+      - name: Wait for startup-services
+        shell: bash
+        run: |
+          SERVICES=(
+            "localhost:27017"   #mongo-db
+            "localhost:10000"   #azurite
+            "localhost:8087"    #user-ms
+            "localhost:8082"    #institution-ms
+            "localhost:1080"    #mock-server
+            "localhost:8090"    #onboarding-functions
+          )
+
+          for service in "${SERVICES[@]}"; do
+            host=$(echo $service | cut -d: -f1)
+            port=$(echo $service | cut -d: -f2)
+
+            echo "Waiting for $host:$port ..."
+            for i in $(seq 1 60); do
+              if nc -z $host $port; then
+                echo "$host:$port is ready"
+                break
+              fi
+              echo "Waiting for $host:$port ($i)..."
+              sleep 1
+            done
+
+            if ! nc -z $host $port; then
+              echo "Timeout waiting for $host:$port"
+              exit 1
+            fi
+          done
+
+      - name: Run Integration Tests
+        id: test-step
+        shell: bash
+        working-directory: apps/onboarding-functions
+        run: |
+          mvn clean test -q \
+              -Dtest=it.pagopa.selfcare.onboarding.steps.OnboardingFunctionStep \
+              -Dsurefire.parallel=none \
+              -Dsurefire.threadCount=1 \
+              -Dsurefire.failIfNoSpecifiedTests=false
+
+      - name: Upload Test Results
+        if: always() && (steps.test-step.conclusion == 'success' || steps.test-step.conclusion == 'failure')
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cucumber-report
+          path: apps/onboarding-functions/target/cucumber-report/cucumber.html
+
+      - name: Collect service logs
+        if: always()
+        working-directory: apps/onboarding-functions
+        run: |
+          mkdir -p docker-logs
+          for s in $(docker compose -f src/test/resources/docker-compose.yml config --services); do
+            docker compose -f src/test/resources/docker-compose.yml logs $s > docker-logs/$s.log 2>&1 || true
+          done
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: docker-logs
+          path: apps/onboarding-functions/docker-logs
+          retention-days: 1
+
+      - name: Tear-down Docker
+        if: always()
+        working-directory: apps/onboarding-functions
+        run: docker compose -f src/test/resources/docker-compose.yml down -v --remove-orphans
+
+      - name: Azure Logout
+        id: az_logout
+        if: always()
+        run: |
+          az logout

@@ -1,0 +1,73 @@
+name: Deploy onboarding ms
+
+on:
+  push:
+    branches:
+      - main
+      - releases/*
+    paths:
+      - "apps/onboarding-ms/**"
+      - "infra/apps/onboarding-ms/**"
+      - "apps/pom.xml"
+      - "pom.xml"
+  
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options:
+          - dev
+          - uat
+          - prod
+
+jobs:
+
+  release_dev:
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
+    name: '[Dev] OnBoarding ms Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+      tf_environment: dev
+      dir: 'infra/apps/onboarding-ms'
+      dockerfile_path: ./apps/onboarding-ms/Dockerfile
+      docker_image_name: pagopa/selfcare-onboarding-ms
+      path_openapi_docs: ./apps/onboarding-ms/src/main/docs/openapi.json
+
+  release_uat:
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
+    name: '[UAT] OnBoarding ms Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    secrets: inherit
+    with:
+      environment: uat
+      tf_environment: uat
+      dir: 'infra/apps/onboarding-ms'
+      dockerfile_path: ./apps/onboarding-ms/Dockerfile
+      docker_image_name: pagopa/selfcare-onboarding-ms
+      path_openapi_docs: ./apps/onboarding-ms/src/main/docs/openapi.json
+
+  release_prod:
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
+    name: '[Prod] OnBoarding ms Release'
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod
+      tf_environment: prod
+      dir: 'infra/apps/onboarding-ms'
+      dockerfile_path: ./apps/onboarding-ms/Dockerfile
+      docker_image_name: pagopa/selfcare-onboarding-ms
+      path_openapi_docs: ./apps/onboarding-ms/src/main/docs/openapi.json
+
+  promote_release:
+    name: 'Promote prerelase release'
+    runs-on: ubuntu-24.04
+    needs: [ release_prod ]
+    steps:
+      - uses: pagopa/selfcare-commons/github-actions-template/promote-release@main
+        with:
+          github_path_token: ${{ secrets.GH_PAT_VARIABLES }}
+          release_version: ${{ vars.CURRENT_UAT_VERSION }}

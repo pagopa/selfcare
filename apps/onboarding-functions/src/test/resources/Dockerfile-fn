@@ -1,0 +1,44 @@
+FROM maven:3.9.6-eclipse-temurin-17
+
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+
+ENV QUARKUS_CLI_VERSION=3.10.0 \
+    NODE_VERSION=18.x
+
+RUN apt-get update && \
+    apt-get install -y curl unzip git && \
+    curl -L https://github.com/quarkusio/quarkus/releases/download/${QUARKUS_CLI_VERSION}/quarkus-cli-${QUARKUS_CLI_VERSION}.tar.gz \
+    | tar -xz -C /opt && \
+    ln -s /opt/quarkus-cli-${QUARKUS_CLI_VERSION}/bin/quarkus /usr/local/bin/quarkus && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION} | bash - && \
+    apt-get install -y nodejs
+
+RUN apt-get update && apt-get install -y libicu70
+
+WORKDIR /usr/src/app
+
+RUN npm i -g azure-functions-core-tools@4 --unsafe-perm true
+ENV AzureWebJobsScriptRoot=/usr/src/app AzureFunctionsJobHost__Logging__Console__IsEnabled=true
+
+WORKDIR /app
+
+COPY selfcare-onboarding/pom.xml /app/selfcare-onboarding/pom.xml
+COPY selfcare-onboarding/apps/pom.xml /app/selfcare-onboarding/apps/pom.xml
+COPY selfcare-onboarding/apps/onboarding-functions /app/selfcare-onboarding/apps/onboarding-functions
+
+WORKDIR /app/selfcare-onboarding/apps/onboarding-functions
+
+COPY selfcare-onboarding/apps/onboarding-functions/src/test/resources/fn/application.properties src/main/resources/application.properties
+COPY selfcare-onboarding/apps/onboarding-functions/src/test/resources/fn/application.properties src/test/resources/application.properties
+COPY selfcare-onboarding/apps/onboarding-functions/src/test/resources/fn/local.settings.json local.settings.json
+COPY selfcare-onboarding/apps/onboarding-functions/src/test/resources/fn/host.json host.json
+COPY selfcare-onboarding/apps/onboarding-functions/src/test/resources/fn/entrypoint.sh entrypoint.sh
+
+RUN chmod +x entrypoint.sh
+
+RUN --mount=type=secret,id=maven_settings,target=/root/.m2/settings.xml \
+    mvn clean install -DskipTests -q
+
+CMD ["./entrypoint.sh"]

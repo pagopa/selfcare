@@ -1,0 +1,40 @@
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+      short_env:
+        type: string
+        required: true
+        description: add '-pnpg' if workflow is related to pnpg
+
+jobs:
+  integration-test:
+    environment: ${{ inputs.environment }}-ci
+    name: 'Run Postman collection on ${{ inputs.environment }}'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        name: Checkout
+      - name: 'Download postman environment'
+        env:
+          INTEGRATION_ENVIRONMENT: ${{ secrets.INTEGRATION_ENVIRONMENT }}
+        run: 'echo "$INTEGRATION_ENVIRONMENT" | base64 --decode > Selfcare-Integration.postman_environment.json'
+        shell: bash
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+        with:
+          node-version: '16.x'
+      - name: Install newman
+        shell: bash
+        run: npm install -g newman
+      - name: Run newman
+        shell: bash
+        run: newman run ./integration-test/newman/Selfcare-Integration.postman_collection.json -e Selfcare-Integration.postman_environment.json --reporters cli,json --reporter-json-export ./integration-test/integration-test-result.json
+      - name: Send newman report
+        shell: bash
+        run: node ./integration-test/convert.js
+      - name: 'Send message on Slack'
+        shell: bash
+        run: >
+          curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} -H 'Content-type: application/json' -d @integration-test/stats.json

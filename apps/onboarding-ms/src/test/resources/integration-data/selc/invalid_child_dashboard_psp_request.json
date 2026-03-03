@@ -1,0 +1,55 @@
+{
+  "productId": "prod-dashboard-psp",
+  "users": [
+    {
+      "taxCode": "FRDSMN80A01F205Z",
+      "name": "Sigmund",
+      "surname": "Freud",
+      "email": "s.freud@test.email.it",
+      "role": "MANAGER"
+    },
+    {
+      "taxCode": "CLVTLI80A01F839V",
+      "name": "Italo",
+      "surname": "Calvino",
+      "email": "i.calvino@test.email.it",
+      "role": "DELEGATE"
+    }
+  ],
+  "institution": {
+    "paymentServiceProvider":{
+      "abiCode":"12345",
+      "businessRegisterNumber":"12345678901",
+      "legalRegisterNumber":"12345",
+      "legalRegisterName":"Napoli",
+      "vatNumberGroup":false
+    },
+    "dataProtectionOfficer":{
+      "address":"Via Test 123",
+      "pec":"test@responsabile.it",
+      "email":"test@responsabile.it"
+    },
+    "institutionType": "PSP",
+    "taxCode": "12312312341",
+    "origin": "SELC",
+    "originId": "12312312341",
+    "city": "Napoli",
+    "country": "IT",
+    "county": "NA",
+    "description": "Banca test",
+    "digitalAddress": "bancatest@open.legalmail.it",
+    "address": "Via Municipio N. 8",
+    "zipCode": "80146",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ],
+    "imported": false
+  },
+  "billing": {
+    "vatNumber": "12345678901",
+    "recipientCode": "123456"
+  }
+}

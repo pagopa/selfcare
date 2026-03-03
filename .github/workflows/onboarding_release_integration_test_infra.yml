@@ -1,0 +1,48 @@
+name: Infra Resources
+
+on:
+  push:
+    branches:
+      - main
+      - releases/*
+    paths:
+      - './infra/integration-test/**'
+
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options:
+          - dev
+          - uat
+          - prod
+
+jobs:
+
+  release_dev:
+    uses: ./.github/workflows/onboarding_call_release_infra.yml
+    name: '[Dev] Functions Infra Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+      dir: ./infra/integration-test
+
+  release_uat:
+    uses: ./.github/workflows/onboarding_call_release_infra.yml
+    name: '[UAT] Functions Infra Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    secrets: inherit
+    with:
+      environment: uat
+      dir: ./infra/integration-test
+
+  release_prod:
+    uses: ./.github/workflows/onboarding_call_release_infra.yml
+    name: '[Prod] Functions Infra Release'
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod
+      dir: ./infra/integration-test

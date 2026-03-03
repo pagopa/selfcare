@@ -1,0 +1,475 @@
+{
+  "type": "record",
+  "name": "Product",
+  "namespace": "it.pagopa.selfcare.product.entity",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string"
+    },
+    {
+      "name": "logo",
+      "type": "string"
+    },
+    {
+      "name": "depictImageUrl",
+      "type": "string"
+    },
+    {
+      "name": "title",
+      "type": "string"
+    },
+    {
+      "name": "logoBgColor",
+      "type": "string"
+    },
+    {
+      "name": "description",
+      "type": "string"
+    },
+    {
+      "name": "urlPublic",
+      "type": "string"
+    },
+    {
+      "name": "urlBO",
+      "type": "string"
+    },
+    {
+      "name": "createdAt",
+      "type": "string"
+    },
+    {
+      "name": "createdBy",
+      "type": "string"
+    },
+    {
+      "name": "modifiedAt",
+      "type": "string"
+    },
+    {
+      "name": "modifiedBy",
+      "type": "string"
+    },
+    {
+      "name": "roleManagementURL",
+      "type": ["null", "string"],
+      "default": null
+    },
+    {
+      "name": "contractTemplateUpdatedAt",
+      "type": ["null", "string"],
+      "default": null
+    },
+    {
+      "name": "contractTemplatePath",
+      "type": ["null", "string"],
+      "default": null
+    },
+    {
+      "name": "contractTemplateVersion",
+      "type": ["null", "string"],
+      "default": null
+    },
+    {
+      "name": "institutionContractMappings",
+      "type": [
+        "null",
+        {
+          "type": "map",
+          "values": {
+            "type": "record",
+            "name": "InstitutionContractStorage",
+            "fields": [
+              {
+                "name": "contractTemplateUpdatedAt",
+                "type": ["null", "string"],
+                "default": null
+              },
+              {
+                "name": "contractTemplatePath",
+                "type": ["null", "string"],
+                "default": null
+              },
+              {
+                "name": "contractTemplateVersion",
+                "type": ["null", "string"],
+                "default": null
+              },
+              {
+                "name": "attachments",
+                "type": [
+                  "null",
+                  {
+                    "type": "array",
+                    "items": "string"
+                  }
+                ],
+                "default": null
+              }
+            ]
+          }
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "enabled",
+      "type": "boolean"
+    },
+    {
+      "name": "delegable",
+      "type": ["null", "boolean"],
+      "default": null
+    },
+    {
+      "name": "invoiceable",
+      "type": ["null", "boolean"],
+      "default": null
+    },
+    {
+      "name": "status",
+      "type": "string"
+    },
+    {
+      "name": "parentId",
+      "type": ["null", "string"],
+      "default": null
+    },
+    {
+      "name": "identityTokenAudience",
+      "type": "string"
+    },
+    {
+      "name": "backOfficeEnvironmentConfigurations",
+      "type": [
+        "null",
+        {
+          "type": "map",
+          "values": {
+            "type": "record",
+            "name": "BackOfficeConfigurations",
+            "fields": [
+              {
+                "name": "url",
+                "type": ["null", "string"],
+                "default": null
+              },
+              {
+                "name": "identityTokenAudience",
+                "type": ["null", "string"],
+                "default": null
+              }
+            ]
+          }
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "parent",
+      "type": ["null", "Product"],
+      "default": null
+    },
+    {
+      "name": "userContractTemplatePath",
+      "type": ["null", "string"],
+      "default": null
+    },
+    {
+      "name": "userContractTemplateVersion",
+      "type": ["null", "string"],
+      "default": null
+    },
+    {
+      "name": "consumers",
+      "type": [
+        "null",
+        {
+          "type": "array",
+          "items": "string"
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "alias",
+      "type": ["null", "string"],
+      "default": null
+    },
+    {
+      "name": "allowCompanyOnboarding",
+      "type": ["null", "boolean"],
+      "default": null
+    },
+    {
+      "name": "allowedInstitutionTaxCode",
+      "type": [
+        "null",
+        {
+          "type": "array",
+          "items": "string"
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "allowIndividualOnboarding",
+      "type": ["null", "boolean"],
+      "default": null
+    },
+    {
+      "name": "emailTemplates",
+      "type": [
+        "null",
+        {
+          "type": "map",
+          "values": {
+            "type": "map",
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "record",
+                "name": "EmailTemplate",
+                "fields": [
+                  {
+                    "name": "path",
+                    "type": "string"
+                  },
+                  {
+                    "name": "status",
+                    "type": "string"
+                  },
+                  {
+                    "name": "version",
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "expirationDate",
+      "type": ["null", "int"],
+      "default": null
+    },
+    {
+      "name": "institutionAggregatorContractMappings",
+      "type": [
+        "null",
+        {
+          "type": "map",
+          "values": {
+            "type": "record",
+            "name": "InstitutionAggregatorContractStorage",
+            "fields": [
+              {
+                "name": "contractTemplateUpdatedAt",
+                "type": ["null", "string"],
+                "default": null
+              },
+              {
+                "name": "contractTemplatePath",
+                "type": ["null", "string"],
+                "default": null
+              },
+              {
+                "name": "contractTemplateVersion",
+                "type": ["null", "string"],
+                "default": null
+              },
+              {
+                "name": "attachments",
+                "type": [
+                  "null",
+                  {
+                    "type": "array",
+                    "items": "string"
+                  }
+                ],
+                "default": null
+              }
+            ]
+          }
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "institutionOrigins",
+      "type": [
+        "null",
+        {
+          "type": "array",
+          "items": {
+            "type": "record",
+            "name": "InstitutionOrigin",
+            "fields": [
+              {
+                "name": "institutionType",
+                "type": "string"
+              },
+              {
+                "name": "origin",
+                "type": "string"
+              },
+              {
+                "name": "labelKey",
+                "type": "string"
+              }
+            ]
+          }
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "roleMappings",
+      "type": [
+        "null",
+        {
+          "type": "map",
+          "values": {
+            "type": "record",
+            "name": "RoleMapping",
+            "fields": [
+              {
+                "name": "multiroleAllowed",
+                "type": ["null", "boolean"],
+                "default": null
+              },
+              {
+                "name": "phasesAdditionAllowed",
+                "type": [
+                  "null",
+                  {
+                    "type": "array",
+                    "items": "string"
+                  }
+                ],
+                "default": null
+              },
+              {
+                "name": "roles",
+                "type": [
+                  "null",
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "record",
+                      "name": "Role",
+                      "fields": [
+                        {
+                          "name": "code",
+                          "type": "string"
+                        },
+                        {
+                          "name": "description",
+                          "type": "string"
+                        },
+                        {
+                          "name": "label",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "default": null
+              }
+            ]
+          }
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "userAggregatorContractMappings",
+      "type": [
+        "null",
+        {
+          "type": "map",
+          "values": {
+            "type": "record",
+            "name": "UserAggregatorContractStorage",
+            "fields": [
+              {
+                "name": "contractTemplateUpdatedAt",
+                "type": ["null", "string"],
+                "default": null
+              },
+              {
+                "name": "contractTemplatePath",
+                "type": ["null", "string"],
+                "default": null
+              },
+              {
+                "name": "contractTemplateVersion",
+                "type": ["null", "string"],
+                "default": null
+              },
+              {
+                "name": "attachments",
+                "type": [
+                  "null",
+                  {
+                    "type": "array",
+                    "items": "string"
+                  }
+                ],
+                "default": null
+              }
+            ]
+          }
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "userContractMappings",
+      "type": [
+        "null",
+        {
+          "type": "map",
+          "values": {
+            "type": "record",
+            "name": "UserContractStorage",
+            "fields": [
+              {
+                "name": "contractTemplateUpdatedAt",
+                "type": ["null", "string"],
+                "default": null
+              },
+              {
+                "name": "contractTemplatePath",
+                "type": ["null", "string"],
+                "default": null
+              },
+              {
+                "name": "contractTemplateVersion",
+                "type": ["null", "string"],
+                "default": null
+              },
+              {
+                "name": "attachments",
+                "type": [
+                  "null",
+                  {
+                    "type": "array",
+                    "items": "string"
+                  }
+                ],
+                "default": null
+              }
+            ]
+          }
+        }
+      ],
+      "default": null
+    }
+  ]
+}

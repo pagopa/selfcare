@@ -1,0 +1,29 @@
+{
+  "billing":{
+    "recipientCode":"",
+    "vatNumber":"06874351007"
+  },
+  "institution":{
+    "institutionType":"PSP",
+    "digitalAddress":"pagopa.postepay@pec.posteitaliane.it",
+    "origin":"SELC",
+    "taxCode":"06874351006",
+    "originId":"06874351006",
+    "paymentServiceProvider":{
+      "abiCode":"36081",
+      "businessRegisterNumber":"06874351007",
+      "providerNames":[
+        "PPAYITR1XXX"
+      ],
+      "contractType":"A",
+      "contractId":"pagopa-psp-52",
+      "vatNumberGroup":false
+    }
+  },
+  "contractImported":{
+    "filePath":"parties/docs/psp/CI015_A_POSTEPAY 2/CI015_A_POSTEPAY 2.pdf",
+    "activatedAt":"2024-10-21T14:35:54.589497374Z",
+    "createdAt":"2024-10-21T14:35:54.589497374Z"
+  },
+  "productId":"prod-pagopa"
+}

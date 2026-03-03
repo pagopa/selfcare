@@ -1,0 +1,51 @@
+name: Deploy PNPG onboarding ms
+
+on:
+  push:
+    branches:
+      - main
+      - releases/*
+    paths:
+      - "apps/onboarding-ms/**"
+      - "infra/apps/onboarding-ms/**"
+      - "apps/pom.xml"
+      - "pom.xml"
+  
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options: 
+        - dev
+        - uat
+        - prod
+
+jobs:
+
+  release_dev:
+    uses: ./.github/workflows/onboarding_call_release_ms.yml
+    name: '[Dev] OnBoarding ms Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+      tf_environment: dev-pnpg
+
+  release_uat:
+    uses: ./.github/workflows/onboarding_call_release_ms.yml
+    name: '[UAT] OnBoarding ms Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    secrets: inherit
+    with:
+      environment: uat
+      tf_environment: uat-pnpg
+
+  release_prod:
+    uses: ./.github/workflows/onboarding_call_release_ms.yml
+    name: '[Prod] OnBoarding ms Release'
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod
+      tf_environment: prod-pnpg

@@ -1,0 +1,48 @@
+{
+  "id": "190e3ca4-8de4-4f90-ad2c-51b112531bb6",
+  "billing": {
+    "publicServices": true,
+    "recipientCode": "UFR0DM",
+    "vatNumber": "00876320409"
+  },
+  "createdAt": "2025-09-03T16:56:35.896Z",
+  "expiringDate": "2025-11-02T16:56:35.238Z",
+  "institution": {
+    "address": "VIA PIERO MARONCELLI 10",
+    "city": "FORLI",
+    "country": "IT",
+    "county": "FC",
+    "description": "UNIEURO  S.P.A.",
+    "digitalAddress": "UFFICIOPAGHE@PEC.SGMDISTRIBUZIONE.IT",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ],
+    "imported": false,
+    "institutionType": "PRV",
+    "origin": "PDND_INFOCAMERE",
+    "originId": "00876320409",
+    "taxCode": "00876320409",
+    "zipCode": "47121"
+  },
+  "payment": {
+    "holder": "NVtQ4B/aMp69L6eymY4SfXj3HHgos40FKyZTCw==",
+    "iban": "LGZ4yCiiLN7oGZyFYm4rEhv3jBuYPLoj32QkfXSso32nqZlt"
+  },
+  "productId": "prod-idpay-merchant",
+  "status": "REQUEST",
+  "userRequester" : {
+    "userRequestUid": "6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"
+  },
+  "users": [
+    {
+      "id": "6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b",
+      "role": "MANAGER",
+      "userMailUuid": "ID_MAIL#a6de7b93-bc56-4187-be5c-9234cef98bed",
+      "productRole": "admin"
+    }
+  ],
+  "workflowType": "CONTRACT_REGISTRATION"
+}

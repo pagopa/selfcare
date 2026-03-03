@@ -1,0 +1,51 @@
+name: Deploy PNPG mongo infra
+
+on:
+  push:
+    branches:
+      - main
+      - releases/*
+    paths:
+      - './infra/mongo'
+
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options: 
+        - dev
+        - uat
+        - prod
+
+jobs:
+
+  release_dev:
+    uses: ./.github/workflows/onboarding_call_release_infra.yml
+    name: '[Dev] Mongo Infra Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+      tf_environment: dev-pnpg
+      dir: ./infra/mongo
+
+  release_uat:
+    uses: ./.github/workflows/onboarding_call_release_infra.yml
+    name: '[UAT] Mongo Infra Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    secrets: inherit
+    with:
+      environment: uat
+      tf_environment: uat-pnpg
+      dir: ./infra/mongo
+
+  release_prod:
+    uses: ./.github/workflows/onboarding_call_release_infra.yml
+    name: '[Prod] Mongo Infra Release'
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod
+      tf_environment: prod-pnpg
+      dir: ./infra/mongo

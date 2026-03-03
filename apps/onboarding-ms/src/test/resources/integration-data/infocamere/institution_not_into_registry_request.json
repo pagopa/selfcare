@@ -1,0 +1,17 @@
+{
+  "institutionType": "PG",
+  "productId": "prod-pn-pg",
+  "users": [
+    {
+      "taxCode": "FRDSMN80A01F205Z",
+      "name": "Sigmund",
+      "surname": "Freud",
+      "email": "s.freud@test.email.it",
+      "role": "MANAGER"
+    }
+  ],
+  "taxCode": "27937810870",
+  "businessName": "DisTerminatio Sas",
+  "origin": "INFOCAMERE",
+  "digitalAddress": "test@test.legalmail.it"
+}

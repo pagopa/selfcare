@@ -1,0 +1,82 @@
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+      short_env:
+        type: string
+        required: true
+        description: add '-pnpg' if workflow is related to pnpg
+      upload_openapi_enabled:
+        type: boolean
+        required: false
+        description: 'Set to True if workflow must upload openapi on storage'
+        default: false
+
+jobs:
+  release:
+    name: 'Build & Release'
+    runs-on: ubuntu-24.04
+    environment:
+      name: ${{ inputs.environment }}-cd
+      url: ${{ format('https://selc-{0}-onboarding-fn.azurewebsites.net', inputs.short_env) }}
+    permissions:
+      id-token: write
+      packages: read
+
+    steps:
+
+      - name: Setup Maven Action
+        uses: s4u/setup-maven-action@fa2c7e4517ed008b1f73e7e0195a9eecf5582cd4 # v1.11.0
+        with:
+          checkout-fetch-depth: 0
+          java-version: 17
+          java-distribution: 'temurin'
+          maven-version: '3.9.5'
+          cache-enabled: true
+
+      - name: Build Functions App
+        shell: bash
+        run: |
+          mvn --projects :onboarding-functions --also-make package install -DskipTests \
+            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.short_env) }}
+
+      - name: Log in to Azure
+        uses: azure/login@e15b166166a8746d1a47596803bd8c1b595455cf # v1.6.0
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ vars.ARM_TENANT_ID }}
+          subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+
+      - name: Deploy Function App
+        shell: bash
+        working-directory: apps/onboarding-functions
+        run: |
+          mvn -f pom.xml quarkus:deploy \
+            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.short_env) }} \
+            -Dquarkus.azure-functions.subscription-id=${{ vars.ARM_SUBSCRIPTION_ID }} \
+            -Dquarkus.azure-functions.resource-group=${{ format('selc-{0}-onboarding-fn-rg', inputs.short_env) }} \
+            -Dquarkus.azure-functions.region=westeurope \
+            -Dquarkus.azure-functions.app-service-plan-name=${{ format('selc-{0}-onboarding-fn-plan', inputs.short_env) }} \
+            -Dquarkus.azure-functions.runtime.java-version=17
+
+      - name: Extract environment short
+        id: extract_env_short
+        run: |
+          env=${{ inputs.environment }}
+          echo "env_short=${env:0:1}" >> $GITHUB_OUTPUT
+
+      - name: Upload to blob storage openapi.json
+        uses: azure/CLI@965c8d7571d2231a54e321ddd07f7b10317f34d9 # v2
+        if: ${{ inputs.upload_openapi_enabled }}
+        with:
+          inlineScript: |
+            az storage blob upload --auth-mode key -f  apps/onboarding-functions/src/main/openapi/openapi.json --account-name selc${{ steps.extract_env_short.outputs.env_short }}checkoutsa  -c selc-openapi -n pagopa/selfcare-onboarding-functions/openapi.json --overwrite
+
+      - name: Upload to blob storage openapi.json
+        uses: azure/CLI@965c8d7571d2231a54e321ddd07f7b10317f34d9 # v2
+        if: ${{ inputs.upload_openapi_enabled }}
+        with:
+          inlineScript: |
+            az storage blob upload --auth-mode key -f  apps/onboarding-functions/src/main/openapi/openapi-apim-function.json --account-name selc${{ steps.extract_env_short.outputs.env_short }}checkoutsa  -c selc-openapi -n pagopa/selfcare-onboarding-functions/openapi-apim-function.json --overwrite

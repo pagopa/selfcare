@@ -61,3 +61,30 @@ infra/cert/env/lib
 ### INTELLIJ RUN CONFIG ###
 .run/product.run.xml
 .run/jvm-remote.run.xml
+
+# Local / IDE / tooling
+local.settings.json
+
+# Build outputs
+bin/
+obj/
+
+# Maven wrapper / build
+onboarding-functions/.mvn/
+
+# Node dependencies
+**/node_modules/
+
+# Docker
+docker-compose.fn.yml
+Dockerfile
+
+# Test resources / emulator data
+apps/onboarding-functions/src/test/resources/storagedata/
+apps/onboarding-functions/src/test/resources/storagedata/**
+apps/onboarding-functions/src/test/resources/azurite-data/
+apps/onboarding-functions/src/test/resources/azurite-data/**
+
+# Project storage
+apps/onboarding-functions/storagedata/
+apps/onboarding-functions/storagedata/**

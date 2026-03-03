@@ -1,0 +1,51 @@
+name: Deploy PNPG onboarding-cdc
+
+on:
+  push:
+    branches:
+      - main
+      - releases/*
+    paths:
+      - "apps/onboarding-cdc/**"
+      - "infra/apps/onboarding-cdc/**"
+      - "apps/pom.xml"
+      - "pom.xml"
+  
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options: 
+        - dev
+        - uat
+        - prod
+
+jobs:
+
+  release_dev:
+    uses: ./.github/workflows/onboarding_call_release_cdc.yml
+    name: '[Dev] PNPG Onboarding-cdc ms Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+      tf_environment: dev-pnpg
+
+  release_uat:
+    uses: ./.github/workflows/onboarding_call_release_cdc.yml
+    name: '[UAT] PNPG Onboarding-cdc ms Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    secrets: inherit
+    with:
+      environment: uat
+      tf_environment: uat-pnpg
+
+  release_prod:
+    uses: ./.github/workflows/onboarding_call_release_cdc.yml
+    name: '[Prod] PNPG Onboarding-cdc ms Release'
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod
+      tf_environment: prod-pnpg

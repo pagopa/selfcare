@@ -1,0 +1,110 @@
+{
+  "type" : "record",
+  "name" : "Product",
+  "namespace" : "it.pagopa.selfcare.product.entity",
+  "fields" : [ {
+    "name" : "id",
+    "type" : [ "string" ]
+  }, {
+    "name" : "logo",
+    "type" : [ "string" ]
+  }, {
+    "name" : "depictImageUrl",
+    "type" : [ "string" ]
+  }, {
+    "name" : "title",
+    "type" : [ "string" ]
+  }, {
+    "name" : "logoBgColor",
+    "type" : [ "string" ]
+  }, {
+    "name" : "description",
+    "type" : [ "string" ]
+  }, {
+    "name" : "urlPublic",
+    "type" : [ "string" ]
+  }, {
+    "name" : "urlBO",
+    "type" : [ "string" ]
+  }, {
+    "name" : "createdAt",
+    "type" : [ "string" ]
+  }, {
+    "name" : "createdBy",
+    "type" : [ "string" ]
+  }, {
+    "name" : "modifiedAt",
+    "type" : [ "string" ]
+  }, {
+    "name" : "modifiedBy",
+    "type" : [ "string" ]
+  }, {
+    "name" : "roleManagementURL",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "contractTemplateUpdatedAt",
+    "type" : [ "string" ]
+  }, {
+    "name" : "contractTemplatePath",
+    "type" : [ "string" ]
+  }, {
+    "name" : "contractTemplateVersion",
+    "type" : [ "string" ]
+  }, {
+    "name" : "institutionContractMappings",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : {
+        "type" : "record",
+        "name" : "ContractStorage",
+        "fields" : [ {
+          "name" : "contractTemplateUpdatedAt",
+          "type" : [ "null", "string" ]
+        }, {
+          "name" : "contractTemplatePath",
+          "type" : [ "null", "string" ]
+        }, {
+          "name" : "contractTemplateVersion",
+          "type" : [ "null", "string" ]
+        } ]
+      }
+    } ]
+  }, {
+    "name" : "enabled",
+    "type" : "boolean"
+  }, {
+    "name" : "delegable",
+    "type" : ["null","boolean"]
+  }, {
+     "name" : "invoiceable",
+     "type" : ["null","boolean"]
+  }, {
+    "name" : "status",
+    "type" : [ "string" ]
+  }, {
+    "name" : "parentId",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "identityTokenAudience",
+    "type" : [ "string" ]
+  }, {
+    "name" : "backOfficeEnvironmentConfigurations",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : {
+        "type" : "record",
+        "name" : "BackOfficeConfigurations",
+        "fields" : [ {
+          "name" : "url",
+          "type" : [ "null", "string" ]
+        }, {
+          "name" : "identityTokenAudience",
+          "type" : [ "null", "string" ]
+        } ]
+      }
+    } ]
+  }, {
+    "name" : "parent",
+    "type" : [ "null", "Product" ]
+  } ]
+}
