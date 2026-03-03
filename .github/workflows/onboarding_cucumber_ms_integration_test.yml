@@ -2,16 +2,15 @@ name: "Integration Tests (onboarding-ms)"
 
 permissions:
   contents: read
+  actions: write
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
-    branches:
-      - main
-      - releases/*
+    types: [ opened, edited, synchronize, reopened, ready_for_review ]
     paths:
       - "apps/onboarding-ms/**"
   workflow_dispatch:
+
 
 jobs:
   integration_tests_ms:

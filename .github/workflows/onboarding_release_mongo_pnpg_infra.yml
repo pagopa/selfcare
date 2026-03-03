@@ -13,10 +13,10 @@ on:
       env:
         type: choice
         description: Environment
-        options: 
-        - dev
-        - uat
-        - prod
+        options:
+          - dev
+          - uat
+          - prod
 
 jobs:
 

@@ -24,14 +24,14 @@ env:
   TERRAFORM_ENVIRONMENT: ${{ inputs.tf_environment || inputs.environment }}
 
 jobs:
-#  tf_resources_deploy:
-#    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
-#    name: Prod - Code Deploy
-#    secrets: inherit
-#    with:
-#      environment: ${{ inputs.tf_environment }}
-#      base_path: ${{ inputs.dir }}
-#      use_private_agent: true
+  #  tf_resources_deploy:
+  #    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+  #    name: Prod - Code Deploy
+  #    secrets: inherit
+  #    with:
+  #      environment: ${{ inputs.tf_environment }}
+  #      base_path: ${{ inputs.dir }}
+  #      use_private_agent: true
 
   tf_plan:
     name: 'Terraform Plan'

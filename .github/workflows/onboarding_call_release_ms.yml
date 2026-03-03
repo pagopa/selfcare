@@ -115,7 +115,7 @@ jobs:
         env:
           TF_VAR_image_tag: ${{ steps.setsha.outputs.short_sha }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Upload Terraform Plan as Artifact
         uses: pagopa/dx/actions/terraform-plan-upload@main
         env:
