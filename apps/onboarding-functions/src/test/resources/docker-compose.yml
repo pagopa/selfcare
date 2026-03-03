@@ -40,7 +40,7 @@ services:
     platform: linux/amd64
     build:
       context: ../../../../../..
-      dockerfile: ./selfcare-onboarding/apps/onboarding-functions/src/test/resources/Dockerfile-fn
+      dockerfile: ./selfcare/apps/onboarding-functions/src/test/resources/Dockerfile-fn
       secrets:
         - maven_settings
     ports:
