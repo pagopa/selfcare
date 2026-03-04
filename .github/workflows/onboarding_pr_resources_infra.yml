@@ -1,0 +1,45 @@
+name: Code Review resources infra
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    branches:
+      - main
+      - releases/**
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - 'infra/resources/**'
+      - './.github/workflows/onboarding_pr_resources_infra.yml'
+      - './.github/workflows/onboarding_call_code_review_resources_infra.yml'
+
+jobs:
+  code_review_dev:
+    uses: ./.github/workflows/onboarding_call_code_review_resources_infra.yml
+    name: '[DEV] Resources Infra Code Review'
+    if: ${{ !startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: dev
+      dir: infra/resources/dev
+
+  code_review_uat:
+    uses: ./.github/workflows/onboarding_call_code_review_resources_infra.yml
+    name: '[UAT] Resources Infra Code Review'
+    secrets: inherit
+    with:
+      environment: uat
+      dir: infra/resources/uat
+
+  code_review_prod:
+    uses: ./.github/workflows/onboarding_call_code_review_resources_infra.yml
+    name: '[PROD] Resources Infra Code Review'
+    secrets: inherit
+    with:
+      environment: prod
+      dir: infra/resources/prod

@@ -1,0 +1,48 @@
+name: Deploy dashboard events infra
+
+on:
+  push:
+    branches:
+      - main
+      - releases/*
+    paths:
+      - 'infra/dashboards'
+
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options:
+          - dev
+          - uat
+          - prod
+
+jobs:
+
+  release_dev:
+    uses: ./.github/workflows/onboarding_call_release_infra.yml
+    name: '[Dev] Dashboard events Infra Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+      dir: infra/dashboards
+
+  release_uat:
+    uses: ./.github/workflows/onboarding_call_release_infra.yml
+    name: '[UAT] Dashboard events Infra Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    secrets: inherit
+    with:
+      environment: uat
+      dir: infra/dashboards
+
+  release_prod:
+    uses: ./.github/workflows/onboarding_call_release_infra.yml
+    name: '[Prod] Dashboard events Infra Release'
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod
+      dir: infra/dashboards

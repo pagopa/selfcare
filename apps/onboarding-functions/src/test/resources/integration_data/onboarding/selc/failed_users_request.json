@@ -1,0 +1,30 @@
+{
+  "id": "89ad7142-24bb-48ad-8504-9c9231137e92",
+  "billing": {
+    "publicServices": false,
+    "recipientCode": "RC000"
+  },
+  "createdAt": "2025-05-13T12:37:49.054Z",
+  "institution": {
+    "imported": false,
+    "institutionType": "PSP",
+    "taxCode": "13234472822",
+    "digitalAddress": "test@test.it"
+  },
+  "productId": "prod-pago",
+  "status": "REQUEST",
+  "users": [
+    {
+      "id": "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+      "role": "MANAGER",
+      "userMailUuid": "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e21",
+      "productRole": "admin"
+    }
+  ],
+  "workflowType": "USERS",
+  "workflowInstanceId": "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+  "updatedAt": "2025-05-13T12:38:17.000Z",
+  "userRequester" : {
+    "userRequestUid": "ec7ca4d5-c537-462a-8c06-e102e0c21c44"
+  }
+}

@@ -13,7 +13,7 @@ on:
       th_env:
         type: choice
         description: Terraform Environment
-        options: 
+        options:
           - dev
           - dev-pnpg
           - uat

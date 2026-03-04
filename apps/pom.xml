@@ -12,6 +12,12 @@
     <packaging>pom</packaging>
     <artifactId>apps</artifactId>
 
+    <properties>
+        <maven.compiler.source>23</maven.compiler.source>
+        <maven.compiler.target>23</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
     <profiles>
         <profile>
             <id>auth</id>
@@ -68,11 +74,39 @@
                 <module>webhook</module>
             </modules>
         </profile>
+        <profile>
+            <id>onboarding-ms</id>
+            <activation>
+                <file>
+                    <exists>onboarding-ms/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>onboarding-ms</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>onboarding-functions</id>
+            <activation>
+                <file>
+                    <exists>onboarding-functions/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>onboarding-functions</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>onboarding-cdc</id>
+            <activation>
+                <file>
+                    <exists>onboarding-cdc/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>onboarding-cdc</module>
+            </modules>
+        </profile>
     </profiles>
-    <properties>
-        <maven.compiler.source>23</maven.compiler.source>
-        <maven.compiler.target>23</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
 
 </project>

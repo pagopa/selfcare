@@ -28,6 +28,7 @@
         <quarkus.platform.version>3.11.2</quarkus.platform.version>
         <junit-jupiter.version>5.7.2</junit-jupiter.version>
         <mockito.version>5.7.0</mockito.version>
+        <sonar.skip>true</sonar.skip>
     </properties>
 
     <dependencyManagement>

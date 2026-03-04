@@ -1,0 +1,33 @@
+{
+  "id": "e49167f4-d9f3-475f-8814-9c0d81e316d2",
+  "billing": {
+    "publicServices": false,
+    "recipientCode": "UFD333"
+  },
+  "createdAt": "2025-05-13T12:37:49.054Z",
+  "institution": {
+    "imported": false,
+    "institutionType": "SCEC",
+    "taxCode": "83001010616",
+    "description": "Comune di Tocco da Casauria",
+    "digitalAddress": "www.comune.toccodacasauria.pe.it",
+    "origin": "IPA",
+    "originId": "c_fx00"
+  },
+  "productId": "prod-interop",
+  "status": "REQUEST",
+  "users": [
+    {
+      "id": "6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b",
+      "role": "MANAGER",
+      "userMailUuid": "ID_MAIL#a6de7b93-bc56-4187-be5c-9234cef98bed",
+      "productRole": "admin"
+    }
+  ],
+  "workflowType": "CONTRACT_REGISTRATION",
+  "workflowInstanceId": "9acdc78f-26c1-4352-ad13-24bd01857edf",
+  "updatedAt": "2025-05-13T12:38:17.000Z",
+  "userRequester" : {
+    "userRequestUid": "6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"
+  }
+}

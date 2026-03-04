@@ -1,0 +1,45 @@
+{
+  "productId": "prod-io-premium",
+  "pricingPlan": "c2",
+  "users": [
+    {
+      "taxCode": "FRDSMN80A01F205Z",
+      "name": "Sigmund",
+      "surname": "Freud",
+      "email": "s.freud@test.email.it",
+      "role": "MANAGER"
+    },
+    {
+      "taxCode": "CLVTLI80A01F839V",
+      "name": "Italo",
+      "surname": "Calvino",
+      "email": "i.calvino@test.email.it",
+      "role": "DELEGATE"
+    }
+  ],
+  "institution": {
+    "institutionType": "PA",
+    "taxCode": "00231830688",
+    "origin": "IPA",
+    "originId": "c_l186",
+    "description": "Comune di Tocco da Casauria",
+    "city": "Tocco Da Casauria",
+    "country": "IT",
+    "county": "PE",
+    "digitalAddress": "comune.toccodacasauria@pec.arc.it",
+    "address": "Largo Menna, 1",
+    "zipCode": "65028",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ],
+    "imported": false
+  },
+  "billing": {
+    "vatNumber": "80415740580",
+    "recipientCode": "UFD333",
+    "publicServices": true
+  }
+}
