@@ -47,30 +47,30 @@ resource "null_resource" "upload_alert_message" {
 }
 
 
-resource "null_resource" "upload_spid_idp_status" {
-  triggers = {
-    file_sha1 = filesha1("${path.module}/../../${var.env}/assets/spid_idp_status.json")
-  }
+# resource "null_resource" "upload_spid_idp_status" {
+#   triggers = {
+#     file_sha1 = filesha1("${path.module}/../../${var.env}/assets/spid_idp_status.json")
+#   }
 
-  provisioner "local-exec" {
-    command = <<EOT
-              az storage blob upload \
-                --container '$web' \
-                --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
-                --account-key ${var.checkout_cdn_storage_primary_access_key} \
-                --file "${path.module}/../../${var.env}/assets/spid_idp_status.json" \
-                --overwrite true \
-                --name 'assets/spid_idp_status.json'
+#   provisioner "local-exec" {
+#     command = <<EOT
+#               az storage blob upload \
+#                 --container '$web' \
+#                 --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
+#                 --account-key ${var.checkout_cdn_storage_primary_access_key} \
+#                 --file "${path.module}/../../${var.env}/assets/spid_idp_status.json" \
+#                 --overwrite true \
+#                 --name 'assets/spid_idp_status.json'
 
-                az afd endpoint purge \
-                  --content-paths "/assets/spid_idp_status.json" \
-                  --resource-group ${var.checkout_fe_rg_name} \
-                  --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
-                  --profile-name ${var.checkout_endpoint_name}  \
-                  --no-wait
-          EOT
-  }
-}
+#                 az afd endpoint purge \
+#                   --content-paths "/assets/spid_idp_status.json" \
+#                   --resource-group ${var.checkout_fe_rg_name} \
+#                   --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
+#                   --profile-name ${var.checkout_endpoint_name}  \
+#                   --no-wait
+#           EOT
+#   }
+# }
 
 resource "null_resource" "upload_config" {
   triggers = {
@@ -88,6 +88,33 @@ resource "null_resource" "upload_config" {
         --name 'assets/config.json'
       az afd endpoint purge \
         --content-paths "/assets/config.json" \
+        --resource-group ${var.checkout_fe_rg_name} \
+        --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
+        --profile-name ${var.checkout_endpoint_name}  \
+        --no-wait
+    EOT
+  }
+}
+
+
+resource "null_resource" "upload_robots" {
+  count = var.env == "uat" ? 1 : 0
+
+  triggers = {
+    file_sha1 = filesha1("${path.module}/../../${var.env}/assets/robots.txt")
+  }
+
+  provisioner "local-exec" {
+    command = <<EOT
+      az storage blob upload \
+        --container '$web' \
+        --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
+        --account-key ${var.checkout_cdn_storage_primary_access_key} \
+        --file "${path.module}/../../${var.env}/assets/robots.txt" \
+        --overwrite true \
+        --name 'assets/robots.txt'
+      az afd endpoint purge \
+        --content-paths "/assets/robots.txt" \
         --resource-group ${var.checkout_fe_rg_name} \
         --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
         --profile-name ${var.checkout_endpoint_name}  \

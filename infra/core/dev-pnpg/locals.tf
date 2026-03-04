@@ -62,6 +62,7 @@ locals {
   aks_platform_env              = "dev01"
   vnet_aks_ddos_protection_plan = false
   cidr_aks_platform_vnet        = ["10.11.0.0/16"]
+  ingress_load_balancer_ip      = "10.11.100.250"
 
   # dns
   dns_zone_prefix    = "dev.selfcare"
@@ -188,4 +189,14 @@ locals {
   logs_delete_retention_days      = 14
   logs_enable_versioning          = false
   logs_advanced_threat_protection = true
+
+  monitor_action_group_slack_name    = "SlackPagoPA"
+  monitor_action_group_email_name    = "PagoPA"
+  monitor_action_group_opsgenie_name = "Opsgenie"
+  alert_action_group_domain_name     = "${local.prefix}${local.env_short}${local.app_domain}"
+
+  # Monitor
+  app_name_fn                           = "${local.prefix}-${local.env_short}-pnpg-onboarding-fn"
+  alert_functions_exceptions_name       = "pnpg-functions-exception"
+  alert_functions_exceptions_role_names = ["${local.app_name_fn}"]
 }
