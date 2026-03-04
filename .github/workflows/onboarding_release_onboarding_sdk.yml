@@ -37,16 +37,14 @@ jobs:
         shell: bash
         run: |
           mvn -B \
-            --projects :onboarding-sdk-pom,:onboarding-sdk-azure-storage,:onboarding-sdk-common,:onboarding-sdk-product,:onboarding-sdk-crypto \
-            --also-make \
+            -f libs/onboarding-sdk-pom/pom.xml \
             clean package -DskipTests
 
       - name: Deploy to GitHub Package Registry
         shell: bash
         run: |
           mvn -B \
-            --projects :onboarding-sdk-pom,:onboarding-sdk-azure-storage,:onboarding-sdk-common,:onboarding-sdk-product,:onboarding-sdk-crypto \
-            --also-make \
+            -f libs/onboarding-sdk-pom/pom.xml \
             deploy -DskipTests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

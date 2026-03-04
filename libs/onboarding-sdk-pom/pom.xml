@@ -7,6 +7,13 @@
     <name>onboarding-sdk-pom</name>
     <version>0.15.4</version>
 
+    <modules>
+        <module>../onboarding-sdk-common</module>
+        <module>../onboarding-sdk-product</module>
+        <module>../onboarding-sdk-crypto</module>
+        <module>../onboarding-sdk-azure-storage</module>
+    </modules>
+
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
