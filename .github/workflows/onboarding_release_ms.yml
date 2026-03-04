@@ -70,4 +70,4 @@ jobs:
       - uses: pagopa/selfcare-commons/github-actions-template/promote-release@main
         with:
           github_path_token: ${{ secrets.GH_PAT_VARIABLES }}
-          release_version: ${{ vars.CURRENT_UAT_VERSION }}
+          release_version: ${{ vars.ONBOARDING_BE_CURRENT_UAT_VERSION }}
