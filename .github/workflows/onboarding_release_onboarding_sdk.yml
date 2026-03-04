@@ -5,12 +5,12 @@ on:
     branches:
       - main
     paths:
-      - './libs/**'
+      - 'libs/onboarding-sdk-**'
 
   workflow_dispatch:
 
 jobs:
-  setup:
+  release:
     name: Release
     runs-on: ubuntu-24.04
     permissions:
@@ -33,13 +33,11 @@ jobs:
         with:
           servers: '[{"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
 
-      - name: Build with Maven
-        shell: bash
-        run: mvn --projects :libs --also-make-dependents clean package -DskipTests
-
-      - name: Deploy to GitHub Package Registry
+      - name: Build and Deploy to GitHub Package Registry
         shell: bash
         run: |
-          mvn -B deploy -f libs/pom.xml
+          mvn clean deploy -DskipTests \
+            --projects :onboarding-sdk-pom,:onboarding-sdk-azure-storage,:onboarding-sdk-common,:onboarding-sdk-product,:onboarding-sdk-crypto \
+            --also-make
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
