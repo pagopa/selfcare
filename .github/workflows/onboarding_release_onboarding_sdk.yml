@@ -33,11 +33,20 @@ jobs:
         with:
           servers: '[{"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
 
-      - name: Build and Deploy to GitHub Package Registry
+      - name: Build with Maven SDK
         shell: bash
         run: |
-          mvn clean deploy -DskipTests \
+          mvn -B \
             --projects :onboarding-sdk-pom,:onboarding-sdk-azure-storage,:onboarding-sdk-common,:onboarding-sdk-product,:onboarding-sdk-crypto \
-            --also-make
+            --also-make \
+            clean package -DskipTests
+
+      - name: Deploy to GitHub Package Registry
+        shell: bash
+        run: |
+          mvn -B \
+            --projects :onboarding-sdk-pom,:onboarding-sdk-azure-storage,:onboarding-sdk-common,:onboarding-sdk-product,:onboarding-sdk-crypto \
+            --also-make \
+            deploy -DskipTests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
