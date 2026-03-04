@@ -88,7 +88,6 @@ java -jar target/quarkus-app/quarkus-run.jar
 # Build
 podman build \
   --build-arg REPO_SELFCARE=selfcare \
-  --build-arg REPO_ONBOARDING=selfcare-onboarding \
   --build-arg REPO_USERNAME=your_username \
   --build-arg REPO_PASSWORD=your_token \
   -t webhook:latest \

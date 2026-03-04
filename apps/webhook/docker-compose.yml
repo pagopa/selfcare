@@ -7,7 +7,6 @@ services:
   #      dockerfile: apps/webhook/Dockerfile_local
   #      args:
   #        REPO_SELFCARE: selfcare
-  #        REPO_ONBOARDING: selfcare-onboarding
   #        REPO_USERNAME: ${GITHUB_USERNAME}
   #        REPO_PASSWORD: ${GITHUB_TOKEN}
   #    ports:
