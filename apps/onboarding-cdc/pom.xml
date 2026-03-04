@@ -25,6 +25,7 @@
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
         <quarkus-openapi-generator.version>2.4.1</quarkus-openapi-generator.version>
+        <commons-sdk-version>0.15.3</commons-sdk-version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -122,6 +123,11 @@
             <groupId>io.quarkiverse.openapi.generator</groupId>
             <artifactId>quarkus-openapi-generator</artifactId>
             <version>${quarkus-openapi-generator.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>onboarding-sdk-product</artifactId>
+            <version>${commons-sdk-version}</version>
         </dependency>
     </dependencies>
     <build>
