@@ -43,7 +43,7 @@ jobs:
 
       - name: Build and Analyze
         shell: bash
-        run: mvn --projects :test-coverage,libs,apps --also-make verify -P${{ inputs.module }},report,coverage
+        run: mvn --projects :test-coverage --also-make verify -P${{ inputs.module }},report,coverage
           -Dsonar.organization=pagopa
           -Dsonar.projectKey=${{ inputs.sonar_key }}
           -Dsonar.token=${{ secrets.SONAR_TOKEN }}
