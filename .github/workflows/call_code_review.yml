@@ -35,7 +35,7 @@ jobs:
 
       - uses: s4u/maven-settings-action@60912582505985be4cc55d2b890eb32767f8de5f # pin@v2.8.0
         with:
-          servers: '[{"id": "selfcare-onboarding", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}, {"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
+          servers: '[{"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
       - name: Build and Analyze
         shell: bash
         env:
@@ -45,7 +45,7 @@ jobs:
           PR_NUMBER: "${{ inputs.pr_number }}"
           SOURCE_BRANCH: "${{ inputs.source_branch }}"
           TARGET_BRANCH: "${{ inputs.target_branch }}"
-        run: mvn --projects :test-coverage,libs,apps --also-make verify -P"$MODULE",report,coverage
+        run: mvn --projects :test-coverage --also-make verify -P"$MODULE",report,coverage
           -Dsonar.organization=pagopa
           -Dsonar.projectKey="$SONAR_KEY"
           -Dsonar.token="${{ secrets.SONAR_TOKEN }}"

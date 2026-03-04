@@ -143,7 +143,7 @@ Reference version with `${project.version}` in banner files.
 
 Apps depend on custom Maven repositories hosted on:
 - Azure DevOps: `selfcare-platform`
-- GitHub Packages: `pagopa/selfcare`, `pagopa/selfcare-onboarding`
+- GitHub Packages: `pagopa/selfcare`
 
 Authentication required for builds - see repository settings in root `pom.xml`.
 
