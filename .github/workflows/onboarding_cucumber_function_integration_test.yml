@@ -40,7 +40,6 @@ jobs:
         with:
           servers: >
             [
-              {"id": "selfcare-onboarding", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"},
               {"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}
             ]
 

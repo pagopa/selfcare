@@ -37,22 +37,15 @@ RUN echo "<settings>\n" \
          "<username>\${repoLogin}</username>\n" \
          "<password>\${repoPwd}</password>\n" \
          "</server>\n" \
-         "<server>\n" \
-         "<id>\${selfcareOnboardingId}</id>\n" \
-         "<username>\${repoLogin}</username>\n" \
-         "<password>\${repoPwd}</password>\n" \
-         "</server>\n" \
          "</servers>\n" \
          "</settings>\n" > settings.xml
 
 ARG REPO_SELFCARE
-ARG REPO_ONBOARDING
 ARG REPO_USERNAME
 ARG REPO_PASSWORD
 
 RUN mvn --global-settings settings.xml --projects :webhook \
     -DrepositoryId=${REPO_SELFCARE} \
-    -DselfcareOnboardingId=${REPO_ONBOARDING} \
     -DrepoLogin=${REPO_USERNAME} \
     -DrepoPwd=${REPO_PASSWORD} \
     --also-make clean package -DskipTests

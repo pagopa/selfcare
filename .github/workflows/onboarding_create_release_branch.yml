@@ -82,10 +82,10 @@ jobs:
 
       - name: Create Release Variables
         run: |
-          gh variable set CURRENT_UAT_VERSION \
+          gh variable set ONBOARDING_BE_CURRENT_UAT_VERSION \
             --body "${{ env.NEW_VERSION }}"
 
-          gh variable set CURRENT_PROD_VERSION \
+          gh variable set ONBOARDING_BE_CURRENT_PROD_VERSION \
             --body "${{ env.OLD_VERSION }}"
         env:
           GH_TOKEN: ${{ secrets.GH_PAT_VARIABLES }}
