@@ -24,43 +24,37 @@ on:
 jobs:
 
   release_dev:
-    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
+    uses: ./.github/workflows/onboarding_call_release_ms.yml
     name: '[Dev] Onboarding ms Release'
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     secrets: inherit
     with:
       environment: dev
       tf_environment: dev
-      dir: 'infra/apps/onboarding-ms'
-      dockerfile_path: apps/onboarding-ms/Dockerfile
-      docker_image_name: pagopa/selfcare-onboarding-ms
       path_openapi_docs: apps/onboarding-ms/src/main/docs/openapi.json
+      openapi_name: selfcare-onboarding-ms
 
   release_uat:
-    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
+    uses: ./.github/workflows/onboarding_call_release_ms.yml
     name: '[UAT] Onboarding ms Release'
     if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
     secrets: inherit
     with:
       environment: uat
       tf_environment: uat
-      dir: 'infra/apps/onboarding-ms'
-      dockerfile_path: apps/onboarding-ms/Dockerfile
-      docker_image_name: pagopa/selfcare-onboarding-ms
       path_openapi_docs: apps/onboarding-ms/src/main/docs/openapi.json
+      openapi_name: selfcare-onboarding-ms
 
   release_prod:
-    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
+    uses: ./.github/workflows/onboarding_call_release_ms.yml
     name: '[Prod] Onboarding ms Release'
     if: ${{ inputs.env == 'prod' }}
     secrets: inherit
     with:
       environment: prod
       tf_environment: prod
-      dir: 'infra/apps/onboarding-ms'
-      dockerfile_path: apps/onboarding-ms/Dockerfile
-      docker_image_name: pagopa/selfcare-onboarding-ms
       path_openapi_docs: apps/onboarding-ms/src/main/docs/openapi.json
+      openapi_name: selfcare-onboarding-ms
 
   promote_release:
     name: 'Promote prerelase release'

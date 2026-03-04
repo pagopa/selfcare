@@ -1,0 +1,115 @@
+{
+	"info": {
+		"_postman_id": "ecfee2ea-6e8d-4050-894f-042c56741cc5",
+		"name": "Selfcare-Integration",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1102274"
+	},
+	"item": [
+		{
+			"name": "External",
+			"item": [
+				{
+					"name": "getUserGroup",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"getInstitutionUsersByProduct ok\", function () {",
+									"var jsonData = pm.response.json();",
+									"pm.response.to.have.status(200);",
+									"//pm.expect(jsonData.message).to.contain('Entity created');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"value": "{{apimKeyPN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{apiBaseUrl}}/external/v2/user-groups?userId={{userId}}&institutions={{institutionId}}",
+							"host": [
+								"{{apiBaseUrl}}"
+							],
+							"path": [
+								"external",
+								"v2",
+								"user-groups"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								},
+								{
+									"key": "institutions",
+									"value": "{{institutionId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getInstitutionUsersByProduct",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"getInstitutionUsersByProduct ok\", function () {",
+									"var jsonData = pm.response.json();",
+									"pm.response.to.have.status(200);",
+									"//pm.expect(jsonData.message).to.contain('Entity created');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"value": "{{apimKeyPN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{apiBaseUrl}}/external/v2/institutions/{{institutionId}}/users?productId={{productId}}",
+							"host": [
+								"{{apiBaseUrl}}"
+							],
+							"path": [
+								"external",
+								"v2",
+								"institutions",
+								"{{institutionId}}",
+								"users"
+							],
+							"query": [
+								{
+									"key": "productId",
+									"value": "{{productId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

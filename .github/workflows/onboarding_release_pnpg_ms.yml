@@ -10,7 +10,7 @@ on:
       - "infra/apps/onboarding-ms/**"
       - "apps/pom.xml"
       - "pom.xml"
-  
+
   workflow_dispatch:
     inputs:
       env:
@@ -22,30 +22,32 @@ on:
           - prod
 
 jobs:
-
   release_dev:
     uses: ./.github/workflows/onboarding_call_release_ms.yml
-    name: '[Dev] Onboarding ms Release'
+    name: "[Dev] Onboarding ms Release"
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     secrets: inherit
     with:
       environment: dev
       tf_environment: dev-pnpg
+      upload_openapi_enabled: false
 
   release_uat:
     uses: ./.github/workflows/onboarding_call_release_ms.yml
-    name: '[UAT] Onboarding ms Release'
+    name: "[UAT] Onboarding ms Release"
     if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
     secrets: inherit
     with:
       environment: uat
       tf_environment: uat-pnpg
+      upload_openapi_enabled: false
 
   release_prod:
     uses: ./.github/workflows/onboarding_call_release_ms.yml
-    name: '[Prod] Onboarding ms Release'
+    name: "[Prod] Onboarding ms Release"
     if: ${{ inputs.env == 'prod' }}
     secrets: inherit
     with:
       environment: prod
       tf_environment: prod-pnpg
+      upload_openapi_enabled: false
