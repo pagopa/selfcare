@@ -2,14 +2,14 @@
 # Monitoring
 ###############################################################################
 
-data "azurerm_resource_group" "monitor_rg" {
-  name = "${local.prefix}-${local.env_short}-monitor-rg"
-}
+# data "azurerm_resource_group" "monitor_rg" {
+#   name = "${local.prefix}-${local.env_short}-monitor-rg"
+# }
 
-data "azurerm_log_analytics_workspace" "log_analytics" {
-  name                = "${local.prefix}-${local.env_short}-law"
-  resource_group_name = data.azurerm_resource_group.monitor_rg.name
-}
+# data "azurerm_log_analytics_workspace" "log_analytics" {
+#   name                = "${local.prefix}-${local.env_short}-law"
+#   resource_group_name = data.azurerm_resource_group.monitor_rg.name
+# }
 
 data "azurerm_application_insights" "application_insights" {
   name                = "${local.prefix}-${local.env_short}-appinsights"
@@ -30,6 +30,12 @@ data "azurerm_monitor_action_group" "email" {
   name                = local.monitor_action_group_email_name
 }
 
+data "azurerm_key_vault_secret" "alert_pnpg_http_status_slack" {
+  name         = "alert-pnpg-http-status-slack"
+  key_vault_id = module.key_vault.key_vault_id
+}
+
+
 resource "azurerm_monitor_action_group" "http_status" {
   count = local.env_short == "d" ? 0 : 1
 
@@ -39,7 +45,7 @@ resource "azurerm_monitor_action_group" "http_status" {
 
   email_receiver {
     name                    = "slack"
-    email_address           = module.key_vault_secrets_query.values["alert-pnpg-http-status-slack"].value
+    email_address           = data.azurerm_key_vault_secret.alert_pnpg_http_status_slack.value
     use_common_alert_schema = true
   }
 
@@ -136,12 +142,12 @@ resource "azurerm_monitor_metric_alert" "functions_exceptions" {
 
 
 data "azurerm_dns_zone" "public" {
-  name                = local.env_short == "p" ? "${local.dns_zone_prefix}.${local.external_domain}" : "${local.env}.${local.dns_zone_prefix}.${local.external_domain}"
+  name                = "${local.dns_zone_prefix}.${local.external_domain}"
   resource_group_name = "${local.prefix}-${local.env_short}-vnet-rg"
 }
 
 data "azurerm_private_dns_zone" "internal" {
-  name                = "internal.${local.dns_zone_prefix}"
+  name                = "internal.${local.dns_zone_prefix}.${local.external_domain}"
   resource_group_name = data.azurerm_dns_zone.public.resource_group_name
 }
 
@@ -221,7 +227,8 @@ resource "azurerm_nat_gateway" "nat_gateway" {
 module "assets" {
   source = "../_modules/assets"
 
-  env = local.env
+  env        = local.env
+  app_domain = local.app_domain
   # CDN
   checkout_cdn_name                       = module.cdn.storage_name
   checkout_endpoint_name                  = module.cdn.name

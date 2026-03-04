@@ -55,6 +55,8 @@ resource "azurerm_resource_group" "checkout_fe_rg" {
 }
 
 resource "azurerm_subnet" "cdn_snet" {
+  count = var.create_snet ? 1 : 0
+
   name                 = "${var.project}-${local.environment.app_name}-snet"
   virtual_network_name = var.vnet_name
   resource_group_name  = var.rg_vnet_name
@@ -66,6 +68,16 @@ resource "azurerm_subnet" "cdn_snet" {
     "Microsoft.Storage",
   ]
 }
+
+data "azurerm_subnet" "cdn_snet" {
+  count = var.create_snet ? 0 : 1
+
+  name                 = "${local.environment.prefix}-${local.environment.env_short}-${local.environment.app_name}-snet"
+  virtual_network_name = var.vnet_name
+  resource_group_name  = var.rg_vnet_name
+}
+
+
 
 
 ###############################################################################
@@ -79,7 +91,7 @@ module "cdn_storage_account" {
 
   resource_group_name                 = azurerm_resource_group.checkout_fe_rg.name
   use_case                            = var.storage_use_case
-  subnet_pep_id                       = azurerm_subnet.cdn_snet.id
+  subnet_pep_id                       = var.create_snet ? azurerm_subnet.cdn_snet[0].id : data.azurerm_subnet.cdn_snet[0].id
   force_public_network_access_enabled = true
 
   static_website = {

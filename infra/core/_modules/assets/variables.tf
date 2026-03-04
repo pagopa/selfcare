@@ -3,6 +3,11 @@ variable "env" {
   description = "Environment name (e.g. dev, uat, prod)"
 }
 
+variable "app_domain" {
+  type        = string
+  description = "Application domain name (e.g. ar or pnpg)"
+}
+
 # CDN\\
 variable "checkout_cdn_name" {
   type        = string

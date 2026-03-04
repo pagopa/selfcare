@@ -30,14 +30,3 @@ output "principal_id" {
 output "storage_name" {
   value = module.cdn_storage_account.name
 }
-
-output "old_storage_account_name" {
-  description = "Name of the old CDN storage account"
-  value       = data.azurerm_storage_account.old_cdn_storage_account.name
-}
-
-output "old_storage_account_primary_access_key" {
-  description = "Primary access key of the old CDN storage account"
-  value       = data.azurerm_storage_account.old_cdn_storage_account.primary_access_key
-  sensitive   = true
-}

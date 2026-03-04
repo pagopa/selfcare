@@ -9,10 +9,15 @@ variable "env_short" {
   description = "Short environment name (e.g. d, u, p)"
 }
 
-variable "location_short" {
+variable "app_domain" {
   type        = string
-  description = "Short location name (e.g. weu, itn, neu)"
+  description = "Application domain name (e.g. ar or pnpg)"
 }
+
+# variable "location_short" {
+#   type        = string
+#   description = "Short location name (e.g. weu, itn, neu)"
+# }
 
 # CDN
 variable "checkout_cdn_name" {
@@ -33,18 +38,23 @@ variable "checkout_fe_rg_name" {
 }
 
 # Contract Storage
-variable "selc_contracts_storage_name" {
-  type        = string
-  description = "Contracts storage account name (module.selc-contracts-storage.name)"
-}
+# variable "selc_contracts_storage_name" {
+#   type        = string
+#   description = "Contracts storage account name (module.selc-contracts-storage.name)"
+# }
 
-variable "selc_contracts_storage_primary_access_key" {
-  type        = string
-  sensitive   = true
-  description = "Contracts storage account primary access key (module.selc-contracts-storage.primary_access_key)"
-}
+# variable "selc_contracts_storage_primary_access_key" {
+#   type        = string
+#   sensitive   = true
+#   description = "Contracts storage account primary access key (module.selc-contracts-storage.primary_access_key)"
+# }
 
-variable "selc_contracts_container_name" {
+# variable "selc_contracts_container_name" {
+#   type        = string
+#   description = "Contracts storage container name (azurerm_storage_container.selc-contracts-container.name)"
+# }
+
+variable "checkout_endpoint_name" {
   type        = string
-  description = "Contracts storage container name (azurerm_storage_container.selc-contracts-container.name)"
+  description = "Checkout frontend endpoint name"
 }

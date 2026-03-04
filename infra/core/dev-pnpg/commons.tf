@@ -209,6 +209,7 @@ module "cdn" {
   instance_number = "01"
   prefix_api      = "api-pnpg"
   host_name       = "pnpg.${local.dns_zone_prefix}.${local.external_domain}"
+  create_snet     = false
 
   dns_zone_prefix      = local.dns_zone_prefix
   external_domain      = local.external_domain

@@ -125,3 +125,9 @@ variable "spa" {
     "dashboard"
   ]
 }
+
+variable "create_snet" {
+  type        = bool
+  default     = true
+  description = "Create a snet or read default cdn snet"
+}

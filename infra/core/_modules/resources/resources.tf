@@ -1,19 +1,20 @@
 # email templates
 resource "null_resource" "upload_resources_templates" {
   triggers = {
-    dir_sha1 = sha1(join("", [for f in fileset("${path.module}/resources/templates", "**") : filesha1("${path.module}/resources/templates/${f}")]))
+    dir_sha1 = sha1(join("", [for f in fileset("${path.module}/../../resources/templates", "**") : filesha1("${path.module}/../../resources/templates/${f}")]))
   }
   provisioner "local-exec" {
     command = <<EOT
-              az storage blob sync --container '$web' \
+            az storage blob sync \
+                --container '$web' \
                 --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
                 --account-key ${var.checkout_cdn_storage_primary_access_key} \
-                --source "./resources/templates" \
+                --source "${path.module}/../../resources/templates" \
                 --destination 'resources/templates/'
-              az cdn endpoint purge \
-                --resource-group ${var.checkout_fe_rg_name} \
-                --name ${var.checkout_cdn_name} \
-                --profile-name ${replace(var.checkout_cdn_name, "-cdn-endpoint", "-cdn-profile")}  \
+              az afd endpoint purge \
+                  --resource-group ${var.checkout_fe_rg_name} \
+                  --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
+                  --profile-name ${replace(var.checkout_endpoint_name, "-cdn-endpoint", "-cdn-profile")}  \
                 --content-paths "/resources/templates/*" \
                 --no-wait
           EOT
@@ -24,19 +25,20 @@ resource "null_resource" "upload_resources_templates" {
 # aggregates csv templates
 resource "null_resource" "upload_resources_aggregates" {
   triggers = {
-    dir_sha1 = sha1(join("", [for f in fileset("${path.module}/resources/aggregates", "**") : filesha1("${path.module}/resources/aggregates/${f}")]))
+    dir_sha1 = sha1(join("", [for f in fileset("${path.module}/../../resources/aggregates", "**") : filesha1("${path.module}/../../resources/aggregates/${f}")]))
   }
   provisioner "local-exec" {
     command = <<EOT
-              az storage blob sync --container '$web' \
+              az storage blob sync \
+                --container '$web' \
                 --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
                 --account-key ${var.checkout_cdn_storage_primary_access_key} \
-                --source "${path.module}/resources/aggregates" \
+                --source "${path.module}/../../resources/aggregates" \
                 --destination 'resources/aggregates/'
-              az cdn endpoint purge \
-                --resource-group ${var.checkout_fe_rg_name} \
-                --name ${var.checkout_cdn_name} \
-                --profile-name ${replace(var.checkout_cdn_name, "-cdn-endpoint", "-cdn-profile")}  \
+              az afd endpoint purge \
+                  --resource-group ${var.checkout_fe_rg_name} \
+                  --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
+                  --profile-name ${replace(var.checkout_endpoint_name, "-cdn-endpoint", "-cdn-profile")}  \
                 --content-paths "/resources/aggregates/*" \
                 --no-wait
           EOT
@@ -46,19 +48,20 @@ resource "null_resource" "upload_resources_aggregates" {
 
 resource "null_resource" "upload_resources_products_logo" {
   triggers = {
-    dir_sha1 = sha1(join("", [for f in fileset("${path.module}/resources/products", "**") : filesha1("${path.module}/resources/products/${f}")]))
+    dir_sha1 = sha1(join("", [for f in fileset("${path.module}/../../resources/products", "**") : filesha1("${path.module}/../../resources/products/${f}")]))
   }
   provisioner "local-exec" {
     command = <<EOT
-              az storage blob sync --container '$web' \
+            az storage blob sync \
+                --container '$web' \
                 --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
                 --account-key ${var.checkout_cdn_storage_primary_access_key} \
-                --source "./resources/templates" \
-                --destination 'resources/templates/'
-              az cdn endpoint purge \
-                --resource-group ${var.checkout_fe_rg_name} \
-                --name ${var.checkout_cdn_name} \
-                --profile-name ${replace(var.checkout_cdn_name, "-cdn-endpoint", "-cdn-profile")}  \
+                --source "${path.module}/../../resources/products" \
+                --destination 'resources/products/' 
+              az afd endpoint purge \
+                  --resource-group ${var.checkout_fe_rg_name} \
+                  --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
+                  --profile-name ${replace(var.checkout_endpoint_name, "-cdn-endpoint", "-cdn-profile")}  \
                 --content-paths "/resources/products/*" \
                 --no-wait
           EOT
@@ -67,7 +70,7 @@ resource "null_resource" "upload_resources_products_logo" {
 
 # default product logo
 data "local_file" "resources_default_product_logo" {
-  filename = "${path.module}/resources/defaultProductLogo.png"
+  filename = "${path.module}/../../resources/defaultProductLogo.png"
 }
 
 resource "null_resource" "upload_resources_default_product_logo" {
@@ -77,19 +80,27 @@ resource "null_resource" "upload_resources_default_product_logo" {
 
   provisioner "local-exec" {
     command = <<EOT
-              az storage blob upload --container '$web' \
+              az storage blob upload \
+                --container '$web' \
                 --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
                 --account-key ${var.checkout_cdn_storage_primary_access_key} \
                 --file ${data.local_file.resources_default_product_logo.filename} \
                 --overwrite true \
                 --name resources/products/default/logo.png
+
+              az afd endpoint purge \
+                --content-paths "/resources/products/default/logo.png" \
+                --resource-group ${var.checkout_fe_rg_name} \
+                --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
+                --profile-name ${replace(var.checkout_endpoint_name, "-cdn-endpoint", "-cdn-profile")}  \
+                --no-wait
           EOT
   }
 }
 
 # default product depict-image
 data "local_file" "resources_default_product_depict-image" {
-  filename = "${path.module}/resources/defaultProductDepictImage.jpeg"
+  filename = "${path.module}/../../resources/defaultProductDepictImage.jpeg"
 }
 
 resource "null_resource" "upload_resources_default_product_resources_depict-image" {
@@ -99,36 +110,44 @@ resource "null_resource" "upload_resources_default_product_resources_depict-imag
 
   provisioner "local-exec" {
     command = <<EOT
-              az storage blob upload --container '$web' \
+            az storage blob upload \
+                --container '$web' \
                 --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
                 --account-key ${var.checkout_cdn_storage_primary_access_key} \
                 --file ${data.local_file.resources_default_product_depict-image.filename} \
                 --overwrite true \
                 --name resources/products/default/depict-image.jpeg
+
+              az afd endpoint purge \
+                --content-paths "/resources/products/default/depict-image.jpeg" \
+                --resource-group ${var.checkout_fe_rg_name} \
+                --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
+                --profile-name ${var.checkout_endpoint_name}  \
+                --no-wait
           EOT
   }
 }
 
 # uploading a pagopa logo to contract storage
-resource "null_resource" "upload_resources_logo" {
-  triggers = {
-    "changes-in-config" : md5(data.local_file.resources_default_product_logo.content)
-  }
-  provisioner "local-exec" {
-    command = <<EOT
-              az storage blob upload --container ${var.selc_contracts_container_name} \
-                --account-name ${var.selc_contracts_storage_name} \
-                --account-key "${var.selc_contracts_storage_primary_access_key}" \
-                --file ${data.local_file.resources_default_product_logo.filename} \
-                --overwrite true \
-                --name resources/logo.png
-          EOT
-  }
-}
+# resource "null_resource" "upload_resources_logo" {
+#   triggers = {
+#     "changes-in-config" : md5(data.local_file.resources_default_product_logo.content)
+#   }
+#   provisioner "local-exec" {
+#     command = <<EOT
+#               az storage blob upload --container ${var.selc_contracts_container_name} \
+#                 --account-name ${var.selc_contracts_storage_name} \
+#                 --account-key "${var.selc_contracts_storage_primary_access_key}" \
+#                 --file ${data.local_file.resources_default_product_logo.filename} \
+#                 --overwrite true \
+#                 --name resources/logo.png
+#           EOT
+#   }
+# }
 
 # anac file
 data "local_file" "resources_anac_data_csv" {
-  filename = "${path.module}/resources/anac/data.csv"
+  filename = "${path.module}/../../resources/anac/data.csv"
 }
 
 resource "null_resource" "upload_resources_anac_data_csv" {
@@ -138,19 +157,27 @@ resource "null_resource" "upload_resources_anac_data_csv" {
 
   provisioner "local-exec" {
     command = <<EOT
-              az storage blob upload --container '$web' \
+            az storage blob upload \
+                --container '$web' \
                 --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
                 --account-key ${var.checkout_cdn_storage_primary_access_key} \
                 --file ${data.local_file.resources_anac_data_csv.filename} \
                 --overwrite true \
                 --name anac-data.csv
+
+              az afd endpoint purge \
+                --content-paths "/anac-data.csv" \
+                --resource-group ${var.checkout_fe_rg_name} \
+                --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
+                --profile-name ${var.checkout_endpoint_name}  \
+                --no-wait
           EOT
   }
 }
 
 # ivass file
 data "local_file" "resources_ivass_data_csv" {
-  filename = "${path.module}/resources/ivass/data.csv"
+  filename = "${path.module}/../../resources/ivass/data.csv"
 }
 
 resource "null_resource" "upload_resources_ivass_data_csv" {
@@ -160,12 +187,20 @@ resource "null_resource" "upload_resources_ivass_data_csv" {
 
   provisioner "local-exec" {
     command = <<EOT
-              az storage blob upload --container '$web' \
+            az storage blob upload \
+                --container '$web' \
                 --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
                 --account-key ${var.checkout_cdn_storage_primary_access_key} \
                 --file ${data.local_file.resources_ivass_data_csv.filename} \
                 --overwrite true \
                 --name ivass-data.csv
+
+              az afd endpoint purge \
+                --content-paths "/ivass-data.csv" \
+                --resource-group ${var.checkout_fe_rg_name} \
+                --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
+                --profile-name ${var.checkout_endpoint_name}  \
+                --no-wait
           EOT
   }
 }
@@ -173,40 +208,41 @@ resource "null_resource" "upload_resources_ivass_data_csv" {
 # metadata agid spid
 resource "null_resource" "upload_metadata" {
   triggers = {
-    file_sha1 = filesha1("./env/${var.env}/spid/metadata.xml")
+    file_sha1 = filesha1("${path.module}/../../${var.env}-${var.app_domain}/spid/metadata.xml")
   }
 
   provisioner "local-exec" {
     command = <<EOT
-              az storage blob upload \
+            az storage blob upload \
                 --container '$web' \
                 --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
                 --account-key ${var.checkout_cdn_storage_primary_access_key} \
-                --file "./env/${var.env}/spid/metadata.xml" \
+                --file "${path.module}/../../${var.env}-${var.app_domain}/spid/metadata.xml" \
                 --overwrite true \
                 --name 'spid/metadata.xml' &&
-              az cdn endpoint purge \
-                --resource-group ${var.checkout_fe_rg_name} \
-                --name ${var.checkout_cdn_name} \
-                --profile-name ${replace(var.checkout_cdn_name, "-cdn-endpoint", "-cdn-profile")}  \
+
+              az afd endpoint purge \
                 --content-paths "/spid/metadata.xml" \
+                --resource-group ${var.checkout_fe_rg_name} \
+                --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
+                --profile-name ${var.checkout_endpoint_name}  \
                 --no-wait
           EOT
   }
 }
 
-resource "null_resource" "upload_contract_templates" {
-  triggers = {
-    dir_sha1 = sha1(join("", [for f in fileset("${path.module}/contracts_template/contracts/template", "**") : filesha1("${path.module}/contracts_template/contracts/template/${f}")]))
-  }
-  provisioner "local-exec" {
-    command = <<EOT
-              az storage copy \
-                --account-name "sc${var.env_short}${var.location_short}ardocumentsst01" \
-                --connection-string "${data.azurerm_key_vault_secret.selc_documents_storage_connection_string.value}" \
-                --destination-container "sc-${var.env_short}-documents-blob" \
-                --source "./contracts_template/*" \
-                --recursive
-          EOT
-  }
-}
+# resource "null_resource" "upload_contract_templates" {
+#   triggers = {
+#     dir_sha1 = sha1(join("", [for f in fileset("${path.module}/../../resources/contracts_template/contracts/template", "**") : filesha1("${path.module}/../../resources/contracts_template/contracts/template/${f}")]))
+#   }
+#   provisioner "local-exec" {
+#     command = <<EOT
+#               az storage copy \
+#                 --account-name "sc${var.env_short}${var.location_short}ardocumentsst01" \
+#                 --connection-string "${data.azurerm_key_vault_secret.selc_documents_storage_connection_string.value}" \
+#                 --destination-container "sc-${var.env_short}-documents-blob" \
+#                 --source "${path.module}/../../resources/contracts_template/contracts/template/*" \
+#                 --recursive
+#           EOT
+#   }
+# }

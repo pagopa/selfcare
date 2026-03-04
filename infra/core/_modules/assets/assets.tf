@@ -23,8 +23,10 @@ resource "null_resource" "upload_assets" {
 
 resource "null_resource" "upload_alert_message" {
   triggers = {
-    file_sha1 = filesha1("${path.module}/../../${var.env}/assets/login-alert-message.json")
+    # file_sha1 = filesha1("${path.module}/../../${var.env}/assets/login-alert-message.json")
+    file_sha1 = filesha1("${path.module}/../../${var.env}-${var.app_domain}/assets/login-alert-message.json")
   }
+  # --file "${path.module}/../../${var.env}/assets/login-alert-message.json" \
 
   provisioner "local-exec" {
     command = <<EOT
@@ -32,7 +34,7 @@ resource "null_resource" "upload_alert_message" {
                 --container '$web' \
                 --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
                 --account-key ${var.checkout_cdn_storage_primary_access_key} \
-                --file "${path.module}/../../${var.env}/assets/login-alert-message.json" \
+                --file "${path.module}/../../${var.env}-${var.app_domain}/assets/login-alert-message.json" \
                 --overwrite true \
                 --name 'assets/login-alert-message.json'
 
@@ -74,7 +76,7 @@ resource "null_resource" "upload_alert_message" {
 
 resource "null_resource" "upload_config" {
   triggers = {
-    file_sha1 = filesha1("${path.module}/../../${var.env}/assets/config.json")
+    file_sha1 = filesha1("${path.module}/../../${var.env}-${var.app_domain}/assets/config.json")
   }
 
   provisioner "local-exec" {
@@ -83,7 +85,7 @@ resource "null_resource" "upload_config" {
         --container '$web' \
         --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
         --account-key ${var.checkout_cdn_storage_primary_access_key} \
-        --file "${path.module}/../../${var.env}/assets/config.json" \
+        --file "${path.module}/../../${var.env}-${var.app_domain}/assets/config.json" \
         --overwrite true \
         --name 'assets/config.json'
       az afd endpoint purge \
@@ -101,7 +103,7 @@ resource "null_resource" "upload_robots" {
   count = var.env == "uat" ? 1 : 0
 
   triggers = {
-    file_sha1 = filesha1("${path.module}/../../${var.env}/assets/robots.txt")
+    file_sha1 = filesha1("${path.module}/../../${var.env}-${var.app_domain}/assets/robots.txt")
   }
 
   provisioner "local-exec" {
@@ -110,7 +112,7 @@ resource "null_resource" "upload_robots" {
         --container '$web' \
         --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
         --account-key ${var.checkout_cdn_storage_primary_access_key} \
-        --file "${path.module}/../../${var.env}/assets/robots.txt" \
+        --file "${path.module}/../../${var.env}-${var.app_domain}/assets/robots.txt" \
         --overwrite true \
         --name 'assets/robots.txt'
       az afd endpoint purge \

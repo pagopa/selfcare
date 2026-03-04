@@ -433,21 +433,24 @@ module "default_roleassignment" {
 # resources
 ###############################################################################
 
-# module "resources" {
-#   source = "../_modules/resources"
+module "resources" {
+  source = "../_modules/resources"
 
-#   env = local.env
+  env        = local.env
+  env_short  = local.env_short
+  app_domain = local.app_domain
 
-#   # CDN
-#   checkout_cdn_name                       = module.cdn.name
-#   checkout_cdn_storage_primary_access_key = module.cdn.storage_primary_access_key
-#   checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
+  # CDN
+  # Contract Storage — TODO: expose these from the appropriate module
+  # selc_contracts_storage_name               = "" # module.<contracts_storage>.name
+  # selc_contracts_storage_primary_access_key = "" # module.<contracts_storage>.primary_access_key
+  # selc_contracts_container_name             = "" # <contracts_container>.name
 
-#   # Contract Storage — TODO: expose these from the appropriate module
-#   selc_contracts_storage_name               = "" # module.<contracts_storage>.name
-#   selc_contracts_storage_primary_access_key = "" # module.<contracts_storage>.primary_access_key
-#   selc_contracts_container_name             = "" # <contracts_container>.name
-# }
+  checkout_cdn_name                       = module.cdn.storage_name
+  checkout_endpoint_name                  = module.cdn.name
+  checkout_cdn_storage_primary_access_key = module.cdn.storage_primary_access_key
+  checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
+}
 
 
 ###############################################################################
@@ -457,7 +460,8 @@ module "default_roleassignment" {
 module "assets" {
   source = "../_modules/assets"
 
-  env = local.env
+  env        = local.env
+  app_domain = local.app_domain
   # CDN
   checkout_cdn_name                       = module.cdn.storage_name
   checkout_endpoint_name                  = module.cdn.name
