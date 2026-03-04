@@ -17,9 +17,9 @@
 
     <distributionManagement>
         <repository>
-            <id>selfcare-onboarding</id>
-            <name>Selfcare Onboarding SDK</name>
-            <url>https://maven.pkg.github.com/pagopa/selfcare-onboarding</url>
+            <id>selfcare</id>
+            <name>Selfcare</name>
+            <url>https://maven.pkg.github.com/pagopa/selfcare</url>
         </repository>
     </distributionManagement>
 
