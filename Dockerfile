@@ -37,7 +37,7 @@ ARG REPO_SELFCARE
 RUN mvn --global-settings settings.xml --projects :user-group-ms -DrepositoryId=${REPO_ONBOARDING} -DselfcareRepositoryId=${REPO_SELFCARE} -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} --also-make-dependents clean package -DskipTests
 
 
-FROM openjdk:17-jdk@sha256:528707081fdb9562eb819128a9f85ae7fe000e2fbaeaf9f87662e7b3f38cb7d8 AS runtime
+FROM amazoncorretto:17@sha256:3f08e3e4271666c2bb048bbd084f7cb0dad2471fa0058e5b080b4c1004c3abf0 AS runtime
 
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
 
