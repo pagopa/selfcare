@@ -1,4 +1,4 @@
-data "azurerm_virtual_network" "vnet_selc" {
+data "azurerm_virtual_network" "vnet" {
   name                = "${var.project}-vnet"
   resource_group_name = local.resource_group_name_vnet
 }
