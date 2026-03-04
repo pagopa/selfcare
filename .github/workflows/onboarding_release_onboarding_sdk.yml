@@ -1,4 +1,4 @@
-name: Release onboarding sdk
+name: Release Onboarding SDK
 
 on:
   push:
@@ -35,7 +35,7 @@ jobs:
 
       - name: Build with Maven
         shell: bash
-        run: mvn --projects :onboarding-libs --also-make-dependents clean package -DskipTests
+        run: mvn --projects :libs --also-make-dependents clean package -DskipTests
 
       - name: Deploy to GitHub Package Registry
         shell: bash
