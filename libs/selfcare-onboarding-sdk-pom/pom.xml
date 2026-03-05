@@ -2,16 +2,17 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>it.pagopa.selfcare</groupId>
-    <artifactId>onboarding-sdk-pom</artifactId>
+    <artifactId>selfcare-onboarding-sdk-pom</artifactId>
     <packaging>pom</packaging>
-    <name>onboarding-sdk-pom</name>
+    <name>selfcare-onboarding-sdk-pom</name>
+    <description>Selfcare Onboarding SDK POM Aggregator</description>
     <version>0.15.4</version>
 
     <modules>
-        <module>../onboarding-sdk-common</module>
-        <module>../onboarding-sdk-product</module>
-        <module>../onboarding-sdk-crypto</module>
-        <module>../onboarding-sdk-azure-storage</module>
+        <module>../selfcare-onboarding-sdk-common</module>
+        <module>../selfcare-onboarding-sdk-product</module>
+        <module>../selfcare-onboarding-sdk-crypto</module>
+        <module>../selfcare-onboarding-sdk-azure-storage</module>
     </modules>
 
     <properties>
@@ -20,8 +21,6 @@
         <maven.compiler.target>17</maven.compiler.target>
         <junit-jupiter.version>5.7.2</junit-jupiter.version>
         <mockito.version>5.7.0</mockito.version>
-        <lombok.version>1.18.36</lombok.version>
-        <mapstruct.version>1.5.5.Final</mapstruct.version>
         <sonar.skip>true</sonar.skip>
     </properties>
 
@@ -74,7 +73,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.1</version>
+                    <version>3.13.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.sonarsource.scanner.maven</groupId>
@@ -106,28 +105,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.13.0</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.mapstruct</groupId>
-                            <artifactId>mapstruct-processor</artifactId>
-                            <version>${mapstruct.version}</version>
-                        </path>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>${lombok.version}</version>
-                        </path>
-                        <!-- additional annotation processor required as of Lombok 1.18.16 -->
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok-mapstruct-binding</artifactId>
-                            <version>0.2.0</version>
-                        </path>
-                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>

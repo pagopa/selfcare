@@ -1,4 +1,4 @@
-# Onboarding SDK Azure Storage
+# Selfcare Onboarding SDK Azure Storage
 
 This library has been developed to provide a set of Java utility classes to simplify the work of interact with azure storage. It includes features that helping for upload or download file from an azure storage container.
 
@@ -9,8 +9,8 @@ To use this library in your projects, you can add the dependency to your pom.xml
 ```shell script
 <dependency>
     <groupId>it.pagopa.selfcare</groupId>
-    <artifactId>onboarding-sdk-azure-storage</artifactId>
-    <version>0.0.1</version>
+    <artifactId>selfcare-onboarding-sdk-azure-storage</artifactId>
+    <version>0.15.4</version>
 </dependency>
 ```
 
@@ -18,7 +18,7 @@ If you are using Gradle, you can add the dependency to your build.gradle file:
 
 ```shell script
 dependencies {
-    implementation 'it.pagopa.selfcare:onboarding-sdk-azure-storage:0.0.1'
+    implementation 'it.pagopa.selfcare:selfcare-onboarding-sdk-azure-storage:0.15.4'
 }
 ```
 

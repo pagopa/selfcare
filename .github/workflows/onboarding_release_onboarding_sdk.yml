@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'libs/onboarding-sdk-**'
+      - 'libs/selfcare-onboarding-sdk-**'
 
   workflow_dispatch:
 
@@ -35,10 +35,10 @@ jobs:
 
       - name: Build with Maven SDK
         shell: bash
-        run: mvn -f libs/onboarding-sdk-pom/pom.xml clean package -DskipTests
+        run: mvn -f libs/selfcare-onboarding-sdk-pom/pom.xml clean package -DskipTests
 
       - name: Deploy to GitHub Package Registry
         shell: bash
-        run: mvn -B -f libs/onboarding-sdk-pom/pom.xml deploy -DskipTests
+        run: mvn -B -f libs/selfcare-onboarding-sdk-pom/pom.xml deploy -DskipTests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

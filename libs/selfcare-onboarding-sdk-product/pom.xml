@@ -3,13 +3,13 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>it.pagopa.selfcare</groupId>
-        <artifactId>onboarding-sdk-pom</artifactId>
+        <artifactId>selfcare-onboarding-sdk-pom</artifactId>
         <version>0.15.4</version>
-        <relativePath>../onboarding-sdk-pom</relativePath>
+        <relativePath>../selfcare-onboarding-sdk-pom</relativePath>
     </parent>
-    <artifactId>onboarding-sdk-product</artifactId>
-    <name>onboarding-sdk-product</name>
-    <version>0.15.4</version>
+    <artifactId>selfcare-onboarding-sdk-product</artifactId>
+    <name>selfcare-onboarding-sdk-product</name>
+    <description>Selfcare Onboarding SDK Product</description>
 
     <properties>
         <jackson.version>2.15.2</jackson.version>
@@ -26,12 +26,12 @@
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>onboarding-sdk-azure-storage</artifactId>
+            <artifactId>selfcare-onboarding-sdk-azure-storage</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>onboarding-sdk-common</artifactId>
+            <artifactId>selfcare-onboarding-sdk-common</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
