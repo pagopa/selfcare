@@ -64,8 +64,8 @@ jobs:
             org.opencontainers.image.title=selfcare-onboarding-ms
             org.opencontainers.image.description=SelfCare Onboarding Microservice
             org.opencontainers.image.authors=PagoPA
-            org.opencontainers.image.url=github.com/pagopa/selfcare
-            org.opencontainers.image.source=https://github.com/selfcare
+            org.opencontainers.image.url=github.com/pagopa/${{ github.repository }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
 
       - name: Build and Push Image
         uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56 # v5.1.0
