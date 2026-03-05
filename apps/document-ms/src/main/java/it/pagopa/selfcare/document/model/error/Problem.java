@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.product.model.error;
+package it.pagopa.selfcare.document.model.error;
 
 import java.util.List;
 import lombok.Data;
