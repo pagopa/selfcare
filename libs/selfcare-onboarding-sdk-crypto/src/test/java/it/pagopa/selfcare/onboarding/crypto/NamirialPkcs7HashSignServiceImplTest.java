@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.document.crypto;
+package it.pagopa.selfcare.onboarding.crypto;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -12,8 +12,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
-
-import it.pagopa.selfcare.document.crypto.impl.NamirialPkcs7HashSignServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.document.crypto;
+package it.pagopa.selfcare.onboarding.crypto;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -13,10 +13,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import it.pagopa.selfcare.document.crypto.client.NamirialHttpClient;
-import it.pagopa.selfcare.document.crypto.entity.Credentials;
-import it.pagopa.selfcare.document.crypto.entity.SignRequest;
-import it.pagopa.selfcare.document.crypto.impl.NamiralSignServiceImpl;
+import it.pagopa.selfcare.onboarding.crypto.client.NamirialHttpClient;
+import it.pagopa.selfcare.onboarding.crypto.entity.Credentials;
+import it.pagopa.selfcare.onboarding.crypto.entity.SignRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
