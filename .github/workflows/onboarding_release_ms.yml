@@ -1,0 +1,67 @@
+name: Deploy onboarding ms
+
+on:
+  push:
+    branches:
+      - main
+      - releases/*
+    paths:
+      - "apps/onboarding-ms/**"
+      - "infra/apps/onboarding-ms/**"
+      - "apps/pom.xml"
+      - "pom.xml"
+  
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options:
+          - dev
+          - uat
+          - prod
+
+jobs:
+
+  release_dev:
+    uses: ./.github/workflows/onboarding_call_release_ms.yml
+    name: '[Dev] Onboarding ms Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+      tf_environment: dev
+      path_openapi_docs: apps/onboarding-ms/src/main/docs/openapi.json
+      openapi_name: selfcare-onboarding-ms
+
+  release_uat:
+    uses: ./.github/workflows/onboarding_call_release_ms.yml
+    name: '[UAT] Onboarding ms Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    secrets: inherit
+    with:
+      environment: uat
+      tf_environment: uat
+      path_openapi_docs: apps/onboarding-ms/src/main/docs/openapi.json
+      openapi_name: selfcare-onboarding-ms
+
+  release_prod:
+    uses: ./.github/workflows/onboarding_call_release_ms.yml
+    name: '[Prod] Onboarding ms Release'
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod
+      tf_environment: prod
+      path_openapi_docs: apps/onboarding-ms/src/main/docs/openapi.json
+      openapi_name: selfcare-onboarding-ms
+
+  promote_release:
+    name: 'Promote prerelase release'
+    runs-on: ubuntu-24.04
+    needs: [ release_prod ]
+    steps:
+      - uses: pagopa/selfcare-commons/github-actions-template/promote-release@main
+        with:
+          github_path_token: ${{ secrets.GH_PAT_VARIABLES }}
+          release_version: ${{ vars.ONBOARDING_BE_CURRENT_UAT_VERSION }}

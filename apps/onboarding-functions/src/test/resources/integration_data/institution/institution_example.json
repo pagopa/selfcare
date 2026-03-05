@@ -1,0 +1,150 @@
+[
+  {
+    "origin": "SELC",
+    "originId": "13234472819",
+    "description": "test",
+    "institutionType": "GPU",
+    "digitalAddress": "1@1.com",
+    "address": "via Roma 3",
+    "zipCode": "23123",
+    "taxCode": "13234472819",
+    "city": "Milano",
+    "county": "MI",
+    "country": "IT",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ],
+    "rea": "REA-13",
+    "imported": false
+  },
+  {
+    "origin": "SELC",
+    "originId": "13234472820",
+    "description": "test",
+    "institutionType": "PT",
+    "digitalAddress": "1@1.com",
+    "address": "via Roma 3",
+    "zipCode": "23123",
+    "taxCode": "13234472820",
+    "city": "Milano",
+    "county": "MI",
+    "country": "IT",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ],
+    "rea": "REA-13",
+    "imported": false
+  },
+  {
+    "origin": "SELC",
+    "originId": "13234472821",
+    "description": "test",
+    "institutionType": "PSP",
+    "digitalAddress": "1@1.com",
+    "address": "via Roma 3",
+    "zipCode": "23123",
+    "taxCode": "13234472821",
+    "city": "Milano",
+    "county": "MI",
+    "country": "IT",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ],
+    "rea": "REA-13",
+    "imported": false
+  },
+  {
+    "origin": "IPA",
+    "originId": "c_l186",
+    "description": "Comune di Tocco da Casauria",
+    "institutionType": "PA",
+    "digitalAddress": "www.comune.toccodacasauria.pe.it",
+    "address": "Via Municipio, 13",
+    "zipCode": "65028",
+    "taxCode": "00231830688",
+    "city": "Pescara",
+    "county": "PE",
+    "country": "IT",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ],
+    "imported": false
+  },
+  {
+    "origin": "SELC",
+    "originId": "10293847565",
+    "description": "Test FOR_APPROVE",
+    "institutionType": "PSP",
+    "digitalAddress": "test@test.it",
+    "address": "via Napoli 4",
+    "zipCode": "23124",
+    "taxCode": "10293847565",
+    "city": "Napoli",
+    "county": "NA",
+    "country": "IT",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ],
+    "rea": "REA-16",
+    "imported": false
+  },
+  {
+    "id": "0ba32016-2dfa-4dd8-a063-969592456d79",
+    "origin": "SELC",
+    "originId": "13234472822",
+    "description": "test",
+    "institutionType": "PSP",
+    "digitalAddress": "1@1.com",
+    "address": "via Roma 3",
+    "zipCode": "23123",
+    "taxCode": "13234472822",
+    "city": "Milano",
+    "county": "MI",
+    "country": "IT",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ],
+    "rea": "REA-13",
+    "imported": false
+  },
+  {
+    "id": "6bb49a39-b08d-4767-9ebe-7b0dd0e4c28e",
+    "origin": "SELC",
+    "originId": "13234472823",
+    "description": "test",
+    "institutionType": "PSP",
+    "digitalAddress": "1@1.com",
+    "address": "via Roma 3",
+    "zipCode": "23123",
+    "taxCode": "13234472823",
+    "city": "Milano",
+    "county": "MI",
+    "country": "IT",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ],
+    "rea": "REA-13",
+    "imported": false
+  }
+]

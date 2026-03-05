@@ -31,7 +31,7 @@
     <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
     <cucumber-sdk.version>0.0.11</cucumber-sdk.version>
     <security-sdk.version>0.2.3</security-sdk.version>
-    <selfcare-onboarding-sdk.version>0.15.1</selfcare-onboarding-sdk.version>
+    <selfcare-onboarding-sdk.version>0.15.4</selfcare-onboarding-sdk.version>
   </properties>
 
   <dependencyManagement>
@@ -102,7 +102,7 @@
     </dependency>
     <dependency>
       <groupId>it.pagopa.selfcare</groupId>
-      <artifactId>onboarding-sdk-crypto</artifactId>
+      <artifactId>selfcare-onboarding-sdk-crypto</artifactId>
       <version>${selfcare-onboarding-sdk.version}</version>
     </dependency>
 
@@ -203,7 +203,7 @@
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <version>3.23.1</version>
+      <version>3.27.7</version>
       <scope>test</scope>
     </dependency>
     <dependency>

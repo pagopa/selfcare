@@ -1,0 +1,43 @@
+{
+  "id": "89ad7142-24bb-48ad-8504-9c9231137e94",
+  "createdAt": "2024-06-17T12:53:01.019Z",
+  "expiringDate": "2024-10-16T12:53:01.019Z",
+  "institution": {
+    "id": "89awdwdwd-3edsdsdfg-9c92311372220",
+    "address": "Via G Verdi 17",
+    "city": "Roma",
+    "country": "IT",
+    "county": "RM",
+    "description": "Comune di Silvi ",
+    "digitalAddress": "protocollo@legalmail.it",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ],
+    "imported": false,
+    "institutionType": "PA",
+    "origin": "IPA",
+    "originId": "ORIGIN",
+    "taxCode": "13234472823",
+    "zipCode": "24060"
+  },
+  "productId": "prod-io",
+  "status": "REQUEST",
+  "userRequester" : {
+    "userRequestUid": "ec7ca4d5-c537-462a-8c06-e102e0c21c44"
+  },
+  "users": [
+    {
+      "id": "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+      "role": "MANAGER",
+      "userMailUuid": "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e21",
+      "productRole": "admin"
+    }
+  ],
+  "workflowType": "USERS_EA",
+  "updatedAt": "2024-10-30T11:14:33.618Z",
+  "workflowInstanceId": "c47b4a25-723d-472d-a022-fa20f7b0685d",
+  "activatedAt": "2024-10-30T11:14:32.698Z"
+}

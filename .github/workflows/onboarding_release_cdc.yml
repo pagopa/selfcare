@@ -1,0 +1,51 @@
+name: Deploy onboarding-cdc
+
+on:
+  push:
+    branches:
+      - main
+      - releases/*
+    paths:
+      - "apps/onboarding-cdc/**"
+      - "infra/apps/onboarding-cdc/**"
+      - "apps/pom.xml"
+      - "pom.xml"
+  
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options:
+          - dev
+          - uat
+          - prod
+
+jobs:
+
+  release_dev:
+    uses: ./.github/workflows/onboarding_call_release_cdc.yml
+    name: '[Dev] Onboarding-cdc ms Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+      tf_environment: dev
+
+  release_uat:
+    uses: ./.github/workflows/onboarding_call_release_cdc.yml
+    name: '[UAT] Onboarding-cdc ms Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    secrets: inherit
+    with:
+      environment: uat
+      tf_environment: uat
+
+  release_prod:
+    uses: ./.github/workflows/onboarding_call_release_cdc.yml
+    name: '[Prod] Onboarding-cdc ms Release'
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod
+      tf_environment: prod

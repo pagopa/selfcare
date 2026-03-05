@@ -1,0 +1,22 @@
+{
+  "users": [
+    {
+      "taxCode": "FRDSMN80A01F205Z",
+      "name": "Sigmund",
+      "surname": "Freud",
+      "email": "s.freud@test.email.it",
+      "role": "MANAGER"
+    },
+    {
+      "taxCode": "CLVTLI80A01F839V",
+      "name": "Italo",
+      "surname": "Calvino",
+      "email": "i.calvino@test.email.it",
+      "role": "DELEGATE"
+    }
+  ],
+  "taxCode": "00095990644",
+  "originId": "c_a489",
+  "origin": "IPA",
+  "productId": "prod-io"
+}

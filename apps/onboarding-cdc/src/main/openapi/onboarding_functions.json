@@ -1,0 +1,601 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "onboarding-functions",
+    "description": "Onboarding Function API documentation",
+    "version": "0.0.1-SNAPSHOT"
+  },
+  "servers": [
+    {
+      "url": "{url}:{port}{basePath}",
+      "variables": {
+        "url": {
+          "default": "http://localhost"
+        },
+        "port": {
+          "default": "80"
+        },
+        "basePath": {
+          "default": ""
+        }
+      }
+    }
+  ],
+  "tags": [
+    {
+      "name": "Orchestration",
+      "description": "Orchestration Trigger"
+    },
+    {
+      "name": "Notifications",
+      "description": "Notifications Trigger"
+    }
+  ],
+  "paths": {
+    "/api/StartOnboardingOrchestration": {
+      "get": {
+        "tags": [
+          "Orchestration"
+        ],
+        "summary": "",
+        "description": "",
+        "parameters": [
+          {
+            "name": "onboardingId",
+            "in": "query",
+            "description": "Onboarding id about item to process",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "timeout",
+            "in": "query",
+            "description": "timeout of waiting completion process (default 1 seconds), set high if you want a sync response",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrchestrationResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
+    "/api/Notification": {
+      "post": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "",
+        "description": "",
+        "parameters": [
+          {
+            "name": "queueEvent",
+            "in": "query",
+            "description": "Query Event type",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Onboarding"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrchestrationResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "OrchestrationResponse": {
+        "title": "OrchestrationResponse",
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": ""
+              },
+              "purgeHistoryDeleteUri": {
+                "type": "string",
+                "description": ""
+              },
+              "restartPostUri": {
+                "type": "string",
+                "description": ""
+              },
+              "sendEventPostUri": {
+                "type": "string",
+                "description": ""
+              },
+              "statusQueryGetUri": {
+                "type": "string",
+                "description": ""
+              },
+              "terminatePostUri": {
+                "type": "string",
+                "description": ""
+              },
+              "resumePostUri": {
+                "type": "string",
+                "description": ""
+              },
+              "suspendPostUri": {
+                "type": "string",
+                "description": ""
+              }
+            }
+          }
+        }
+      },
+      "Onboarding": {
+        "title": "Onboarding",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "testEnvProductIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "workflowType": {
+            "$ref": "#/components/schemas/WorkflowType"
+          },
+          "institution": {
+            "$ref": "#/components/schemas/Institution"
+          },
+          "pricingPlan": {
+            "type": "string"
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/User"
+            }
+          },
+          "aggregates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AggregateInstitution"
+            }
+          },
+          "aggregator": {
+            "$ref": "#/components/schemas/Aggregator"
+          },
+          "billing": {
+            "$ref": "#/components/schemas/Billing"
+          },
+          "status": {
+            "type": "string"
+          },
+          "additionalInformations": {
+            "$ref": "#/components/schemas/AdditionalInformations"
+          },
+          "createdAt": {
+            "$ref": "#/components/schemas/LocalDateTime"
+          },
+          "activatedAt": {
+            "$ref": "#/components/schemas/LocalDateTime"
+          },
+          "updatedAt": {
+            "$ref": "#/components/schemas/LocalDateTime"
+          },
+          "expiringDate": {
+            "$ref": "#/components/schemas/LocalDateTime"
+          },
+          "signContract": {
+            "type": "boolean"
+          },
+          "isAggregator": {
+            "type": "boolean"
+          },
+          "userRequester": {
+            "$ref": "#/components/schemas/UserRequester"
+          },
+          "referenceOnboardingId": {
+            "type": "string"
+          }
+        }
+      },
+      "Institution": {
+        "title": "Institution",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "institutionType": {
+            "$ref": "#/components/schemas/InstitutionType"
+          },
+          "subunitCode": {
+            "type": "string"
+          },
+          "taxCode": {
+            "type": "string"
+          },
+          "institutionPaSubunitType": {
+            "$ref": "#/components/schemas/InstitutionPaSubunitType"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/Origin"
+          },
+          "originId": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "geographicTaxonomies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GeographicTaxonomy"
+            }
+          },
+          "county": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "digitalAddress": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "zipCode": {
+            "type": "string"
+          },
+          "rea": {
+            "type": "string"
+          },
+          "supportEmail": {
+            "type": "string"
+          },
+          "supportPhone": {
+            "type": "string"
+          },
+          "imported": {
+            "type": "boolean"
+          },
+          "businessRegisterPlace": {
+            "type": "string"
+          },
+          "shareCapital": {
+            "type": "string"
+          },
+          "paymentServiceProvider": {
+            "$ref": "#/components/schemas/PaymentServiceProvider"
+          },
+          "dataProtectionOfficer": {
+            "$ref": "#/components/schemas/DataProtectionOfficer"
+          },
+          "parentDescription": {
+            "type": "string"
+          }
+        }
+      },
+      "AggregateInstitution": {
+        "title": "AggregateInstitution",
+        "type": "object",
+        "properties": {
+          "taxCode": {
+            "type": "string"
+          },
+          "subunitCode": {
+            "type": "string"
+          },
+          "subunitType": {
+            "type": "string"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/Origin"
+          },
+          "originId": {
+            "type": "string"
+          },
+          "geographicTaxonomies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GeographicTaxonomy"
+            }
+          },
+          "description": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "zipCode": {
+            "type": "string"
+          }
+        }
+      },
+      "Aggregator": {
+        "title": "Aggregator",
+        "type": "object",
+        "properties": {
+          "taxCode": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "originId": {
+            "type": "string"
+          }
+        }
+      },
+      "DataProtectionOfficer": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "pec": {
+            "type": "string"
+          }
+        }
+      },
+      "PaymentServiceProvider": {
+        "type": "object",
+        "properties": {
+          "abiCode": {
+            "type": "string"
+          },
+          "businessRegisterNumber": {
+            "type": "string"
+          },
+          "legalRegisterNumber": {
+            "type": "string"
+          },
+          "legalRegisterName": {
+            "type": "string"
+          },
+          "vatNumberGroup": {
+            "type": "boolean"
+          },
+          "providerNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "contractType": {
+            "type": "string"
+          },
+          "contractId": {
+            "type": "string"
+          }
+        }
+      },
+      "GeographicTaxonomy": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "desc": {
+            "type": "string"
+          }
+        }
+      },
+      "Billing": {
+        "type": "object",
+        "properties": {
+          "vatNumber": {
+            "type": "string"
+          },
+          "recipientCode": {
+            "type": "string"
+          },
+          "publicServices": {
+            "type": "boolean"
+          },
+          "taxCodeInvoicing": {
+            "type": "string"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "productRole": {
+            "type": "string"
+          },
+          "userMailUuid": {
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/PartyRole"
+          }
+        }
+      },
+      "AdditionalInformations": {
+        "type": "object",
+        "properties": {
+          "belongRegulatedMarket": {
+            "type": "boolean"
+          },
+          "regulatedMarketNote": {
+            "type": "string"
+          },
+          "ipa": {
+            "type": "boolean"
+          },
+          "ipaCode": {
+            "type": "string"
+          },
+          "establishedByRegulatoryProvision": {
+            "type": "boolean"
+          },
+          "establishedByRegulatoryProvisionNote": {
+            "type": "string"
+          },
+          "agentOfPublicService": {
+            "type": "boolean"
+          },
+          "agentOfPublicServiceNote": {
+            "type": "string"
+          },
+          "otherNote": {
+            "type": "string"
+          }
+        }
+      },
+      "PartyRole": {
+        "enum": [
+          "MANAGER",
+          "DELEGATE",
+          "SUB_DELEGATE",
+          "OPERATOR",
+          "ADMIN_EA"
+        ],
+        "type": "string"
+      },
+      "WorkflowType": {
+        "enum": [
+          "CONTRACT_REGISTRATION",
+          "FOR_APPROVE",
+          "FOR_APPROVE_PT",
+          "FOR_APPROVE_GPU",
+          "CONFIRMATION",
+          "IMPORT",
+          "IMPORT_AGGREGATION",
+          "USERS",
+          "USERS_IMPORT",
+          "CONTRACT_REGISTRATION_AGGREGATOR",
+          "CONFIRMATION_AGGREGATE",
+          "INCREMENT_REGISTRATION_AGGREGATOR",
+          "USERS_PG",
+          "USERS_EA",
+          "CONFIRMATION_AGGREGATOR"
+        ],
+        "type": "string"
+      },
+      "InstitutionType": {
+        "enum": [
+          "PA",
+          "PG",
+          "GSP",
+          "SA",
+          "PT",
+          "SCP",
+          "PSP",
+          "AS",
+          "REC",
+          "CON",
+          "PRV",
+          "PRV_PF",
+          "GPU",
+          "SCEC"
+        ],
+        "type": "string"
+      },
+      "Origin": {
+        "enum": [
+          "MOCK",
+          "IPA",
+          "SELC",
+          "ANAC",
+          "UNKNOWN",
+          "ADE",
+          "INFOCAMERE",
+          "IVASS",
+          "PDND_INFOCAMERE"
+        ],
+        "type": "string"
+      },
+      "UserRequester" : {
+        "type" : "object",
+        "properties" : {
+          "userRequestUid" : {
+            "type" : "string"
+          },
+          "userMailUuid" : {
+            "type" : "string"
+          }
+        }
+      },
+      "InstitutionPaSubunitType": {
+        "enum": [
+          "AOO",
+          "UO"
+        ],
+        "type": "string"
+      },
+      "LocalDateTime": {
+        "format": "date-time",
+        "type": "string",
+        "example": "2022-03-10T12:15:50"
+      }
+    },
+    "securitySchemes": {
+      "api_key": {
+        "type": "apiKey",
+        "name": "x-functions-key",
+        "in": "header"
+      }
+    }
+  }
+}

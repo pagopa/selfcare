@@ -1,0 +1,591 @@
+[
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": ["fiscalCode,familyName,email,name,workContacts"]
+      },
+      "pathParameters": {
+        "id": ["6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b\",\"fiscalCode\":\"VRDMRA22T71F205A\",\"name\":{\"certification\":\"SPID\",\"value\":\"Tizio\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Caio\"},\"email\":{\"certification\":\"SPID\",\"value\":\"prova@test.it\"},\"workContacts\":{\"ID_MAIL#a6de7b93-bc56-4187-be5c-9234cef98bed\":{\"email\":{\"certification\":\"NONE\",\"value\":\"123123-55555-efaz-12312-apclacpela@test.it\"}},\"ID_CONTACTS#8840aa32-a2ab-434b-8b8a-11281163352e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8840aa32-a2ab-434b-8b8a-11281163352e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"12311111111\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": ["fiscalCode,familyName,name,workContacts"]
+      },
+      "pathParameters": {
+        "id": ["6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b\",\"fiscalCode\":\"VRDMRA22T71F205A\",\"name\":{\"certification\":\"SPID\",\"value\":\"Tizio\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Caio\"},\"email\":{\"certification\":\"SPID\",\"value\":\"prova@test.it\"},\"workContacts\":{\"ID_MAIL#a6de7b93-bc56-4187-be5c-9234cef98bed\":{\"email\":{\"certification\":\"NONE\",\"value\":\"123123-55555-efaz-12312-apclacpela@test.it\"}},\"ID_CONTACTS#8840aa32-a2ab-434b-8b8a-11281163352e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8840aa32-a2ab-434b-8b8a-11281163352e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"12311111111\"}}}}}"
+    }
+  },
+    {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": ["fiscalCode,familyName,name,workContacts"]
+      },
+      "pathParameters": {
+        "id": ["ec7ca4d5-c537-462a-8c06-e102e0c21c44"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"ec7ca4d5-c537-462a-8c06-e102e0c21c44\",\"fiscalCode\":\"VRDMRA22T71F205A\",\"name\":{\"certification\":\"SPID\",\"value\":\"Tizio\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Caio\"},\"email\":{\"certification\":\"SPID\",\"value\":\"prova@test.it\"},\"workContacts\":{\"ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e21\":{\"email\":{\"certification\":\"NONE\",\"value\":\"123123-55555-efaz-12312-apclacpela@test.it\"}},\"ID_CONTACTS#8840aa32-a2ab-434b-8b8a-11281163352e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8840aa32-a2ab-434b-8b8a-11281163352e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"12311111111\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": ["fiscalCode,familyName,name"]
+      },
+      "pathParameters": {
+        "id": ["ec7ca4d5-c537-462a-8c06-e102e0c21c44"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"ec7ca4d5-c537-462a-8c06-e102e0c21c44\",\"fiscalCode\":\"CLVTLI80A01F839V\",\"name\":{\"certification\":\"SPID\",\"value\":\"Tizio\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Caio\"},\"email\":{\"certification\":\"SPID\",\"value\":\"prova@test.it\"},\"workContacts\":{\"ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e22\":{\"email\":{\"certification\":\"NONE\",\"value\":\"123123-55555-efaz-12312-apclacpela@test.it\"}},\"ID_CONTACTS#8840aa32-a2ab-434b-8b8a-11281163352e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8840aa32-a2ab-434b-8b8a-11281163352e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"12311111111\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": ["fiscalCode,familyName,name,workContacts"]
+      },
+      "pathParameters": {
+        "id": ["ec7ca4d5-c537-462a-8c06-e102e0c21c44"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"ec7ca4d5-c537-462a-8c06-e102e0c21c44\",\"fiscalCode\":\"CLVTLI80A01F839V\",\"name\":{\"certification\":\"SPID\",\"value\":\"Tizio\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Caio\"},\"email\":{\"certification\":\"SPID\",\"value\":\"prova@test.it\"},\"workContacts\":{\"ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e21\":{\"email\":{\"certification\":\"NONE\",\"value\":\"123123-55555-efaz-12312-apclacpela@test.it\"}},\"ID_CONTACTS#8840aa32-a2ab-434b-8b8a-11281163352e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8840aa32-a2ab-434b-8b8a-11281163352e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"12311111111\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": ["name,familyName,email,workContacts"]
+      },
+      "pathParameters": {
+        "id": ["ec7ca4d5-c537-462a-8c06-e102e0c21c44"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"ec7ca4d5-c537-462a-8c06-e102e0c21c44\",\"fiscalCode\":\"CLVTLI80A01F839V\",\"name\":{\"certification\":\"SPID\",\"value\":\"Tizio\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Caio\"},\"email\":{\"certification\":\"SPID\",\"value\":\"prova@test.it\"},\"workContacts\":{\"ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e21\":{\"email\":{\"certification\":\"NONE\",\"value\":\"123123-55555-efaz-12312-apclacpela@test.it\"}},\"ID_CONTACTS#8840aa32-a2ab-434b-8b8a-11281163352e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8840aa32-a2ab-434b-8b8a-11281163352e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"12311111111\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": ["fiscalCode,familyName,name"]
+      },
+      "pathParameters": {
+        "id": ["6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b\",\"fiscalCode\":\"VRDMRA22T71F205A\",\"name\":{\"certification\":\"SPID\",\"value\":\"Tizio\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Caio\"},\"email\":{\"certification\":\"SPID\",\"value\":\"prova@test.it\"},\"workContacts\":{\"ID_MAIL#a6de7b93-bc56-4187-be5c-9234cef98bed\":{\"email\":{\"certification\":\"NONE\",\"value\":\"123123-55555-efaz-12312-apclacpela@test.it\"}},\"ID_CONTACTS#8840aa32-a2ab-434b-8b8a-11281163352e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8840aa32-a2ab-434b-8b8a-11281163352e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"12311111111\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": ["name,familyName,email,workContacts"]
+      },
+      "pathParameters": {
+        "id": ["6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b\",\"name\":{\"certification\":\"SPID\",\"value\":\"Tizio\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Caio\"},\"email\":{\"certification\":\"SPID\",\"value\":\"prova@test.it\"},\"workContacts\":{\"ID_MAIL#a6de7b93-bc56-4187-be5c-9234cef98bed\":{\"email\":{\"certification\":\"NONE\",\"value\":\"123123-55555-efaz-12312-apclacpela@test.it\"}},\"ID_CONTACTS#8840aa32-a2ab-434b-8b8a-11281163352e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8840aa32-a2ab-434b-8b8a-11281163352e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"12311111111\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "pathParameters": {
+        "id": ["97a511a7-2acc-47b9-afed-2f3c65753b4a"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"fiscalCode\":\"PRVTNT80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"John\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"},\"workContacts\":{\"ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}},\"ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1\":{\"email\":{\"certification\":\"NONE\",\"value\":\"81956dd1-00fd-4423-888b-f77a48d26ba1@test.it\"}},\"ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375\":{\"email\":{\"certification\":\"NONE\",\"value\":\"875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3335252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": ["name,familyName,email,workContacts"]
+      },
+      "pathParameters": {
+        "id": ["97a511a7-2acc-47b9-afed-2f3c65753b4a"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"workContacts\":{\"ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}},\"ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1\":{\"email\":{\"certification\":\"NONE\",\"value\":\"81956dd1-00fd-4423-888b-f77a48d26ba1@test.it\"}},\"ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375\":{\"email\":{\"certification\":\"NONE\",\"value\":\"875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3335252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "pathParameters": {
+        "id": ["wronguserid"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":500,\"body\":\"Something has gone wrong in the server\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": ["wrongfield"]
+      },
+      "pathParameters": {
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf7"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":500,\"body\":\"Something has gone wrong in the server\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": ["fiscalCode"]
+      },
+      "pathParameters": {
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf7"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"35a78332-d038-4bfa-8e85-2cba7f6b7bf7\",\"fiscalCode\":\"blbrki80A41H401T\",\"workContacts\":{}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": ["familyName"]
+      },
+      "pathParameters": {
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf7"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"35a78332-d038-4bfa-8e85-2cba7f6b7bf7\",\"familyName\":{\"certification\":\"SPID\",\"value\":\"Balboa\"},\"workContacts\":{}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": ["name"]
+      },
+      "pathParameters": {
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf7"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"35a78332-d038-4bfa-8e85-2cba7f6b7bf7\",\"name\":{\"certification\":\"SPID\",\"value\":\"rocky\"},\"workContacts\":{}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": ["workContracts"]
+      },
+      "pathParameters": {
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf7"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"35a78332-d038-4bfa-8e85-2cba7f6b7bf7\",\"workContacts\":{\"ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv\":{\"email\":{\"certification\":\"NONE\",\"value\":\"r.balboa@regionelazio.it\"}},\"ID_MAIL#123123-55555-efaz-12312-apclacpela\":{\"email\":{\"certification\":\"NONE\",\"value\":\"r.balboa@unibologna.it\"}},\"ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": ["fiscalCode,name"]
+      },
+      "pathParameters": {
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf7"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"35a78332-d038-4bfa-8e85-2cba7f6b7bf7\",\"fiscalCode\":\"blbrki80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"rocky\"},\"workContacts\":{}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": ["fiscalCode,name,familyName"]
+      },
+      "pathParameters": {
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf7"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"35a78332-d038-4bfa-8e85-2cba7f6b7bf7\",\"fiscalCode\":\"blbrki80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"rocky\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Balboa\"},\"workContacts\":{}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "pathParameters": {
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf7"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"35a78332-d038-4bfa-8e85-2cba7f6b7bf7\",\"fiscalCode\":\"blbrki80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"rocky\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Balboa\"},\"email\":{\"certification\":\"SPID\",\"value\":\"personal@test.it\"},\"workContacts\":{\"ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv\":{\"email\":{\"certification\":\"NONE\",\"value\":\"r.balboa@regionelazio.it\"}},\"ID_MAIL#123123-55555-efaz-12312-apclacpela\":{\"email\":{\"certification\":\"NONE\",\"value\":\"r.balboa@unibologna.it\"}},\"ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/user-registry-mock/v1/users/search",
+      "queryStringParameters": {
+        "fl": ["name,familyName,email,workContacts"]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "blbrki80A41H401T"
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"35a78332-d038-4bfa-8e85-2cba7f6b7bf7\",\"name\":{\"certification\":\"SPID\",\"value\":\"rocky\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Balboa\"},\"email\":{\"certification\":\"SPID\",\"value\":\"personal@test.it\"},\"workContacts\":{\"ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv\":{\"email\":{\"certification\":\"NONE\",\"value\":\"r.balboa@regionelazio.it\"}},\"ID_MAIL#123123-55555-efaz-12312-apclacpela\":{\"email\":{\"certification\":\"NONE\",\"value\":\"r.balboa@unibologna.it\"}},\"ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/user-registry-mock/v1/users/search",
+      "queryStringParameters": {
+        "fl": ["fiscalCode,familyName,email,name,workContacts"]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "blbrki80A41H401T"
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"35a78332-d038-4bfa-8e85-2cba7f6b7bf7\",\"fiscalCode\":\"blbrki80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"rocky\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Balboa\"},\"email\":{\"certification\":\"SPID\",\"value\":\"personal@test.it\"},\"workContacts\":{\"ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv\":{\"email\":{\"certification\":\"NONE\",\"value\":\"r.balboa@regionelazio.it\"}},\"ID_MAIL#123123-55555-efaz-12312-apclacpela\":{\"email\":{\"certification\":\"NONE\",\"value\":\"r.balboa@unibologna.it\"}},\"ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/user-registry-mock/v1/users/search",
+      "queryStringParameters": {
+        "fl": ["fiscalCode,familyName,name,workContacts"]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "FRDSMN80A01F205Z"
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"35a78332-d038-4bfa-8e85-2cba7f6b7bf7\",\"fiscalCode\":\"FRDSMN80A01F205Z\",\"name\":{\"certification\":\"SPID\",\"value\":\"Sigmund\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Freud\"},\"email\":{\"certification\":\"SPID\",\"value\":\"s.freud@test.email.it\"},\"workContacts\":{\"ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv\":{\"email\":{\"certification\":\"NONE\",\"value\":\"r.balboa@regionelazio.it\"}},\"ID_MAIL#123123-55555-efaz-12312-apclacpela\":{\"email\":{\"certification\":\"NONE\",\"value\":\"r.balboa@unibologna.it\"}},\"ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/user-registry-mock/v1/users/search",
+      "queryStringParameters": {
+        "fl": ["fiscalCode,familyName,name,workContacts"]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "CTNMCP80A01H501M"
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"35a78332-d038-4bfa-8e85-2cba7f6b7bf9\",\"fiscalCode\":\"CTNMCP80A01H501M\",\"name\":{\"certification\":\"SPID\",\"value\":\"Marco Porcio\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Catone\"},\"email\":{\"certification\":\"SPID\",\"value\":\"MarcoPorcioCatoneSpqr@spqr.roma\"},\"workContacts\":{\"ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv\":{\"email\":{\"certification\":\"NONE\",\"value\":\"r.balboa@regionelazio.it\"}},\"ID_MAIL#123123-55555-efaz-12312-apclacpela\":{\"email\":{\"certification\":\"NONE\",\"value\":\"r.balboa@unibologna.it\"}},\"ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/user-registry-mock/v1/users/search",
+      "queryStringParameters": {
+        "fl": ["fiscalCode,familyName,name,workContacts"]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "CLVTLI80A01F839V"
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"35a78332-d038-4bfa-8e85-2cba7f6b7bf7\",\"fiscalCode\":\"CLVTLI80A01F839V\",\"name\":{\"certification\":\"SPID\",\"value\":\"Italo\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Calvino\"},\"email\":{\"certification\":\"SPID\",\"value\":\"i.calvino@test.email.it\"},\"workContacts\":{\"ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv\":{\"email\":{\"certification\":\"NONE\",\"value\":\"r.balboa@regionelazio.it\"}},\"ID_MAIL#123123-55555-efaz-12312-apclacpela\":{\"email\":{\"certification\":\"NONE\",\"value\":\"r.balboa@unibologna.it\"}},\"ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/user-registry-mock/v1/users/search",
+      "queryStringParameters": {
+        "fl": ["name,familyName,email,workContacts"]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "wrongfield": "blbrki80A41H401T"
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":500,\"body\":\"Something has gone wrong in the server\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/user-registry-mock/v1/users/search",
+      "queryStringParameters": {
+        "fl": ["name,familyName,email,workContacts"]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {},
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":500,\"body\":\"Something has gone wrong in the server\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "PATCH",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "pathParameters": {
+        "id": ["97a511a7-2acc-47b9-afed-2f3c65753b4a"]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "workContacts": {}
+        },
+        "matchType": "ONLY_MATCHING_FIELDS"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":204}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "PATCH",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "pathParameters": {
+        "id": ["6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "workContacts": {}
+        },
+        "matchType": "ONLY_MATCHING_FIELDS"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":204}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "PATCH",
+      "path": "/user-registry-mock/v1/users",
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "VRDMRA22T71F205A"
+        },
+        "matchType": "ONLY_MATCHING_FIELDS"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b\"}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "PATCH",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "pathParameters": {
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf7"]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":204}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "PATCH",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "pathParameters": {
+        "id": [
+          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
+        ]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "FRDSMN80A01F205Z",
+          "workContacts": {
+            "77aae5a8-c6cf-4c7b-82ee-e514e09f5e75": {
+              "email": {
+                "certification": "NONE",
+                "value": "test.rdb.dev@gmail.com"
+              }
+            }
+          }
+        },
+        "matchType": "ONLY_MATCHING_FIELDS"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b\"}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "PATCH",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "pathParameters": {
+        "id": ["ec7ca4d5-c537-462a-8c06-e102e0c21c44"]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "CLVTLI80A01F839V",
+          "workContacts": {
+            "77aae5a8-c6cf-4c7b-82ee-e514e09f5e75": {
+              "email": {
+                "certification": "NONE",
+                "value": "test2@gmail.com"
+              }
+            }
+          }
+        },
+        "matchType": "ONLY_MATCHING_FIELDS"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b\"}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "PATCH",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "pathParameters": {
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf9"]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "CTNMCP80A01H501M",
+          "workContacts": {
+            "77aae5a8-c6cf-4c7b-82ee-e514e09f5e75": {
+              "email": {
+                "certification": "NONE",
+                "value": "testcatone@gmail.com"
+              }
+            }
+          }
+        },
+        "matchType": "ONLY_MATCHING_FIELDS"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b\"}}"
+    }
+  }
+]

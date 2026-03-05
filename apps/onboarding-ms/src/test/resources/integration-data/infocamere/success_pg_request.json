@@ -1,0 +1,17 @@
+{
+  "institutionType": "PG",
+  "productId": "prod-pn-pg",
+  "users": [
+    {
+      "taxCode": "CTNMCP80A01H501M",
+      "name": "Marco Porcio",
+      "surname": "Catone",
+      "email": "MarcoPorcioCatoneSpqr@spqr.roma",
+      "role": "MANAGER"
+    }
+  ],
+  "taxCode": "27937810870",
+  "businessName": "DisTerminatio Sas",
+  "origin": "INFOCAMERE",
+  "digitalAddress": "test@test.legalmail.it"
+}

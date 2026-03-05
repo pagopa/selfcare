@@ -1,0 +1,58 @@
+{
+  "productId": "prod-pagopa",
+  "users": [
+    {
+      "taxCode": "FRDSMN80A01F205Z",
+      "name": "Sigmund",
+      "surname": "Freud",
+      "email": "s.freud@test.email.it",
+      "role": "MANAGER"
+    },
+    {
+      "taxCode": "CLVTLI80A01F839V",
+      "name": "Italo",
+      "surname": "Calvino",
+      "email": "i.calvino@test.email.it",
+      "role": "DELEGATE"
+    }
+  ],
+  "institution": {
+    "institutionType": "GPU",
+    "taxCode": "00001910111",
+    "origin": "SELC",
+    "originId": "00001910111",
+    "city": "Reggio Calabria",
+    "country": "IT",
+    "county": "RC",
+    "description": "GPU",
+    "digitalAddress": "gpu@pec.test.it",
+    "address": "Via Municipio N. 8",
+    "zipCode": "89100",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ],
+    "businessRegisterPlace": "Reggio Calabria",
+    "rea": "RC-123455",
+    "shareCapital": 10000000,
+    "imported": false
+  },
+  "billing": {
+    "vatNumber": "00001910111",
+    "recipientCode": "UFO5LL",
+    "publicServices": true
+  },
+  "gpuData": {
+    "businessRegisterNumber": "test",
+    "legalRegisterNumber": "46568",
+    "legalRegisterName": "Test",
+    "longTermPayments": false,
+    "manager": true,
+    "managerAuthorized": true,
+    "managerEligible": true,
+    "managerProsecution": true,
+    "institutionCourtMeasures": true
+  }
+}

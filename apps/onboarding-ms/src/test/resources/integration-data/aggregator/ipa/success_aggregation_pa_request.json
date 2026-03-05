@@ -1,0 +1,109 @@
+{
+  "productId": "prod-io",
+  "users": [
+    {
+      "taxCode": "FRDSMN80A01F205Z",
+      "name": "Sigmund",
+      "surname": "Freud",
+      "email": "s.freud@test.email.it",
+      "role": "MANAGER"
+    },
+    {
+      "taxCode": "CLVTLI80A01F839V",
+      "name": "Italo",
+      "surname": "Calvino",
+      "email": "i.calvino@test.email.it",
+      "role": "DELEGATE"
+    }
+  ],
+  "aggregates": [
+    {
+      "taxCode": "00136380805",
+      "description": "Ufficio per la transizione al Digitale",
+      "subunitCode": "WZVWRR",
+      "subunitType": "UO",
+      "vatNumber": "00136380805",
+      "parentDescription": "Comune di Reggio Calabria",
+      "geographicTaxonomies": [
+        {
+          "code": "ITA",
+          "desc": "ITALIA"
+        }
+      ],
+      "address": "Via Municipio N. 8",
+      "zipCode": "89124",
+      "originId": "WZVWRR",
+      "origin": "IPA",
+      "users": [
+        {
+          "taxCode": "FRDSMN80A01F205Z",
+          "name": "Sigmund",
+          "surname": "Freud",
+          "email": "s.freud@test.email.it",
+          "role": "MANAGER"
+        }
+      ],
+      "recipientCode": "WZVWRR",
+      "digitalAddress": "protocollo@pec.reggiocal.it",
+      "city": "Reggio Calabria",
+      "county": "RC"
+    },
+    {
+      "taxCode": "00136380805",
+      "description": "AVVOCATURA CIVICA",
+      "subunitCode": "Z3WPMX",
+      "subunitType": "UO",
+      "vatNumber": "00136380805",
+      "parentDescription": "Comune di Reggio Calabria",
+      "geographicTaxonomies": [
+        {
+          "code": "ITA",
+          "desc": "ITALIA"
+        }
+      ],
+      "address": "Via Sant'Anna II tronco, palazzo Ce.Dir.",
+      "zipCode": "89128",
+      "originId": "Z3WPMX",
+      "origin": "IPA",
+      "users": [
+        {
+          "taxCode": "FRDSMN80A01F205Z",
+          "name": "Sigmund",
+          "surname": "Freud",
+          "email": "s.freud@test.email.it",
+          "role": "MANAGER"
+        }
+      ],
+      "recipientCode": "WZVWRR",
+      "digitalAddress": "protocollo@pec.reggiocal.it",
+      "city": "Reggio Calabria",
+      "county": "RC"
+    }
+  ],
+  "isAggregator": true,
+  "institution": {
+    "institutionType": "PA",
+    "taxCode": "00136380805",
+    "origin": "IPA",
+    "originId": "c_h224",
+    "city": "Reggio Calabria",
+    "country": "IT",
+    "county": "RC",
+    "description": "Comune di Reggio Calabria",
+    "digitalAddress": "protocollo@pec.reggiocal.it",
+    "address": "Piazza Italia, Palazzo San Giorgio",
+    "zipCode": "89124",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ],
+    "imported": false
+  },
+  "billing": {
+    "vatNumber": "00136380805",
+    "recipientCode": "WZVWRR",
+    "publicServices": true
+  }
+}

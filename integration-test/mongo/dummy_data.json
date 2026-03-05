@@ -1,0 +1,53 @@
+[
+  {
+    "billing": {
+      "publicServices": false,
+      "vatNumber": "08875230016"
+    },
+    "createdAt": {
+      "$date": "2024-02-23T11:01:32.618Z"
+    },
+    "expiringDate": {
+      "$date": "2024-10-23T11:01:32.618Z"
+    },
+    "institution": {
+      "address": "CORSO COMO 17  20154 MILANO",
+      "city": "Milano",
+      "country": "IT",
+      "county": "MI",
+      "description": "AXA FRANCE VIE",
+      "digitalAddress": "AXAFRANCEVIE@LEGALMAIL.IT",
+      "imported": false,
+      "institutionType": "AS",
+      "origin": "IVASS",
+      "taxCode": "08875230016",
+      "zipCode": "20154",
+      "id": "1ff1d0eb-5022-42d3-8713-e2b81421c503"
+    },
+    "productId": "prod-interop",
+    "status": "FAILED",
+    "userRequestUid": "c5ae981f-c651-45f9-bb7f-589297c88416",
+    "users": [
+      {
+        "_id": "ce92f015-abcc-4c5b-980b-0da6cdc42ea7",
+        "productRole": "admin",
+        "role": "MANAGER",
+        "userMailUuid": "c5ba6158-da4f-4600-9136-b1315f7510a1"
+      },
+      {
+        "_id": "c5ae981f-c651-45f9-bb7f-589297c88416",
+        "productRole": "admin",
+        "role": "DELEGATE",
+        "userMailUuid": "a0155d9a-97be-4e29-8623-0b0ba427c280"
+      }
+    ],
+    "workflowType": "CONTRACT_REGISTRATION",
+    "updateAt": {
+      "$date": "2024-02-23T11:02:22.389Z"
+    },
+    "workflowInstanceId": "ba43b6cd-85c2-4c77-a6a8-4a60c9f47ec0",
+    "updatedAt": {
+      "$date": "2024-05-17T12:14:53.996Z"
+    }
+  }
+]

@@ -1,0 +1,53 @@
+name: Deploy onboarding functions
+
+on:
+  push:
+    branches:
+      - main
+      - releases/*
+    paths:
+      - 'apps/onboarding-functions/**'
+      - "apps/pom.xml"
+      - "pom.xml"
+
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options:
+          - dev
+          - uat
+          - prod
+
+jobs:
+
+  release_dev:
+    uses: ./.github/workflows/onboarding_call_release_function.yml
+    name: '[Dev] Onboarding function Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+      short_env: d
+      upload_openapi_enabled: true
+
+  release_uat:
+    uses: ./.github/workflows/onboarding_call_release_function.yml
+    name: '[UAT] Onboarding function Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    secrets: inherit
+    with:
+      environment: uat
+      short_env: u
+      upload_openapi_enabled: true
+
+  release_prod:
+    uses: ./.github/workflows/onboarding_call_release_function.yml
+    name: '[Prod] Onboarding function Release'
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod
+      short_env: p
+      upload_openapi_enabled: true

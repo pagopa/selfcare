@@ -1,0 +1,109 @@
+{
+  "productId": "prod-io",
+  "users": [
+    {
+      "taxCode": "FRDSMN80A01F205Z",
+      "name": "Sigmund",
+      "surname": "Freud",
+      "email": "s.freud@test.email.it",
+      "role": "MANAGER"
+    },
+    {
+      "taxCode": "CLVTLI80A01F839V",
+      "name": "Italo",
+      "surname": "Calvino",
+      "email": "i.calvino@test.email.it",
+      "role": "DELEGATE"
+    }
+  ],
+  "aggregates": [
+    {
+      "taxCode": "83001010616",
+      "description": "Ufficio per la transizione al Digitale",
+      "subunitCode": "RSRFHL",
+      "subunitType": "UO",
+      "vatNumber": "83001010616",
+      "parentDescription": "Comune di Roccamonfina",
+      "geographicTaxonomies": [
+        {
+          "code": "ITA",
+          "desc": "ITALIA"
+        }
+      ],
+      "address": "Via Municipio N. 8",
+      "zipCode": "81035",
+      "originId": "RSRFHL",
+      "origin": "IPA",
+      "users": [
+        {
+          "taxCode": "FRDSMN80A01F205Z",
+          "name": "Sigmund",
+          "surname": "Freud",
+          "email": "s.freud@test.email.it",
+          "role": "MANAGER"
+        }
+      ],
+      "recipientCode": "UFO5LL",
+      "digitalAddress": "protocollo.roccamonfina@asmepec.it",
+      "city": "Roccamonfina",
+      "county": "CE"
+    },
+    {
+      "taxCode": "83001010616",
+      "description": "Uff_eFatturaPA",
+      "subunitCode": "UFO5LL",
+      "subunitType": "UO",
+      "vatNumber": "83001010616",
+      "parentDescription": "Comune di Roccamonfina",
+      "geographicTaxonomies": [
+        {
+          "code": "ITA",
+          "desc": "ITALIA"
+        }
+      ],
+      "address": "Via Municipio N. 8",
+      "zipCode": "81035",
+      "originId": "UFO5LL",
+      "origin": "IPA",
+      "users": [
+        {
+          "taxCode": "FRDSMN80A01F205Z",
+          "name": "Sigmund",
+          "surname": "Freud",
+          "email": "s.freud@test.email.it",
+          "role": "MANAGER"
+        }
+      ],
+      "recipientCode": "UFO5LL",
+      "digitalAddress": "protocollo.roccamonfina@asmepec.it",
+      "city": "Roccamonfina",
+      "county": "CE"
+    }
+  ],
+  "isAggregator": true,
+  "institution": {
+    "institutionType": "PA",
+    "taxCode": "83001010616",
+    "origin": "IPA",
+    "originId": "c_h423",
+    "city": "Roccamonfina",
+    "country": "IT",
+    "county": "CE",
+    "description": "Comune di Roccamonfina",
+    "digitalAddress": "protocollo.roccamonfina@asmepec.it",
+    "address": "Via Municipio N. 8",
+    "zipCode": "81035",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ],
+    "imported": false
+  },
+  "billing": {
+    "vatNumber": "83001010616",
+    "recipientCode": "UFO5LL",
+    "publicServices": true
+  }
+}

@@ -1,24 +1,26 @@
-user-ms:
+onboarding-functions:
   - changed-files:
-      - any-glob-to-any-file: ['apps/user-ms/**']
-user-group-ms:
+      - any-glob-to-any-file: [ 'apps/onboarding-functions/**' ]
+
+onboarding-ms:
   - changed-files:
-      - any-glob-to-any-file: ['apps/user-group-ms/**']
-user-cdc:
+      - any-glob-to-any-file: [ 'apps/onboarding-ms/**' ]
+
+onboarding-cdc:
   - changed-files:
-      - any-glob-to-any-file: ['apps/user-cdc/**']
+      - any-glob-to-any-file: [ 'apps/onboarding-cdc/**' ]
 
 libs:
   - changed-files:
-      - any-glob-to-any-file: ['libs/**']
+      - any-glob-to-any-file: [ 'libs/**' ]
 
 ops:
   - changed-files:
-      - any-glob-to-any-file: ['.github/**', 'infra/**', '.identity/**']
+      - any-glob-to-any-file: [ '.github/**', 'infra/**', '.identity/**' ]
 
 docs:
   - changed-files:
-      - any-glob-to-any-file: ['README.md']
+      - any-glob-to-any-file: [ 'README.md' ]
 
 hotfix:
-  - base-branch: ['releases/*']
+  - base-branch: [ 'releases/*' ]
