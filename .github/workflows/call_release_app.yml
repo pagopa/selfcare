@@ -52,7 +52,7 @@ jobs:
       dockerfile_path: ./${{ inputs.APP_PATH }}/Dockerfile
       docker_image_name: ${{ (endsWith(inputs.app, '-cdc')) && format('pagopa/selfcare-{0}', inputs.app) || format('pagopa/selfcare-{0}-ms', inputs.app) }}
       path_openapi_docs: ./${{ inputs.APP_PATH }}/src/main/docs/openapi.json
-      upload_openapi_enabled: ${{ !endsWith(inputs.app, '-cdc') }}
+      upload_openapi_enabled: ${{ inputs.target == 'selc' && !endsWith(inputs.app, '-cdc') }}
 
   release_uat:
     uses: ./.github/workflows/call_release_docker.yml
@@ -66,7 +66,7 @@ jobs:
       dockerfile_path: ./${{ inputs.APP_PATH }}/Dockerfile
       docker_image_name: ${{ (endsWith(inputs.app, '-cdc')) && format('pagopa/selfcare-{0}', inputs.app) || format('pagopa/selfcare-{0}-ms', inputs.app) }}
       path_openapi_docs: ./${{ inputs.APP_PATH }}/src/main/docs/openapi.json
-      upload_openapi_enabled: ${{ !endsWith(inputs.app, '-cdc') }}
+      upload_openapi_enabled: ${{ inputs.target == 'selc' && !endsWith(inputs.app, '-cdc') }}
 
   release_prod:
     uses: ./.github/workflows/call_release_docker.yml
@@ -80,4 +80,4 @@ jobs:
       dockerfile_path: ./${{ inputs.APP_PATH }}/Dockerfile
       docker_image_name: ${{ (endsWith(inputs.app, '-cdc')) && format('pagopa/selfcare-{0}', inputs.app) || format('pagopa/selfcare-{0}-ms', inputs.app) }}
       path_openapi_docs: ./${{ inputs.APP_PATH }}/src/main/docs/openapi.json
-      upload_openapi_enabled: ${{ !endsWith(inputs.app, '-cdc') }}
+      upload_openapi_enabled: ${{ inputs.target == 'selc' && !endsWith(inputs.app, '-cdc') }}
