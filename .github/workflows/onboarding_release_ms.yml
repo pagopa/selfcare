@@ -33,7 +33,7 @@ jobs:
       tf_environment: dev
       dir: 'infra/apps/onboarding-ms'
       dockerfile_path: './apps/onboarding-ms/Dockerfile'
-      docker_image_name: 'selfcare-onboarding-ms'
+      docker_image_name: 'pagopa/selfcare-onboarding-ms'
       path_openapi_docs: 'apps/onboarding-ms/src/main/docs/openapi.json'
 
   release_uat:
