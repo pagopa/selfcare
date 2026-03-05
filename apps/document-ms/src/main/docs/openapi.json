@@ -1196,7 +1196,7 @@
     }
   },
   "info" : {
-    "title" : "Product API",
+    "title" : "Document API",
     "version" : "1.0.0"
   },
   "servers" : [ {

@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.product.exception.handler;
 
 import it.pagopa.selfcare.product.exception.*;
-import it.pagopa.selfcare.product.model.dto.response.Problem;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.NotAllowedException;
