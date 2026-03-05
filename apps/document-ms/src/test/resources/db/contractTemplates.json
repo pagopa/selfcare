@@ -1,0 +1,24 @@
+[
+  {
+    "_id": "5ca7f491-5770-40ba-baf0-6fe612bba14e",
+    "createdAt": {
+      "$date": "2025-12-05T11:06:42.037Z"
+    },
+    "createdBy": "testuser",
+    "fileType": "HTML",
+    "name": "accordo di adesione",
+    "productId": "prod-test",
+    "version": "0.0.2"
+  },
+  {
+    "_id": "76f9cfd4-e9ae-4eeb-8ed3-1285cc5968d6",
+    "createdAt": {
+      "$date": "2025-12-01T11:28:44.859Z"
+    },
+    "description": "Accordo di adesione di esempio pdf",
+    "fileType": "PDF",
+    "name": "accordo di adesione",
+    "productId": "prod-test",
+    "version": "0.0.3"
+  }
+]
