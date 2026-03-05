@@ -20,7 +20,7 @@
         </sonar.coverage.exclusions>
         <sonar.test.exclusions>src/test/**,**/steps/**,**/cucumber/**,**/*IT.java,**/*Test.java</sonar.test.exclusions>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-        <commons-sdk-version>0.15.3</commons-sdk-version>
+        <commons-sdk-version>0.15.4</commons-sdk-version>
     </properties>
 
     <build>
@@ -74,6 +74,12 @@
             <dependencies>
                 <dependency>
                     <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
                     <artifactId>onboarding-ms</artifactId>
                     <version>1.0.0-SNAPSHOT</version>
                 </dependency>
@@ -85,6 +91,12 @@
                 <activeByDefault>false</activeByDefault>
             </activation>
             <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
                 <dependency>
                     <groupId>it.pagopa.selfcare</groupId>
                     <artifactId>onboarding-functions</artifactId>
@@ -100,6 +112,12 @@
             <dependencies>
                 <dependency>
                     <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
                     <artifactId>onboarding-cdc</artifactId>
                     <version>1.0.0-SNAPSHOT</version>
                 </dependency>
@@ -111,6 +129,12 @@
                 <activeByDefault>false</activeByDefault>
             </activation>
             <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
                 <dependency>
                     <groupId>it.pagopa.selfcare</groupId>
                     <artifactId>iam</artifactId>
@@ -126,6 +150,12 @@
             <dependencies>
                 <dependency>
                     <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
                     <artifactId>product</artifactId>
                     <version>0.1.0-SNAPSHOT</version>
                 </dependency>
@@ -137,6 +167,12 @@
                 <activeByDefault>false</activeByDefault>
             </activation>
             <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
                 <dependency>
                     <groupId>it.pagopa.selfcare</groupId>
                     <artifactId>product-cdc</artifactId>
@@ -152,6 +188,12 @@
             <dependencies>
                 <dependency>
                     <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
                     <artifactId>webhook</artifactId>
                     <version>0.1.0-SNAPSHOT</version>
                 </dependency>
@@ -165,22 +207,22 @@
             <dependencies>
                 <dependency>
                     <groupId>it.pagopa.selfcare</groupId>
-                    <artifactId>onboarding-sdk-product</artifactId>
+                    <artifactId>selfcare-onboarding-sdk-product</artifactId>
                     <version>${commons-sdk-version}</version>
                 </dependency>
                 <dependency>
                     <groupId>it.pagopa.selfcare</groupId>
-                    <artifactId>onboarding-sdk-common</artifactId>
+                    <artifactId>selfcare-onboarding-sdk-common</artifactId>
                     <version>${commons-sdk-version}</version>
                 </dependency>
                 <dependency>
                     <groupId>it.pagopa.selfcare</groupId>
-                    <artifactId>onboarding-sdk-azure-storage</artifactId>
+                    <artifactId>selfcare-onboarding-sdk-azure-storage</artifactId>
                     <version>${commons-sdk-version}</version>
                 </dependency>
                 <dependency>
                     <groupId>it.pagopa.selfcare</groupId>
-                    <artifactId>onboarding-sdk-crypto</artifactId>
+                    <artifactId>selfcare-onboarding-sdk-crypto</artifactId>
                     <version>${commons-sdk-version}</version>
                 </dependency>
             </dependencies>

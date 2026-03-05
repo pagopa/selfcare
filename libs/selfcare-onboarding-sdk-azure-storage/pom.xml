@@ -5,12 +5,14 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>it.pagopa.selfcare</groupId>
-        <artifactId>onboarding-sdk-pom</artifactId>
-        <version>0.15.3</version>
-        <relativePath>../onboarding-sdk-pom</relativePath>
+        <artifactId>selfcare-onboarding-sdk-pom</artifactId>
+        <version>0.15.4</version>
+        <relativePath>../selfcare-onboarding-sdk-pom</relativePath>
     </parent>
 
-    <artifactId>onboarding-sdk-azure-storage</artifactId>
+    <artifactId>selfcare-onboarding-sdk-azure-storage</artifactId>
+    <name>selfcare-onboarding-sdk-azure-storage</name>
+    <description>Selfcare Onboarding SDK Azure Storage</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
