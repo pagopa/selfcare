@@ -55,30 +55,30 @@ jobs:
 
       - name: Trigger Functions Release
         run: |
-          gh workflow run onboarding_release_functions.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }}
+          gh workflow run release_functions.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=selc -f app=onboarding-functions
 
       - name: Trigger Onboarding ms Release
         run: |
-          gh workflow run onboarding_release_ms.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }}
+          gh workflow run release_app.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=selc -f app=onboarding
 
       - name: Trigger Onboarding CDC Release
         run: |
-          gh workflow run onboarding_release_cdc.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }}
+          gh workflow run release_app.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=selc -f app=onboarding-cdc
 
       - name: Trigger PNPG Functions Release
         run: |
-          gh workflow run onboarding_release_pnpg_functions.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }}
+          gh workflow run release_functions.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=onboarding-functions
 
       - name: Trigger PNPG Onboarding ms Release
         run: |
-          gh workflow run onboarding_release_pnpg_ms.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }}
+          gh workflow run release_app.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=onboarding
 
       - name: Trigger PNPG Onboarding CDC Release
         run: |
-          gh workflow run onboarding_release_pnpg_cdc.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }}
+          gh workflow run release_app.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=onboarding-cdc

@@ -1,4 +1,4 @@
-name: Deploy App
+name: Deploy Functions
 
 on:
   workflow_dispatch:
@@ -21,28 +21,18 @@ on:
         default: selc
       app:
         type: choice
-        description: App name
+        description: Function name
         options:
-          - auth
-          - iam
-          - product
-          - product-cdc
-          - webhook
-          - onboarding
-          - onboarding-cdc
+          - onboarding-functions
         required: true
-        default: auth
+        default: onboarding-functions
 
 jobs:
   release:
-    uses: ./.github/workflows/call_release_app.yml
-    name: Call Release App
+    uses: ./.github/workflows/call_release_functions.yml
+    name: Call Release Functions
     secrets: inherit
     with:
       env: ${{ inputs.env }}
       target: ${{ inputs.target }}
       app: ${{ inputs.app }}
-      APP_PATH: apps/${{ inputs.app }}
-      INFRA_PATH: infra/apps/${{ inputs.app }}
-      APPS_POM: apps/pom.xml
-      POM: pom.xml
