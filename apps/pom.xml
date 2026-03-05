@@ -31,6 +31,17 @@
             </modules>
         </profile>
         <profile>
+            <id>document-ms</id>
+            <activation>
+                <file>
+                    <exists>document-ms/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>document-ms</module>
+            </modules>
+        </profile>
+        <profile>
             <id>iam</id>
             <activation>
                 <file>
