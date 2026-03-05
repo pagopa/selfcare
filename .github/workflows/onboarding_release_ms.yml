@@ -24,37 +24,43 @@ on:
 jobs:
 
   release_dev:
-    uses: ./.github/workflows/onboarding_call_release_ms.yml
+    uses: ./.github/workflows/call_release_docker.yml
     name: '[Dev] Onboarding ms Release'
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     secrets: inherit
     with:
       environment: dev
       tf_environment: dev
-      path_openapi_docs: apps/onboarding-ms/src/main/docs/openapi.json
-      openapi_name: selfcare-onboarding-ms
+      dir: 'infra/apps/onboarding-ms'
+      dockerfile_path: './apps/onboarding-ms/Dockerfile'
+      docker_image_name: 'pagopa/selfcare-onboarding-ms'
+      path_openapi_docs: 'apps/onboarding-ms/src/main/docs/openapi.json'
 
   release_uat:
-    uses: ./.github/workflows/onboarding_call_release_ms.yml
+    uses: ./.github/workflows/call_release_docker.yml
     name: '[UAT] Onboarding ms Release'
     if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
     secrets: inherit
     with:
       environment: uat
       tf_environment: uat
-      path_openapi_docs: apps/onboarding-ms/src/main/docs/openapi.json
-      openapi_name: selfcare-onboarding-ms
+      dir: 'infra/apps/onboarding-ms'
+      dockerfile_path: './apps/onboarding-ms/Dockerfile'
+      docker_image_name: 'pagopa/selfcare-onboarding-ms'
+      path_openapi_docs: 'apps/onboarding-ms/src/main/docs/openapi.json'
 
   release_prod:
-    uses: ./.github/workflows/onboarding_call_release_ms.yml
+    uses: ./.github/workflows/call_release_docker.yml
     name: '[Prod] Onboarding ms Release'
     if: ${{ inputs.env == 'prod' }}
     secrets: inherit
     with:
       environment: prod
       tf_environment: prod
-      path_openapi_docs: apps/onboarding-ms/src/main/docs/openapi.json
-      openapi_name: selfcare-onboarding-ms
+      dir: 'infra/apps/onboarding-ms'
+      dockerfile_path: './apps/onboarding-ms/Dockerfile'
+      docker_image_name: 'pagopa/selfcare-onboarding-ms'
+      path_openapi_docs: 'apps/onboarding-ms/src/main/docs/openapi.json'
 
   promote_release:
     name: 'Promote prerelase release'
