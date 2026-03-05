@@ -1,0 +1,51 @@
+name: Core Code Review Infra DX
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - ./infra/core/**
+      - ./.github/workflows/call_code_review_infra_dx.yml
+      - ./.github/workflows/pr_core_infra.yml
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        required: true
+        type: choice
+        description: 'Select the Environment'
+        default: dev
+        options:
+          - dev
+          - uat
+          - prod
+      domain:
+        required: true
+        type: choice
+        description: 'Select the Domain'
+        default: ar
+        options:
+          - ar
+          - pnpg
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    uses: ./.github/workflows/call_code_review_infra_dx.yml
+    name: Core Code Review
+    secrets: inherit
+    with:
+      environment: ${{ inputs.environment }}
+      dir: './infra/core/${{ inputs.environment }}-${{ inputs.domain }}'
+      agent: self-hosted
