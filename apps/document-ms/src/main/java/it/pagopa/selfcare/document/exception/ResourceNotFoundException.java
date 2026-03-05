@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.product.exception;
+package it.pagopa.selfcare.document.exception;
 
 public class ResourceNotFoundException extends RuntimeException {
   private final String code;
