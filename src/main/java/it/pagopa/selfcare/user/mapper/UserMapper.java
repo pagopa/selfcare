@@ -16,15 +16,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
-import org.openapi.quarkus.user_registry_json.model.BirthDateCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.MobilePhoneCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
-import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.SaveUserDto;
-import org.openapi.quarkus.user_registry_json.model.UserResource;
-import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -79,6 +71,8 @@ public interface UserMapper {
             workContactResourceMap.forEach((key, value) -> {
                 WorkContactResponse workContact = new WorkContactResponse();
                 workContact.setEmail(toEmailCertifiableFieldResponse(value.getEmail()));
+                workContact.setMobilePhone(toMobilePhoneCertifiableFieldResponse(value.getMobilePhone()));
+                workContact.setTelephone(toTelephoneCertifiableFieldResponse(value.getTelephone()));
                 resourceMap.put(key, workContact);
             });
         }
@@ -139,6 +133,20 @@ public interface UserMapper {
 
     @Named("toEmailCertifiableFieldResponse")
     default CertifiableFieldResponse<String> toEmailCertifiableFieldResponse(EmailCertifiableSchema resource){
+        return Optional.ofNullable(resource).map(r -> new CertifiableFieldResponse<>(r.getValue(),
+                Optional.ofNullable(r.getCertification()).map(certificationEnum -> mapToCertificationEnum(certificationEnum.value())).orElse(null)))
+                .orElse(null);
+    }
+
+    @Named("toMobilePhoneCertifiableFieldResponse")
+    default CertifiableFieldResponse<String> toMobilePhoneCertifiableFieldResponse(MobilePhoneCertifiableSchema resource){
+        return Optional.ofNullable(resource).map(r -> new CertifiableFieldResponse<>(r.getValue(),
+                Optional.ofNullable(r.getCertification()).map(certificationEnum -> mapToCertificationEnum(certificationEnum.value())).orElse(null)))
+                .orElse(null);
+    }
+
+    @Named("toTelephoneCertifiableFieldResponse")
+    default CertifiableFieldResponse<String> toTelephoneCertifiableFieldResponse(TelephoneCertifiableSchema resource){
         return Optional.ofNullable(resource).map(r -> new CertifiableFieldResponse<>(r.getValue(),
                 Optional.ofNullable(r.getCertification()).map(certificationEnum -> mapToCertificationEnum(certificationEnum.value())).orElse(null)))
                 .orElse(null);

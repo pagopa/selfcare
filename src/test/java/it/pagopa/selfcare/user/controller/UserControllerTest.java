@@ -76,7 +76,11 @@ class UserControllerTest {
         userDetailResponse.setName(new CertifiableFieldResponse<>("name", CertificationEnum.SPID));
         userDetailResponse.setFamilyName(new CertifiableFieldResponse<>("familyName", CertificationEnum.SPID));
         userDetailResponse.setFiscalCode("fiscalCode");
-        userDetailResponse.setWorkContacts(Map.of("userMailUuid", new WorkContactResponse(new CertifiableFieldResponse<String>("email", CertificationEnum.SPID))));
+        userDetailResponse.setWorkContacts(Map.of("userMailUuid", new WorkContactResponse(
+                new CertifiableFieldResponse<>("email", CertificationEnum.SPID),
+                new CertifiableFieldResponse<>("mobilePhone", CertificationEnum.SPID),
+                new CertifiableFieldResponse<>("telephone", CertificationEnum.SPID)
+        )));
     }
 
     /**

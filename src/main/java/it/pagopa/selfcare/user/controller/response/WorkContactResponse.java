@@ -8,5 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class WorkContactResponse {
- private CertifiableFieldResponse<String> email;
+    private CertifiableFieldResponse<String> email;
+    private CertifiableFieldResponse<String> mobilePhone;
+    private CertifiableFieldResponse<String> telephone;
 }

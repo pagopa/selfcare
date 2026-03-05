@@ -24,6 +24,7 @@ public class UserMapperTest {
     public static final String CONTACTS_UUID = "contactsUuid";
     public static final String EMAIL = "email";
     public static final String MOBILE_PHONE = "mobilePhone";
+    public static final String TELEPHONE = "telephone";
     private final UserMapper userMapper = new UserMapperImpl();
 
     @Test
@@ -158,11 +159,17 @@ public class UserMapperTest {
         final Map<String, WorkContactResource> workContactResourceMap = new HashMap<>();
         final WorkContactResource workContactResource = new WorkContactResource();
         final EmailCertifiableSchema email = new EmailCertifiableSchema(EmailCertifiableSchema.CertificationEnum.NONE, EMAIL);
+        final MobilePhoneCertifiableSchema mobilePhone = new MobilePhoneCertifiableSchema(MobilePhoneCertifiableSchema.CertificationEnum.NONE, MOBILE_PHONE);
+        final TelephoneCertifiableSchema telephone = new TelephoneCertifiableSchema(TelephoneCertifiableSchema.CertificationEnum.NONE, TELEPHONE);
         workContactResource.setEmail(email);
+        workContactResource.setMobilePhone(mobilePhone);
+        workContactResource.setTelephone(telephone);
         workContactResourceMap.put(CONTACTS_UUID, workContactResource);
         Map<String, WorkContactResponse> responseMap = userMapper.toWorkContactResponse(workContactResourceMap);
 
         assertEquals(email.getValue(), responseMap.get(CONTACTS_UUID).getEmail().getValue());
+        assertEquals(mobilePhone.getValue(), responseMap.get(CONTACTS_UUID).getMobilePhone().getValue());
+        assertEquals(telephone.getValue(), responseMap.get(CONTACTS_UUID).getTelephone().getValue());
     }
 
     @Test

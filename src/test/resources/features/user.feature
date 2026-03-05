@@ -562,17 +562,19 @@ Feature: User
     When I send a POST request to "users/search"
     Then The status code is 200
     And The response body contains:
-      | id                                                                                | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
-      | name.value                                                                        | rocky                                         |
-      | name.certified                                                                    | SPID                                          |
-      | familyName.value                                                                  | Balboa                                        |
-      | familyName.certified                                                              | SPID                                          |
-      | workContacts.ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv.email.value             | r.balboa@regionelazio.it                      |
-      | workContacts.ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv.email.certified         | NONE                                          |
-      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.email.value         | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it  |
-      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.email.certified     | NONE                                          |
-      | workContacts.ID_MAIL#123123-55555-efaz-12312-apclacpela.email.value               | r.balboa@unibologna.it                        |
-      | workContacts.ID_MAIL#123123-55555-efaz-12312-apclacpela.email.certified           | NONE                                          |
+      | id                                                                                  | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7         |
+      | name.value                                                                          | rocky                                        |
+      | name.certified                                                                      | SPID                                         |
+      | familyName.value                                                                    | Balboa                                       |
+      | familyName.certified                                                                | SPID                                         |
+      | workContacts.ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv.email.value               | r.balboa@regionelazio.it                     |
+      | workContacts.ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv.email.certified           | NONE                                         |
+      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.email.value           | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it |
+      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.email.certified       | NONE                                         |
+      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.mobilePhone.value     | 3365252525                                   |
+      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.mobilePhone.certified | NONE                                         |
+      | workContacts.ID_MAIL#123123-55555-efaz-12312-apclacpela.email.value                 | r.balboa@unibologna.it                       |
+      | workContacts.ID_MAIL#123123-55555-efaz-12312-apclacpela.email.certified             | NONE                                         |
     And The response body doesn't contain field "fiscalCode"
 
   Scenario: Successfully search user by fiscalCode and institutionId
@@ -588,19 +590,21 @@ Feature: User
     When I send a POST request to "users/search"
     Then The status code is 200
     And The response body contains:
-      | id                                                                                | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
-      | name.value                                                                        | rocky                                         |
-      | name.certified                                                                    | SPID                                          |
-      | familyName.value                                                                  | Balboa                                        |
-      | familyName.certified                                                              | SPID                                          |
-      | workContacts.ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv.email.value             | r.balboa@regionelazio.it                      |
-      | workContacts.ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv.email.certified         | NONE                                          |
-      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.email.value         | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it  |
-      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.email.certified     | NONE                                          |
-      | workContacts.ID_MAIL#123123-55555-efaz-12312-apclacpela.email.value               | r.balboa@unibologna.it                        |
-      | workContacts.ID_MAIL#123123-55555-efaz-12312-apclacpela.email.certified           | NONE                                          |
-      | email.value                                                                       | r.balboa@unibologna.it                        |
-      | email.certified                                                                   | NONE                                          |
+      | id                                                                                  | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7         |
+      | name.value                                                                          | rocky                                        |
+      | name.certified                                                                      | SPID                                         |
+      | familyName.value                                                                    | Balboa                                       |
+      | familyName.certified                                                                | SPID                                         |
+      | workContacts.ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv.email.value               | r.balboa@regionelazio.it                     |
+      | workContacts.ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv.email.certified           | NONE                                         |
+      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.email.value           | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it |
+      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.email.certified       | NONE                                         |
+      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.mobilePhone.value     | 3365252525                                   |
+      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.mobilePhone.certified | NONE                                         |
+      | workContacts.ID_MAIL#123123-55555-efaz-12312-apclacpela.email.value                 | r.balboa@unibologna.it                       |
+      | workContacts.ID_MAIL#123123-55555-efaz-12312-apclacpela.email.certified             | NONE                                         |
+      | email.value                                                                         | r.balboa@unibologna.it                       |
+      | email.certified                                                                     | NONE                                         |
     And The response body doesn't contain field "fiscalCode"
 
   Scenario: Successfully search user by fiscalCode and institutionId
@@ -616,19 +620,21 @@ Feature: User
     When I send a POST request to "users/search"
     Then The status code is 200
     And The response body contains:
-      | id                                                                                | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
-      | name.value                                                                        | rocky                                         |
-      | name.certified                                                                    | SPID                                          |
-      | familyName.value                                                                  | Balboa                                        |
-      | familyName.certified                                                              | SPID                                          |
-      | workContacts.ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv.email.value             | r.balboa@regionelazio.it                      |
-      | workContacts.ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv.email.certified         | NONE                                          |
-      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.email.value         | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it  |
-      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.email.certified     | NONE                                          |
-      | workContacts.ID_MAIL#123123-55555-efaz-12312-apclacpela.email.value               | r.balboa@unibologna.it                        |
-      | workContacts.ID_MAIL#123123-55555-efaz-12312-apclacpela.email.certified           | NONE                                          |
-      | email.value                                                                       | r.balboa@regionelazio.it                      |
-      | email.certified                                                                   | NONE                                          |
+      | id                                                                                  | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7         |
+      | name.value                                                                          | rocky                                        |
+      | name.certified                                                                      | SPID                                         |
+      | familyName.value                                                                    | Balboa                                       |
+      | familyName.certified                                                                | SPID                                         |
+      | workContacts.ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv.email.value               | r.balboa@regionelazio.it                     |
+      | workContacts.ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv.email.certified           | NONE                                         |
+      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.email.value           | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it |
+      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.email.certified       | NONE                                         |
+      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.mobilePhone.value     | 3365252525                                   |
+      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.mobilePhone.certified | NONE                                         |
+      | workContacts.ID_MAIL#123123-55555-efaz-12312-apclacpela.email.value                 | r.balboa@unibologna.it                       |
+      | workContacts.ID_MAIL#123123-55555-efaz-12312-apclacpela.email.certified             | NONE                                         |
+      | email.value                                                                         | r.balboa@regionelazio.it                     |
+      | email.certified                                                                     | NONE                                         |
     And The response body doesn't contain field "fiscalCode"
 
   Scenario: Successfully search user by fiscalCode and wrong institutionId
@@ -644,17 +650,19 @@ Feature: User
     When I send a POST request to "users/search"
     Then The status code is 200
     And The response body contains:
-      | id                                                                                | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
-      | name.value                                                                        | rocky                                         |
-      | name.certified                                                                    | SPID                                          |
-      | familyName.value                                                                  | Balboa                                        |
-      | familyName.certified                                                              | SPID                                          |
-      | workContacts.ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv.email.value             | r.balboa@regionelazio.it                      |
-      | workContacts.ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv.email.certified         | NONE                                          |
-      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.email.value         | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it  |
-      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.email.certified     | NONE                                          |
-      | workContacts.ID_MAIL#123123-55555-efaz-12312-apclacpela.email.value               | r.balboa@unibologna.it                        |
-      | workContacts.ID_MAIL#123123-55555-efaz-12312-apclacpela.email.certified           | NONE                                          |
+      | id                                                                                  | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7         |
+      | name.value                                                                          | rocky                                        |
+      | name.certified                                                                      | SPID                                         |
+      | familyName.value                                                                    | Balboa                                       |
+      | familyName.certified                                                                | SPID                                         |
+      | workContacts.ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv.email.value               | r.balboa@regionelazio.it                     |
+      | workContacts.ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv.email.certified           | NONE                                         |
+      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.email.value           | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it |
+      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.email.certified       | NONE                                         |
+      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.mobilePhone.value     | 3365252525                                   |
+      | workContacts.ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7.mobilePhone.certified | NONE                                         |
+      | workContacts.ID_MAIL#123123-55555-efaz-12312-apclacpela.email.value                 | r.balboa@unibologna.it                       |
+      | workContacts.ID_MAIL#123123-55555-efaz-12312-apclacpela.email.certified             | NONE                                         |
     And The response body doesn't contain field "fiscalCode"
     And The response body doesn't contain field "email.value"
     And The response body doesn't contain field "email.certified"

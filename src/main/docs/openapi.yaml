@@ -1708,6 +1708,10 @@ components:
       properties:
         email:
           $ref: "#/components/schemas/CertifiableFieldResponseString"
+        mobilePhone:
+          $ref: "#/components/schemas/CertifiableFieldResponseString"
+        telephone:
+          $ref: "#/components/schemas/CertifiableFieldResponseString"
   securitySchemes:
     SecurityScheme:
       type: http
