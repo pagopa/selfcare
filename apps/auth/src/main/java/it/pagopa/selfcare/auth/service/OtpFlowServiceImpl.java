@@ -13,6 +13,7 @@ import it.pagopa.selfcare.auth.model.FeatureFlagEnum;
 import it.pagopa.selfcare.auth.model.OtpStatus;
 import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.model.otp.OtpBetaUser;
+import it.pagopa.selfcare.auth.model.otp.OtpDailyLimit;
 import it.pagopa.selfcare.auth.model.otp.OtpFeatureFlag;
 import it.pagopa.selfcare.auth.model.otp.OtpInfo;
 import it.pagopa.selfcare.auth.util.GeneralUtils;
@@ -20,16 +21,17 @@ import it.pagopa.selfcare.auth.util.OtpUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
-import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.util.Date;
-import java.util.Optional;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.bson.Document;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.Date;
+import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @ApplicationScoped
@@ -40,7 +42,11 @@ public class OtpFlowServiceImpl implements OtpFlowService {
   private final OtpNotificationService otpNotificationService;
   private final SessionService sessionService;
 
-  @Inject OtpFeatureFlag otpFeatureFlag;
+  @Inject
+  OtpFeatureFlag otpFeatureFlag;
+
+  @Inject
+  OtpDailyLimit otpLimitConfig;
 
   @ConfigProperty(name = "auth-ms.retry.min-backoff")
   Integer retryMinBackOff;
@@ -106,53 +112,52 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                                         new InternalException(
                                             "Cannot get last OTP Flow:" + failure.toString()))
                                 .chain(
-                                    maybeLastOtpFlow ->
-                                        maybeLastOtpFlow
-                                            .map(
-                                                otpFlow ->
-                                                    OtpUtils.isNewOtpFlowRequired(
-                                                            otpFlow, userClaims.getSameIdp())
-                                                        ? createAndSendOtp(
-                                                                userClaims.getUid(),
-                                                                institutionalEmail)
-                                                            .map(
-                                                                createdOtpFlow ->
-                                                                    Optional.of(
-                                                                        new OtpInfo(
-                                                                            createdOtpFlow
-                                                                                .getUuid(),
-                                                                            institutionalEmail)))
-                                                        /*
-                                                         * A previous PENDING OTP flow is found so we must ask for the same flow to be completed by user
-                                                         */
-                                                        : otpFlow
-                                                                .getStatus()
-                                                                .equals(OtpStatus.PENDING)
-                                                            ? Uni.createFrom()
-                                                                .item(
-                                                                    Optional.of(
-                                                                        new OtpInfo(
-                                                                            otpFlow.getUuid(),
-                                                                            institutionalEmail)))
-                                                            // a previous COMPLETED OTP flow with
-                                                            // sameIdp=true is found. No OTP flow
-                                                            // needed.
-                                                            : Uni.createFrom().item(emptyOtpInfo))
-                                            .orElse(
-                                                !userClaims.getSameIdp()
-                                                    // This is the first time a user is asked for an
-                                                    // OTP flow
-                                                    ? createAndSendOtp(
-                                                            userClaims.getUid(), institutionalEmail)
-                                                        .map(
-                                                            createdOtpFlow ->
-                                                                Optional.of(
-                                                                    new OtpInfo(
-                                                                        createdOtpFlow.getUuid(),
-                                                                        institutionalEmail)))
-                                                    : Uni.createFrom().item(emptyOtpInfo))))
-                    // User is not present on Self care so we can proceed without OTP Flow
-                    .orElse(Uni.createFrom().item(emptyOtpInfo)));
+                                    maybeLastOtpFlow -> {
+                                      if (maybeLastOtpFlow.isPresent()) {
+                                        OtpFlow otpFlow = maybeLastOtpFlow.get();
+                                        // check if a new otp flow is required
+                                        return OtpUtils.isNewOtpFlowRequired(
+                                                        otpFlow, userClaims.getSameIdp(), otpLimitConfig.getDailyLimit())
+                                                .chain(isRequired -> {
+                                                  if (isRequired) {
+                                                    return createAndSendOtp(userClaims.getUid(), institutionalEmail)
+                                                            .map(createdOtpFlow ->
+                                                                    Optional.of(new OtpInfo(
+                                                                            createdOtpFlow.getUuid(),
+                                                                            institutionalEmail)));
+                                                  }
+                                                  //
+                                                  // A previous PENDING OTP flow is found, so we must ask for the same flow to be completed by user
+                                                  //
+                                                  else if (otpFlow.getStatus().equals(OtpStatus.PENDING)) {
+                                                    return Uni.createFrom().item(
+                                                            Optional.of(new OtpInfo(otpFlow.getUuid(), institutionalEmail)));
+                                                  }
+                                                  // a previous COMPLETED OTP flow in the last 6 months with
+                                                  // sameIdp=true is found. No OTP flow needed.
+                                                  else {
+                                                    return Uni.createFrom().item(emptyOtpInfo);
+                                                  }
+                                                });
+                                      } else {
+                                        // no otp flow found, check if periodic otp is required
+                                        return OtpUtils.isPeriodicOtpRequiredWithNoLastOtp(userClaims.getSameIdp(), otpLimitConfig.getDailyLimit())
+                                                .chain(periodicRequired -> {
+                                                  if (periodicRequired) {
+                                                    return createAndSendOtp(userClaims.getUid(), institutionalEmail)
+                                                            .map(createdOtpFlow ->
+                                                                    Optional.of(new OtpInfo(
+                                                                            createdOtpFlow.getUuid(),
+                                                                            institutionalEmail)));
+                                                  } else {
+                                                    return Uni.createFrom().item(emptyOtpInfo);
+                                                  }
+                                                });
+                                      }
+                                    })
+                    )
+                    .orElse(Uni.createFrom().item(emptyOtpInfo))
+            );
   }
 
   /**

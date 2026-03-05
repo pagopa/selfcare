@@ -1,7 +1,5 @@
 package it.pagopa.selfcare.auth.integration_test.steps;
 
-import static org.junit.jupiter.api.Assertions.fail;
-
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
@@ -10,18 +8,22 @@ import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.model.FeatureFlagEnum;
 import it.pagopa.selfcare.auth.model.OtpStatus;
 import it.pagopa.selfcare.auth.model.otp.OtpBetaUser;
+import it.pagopa.selfcare.auth.model.otp.OtpDailyLimit;
 import it.pagopa.selfcare.auth.model.otp.OtpFeatureFlag;
 import it.pagopa.selfcare.auth.service.JwtService;
 import it.pagopa.selfcare.cucumber.utils.SharedStepData;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
+import org.junit.jupiter.api.Assertions;
+
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
-import org.junit.jupiter.api.Assertions;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 @Slf4j
 @ApplicationScoped
@@ -31,6 +33,8 @@ public class AuthSteps {
   @Inject JwtService jwtService;
 
   @Inject OtpFeatureFlag otpFeatureFlag;
+
+  @Inject OtpDailyLimit otpDailyLimit;
 
   @Before
   public void setUp() {
@@ -61,6 +65,11 @@ public class AuthSteps {
   public void otpFeatureFlagIsSetTo(String featureFlag) {
     FeatureFlagEnum flag = FeatureFlagEnum.valueOf(featureFlag.toUpperCase());
     otpFeatureFlag.setFeatureFlag(flag);
+  }
+
+  @And("OTP daily limit is set to {int}")
+  public void otpDailyLimitIsSetTo(int limit) {
+    otpDailyLimit.setDailyLimit(limit);
   }
 
   @And("User in the beta user list with the following details:")

@@ -1,7 +1,9 @@
 package it.pagopa.selfcare.auth.util;
 
+import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.model.OtpStatus;
+
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -58,11 +60,70 @@ public class OtpUtils {
    * @param sameIdp: A boolean indicating if a user has changed its IdP since last login
    * @return a Boolean indicating if this user requires a brand new OtpFlow
    */
-  public static Boolean isNewOtpFlowRequired(OtpFlow lastOtpFlow, Boolean sameIdp) {
+  public static Uni<Boolean> isNewOtpFlowRequired(OtpFlow lastOtpFlow, Boolean sameIdp, Integer limit) {
+
     List<OtpStatus> otpStatusFinalKoStatuses = List.of(OtpStatus.EXPIRED, OtpStatus.REJECTED);
-    return (lastOtpFlow.getStatus().equals(OtpStatus.COMPLETED) && !sameIdp)
-        || (!lastOtpFlow.getStatus().equals(OtpStatus.COMPLETED)
-            && lastOtpFlow.getExpiresAt().isBefore(OffsetDateTime.now()))
-        || otpStatusFinalKoStatuses.contains(lastOtpFlow.getStatus());
+
+    boolean isSameIdpFalse = lastOtpFlow.getStatus().equals(OtpStatus.COMPLETED) && !sameIdp;
+    boolean isOtpExpired = !lastOtpFlow.getStatus().equals(OtpStatus.COMPLETED)
+            && lastOtpFlow.getExpiresAt().isBefore(OffsetDateTime.now());
+    boolean isLastOtpKO = otpStatusFinalKoStatuses.contains(lastOtpFlow.getStatus());
+
+    if (isSameIdpFalse || isOtpExpired || isLastOtpKO) {
+      return Uni.createFrom().item(true);
+    }
+
+    return isPeriodicOtpRequiredWithLastOpt(lastOtpFlow, sameIdp, limit);
   }
+
+  public static Uni<Boolean> isPeriodicOtpRequiredWithLastOpt(OtpFlow lastOtpFlow, Boolean sameIdp, Integer limit) {
+
+      boolean isCompleted = lastOtpFlow.getStatus().equals(OtpStatus.COMPLETED);
+      boolean isOlderThanSixMonths = lastOtpFlow.getCreatedAt().isBefore(OffsetDateTime.now().minusMonths(6));
+
+      if (!(isCompleted && sameIdp && isOlderThanSixMonths)) {
+        return Uni.createFrom().item(false);
+      }
+
+      return isPeriodicOtpRequired(limit);
+    }
+
+  public static Uni<Boolean> isPeriodicOtpRequiredWithNoLastOtp(Boolean sameIdp, Integer limit) {
+    if (Boolean.FALSE.equals(sameIdp)) {
+      return Uni.createFrom().item(true);
+    }
+    return isPeriodicOtpRequired(limit);
+  }
+
+  public static Uni<Boolean> isPeriodicOtpRequired(Integer limit) {
+    if (limit == 0) {
+      return Uni.createFrom().item(false);
+    }
+
+    if (limit < 0) {
+      return Uni.createFrom().item(true);
+    }
+
+    return otpCountTodayDistinctUsers()
+            .map(count -> count < limit);
+  }
+
+  public static Uni<Long> otpCountTodayDistinctUsers() {
+
+    OffsetDateTime now = OffsetDateTime.now();
+    OffsetDateTime startOfDay = now.toLocalDate()
+            .atStartOfDay()
+            .atOffset(now.getOffset());
+
+    return OtpFlow.find("createdAt >= ?1", startOfDay)
+            .project(OtpFlow.class)
+            .list()
+            .map(list ->
+                    list.stream()
+                            .map(OtpFlow::getUserId)
+                            .distinct()
+                            .count()
+            );
+  }
+
 }
