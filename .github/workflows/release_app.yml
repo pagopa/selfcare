@@ -28,7 +28,7 @@ on:
           - product
           - product-cdc
           - webhook
-          - onboarding
+          - onboarding-ms
           - onboarding-cdc
         required: true
         default: auth
