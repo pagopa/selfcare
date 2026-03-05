@@ -1,6 +1,6 @@
 resource "random_password" "encryption_key" {
-  length           = 32
-  special          = false
+  length  = 32
+  special = false
 
   keepers = {
     version = 1
@@ -8,8 +8,8 @@ resource "random_password" "encryption_key" {
 }
 
 resource "random_password" "encryption_iv" {
-  length           = 12
-  special          = false
+  length  = 12
+  special = false
 
   keepers = {
     version = 1
@@ -21,7 +21,7 @@ resource "azurerm_key_vault_secret" "encryption_iv_secret" {
   value        = random_password.encryption_iv.result
   content_type = "text/plain"
 
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = module.key_vault.key_vault_id
 }
 
 resource "azurerm_key_vault_secret" "encryption_key_secret" {
@@ -29,5 +29,5 @@ resource "azurerm_key_vault_secret" "encryption_key_secret" {
   value        = random_password.encryption_key.result
   content_type = "text/plain"
 
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = module.key_vault.key_vault_id
 }

@@ -1,6 +1,7 @@
 locals {
   # general
   prefix              = "selc"
+  prefix_short        = "sc"
   env_short           = "d"
   env                 = "dev"
   location            = "westeurope"

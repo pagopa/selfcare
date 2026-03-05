@@ -289,9 +289,9 @@ module "container_app_environments" {
   location            = local.location
   resource_group_name = azurerm_resource_group.selc_container_app_rg.name
 
-  subnet_id = module.networking.subnet.id
-
-  cae_name = "${local.project}-pnpg-cae-cp"
+  enable_log = false
+  subnet_id  = module.networking.subnet.id
+  cae_name   = "${local.project}-pnpg-cae-cp"
 
   workload_profiles = []
 
