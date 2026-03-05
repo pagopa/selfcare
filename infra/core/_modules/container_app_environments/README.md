@@ -19,39 +19,30 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [azurerm_container_app_environment.cae_pnpg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app_environment) | resource |
-| [azurerm_container_app_environment.cae_selc](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app_environment) | resource |
-| [azurerm_management_lock.identity_lock_pnpg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
-| [azurerm_management_lock.identity_lock_selc](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
-| [azurerm_management_lock.lock_pnpg_cae](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
-| [azurerm_management_lock.lock_selc_cae](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
-| [azurerm_user_assigned_identity.cae_identity_pnpg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
-| [azurerm_user_assigned_identity.cae_identity_selc](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
+| [azurerm_container_app_environment.cae](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app_environment) | resource |
+| [azurerm_management_lock.identity_lock](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
+| [azurerm_management_lock.lock_cae](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
+| [azurerm_user_assigned_identity.cae_identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
 | [azurerm_log_analytics_workspace.log_analytics_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/log_analytics_workspace) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_cae_name"></a> [cae\_name](#input\_cae\_name) | Name of Container App env | `string` | n/a | yes |
+| <a name="input_infrastructure_resource_group_name"></a> [infrastructure\_resource\_group\_name](#input\_infrastructure\_resource\_group\_name) | Name of the platform-managed resource group created for the Managed Environment to host infrastructure resources. Changing this forces a new resource to be created. | `string` | `null` | no |
 | <a name="input_location"></a> [location](#input\_location) | Azure region | `string` | n/a | yes |
-| <a name="input_pnpg_cae_name"></a> [pnpg\_cae\_name](#input\_pnpg\_cae\_name) | Name of Container App env | `string` | n/a | yes |
-| <a name="input_pnpg_resource_group_name"></a> [pnpg\_resource\_group\_name](#input\_pnpg\_resource\_group\_name) | Name of the PNPG resource group where resources will be created | `string` | n/a | yes |
-| <a name="input_pnpg_subnet_id"></a> [pnpg\_subnet\_id](#input\_pnpg\_subnet\_id) | Id of the subnet to use for PNPG Container App Environment | `string` | n/a | yes |
-| <a name="input_pnpg_workload_profiles"></a> [pnpg\_workload\_profiles](#input\_pnpg\_workload\_profiles) | PNPG workload profiles | <pre>list(object({<br/>    name                  = string<br/>    workload_profile_type = string<br/>    minimum_count         = number<br/>    maximum_count         = number<br/>  }))</pre> | <pre>[<br/>  {<br/>    "maximum_count": 1,<br/>    "minimum_count": 0,<br/>    "name": "Consumption",<br/>    "workload_profile_type": "Consumption"<br/>  }<br/>]</pre> | no |
 | <a name="input_project"></a> [project](#input\_project) | SelfCare prefix and short environment | `string` | n/a | yes |
-| <a name="input_selc_cae_name"></a> [selc\_cae\_name](#input\_selc\_cae\_name) | Name of selc Container App env | `string` | n/a | yes |
-| <a name="input_selc_resource_group_name"></a> [selc\_resource\_group\_name](#input\_selc\_resource\_group\_name) | Name of the Selfcare resource group where resources will be created | `string` | n/a | yes |
-| <a name="input_selc_subnet_id"></a> [selc\_subnet\_id](#input\_selc\_subnet\_id) | Id of the subnet to use for SelfCare Container App Environment | `string` | n/a | yes |
-| <a name="input_selc_workload_profiles"></a> [selc\_workload\_profiles](#input\_selc\_workload\_profiles) | SELC workload profiles | <pre>list(object({<br/>    name                  = string<br/>    workload_profile_type = string<br/>    minimum_count         = number<br/>    maximum_count         = number<br/>  }))</pre> | <pre>[<br/>  {<br/>    "maximum_count": 1,<br/>    "minimum_count": 0,<br/>    "name": "Consumption",<br/>    "workload_profile_type": "Consumption"<br/>  }<br/>]</pre> | no |
+| <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Name of the resource group where resources will be created | `string` | n/a | yes |
+| <a name="input_subnet_id"></a> [subnet\_id](#input\_subnet\_id) | Id of the subnet to use for Container App Environment | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resource tags | `map(any)` | n/a | yes |
+| <a name="input_workload_profiles"></a> [workload\_profiles](#input\_workload\_profiles) | Workload profiles | <pre>list(object({<br/>    name                  = string<br/>    workload_profile_type = string<br/>    minimum_count         = number<br/>    maximum_count         = number<br/>  }))</pre> | <pre>[<br/>  {<br/>    "maximum_count": 1,<br/>    "minimum_count": 0,<br/>    "name": "Consumption",<br/>    "workload_profile_type": "Consumption"<br/>  }<br/>]</pre> | no |
 | <a name="input_zone_redundant"></a> [zone\_redundant](#input\_zone\_redundant) | Enable or not the zone redundancy | `bool` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_container_app_environment_pnpg"></a> [container\_app\_environment\_pnpg](#output\_container\_app\_environment\_pnpg) | n/a |
-| <a name="output_container_app_environment_selfcare"></a> [container\_app\_environment\_selfcare](#output\_container\_app\_environment\_selfcare) | n/a |
-| <a name="output_user_assigned_identity_pnpg"></a> [user\_assigned\_identity\_pnpg](#output\_user\_assigned\_identity\_pnpg) | Details about the user-assigned managed identity created to manage roles of the Container Apps of PNPG Environment |
-| <a name="output_user_assigned_identity_selfcare"></a> [user\_assigned\_identity\_selfcare](#output\_user\_assigned\_identity\_selfcare) | Details about the user-assigned managed identity created to manage roles of the Container Apps of Selfcare Environment |
+| <a name="output_container_app_environment"></a> [container\_app\_environment](#output\_container\_app\_environment) | n/a |
+| <a name="output_user_assigned_identity"></a> [user\_assigned\_identity](#output\_user\_assigned\_identity) | Details about the user-assigned managed identity created to manage roles of the Container Apps of Selfcare Environment |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->

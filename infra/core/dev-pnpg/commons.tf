@@ -272,11 +272,30 @@ module "networking" {
 
   # inferred from vnet-common with cidr 10.1.0.0/16
   # https://github.com/pagopa/selfcare-infra/blob/9de7d03852904c1e743684a9edd40ae9df0645a8/src/core/01_network_0.tf#L9-L10
-  cidr_subnet_cae = "10.1.156.0/23"
+  cidr_subnet_cae  = "10.1.156.0/23"
+  cidr_subnet_main = "10.1.148.0/23"
 
   container_app_name_snet = "${local.project}-pnpg-cae-cp-snet"
 
   delegation = []
+
+  tags = local.tags
+}
+
+module "container_app_environments" {
+  source = "../_modules/container_app_environments"
+
+  project             = "${local.prefix}-${local.env_short}"
+  location            = local.location
+  resource_group_name = azurerm_resource_group.selc_container_app_rg.name
+
+  subnet_id = module.networking.subnet.id
+
+  cae_name = "${local.project}-pnpg-cae-cp"
+
+  workload_profiles = []
+
+  zone_redundant = false
 
   tags = local.tags
 }

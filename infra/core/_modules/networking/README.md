@@ -35,6 +35,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_cidr_subnet_cae"></a> [cidr\_subnet\_cae](#input\_cidr\_subnet\_cae) | CIDR block for ContainerAppEnvironment subnet | `string` | n/a | yes |
+| <a name="input_cidr_subnet_main"></a> [cidr\_subnet\_main](#input\_cidr\_subnet\_main) | CIDR block for main subnet | `string` | `null` | no |
 | <a name="input_container_app_name_snet"></a> [container\_app\_name\_snet](#input\_container\_app\_name\_snet) | Name of container app subnet | `string` | n/a | yes |
 | <a name="input_core_vnet"></a> [core\_vnet](#input\_core\_vnet) | True if the module define the core vnet, true for AR | `bool` | `true` | no |
 | <a name="input_delegation"></a> [delegation](#input\_delegation) | Container app subnet delegation | <pre>list(object({<br/>    name                       = string<br/>    service_delegation_name    = string<br/>    service_delegation_actions = list(string)<br/>  }))</pre> | <pre>[<br/>  {<br/>    "name": "Microsoft.App/environments",<br/>    "service_delegation_actions": [<br/>      "Microsoft.Network/virtualNetworks/subnets/join/action"<br/>    ],<br/>    "service_delegation_name": "Microsoft.App/environments"<br/>  }<br/>]</pre> | no |

@@ -15,7 +15,7 @@ resource "azurerm_network_security_rule" "cae_subnet_outbound_rule" {
   source_port_range           = "*"
   destination_port_range      = "*"
   source_address_prefix       = "*"
-  destination_address_prefix  = var.cidr_subnet_cae
+  destination_address_prefix  = var.cidr_subnet_main
   resource_group_name         = data.azurerm_virtual_network.vnet.resource_group_name
   network_security_group_name = azurerm_network_security_group.subnet_nsg[0].name
 }
@@ -29,7 +29,7 @@ resource "azurerm_network_security_rule" "cae_subnet_inbound_rule" {
   protocol                    = "*"
   source_port_range           = "*"
   destination_port_range      = "*"
-  source_address_prefix       = var.cidr_subnet_cae
+  source_address_prefix       = var.cidr_subnet_main
   destination_address_prefix  = "*"
   resource_group_name         = data.azurerm_virtual_network.vnet.resource_group_name
   network_security_group_name = azurerm_network_security_group.subnet_nsg[0].name

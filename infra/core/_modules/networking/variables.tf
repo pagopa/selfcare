@@ -13,6 +13,11 @@ variable "cidr_subnet_cae" {
   description = "CIDR block for ContainerAppEnvironment subnet"
 }
 
+variable "cidr_subnet_main" {
+  type        = string
+  description = "CIDR block for main subnet"
+  default     = null
+}
 variable "core_vnet" {
   type        = bool
   description = "True if the module define the core vnet, true for AR"

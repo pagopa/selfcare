@@ -607,24 +607,30 @@ module "networking" {
   tags = local.tags
 }
 
-# module "container_app_environments" {
-#   source = "../_modules/container_app_environments"
+module "container_app_environments" {
+  source = "../_modules/container_app_environments"
 
-#   project                  = "${local.prefix}-${local.env_short}"
-#   location                 = local.location
+  project             = "${local.prefix}-${local.env_short}"
+  location            = local.location
+  resource_group_name = azurerm_resource_group.selc_cae_rg.name
+  # pnpg_resource_group_name = azurerm_resource_group.selc_container_app_rg.name
 
-#   selc_resource_group_name = azurerm_resource_group.selc_cae_rg.name
-#   # pnpg_resource_group_name = azurerm_resource_group.selc_container_app_rg.name
+  subnet_id = module.networking.subnet.id
+  # pnpg_subnet_id = module.networking.subnet_pnpg.id
 
-#   selc_subnet_id = module.networking.subnet_selfcare.id
-#   # pnpg_subnet_id = module.networking.subnet_pnpg.id
+  cae_name = "${local.project}-cae-002"
+  # pnpg_cae_name = "${local.project}-pnpg-cae-cp"
+  infrastructure_resource_group_name = "ME_selc-d-cae-002_selc-d-container-app-002-rg_westeurope"
+  workload_profiles = [
+    {
+      name                  = "Consumption"
+      workload_profile_type = "Consumption"
+      minimum_count         = 0
+      maximum_count         = 0
+    }
+  ]
 
-#   selc_cae_name = "${local.project}-cae-002"
-#   # pnpg_cae_name = "${local.project}-pnpg-cae-cp"
+  zone_redundant = false
 
-#   # pnpg_workload_profiles = []
-
-#   zone_redundant = false
-
-#   tags = local.tags
-# }
+  tags = local.tags
+}
