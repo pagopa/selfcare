@@ -3,12 +3,13 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>it.pagopa.selfcare</groupId>
-        <artifactId>onboarding-sdk-pom</artifactId>
-        <version>0.15.3</version>
-        <relativePath>../onboarding-sdk-pom</relativePath>
+        <artifactId>selfcare-onboarding-sdk-pom</artifactId>
+        <version>0.15.4</version>
+        <relativePath>../selfcare-onboarding-sdk-pom</relativePath>
     </parent>
-    <artifactId>onboarding-sdk-crypto</artifactId>
-    <name>onboarding-sdk-crypto</name>
+    <artifactId>selfcare-onboarding-sdk-crypto</artifactId>
+    <name>selfcare-onboarding-sdk-crypto</name>
+    <description>Selfcare Onboarding SDK Crypto</description>
     <url>http://maven.apache.org</url>
     <properties>
         <google-http-client.version>1.45.0</google-http-client.version>

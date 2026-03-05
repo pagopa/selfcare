@@ -9,7 +9,7 @@ It is triggered by http request at GET or POST `/api/StartOnboardingOrchestratio
 
 ### Contract Signature
 
-You can enable the signature inside contracts when there are builded setting PAGOPA_SIGNATURE_SOURCE env (default value is `disabled`) as `local` if you want to use Pkcs7HashSignService or `aruba` for ArubaPkcs7HashSignService. Look at this [README](https://github.com/pagopa/selfcare-onboarding/tree/develop/libs/onboarding-sdk-crypto#readme) for more informations.
+You can enable the signature inside contracts when there are builded setting PAGOPA_SIGNATURE_SOURCE env (default value is `disabled`) as `local` if you want to use Pkcs7HashSignService or `aruba` for ArubaPkcs7HashSignService. Look at this [README](../../libs/onboarding-sdk-crypto/README.md) for more informations.
 
 
 ## Running locally
