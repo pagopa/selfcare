@@ -44,7 +44,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@dbef88086f6cef02e264edb7dbf63250c17cef6c # v5.5.0
         with:
-          images: ghcr.io/selfcare-onboarding-cdc
+          images: ghcr.io/pagopa/selfcare-onboarding-cdc
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=branch
