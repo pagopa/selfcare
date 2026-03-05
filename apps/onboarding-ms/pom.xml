@@ -252,17 +252,17 @@
 
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>onboarding-sdk-azure-storage</artifactId>
+            <artifactId>selfcare-onboarding-sdk-azure-storage</artifactId>
             <version>${commons-sdk-version}</version>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>onboarding-sdk-crypto</artifactId>
+            <artifactId>selfcare-onboarding-sdk-crypto</artifactId>
             <version>${commons-sdk-version}</version>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>onboarding-sdk-product</artifactId>
+            <artifactId>selfcare-onboarding-sdk-product</artifactId>
             <version>${commons-sdk-version}</version>
         </dependency>
         <dependency>
