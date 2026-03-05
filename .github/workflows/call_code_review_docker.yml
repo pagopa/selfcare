@@ -4,16 +4,15 @@ on:
       dockerfile_path:
         type: string
         required: false
-        default: './Dockerfile.new'
+        default: "./Dockerfile.new"
       dockerfile_context:
         type: string
         required: false
-        default: '.'
+        default: "."
 
 jobs:
-
   docker_build:
-    name: 'Build Docker image'
+    name: "Build Docker image"
     runs-on: ubuntu-24.04
     permissions:
       packages: write
@@ -22,7 +21,6 @@ jobs:
       DOCKERFILE_PATH: ${{ inputs.dockerfile_path }}
 
     steps:
-
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
         name: Checkout
 
@@ -53,6 +51,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=min
           build-args: |
-            REPO_ONBOARDING=selfcare-onboarding
+            REPO_SELFCARE=selfcare
             REPO_USERNAME=${{ github.actor }}
             REPO_PASSWORD=${{ secrets.GITHUB_TOKEN }}

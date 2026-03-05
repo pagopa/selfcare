@@ -2,12 +2,21 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>it.pagopa.selfcare</groupId>
-    <artifactId>onboarding-sdk-pom</artifactId>
+    <artifactId>selfcare-onboarding-sdk-pom</artifactId>
     <packaging>pom</packaging>
-    <name>onboarding-sdk-pom</name>
-    <version>0.15.3</version>
+    <name>selfcare-onboarding-sdk-pom</name>
+    <description>Selfcare Onboarding SDK POM Aggregator</description>
+    <version>0.15.4</version>
+
+    <modules>
+        <module>../selfcare-onboarding-sdk-common</module>
+        <module>../selfcare-onboarding-sdk-product</module>
+        <module>../selfcare-onboarding-sdk-crypto</module>
+        <module>../selfcare-onboarding-sdk-azure-storage</module>
+    </modules>
 
     <properties>
+        <java.version>17</java.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <junit-jupiter.version>5.7.2</junit-jupiter.version>
@@ -17,9 +26,9 @@
 
     <distributionManagement>
         <repository>
-            <id>selfcare-onboarding</id>
-            <name>Selfcare Onboarding SDK</name>
-            <url>https://maven.pkg.github.com/pagopa/selfcare-onboarding</url>
+            <id>selfcare</id>
+            <name>Selfcare</name>
+            <url>https://maven.pkg.github.com/pagopa/selfcare</url>
         </repository>
     </distributionManagement>
 
@@ -64,7 +73,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.1</version>
+                    <version>3.13.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.sonarsource.scanner.maven</groupId>
@@ -80,6 +89,28 @@
         </pluginManagement>
 
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>3.1.2</version>
+                <configuration>
+                    <skip>false</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>

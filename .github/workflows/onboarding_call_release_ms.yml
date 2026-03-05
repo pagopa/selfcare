@@ -7,6 +7,19 @@ on:
       tf_environment:
         type: string
         required: false
+      path_openapi_docs:
+        type: string
+        required: false
+        description: 'Path to the OpenAPI documentation'
+      openapi_name:
+        type: string
+        required: false
+        description: 'Name of the openapi file on storage'
+      upload_openapi_enabled:
+        type: boolean
+        required: false
+        description: 'Set to False if workflow must not upload openapi on storage'
+        default: true
 
 env:
   DIR: "infra/apps/onboarding-ms"
@@ -51,10 +64,10 @@ jobs:
             type=sha
           labels:
             org.opencontainers.image.title=selfcare-onboarding-ms
-            org.opencontainers.image.description=SelfCare onboarding microservice
+            org.opencontainers.image.description=SelfCare Onboarding Microservice
             org.opencontainers.image.authors=PagoPA
-            org.opencontainers.image.url=github.com/pagopa/selfcare-onboarding
-            org.opencontainers.image.source=https://github.com/selfcare-onboarding
+            org.opencontainers.image.url=github.com/pagopa/selfcare
+            org.opencontainers.image.source=https://github.com/selfcare
 
       - name: Build and Push Image
         uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56 # v5.1.0
@@ -69,7 +82,6 @@ jobs:
           secrets: | 
             "GH_TOKEN=${{ secrets.GH_PAT_VARIABLES }}"
           build-args: |
-            REPO_ONBOARDING=selfcare-onboarding
             REPO_SELFCARE=selfcare
             REPO_USERNAME=${{ github.actor }}
             REPO_PASSWORD=${{ secrets.GITHUB_TOKEN }}
@@ -188,3 +200,40 @@ jobs:
           terraform apply -lock-timeout=3000s -auto-approve -input=false tfplan-${{ inputs.tf_environment }}-${{ github.sha }}
         env:
           TF_VAR_image_tag: ${{ needs.tf_plan.outputs.image_tag }}
+
+  upload_openapi:
+    name: 'Upload OpenAPI'
+    runs-on: ubuntu-24.04
+    needs: [ release ]
+    if: ${{ inputs.upload_openapi_enabled }}
+    environment: ${{ inputs.environment }}-cd
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        name: Checkout
+
+      - name: Azure Login
+        uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ vars.ARM_TENANT_ID }}
+          subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+
+      - name: Extract environment short
+        id: extract_env_short
+        run: |
+          env=${{ inputs.environment }}
+          echo "env_short=${env:0:1}" >> $GITHUB_OUTPUT
+
+      - name: Upload to blob storage
+        uses: azure/CLI@965c8d7571d2231a54e321ddd07f7b10317f34d9 # v2
+        with:
+          inlineScript: |
+            az storage blob upload --auth-mode key -f  ${{ inputs.path_openapi_docs }} --account-name selc${{ steps.extract_env_short.outputs.env_short }}checkoutsa  -c selc-openapi -n ${{ inputs.openapi_name }}/openapi.json --overwrite

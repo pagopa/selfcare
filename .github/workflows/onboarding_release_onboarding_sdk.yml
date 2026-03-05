@@ -1,16 +1,16 @@
-name: Release onboarding sdk
+name: Release Onboarding SDK
 
 on:
   push:
     branches:
       - main
     paths:
-      - './libs/**'
+      - 'libs/selfcare-onboarding-sdk-**'
 
   workflow_dispatch:
 
 jobs:
-  setup:
+  release:
     name: Release
     runs-on: ubuntu-24.04
     permissions:
@@ -31,15 +31,14 @@ jobs:
 
       - uses: s4u/maven-settings-action@60912582505985be4cc55d2b890eb32767f8de5f # pin@v2.8.0
         with:
-          servers: '[{"id": "selfcare-onboarding", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
+          servers: '[{"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
 
-      - name: Build with Maven
+      - name: Build with Maven SDK
         shell: bash
-        run: mvn --projects :onboarding-libs --also-make-dependents clean package -DskipTests
+        run: mvn -f libs/selfcare-onboarding-sdk-pom/pom.xml clean package -DskipTests
 
       - name: Deploy to GitHub Package Registry
         shell: bash
-        run: |
-          mvn -B deploy -f libs/pom.xml
+        run: mvn -B -f libs/selfcare-onboarding-sdk-pom/pom.xml deploy -DskipTests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

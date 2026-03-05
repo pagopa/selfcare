@@ -3,11 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>it.pagopa.selfcare</groupId>
-        <artifactId>onboarding-sdk-pom</artifactId>
-        <version>0.15.3</version>
-        <relativePath>../onboarding-sdk-pom</relativePath>
+        <artifactId>selfcare-onboarding-sdk-pom</artifactId>
+        <version>0.15.4</version>
+        <relativePath>../selfcare-onboarding-sdk-pom</relativePath>
     </parent>
-    <artifactId>onboarding-sdk-common</artifactId>
-    <name>onboarding-sdk-common</name>
-    <url>http://maven.apache.org</url>
+    <artifactId>selfcare-onboarding-sdk-common</artifactId>
+    <name>selfcare-onboarding-sdk-common</name>
+    <description>Selfcare Onboarding SDK Common</description>
 </project>

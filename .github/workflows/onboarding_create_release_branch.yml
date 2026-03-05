@@ -82,60 +82,60 @@ jobs:
 
       - name: Create Release Variables
         run: |
-          gh variable set CURRENT_UAT_VERSION \
+          gh variable set ONBOARDING_BE_CURRENT_UAT_VERSION \
             --body "${{ env.NEW_VERSION }}"
 
-          gh variable set CURRENT_PROD_VERSION \
+          gh variable set ONBOARDING_BE_CURRENT_PROD_VERSION \
             --body "${{ env.OLD_VERSION }}"
         env:
           GH_TOKEN: ${{ secrets.GH_PAT_VARIABLES }}
 
       - name: Trigger Functions Infra UAT Release
         run: |
-          gh workflow run release_functions_infra.yml \
+          gh workflow run onboarding_release_functions_infra.yml \
             --ref $NEW_BRANCH_NAME
 
       - name: Trigger Mongo Infra UAT Release
         run: |
-          gh workflow run release_mongo_infra.yml \
+          gh workflow run onboarding_release_mongo_infra.yml \
             --ref $NEW_BRANCH_NAME
 
       - name: Trigger PNPG Functions Infra UAT Release
         run: |
-          gh workflow run release_functions_pnpg_infra.yml \
+          gh workflow run onboarding_release_functions_pnpg_infra.yml \
             --ref $NEW_BRANCH_NAME
 
       - name: Trigger PNPG Mongo Infra UAT Release
         run: |
-          gh workflow run release_mongo_pnpg_infra.yml \
+          gh workflow run onboarding_release_mongo_pnpg_infra.yml \
             --ref $NEW_BRANCH_NAME
 
       - name: Trigger Functions UAT Release
         run: |
-          gh workflow run release_functions.yml \
+          gh workflow run onboarding_release_functions.yml \
             --ref $NEW_BRANCH_NAME
 
       - name: Trigger Onboarding ms UAT Release
         run: |
-          gh workflow run release_ms.yml \
+          gh workflow run onboarding_release_ms.yml \
             --ref $NEW_BRANCH_NAME
 
       - name: Trigger Onboarding CDC UAT Release
         run: |
-          gh workflow run release_cdc.yml \
+          gh workflow run onboarding_release_cdc.yml \
             --ref $NEW_BRANCH_NAME
 
       - name: Trigger PNPG Functions UAT Release
         run: |
-          gh workflow run release_pnpg_functions.yml \
+          gh workflow run onboarding_release_pnpg_functions.yml \
             --ref $NEW_BRANCH_NAME
 
       - name: Trigger PNPG Onboarding ms UAT Release
         run: |
-          gh workflow run release_pnpg_ms.yml \
+          gh workflow run onboarding_release_pnpg_ms.yml \
             --ref $NEW_BRANCH_NAME
 
       - name: Trigger PNPG Onboarding CDC UAT Release
         run: |
-          gh workflow run release_pnpg_cdc.yml \
+          gh workflow run onboarding_release_pnpg_cdc.yml \
             --ref $NEW_BRANCH_NAME

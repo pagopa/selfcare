@@ -1,4 +1,4 @@
-# Onboarding SDK Crypto
+# Selfcare Onboarding SDK Crypto
 
 This module contains utilities to perform cryptographic operation, such digital signatures. See [Confluence page](https://pagopa.atlassian.net/wiki/spaces/SCP/pages/616857618/Firma+digitale+per+mezzo+dei+servizi+di+Aruba)
 for integration and documentation details
@@ -56,15 +56,15 @@ To use this library in your projects, you can add the dependency to your pom.xml
 ```shell script
 <dependency>
     <groupId>it.pagopa.selfcare</groupId>
-    <artifactId>onboarding-sdk-crypto</artifactId>
-    <version>0.1.0</version>
+    <artifactId>selfcare-onboarding-sdk-crypto</artifactId>
+    <version>0.15.4</version>
 </dependency>
 ```
 If you are using Gradle, you can add the dependency to your build.gradle file:
 
 ```shell script
 dependencies {
-    implementation 'it.pagopa.selfcare:onboarding-sdk-crypto:0.1.0'
+    implementation 'it.pagopa.selfcare:selfcare-onboarding-sdk-crypto:0.15.4'
 }
 ```
 
