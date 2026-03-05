@@ -1,0 +1,31 @@
+# Key Vault certificates (consumed by appgateway)
+data "azurerm_key_vault_certificate" "app_gw_platform" {
+  name         = var.app_gateway_api_certificate_name
+  key_vault_id = var.key_vault_id
+}
+
+data "azurerm_key_vault_certificate" "api_pnpg_selfcare_certificate" {
+  name         = var.app_gateway_api_pnpg_certificate_name
+  key_vault_id = var.key_vault_id
+}
+data "azurerm_key_vault_secret" "apim_publisher_email" {
+  name         = "apim-publisher-email"
+  key_vault_id = var.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "sec_workspace_id" {
+  count        = var.env_short == "p" ? 1 : 0
+  name         = "sec-workspace-id"
+  key_vault_id = var.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "sec_storage_id" {
+  count        = var.env_short == "p" ? 1 : 0
+  name         = "sec-storage-id"
+  key_vault_id = var.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "selc_documents_storage_connection_string" {
+  name         = "documents-storage-connection-string"
+  key_vault_id = var.key_vault_id
+}
