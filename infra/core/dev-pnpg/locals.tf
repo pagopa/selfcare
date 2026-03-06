@@ -17,7 +17,7 @@ locals {
     CreatedBy   = "Terraform"
     Environment = "Dev"
     Owner       = "Selfcare"
-    Source      = "https://github.com/pagopa/selfcare-infra"
+    Source      = "https://github.com/pagopa/selfcare"
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
     Application = "PNPG"
   }

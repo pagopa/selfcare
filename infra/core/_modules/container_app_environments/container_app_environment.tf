@@ -3,7 +3,7 @@ resource "azurerm_container_app_environment" "cae" {
   location            = var.location
   resource_group_name = var.resource_group_name
 
-  log_analytics_workspace_id = data.azurerm_log_analytics_workspace.log_analytics_workspace.id
+  log_analytics_workspace_id = var.enable_log ? data.azurerm_log_analytics_workspace.log_analytics_workspace.id : null
 
   infrastructure_subnet_id           = var.subnet_id
   zone_redundancy_enabled            = var.subnet_id == null ? null : var.zone_redundant

@@ -65,7 +65,7 @@ resource "azurerm_user_assigned_identity" "documents_identity" {
 data "azurerm_key_vault_secret" "selc_documents_storage_connection_string" {
   name         = "documents-storage-connection-string"
   key_vault_id = data.azurerm_key_vault.key_vault.id
-  depends_on = [module.storage_documents]
+  depends_on   = [module.storage_documents]
 }
 
 data "local_file" "resources_logo" {

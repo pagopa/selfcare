@@ -22,6 +22,10 @@ resource "azurerm_key_vault_secret" "encryption_iv_secret" {
   content_type = "text/plain"
 
   key_vault_id = data.azurerm_key_vault.key_vault.id
+
+  lifecycle {
+    ignore_changes = all
+  }
 }
 
 resource "azurerm_key_vault_secret" "encryption_key_secret" {
@@ -30,4 +34,8 @@ resource "azurerm_key_vault_secret" "encryption_key_secret" {
   content_type = "text/plain"
 
   key_vault_id = data.azurerm_key_vault.key_vault.id
+
+  lifecycle {
+    ignore_changes = all
+  }
 }
