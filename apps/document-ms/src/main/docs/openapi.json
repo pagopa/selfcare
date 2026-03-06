@@ -1,6 +1,289 @@
 {
   "openapi" : "3.1.0",
+  "paths" : {
+    "/v1/documents/contract-files" : {
+      "put" : {
+        "summary" : "Update document contract files",
+        "description" : "Updates the contractSigned and contractFilename paths for a document after contract deletion/move operations.",
+        "operationId" : "updateDocumentContractFiles",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/Document"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "tags" : [ "Document Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/contract-report" : {
+      "get" : {
+        "summary" : "Check if contract signed is a CADES file",
+        "description" : "Check if contract signed is a CADES file even if is not .p7m",
+        "operationId" : "reportContractSigned",
+        "tags" : [ "internal-v1" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          },
+          "required" : true
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ContractSignedReport"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/{onboardingId}/attachment" : {
+      "post" : {
+        "summary" : "Upload attachment by verifying and signing document, then save into storage.",
+        "description" : "Perform upload  of the file passed in input verifying digest e put company signature",
+        "operationId" : "uploadAttachment",
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "name",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          },
+          "required" : true
+        } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "required" : [ "file" ],
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "tags" : [ "Document Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      },
+      "get" : {
+        "summary" : "Retrieve attachment for a given onboarding and filename",
+        "description" : "Downloads the attachment file associated with the specified onboarding ID and filename.",
+        "operationId" : "getAttachment",
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "name",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          },
+          "required" : true
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/octet-stream" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "tags" : [ "Document Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/{onboardingId}/attachment/status" : {
+      "head" : {
+        "summary" : "Verify attachment availability",
+        "description" : "Verifies the availability of the specified attachment in the storage system. A successful check returns HTTP 204 (No Content), while a missing attachment results in HTTP 404 (Not Found).",
+        "operationId" : "headAttachment",
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "name",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          },
+          "required" : true
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "tags" : [ "Document Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    }
+  },
   "components" : {
+    "schemas" : {
+      "ContractSignedReport" : {
+        "type" : "object",
+        "properties" : {
+          "cades" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "Document" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/TokenType"
+          },
+          "onboardingId" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "checksum" : {
+            "type" : "string"
+          },
+          "contractVersion" : {
+            "type" : "string"
+          },
+          "contractTemplate" : {
+            "type" : "string"
+          },
+          "contractSigned" : {
+            "type" : "string"
+          },
+          "contractFilename" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "$ref" : "#/components/schemas/LocalDateTime"
+          },
+          "updatedAt" : {
+            "$ref" : "#/components/schemas/LocalDateTime"
+          },
+          "deletedAt" : {
+            "$ref" : "#/components/schemas/LocalDateTime"
+          },
+          "activatedAt" : {
+            "$ref" : "#/components/schemas/LocalDateTime"
+          }
+        }
+      },
+      "LocalDateTime" : {
+        "type" : "string",
+        "format" : "date-time",
+        "examples" : [ "2022-03-10T12:15:50" ]
+      },
+      "TokenType" : {
+        "type" : "string",
+        "enum" : [ "INSTITUTION", "LEGALS", "USER", "ATTACHMENT" ]
+      }
+    },
     "securitySchemes" : {
       "SecurityScheme" : {
         "type" : "http",
@@ -10,11 +293,13 @@
       }
     }
   },
+  "tags" : [ {
+    "name" : "internal-v1"
+  } ],
   "info" : {
     "title" : "Document API",
     "version" : "1.0.0"
   },
-  "paths" : { },
   "servers" : [ {
     "url" : "http://localhost:8080",
     "description" : "Auto generated value"
