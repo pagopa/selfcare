@@ -23,7 +23,7 @@ services:
 
   azure-cli:
     build:
-      context: "."
+      context: "src/test/resources/"
       dockerfile: "Dockerfile-azure-cli"
     depends_on:
       - azurite
@@ -57,7 +57,7 @@ services:
     networks:
       - developer-network
     env_file:
-      - test-institution-ms.env
+      - src/test/resources/test-institution-ms.env
     depends_on:
       - mongodb
       - mock-server
@@ -69,7 +69,7 @@ services:
     ports:
       - "8087:8087"
     env_file:
-      - test-user-ms.env
+      - src/test/resources/test-user-ms.env
     networks:
       - developer-network
     depends_on:
