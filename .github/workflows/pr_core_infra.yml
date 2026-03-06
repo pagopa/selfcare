@@ -40,6 +40,11 @@ concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
 
+permissions:
+  contents: read
+  packages: read
+
+
 jobs:
   plan:
     uses: ./.github/workflows/call_code_review_infra_dx.yml
