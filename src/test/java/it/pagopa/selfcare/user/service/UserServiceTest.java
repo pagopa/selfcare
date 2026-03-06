@@ -2188,6 +2188,7 @@ class UserServiceTest {
                 "Selc:DeleteProductUsers",
                 "Selc:ListProductUsers",
                 "Selc:ManageProductGroups",
+                "Selc:ListAllProductGroups",
                 "Selc:ListProductGroups",
                 "Selc:CreateDelegation",
                 "Selc:ViewInstitutionData",
