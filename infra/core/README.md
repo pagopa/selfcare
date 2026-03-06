@@ -43,11 +43,13 @@ export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 To apply changes follow the standard terraform lifecycle once the code in this repository has been changed:
 
 ```sh
-terraform.sh init [dev|uat|prod]
+cd /infra/core/ENV-DOMAIN (eg. dev-ar)
 
-terraform.sh plan [dev|uat|prod]
+terraform init
 
-terraform.sh apply [dev|uat|prod]
+terraform plan
+
+terraform apply
 ```
 
 ## Terraform lock.hcl
