@@ -649,7 +649,7 @@ resource "azurerm_resource_group" "documents_sa_rg" {
 module "storage_documents" {
   source = "../_modules/storage_accounts"
 
-  prefix          = local.prefix
+  prefix          = local.prefix_short
   env_short       = local.env_short
   location        = local.location
   domain          = "ar"
