@@ -1,6 +1,6 @@
 resource "random_password" "encryption_key" {
-  length           = 32
-  special          = false
+  length  = 32
+  special = false
 
   keepers = {
     version = 1
@@ -8,8 +8,8 @@ resource "random_password" "encryption_key" {
 }
 
 resource "random_password" "encryption_iv" {
-  length           = 12
-  special          = false
+  length  = 12
+  special = false
 
   keepers = {
     version = 1
