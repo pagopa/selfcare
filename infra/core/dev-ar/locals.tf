@@ -17,7 +17,7 @@ locals {
   tags = {
     CreatedBy   = "Terraform"
     Environment = "Dev"
-    Owner       = "SelfCare"
+    Owner       = "Selfcare"
     Source      = "https://github.com/pagopa/selfcare"
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
   }
