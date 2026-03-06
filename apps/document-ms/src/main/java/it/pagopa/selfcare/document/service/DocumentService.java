@@ -8,7 +8,6 @@ import java.util.List;
 
 import it.pagopa.selfcare.document.model.FormItem;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
-import it.pagopa.selfcare.product.entity.Product;
 import org.jboss.resteasy.reactive.RestResponse;
 
 public interface DocumentService {
@@ -41,11 +40,15 @@ public interface DocumentService {
 
     Uni<Document> retrieveToken(String onboardingId);
 
-    Uni<Document> retrieveToken(Onboarding onboarding, FormItem formItem, Product product);
-
     Uni<String> updateTokenWithFilePath(String filepath, Document document);
 
     Uni<Void> updateTokenUpdatedAt(String onboardingId);
 
-    Uni<Void> persistTokenForImport(Onboarding onboardingPersisted, Product product, OnboardingImportContract contractImported);
+    /**
+     * Updates the contract file paths for a document after contract deletion/move operations.
+     *
+     * @param document the document containing the updated file paths
+     * @return the number of updated records
+     */
+    Uni<Long> updateDocumentContractFiles(Document document);
 }
