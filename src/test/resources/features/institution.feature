@@ -10,9 +10,9 @@ Feature: Institution
     Then The status code is 200
     And The response body contains the list "" of size 2
     And The response body contains at path "" the following list of objects in any order:
-      | id                                      | taxCode                  | name        | surname      | email                                               |
-      | 97a511a7-2acc-47b9-afed-2f3c65753b4a    | PRVTNT80A41H401T         | John        | Doe          | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it        |
-      | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7    | blbrki80A41H401T         | rocky       | Balboa       | r.balboa@regionelazio.it                            |
+      | id                                      | taxCode                  | name        | surname      | email                                               | mobilePhone | telephone  |
+      | 97a511a7-2acc-47b9-afed-2f3c65753b4a    | PRVTNT80A41H401T         | John        | Doe          | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it        | 3365252525  | 0987654321 |
+      | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7    | blbrki80A41H401T         | rocky       | Balboa       | r.balboa@regionelazio.it                            |             |            |
 
   Scenario: Successfully fetches detailed information about users associated with a wrong institution id
     Given User login with username "j.doe" and password "test"

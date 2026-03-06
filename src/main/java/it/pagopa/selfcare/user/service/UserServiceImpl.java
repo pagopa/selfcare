@@ -142,6 +142,8 @@ public class UserServiceImpl implements UserService {
                                 .taxCode(userResource.getFiscalCode())
                                 .products(onboardedProductMapper.toList(userInstitution.getProducts()))
                                 .email(UserUtils.getMailByMailUuid(userResource.getWorkContacts(), userInstitution.getUserMailUuid()).orElse(null))
+                                .mobilePhone(UserUtils.getMobilePhoneByMailUuid(userResource.getWorkContacts(), userInstitution.getUserMailUuid()).orElse(null))
+                                .telephone(UserUtils.getTelephoneByMailUuid(userResource.getWorkContacts(), userInstitution.getUserMailUuid()).orElse(null))
                                 .build()))
                 .merge();
     }

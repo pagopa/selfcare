@@ -18,6 +18,8 @@ public class UserProductResponse {
     private String name;
     private String surname;
     private String email;
+    private String mobilePhone;
+    private String telephone;
     private List<OnboardedProductResponse> products;
 
 }

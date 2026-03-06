@@ -86,10 +86,16 @@ class UserServiceTest {
         userResource.setName(certifiedName);
         userResource.setFamilyName(certifiedSurname);
         userResource.setFiscalCode("taxCode");
-        org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema certifiedEmail = new EmailCertifiableSchema();
+        EmailCertifiableSchema certifiedEmail = new EmailCertifiableSchema();
         certifiedEmail.setValue("test@test.it");
+        MobilePhoneCertifiableSchema certifiedMobilePhone = new MobilePhoneCertifiableSchema();
+        certifiedMobilePhone.setValue("1234567890");
+        TelephoneCertifiableSchema certifiedTelephone = new TelephoneCertifiableSchema();
+        certifiedTelephone.setValue("0987654321");
         WorkContactResource workContactResource = new WorkContactResource();
         workContactResource.setEmail(certifiedEmail);
+        workContactResource.setMobilePhone(certifiedMobilePhone);
+        workContactResource.setTelephone(certifiedTelephone);
         userResource.setEmail(certifiedEmail);
 
         Map<String, WorkContactResource> map = new HashMap<>();
@@ -328,6 +334,8 @@ class UserServiceTest {
 
         UserProductResponse actualUser = actual.get(0);
         assertEquals(userResource.getWorkContacts().get(workContractsKey).getEmail().getValue(), actualUser.getEmail());
+        assertEquals(userResource.getWorkContacts().get(workContractsKey).getMobilePhone().getValue(), actualUser.getMobilePhone());
+        assertEquals(userResource.getWorkContacts().get(workContractsKey).getTelephone().getValue(), actualUser.getTelephone());
         assertEquals(userResource.getName().getValue(), actualUser.getName());
         assertEquals(userResource.getFiscalCode(), actualUser.getTaxCode());
 

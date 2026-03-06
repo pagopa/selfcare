@@ -22,9 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.reactive.ClientWebApplicationException;
-import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.UserResource;
-import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.util.*;
 
@@ -166,6 +164,34 @@ public class UserUtils {
                 .map(WorkContactResource::getEmail)
                 .filter(Objects::nonNull)
                 .map(EmailCertifiableSchema::getValue)
+                .filter(Objects::nonNull)
+                .findFirst();
+    }
+
+    public static Optional<String> getMobilePhoneByMailUuid(Map<String, WorkContactResource> workContacts, String mailUid) {
+        if(Objects.isNull(workContacts) || workContacts.isEmpty() || Objects.isNull(mailUid)) return Optional.empty();
+
+        return workContacts.entrySet().stream()
+                .filter(entry -> entry.getKey().equals(mailUid))
+                .map(Map.Entry::getValue)
+                .filter(Objects::nonNull)
+                .map(WorkContactResource::getMobilePhone)
+                .filter(Objects::nonNull)
+                .map(MobilePhoneCertifiableSchema::getValue)
+                .filter(Objects::nonNull)
+                .findFirst();
+    }
+
+    public static Optional<String> getTelephoneByMailUuid(Map<String, WorkContactResource> workContacts, String mailUid) {
+        if(Objects.isNull(workContacts) || workContacts.isEmpty() || Objects.isNull(mailUid)) return Optional.empty();
+
+        return workContacts.entrySet().stream()
+                .filter(entry -> entry.getKey().equals(mailUid))
+                .map(Map.Entry::getValue)
+                .filter(Objects::nonNull)
+                .map(WorkContactResource::getTelephone)
+                .filter(Objects::nonNull)
+                .map(TelephoneCertifiableSchema::getValue)
                 .filter(Objects::nonNull)
                 .findFirst();
     }

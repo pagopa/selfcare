@@ -1623,6 +1623,10 @@ components:
           type: string
         email:
           type: string
+        mobilePhone:
+          type: string
+        telephone:
+          type: string
         products:
           type: array
           items:
