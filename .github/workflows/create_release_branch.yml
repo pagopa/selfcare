@@ -71,7 +71,7 @@ jobs:
 
           NEW_VERSION=$(semver --increment ${{ inputs.version-bump }} "$OLD_VERSION")
           NEW_BRANCH="releases/${DOMAIN}_${NEW_VERSION}"
-          TAG_NAME="${DOMAIN}-${NEW_VERSION}"
+          TAG_NAME="${DOMAIN}_${NEW_VERSION}"
           OLD_TAG=$(git tag -l "${DOMAIN}*" | sort -V | tail -n 1)
 
           echo "NEW_VERSION=${NEW_VERSION}" >> $GITHUB_OUTPUT
