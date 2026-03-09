@@ -1,0 +1,49 @@
+name: IAM - Trigger Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options: [dev, uat, prod]
+        required: true
+      branch:
+        type: string
+        description: Branch name (e.g. releases/iam_1.0.0)
+        required: true
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.extract.outputs.VERSION }}
+    steps:
+      - id: extract
+        run: |
+          VERSION=$(echo "${{ inputs.branch }}" | sed 's/.*iam_//')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+  release:
+    needs: prepare
+    uses: ./.github/workflows/call_release_app.yml
+    with:
+      env: ${{ inputs.env }}
+      target: selc
+      app: iam
+      APP_PATH: apps/iam
+      INFRA_PATH: infra/apps/iam
+      APPS_POM: apps/pom.xml
+      POM: pom.xml
+    secrets: inherit
+
+  update_prod_variable:
+    name: "Update PROD Version Variable"
+    needs: [prepare, release]
+    if: inputs.env == 'prod'
+    uses: ./.github/workflows/call_update_gh_variable.yml
+    with:
+      domain: iam
+      env: prod
+      version: ${{ needs.prepare.outputs.version }}
+    secrets: inherit

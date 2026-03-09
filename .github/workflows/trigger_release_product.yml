@@ -1,0 +1,62 @@
+name: Product - Trigger Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options: [dev, uat, prod]
+        required: true
+      branch:
+        type: string
+        description: Branch name (e.g. releases/product_1.0.0)
+        required: true
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.extract.outputs.VERSION }}
+    steps:
+      - id: extract
+        run: |
+          VERSION=$(echo "${{ inputs.branch }}" | sed 's/.*product_//')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+  release_product:
+    needs: prepare
+    uses: ./.github/workflows/call_release_app.yml
+    with:
+      env: ${{ inputs.env }}
+      target: selc
+      app: product
+      APP_PATH: apps/product
+      INFRA_PATH: infra/apps/product
+      APPS_POM: apps/pom.xml
+      POM: pom.xml
+    secrets: inherit
+
+  release_product_cdc:
+    needs: prepare
+    uses: ./.github/workflows/call_release_app.yml
+    with:
+      env: ${{ inputs.env }}
+      target: selc
+      app: product-cdc
+      APP_PATH: apps/product-cdc
+      INFRA_PATH: infra/apps/product-cdc
+      APPS_POM: apps/pom.xml
+      POM: pom.xml
+    secrets: inherit
+
+  update_prod_variable:
+    name: "Update PROD Version Variable"
+    needs: [prepare, release_product, release_product_cdc]
+    if: inputs.env == 'prod'
+    uses: ./.github/workflows/call_update_gh_variable.yml
+    with:
+      domain: product
+      env: prod
+      version: ${{ needs.prepare.outputs.version }}
+    secrets: inherit
