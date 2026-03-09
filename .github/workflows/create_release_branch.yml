@@ -32,30 +32,36 @@ jobs:
       contents: write
       actions: write
     outputs:
-      new_version: ${{ env.NEW_VERSION }}
-      new_branch: ${{ env.NEW_BRANCH }}
+      new_version: ${{ steps.versioning.outputs.NEW_VERSION }}
+      new_branch: ${{ steps.versioning.outputs.NEW_BRANCH }}
 
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       DOMAIN: ${{ inputs.domain }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
 
-      - name: Install Node.js & Semver
+      - name: Fetch all branches and tags
+        run: git fetch --all --tags
+
+      - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - run: npm install -g semver
 
-      - name: Calculate Versions
+      - name: Install semver CLI
+        run: npm install -g semver
+
+      - name: Calculate New Version
         id: versioning
         run: |
           PREFIX="releases/${DOMAIN}_"
-          LAST_BRANCH=$(git branch -r | grep -Eo "${PREFIX}[0-9]+\.[0-9]+\.[0-9]+" | sort -V | tail -n 1)
+          LAST_BRANCH=$(git branch -a | grep -Eo "${PREFIX}[0-9]+\.[0-9]+\.[0-9]+" | sort -V | tail -n 1)
 
           if [ -z "$LAST_BRANCH" ]; then
             OLD_VERSION="0.0.0"
@@ -68,27 +74,38 @@ jobs:
           TAG_NAME="${DOMAIN}-v${NEW_VERSION}"
           OLD_TAG="${DOMAIN}-v${OLD_VERSION}"
 
+          echo "NEW_VERSION=${NEW_VERSION}" >> $GITHUB_OUTPUT
+          echo "NEW_BRANCH=${NEW_BRANCH}" >> $GITHUB_OUTPUT
+          echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_OUTPUT
+          echo "OLD_TAG=${OLD_TAG}" >> $GITHUB_OUTPUT
+
           echo "NEW_VERSION=${NEW_VERSION}" >> $GITHUB_ENV
           echo "NEW_BRANCH=${NEW_BRANCH}" >> $GITHUB_ENV
           echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
           echo "OLD_TAG=${OLD_TAG}" >> $GITHUB_ENV
-          echo "OLD_VERSION=${OLD_VERSION}" >> $GITHUB_ENV
 
-      - name: Create and Push Branch
+      - name: Create and Push Release Branch
         run: |
           git checkout -b ${{ env.NEW_BRANCH }}
           git push origin ${{ env.NEW_BRANCH }}
 
       - name: Create GitHub Release
         run: |
+          if gh release view "${{ env.OLD_TAG }}" >/dev/null 2>&1; then
+            NOTES_FLAG="--notes-start-tag ${{ env.OLD_TAG }}"
+          else
+            NOTES_FLAG=""
+          fi
+
           gh release create ${{ env.TAG_NAME }} \
             --title "${{ env.DOMAIN }} v${{ env.NEW_VERSION }}" \
             --target ${{ env.NEW_BRANCH }} \
             --generate-notes \
-            --notes-start-tag ${{ env.OLD_TAG }} \
+            $NOTES_FLAG \
             --prerelease
 
   update_uat_variable:
+    name: "Update UAT Version Variable"
     needs: create_branch
     uses: ./.github/workflows/call_update_gh_variable.yml
     with:
@@ -99,10 +116,11 @@ jobs:
       gh_token: ${{ secrets.GH_PAT_VARIABLES }}
 
   trigger_deploy:
+    name: "Trigger UAT Deployment"
     needs: [create_branch, update_uat_variable]
     runs-on: ubuntu-24.04
     steps:
-      - name: Trigger Domain Orchestrator
+      - name: Trigger Domain Orchestrator Workflow
         run: |
           gh workflow run "trigger_release_${{ inputs.domain }}.yml" \
             --ref ${{ needs.create_branch.outputs.new_branch }} \
