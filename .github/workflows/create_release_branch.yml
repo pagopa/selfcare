@@ -1,4 +1,4 @@
-name: Generic - Create Release Branch
+name: Create Release Branch
 
 on:
   workflow_dispatch:

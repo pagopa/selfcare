@@ -27,7 +27,8 @@ jobs:
           
           VAR_NAME="${VAR_DOMAIN}_CURRENT_${VAR_ENV}_VERSION"
           
-          echo "Updating variable $VAR_NAME to ${{ inputs.version }}"
+          echo "Updating variable $VAR_NAME to ${{ inputs.version }} in repo ${{ github.repository }}"
           gh variable set "$VAR_NAME" --body "${{ inputs.version }}"
         env:
           GH_TOKEN: ${{ secrets.gh_token }}
+          GH_REPO: ${{ github.repository }}
