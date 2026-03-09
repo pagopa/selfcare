@@ -70,7 +70,7 @@ jobs:
           fi
 
           NEW_VERSION=$(semver --increment ${{ inputs.version-bump }} "$OLD_VERSION")
-          NEW_BRANCH="releases/${DOMAIN}_${NEW_VERSION}"
+          NEW_BRANCH="releases/${DOMAIN}_v${NEW_VERSION}"
           TAG_NAME="${DOMAIN}-v${NEW_VERSION}"
           OLD_TAG="${DOMAIN}-v${OLD_VERSION}"
 
