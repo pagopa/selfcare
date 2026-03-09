@@ -67,5 +67,5 @@ Feature: User Permissions
       | productId | prod-A |
     And The following path params:
       | userId | a0530f76-3454-418c-9d65-eb3162075495 |
-    When I send a GET request to "/iam/user/{userId}"
+    When I send a GET request to "/iam/users/{userId}/permissions/read:users"
     Then The status code is 200
