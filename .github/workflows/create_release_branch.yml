@@ -66,13 +66,13 @@ jobs:
           if [ -z "$LAST_BRANCH" ]; then
             OLD_VERSION="0.0.0"
           else
-            OLD_VERSION=$(echo "$LAST_BRANCH" | sed "s|.*${DOMAIN}_||")
+            OLD_VERSION=$(echo "$LAST_BRANCH" | grep -Eo "[0-9]+\.[0-9]+\.[0-9]+")
           fi
 
           NEW_VERSION=$(semver --increment ${{ inputs.version-bump }} "$OLD_VERSION")
-          NEW_BRANCH="releases/${DOMAIN}_v${NEW_VERSION}"
-          TAG_NAME="${DOMAIN}-v${NEW_VERSION}"
-          OLD_TAG="${DOMAIN}-v${OLD_VERSION}"
+          NEW_BRANCH="releases/${DOMAIN}_${NEW_VERSION}"
+          TAG_NAME="${DOMAIN}-${NEW_VERSION}"
+          OLD_TAG=$(git tag -l "${DOMAIN}*" | sort -V | tail -n 1)
 
           echo "NEW_VERSION=${NEW_VERSION}" >> $GITHUB_OUTPUT
           echo "NEW_BRANCH=${NEW_BRANCH}" >> $GITHUB_OUTPUT
@@ -91,11 +91,16 @@ jobs:
 
       - name: Create GitHub Release
         run: |
+          NOTES_TAG_ARG=""
+          if [ -n "${{ env.OLD_TAG }}" ]; then
+            NOTES_TAG_ARG="--notes-start-tag ${{ env.OLD_TAG }}"
+          fi
+
           gh release create ${{ env.TAG_NAME }} \
-            --title "${{ env.DOMAIN }}_v${{ env.NEW_VERSION }}" \
+            --title "${{ env.DOMAIN }}_${{ env.NEW_VERSION }}" \
             --target ${{ env.NEW_BRANCH }} \
             --generate-notes \
-            --notes-start-tag ${{ env.OLD_TAG }} \
+            $NOTES_TAG_ARG \
             --prerelease
 
   update_uat_variable:
