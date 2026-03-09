@@ -23,13 +23,13 @@ jobs:
       actions: write
     env:
       GH_REPO: ${{ github.repository }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{ secrets.GH_PAT_VARIABLES }}
     steps:
       - name: Update Variable
         run: |
           VAR_DOMAIN=$(echo "${{ inputs.domain }}" | tr '[:lower:]' '[:upper:]')
           VAR_ENV=$(echo "${{ inputs.env }}" | tr '[:lower:]' '[:upper:]')
           VAR_NAME="${VAR_DOMAIN}_CURRENT_${VAR_ENV}_VERSION"
-          
+
           echo "Updating variable $VAR_NAME to ${{ inputs.version }} in repo ${{ github.repository }}"
           gh variable set "$VAR_NAME" --body "${{ inputs.version }}" --repo ${{ github.repository }}
