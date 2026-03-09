@@ -29,7 +29,7 @@ jobs:
         run: |
           VAR_DOMAIN=$(echo "${{ inputs.domain }}" | tr '[:lower:]' '[:upper:]')
           VAR_ENV=$(echo "${{ inputs.env }}" | tr '[:lower:]' '[:upper:]')
-          VAR_NAME="${VAR_DOMAIN}_BE_CURRENT_${VAR_ENV}_VERSION"
+          VAR_NAME="${VAR_DOMAIN}_CURRENT_${VAR_ENV}_VERSION"
           
           echo "Updating variable $VAR_NAME to ${{ inputs.version }} in repo ${{ github.repository }}"
           gh variable set "$VAR_NAME" --body "${{ inputs.version }}" --repo ${{ github.repository }}
