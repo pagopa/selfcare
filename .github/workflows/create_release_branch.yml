@@ -92,7 +92,7 @@ jobs:
       - name: Create GitHub Release
         run: |
           gh release create ${{ env.TAG_NAME }} \
-            --title "${{ env.DOMAIN }} v${{ env.NEW_VERSION }}" \
+            --title "${{ env.DOMAIN }}_v${{ env.NEW_VERSION }}" \
             --target ${{ env.NEW_BRANCH }} \
             --generate-notes \
             --notes-start-tag ${{ env.OLD_TAG }} \
