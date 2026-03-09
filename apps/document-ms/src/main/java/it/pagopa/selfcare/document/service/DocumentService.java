@@ -1,7 +1,9 @@
 package it.pagopa.selfcare.document.service;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.document.controller.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.controller.response.ContractSignedReport;
+import it.pagopa.selfcare.document.controller.response.DocumentBuilderResponse;
 import it.pagopa.selfcare.document.entity.Document;
 import java.io.File;
 import java.util.List;
@@ -53,4 +55,15 @@ public interface DocumentService {
      * @return the number of updated records
      */
     Uni<Long> updateDocumentContractFiles(Document document);
+
+    /**
+     * Saves a document (contract or attachment) based on the TokenType in the request.
+     * For INSTITUTION/USER types, saves a contract document.
+     * For ATTACHMENT type, saves an attachment document.
+     *
+     * @param request the document save request
+     * @return the save response containing documentId, checksum and alreadyExists flag
+     */
+    Uni<DocumentBuilderResponse> saveDocument(DocumentBuilderRequest request);
+
 }

@@ -3,6 +3,7 @@ package it.pagopa.selfcare.document.controller;
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.document.controller.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.controller.response.DocumentResponse;
 import it.pagopa.selfcare.document.mapper.DocumentMapper;
 import it.pagopa.selfcare.document.service.DocumentService;
@@ -205,5 +206,19 @@ public class DocumentController {
                         .build();
               }
             });
+  }
+
+  @Operation(summary = "Save document (contract or attachment)",
+          description = "Persists a document associated with an onboarding. " +
+                  "For INSTITUTION/USER token types, saves a contract. " +
+                  "For ATTACHMENT token type, saves an attachment.")
+  @POST
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<Response> saveDocument(@Valid DocumentBuilderRequest request) {
+    log.info("Saving document for onboardingId: {}, tokenType: {}",
+            request.getOnboardingId(), request.getTokenType());
+    return documentService.saveDocument(request)
+            .onItem().transform(response -> Response.status(Response.Status.CREATED).entity(response).build());
   }
 }

@@ -1,11 +1,16 @@
 package it.pagopa.selfcare.document.service.impl;
 
+import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+import eu.europa.esig.dss.model.DSSDocument;
+import eu.europa.esig.dss.model.FileDocument;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
 import it.pagopa.selfcare.document.config.DocumentMsConfig;
+import it.pagopa.selfcare.document.controller.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.controller.response.ContractSignedReport;
+import it.pagopa.selfcare.document.controller.response.DocumentBuilderResponse;
 import it.pagopa.selfcare.document.entity.Document;
 import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
@@ -24,8 +29,10 @@ import org.jboss.resteasy.reactive.RestResponse;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 import static it.pagopa.selfcare.document.util.ErrorMessage.ORIGINAL_DOCUMENT_NOT_FOUND;
 import static it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT;
@@ -221,6 +228,83 @@ public class DocumentServiceImp implements DocumentService {
         );
     }
 
+    @Override
+    public Uni<DocumentBuilderResponse> saveDocument(DocumentBuilderRequest request) {
+        log.info("Saving document for onboarding: {}, tokenType: {}",
+                request.getOnboardingId(), request.getTokenType());
+
+        if (request.isAttachment()) {
+            return handleAttachmentDocument(request);
+        }
+        // INSTITUTION and USER share the same logic
+        return handleContractDocument(request);
+    }
+
+    private Uni<DocumentBuilderResponse> handleContractDocument(DocumentBuilderRequest request) {
+        String onboardingId = request.getOnboardingId();
+
+        return documentRepository.findByOnboardingId(onboardingId)
+                .onItem().transformToUni(existingDoc -> {
+                    if (Objects.nonNull(existingDoc)) {
+                        return Uni.createFrom().item(DocumentBuilderResponse.builder()
+                                .documentId(existingDoc.getId())
+                                .alreadyExists(true)
+                                .build());
+                    }
+
+                    return retrieveContract(onboardingId, false)
+                            .onItem().transform(restResponse -> {
+                                File contract = restResponse.getEntity();
+                                DSSDocument dssDocument = new FileDocument(contract);
+                                return dssDocument.getDigest(DigestAlgorithm.SHA256).getBase64Value();
+                            })
+                            .onItem().transformToUni(digest -> persistDocument(request, digest));
+                });
+    }
+
+    private Uni<DocumentBuilderResponse> handleAttachmentDocument(DocumentBuilderRequest request) {
+        String onboardingId = request.getOnboardingId();
+
+        return retrieveAttachment(onboardingId, request.getDocumentName())
+                .onItem().transform(restResponse -> {
+                    File attachment = restResponse.getEntity();
+                    DSSDocument dssDocument = new FileDocument(attachment);
+                    return dssDocument.getDigest(DigestAlgorithm.SHA256).getBase64Value();
+                })
+                .onItem().transformToUni(digest -> persistDocument(request, digest));
+    }
+
+    private Uni<DocumentBuilderResponse> persistDocument(DocumentBuilderRequest request, String digest) {
+        Document document = buildDocument(request, digest);
+
+        return documentRepository.persist(document)
+                .onItem().transform(persisted -> DocumentBuilderResponse.builder()
+                        .documentId(persisted.getId())
+                        .checksum(digest)
+                        .alreadyExists(false)
+                        .build());
+    }
+
+    private Document buildDocument(DocumentBuilderRequest request, String digest) {
+        log.debug("Creating Document for onboarding {} ...", request.getOnboardingId());
+        Document document = new Document();
+        String documentId = request.isAttachment()
+                ? UUID.randomUUID().toString()
+                : request.getOnboardingId();
+        document.setId(documentId);
+        document.setOnboardingId(request.getOnboardingId());
+        document.setProductId(request.getProductId());
+        document.setChecksum(digest);
+        document.setType(request.getTokenType());
+        document.setContractTemplate(request.getTemplatePath());
+        document.setContractVersion(request.getTemplateVersion());
+        document.setContractFilename(request.getPdfFormatFilename());
+        document.setName(request.getDocumentName());
+        document.setCreatedAt(LocalDateTime.now());
+        document.setUpdatedAt(LocalDateTime.now());
+        return document;
+    }
+
     private String buildAttachmentPath(Document document) {
         return Objects.nonNull(document.getContractSigned()) ? document.getContractSigned() : getAttachmentByOnboarding(document.getOnboardingId(), document.getContractFilename());
     }
@@ -231,7 +315,7 @@ public class DocumentServiceImp implements DocumentService {
 
     private Uni<Boolean> checkAttachmentExists(Document document, String onboardingId, String attachmentName) {
         if (Objects.isNull(document)) {
-            log.info("Token not found onboardingId={}, attachmentName={}", onboardingId, attachmentName);
+            log.info("Token not found onboardingId={}, documentName={}", onboardingId, attachmentName);
             return Uni.createFrom().item(false);
         }
 
@@ -243,10 +327,10 @@ public class DocumentServiceImp implements DocumentService {
     private boolean verifyAttachmentInStorage(Document document, String onboardingId, String attachmentName) {
         try {
             azureBlobClient.getProperties(document.getContractSigned());
-            log.info("Attachment found in storage onboardingId={}, attachmentName={}", onboardingId, attachmentName);
+            log.info("Attachment found in storage onboardingId={}, documentName={}", onboardingId, attachmentName);
             return true;
         } catch (SelfcareAzureStorageException e) {
-            log.info("Attachment not found in storage onboardingId={}, attachmentName={}", onboardingId, attachmentName);
+            log.info("Attachment not found in storage onboardingId={}, documentName={}", onboardingId, attachmentName);
             return false;
         }
     }
