@@ -22,7 +22,6 @@ jobs:
     permissions:
       actions: write
     env:
-      GH_TOKEN: ${{ secrets.GH_PAT_VARIABLES }}
       GH_REPO: ${{ github.repository }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
