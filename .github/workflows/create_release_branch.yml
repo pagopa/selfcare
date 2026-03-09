@@ -95,7 +95,7 @@ jobs:
             --title "${{ env.DOMAIN }} v${{ env.NEW_VERSION }}" \
             --target ${{ env.NEW_BRANCH }} \
             --generate-notes \
-            --notes-start-tag v${{ env.OLD_TAG }} \
+            --notes-start-tag ${{ env.OLD_TAG }} \
             --prerelease
 
   update_uat_variable:
