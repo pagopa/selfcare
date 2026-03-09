@@ -7,9 +7,12 @@ import jakarta.enterprise.context.ApplicationScoped;
 import org.bson.types.ObjectId;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @ApplicationScoped
 public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Document, ObjectId> {
+
+    private static final String ONBOARDING_ID = "onboardingId";
 
     public Uni<Long> updateContractFiles(String documentId, String contractSigned, String contractFilename) {
         return update("contractSigned = ?1 and contractFilename = ?2 and updatedAt = ?3",
@@ -22,7 +25,12 @@ public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Do
                 .firstResult();
     }
 
-    public Uni<Document> findById(String onboardingId) {
-        return find("onboardingId", onboardingId).firstResult();
+    public Uni<Document> findByOnboardingId(String onboardingId) {
+        return find(ONBOARDING_ID, onboardingId).firstResult();
     }
+
+    public Uni<List<Document>> findAllByOnboardingId(String onboardingId) {
+        return find(ONBOARDING_ID, onboardingId).list();
+    }
+
 }

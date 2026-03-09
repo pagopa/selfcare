@@ -3,25 +3,29 @@ package it.pagopa.selfcare.document.controller;
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.document.controller.response.DocumentResponse;
+import it.pagopa.selfcare.document.mapper.DocumentMapper;
+import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.document.controller.response.ContractSignedReport;
 import it.pagopa.selfcare.document.entity.Document;
 import it.pagopa.selfcare.document.exception.ConflictException;
-import it.pagopa.selfcare.document.service.DocumentService;
 import jakarta.inject.Inject;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 import java.io.File;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestResponse;
+
+import java.util.List;
+import org.apache.http.HttpStatus;
+import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
 import org.owasp.encoder.Encode;
 
@@ -37,6 +41,88 @@ public class DocumentController {
   SecurityIdentity securityIdentity;
 
   private final DocumentService documentService;
+  private final DocumentMapper documentMapper;
+
+    /**
+     * Retrieves the document for a given onboarding
+     *
+     * @param onboardingId onboarding's unique identifier
+     * @return The document
+     * * Code: 200, Message: successful operation, DataType: DocumentId
+     * * Code: 400, Message: Invalid ID supplied, DataType: Problem
+     * * Code: 404, Message: Document not found, DataType: Problem
+     */
+
+    @Operation(
+            summary = "Retrieves the documents for a given onboarding",
+            description = "Fetches a list of documents associated with the specified onboarding ID."
+    )
+    @GET
+    @Path("/onboarding/{onboardingId}")
+    public Uni<List<DocumentResponse>> getDocumentByOnboardingId(@PathParam(value = "onboardingId") String onboardingId) {
+        return documentService.getDocumentsByOnboardingId(onboardingId)
+                .map(documents -> documents.stream()
+                        .map(documentMapper::toResponse)
+                        .toList());
+    }
+
+    @Operation(
+            summary = "Retrieves the document for a given document ID",
+            description = "Fetches a document associated with the specified document ID."
+    )
+    @GET
+    @Path("/{id}")
+    public Uni<DocumentResponse> getDocumentById(@PathParam(value = "id") String id) {
+        return documentService.getDocumentById(id)
+                .map(documentMapper::toResponse);
+    }
+
+    @Operation(
+            summary = "Retrieve contract not signed for a given onboarding",
+            description = "Downloads the unsigned contract file associated with the specified onboarding ID."
+    )
+    @GET
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Path("/{onboardingId}/contract")
+    public Uni<RestResponse<File>> getContract(@PathParam(value = "onboardingId") String onboardingId) {
+        return documentService.retrieveContract(onboardingId, Boolean.FALSE);
+    }
+
+    @Operation(
+            summary = "Retrieve template attachment for a given onboarding and filename",
+            description = "Downloads the template attachment file associated with the specified onboarding ID and filename."
+    )
+    @GET
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Path("/{onboardingId}/template-attachment")
+    public Uni<RestResponse<File>> getTemplateAttachment(@PathParam(value = "onboardingId") String onboardingId,
+                                                         @NotNull @QueryParam(value = "name") String attachmentName) {
+        return documentService.retrieveTemplateAttachment(onboardingId, attachmentName);
+    }
+
+    @Operation(
+            summary = "Find an attachment for a given onboarding id and update the contract signed path",
+            description = "Find  an attachment for a given onboarding id and update the contract signed path"
+    )
+    @PUT
+    @Tag(name = "internal-v1")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/contract-signed")
+    public Uni<Long> updateContractSigned(@NotNull @QueryParam(value = "onboardingId") String onboardingId,
+                                          @NotNull @QueryParam(value = "contractSigned") String contractSigned) {
+        return documentService.updateContractSigned(onboardingId, contractSigned);
+    }
+
+    @Operation(
+            summary = "Retrieve contract signed for a given onboarding",
+            description = "Downloads the contract file associated with the specified onboarding ID."
+    )
+    @GET
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Path("/{id}/contract-signed")
+    public Uni<RestResponse<File>> getContractSigned(@PathParam(value = "id") String id) {
+        return documentService.retrieveSignedFile(id);
+    }
 
   @Operation(
           summary = "Retrieve attachment for a given onboarding and filename",

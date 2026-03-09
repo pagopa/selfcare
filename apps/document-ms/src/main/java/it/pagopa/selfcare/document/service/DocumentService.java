@@ -12,11 +12,13 @@ import org.jboss.resteasy.reactive.RestResponse;
 
 public interface DocumentService {
 
-    Uni<List<Document>> getToken(String onboardingId);
+    Uni<List<Document>> getDocumentsByOnboardingId(String onboardingId);
+
+    Uni<Document> getDocumentById(String id);
 
     Uni<RestResponse<File>> retrieveContract(String onboardingId, boolean isSigned);
 
-    Uni<RestResponse<File>> retrieveSignedFile(String onboardingId);
+    Uni<RestResponse<File>> retrieveSignedFile(String id);
 
     Uni<RestResponse<File>> retrieveTemplateAttachment(String onboardingId, String attachmentName);
 

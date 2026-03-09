@@ -54,6 +54,123 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
+  /v1/documents/contract-signed:
+    put:
+      summary: Find an attachment for a given onboarding id and update the contract
+        signed path
+      description: Find  an attachment for a given onboarding id and update the contract
+        signed path
+      operationId: updateContractSigned
+      tags:
+      - internal-v1
+      parameters:
+      - name: contractSigned
+        in: query
+        schema:
+          type: string
+        required: true
+      - name: onboardingId
+        in: query
+        schema:
+          type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: integer
+                format: int64
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /v1/documents/onboarding/{onboardingId}:
+    get:
+      summary: Retrieves the documents for a given onboarding
+      description: Fetches a list of documents associated with the specified onboarding
+        ID.
+      operationId: getDocumentByOnboardingId
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DocumentResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      tags:
+      - Document Controller
+      security:
+      - SecurityScheme: []
+  /v1/documents/{id}:
+    get:
+      summary: Retrieves the document for a given document ID
+      description: Fetches a document associated with the specified document ID.
+      operationId: getDocumentById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      tags:
+      - Document Controller
+      security:
+      - SecurityScheme: []
+  /v1/documents/{id}/contract-signed:
+    get:
+      summary: Retrieve contract signed for a given onboarding
+      description: Downloads the contract file associated with the specified onboarding
+        ID.
+      operationId: getContractSigned
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      tags:
+      - Document Controller
+      security:
+      - SecurityScheme: []
   /v1/documents/{onboardingId}/attachment:
     post:
       summary: "Upload attachment by verifying and signing document, then save into\
@@ -160,6 +277,67 @@ paths:
       - Document Controller
       security:
       - SecurityScheme: []
+  /v1/documents/{onboardingId}/contract:
+    get:
+      summary: Retrieve contract not signed for a given onboarding
+      description: Downloads the unsigned contract file associated with the specified
+        onboarding ID.
+      operationId: getContract
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      tags:
+      - Document Controller
+      security:
+      - SecurityScheme: []
+  /v1/documents/{onboardingId}/template-attachment:
+    get:
+      summary: Retrieve template attachment for a given onboarding and filename
+      description: Downloads the template attachment file associated with the specified
+        onboarding ID and filename.
+      operationId: getTemplateAttachment
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: name
+        in: query
+        schema:
+          type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      tags:
+      - Document Controller
+      security:
+      - SecurityScheme: []
 components:
   schemas:
     ContractSignedReport:
@@ -197,6 +375,31 @@ components:
         deletedAt:
           $ref: "#/components/schemas/LocalDateTime"
         activatedAt:
+          $ref: "#/components/schemas/LocalDateTime"
+    DocumentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: "#/components/schemas/TokenType"
+        productId:
+          type: string
+        checksum:
+          type: string
+        contractVersion:
+          type: string
+        contractTemplate:
+          type: string
+        contractSigned:
+          type: string
+        createdAt:
+          $ref: "#/components/schemas/LocalDateTime"
+        updatedAt:
+          $ref: "#/components/schemas/LocalDateTime"
+        closedAt:
+          $ref: "#/components/schemas/LocalDateTime"
+        deletedAt:
           $ref: "#/components/schemas/LocalDateTime"
     LocalDateTime:
       type: string
