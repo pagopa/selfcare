@@ -1,0 +1,112 @@
+name: Generic - Create Release Branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        type: choice
+        description: "Domain to release"
+        options:
+          - onboarding
+          - auth
+          - iam
+          - product
+          - webhook
+          - document-ms
+        required: true
+      version-bump:
+        type: choice
+        description: "Major, Minor, or Patch"
+        options:
+          - major
+          - minor
+          - patch
+        default: patch
+        required: true
+
+jobs:
+  create_branch:
+    name: "Create Release Branch"
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: write
+    outputs:
+      new_version: ${{ env.NEW_VERSION }}
+      new_branch: ${{ env.NEW_BRANCH }}
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      DOMAIN: ${{ inputs.domain }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Install Node.js & Semver
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install -g semver
+
+      - name: Calculate Versions
+        id: versioning
+        run: |
+          PREFIX="releases/${DOMAIN}_"
+          LAST_BRANCH=$(git branch -r | grep -Eo "${PREFIX}[0-9]+\.[0-9]+\.[0-9]+" | sort -V | tail -n 1)
+
+          if [ -z "$LAST_BRANCH" ]; then
+            OLD_VERSION="0.0.0"
+          else
+            OLD_VERSION=$(echo "$LAST_BRANCH" | sed "s|.*${DOMAIN}_||")
+          fi
+
+          NEW_VERSION=$(semver --increment ${{ inputs.version-bump }} "$OLD_VERSION")
+          NEW_BRANCH="releases/${DOMAIN}_${NEW_VERSION}"
+          TAG_NAME="${DOMAIN}-v${NEW_VERSION}"
+          OLD_TAG="${DOMAIN}-v${OLD_VERSION}"
+
+          echo "NEW_VERSION=${NEW_VERSION}" >> $GITHUB_ENV
+          echo "NEW_BRANCH=${NEW_BRANCH}" >> $GITHUB_ENV
+          echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
+          echo "OLD_TAG=${OLD_TAG}" >> $GITHUB_ENV
+          echo "OLD_VERSION=${OLD_VERSION}" >> $GITHUB_ENV
+
+      - name: Create and Push Branch
+        run: |
+          git checkout -b ${{ env.NEW_BRANCH }}
+          git push origin ${{ env.NEW_BRANCH }}
+
+      - name: Create GitHub Release
+        run: |
+          gh release create ${{ env.TAG_NAME }} \
+            --title "${{ env.DOMAIN }} v${{ env.NEW_VERSION }}" \
+            --target ${{ env.NEW_BRANCH }} \
+            --generate-notes \
+            --notes-start-tag ${{ env.OLD_TAG }} \
+            --prerelease
+
+  update_uat_variable:
+    needs: create_branch
+    uses: ./.github/workflows/call_update_gh_variable.yml
+    with:
+      domain: ${{ inputs.domain }}
+      env: uat
+      version: ${{ needs.create_branch.outputs.new_version }}
+    secrets:
+      gh_token: ${{ secrets.GH_PAT_VARIABLES }}
+
+  trigger_deploy:
+    needs: [create_branch, update_uat_variable]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Trigger Domain Orchestrator
+        run: |
+          gh workflow run "trigger_release_${{ inputs.domain }}.yml" \
+            --ref ${{ needs.create_branch.outputs.new_branch }} \
+            -f env=uat \
+            -f branch=${{ needs.create_branch.outputs.new_branch }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
