@@ -28,4 +28,4 @@ jobs:
           echo "Updating variable $VAR_NAME to ${{ inputs.version }} in repo ${{ github.repository }}"
           gh variable set "$VAR_NAME" --body "${{ inputs.version }}" --repo ${{ github.repository }}
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT_VARIABLES || github.token }}
+          GH_TOKEN: ${{ secrets.GH_PAT_VARIABLES }}
