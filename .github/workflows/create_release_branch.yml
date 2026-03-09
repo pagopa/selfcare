@@ -11,6 +11,7 @@ on:
           - auth
           - iam
           - product
+          - product-cdc
           - webhook
           - document-ms
         required: true
@@ -119,8 +120,16 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Trigger Domain Orchestrator Workflow
+        shell: bash
         run: |
-          gh workflow run "trigger_release_${{ inputs.domain }}.yml" \
+          DOMAIN="${{ inputs.domain }}"
+          WF_DOMAIN="$DOMAIN"
+
+          if [[ "$DOMAIN" =~ -cdc$ ]]; then
+            WF_DOMAIN="${DOMAIN//-/_}"
+          fi
+
+          gh workflow run "trigger_release_${WF_DOMAIN}.yml" \
             --repo "${{ github.repository }}" \
             --ref "${{ needs.create_branch.outputs.new_branch }}" \
             -f env=uat \
