@@ -91,17 +91,11 @@ jobs:
 
       - name: Create GitHub Release
         run: |
-          if gh release view "${{ env.OLD_TAG }}" >/dev/null 2>&1; then
-            NOTES_FLAG="--notes-start-tag ${{ env.OLD_TAG }}"
-          else
-            NOTES_FLAG=""
-          fi
-
           gh release create ${{ env.TAG_NAME }} \
             --title "${{ env.DOMAIN }} v${{ env.NEW_VERSION }}" \
             --target ${{ env.NEW_BRANCH }} \
             --generate-notes \
-            $NOTES_FLAG \
+            --notes-start-tag v${{ env.OLD_TAG }} \
             --prerelease
 
   update_uat_variable:
