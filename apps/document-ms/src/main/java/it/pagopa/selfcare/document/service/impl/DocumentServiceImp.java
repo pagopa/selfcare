@@ -17,6 +17,7 @@ import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.model.FormItem;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.document.service.DocumentService;
+import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.HttpHeaders;
@@ -47,8 +48,9 @@ public class DocumentServiceImp implements DocumentService {
     private final AzureBlobClient azureBlobClient;
     private final DocumentMsConfig documentMsConfig;
 
-
-    public DocumentServiceImp(DocumentRepository documentRepository, AzureBlobClient azureBlobClient, DocumentMsConfig documentMsConfig) {
+    public DocumentServiceImp(DocumentRepository documentRepository,
+                              AzureBlobClient azureBlobClient,
+                              DocumentMsConfig documentMsConfig) {
         this.documentRepository = documentRepository;
         this.azureBlobClient = azureBlobClient;
         this.documentMsConfig = documentMsConfig;
@@ -130,8 +132,16 @@ public class DocumentServiceImp implements DocumentService {
     }
 
     @Override
-    public Uni<RestResponse<File>> retrieveTemplateAttachment(String onboardingId, String attachmentName) {
-        return null;
+    public Uni<RestResponse<File>> retrieveTemplateAttachment(String onboardingId, AttachmentTemplate attachment) {
+        return Uni.createFrom()
+                .item(() -> azureBlobClient.getFileAsPdf(attachment.getTemplatePath()))
+                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Template Attachment not found on storage for onboarding: %s", onboardingId)))
+                .runSubscriptionOn(Infrastructure.getDefaultExecutor())
+                .onItem().transform(file -> RestResponse.ResponseBuilder
+                        .ok(file, MediaType.APPLICATION_OCTET_STREAM)
+                        .header(HttpHeaders.CONTENT_DISPOSITION,
+                                HTTP_HEADER_VALUE_ATTACHMENT_FILENAME + attachment.getName())
+                        .build());
     }
 
     @Override
@@ -159,7 +169,7 @@ public class DocumentServiceImp implements DocumentService {
 
     @Override
     public Uni<Long> updateContractSigned(String onboardingId, String documentSignedPath) {
-        return null;
+        return documentRepository.updateContractSignedByOnboardingId(onboardingId, documentSignedPath);
     }
 
     @Override
@@ -205,18 +215,17 @@ public class DocumentServiceImp implements DocumentService {
     }
 
     @Override
-    public Uni<Document> retrieveToken(String onboardingId) {
-        return null;
+    public Uni<String> updateDocumentWithFilePath(String filepath, String documentId) {
+        log.info("Updating document with id {} with file path {}", documentId, filepath);
+        return documentRepository.updateContractSignedByDocumentId(documentId, filepath)
+                .replaceWith(filepath);
     }
 
     @Override
-    public Uni<String> updateTokenWithFilePath(String filepath, Document document) {
-        return null;
-    }
-
-    @Override
-    public Uni<Void> updateTokenUpdatedAt(String onboardingId) {
-        return null;
+    public Uni<Void> updateDocumentUpdatedAt(String onboardingId) {
+        log.info("Updating document 'updatedAt' for onboardingId={}", onboardingId);
+        return documentRepository.updateUpdatedAt(onboardingId)
+                .onItem().transform(ignore -> null);
     }
 
     @Override
@@ -315,7 +324,7 @@ public class DocumentServiceImp implements DocumentService {
 
     private Uni<Boolean> checkAttachmentExists(Document document, String onboardingId, String attachmentName) {
         if (Objects.isNull(document)) {
-            log.info("Token not found onboardingId={}, documentName={}", onboardingId, attachmentName);
+            log.info("Document not found onboardingId={}, documentName={}", onboardingId, attachmentName);
             return Uni.createFrom().item(false);
         }
 

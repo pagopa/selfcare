@@ -10,6 +10,7 @@ import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.document.controller.response.ContractSignedReport;
 import it.pagopa.selfcare.document.entity.Document;
 import it.pagopa.selfcare.document.exception.ConflictException;
+import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.Valid;
@@ -90,15 +91,20 @@ public class DocumentController {
     }
 
     @Operation(
-            summary = "Retrieve template attachment for a given onboarding and filename",
-            description = "Downloads the template attachment file associated with the specified onboarding ID and filename."
+            summary = "Retrieve template attachment for a given onboarding and filename and template path",
+            description = "Downloads the template attachment file associated with the specified onboarding ID and filename and template path."
     )
     @GET
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Path("/{onboardingId}/template-attachment")
-    public Uni<RestResponse<File>> getTemplateAttachment(@PathParam(value = "onboardingId") String onboardingId,
-                                                         @NotNull @QueryParam(value = "name") String attachmentName) {
-        return documentService.retrieveTemplateAttachment(onboardingId, attachmentName);
+    public Uni<RestResponse<File>> getTemplateAttachment(
+            @PathParam(value = "onboardingId") String onboardingId,
+            @NotNull @QueryParam("templatePath") String templatePath,
+            @NotNull @QueryParam("name") String name) {
+        AttachmentTemplate attachment = new AttachmentTemplate();
+        attachment.setTemplatePath(templatePath);
+        attachment.setName(name);
+        return documentService.retrieveTemplateAttachment(onboardingId, attachment);
     }
 
     @Operation(
@@ -109,9 +115,18 @@ public class DocumentController {
     @Tag(name = "internal-v1")
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/contract-signed")
-    public Uni<Long> updateContractSigned(@NotNull @QueryParam(value = "onboardingId") String onboardingId,
+    public Uni<Response> updateContractSigned(@NotNull @QueryParam(value = "onboardingId") String onboardingId,
                                           @NotNull @QueryParam(value = "contractSigned") String contractSigned) {
-        return documentService.updateContractSigned(onboardingId, contractSigned);
+        return documentService.updateContractSigned(onboardingId, contractSigned)
+                .map(updatedCount -> {
+                    if (updatedCount > 0) {
+                        return Response.noContent().build();
+                    } else {
+                        return Response.status(Response.Status.NOT_FOUND)
+                                .entity("Attachment not found for onboardingId: " + onboardingId)
+                                .build();
+                    }
+                });
     }
 
     @Operation(

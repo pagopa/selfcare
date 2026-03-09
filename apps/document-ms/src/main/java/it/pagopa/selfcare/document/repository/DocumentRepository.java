@@ -33,4 +33,19 @@ public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Do
         return find(ONBOARDING_ID, onboardingId).list();
     }
 
+    public Uni<Long> updateContractSignedByOnboardingId(String onboardingId, String contractSignedPath) {
+        return update("contractSigned = ?1", contractSignedPath)
+                .where(ONBOARDING_ID, onboardingId);
+    }
+
+    public Uni<Long> updateContractSignedByDocumentId(String documentId, String contractSignedPath) {
+        return update("contractSigned = ?1", contractSignedPath)
+                .where("_id", documentId);
+    }
+
+    public Uni<Long> updateUpdatedAt(String onboardingId) {
+        return update("updatedAt = ?1", LocalDateTime.now())
+                .where(ONBOARDING_ID, onboardingId);
+    }
+
 }

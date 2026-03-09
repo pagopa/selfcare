@@ -9,6 +9,7 @@ import java.io.File;
 import java.util.List;
 
 import it.pagopa.selfcare.document.model.FormItem;
+import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import org.jboss.resteasy.reactive.RestResponse;
 
@@ -22,7 +23,7 @@ public interface DocumentService {
 
     Uni<RestResponse<File>> retrieveSignedFile(String id);
 
-    Uni<RestResponse<File>> retrieveTemplateAttachment(String onboardingId, String attachmentName);
+    Uni<RestResponse<File>> retrieveTemplateAttachment(String onboardingId, AttachmentTemplate attachment);
 
     Uni<RestResponse<File>> retrieveAttachment(String onboardingId, String attachmentName);
 
@@ -42,11 +43,9 @@ public interface DocumentService {
 
     Uni<Boolean> existsAttachment(String onboardingId, String attachmentName);
 
-    Uni<Document> retrieveToken(String onboardingId);
+    Uni<String> updateDocumentWithFilePath(String filepath, String documentId);
 
-    Uni<String> updateTokenWithFilePath(String filepath, Document document);
-
-    Uni<Void> updateTokenUpdatedAt(String onboardingId);
+    Uni<Void> updateDocumentUpdatedAt(String onboardingId);
 
     /**
      * Updates the contract file paths for a document after contract deletion/move operations.
