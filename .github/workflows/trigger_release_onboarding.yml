@@ -61,7 +61,7 @@ jobs:
       - name: Trigger Onboarding ms Release
         run: |
           gh workflow run release_app.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=selc -f app=onboarding
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=selc -f app=onboarding-ms
 
       - name: Trigger Onboarding CDC Release
         run: |
@@ -76,7 +76,7 @@ jobs:
       - name: Trigger PNPG Onboarding ms Release
         run: |
           gh workflow run release_app.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=onboarding
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=onboarding-ms
 
       - name: Trigger PNPG Onboarding CDC Release
         run: |
