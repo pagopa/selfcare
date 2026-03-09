@@ -14,6 +14,7 @@ import it.pagopa.selfcare.iam.model.UserPermissions;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.util.*;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -38,7 +39,7 @@ public class UserPermissionsRepository {
 
     List<String> productIds =
         Optional.ofNullable(products).isPresent() && !products.isEmpty()
-            ? List.of(ALL, String.join(",", products))
+            ? Stream.concat(Stream.of(ALL), products.stream()).toList()
             : List.of(ALL);
 
     pipeline.add(Aggregates.match(Filters.in("productRoles.productId", productIds)));

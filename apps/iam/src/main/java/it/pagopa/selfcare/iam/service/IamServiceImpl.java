@@ -3,6 +3,7 @@ package it.pagopa.selfcare.iam.service;
 import static it.pagopa.selfcare.iam.util.GeneralUtils.PRODUCT_ALL;
 
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
 import it.pagopa.selfcare.iam.entity.UserClaims;
 import it.pagopa.selfcare.iam.exception.InvalidRequestException;
@@ -380,6 +381,7 @@ public class IamServiceImpl implements IamService {
             id ->
                 Uni.createFrom()
                     .item(() -> institutionApi.retrieveInstitutionByIdUsingGET(id, productId))
+                    .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                     .onFailure(GeneralUtils::checkIfIsRetryableException)
                     .retry()
                     .withBackOff(
@@ -388,7 +390,16 @@ public class IamServiceImpl implements IamService {
                     .onItem()
                     .transform(this::extractOnboardingProductIds)
                     .onFailure()
-                    .recoverWithItem(fallback))
+                    .recoverWithItem(
+                        ex -> {
+                          // LOG dell'errore e ritorno del fallback all'interno dello stesso blocco
+                          log.error(
+                              "Errore durante il recupero dell'istituzione {}: {}",
+                              id,
+                              ex.getMessage(),
+                              ex);
+                          return fallback;
+                        }))
         .orElseGet(() -> Uni.createFrom().item(fallback));
   }
 

@@ -20,7 +20,11 @@ import org.testcontainers.containers.wait.strategy.Wait;
 @TestProfile(CucumberTestProfile.class)
 @CucumberOptions(
     features = "src/test/resources/features",
-    glue = {"it.pagopa.selfcare.iam.cucumber.steps", "it.pagopa.selfcare.iam.util"},
+    glue = {
+      "it.pagopa.selfcare.cucumber.utils",
+      "it.pagopa.selfcare.iam.cucumber",
+      "it.pagopa.selfcare.iam.util"
+    },
     plugin = {
       "pretty",
       "html:target/cucumber-report/cucumber.html",
@@ -48,6 +52,11 @@ public class CucumberSuiteTest extends CucumberQuarkusTest {
         new ComposeContainer(new File("docker-compose.yml"))
             .withPull(true)
             .waitingFor("mongodb", Wait.forListeningPort())
+            // .waitingFor("userms",
+            // Wait.forHttp("/q/health/ready").forPort(8087).forStatusCode(200))
+            .waitingFor("userms", Wait.forLogMessage(".*Listening on:.*\\n", 1))
+            .waitingFor("institutionms", Wait.forLogMessage(".*Running with Spring Boot.*\\n", 1))
+            .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1))
             .withStartupTimeout(Duration.ofMinutes(5));
 
     composeContainer.start();

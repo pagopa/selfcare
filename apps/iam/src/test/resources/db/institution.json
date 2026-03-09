@@ -1,0 +1,96 @@
+[
+  {
+    "_id": "cdd3d4bb-bae3-4187-af16-53ec40358267",
+    "externalId": "00310810825",
+    "description": "Comune di Test",
+    "digitalAddress": "comune.test@test.it",
+    "address": "Via Roma, 1",
+    "zipCode": "90000",
+    "taxCode": "10000000825",
+    "onboarding": [
+      {
+        "productId": "prod-interop",
+        "tokenId": "81ea93f8-0276-48a7-bdd2-53106c5e8387",
+        "status": "ACTIVE",
+        "contract": "parties/docs/81ea93f8-0276-48a7-bdd2-53106c5e8387/accordo_adesione.p7m",
+        "billing": {
+          "vatNumber": "80002090928",
+          "recipientCode": "c_i580",
+          "publicServices": false
+        },
+        "createdAt": "2023-05-03T13:18:08.563134Z",
+        "updatedAt": "2023-05-03T13:18:08.563165Z",
+        "institutionType": "PA",
+        "origin": "IPA",
+        "originId": "c_c067"
+      },
+      {
+        "productId": "prod-fd",
+        "tokenId": "a3f2d517-b432-4745-ae9b-5bb1f1bcfb79",
+        "status": "ACTIVE",
+        "contract": "parties/docs/a3f2d517-b432-4745-ae9b-5bb1f1bcfb79/accordo_adesione.p7m",
+        "billing": {
+          "vatNumber": "00310810825",
+          "recipientCode": "dfhadr",
+          "publicServices": false
+        },
+        "createdAt": "2023-06-22T09:12:45.933504Z",
+        "updatedAt": "2023-06-22T09:16:50.172777Z",
+        "isAggregator": "false",
+        "institutionType": "PA",
+        "origin": "IPA",
+        "originId": "c_c067"
+      },
+      {
+        "productId": "prod-io",
+        "tokenId": "5eeaf667-e9c1-4150-bb4b-1fce01df6ab9",
+        "status": "ACTIVE",
+        "contract": "parties/docs/5eeaf667-e9c1-4150-bb4b-1fce01df6ab9/accordo_adesione.p7m",
+        "billing": {
+          "vatNumber": "00017561486",
+          "recipientCode": "000000",
+          "publicServices": false
+        },
+        "createdAt": "2024-06-04T13:06:50.154Z",
+        "isAggregator": true,
+        "institutionType": "PA",
+        "origin": "IPA",
+        "originId": "c_c067"
+      },
+      {
+        "productId": "prod-pagopa",
+        "tokenId": "6c4fc5c1-65bb-496c-ae0a-547a4c920bd9",
+        "status": "ACTIVE",
+        "contract": "parties/docs/6c4fc5c1-65bb-496c-ae0a-547a4c920bd9/accordo_adesione.p7m",
+        "billing": {
+          "vatNumber": "00750840175",
+          "recipientCode": "UF7ECB",
+          "publicServices": true
+        },
+        "createdAt": "2024-07-05T14:43:04.672108422Z",
+        "institutionType": "PA",
+        "origin": "IPA",
+        "originId": "02IKT4NA"
+      }
+    ],
+    "geographicTaxonomies": [
+      {
+        "code": "058091",
+        "desc": "ROMA - COMUNE"
+      }
+    ],
+    "attributes": [
+      {
+        "origin": "IPA",
+        "code": "L6",
+        "description": "Comuni e loro Consorzi e Associazioni"
+      }
+    ],
+    "imported": false,
+    "createdAt": "2023-01-18T08:20:44.726Z",
+    "updatedAt": "2024-07-05T14:43:04.860664851Z",
+    "supportEmail": "a@l.it",
+    "origin": "IPA",
+    "originId": "c_c067"
+  }
+]

@@ -1,4 +1,3 @@
-version: '3.8'
 services:
 
   mongodb:
@@ -28,8 +27,8 @@ services:
     depends_on:
       - azurite
     volumes:
-      - "./blobStorageInit/init_azurite.sh:/init_azurite.sh"
-      - "./blobStorageInit/products.json:/workspace/products.json"
+      - "./src/test/resources/blobStorageInit/init_azurite.sh:/init_azurite.sh"
+      - "./src/test/resources/blobStorageInit/products.json:/workspace/products.json"
     environment:
       - SELFCARE_INFRA_PRIVATE_ENV=dev
     networks:
@@ -49,7 +48,7 @@ services:
     volumes:
       - "./mock:/config"
 
-  institution-ms:
+  institutionms:
     platform: linux/amd64
     image: ghcr.io/pagopa/selfcare-institution-ms:latest
     ports:
@@ -63,7 +62,7 @@ services:
       - mock-server
       - azure-cli
 
-  user-ms:
+  userms:
     platform: linux/amd64
     image: ghcr.io/pagopa/selfcare-user-ms:latest
     ports:
@@ -73,7 +72,7 @@ services:
     networks:
       - developer-network
     depends_on:
-      - mongo-db
+      - mongodb
       - mock-server
       - azure-cli
 
