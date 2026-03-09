@@ -1,4 +1,4 @@
-name: Generic - Create Release Branch
+name: Create Release Branch
 
 on:
   workflow_dispatch:
@@ -112,8 +112,7 @@ jobs:
       domain: ${{ inputs.domain }}
       env: uat
       version: ${{ needs.create_branch.outputs.new_version }}
-    secrets:
-      gh_token: ${{ secrets.GH_PAT_VARIABLES }}
+    secrets: inherit
 
   trigger_deploy:
     name: "Trigger UAT Deployment"
@@ -125,6 +124,7 @@ jobs:
           gh workflow run "trigger_release_${{ inputs.domain }}.yml" \
             --ref ${{ needs.create_branch.outputs.new_branch }} \
             -f env=uat \
-            -f branch=${{ needs.create_branch.outputs.new_branch }}
+            -f branch=${{ needs.create_branch.outputs.new_branch }} \
+            --repo ${{ github.repository }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
