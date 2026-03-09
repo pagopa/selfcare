@@ -112,8 +112,7 @@ jobs:
       domain: ${{ inputs.domain }}
       env: uat
       version: ${{ needs.create_branch.outputs.new_version }}
-    secrets:
-      gh_token: ${{ secrets.GH_PAT_VARIABLES }}
+    secrets: inherit
 
   trigger_deploy:
     name: "Trigger UAT Deployment"
