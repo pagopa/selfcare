@@ -194,21 +194,6 @@ public class DocumentServiceImp implements DocumentService {
                 .onFailure().recoverWithUni(() -> Uni.createFrom().item(ContractSignedReport.cades(false)));
     }
 
-    @Override
-    public String getAndVerifyDigest(FormItem file, ContractTemplate contract, boolean skipDigestCheck) {
-        return "";
-    }
-
-    @Override
-    public String getTemplateAndVerifyDigest(FormItem file, String contractTemplatePath, boolean skipDigestCheck) {
-        return "";
-    }
-
-    @Override
-    public String getContractPathByOnboarding(String onboardingId, String filename) {
-        return "";
-    }
-
     // questo metodo incorporava lato onboarding-ms un controllo sull'onboarding associato al document, lasciare la logica dell'esistenza dell'onboarding lato onboarding-ms
     @Override
     public Uni<Boolean> existsAttachment(String onboardingId, String attachmentName) {
@@ -219,7 +204,8 @@ public class DocumentServiceImp implements DocumentService {
     @Override
     public Uni<Void> updateDocumentUpdatedAt(String onboardingId) {
         log.info("Updating document 'updatedAt' for onboardingId={}", onboardingId);
-        return documentRepository.updateUpdatedAt(onboardingId)
+        LocalDateTime updatedAt = LocalDateTime.now();
+        return documentRepository.updateUpdatedAt(onboardingId, updatedAt)
                 .onItem().transform(ignore -> null);
     }
 

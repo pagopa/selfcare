@@ -11,7 +11,6 @@ import java.util.List;
 
 import it.pagopa.selfcare.document.model.FormItem;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
-import it.pagopa.selfcare.product.entity.ContractTemplate;
 import org.jboss.resteasy.reactive.RestResponse;
 
 public interface DocumentService {
@@ -35,12 +34,6 @@ public interface DocumentService {
     Uni<List<String>> getAttachments(String onboardingId);
 
     Uni<ContractSignedReport> reportContractSigned(String onboardingId);
-
-    String getAndVerifyDigest(FormItem file, ContractTemplate contract, boolean skipDigestCheck);
-
-    String getTemplateAndVerifyDigest(FormItem file, String contractTemplatePath, boolean skipDigestCheck);
-
-    String getContractPathByOnboarding(String onboardingId, String filename);
 
     Uni<Boolean> existsAttachment(String onboardingId, String attachmentName);
 
