@@ -298,13 +298,21 @@ public class DocumentServiceImp implements DocumentService {
         document.setType(request.getTokenType());
         document.setContractTemplate(request.getTemplatePath());
         document.setContractVersion(request.getTemplateVersion());
-        document.setContractFilename(CONTRACT_FILENAME_FUNC.apply(
-                request.getPdfFormatFilename(), request.getProductTitle()));
+        setContractFileName(request, document);
         document.setName(request.getDocumentName());
         document.setCreatedAt(LocalDateTime.now());
         document.setUpdatedAt(LocalDateTime.now());
         return document;
     }
+
+    private static void setContractFileName(DocumentBuilderRequest request, Document document) {
+        String filenamePattern = ATTACHMENT.equals(request.getTokenType())
+                ? "%s_" + request.getDocumentName() + ".pdf"
+                : request.getPdfFormatFilename();
+
+        document.setContractFilename(CONTRACT_FILENAME_FUNC.apply(filenamePattern, request.getProductTitle()));
+    }
+
 
     private String buildAttachmentPath(Document document) {
         return Objects.nonNull(document.getContractSigned()) ? document.getContractSigned() : getAttachmentByOnboarding(document.getOnboardingId(), document.getContractFilename());
