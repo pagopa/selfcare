@@ -49,7 +49,7 @@ namirial-sign:
 
 cucumber-sdk:
   - changed-files:
-      - any-glob-to-any-file: ["libs/cucumber-sdk/**"]
+      - any-glob-to-any-file: ["libs/selfcare-cucumber-sdk/**"]
 
 onboarding-sdk:
   - changed-files:
