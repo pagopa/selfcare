@@ -21,4 +21,6 @@ public interface IamService {
 
   Uni<Boolean> hasPermission(
       String userId, String permission, String productId, String institutionId);
+
+  Uni<List<String>> getInstitutionProducts(String institutionId, String productId);
 }

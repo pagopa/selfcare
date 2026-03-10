@@ -4,6 +4,7 @@ import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
+import it.pagopa.selfcare.iam.controller.response.PermissionResponse;
 import it.pagopa.selfcare.iam.controller.response.Problem;
 import it.pagopa.selfcare.iam.entity.UserClaims;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
@@ -326,6 +327,6 @@ public class IamController {
     return iamService
         .hasPermission(userId, permission, productId, institutionId)
         .onItem()
-        .transform(hasPermission -> Response.ok(hasPermission).build());
+        .transform(hasPermission -> Response.ok(new PermissionResponse(hasPermission)).build());
   }
 }
