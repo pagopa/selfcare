@@ -56,7 +56,7 @@ services:
     networks:
       - developer-network
     env_file:
-      - src/test/resources/test-institution-ms.env
+      - ./src/test/resources/test-institution-ms.env
     depends_on:
       - mongodb
       - mock-server
