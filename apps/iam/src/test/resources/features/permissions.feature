@@ -63,9 +63,9 @@ Feature: User Permissions
     Given User login with username "user-002" and password "test"
     And The following query params:
       | institutionId | cdd3d4bb-bae3-4187-af16-53ec40358267 |
-    And The following query params:
-      | productId | prod-A |
+      | productId     | product-A                            |
     And The following path params:
       | userId | a0530f76-3454-418c-9d65-eb3162075495 |
     When I send a GET request to "/iam/users/{userId}/permissions/read:users"
     Then The status code is 200
+    And The response body contains the string "true"

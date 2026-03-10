@@ -27,6 +27,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.institution_openapi_json.api.InstitutionApi;
 import org.openapi.quarkus.institution_openapi_json.model.InstitutionResponse;
+import org.owasp.encoder.Encode;
 
 @Slf4j
 @ApplicationScoped
@@ -392,10 +393,9 @@ public class IamServiceImpl implements IamService {
                     .onFailure()
                     .recoverWithItem(
                         ex -> {
-                          // LOG dell'errore e ritorno del fallback all'interno dello stesso blocco
                           log.error(
-                              "Errore durante il recupero dell'istituzione {}: {}",
-                              id,
+                              "Error while retrieving institution {}: {}",
+                              Encode.forJava(id),
                               ex.getMessage(),
                               ex);
                           return fallback;
