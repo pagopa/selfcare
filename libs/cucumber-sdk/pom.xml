@@ -6,7 +6,7 @@
 
   <artifactId>cucumber-sdk</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.12</version>
+  <version>0.0.13</version>
   <groupId>it.pagopa.selfcare</groupId>
 
   <distributionManagement>

@@ -607,7 +607,7 @@ class IamServiceImplTest {
             .permissions(List.of("read:users", "write:users"))
             .build();
 
-    when(userPermissionsRepository.getUserPermissions(userId, permission, productId))
+    when(userPermissionsRepository.getUserPermissions(userId, permission, List.of(productId)))
         .thenReturn(Uni.createFrom().item(userPermissions));
 
     Boolean result =
@@ -630,7 +630,7 @@ class IamServiceImplTest {
             .permissions(List.of("read:users", "write:users"))
             .build();
 
-    when(userPermissionsRepository.getUserPermissions(userId, permission, productId))
+    when(userPermissionsRepository.getUserPermissions(userId, permission, List.of(productId)))
         .thenReturn(Uni.createFrom().item(userPermissions));
 
     Boolean result =
@@ -653,7 +653,7 @@ class IamServiceImplTest {
             .permissions(List.of())
             .build();
 
-    when(userPermissionsRepository.getUserPermissions(userId, permission, productId))
+    when(userPermissionsRepository.getUserPermissions(userId, permission, List.of(productId)))
         .thenReturn(Uni.createFrom().item(userPermissions));
 
     Boolean result =

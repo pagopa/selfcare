@@ -14,6 +14,7 @@ import it.pagopa.selfcare.iam.model.UserPermissions;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.util.*;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -23,19 +24,24 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 @ApplicationScoped
 public class UserPermissionsRepository {
 
+  public static final String ALL = "ALL";
   @Inject ReactiveMongoClient mongoClient;
 
   @ConfigProperty(name = "quarkus.mongodb.database")
   String databaseName;
 
   /** Aggregation query to extract a user's permissions for a specific product (optional). */
-  public Uni<UserPermissions> getUserPermissions(String uid, String permission, String productId) {
+  public Uni<UserPermissions> getUserPermissions(
+      String uid, String permission, List<String> products) {
     List<Bson> pipeline = new ArrayList<>();
     pipeline.add(Aggregates.match(Filters.eq("_id", uid)));
     pipeline.add(Aggregates.unwind("$productRoles"));
 
     List<String> productIds =
-        Optional.ofNullable(productId).isPresent() ? List.of("ALL", productId) : List.of("ALL");
+        Optional.ofNullable(products).isPresent() && !products.isEmpty()
+            ? Stream.concat(Stream.of(ALL), products.stream()).toList()
+            : List.of(ALL);
+
     pipeline.add(Aggregates.match(Filters.in("productRoles.productId", productIds)));
 
     List<Bson> pipelinePost =
