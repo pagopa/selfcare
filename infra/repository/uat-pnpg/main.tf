@@ -16,7 +16,7 @@ terraform {
     resource_group_name  = "terraform-state-rg"
     storage_account_name = "tfappuatselfcare"
     container_name       = "terraform-state"
-    key                  = "selfcare-onboarding.repository.tfstate"
+    key                  = "selfcare.repository.tfstate"
   }
 }
 
@@ -33,17 +33,8 @@ data "azurerm_client_config" "current" {}
 data "azurerm_subscription" "current" {}
 
 module "repository" {
-  source = "github.com/pagopa/selfcare-commons//infra/terraform-modules/github_repository_settings?ref=main"
+  source = "../_modules/github-selfcare"
 
-  github = {
-    repository = "selfcare-onboarding"
-  }
-}
-
-module "mongodb" {
-  source = "../_modules/mongodb"
-
-  name                = "selcOnboarding"
-  resource_group_name = local.mongo_db.mongodb_rg_name
-  account_name        = local.mongo_db.cosmosdb_account_mongodb_name
+  repository_name = "selfcare"
+  prefix          = local.prefix
 }

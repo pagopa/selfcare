@@ -1,5 +1,5 @@
-output "mongodb" {
-  value = module.mongodb
+output "repository" {
+  value = module.repository
 }
 
 output "subscription_id" {
