@@ -141,7 +141,7 @@ public class IamControllerTest {
             institutionId)
         .then()
         .statusCode(200)
-        .body(equalTo("true"));
+        .body(equalTo("{\"hasPermission\":true}"));
   }
 
   @Test
@@ -160,7 +160,7 @@ public class IamControllerTest {
             "inst-2")
         .then()
         .statusCode(200)
-        .body(equalTo("false"));
+        .body(equalTo("{\"hasPermission\":false}"));
   }
 
   @Test
@@ -217,7 +217,7 @@ public class IamControllerTest {
         .get("/users/{uid}/permissions/{permission}", "user-null", "read:users")
         .then()
         .statusCode(200)
-        .body(equalTo("true"));
+        .body(equalTo("{\"hasPermission\":true}"));
   }
 
   @Test
