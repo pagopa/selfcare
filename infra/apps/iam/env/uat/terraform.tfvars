@@ -59,6 +59,10 @@ app_settings = [
   {
     name  = "IAM_MS_RETRY"
     value = 3
+  },
+  {
+    name  = "INSTITUTION_API_URL"
+    value = "https://selc-u-ms-core-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
   }
 ]
 
