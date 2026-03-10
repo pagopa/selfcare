@@ -21,7 +21,7 @@ jobs:
     steps:
       - id: extract
         run: |
-          VERSION=$(echo "${{ inputs.branch }}" | sed 's/.*product-cdc_//')
+          VERSION=$(echo "${{ inputs.branch }}" | sed 's/.*_//;s/^v//')
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
   release_product_cdc:
