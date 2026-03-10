@@ -24,6 +24,10 @@ on:
           - patch
         default: patch
         required: true
+      manual-version:
+        type: string
+        description: "Force a specific version (e.g. 1.0.0). If provided, version-bump is ignored."
+        required: false
 
 jobs:
   create_branch:
@@ -62,7 +66,7 @@ jobs:
         id: versioning
         run: |
           PREFIX="releases/${DOMAIN}_"
-          LAST_BRANCH=$(git branch -a | grep -Eo "${PREFIX}[0-9]+\.[0-9]+\.[0-9]+" | sort -V | tail -n 1)
+          LAST_BRANCH=$(git branch -a | grep -Eo "${PREFIX}v?[0-9]+\.[0-9]+\.[0-9]+" | sort -V | tail -n 1)
 
           if [ -z "$LAST_BRANCH" ]; then
             OLD_VERSION="0.0.0"
@@ -70,10 +74,15 @@ jobs:
             OLD_VERSION=$(echo "$LAST_BRANCH" | grep -Eo "[0-9]+\.[0-9]+\.[0-9]+")
           fi
 
-          NEW_VERSION=$(semver --increment ${{ inputs.version-bump }} "$OLD_VERSION")
-          NEW_BRANCH="releases/${DOMAIN}_${NEW_VERSION}"
-          TAG_NAME="${DOMAIN}_${NEW_VERSION}"
-          OLD_TAG=$(git tag -l "${DOMAIN}*" | sort -V | tail -n 1)
+          if [ -n "${{ inputs.manual-version }}" ]; then
+            NEW_VERSION="${{ inputs.manual-version }}"
+          else
+            NEW_VERSION=$(semver --increment ${{ inputs.version-bump }} "$OLD_VERSION")
+          fi
+
+          NEW_BRANCH="releases/${DOMAIN}_v${NEW_VERSION}"
+          TAG_NAME="${DOMAIN}_v${NEW_VERSION}"
+          OLD_TAG=$(git tag -l "${DOMAIN}_*" | sort -V | tail -n 1)
 
           echo "NEW_VERSION=${NEW_VERSION}" >> $GITHUB_OUTPUT
           echo "NEW_BRANCH=${NEW_BRANCH}" >> $GITHUB_OUTPUT
@@ -98,7 +107,7 @@ jobs:
           fi
 
           gh release create ${{ env.TAG_NAME }} \
-            --title "${{ env.DOMAIN }}_${{ env.NEW_VERSION }}" \
+            --title "${{ env.DOMAIN }}_v${{ env.NEW_VERSION }}" \
             --target ${{ env.NEW_BRANCH }} \
             --generate-notes \
             $NOTES_TAG_ARG \
@@ -123,11 +132,7 @@ jobs:
         shell: bash
         run: |
           DOMAIN="${{ inputs.domain }}"
-          WF_DOMAIN="$DOMAIN"
-
-          if [[ "$DOMAIN" =~ -cdc$ ]]; then
-            WF_DOMAIN="${DOMAIN//-/_}"
-          fi
+          WF_DOMAIN="${DOMAIN//-/_}"
 
           gh workflow run "trigger_release_${WF_DOMAIN}.yml" \
             --repo "${{ github.repository }}" \

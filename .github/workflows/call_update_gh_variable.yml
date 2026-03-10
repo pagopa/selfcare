@@ -21,8 +21,8 @@ jobs:
     steps:
       - name: Update Variable
         run: |
-          VAR_DOMAIN=$(echo "${{ inputs.domain }}" | tr '[:lower:]' '[:upper:]')
-          VAR_ENV=$(echo "${{ inputs.env }}" | tr '[:lower:]' '[:upper:]')
+          VAR_DOMAIN=$(echo "${{ inputs.domain }}" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+          VAR_ENV=$(echo "${{ inputs.env }}" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
           VAR_NAME="${VAR_DOMAIN}_CURRENT_${VAR_ENV}_VERSION"
 
           echo "Updating variable $VAR_NAME to ${{ inputs.version }} in repo ${{ github.repository }}"
