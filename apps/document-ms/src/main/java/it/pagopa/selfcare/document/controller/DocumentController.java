@@ -108,8 +108,8 @@ public class DocumentController {
     }
 
     @Operation(
-            summary = "Find an attachment for a given onboarding id and update the contract signed path",
-            description = "Find  an attachment for a given onboarding id and update the contract signed path"
+            summary = "Update contract signed path for a given onboarding",
+            description = "Update contract signed path for a given onboarding"
     )
     @PUT
     @Tag(name = "internal-v1")

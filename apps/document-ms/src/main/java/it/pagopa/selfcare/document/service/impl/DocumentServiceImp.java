@@ -211,15 +211,8 @@ public class DocumentServiceImp implements DocumentService {
     // questo metodo incorporava lato onboarding-ms un controllo sull'onboarding associato al token, lasciare la logica dell'esistenza dell'onboarding lato onboarding-ms
     @Override
     public Uni<Boolean> existsAttachment(String onboardingId, String attachmentName) {
-        return documentRepository.findByOnboardingId(onboardingId)
+        return documentRepository.findAttachment(onboardingId, ATTACHMENT.name(), attachmentName)
                 .onItem().transformToUni(document -> checkAttachmentExists(document, onboardingId, attachmentName));
-    }
-
-    @Override
-    public Uni<String> updateDocumentWithFilePath(String filepath, String documentId) {
-        log.info("Updating document with id {} with file path {}", documentId, filepath);
-        return documentRepository.updateContractSignedByDocumentId(documentId, filepath)
-                .replaceWith(filepath);
     }
 
     @Override
@@ -232,7 +225,7 @@ public class DocumentServiceImp implements DocumentService {
     @Override
     public Uni<Long> updateDocumentContractFiles(Document document) {
         return documentRepository.updateContractFiles(
-                document.getId(),
+                document.getOnboardingId(),
                 document.getContractSigned(),
                 document.getContractFilename()
         );

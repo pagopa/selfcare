@@ -43,8 +43,6 @@ public interface DocumentService {
 
     Uni<Boolean> existsAttachment(String onboardingId, String attachmentName);
 
-    Uni<String> updateDocumentWithFilePath(String filepath, String documentId);
-
     Uni<Void> updateDocumentUpdatedAt(String onboardingId);
 
     /**

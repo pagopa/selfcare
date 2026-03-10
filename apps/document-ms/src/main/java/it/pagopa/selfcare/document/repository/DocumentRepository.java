@@ -9,15 +9,17 @@ import org.bson.types.ObjectId;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static it.pagopa.selfcare.onboarding.common.TokenType.*;
+
 @ApplicationScoped
 public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Document, ObjectId> {
 
     private static final String ONBOARDING_ID = "onboardingId";
 
-    public Uni<Long> updateContractFiles(String documentId, String contractSigned, String contractFilename) {
+    public Uni<Long> updateContractFiles(String onboardingId, String contractSigned, String contractFilename) {
         return update("contractSigned = ?1 and contractFilename = ?2 and updatedAt = ?3",
                 contractSigned, contractFilename, LocalDateTime.now())
-                .where("_id", documentId);
+                .where("onboardingId = ?1 and type = ?2", onboardingId, List.of(INSTITUTION.name(), USER.name()));
     }
 
     public Uni<Document> findAttachment(String onboardingId, String type, String name) {
@@ -26,7 +28,8 @@ public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Do
     }
 
     public Uni<Document> findByOnboardingId(String onboardingId) {
-        return find(ONBOARDING_ID, onboardingId).firstResult();
+        return find("onboardingId = ?1 and type = ?2", onboardingId, List.of(INSTITUTION.name(), USER.name()))
+                .firstResult();
     }
 
     public Uni<List<Document>> findAllByOnboardingId(String onboardingId) {
@@ -35,17 +38,12 @@ public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Do
 
     public Uni<Long> updateContractSignedByOnboardingId(String onboardingId, String contractSignedPath) {
         return update("contractSigned = ?1", contractSignedPath)
-                .where(ONBOARDING_ID, onboardingId);
-    }
-
-    public Uni<Long> updateContractSignedByDocumentId(String documentId, String contractSignedPath) {
-        return update("contractSigned = ?1", contractSignedPath)
-                .where("_id", documentId);
+                .where("onboardingId = ?1 and type = ?2", onboardingId, List.of(INSTITUTION.name(), USER.name()));
     }
 
     public Uni<Long> updateUpdatedAt(String onboardingId) {
         return update("updatedAt = ?1", LocalDateTime.now())
-                .where(ONBOARDING_ID, onboardingId);
+                .where("onboardingId = ?1 and type = ?2", onboardingId, List.of(INSTITUTION.name(), USER.name()));
     }
 
 }
