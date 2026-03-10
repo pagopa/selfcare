@@ -36,6 +36,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static it.pagopa.selfcare.document.util.ErrorMessage.ORIGINAL_DOCUMENT_NOT_FOUND;
+import static it.pagopa.selfcare.document.util.Utils.CONTRACT_FILENAME_FUNC;
 import static it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT;
 
 @Slf4j
@@ -297,17 +298,15 @@ public class DocumentServiceImp implements DocumentService {
     private Document buildDocument(DocumentBuilderRequest request, String digest) {
         log.debug("Creating Document for onboarding {} ...", request.getOnboardingId());
         Document document = new Document();
-        String documentId = request.isAttachment()
-                ? UUID.randomUUID().toString()
-                : request.getOnboardingId();
-        document.setId(documentId);
+        document.setId(UUID.randomUUID().toString());
         document.setOnboardingId(request.getOnboardingId());
         document.setProductId(request.getProductId());
         document.setChecksum(digest);
         document.setType(request.getTokenType());
         document.setContractTemplate(request.getTemplatePath());
         document.setContractVersion(request.getTemplateVersion());
-        document.setContractFilename(request.getPdfFormatFilename());
+        document.setContractFilename(CONTRACT_FILENAME_FUNC.apply(
+                request.getPdfFormatFilename(), request.getProductTitle()));
         document.setName(request.getDocumentName());
         document.setCreatedAt(LocalDateTime.now());
         document.setUpdatedAt(LocalDateTime.now());
