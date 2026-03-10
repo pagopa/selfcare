@@ -228,6 +228,7 @@ public class DocumentController {
                   "For INSTITUTION/USER token types, saves a contract. " +
                   "For ATTACHMENT token type, saves an attachment.")
   @POST
+  @Path("/save")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<Response> saveDocument(@Valid DocumentBuilderRequest request) {
