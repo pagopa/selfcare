@@ -65,7 +65,7 @@ Feature: User Permissions
       | productId     | product-B                            |
     And The following path params:
       | userId     | a0530f76-3454-418c-9d65-eb3162075495 |
-      | permission | read:users                           |
+      | permission | write:users                          |
     When I send a GET request to "/iam/users/{userId}/permissions/{permission}"
     Then The status code is 200
     And The response body contains the string "true"

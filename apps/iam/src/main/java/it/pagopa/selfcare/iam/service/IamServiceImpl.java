@@ -389,7 +389,7 @@ public class IamServiceImpl implements IamService {
                         Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))
                     .atMost(maxRetry)
                     .onItem()
-                    .transform(this::extractOnboardingProductIds)
+                    .transform(institution -> extractOnboardingProductIds(institution, productId))
                     .onFailure()
                     .recoverWithItem(
                         ex -> {
@@ -403,7 +403,8 @@ public class IamServiceImpl implements IamService {
         .orElseGet(() -> Uni.createFrom().item(fallback));
   }
 
-  private List<String> extractOnboardingProductIds(InstitutionResponse institution) {
+  private List<String> extractOnboardingProductIds(
+      InstitutionResponse institution, String productId) {
     if (institution == null || institution.getOnboarding() == null) {
       return List.of();
     }
@@ -412,6 +413,7 @@ public class IamServiceImpl implements IamService {
         .map(onboarding -> onboarding != null ? onboarding.getProductId() : null)
         .filter(Objects::nonNull)
         .filter(product -> !product.isBlank())
+        .filter(product -> productId == null || product.equals(productId))
         .distinct()
         .toList();
   }
