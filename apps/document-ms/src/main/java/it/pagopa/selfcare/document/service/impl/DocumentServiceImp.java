@@ -53,7 +53,7 @@ public class DocumentServiceImp implements DocumentService {
 
     public DocumentServiceImp(DocumentRepository documentRepository,
                               AzureBlobClient azureBlobClient,
-                              DocumentMsConfig documentMsConfig, Utils utils) {
+                              DocumentMsConfig documentMsConfig) {
         this.documentRepository = documentRepository;
         this.azureBlobClient = azureBlobClient;
         this.documentMsConfig = documentMsConfig;

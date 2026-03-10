@@ -112,12 +112,12 @@ public class DocumentController {
             summary = "Update contract signed path for a given onboarding",
             description = "Update contract signed path for a given onboarding"
     )
-    @PUT
-    @Tag(name = "internal-v1")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/contract-signed")
-    public Uni<Response> updateContractSigned(@NotNull @QueryParam(value = "onboardingId") String onboardingId,
-                                          @NotNull @QueryParam(value = "contractSigned") String contractSigned) {
+  @PUT
+  @Tag(name = "internal-v1")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("/{onboardingId}/contract-signed")
+  public Uni<Response> updateContractSigned(@NotNull @PathParam(value = "onboardingId") String onboardingId,
+                                            @NotNull @QueryParam(value = "contractSigned") String contractSigned) {
         return documentService.updateContractSigned(onboardingId, contractSigned)
                 .map(updatedCount -> {
                     if (updatedCount > 0) {
@@ -249,5 +249,18 @@ public class DocumentController {
     log.info("Persisting token for import, onboardingId: {}", request.getOnboardingId());
     return documentService.persistDocumentForImport(request)
             .onItem().transform(token -> Response.status(Response.Status.CREATED).entity(token).build());
+  }
+
+  @Operation(
+          summary = "Update document updatedAt field",
+          description = "Sets the updatedAt timestamp of the document associated with the given onboarding ID to the current date and time."
+  )
+  @PUT
+  @Path("/{onboardingId}/updated-at")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<Response> updateDocumentUpdatedAt(@NotNull @PathParam(value = "onboardingId") String onboardingId) {
+    log.info("Updating document 'updatedAt' for onboardingId: {}", Encode.forJava(onboardingId));
+    return documentService.updateDocumentUpdatedAt(onboardingId)
+            .replaceWith(Response.noContent().build());
   }
 }
