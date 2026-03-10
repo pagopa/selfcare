@@ -9,6 +9,7 @@ import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
 import it.pagopa.selfcare.document.config.DocumentMsConfig;
 import it.pagopa.selfcare.document.controller.request.DocumentBuilderRequest;
+import it.pagopa.selfcare.document.controller.request.DocumentImportRequest;
 import it.pagopa.selfcare.document.controller.response.ContractSignedReport;
 import it.pagopa.selfcare.document.controller.response.DocumentBuilderResponse;
 import it.pagopa.selfcare.document.entity.Document;
@@ -17,6 +18,7 @@ import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.model.FormItem;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.document.service.DocumentService;
+import it.pagopa.selfcare.document.util.Utils;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -36,8 +38,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static it.pagopa.selfcare.document.util.ErrorMessage.ORIGINAL_DOCUMENT_NOT_FOUND;
-import static it.pagopa.selfcare.document.util.Utils.CONTRACT_FILENAME_FUNC;
-import static it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT;
+import static it.pagopa.selfcare.document.util.Utils.*;
+import static it.pagopa.selfcare.onboarding.common.TokenType.*;
 
 @Slf4j
 @ApplicationScoped
@@ -51,7 +53,7 @@ public class DocumentServiceImp implements DocumentService {
 
     public DocumentServiceImp(DocumentRepository documentRepository,
                               AzureBlobClient azureBlobClient,
-                              DocumentMsConfig documentMsConfig) {
+                              DocumentMsConfig documentMsConfig, Utils utils) {
         this.documentRepository = documentRepository;
         this.azureBlobClient = azureBlobClient;
         this.documentMsConfig = documentMsConfig;
@@ -208,7 +210,7 @@ public class DocumentServiceImp implements DocumentService {
         return "";
     }
 
-    // questo metodo incorporava lato onboarding-ms un controllo sull'onboarding associato al token, lasciare la logica dell'esistenza dell'onboarding lato onboarding-ms
+    // questo metodo incorporava lato onboarding-ms un controllo sull'onboarding associato al document, lasciare la logica dell'esistenza dell'onboarding lato onboarding-ms
     @Override
     public Uni<Boolean> existsAttachment(String onboardingId, String attachmentName) {
         return documentRepository.findAttachment(onboardingId, ATTACHMENT.name(), attachmentName)
@@ -233,8 +235,8 @@ public class DocumentServiceImp implements DocumentService {
 
     @Override
     public Uni<DocumentBuilderResponse> saveDocument(DocumentBuilderRequest request) {
-        log.info("Saving document for onboarding: {}, tokenType: {}",
-                request.getOnboardingId(), request.getTokenType());
+        log.info("Saving document for onboarding: {}, documentType: {}",
+                request.getOnboardingId(), request.getDocumentType());
 
         if (request.isAttachment()) {
             return handleAttachmentDocument(request);
@@ -288,6 +290,30 @@ public class DocumentServiceImp implements DocumentService {
                         .build());
     }
 
+    @Override
+    public Uni<Document> persistDocumentForImport(DocumentImportRequest request) {
+        log.info("Creating document for import, onboardingId: {}", request.getOnboardingId());
+
+        Document document = new Document();
+        document.setOnboardingId(request.getOnboardingId());
+        document.setProductId(request.getProductId());
+        document.setContractSigned(request.getContractFilePath());
+        document.setContractFilename(request.getContractFileName());
+        document.setCreatedAt(request.getContractCreatedAt());
+        document.setUpdatedAt(request.getContractCreatedAt());
+        document.setType(INSTITUTION);
+
+        String contractTemplate = getContractTemplatePath(request.getInstitutionType(), request.getProduct());
+        String contractTemplateVersion = getContractTemplateVersion(request.getInstitutionType(), request.getProduct());
+        document.setContractTemplate(contractTemplate);
+        document.setContractVersion(contractTemplateVersion);
+
+        return documentRepository.persist(document)
+                .replaceWith(document)
+                .onItem().invoke(() ->
+                        log.info("Document persisted for onboardingId: {}", request.getOnboardingId()));
+    }
+
     private Document buildDocument(DocumentBuilderRequest request, String digest) {
         log.debug("Creating Document for onboarding {} ...", request.getOnboardingId());
         Document document = new Document();
@@ -295,7 +321,7 @@ public class DocumentServiceImp implements DocumentService {
         document.setOnboardingId(request.getOnboardingId());
         document.setProductId(request.getProductId());
         document.setChecksum(digest);
-        document.setType(request.getTokenType());
+        document.setType(request.getDocumentType());
         document.setContractTemplate(request.getTemplatePath());
         document.setContractVersion(request.getTemplateVersion());
         setContractFileName(request, document);
@@ -306,7 +332,7 @@ public class DocumentServiceImp implements DocumentService {
     }
 
     private static void setContractFileName(DocumentBuilderRequest request, Document document) {
-        String filenamePattern = ATTACHMENT.equals(request.getTokenType())
+        String filenamePattern = ATTACHMENT.equals(request.getDocumentType())
                 ? "%s_" + request.getDocumentName() + ".pdf"
                 : request.getPdfFormatFilename();
 

@@ -21,7 +21,7 @@ public class DocumentBuilderRequest {
     private String productId;
 
     @NotNull
-    private TokenType tokenType;
+    private TokenType documentType;
 
     private String documentName;
 
@@ -44,6 +44,6 @@ public class DocumentBuilderRequest {
      * Checks if this is an attachment request.
      */
     public boolean isAttachment() {
-        return TokenType.ATTACHMENT.equals(tokenType);
+        return TokenType.ATTACHMENT.equals(documentType);
     }
 }

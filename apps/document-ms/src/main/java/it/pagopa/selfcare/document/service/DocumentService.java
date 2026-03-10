@@ -2,6 +2,7 @@ package it.pagopa.selfcare.document.service;
 
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.controller.request.DocumentBuilderRequest;
+import it.pagopa.selfcare.document.controller.request.DocumentImportRequest;
 import it.pagopa.selfcare.document.controller.response.ContractSignedReport;
 import it.pagopa.selfcare.document.controller.response.DocumentBuilderResponse;
 import it.pagopa.selfcare.document.entity.Document;
@@ -62,5 +63,7 @@ public interface DocumentService {
      * @return the save response containing documentId, checksum and alreadyExists flag
      */
     Uni<DocumentBuilderResponse> saveDocument(DocumentBuilderRequest request);
+
+    Uni<Document> persistDocumentForImport(DocumentImportRequest request);
 
 }

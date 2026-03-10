@@ -4,6 +4,7 @@ import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.controller.request.DocumentBuilderRequest;
+import it.pagopa.selfcare.document.controller.request.DocumentImportRequest;
 import it.pagopa.selfcare.document.controller.response.DocumentResponse;
 import it.pagopa.selfcare.document.mapper.DocumentMapper;
 import it.pagopa.selfcare.document.service.DocumentService;
@@ -232,9 +233,21 @@ public class DocumentController {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<Response> saveDocument(@Valid DocumentBuilderRequest request) {
-    log.info("Saving document for onboardingId: {}, tokenType: {}",
-            request.getOnboardingId(), request.getTokenType());
+    log.info("Saving document for onboardingId: {}, documentType: {}",
+            request.getOnboardingId(), request.getDocumentType());
     return documentService.saveDocument(request)
             .onItem().transform(response -> Response.status(Response.Status.CREATED).entity(response).build());
+  }
+
+    @Operation(summary = "Persist document for import",
+            description = "Persists a document during the import process, associating it with the relevant onboarding and product.")
+  @POST
+  @Path("/import")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<Response> persistDocumentForImport(@Valid DocumentImportRequest request) {
+    log.info("Persisting token for import, onboardingId: {}", request.getOnboardingId());
+    return documentService.persistDocumentForImport(request)
+            .onItem().transform(token -> Response.status(Response.Status.CREATED).entity(token).build());
   }
 }
