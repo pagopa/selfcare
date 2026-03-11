@@ -8,6 +8,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 @Data
 public class OtpDailyLimit {
 
-    @ConfigProperty(name = "otp.daily.limit")
+    @ConfigProperty(name = "otp.daily.limit", defaultValue = "0")
     Integer dailyLimit;
 }

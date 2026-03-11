@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import static it.pagopa.selfcare.auth.model.OtpStatus.COMPLETED;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @Slf4j
@@ -36,9 +37,26 @@ public class AuthSteps {
 
   @Inject OtpDailyLimit otpDailyLimit;
 
-  @Before
+  @Before(order = 0)
   public void setUp() {
     resetTestState();
+  }
+
+  @Before(value = "@OidcBelowLimit", order = 10)
+  public void setHighLimit() {
+    otpDailyLimit.setDailyLimit(20);
+    writeOptFlowToDatabase();
+  }
+
+  @Before(value = "@OidcAboveLimit", order = 10)
+  public void setLowLimit() {
+    otpDailyLimit.setDailyLimit(2);
+    writeOptFlowToDatabase();
+  }
+
+  @Before(value = "@OidcOpenLimit", order = 10)
+  public void setLimitOpen() {
+    otpDailyLimit.setDailyLimit(-1);
   }
 
   @After
@@ -65,11 +83,6 @@ public class AuthSteps {
   public void otpFeatureFlagIsSetTo(String featureFlag) {
     FeatureFlagEnum flag = FeatureFlagEnum.valueOf(featureFlag.toUpperCase());
     otpFeatureFlag.setFeatureFlag(flag);
-  }
-
-  @And("OTP daily limit is set to {int}")
-  public void otpDailyLimitIsSetTo(int limit) {
-    otpDailyLimit.setDailyLimit(limit);
   }
 
   @And("User in the beta user list with the following details:")
@@ -137,6 +150,22 @@ public class AuthSteps {
         .indefinitely();
   }
 
+
+  @And("An OTP flow with uuid {string} was already COMPLETED {int} months ago")
+  public void anOTPFlowWithUuidAlreadyExistsWithStatusAndMonths(String uuid, int months) {
+    String updateBuilder =
+            "{'$set': { 'status': ?1, 'attempts' : ?2, 'createdAt': ?3, 'updatedAt' : ?4 } }";
+    OtpFlow.update(
+                    updateBuilder,
+                    COMPLETED,
+                    0,
+                    Date.from(OffsetDateTime.now().minusMonths(months).toInstant()),
+                    Date.from(OffsetDateTime.now().minusMonths(months).toInstant()))
+            .where(OtpFlow.Fields.uuid.name(), uuid)
+            .await()
+            .indefinitely();
+  }
+
   @And("The OTP flow with uuid {string} has been updated to status {string}")
   public void theOTPFlowStatusHasBeenUpdatedTo(String uuid, String status) {
     OtpFlow otpFlow =
@@ -156,5 +185,57 @@ public class AuthSteps {
   private void resetTestState() {
     otpFeatureFlag.setFeatureFlag(FeatureFlagEnum.NONE);
     otpFeatureFlag.setOtpBetaUsers(List.of());
+    otpDailyLimit.setDailyLimit(0);
+    deleteOtpFlowFromDatabase();
   }
+
+  private void writeOptFlowToDatabase() {
+    OffsetDateTime now = OffsetDateTime.now();
+
+    OtpFlow otpFlow =
+            OtpFlow.builder()
+                    .userId("35a78332-d038-4bfa-8e85-2cba7f6b7323")
+                    .status(OtpStatus.PENDING)
+                    .attempts(0)
+                    .createdAt(now)
+                    .updatedAt(now)
+                    .expiresAt(now)
+                    .build();
+
+    OtpFlow otpFlow2 =
+            OtpFlow.builder()
+                    .userId("35a78332-d038-4bfa-8e85-2cba7f6b7322")
+                    .status(OtpStatus.PENDING)
+                    .attempts(0)
+                    .createdAt(now)
+                    .updatedAt(now)
+                    .expiresAt(now)
+                    .build();
+
+    OtpFlow otpFlowSameUser =
+            OtpFlow.builder()
+                    .userId("35a78332-d038-4bfa-8e85-2cba7f6b7322")
+                    .status(OtpStatus.PENDING)
+                    .attempts(0)
+                    .createdAt(now)
+                    .updatedAt(now)
+                    .expiresAt(now)
+                    .build();
+
+    otpFlow.persist().await().indefinitely();
+    otpFlow2.persist().await().indefinitely();
+    otpFlowSameUser.persist().await().indefinitely();
+  }
+
+  private void deleteOtpFlowFromDatabase() {
+    OtpFlow.delete("userId", "35a78332-d038-4bfa-8e85-2cba7f6b7323")
+            .await()
+            .indefinitely();
+
+    OtpFlow.delete("userId", "35a78332-d038-4bfa-8e85-2cba7f6b7322")
+            .await()
+            .indefinitely();
+  }
+
+
 }

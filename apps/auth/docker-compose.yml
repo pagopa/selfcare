@@ -51,47 +51,65 @@ services:
     image: ghcr.io/pagopa/selfcare-user-ms:latest
     platform: linux/amd64
     ports:
-      - '8084:8080'
+      - '8080:8080'
     env_file:
       - "./src/test/resources/userenv"
     networks:
       - develop-network
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_started
+      azure-cli:
+        condition: service_completed_successfully
+      mockserver:
+        condition: service_started
 
   externalms:
     image: ghcr.io/pagopa/selfcare-external-api-backend:latest
     platform: linux/amd64
     ports:
-      - '8082:8080'
+      - '8082:8082'
     env_file:
       - "./src/test/resources/externalenv"
     networks:
       - develop-network
+    depends_on:
+      mockserver:
+        condition: service_started
+      azure-cli:
+        condition: service_completed_successfully
 
   institutionms:
     image: ghcr.io/pagopa/selfcare-institution-ms:latest
     platform: linux/amd64
     ports:
-      - '8083:8080'
+      - '8083:8083'
     env_file:
       - "./src/test/resources/institutionenv"
     networks:
       - develop-network
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_started
+      azure-cli:
+        condition: service_completed_successfully
+      mockserver:
+        condition: service_started
 
   iamms:
     image: ghcr.io/pagopa/selfcare-iam-ms:latest
     platform: linux/amd64
     ports:
-      - '8085:8080'
+      - '8085:8085'
     env_file:
       - "./src/test/resources/iamenv"
     networks:
       - develop-network
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_started
+      mockserver:
+        condition: service_started
 
 networks:
   develop-network:

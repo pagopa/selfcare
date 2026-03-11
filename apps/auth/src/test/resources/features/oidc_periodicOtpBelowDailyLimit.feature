@@ -1,4 +1,5 @@
-Feature: Oidc with no active periodic OTP flow
+@OidcBelowLimit
+Feature: Oidc with periodic OTP flow below daily limit
 
   Scenario: Successful OIDC exchange with OTP feature flag set to "NONE"
     And The following request body:
@@ -33,6 +34,7 @@ Feature: Oidc with no active periodic OTP flow
       | family_name      | Balboa              |
       | iss              | SPID                |
 
+  @RemoveOtpFlow
   Scenario: Successful OIDC exchange with OTP feature flag set to "BETA", user in beta list, forced OTP disabled and no previous OTP flow found
     Given User login with username "r.balboa" and password "test"
     And OTP feature flag is set to "BETA"
@@ -47,11 +49,11 @@ Feature: Oidc with no active periodic OTP flow
       """
     When I send a POST request to "oidc/exchange"
     Then The status code is 200
-    And The session token claims contains:
-      | fiscal_number    | blbrki80A41H401T    |
-      | name             | rocky               |
-      | family_name      | Balboa              |
-      | iss              | SPID                |
+    And The response body contains:
+      | requiresOtpFlow    | true                      |
+      | maskedEmail        | r*.b****a@regionelazio.it |
+    And The response body contains field "otpSessionUid"
+    And An OTP flow should be created with status "PENDING"
 
   @RemoveOtpFlow
   Scenario: Successful OIDC exchange with OTP feature flag set to "BETA", user in beta list, forced OTP and no previous OTP flow found
@@ -76,7 +78,6 @@ Feature: Oidc with no active periodic OTP flow
     And The response body contains field "otpSessionUid"
     And An OTP flow should be created with status "PENDING"
 
-  @RemoveOtpFlow
   Scenario: Successful OIDC exchange with OTP feature flag set to "BETA", user in beta list, forced OTP, previous OTP flow found and new Otp flow required
     Given User login with username "j.doe" and password "test"
     And OTP feature flag is set to "BETA"
@@ -99,7 +100,7 @@ Feature: Oidc with no active periodic OTP flow
     And The response body contains field "otpSessionUid"
     And An OTP flow should be created with status "PENDING"
 
-  Scenario: Successful OIDC exchange with OTP feature flag set to "BETA", user in beta list, forced OTP disabled and previous completed OTP flow with sameIdp=true found
+  Scenario: Successful OIDC exchange with OTP feature flag set to "BETA", user in beta list, forced OTP disabled and previous completed OTP flow 3 months ago with sameIdp=true found
     Given User login with username "j.doe" and password "test"
     And OTP feature flag is set to "BETA"
     And User in the beta user list with the following details:
@@ -111,7 +112,7 @@ Feature: Oidc with no active periodic OTP flow
           "redirectUri": "https://example.com/callback"
       }
       """
-    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" already exists with status "COMPLETED" and attempts 1
+    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" was already COMPLETED 3 months ago
     When I send a POST request to "oidc/exchange"
     Then The status code is 200
     And The session token claims contains:
@@ -119,6 +120,28 @@ Feature: Oidc with no active periodic OTP flow
       | name             | John                |
       | family_name      | Doe                 |
       | iss              | SPID                |
+
+  @RemoveOtpFlow
+  Scenario: Successful OIDC exchange with OTP feature flag set to "BETA", user in beta list, forced OTP disabled and previous completed OTP flow 7 months ago with sameIdp=true found
+    Given User login with username "j.doe" and password "test"
+    And OTP feature flag is set to "BETA"
+    And User in the beta user list with the following details:
+      | fiscalCode  | PRVTNT80A41H401T                |
+    And The following request body:
+      """
+      {
+          "code": "auth_code_flow_present_123",
+          "redirectUri": "https://example.com/callback"
+      }
+      """
+    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" was already COMPLETED 7 months ago
+    When I send a POST request to "oidc/exchange"
+    Then The status code is 200
+    And The response body contains:
+      | requiresOtpFlow    | true                                 |
+      | maskedEmail        | j*.d*e@regionelazio.it               |
+    And The response body contains field "otpSessionUid"
+    And An OTP flow should be created with status "PENDING"
 
   Scenario: Successful OIDC exchange with OTP feature flag set to "BETA", user in beta list, forced OTP disabled and previous pending OTP flow with sameIdp=false found
     Given User login with username "j.doe" and password "test"
@@ -224,6 +247,7 @@ Feature: Oidc with no active periodic OTP flow
       | status | 500       |
       | detail | Cannot Handle OTP Flow:it.pagopa.selfcare.auth.exception.InternalException: Cannot get User Info Email on External Internal APIs:it.pagopa.selfcare.auth.exception.InternalException: Internal server error:Received: 'Internal Server Error, status code 500' when invoking REST Client method: 'org.openapi.quarkus.internal_json.api.UserApi#v2getUserInfoUsingGET' |
 
+  @RemoveOtpFlow
   Scenario: Successful OIDC exchange with OTP feature flag set to "ALL" and no previous OTP flow found
     Given User login with username "r.balboa" and password "test"
     And OTP feature flag is set to "ALL"
@@ -236,11 +260,11 @@ Feature: Oidc with no active periodic OTP flow
       """
     When I send a POST request to "oidc/exchange"
     Then The status code is 200
-    And The session token claims contains:
-      | fiscal_number    | blbrki80A41H401T    |
-      | name             | rocky               |
-      | family_name      | Balboa              |
-      | iss              | SPID                |
+    And The response body contains:
+      | requiresOtpFlow    | true                      |
+      | maskedEmail        | r*.b****a@regionelazio.it |
+    And The response body contains field "otpSessionUid"
+    And An OTP flow should be created with status "PENDING"
 
   Scenario: Successful OIDC exchange with OTP feature flag set to "ALL", previous OTP flow found and new Otp flow required
     Given User login with username "j.doe" and password "test"
@@ -260,7 +284,7 @@ Feature: Oidc with no active periodic OTP flow
     And The response body contains field "otpSessionUid"
     And An OTP flow should be created with status "PENDING"
 
-  Scenario: Successful OIDC exchange with OTP feature flag set to "ALL" and previous completed OTP flow with sameIdp=true found
+  Scenario: Successful OIDC exchange with OTP feature flag set to "ALL" and previous completed OTP flow 3 months ago with sameIdp=true found
     Given User login with username "j.doe" and password "test"
     And OTP feature flag is set to "ALL"
     And The following request body:
@@ -270,7 +294,7 @@ Feature: Oidc with no active periodic OTP flow
           "redirectUri": "https://example.com/callback"
       }
       """
-    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" already exists with status "COMPLETED" and attempts 1
+    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" was already COMPLETED 3 months ago
     When I send a POST request to "oidc/exchange"
     Then The status code is 200
     And The session token claims contains:
@@ -278,6 +302,26 @@ Feature: Oidc with no active periodic OTP flow
       | name             | John                |
       | family_name      | Doe                 |
       | iss              | SPID                |
+
+  @RemoveOtpFlow
+  Scenario: Successful OIDC exchange with OTP feature flag set to "ALL" and previous completed OTP flow 7 months ago with sameIdp=true found
+    Given User login with username "j.doe" and password "test"
+    And OTP feature flag is set to "ALL"
+    And The following request body:
+      """
+      {
+          "code": "auth_code_flow_present_123",
+          "redirectUri": "https://example.com/callback"
+      }
+      """
+    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" was already COMPLETED 7 months ago
+    When I send a POST request to "oidc/exchange"
+    Then The status code is 200
+    And The response body contains:
+      | requiresOtpFlow    | true                   |
+      | maskedEmail        | j*.d*e@regionelazio.it |
+    And The response body contains field "otpSessionUid"
+    And An OTP flow should be created with status "PENDING"
 
   Scenario: Successful OIDC exchange with OTP feature flag set to "ALL" and previous pending OTP flow with sameIdp=false found
     Given User login with username "j.doe" and password "test"

@@ -1,13 +1,16 @@
 package it.pagopa.selfcare.auth.util;
 
+import com.mongodb.client.model.Filters;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.model.OtpStatus;
+import lombok.extern.slf4j.Slf4j;
 
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+@Slf4j
 public class OtpUtils {
 
   private static final SecureRandom random = new SecureRandom();
@@ -105,7 +108,10 @@ public class OtpUtils {
     }
 
     return otpCountTodayDistinctUsers()
-            .map(count -> count < limit);
+            .map(count ->{
+              log.info("OTP count is: {}", count);
+              return count < limit;
+            });
   }
 
   public static Uni<Long> otpCountTodayDistinctUsers() {
@@ -115,15 +121,11 @@ public class OtpUtils {
             .atStartOfDay()
             .atOffset(now.getOffset());
 
-    return OtpFlow.find("createdAt >= ?1", startOfDay)
-            .project(OtpFlow.class)
-            .list()
-            .map(list ->
-                    list.stream()
-                            .map(OtpFlow::getUserId)
-                            .distinct()
-                            .count()
-            );
+    return OtpFlow.mongoCollection()
+            .distinct("userId", Filters.gte("createdAt", startOfDay.toInstant()), String.class)
+            .collect()
+            .asList()
+            .map(list -> (long) list.size());
   }
 
 }
