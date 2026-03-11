@@ -1,13 +1,12 @@
 resource "azurerm_resource_group" "documents_sa_rg" {
-  name = "${local.project}-${local.naming_config}-storage-rg"
-  //name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "resource_group" }))
+  name     = "${local.project}-${local.naming_config}-storage-rg"
   location = local.location
 }
 
 module "storage_documents" {
-  source = "../_modules/storage_accounts"
+  source = "../../core/_modules/storage_accounts"
 
-  prefix          = local.prefix
+  prefix          = local.storage_prefix
   env_short       = local.env_short
   location        = local.location
   domain          = "ar"

@@ -1,10 +1,24 @@
 locals {
-  prefix    = "sc"
-  env_short = "u"
-  location  = "westeurope"
+  prefix         = "selc"
+  storage_prefix = "sc"
+  env_short      = "u"
+  location       = "westeurope"
+  location_short = "weu"
+  domain         = "pnpg"
+  is_pnpg        = false
   # suffix_increment = "-002"
 
-  function_name = "${local.project}-onboarding-fn"
+  pnpg_suffix = local.is_pnpg == true ? "-${local.location_short}-${local.domain}" : ""
+
+  project = "${local.prefix}-${local.env_short}"
+
+  mongo_db = {
+    mongodb_rg_name               = "${local.prefix}-${local.env_short}${local.pnpg_suffix}-cosmosdb-mongodb-rg",
+    cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}${local.pnpg_suffix}-cosmosdb-mongodb-account"
+    mongodb_name                  = "selcOnboarding"
+  }
+
+  function_name = "${local.storage_prefix}-onboarding-fn"
 
   tags = {
     CreatedBy   = "Terraform"
@@ -16,10 +30,9 @@ locals {
 
   cidr_subnet_document_storage = ["10.1.136.0/24"]
 
-  key_vault_resource_group_name = "selc-${local.env_short}-sec-rg"
-  key_vault_name                = "selc-${local.env_short}-kv"
+  key_vault_resource_group_name = "${local.prefix}-${local.env_short}-sec-rg"
+  key_vault_name                = "${local.prefix}-${local.env_short}-kv"
 
-  project                  = "selc-${local.env_short}"
   naming_config            = "documents"
   resource_group_name_vnet = "${local.project}-vnet-rg"
 

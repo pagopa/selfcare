@@ -1,12 +1,13 @@
 resource "azurerm_resource_group" "documents_sa_rg" {
-  name     = "${local.project}-${local.naming_config}-storage-rg"
+  name = "${local.project}-${local.naming_config}-storage-rg"
+  //name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "resource_group" }))
   location = local.location
 }
 
 module "storage_documents" {
-  source = "../../core/_modules/storage_accounts"
+  source = "../_modules/storage_accounts"
 
-  prefix          = local.storage_prefix
+  prefix          = local.prefix
   env_short       = local.env_short
   location        = local.location
   domain          = "ar"
@@ -29,7 +30,7 @@ module "storage_documents" {
       allow_protected_append_writes = false
       period_since_creation_in_days = 1
     }
-    restore_policy_days   = 0 # Cannot enable both immutability_policy and restore_policy
+    restore_policy_days   = 0
     delete_retention_days = 0
     versioning            = false
     last_access_time      = true
@@ -39,17 +40,17 @@ module "storage_documents" {
     }
   }
 
-  base_blob_tier_to_cool_after_days_since_modification_greater_than = 1
-  base_blob_tier_to_cold_after_days_since_creation_greater_than     = 1
-  base_delete_after_days_since_creation_greater_than                = 1
+  base_blob_tier_to_cool_after_days_since_modification_greater_than = 30
+  base_blob_tier_to_cold_after_days_since_creation_greater_than     = 90
+  base_delete_after_days_since_creation_greater_than                = 3651
 
   # snapshot_change_tier_to_archive_after_days_since_creation    = 30
-  snapshot_change_tier_to_cool_after_days_since_creation = 1
-  snapshot_delete_after_days_since_creation_greater_than = 1
+  snapshot_change_tier_to_cool_after_days_since_creation = 90
+  snapshot_delete_after_days_since_creation_greater_than = 3651
 
   # version_change_tier_to_archive_after_days_since_creation    = 30
-  version_change_tier_to_cool_after_days_since_creation = 1
-  version_delete_after_days_since_creation              = 1
+  version_change_tier_to_cool_after_days_since_creation = 90
+  version_delete_after_days_since_creation              = 3651
 
   key_vault_resource_group_name = local.key_vault_resource_group_name
   key_vault_name                = local.key_vault_name

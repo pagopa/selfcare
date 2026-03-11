@@ -16,7 +16,7 @@ terraform {
     resource_group_name  = "terraform-state-rg"
     storage_account_name = "tfappprodselfcare"
     container_name       = "terraform-state"
-    key                  = "selfcare-onboarding.storage-documents.tfstate"
+    key                  = "selfcare.resources.tfstate"
     use_azuread_auth     = true
   }
 }
@@ -29,3 +29,11 @@ provider "azurerm" {
 data "azurerm_subscription" "current" {}
 
 data "azurerm_client_config" "current" {}
+
+module "mongodb" {
+  source = "../_modules/mongodb"
+
+  name                = local.mongo_db.mongodb_name
+  resource_group_name = local.mongo_db.mongodb_rg_name
+  account_name        = local.mongo_db.cosmosdb_account_mongodb_name
+}

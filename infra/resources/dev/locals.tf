@@ -1,7 +1,7 @@
 locals {
   prefix         = "selc"
   storage_prefix = "sc"
-  env_short      = "p"
+  env_short      = "d"
   location       = "westeurope"
   location_short = "weu"
   domain         = "pnpg"
@@ -10,7 +10,7 @@ locals {
 
   pnpg_suffix = local.is_pnpg == true ? "-${local.location_short}-${local.domain}" : ""
 
-  project = "${local.prefix}-${local.env_short}"
+  project                  = "${local.prefix}-${local.env_short}"
 
   mongo_db = {
     mongodb_rg_name               = "${local.prefix}-${local.env_short}${local.pnpg_suffix}-cosmosdb-mongodb-rg",
@@ -18,11 +18,11 @@ locals {
     mongodb_name                  = "selcOnboarding"
   }
 
-  function_name = "${local.storage_prefix}-onboarding-fn"
+  function_name = "${local.project}-onboarding-fn"
 
   tags = {
     CreatedBy   = "Terraform"
-    Environment = "PROD"
+    Environment = "DEV"
     Owner       = "SelfCare"
     Source      = "https://github.com/pagopa/selfcare-onboarding"
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
