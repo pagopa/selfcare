@@ -1,0 +1,63 @@
+name: Deploy SELC - user-group-cdc
+
+on:
+  push:
+    branches:
+      - main
+      - releases/*
+    paths:
+      - "apps/user-group-cdc/**"
+      - "infra/container_apps/user-group-cdc/**"
+      - "apps/pom.xml"
+      - "pom.xml"
+  
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options: 
+        - dev
+        - uat
+        - prod
+
+jobs:
+
+  release_dev:
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
+    name: '[Dev] User cdc Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+      tf_environment: dev
+      dir: 'infra/container_apps/user-group-cdc'
+      dockerfile_path: ./apps/user-group-cdc/Dockerfile
+      docker_image_name: pagopa/selfcare-user-group-cdc
+      upload_openapi_enabled: false
+
+  release_uat:
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
+    name: '[UAT] User cdc Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    secrets: inherit
+    with:
+      environment: uat
+      tf_environment: uat
+      dir: 'infra/container_apps/user-group-cdc'
+      dockerfile_path: ./apps/user-group-cdc/Dockerfile
+      docker_image_name: pagopa/selfcare-user-group-cdc
+      upload_openapi_enabled: false
+
+  release_prod:
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
+    name: '[Prod] User cdc Release'
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod
+      tf_environment: prod
+      dir: 'infra/container_apps/user-group-cdc'
+      dockerfile_path: ./apps/user-group-cdc/Dockerfile
+      docker_image_name: pagopa/selfcare-user-group-cdc
+      upload_openapi_enabled: false

@@ -1,0 +1,49 @@
+name: PR - Validation
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    branches:
+      - main
+      - releases/**
+    types:
+      - opened
+      - synchronize
+
+jobs:
+
+  validate_pr_size:
+    name: Ensure PR is small
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # 4.1.1
+        name: Checkout
+        with:
+          fetch-depth: 0
+
+      - name: Get total lines changed
+        shell: bash
+        run: |
+          size=$(git diff --stat origin/${{ github.base_ref }} --diff-filter=d \
+          | grep -v .lock \
+          | awk -F"|" '{ print $2 }' \
+          | awk '{ print $1 }' \
+          | sed '/^$/d' \
+          | paste -sd+ - \
+          | bc)
+
+          echo "size=${size}" >> $GITHUB_ENV
+          echo ""
+          echo "Total lines changed (note: *.lock files are excluded from this count): "
+          echo $size
+
+      - name: Evaluate Lines Changed
+        shell: bash
+        run: |
+          if [[ $size -gt 500 ]]
+          then
+            echo "Warning - total lines changed is greater than 500."
+            echo "Please consider breaking this PR down."
+            exit 1
+          fi
