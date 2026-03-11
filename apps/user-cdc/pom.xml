@@ -136,6 +136,16 @@
             <artifactId>user-sdk-event</artifactId>
             <version>0.0.1</version>
         </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selfcare-onboarding-sdk-product</artifactId>
+            <version>0.6.10</version>
+        </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selfcare-onboarding-sdk-azure-storage</artifactId>
+            <version>0.6.10</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
