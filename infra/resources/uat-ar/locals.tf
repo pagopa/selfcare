@@ -4,17 +4,13 @@ locals {
   env_short      = "u"
   location       = "westeurope"
   location_short = "weu"
-  domain         = "pnpg"
-  is_pnpg        = false
   # suffix_increment = "-002"
-
-  pnpg_suffix = local.is_pnpg == true ? "-${local.location_short}-${local.domain}" : ""
 
   project = "${local.prefix}-${local.env_short}"
 
   mongo_db = {
-    mongodb_rg_name               = "${local.prefix}-${local.env_short}${local.pnpg_suffix}-cosmosdb-mongodb-rg",
-    cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}${local.pnpg_suffix}-cosmosdb-mongodb-account"
+    mongodb_rg_name               = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-rg",
+    cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-account"
     mongodb_name                  = "selcOnboarding"
   }
 
