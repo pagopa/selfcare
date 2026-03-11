@@ -1,6 +1,6 @@
 is_pnpg             = true
 env_short           = "d"
-private_dns_name    = "selc-d-pnpg-onboardingbackend-ca.victoriousfield-e39534b8.westeurope.azurecontainerapps.io"
+private_dns_name    = "selc-d-pnpg-onboardingbackend-ca.blackhill-644148c0.westeurope.azurecontainerapps.io"
 dns_zone_prefix     = "pnpg.dev.selfcare"
 api_dns_zone_prefix = "api-pnpg.dev.selfcare"
 
