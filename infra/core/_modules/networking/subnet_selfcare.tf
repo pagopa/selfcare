@@ -18,6 +18,7 @@ resource "azurerm_subnet" "container_app_snet" {
 }
 
 resource "azurerm_subnet_nat_gateway_association" "subnet_gateway_association" {
+  count          = var.core_vnet ? 1 : 0
   nat_gateway_id = data.azurerm_nat_gateway.nat_gateway.id
   subnet_id      = azurerm_subnet.container_app_snet.id
 }
