@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+
+  user-ms:
+    image: user-ms:latest
+    container_name: user-ms
+    restart: on-failure
+    build:
+      context: .
+      dockerfile: ./apps/user-ms/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - JWT_TOKEN_PUBLIC_KEY=asdf
