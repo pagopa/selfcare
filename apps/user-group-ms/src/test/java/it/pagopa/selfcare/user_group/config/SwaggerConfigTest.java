@@ -3,14 +3,15 @@ package it.pagopa.selfcare.user_group.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.selfcare.user_group.model.mapper.UserGroupMapper;
 import it.pagopa.selfcare.user_group.service.UserGroupService;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -24,13 +25,9 @@ import java.nio.file.Paths;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Disabled("TODO: Fix MongoDB configuration for test - swaggerEN profile needs MongoDB database configured")
 @SpringBootTest
+@EnableAutoConfiguration(exclude = {MongoAutoConfiguration.class, MongoDataAutoConfiguration.class})
 @ActiveProfiles("swaggerEN")
-@TestPropertySource(properties = {
-    "spring.data.mongodb.uri=mongodb://localhost:27017",
-    "spring.data.mongodb.database=selcUserGroup"
-})
 class SwaggerConfigTest {
 
     @MockBean
