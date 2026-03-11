@@ -1,63 +1,29 @@
 package it.pagopa.selfcare.onboarding.core;
 
-import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.onboarding.connector.api.ProductsConnector;
-import it.pagopa.selfcare.onboarding.connector.exceptions.ResourceNotFoundException;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.ProductStatus;
-import it.pagopa.selfcare.product.exception.ProductNotFoundException;
-import java.util.List;
+import it.pagopa.selfcare.onboarding.connector.api.ProductMsConnector;
+import it.pagopa.selfcare.onboarding.connector.model.product.OriginResult;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.owasp.encoder.Encode;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
 
 @Slf4j
 @Service
 public class ProductServiceImpl implements ProductService {
 
-    private final ProductsConnector productsConnector;
+    // CONNECTOR
+    private final ProductMsConnector productMsConnector;
 
-    @Autowired
-    public ProductServiceImpl(ProductsConnector productsConnector) {
-        this.productsConnector = productsConnector;
+    public ProductServiceImpl(ProductMsConnector productMsConnector) {
+        this.productMsConnector = productMsConnector;
     }
 
     @Override
-    public Product getProduct(String id, InstitutionType institutionType) {
-        log.trace("getProduct start");
-        log.debug("getProduct id = {}, institutionType = {}", id, institutionType);
-        Assert.notNull(id, "ProductId is required");
-        try {
-            Product product = productsConnector.getProduct(id, institutionType);
-            log.debug("getProduct result = {}", product);
-            log.trace("getProduct end");
-            return product;
-        } catch (ProductNotFoundException e) {
-            throw new ResourceNotFoundException("No product found with id " + id);
-        }
-    }
-
-    @Override
-    public Product getProductValid(String id) {
-        log.trace("getProductValid start");
-        log.debug("getProductValid id = {}", id);
-        Assert.notNull(id, "ProductId is required");
-        Product product = productsConnector.getProductValid(id);
-        log.debug("getProductValid result = {}", product);
-        log.trace("getProductValid end");
-        return product;
-    }
-
-    @Override
-    public List<Product> getProducts(boolean rootOnly) {
-        log.trace("getProducts start");
-        List<Product> products = productsConnector.getProducts(rootOnly);
-        List<Product> activeProducts = products.stream()
-                .filter(product -> ProductStatus.ACTIVE.equals(product.getStatus()))
-                .toList();
-        log.debug("getProducts result = {}", activeProducts);
-        log.trace("getProducts end");
-        return activeProducts;
+    public OriginResult getOrigins(String productId) {
+        log.trace("getOrigins start");
+        String productIdSanitized = Encode.forJava(productId);
+        OriginResult originResult = productMsConnector.getOrigins(productIdSanitized);
+        log.debug("getOrigins size = {}", originResult.getOrigins().size());
+        log.trace("getOrigins end");
+        return originResult;
     }
 }

@@ -59,10 +59,6 @@ app_settings = [
     value = "http://selc-d-pnpg-onboarding-ms-ca",
   },
   {
-    name  = "ONBOARDING_ALLOWED_INSTITUTIONS_PRODUCTS"
-    value = "{'prod-pn-pg':{'*'}}"
-  },
-  {
     name  = "MS_CORE_URL"
     value = "http://selc-d-pnpg-ms-core-ca"
   },
@@ -101,6 +97,10 @@ app_settings = [
   {
     name  = "MS_USER_INSTITUTION_URL"
     value = "http://selc-d-user-ms-ca"
+  },
+  {
+    name  = "MS_PRODUCT_URL"
+    value = "http://selc-d-product-ms-ca"
   }
 ]
 

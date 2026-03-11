@@ -2,7 +2,7 @@ package it.pagopa.selfcare.onboarding.web.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.pagopa.selfcare.onboarding.core.ProductService;
+import it.pagopa.selfcare.onboarding.core.ProductAzureService;
 import it.pagopa.selfcare.onboarding.web.config.WebTestConfig;
 import it.pagopa.selfcare.onboarding.web.model.ProductResource;
 import it.pagopa.selfcare.onboarding.web.model.mapper.ProductMapperImpl;
@@ -43,7 +43,7 @@ class ProductControllerTest {
     protected MockMvc mvc;
 
     @MockBean
-    protected ProductService productServiceMock;
+    protected ProductAzureService productAzureServiceMock;
 
     @Autowired
     protected ObjectMapper objectMapper;
@@ -55,7 +55,7 @@ class ProductControllerTest {
     void getProduct() throws Exception {
         //given
         final String productId = "productId";
-        Mockito.when(productServiceMock.getProduct(Mockito.any(), any()))
+        Mockito.when(productAzureServiceMock.getProduct(Mockito.any(), any()))
                 .thenReturn(new Product());
         //when
         MvcResult result = mvc.perform(MockMvcRequestBuilders
@@ -69,9 +69,9 @@ class ProductControllerTest {
                 result.getResponse().getContentAsString(),
                 ProductResource.class);
         Assertions.assertNotNull(response);
-        Mockito.verify(productServiceMock, Mockito.times(1))
+        Mockito.verify(productAzureServiceMock, Mockito.times(1))
                 .getProduct(Mockito.anyString(), any());
-        Mockito.verifyNoMoreInteractions(productServiceMock);
+        Mockito.verifyNoMoreInteractions(productAzureServiceMock);
     }
 
     /**
@@ -80,7 +80,7 @@ class ProductControllerTest {
     @Test
     void getProducts() throws Exception {
         //given
-        Mockito.when(productServiceMock.getProducts(false))
+        Mockito.when(productAzureServiceMock.getProducts(false))
                 .thenReturn(List.of(new Product()));
         //when
         MvcResult result = mvc.perform(MockMvcRequestBuilders
@@ -94,9 +94,9 @@ class ProductControllerTest {
                 result.getResponse().getContentAsString(),
                 new TypeReference<>(){});
         Assertions.assertNotNull(response);
-        Mockito.verify(productServiceMock, Mockito.times(1))
+        Mockito.verify(productAzureServiceMock, Mockito.times(1))
                 .getProducts(false);
-        Mockito.verifyNoMoreInteractions(productServiceMock);
+        Mockito.verifyNoMoreInteractions(productAzureServiceMock);
     }
 
     /**
@@ -113,7 +113,7 @@ class ProductControllerTest {
         userContractMappings.put(Product.CONTRACT_TYPE_DEFAULT, userContract);
         product.setUserContractMappings(userContractMappings);
 
-        Mockito.when(productServiceMock.getProducts(true))
+        Mockito.when(productAzureServiceMock.getProducts(true))
                 .thenReturn(List.of(product));
         //when
         MvcResult result = mvc.perform(MockMvcRequestBuilders
@@ -128,8 +128,8 @@ class ProductControllerTest {
                 new TypeReference<>(){});
         Assertions.assertNotNull(response);
         Assertions.assertEquals(1, response.size());
-        Mockito.verify(productServiceMock, Mockito.times(1))
+        Mockito.verify(productAzureServiceMock, Mockito.times(1))
                 .getProducts(true);
-        Mockito.verifyNoMoreInteractions(productServiceMock);
+        Mockito.verifyNoMoreInteractions(productAzureServiceMock);
     }
 }

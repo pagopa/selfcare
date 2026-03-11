@@ -56,6 +56,8 @@ public class OnboardingData {
     private List<String> attachments;
     private List<String> atecoCodes;
     private Payment payment;
+    private Boolean toAddOnAggregates;
+    private UserRequester userRequester;
     public List<User> getUsers() {
         return Optional.ofNullable(users).orElse(Collections.emptyList());
     }

@@ -36,4 +36,7 @@ public class OnboardingUserDto {
     @ApiModelProperty(value = "${swagger.onboarding.institutions.model.subunitCode}")
     private String subunitCode;
 
+    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.toAddOnAggregates}")
+    private Boolean toAddOnAggregates;
+
 }

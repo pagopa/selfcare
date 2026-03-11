@@ -78,6 +78,18 @@ services:
       - mock-server
       - azure-cli
 
+
+  product-ms:
+    image: ghcr.io/pagopa/selfcare-product-ms:latest
+    ports:
+      - "9090:8080"
+    networks:
+      - develop-network
+    env_file:
+      - test-product-ms.env
+    depends_on:
+      - mongo-db
+
   mock-server:
     image: mockserver/mockserver@sha256:adec675a93253dcd503cda331dbc8c88383c1c79ceb2370ec9766ad3f010d255
     ports:

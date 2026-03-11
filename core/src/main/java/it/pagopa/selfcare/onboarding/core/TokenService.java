@@ -2,6 +2,7 @@ package it.pagopa.selfcare.onboarding.core;
 
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface TokenService {
@@ -19,9 +20,15 @@ public interface TokenService {
 
   Resource getContract(String onboardingId);
 
+  Resource getTemplateAttachment(String onboardingId, String filename);
+
   Resource getAttachment(String onboardingId, String filename);
 
   Resource getAggregatesCsv(String onboardingId, String productId);
 
   boolean verifyAllowedUserByRole(String onboardingId, String uid);
+
+  void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName);
+
+  HttpStatusCode headAttachment(String onboardingId, String filename);
 }

@@ -1,8 +1,8 @@
-package it.pagopa.selfcare.onboarding.core;
+package it.pagopa.selfcare.onboarding.connector.api;
 
 import it.pagopa.selfcare.onboarding.connector.model.product.OriginResult;
 
-public interface ProductService {
+public interface ProductMsConnector {
 
     OriginResult getOrigins(String productId);
 

@@ -21,7 +21,6 @@ import it.pagopa.selfcare.onboarding.connector.model.user.UserId;
 import it.pagopa.selfcare.onboarding.core.exception.OnboardingNotAllowedException;
 import it.pagopa.selfcare.onboarding.core.mapper.InstitutionInfoMapper;
 import it.pagopa.selfcare.onboarding.core.mapper.InstitutionInfoMapperImpl;
-import it.pagopa.selfcare.onboarding.core.strategy.OnboardingValidationStrategy;
 import it.pagopa.selfcare.onboarding.core.utils.PgManagerVerifier;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
@@ -85,9 +84,6 @@ class InstitutionServiceImplTest {
     private PartyRegistryProxyConnector partyRegistryProxyConnectorMock;
 
     @Mock
-    private OnboardingValidationStrategy onboardingValidationStrategyMock;
-
-    @Mock
     private PgManagerVerifier pgManagerVerifierMock;
 
     @Captor
@@ -138,7 +134,7 @@ class InstitutionServiceImplTest {
         //then
         ValidationException e = assertThrows(ValidationException.class, executable);
         assertEquals(LOCATION_INFO_IS_REQUIRED, e.getMessage());
-        verifyNoInteractions(productsConnectorMock, partyConnectorMock, userConnectorMock, onboardingValidationStrategyMock);
+        verifyNoInteractions(productsConnectorMock, partyConnectorMock, userConnectorMock);
     }
 
     @Test
@@ -361,7 +357,7 @@ class InstitutionServiceImplTest {
                     userId.setId(UUID.randomUUID());
                     return userId;
                 });
-        when(onboardingValidationStrategyMock.validate(any(), any()))
+        when(productService.isProductEnabled(any()))
                 .thenReturn(true);
         // when
         institutionService.onboardingProduct(onboardingData);
@@ -372,8 +368,8 @@ class InstitutionServiceImplTest {
                 .createInstitution(onboardingData);
         verify(productsConnectorMock, times(1))
                 .getProduct(onboardingData.getProductId(), onboardingData.getInstitutionType());
-        verify(onboardingValidationStrategyMock, times(1))
-                .validate(onboardingData.getProductId(), onboardingData.getTaxCode());
+        verify(productService, times(1))
+                .isProductEnabled(onboardingData.getProductId());
         verify(partyConnectorMock, times(1))
                 .onboardingOrganization(onboardingDataCaptor.capture());
         ArgumentCaptor<SaveUserDto> saveUserCaptor = ArgumentCaptor.forClass(SaveUserDto.class);
@@ -392,7 +388,7 @@ class InstitutionServiceImplTest {
             assertNotNull(userInfo.getId());
         });
         verify(productsConnectorMock, times(2)).getProduct(any(), any());
-        verifyNoMoreInteractions(userConnectorMock, onboardingValidationStrategyMock);
+        verifyNoMoreInteractions(userConnectorMock);
     }
 
     @Test
@@ -438,7 +434,7 @@ class InstitutionServiceImplTest {
                     userId.setId(UUID.randomUUID());
                     return userId;
                 });
-        when(onboardingValidationStrategyMock.validate(any(), any()))
+        when(productService.isProductEnabled(any()))
                 .thenReturn(true);
         // when
         institutionService.onboardingProduct(onboardingData);
@@ -449,8 +445,8 @@ class InstitutionServiceImplTest {
                 .createInstitutionFromInfocamere(onboardingData);
         verify(productsConnectorMock, times(1))
                 .getProduct(onboardingData.getProductId(), onboardingData.getInstitutionType());
-        verify(onboardingValidationStrategyMock, times(1))
-                .validate(onboardingData.getProductId(), onboardingData.getTaxCode());
+        verify(productService, times(1))
+                .isProductEnabled(onboardingData.getProductId());
         verify(partyConnectorMock, times(1))
                 .onboardingOrganization(onboardingDataCaptor.capture());
         ArgumentCaptor<SaveUserDto> saveUserCaptor = ArgumentCaptor.forClass(SaveUserDto.class);
@@ -469,7 +465,7 @@ class InstitutionServiceImplTest {
             assertNotNull(userInfo.getId());
         });
         verify(productsConnectorMock, times(2)).getProduct(any(), any());
-        verifyNoMoreInteractions(userConnectorMock, onboardingValidationStrategyMock);
+        verifyNoMoreInteractions(userConnectorMock);
     }
 
 
@@ -558,7 +554,7 @@ class InstitutionServiceImplTest {
                 .thenReturn(parentProductMock);
 
         doThrow(new RuntimeException("")).when(partyConnectorMock).verifyOnboarding(any(), any());
-        when(onboardingValidationStrategyMock.validate(any(), any())).thenReturn(true);
+        when(productService.isProductEnabled(any())).thenReturn(true);
 
         Assertions.assertThrows(ValidationException.class, () -> institutionService.onboardingProduct(onboardingData));
         verify(productsConnectorMock, times(2)).getProduct(any(), any());
@@ -621,7 +617,7 @@ class InstitutionServiceImplTest {
                     userId.setId(UUID.randomUUID());
                     return userId;
                 });
-        when(onboardingValidationStrategyMock.validate(any(), any()))
+        when(productService.isProductEnabled(any()))
                 .thenReturn(true);
         // when
         institutionService.onboardingProduct(onboardingData);
@@ -632,8 +628,8 @@ class InstitutionServiceImplTest {
                 .createInstitutionFromIpa(onboardingData.getTaxCode(), onboardingData.getSubunitCode(), onboardingData.getSubunitType());
         verify(productsConnectorMock, times(1))
                 .getProduct(onboardingData.getProductId(), onboardingData.getInstitutionType());
-        verify(onboardingValidationStrategyMock, times(1))
-                .validate(onboardingData.getProductId(), onboardingData.getTaxCode());
+        verify(productService, times(1))
+                .isProductEnabled(onboardingData.getProductId());
         verify(partyConnectorMock, times(1))
                 .onboardingOrganization(onboardingDataCaptor.capture());
         ArgumentCaptor<SaveUserDto> saveUserCaptor = ArgumentCaptor.forClass(SaveUserDto.class);
@@ -691,7 +687,7 @@ class InstitutionServiceImplTest {
                     userId.setId(UUID.randomUUID());
                     return userId;
                 });
-        when(onboardingValidationStrategyMock.validate(any(), any()))
+        when(productService.isProductEnabled(any()))
                 .thenReturn(true);
         // when
         institutionService.onboardingProduct(onboardingData);
@@ -702,8 +698,8 @@ class InstitutionServiceImplTest {
                 .createInstitutionFromANAC(onboardingData);
         verify(productsConnectorMock, times(1))
                 .getProduct(onboardingData.getProductId(), onboardingData.getInstitutionType());
-        verify(onboardingValidationStrategyMock, times(1))
-                .validate(onboardingData.getProductId(), onboardingData.getTaxCode());
+        verify(productService, times(1))
+                .isProductEnabled(onboardingData.getProductId());
         verify(partyConnectorMock, times(1))
                 .onboardingOrganization(onboardingDataCaptor.capture());
         ArgumentCaptor<SaveUserDto> saveUserCaptor = ArgumentCaptor.forClass(SaveUserDto.class);
@@ -761,7 +757,7 @@ class InstitutionServiceImplTest {
                     userId.setId(UUID.randomUUID());
                     return userId;
                 });
-        when(onboardingValidationStrategyMock.validate(any(), any()))
+        when(productService.isProductEnabled(any()))
                 .thenReturn(true);
         // when
         institutionService.onboardingProduct(onboardingData);
@@ -772,8 +768,8 @@ class InstitutionServiceImplTest {
                 .createInstitutionFromIVASS(onboardingData);
         verify(productsConnectorMock, times(1))
                 .getProduct(onboardingData.getProductId(), onboardingData.getInstitutionType());
-        verify(onboardingValidationStrategyMock, times(1))
-                .validate(onboardingData.getProductId(), onboardingData.getTaxCode());
+        verify(productService, times(1))
+                .isProductEnabled(onboardingData.getProductId());
         verify(partyConnectorMock, times(1))
                 .onboardingOrganization(onboardingDataCaptor.capture());
         ArgumentCaptor<SaveUserDto> saveUserCaptor = ArgumentCaptor.forClass(SaveUserDto.class);
@@ -831,7 +827,7 @@ class InstitutionServiceImplTest {
                     userId.setId(UUID.randomUUID());
                     return userId;
                 });
-        when(onboardingValidationStrategyMock.validate(any(), any()))
+        when(productService.isProductEnabled(any()))
                 .thenReturn(true);
         // when
         institutionService.onboardingProduct(onboardingData);
@@ -840,8 +836,8 @@ class InstitutionServiceImplTest {
                 .getInstitutionsByTaxCodeAndSubunitCode(onboardingData.getTaxCode(), onboardingData.getSubunitCode());
         verify(productsConnectorMock, times(1))
                 .getProduct(onboardingData.getProductId(), onboardingData.getInstitutionType());
-        verify(onboardingValidationStrategyMock, times(1))
-                .validate(onboardingData.getProductId(), onboardingData.getTaxCode());
+        verify(productService, times(1))
+                .isProductEnabled(onboardingData.getProductId());
         verify(partyConnectorMock, times(1))
                 .onboardingOrganization(onboardingDataCaptor.capture());
         ArgumentCaptor<SaveUserDto> saveUserCaptor = ArgumentCaptor.forClass(SaveUserDto.class);
@@ -898,7 +894,7 @@ class InstitutionServiceImplTest {
                     userId.setId(UUID.randomUUID());
                     return userId;
                 });
-        when(onboardingValidationStrategyMock.validate(any(), any()))
+        when(productService.isProductEnabled(any()))
                 .thenReturn(true);
         when(partyRegistryProxyConnectorMock.getAooById(anyString()))
                 .thenReturn(mockInstance(new HomogeneousOrganizationalArea()));
@@ -914,8 +910,8 @@ class InstitutionServiceImplTest {
                 .createInstitutionFromIpa(onboardingData.getTaxCode(), onboardingData.getSubunitCode(), onboardingData.getSubunitType());
         verify(productsConnectorMock, times(1))
                 .getProduct(onboardingData.getProductId(), onboardingData.getInstitutionType());
-        verify(onboardingValidationStrategyMock, times(1))
-                .validate(onboardingData.getProductId(), onboardingData.getTaxCode());
+        verify(productService, times(1))
+                .isProductEnabled(onboardingData.getProductId());
         verify(partyConnectorMock, times(1))
                 .onboardingOrganization(onboardingDataCaptor.capture());
         ArgumentCaptor<SaveUserDto> saveUserCaptor = ArgumentCaptor.forClass(SaveUserDto.class);
@@ -972,7 +968,7 @@ class InstitutionServiceImplTest {
                     userId.setId(UUID.randomUUID());
                     return userId;
                 });
-        when(onboardingValidationStrategyMock.validate(any(), any()))
+        when(productService.isProductEnabled(any()))
                 .thenReturn(true);
         when(partyRegistryProxyConnectorMock.getUoById(anyString()))
                 .thenReturn(mockInstance(new OrganizationUnit()));
@@ -988,8 +984,8 @@ class InstitutionServiceImplTest {
                 .createInstitutionFromIpa(onboardingData.getTaxCode(), onboardingData.getSubunitCode(), onboardingData.getSubunitType());
         verify(productsConnectorMock, times(1))
                 .getProduct(onboardingData.getProductId(), onboardingData.getInstitutionType());
-        verify(onboardingValidationStrategyMock, times(1))
-                .validate(onboardingData.getProductId(), onboardingData.getTaxCode());
+        verify(productService, times(1))
+                .isProductEnabled(onboardingData.getProductId());
         verify(partyConnectorMock, times(1))
                 .onboardingOrganization(onboardingDataCaptor.capture());
         ArgumentCaptor<SaveUserDto> saveUserCaptor = ArgumentCaptor.forClass(SaveUserDto.class);
@@ -1209,9 +1205,11 @@ class InstitutionServiceImplTest {
         // then
         final Exception e = assertThrows(OnboardingNotAllowedException.class, executable);
         assertEquals("Institution with external id '" + externalInstitutionId + "' is not allowed to onboard '" + productId + "' product", e.getMessage());
-        verify(onboardingValidationStrategyMock, times(1))
-                .validate(productId, externalInstitutionId);
-        verifyNoMoreInteractions(onboardingValidationStrategyMock);
+        verify(productService, times(1))
+                .isProductEnabled(productId);
+        verify(productService, times(1))
+                .verifyAllowedByInstitutionTaxCode(productId, externalInstitutionId);
+        verifyNoMoreInteractions(productService);
         verifyNoInteractions(productsConnectorMock, userConnectorMock, partyConnectorMock);
     }
 
@@ -1221,17 +1219,19 @@ class InstitutionServiceImplTest {
         // given
         final String externalInstitutionId = "externalInstitutionId";
         final String productId = "productId";
-        when(onboardingValidationStrategyMock.validate(productId, externalInstitutionId))
+        when(productService.isProductEnabled(productId))
                 .thenReturn(true);
         // when
         final Executable executable = () -> institutionService.verifyOnboarding(externalInstitutionId, productId);
         // then
         assertDoesNotThrow(executable);
-        verify(onboardingValidationStrategyMock, times(1))
-                .validate(productId, externalInstitutionId);
+        verify(productService, times(1))
+                .isProductEnabled(productId);
+        verify(productService, times(1))
+                .verifyAllowedByInstitutionTaxCode(productId, externalInstitutionId);
         verify(partyConnectorMock, times(1))
                 .verifyOnboarding(externalInstitutionId, productId);
-        verifyNoMoreInteractions(onboardingValidationStrategyMock, partyConnectorMock);
+        verifyNoMoreInteractions(productService, partyConnectorMock);
         verifyNoInteractions(productsConnectorMock, userConnectorMock);
     }
 
@@ -1248,9 +1248,11 @@ class InstitutionServiceImplTest {
         // then
         final Exception e = assertThrows(OnboardingNotAllowedException.class, executable);
         assertEquals("Institution with external id '" + taxCode + "' is not allowed to onboard '" + productId + "' product", e.getMessage());
-        verify(onboardingValidationStrategyMock, times(1))
-                .validate(productId, taxCode);
-        verifyNoMoreInteractions(onboardingValidationStrategyMock);
+        verify(productService, times(1))
+                .isProductEnabled(productId);
+        verify(productService, times(1))
+                .verifyAllowedByInstitutionTaxCode(productId, taxCode);
+        verifyNoMoreInteractions(productService);
         verifyNoInteractions(productsConnectorMock, userConnectorMock, onboardingMsConnector);
     }
 
@@ -1284,7 +1286,7 @@ class InstitutionServiceImplTest {
     void verifyOnboardingInfo_allowedParameter(String taxCode, String origin, String originId, String subunitCode) {
         // given
         final String productId = "productId";
-        when(onboardingValidationStrategyMock.validate(productId, taxCode))
+        when(productService.isProductEnabled(productId))
                 .thenReturn(true);
 
         // when
@@ -1292,11 +1294,13 @@ class InstitutionServiceImplTest {
 
         // then
         assertDoesNotThrow(executable);
-        verify(onboardingValidationStrategyMock, times(1))
-                .validate(productId, taxCode);
+        verify(productService, times(1))
+                .isProductEnabled(productId);
+        verify(productService, times(1))
+                .verifyAllowedByInstitutionTaxCode(productId, taxCode);
         verify(onboardingMsConnector, times(1))
                 .verifyOnboarding(productId, taxCode, originId, origin, subunitCode, null);
-        verifyNoMoreInteractions(onboardingValidationStrategyMock, onboardingMsConnector);
+        verifyNoMoreInteractions(productService, onboardingMsConnector);
         verifyNoInteractions(productsConnectorMock, userConnectorMock);
     }
 
@@ -1318,17 +1322,19 @@ class InstitutionServiceImplTest {
         final String productId = "productId";
         final String origin = "origin";
         final String originId = "originId";
-        when(onboardingValidationStrategyMock.validate(productId, taxCode))
+        when(productService.isProductEnabled(productId))
                 .thenReturn(true);
         // when
         final Executable executable = () -> institutionService.verifyOnboarding(productId, taxCode, origin, originId, subunitCode, InstitutionType.PA.name());
         // then
         assertDoesNotThrow(executable);
-        verify(onboardingValidationStrategyMock, times(1))
-                .validate(productId, taxCode);
+        verify(productService, times(1))
+                .isProductEnabled(productId);
+        verify(productService, times(1))
+                .verifyAllowedByInstitutionTaxCode(productId, taxCode);
         verify(onboardingMsConnector, times(1))
                 .verifyOnboarding(productId, taxCode, origin, originId, subunitCode, InstitutionType.PA.name());
-        verifyNoMoreInteractions(onboardingValidationStrategyMock, onboardingMsConnector);
+        verifyNoMoreInteractions(productService, onboardingMsConnector);
         verifyNoInteractions(productsConnectorMock, userConnectorMock);
     }
 

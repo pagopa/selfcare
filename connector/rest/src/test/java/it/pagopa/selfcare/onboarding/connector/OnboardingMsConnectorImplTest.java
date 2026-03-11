@@ -17,6 +17,7 @@ import org.junit.jupiter.api.function.Executable;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
@@ -74,6 +75,11 @@ class OnboardingMsConnectorImplTest {
         onboardingData.setUsers(List.of(mockInstance(new User())));
         onboardingData.setOriginId("originId");
         onboardingData.setInstitutionUpdate(institutionUpdate);
+        UserRequester userRequester = new UserRequester();
+        userRequester.setEmail("email");
+        userRequester.setName("name");
+        userRequester.setSurname("surname");
+        onboardingData.setUserRequester(userRequester);
         // when
         onboardingMsConnector.onboarding(onboardingData);
         // then
@@ -84,6 +90,9 @@ class OnboardingMsConnectorImplTest {
         OnboardingDefaultRequest actual = onboardingRequestCaptor.getValue();
         assertEquals(actual.getInstitution().getTaxCode(), institutionUpdate.getTaxCode());
         assertEquals(actual.getInstitution().getDescription(), institutionUpdate.getDescription());
+        assertEquals(actual.getUserRequester().getEmail(), userRequester.getEmail());
+        assertEquals(actual.getUserRequester().getName(), userRequester.getName());
+        assertEquals(actual.getUserRequester().getSurname(), userRequester.getSurname());
         verifyNoMoreInteractions(msOnboardingApiClient);
     }
 
@@ -99,6 +108,11 @@ class OnboardingMsConnectorImplTest {
         onboardingData.setBilling(billing);
         onboardingData.setUsers(List.of(mockInstance(new User())));
         onboardingData.setInstitutionUpdate(institutionUpdate);
+        UserRequester userRequester = new UserRequester();
+        userRequester.setEmail("email");
+        userRequester.setName("name");
+        userRequester.setSurname("surname");
+        onboardingData.setUserRequester(userRequester);
         // when
         onboardingMsConnector.onboarding(onboardingData);
         // then
@@ -108,6 +122,9 @@ class OnboardingMsConnectorImplTest {
                 ._onboardingPa(onboardingRequestCaptor.capture());
         OnboardingPaRequest actual = onboardingRequestCaptor.getValue();
         assertEquals(actual.getInstitution().getTaxCode(), institutionUpdate.getTaxCode());
+        assertEquals(actual.getUserRequester().getEmail(), userRequester.getEmail());
+        assertEquals(actual.getUserRequester().getName(), userRequester.getName());
+        assertEquals(actual.getUserRequester().getSurname(), userRequester.getSurname());
         verifyNoMoreInteractions(msOnboardingApiClient);
     }
 
@@ -125,6 +142,11 @@ class OnboardingMsConnectorImplTest {
         onboardingData.setBilling(billing);
         onboardingData.setUsers(List.of(mockInstance(new User())));
         onboardingData.setInstitutionUpdate(institutionUpdate);
+        UserRequester userRequester = new UserRequester();
+        userRequester.setEmail("email");
+        userRequester.setName("name");
+        userRequester.setSurname("surname");
+        onboardingData.setUserRequester(userRequester);
         // when
         onboardingMsConnector.onboarding(onboardingData);
         // then
@@ -135,6 +157,9 @@ class OnboardingMsConnectorImplTest {
         assertEquals(actual.getInstitution().getTaxCode(), institutionUpdate.getTaxCode());
         assertNotNull(actual.getInstitution().getPaymentServiceProvider());
         assertNotNull(actual.getInstitution().getDataProtectionOfficer());
+        assertEquals(actual.getUserRequester().getEmail(), userRequester.getEmail());
+        assertEquals(actual.getUserRequester().getName(), userRequester.getName());
+        assertEquals(actual.getUserRequester().getSurname(), userRequester.getSurname());
         verifyNoMoreInteractions(msOnboardingApiClient);
     }
 
@@ -147,7 +172,6 @@ class OnboardingMsConnectorImplTest {
         when(msOnboardingAggregatesApiClient._verifyAppIoAggregatesCsv(file))
                 .thenReturn(ResponseEntity.ok(verifyAggregateAppIoResponse));
         when(onboardingMapper.toVerifyAggregateResult(eq(verifyAggregateAppIoResponse))).thenReturn(expectedResult);
-
         // when
         VerifyAggregateResult result = onboardingMsConnector.aggregatesVerification(file, "prod-io");
 
@@ -166,7 +190,6 @@ class OnboardingMsConnectorImplTest {
         when(msOnboardingAggregatesApiClient._verifyPagoPaAggregatesCsv(file))
                 .thenReturn(ResponseEntity.ok(new VerifyAggregateResponse()));
         when(onboardingMapper.toVerifyAggregateResult(eq(verifyAggregateResponse))).thenReturn(expectedResult);
-
         // when
         VerifyAggregateResult result = onboardingMsConnector.aggregatesVerification(file, "prod-pagopa");
 
@@ -354,20 +377,56 @@ class OnboardingMsConnectorImplTest {
     }
 
     @Test
-    void getAttachment() {
+    void getTemplateAttachment() {
         // given
         final String onboardingId = "onboardingId";
         final String filename = "filename";
         Resource resource = Mockito.mock(Resource.class);
-        when(msOnboardingTokenApiClient._getAttachment(onboardingId, filename))
+        when(msOnboardingTokenApiClient._getTemplateAttachment(onboardingId, filename))
                 .thenReturn(ResponseEntity.of(Optional.of(resource)));
         // when
-        final Executable executable = () -> onboardingMsConnector.getAttachment(onboardingId, filename);
+        final Executable executable = () -> onboardingMsConnector.getTemplateAttachment(onboardingId, filename);
         // then
         assertDoesNotThrow(executable);
         verify(msOnboardingTokenApiClient, times(1))
-                ._getAttachment(onboardingId, filename);
+                ._getTemplateAttachment(onboardingId, filename);
         verifyNoMoreInteractions(msOnboardingTokenApiClient);
+    }
+
+    @Test
+    void headAttachment() {
+        // given
+        final String onboardingId = "onboardingId";
+        final String filename = "filename";
+
+        when(msOnboardingTokenApiClient._headAttachment(onboardingId, filename))
+                .thenReturn(ResponseEntity.status(HttpStatusCode.valueOf(204)).build());
+        // when
+        HttpStatusCode result = onboardingMsConnector.headAttachment(onboardingId, filename);
+
+        // then
+        verify(msOnboardingTokenApiClient, times(1))
+                ._headAttachment(onboardingId, filename);
+        verifyNoMoreInteractions(msOnboardingTokenApiClient);
+        assertEquals(result, HttpStatusCode.valueOf(204));
+    }
+
+    @Test
+    void headAttachment_shouldReturn404_whenNotFound() {
+        // given
+        final String onboardingId = "onboardingId";
+        final String filename = "filename";
+
+        when(msOnboardingTokenApiClient._headAttachment(onboardingId, filename))
+                .thenReturn(ResponseEntity.status(HttpStatusCode.valueOf(404)).build());
+        // when
+        HttpStatusCode result = onboardingMsConnector.headAttachment(onboardingId, filename);
+
+        // then
+        verify(msOnboardingTokenApiClient, times(1))
+                ._headAttachment(onboardingId, filename);
+        verifyNoMoreInteractions(msOnboardingTokenApiClient);
+        assertEquals(result, HttpStatusCode.valueOf(404));
     }
 
     @Test
@@ -733,4 +792,24 @@ class OnboardingMsConnectorImplTest {
         verifyNoMoreInteractions(msOnboardingApiClient);
         verifyNoMoreInteractions(onboardingMapper);
     }
+
+    @Test
+    void uploadAttachment() {
+        // given
+        final String onboardingId = "onboardingId";
+        final String filename = "filename";
+        MockMultipartFile file = new MockMultipartFile("file", "content".getBytes());
+
+        when(msOnboardingTokenApiClient._uploadAttachment(onboardingId, filename, file))
+                .thenReturn(ResponseEntity.ok().build());
+
+        // when
+        onboardingMsConnector.uploadAttachment(onboardingId, file, filename);
+
+        // then
+        verify(msOnboardingTokenApiClient, times(1))
+                ._uploadAttachment(onboardingId, filename, file);
+        verifyNoMoreInteractions(msOnboardingTokenApiClient);
+    }
+
 }

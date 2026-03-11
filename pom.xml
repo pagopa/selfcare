@@ -24,7 +24,7 @@
     <properties>
         <selc-commons.version>2.9.0</selc-commons.version>
         <sonar.host.url>https://sonarcloud.io/</sonar.host.url>
-        <parent-commons-sdk-version>0.12.0</parent-commons-sdk-version>
+        <parent-commons-sdk-version>0.15.3</parent-commons-sdk-version>
     </properties>
 
     <dependencyManagement>
@@ -118,6 +118,16 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>5.5.0.6356</version>
+            </plugin>
+        </plugins>
+    </build>
 
     <repositories>
         <repository>

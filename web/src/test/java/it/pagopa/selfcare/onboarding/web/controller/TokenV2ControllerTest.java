@@ -1,12 +1,6 @@
 package it.pagopa.selfcare.onboarding.web.controller;
 
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.*;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
@@ -24,11 +18,6 @@ import it.pagopa.selfcare.onboarding.web.handler.TokenExceptionHandler;
 import it.pagopa.selfcare.onboarding.web.model.OnboardingRequestResource;
 import it.pagopa.selfcare.onboarding.web.model.ReasonForRejectDto;
 import it.pagopa.selfcare.onboarding.web.model.mapper.OnboardingResourceMapperImpl;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.List;
-import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -37,6 +26,7 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
@@ -46,6 +36,17 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.List;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.*;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(value = {TokenV2Controller.class}, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 @ContextConfiguration(classes = {TokenV2Controller.class, WebTestConfig.class, OnboardingResourceMapperImpl.class, TokenExceptionHandler.class})
@@ -254,30 +255,99 @@ class TokenV2ControllerTest {
     }
 
     /**
-     * Method under test: {@link TokenV2Controller#getAttachment(String, String)}
+     * Method under test: {@link TokenV2Controller#getTemplateAttachment(String, String)}
      */
     @Test
-    void getAttachment() throws Exception {
+    void getTemplateAttachment() throws Exception {
         final String onboardingId = "onboardingId";
         final String text = "String";
         final String filename = "filename";
         byte[] bytes = text.getBytes();
         InputStream is = new ByteArrayInputStream(bytes);
         Resource resource = Mockito.mock(Resource.class);
-        Mockito.when(tokenService.getAttachment(onboardingId, filename)).thenReturn(resource);
+        Mockito.when(tokenService.getTemplateAttachment(onboardingId, filename)).thenReturn(resource);
         Mockito.when(resource.getInputStream()).thenReturn(is);
 
         //when
         mvc.perform(MockMvcRequestBuilders
-                        .get("/v2/tokens/{onboardingId}/attachment?name={name}", onboardingId, filename)
+                        .get("/v2/tokens/{onboardingId}/template-attachment?name={name}", onboardingId, filename)
                         .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
                 .andExpect(status().isOk())
                 .andReturn();
 
         //then
         verify(tokenService, times(1))
-                .getAttachment(onboardingId, filename);
+                .getTemplateAttachment(onboardingId, filename);
     }
+
+
+    @Test
+    void headAttachmentTest() throws Exception {
+        // given
+        final String onboardingId = "onboardingId";
+        final String filename = "filename";
+
+        Mockito.when(tokenService.headAttachment(onboardingId, filename)).thenReturn(HttpStatusCode.valueOf(204));
+
+        //when
+        mvc.perform(MockMvcRequestBuilders
+                        .head("/v2/tokens/{onboardingId}/attachment/status", onboardingId)
+                        .queryParam("name", filename))
+                .andExpect(status().isNoContent())
+                .andReturn();
+
+        //then
+        verify(tokenService, times(1))
+                .headAttachment(eq("onboardingId"), eq("filename"));
+    }
+
+    @Test
+    void headAttachmentTest_shouldReturnNotFound() throws Exception {
+        // given
+        final String onboardingId = "onboardingId";
+        final String filename = "filename";
+
+        Mockito.when(tokenService.headAttachment(onboardingId, filename)).thenReturn(HttpStatusCode.valueOf(404));
+
+        //when
+        mvc.perform(MockMvcRequestBuilders
+                        .head("/v2/tokens/{onboardingId}/attachment/status", onboardingId)
+                        .queryParam("name", filename))
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        //then
+        verify(tokenService, times(1))
+                .headAttachment(eq("onboardingId"), eq("filename"));
+    }
+
+    /**
+     * Method under test: {@link TokenV2Controller#uploadAttachment(String, String, MultipartFile)}
+     */
+    @Test
+    void uploadAttachment() throws Exception {
+        final String onboardingId = "onboardingId";
+        final String filename = "filename";
+
+        MockMultipartFile file = new MockMultipartFile(
+                "attachment",         
+                "hello.pdf",
+                MediaType.APPLICATION_PDF_VALUE,
+                "Hello, World!".getBytes()
+        );
+
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+                .multipart("/v2/tokens/{onboardingId}/attachment", onboardingId)
+                .file(file)
+                .queryParam("name", filename);
+
+        mvc.perform(requestBuilder)
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
+
+        verify(tokenService, times(1))
+                .uploadAttachment(onboardingId, file, filename);
+    }
+
 
     /**
      * Method under test: {@link TokenV2Controller#getAggregatesCsv(String, String, java.security.Principal)}

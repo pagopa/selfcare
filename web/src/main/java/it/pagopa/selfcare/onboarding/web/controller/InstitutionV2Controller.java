@@ -66,6 +66,7 @@ public class InstitutionV2Controller {
     public void onboarding(@RequestBody @Valid OnboardingProductDto request) {
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", request);
+        institutionService.validateOnboardingByProductOrInstitutionTaxCode(request.getTaxCode(), request.getProductId());
         if (Boolean.TRUE.equals(request.getIsAggregator())) {
             institutionService.onboardingPaAggregator(onboardingResourceMapper.toEntity(request));
         } else {

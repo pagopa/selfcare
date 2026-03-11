@@ -443,3 +443,99 @@ db.userInstitutions.insertMany([
   }
 ]);
 
+db = db.getSiblingDB("selcProduct");
+
+db.products.insertMany([
+  {
+    _id: "89ad7142-24bb-48ad-8504-9c9231137232",
+    productId: "prod-test",
+    alias: "prod-test",
+    title: "Prod TEST",
+    description: "Product description",
+    status: "TESTING",
+    version: 1,
+    consumers: [
+      "Standard"
+    ],
+    visualConfiguration: {
+      logoUrl: "http://localhost:8080",
+      depictImageUrl: "http://localhost:8080",
+      logoBgColor: "#0B3EE3"
+    },
+    features: {
+      allowCompanyOnboarding: true,
+      allowIndividualOnboarding: false,
+      allowedInstitutionTaxCode: [],
+      delegable: false,
+      invoiceable: true,
+      expirationDays: 30,
+      enabled: true
+    },
+    roleMappings: [
+      {
+        role: "OPERATOR",
+        multiroleAllowed: false,
+        phasesAdditionAllowed: [],
+        skipUserCreation: false,
+        backOfficeRoles: [
+          {
+            code: "referente operativo",
+            label: "Operatore",
+            description: "Operatore"
+          }
+        ]
+      }
+    ],
+    contracts: [
+      {
+        type: "institution",
+        institutionType: "DEFAULT",
+        path: "contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html",
+        version: "2.4.6",
+        order: 10,
+        generated: true,
+        mandatory: true,
+        name: "Accordo di adesione IO",
+        workflowState: "REQUEST",
+        workflowType: []
+      }
+    ],
+    institutionOrigins: [
+      {
+        institutionType: "PA",
+        origin: "IPA",
+        labelKey: "pa"
+      },
+      {
+        institutionType: "GSP",
+        origin: "IPA",
+        labelKey: "gsp"
+      },
+      {
+        institutionType: "SCP",
+        origin: "SELC",
+        labelKey: "scp"
+      }
+    ],
+    emailTemplates: [
+      {
+        type: "IMPORT",
+        institutionType: "DEFAULT",
+        path: "contracts/template/mail/import-massivo-io/1.0.0.json",
+        version: "1.0.0",
+        status: "PENDING"
+      }
+    ],
+    backOfficeEnvironmentConfigurations: [
+      {
+        env: "Locale",
+        urlPublic: "http://localhost:8080",
+        urlBO: "http://localhost:8080",
+        identityTokenAudience: "locale"
+      }
+    ],
+    metadata: {
+      createdBy: "user-apim-name"
+    }
+  }
+]);

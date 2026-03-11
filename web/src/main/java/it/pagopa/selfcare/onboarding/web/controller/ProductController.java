@@ -4,7 +4,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
 import io.swagger.v3.oas.annotations.Operation;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.onboarding.core.ProductService;
+import it.pagopa.selfcare.onboarding.core.ProductAzureService;
 import it.pagopa.selfcare.onboarding.web.model.ProductResource;
 import it.pagopa.selfcare.onboarding.web.model.mapper.ProductMapper;
 import it.pagopa.selfcare.product.entity.Product;
@@ -22,12 +22,12 @@ import org.springframework.web.bind.annotation.*;
 @Api(tags = "product")
 public class ProductController {
 
-    private final ProductService productService;
+    private final ProductAzureService productAzureService;
     private final ProductMapper productMapper;
 
     @Autowired
-    public ProductController(ProductService productService, ProductMapper productMapper) {
-        this.productService = productService;
+    public ProductController(ProductAzureService productAzureService, ProductMapper productMapper) {
+        this.productAzureService = productAzureService;
         this.productMapper = productMapper;
     }
 
@@ -43,7 +43,7 @@ public class ProductController {
                                       Optional<InstitutionType> institutionType) {
         log.trace("getProduct start");
         log.debug("getProduct id = {}, institutionType = {}", id, institutionType);
-        Product product = productService.getProduct(id, institutionType.orElse(null));
+        Product product = productAzureService.getProduct(id, institutionType.orElse(null));
         ProductResource resource = productMapper.toResource(product);
         log.debug("getProduct result = {}", resource);
         log.trace("getProduct end");
@@ -56,7 +56,7 @@ public class ProductController {
             description = "${swagger.onboarding.product.api.getProducts}", operationId = "getProducts")
     public List<ProductResource> getProducts() {
         log.trace("getProducts start");
-        final List<Product> products = productService.getProducts(false);
+        final List<Product> products = productAzureService.getProducts(false);
         List<ProductResource> resources = products.stream()
                 .map(productMapper::toResource)
                 .toList();
@@ -71,7 +71,7 @@ public class ProductController {
             description = "${swagger.onboarding.product.api.getProductsAdmin}", operationId = "getProductsAdmin")
     public List<ProductResource> getProductsAdmin() {
         log.trace("getProductsAdmin start");
-        final List<Product> products = productService.getProducts(true);
+        final List<Product> products = productAzureService.getProducts(true);
         List<ProductResource> resources = products.stream()
                 .filter(product -> Objects.nonNull(product.getUserContractTemplate(Product.CONTRACT_TYPE_DEFAULT).getContractTemplatePath()))
                 .map(productMapper::toResource)

@@ -150,14 +150,21 @@ Feature: Institution
     When I send a HEAD request to "/v1/institutions/{externalInstitutionId}/products/{productId}"
     Then The status code is 204
 
-  Scenario: Failed to verify onboarding when not allowed on strategy
+  Scenario: Failed to verify onboarding
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | externalInstitutionId | test-io   |
-      | productId             | prod-test |
+      | productId             | prod-test-1 |
     When I send a HEAD request to "/v1/institutions/{externalInstitutionId}/products/{productId}"
     Then The status code is 404
 
+  Scenario: Failed to verify onboarding when product is not enabled for institution
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | externalInstitutionId | test-io   |
+      | productId             | test-product-2 |
+    When I send a HEAD request to "/v1/institutions/{externalInstitutionId}/products/{productId}"
+    Then The status code is 403
 
   Scenario: Success to verify onboarding
     Given User login with username "j.doe" and password "test"

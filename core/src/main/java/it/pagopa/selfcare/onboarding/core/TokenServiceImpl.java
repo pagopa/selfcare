@@ -5,6 +5,7 @@ import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
@@ -96,6 +97,18 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
+    public Resource getTemplateAttachment(String onboardingId, String filename) {
+        log.trace("getTemplateAttachment start");
+        log.debug("getTemplateAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(filename));
+        Assert.notNull(onboardingId, TOKEN_ID_IS_REQUIRED);
+        Assert.notNull(filename, "filename is required");
+        Resource resource = onboardingMsConnector.getTemplateAttachment(onboardingId, filename);
+        log.debug("getTemplateAttachment result = success");
+        log.trace("getTemplateAttachment end");
+        return resource;
+    }
+
+    @Override
     public Resource getAttachment(String onboardingId, String filename) {
         log.trace("getAttachment start");
         log.debug("getAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(filename));
@@ -123,7 +136,30 @@ public class TokenServiceImpl implements TokenService {
   public boolean verifyAllowedUserByRole(String onboardingId, String uid) {
     log.trace("verifyAllowedUserRole for {} - {}", onboardingId, uid);
     OnboardingData onboardingData = getOnboardingWithUserInfo(onboardingId);
-
     return onboardingData.getUsers().stream().anyMatch(user -> uid.equalsIgnoreCase(user.getId()));
   }
+
+    @Override
+    public void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName) {
+        log.trace("uploadAttachment start");
+        log.debug("uploadAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(attachmentName));
+        Assert.notNull(onboardingId, TOKEN_ID_IS_REQUIRED);
+        Assert.notNull(attachmentName, "filename is required");
+        Assert.notNull(attachment, "file is required");
+        onboardingMsConnector.uploadAttachment(onboardingId, attachment, attachmentName);
+        log.debug("getAttachment result = success");
+        log.trace("getAttachment end");
+    }
+
+    @Override
+    public HttpStatusCode headAttachment(String onboardingId, String filename) {
+        log.trace("headAttachment start");
+        log.debug("headAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(filename));
+        Assert.notNull(onboardingId, TOKEN_ID_IS_REQUIRED);
+        Assert.notNull(filename, "filename is required");
+        HttpStatusCode resource = onboardingMsConnector.headAttachment(onboardingId, filename);
+        log.debug("headAttachment result {}", resource.value());
+        log.trace("headAttachment end");
+        return resource;
+    }
 }

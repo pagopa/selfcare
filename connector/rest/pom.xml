@@ -48,7 +48,7 @@
             <plugin>
                 <groupId>org.openapitools</groupId>
                 <artifactId>openapi-generator-maven-plugin</artifactId>
-                <version>6.3.0</version>
+                <version>7.17.0</version>
                 <executions>
                     <execution>
                         <id>selfcare-ms-core</id>
@@ -60,7 +60,7 @@
                             <inputSpec>${project.basedir}/docs/openapi/api-selfcare-core-docs.json</inputSpec>
                             <generatorName>spring</generatorName>
                             <library>spring-cloud</library>
-                            <modelNameSuffix />
+                            <modelNameSuffix/>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <configOptions>
@@ -70,7 +70,6 @@
                                 <modelPackage>${project.groupId}.core.generated.openapi.v1.dto</modelPackage>
                                 <apiPackage>${project.groupId}.core.generated.openapi.v1.api</apiPackage>
                                 <configPackage>${project.groupId}.core.generated.openapi.v1.config</configPackage>
-                                <additionalModelTypeAnnotations>@lombok.Builder; @lombok.NoArgsConstructor; @lombok.AllArgsConstructor</additionalModelTypeAnnotations>
                                 <dateLibrary>java8-localdatetime</dateLibrary>
                                 <delegatePattern>true</delegatePattern>
                                 <interfaceOnly>true</interfaceOnly>
@@ -82,6 +81,7 @@
                             </configOptions>
                         </configuration>
                     </execution>
+
                     <execution>
                         <id>selfcare-ms-onboarding</id>
                         <goals>
@@ -92,7 +92,7 @@
                             <inputSpec>${project.basedir}/docs/openapi/api-selfcare-onboarding-docs.json</inputSpec>
                             <generatorName>spring</generatorName>
                             <library>spring-cloud</library>
-                            <modelNameSuffix />
+                            <modelNameSuffix/>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <configOptions>
@@ -102,7 +102,6 @@
                                 <modelPackage>${project.groupId}.onboarding.generated.openapi.v1.dto</modelPackage>
                                 <apiPackage>${project.groupId}.onboarding.generated.openapi.v1.api</apiPackage>
                                 <configPackage>${project.groupId}.onboarding.generated.openapi.v1.config</configPackage>
-                                <additionalModelTypeAnnotations>@lombok.Builder; @lombok.NoArgsConstructor; @lombok.AllArgsConstructor</additionalModelTypeAnnotations>
                                 <dateLibrary>java8-localdatetime</dateLibrary>
                                 <delegatePattern>true</delegatePattern>
                                 <interfaceOnly>true</interfaceOnly>
@@ -114,6 +113,7 @@
                             </configOptions>
                         </configuration>
                     </execution>
+
                     <execution>
                         <id>selfcare-ms-user</id>
                         <goals>
@@ -124,7 +124,7 @@
                             <inputSpec>${project.basedir}/docs/openapi/api-selfcare-user-docs.json</inputSpec>
                             <generatorName>spring</generatorName>
                             <library>spring-cloud</library>
-                            <modelNameSuffix />
+                            <modelNameSuffix/>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <configOptions>
@@ -134,7 +134,6 @@
                                 <modelPackage>${project.groupId}.user.generated.openapi.v1.dto</modelPackage>
                                 <apiPackage>${project.groupId}.user.generated.openapi.v1.api</apiPackage>
                                 <configPackage>${project.groupId}.user.generated.openapi.v1.config</configPackage>
-                                <additionalModelTypeAnnotations>@lombok.Builder; @lombok.NoArgsConstructor; @lombok.AllArgsConstructor</additionalModelTypeAnnotations>
                                 <dateLibrary>java8-localdatetime</dateLibrary>
                                 <delegatePattern>true</delegatePattern>
                                 <interfaceOnly>true</interfaceOnly>
@@ -146,6 +145,7 @@
                             </configOptions>
                         </configuration>
                     </execution>
+
                     <execution>
                         <id>selfcare-onboarding-functions</id>
                         <goals>
@@ -156,7 +156,7 @@
                             <inputSpec>${project.basedir}/docs/openapi/api-selfcare-onboarding-functions-docs.json</inputSpec>
                             <generatorName>spring</generatorName>
                             <library>spring-cloud</library>
-                            <modelNameSuffix />
+                            <modelNameSuffix/>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <configOptions>
@@ -166,7 +166,6 @@
                                 <modelPackage>${project.groupId}.onboarding_functions.generated.openapi.v1.dto</modelPackage>
                                 <apiPackage>${project.groupId}.onboarding_functions.generated.openapi.v1.api</apiPackage>
                                 <configPackage>${project.groupId}.onboarding_functions.generated.openapi.v1.config</configPackage>
-                                <additionalModelTypeAnnotations>@lombok.Builder; @lombok.NoArgsConstructor; @lombok.AllArgsConstructor</additionalModelTypeAnnotations>
                                 <dateLibrary>java8-localdatetime</dateLibrary>
                                 <delegatePattern>true</delegatePattern>
                                 <interfaceOnly>true</interfaceOnly>
@@ -178,6 +177,7 @@
                             </configOptions>
                         </configuration>
                     </execution>
+
                     <execution>
                         <id>user-registry</id>
                         <goals>
@@ -188,7 +188,7 @@
                             <inputSpec>${project.basedir}/docs/openapi/api-user-registry-docs.json</inputSpec>
                             <generatorName>spring</generatorName>
                             <library>spring-cloud</library>
-                            <modelNameSuffix />
+                            <modelNameSuffix/>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <configOptions>
@@ -198,7 +198,6 @@
                                 <modelPackage>${project.groupId}.user_registry.generated.openapi.v1.dto</modelPackage>
                                 <apiPackage>${project.groupId}.user_registry.generated.openapi.v1.api</apiPackage>
                                 <configPackage>${project.groupId}.user_registry.generated.openapi.v1.config</configPackage>
-                                <additionalModelTypeAnnotations>@lombok.Builder; @lombok.NoArgsConstructor; @lombok.AllArgsConstructor</additionalModelTypeAnnotations>
                                 <dateLibrary>java8-localdatetime</dateLibrary>
                                 <delegatePattern>true</delegatePattern>
                                 <interfaceOnly>true</interfaceOnly>
@@ -210,6 +209,39 @@
                             </configOptions>
                         </configuration>
                     </execution>
+
+                    <execution>
+                        <id>selc-ms-product</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <inputSpec>${project.basedir}/docs/openapi/api-selfcare-ms-product-docs.json</inputSpec>
+                            <generatorName>spring</generatorName>
+                            <library>spring-cloud</library>
+                            <modelNameSuffix/>
+                            <generateApiTests>false</generateApiTests>
+                            <generateModelTests>false</generateModelTests>
+                            <configOptions>
+                                <useSpringBoot3>true</useSpringBoot3>
+                                <generateForOpenFeign>true</generateForOpenFeign>
+                                <basePackage>${project.groupId}.product.generated.openapi.v1</basePackage>
+                                <modelPackage>${project.groupId}.product.generated.openapi.v1.dto</modelPackage>
+                                <apiPackage>${project.groupId}.product.generated.openapi.v1.api</apiPackage>
+                                <configPackage>${project.groupId}.product.generated.openapi.v1.config</configPackage>
+                                <dateLibrary>java8-localdatetime</dateLibrary>
+                                <delegatePattern>true</delegatePattern>
+                                <interfaceOnly>true</interfaceOnly>
+                                <annotationLibrary>none</annotationLibrary>
+                                <documentationProvider>source</documentationProvider>
+                                <openApiNullable>false</openApiNullable>
+                                <skipDefaultInterface>false</skipDefaultInterface>
+                                <useTags>true</useTags>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+
                 </executions>
             </plugin>
         </plugins>

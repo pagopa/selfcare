@@ -60,10 +60,6 @@ app_settings = [
     value = "http://selc-d-onboarding-ms-ca",
   },
   {
-    name  = "ONBOARDING_ALLOWED_INSTITUTIONS_PRODUCTS"
-    value = "{'prod-interop':{'*'},'prod-pn':{'*'},'prod-io':{'*'},'prod-io-premium':{'*'},'prod-pagopa':{'*'},'prod-fd':{'*'},'prod-fd-garantito':{'*'},'prod-io-sign':{'*'},'prod-sendino':{'*'},'prod-idpay':{'*'},'prod-idpay-merchant':{'*'},'prod-idpay-gi':{'*'}}"
-  },
-  {
     name  = "MS_CORE_URL"
     value = "http://selc-d-ms-core-ca"
   },
@@ -102,6 +98,10 @@ app_settings = [
   {
     name  = "MS_USER_INSTITUTION_URL"
     value = "http://selc-d-user-ms-ca"
+  },
+  {
+    name  = "MS_PRODUCT_URL"
+    value = "http://selc-d-product-ms-ca"
   }
 ]
 

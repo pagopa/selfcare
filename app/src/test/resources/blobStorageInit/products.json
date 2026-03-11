@@ -20,14 +20,14 @@
     "id": "prod-io",
     "identityTokenAudience": "api.io.selfcare.pagopa.it",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/io/2.4.5/io-accordo_di_adesione-v.2.4.5.html",
         "contractTemplateVersion": "2.4.5",
         "attachments": []
       }
     },
     "institutionAggregatorContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/io/2.4.5/io-accordo_di_adesione-v.2.4.5.html",
         "contractTemplateVersion": "2.4.5",
         "attachments": []
@@ -111,13 +111,13 @@
     "urlBO": "https://mock.url/prod-io/bo",
     "urlPublic": "https://mock.url/prod-io/public",
     "userContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/io/user/1.0.0/io-aggiunta-amministratore-v.1.0.html",
         "contractTemplateVersion": "1.0.0"
       }
     },
     "userAggregatorContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/io/user/1.0.0/io-aggiunta-amministratore-v.1.0.html",
         "contractTemplateVersion": "1.0.0"
       }
@@ -146,14 +146,14 @@
     "id": "prod-pn",
     "identityTokenAudience": "portale-pa.dev.pn.pagopa.it",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/pn/2.0.0/pn-accordo_di_adesione-v.2.0.0.html",
         "contractTemplateVersion": "2.0.0",
         "attachments": []
       }
     },
     "institutionAggregatorContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/pn/aggregator/1.0.0/pn-accordo_di_adesione-aggregatore-v.1.0.0.html",
         "contractTemplateVersion": "1.0.0",
         "attachments": []
@@ -223,7 +223,7 @@
     "urlBO": "https://mock.url/prod-pn/bo",
     "urlPublic": "https://mock.url/prod-pn/public",
     "userContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/pn/user/1.0.0/pn-aggiunta-amministratore-v.1.0.html",
         "contractTemplateVersion": "1.0.0"
       }
@@ -249,7 +249,7 @@
     "id": "prod-pagopa",
     "identityTokenAudience": "api.platform.pagopa.it",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/pagopa/1.0.0/pagopa-accordo_di_adesione_ec-v.1.0.0.html",
         "contractTemplateVersion": "1.0.0",
         "attachments": []
@@ -289,7 +289,7 @@
       }
     },
     "institutionAggregatorContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/pagopa/1.0.5/pagopa-accordo_di_adesione_prv-v.1.0.5.html",
         "contractTemplateVersion": "1.0.5",
         "attachments": []
@@ -720,7 +720,7 @@
     "urlBO": "https://mock.url/prod-pagopa/bo",
     "urlPublic": "https://mock.url/prod-pagopa/public",
     "userContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/pagopa/user/1.0.0/pagopa-aggiunta-amministratore-v.1.0.html",
         "contractTemplateVersion": "1.0.0"
       },
@@ -730,7 +730,7 @@
       }
     },
     "userAggregatorContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/pagopa/user-aggregator/1.0.0/pagopa-aggiunta-amministratore-aggregatore-v.1.0.0.html",
         "contractTemplateVersion": "1.0.0"
       }
@@ -756,7 +756,7 @@
     "id": "prod-dashboard-psp",
     "identityTokenAudience": "api.platform.pagopa.it",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/pagopa-insights/1.0.0/pagopa-insights-accordo-di-adesione-v.1.0.0.html",
         "contractTemplateVersion": "1.0.0"
       }
@@ -832,7 +832,7 @@
     "parentId": "prod-pagopa",
     "urlBO": "https://mock.url/prod-dashboard-psp/bo",
     "userContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/pagopa/user/psp/1.1.0/pagopa-aggiunta-amministratore-psp-v.1.1.0.html",
         "contractTemplateVersion": "1.1.0"
       }
@@ -849,7 +849,7 @@
     "enabled": true,
     "id": "prod-ciban",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/dummy-accordo_di_adesione.html",
         "contractTemplateVersion": "1.0.0",
         "attachments": []
@@ -930,7 +930,7 @@
     "enabled": true,
     "id": "prod-cgn",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/dummy-accordo_di_adesione.html",
         "contractTemplateVersion": "1.0.0",
         "attachments": []
@@ -1023,7 +1023,7 @@
         "contractTemplateVersion": "2.1.1",
         "attachments": []
       },
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/interop/2.3.2/interop-accordo_di_adesione-v.2.3.2.html",
         "contractTemplateVersion": "2.3.2",
         "attachments": []
@@ -1106,7 +1106,7 @@
     "urlBO": "https://mock.url/prod-interop/bo",
     "urlPublic": "https://mock.url/prod-interop/public",
     "userContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/interop/user/2.0.1/interop-aggiunta-amministratore-v.2.0.1.html",
         "contractTemplateVersion": "2.0.1"
       }
@@ -1125,7 +1125,7 @@
     "enabled": true,
     "id": "prod-io-premium",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/io-premium/1.1.1/io-premium-accordo_di_adesione-v.1.1.1.html",
         "contractTemplateVersion": "1.1.1",
         "attachments": []
@@ -1181,7 +1181,7 @@
     "title": "IO Premium",
     "urlPublic": "https://mock.url/prod-io-premium/public",
     "userContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/io/user/1.0.0/io-aggiunta-amministratore-v.1.0.html",
         "contractTemplateVersion": "1.0.0"
       }
@@ -1196,7 +1196,7 @@
     "enabled": true,
     "id": "prod-pn-premium",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/pn-premium/0.0.1/pn-premium-accordo_di_adesione-v.0.0.1.html",
         "contractTemplateVersion": "0.0.1",
         "attachments": []
@@ -1220,7 +1220,7 @@
     "id": "prod-idpay",
     "identityTokenAudience": "idpay.welfare.pagopa.it",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/dummy-accordo_di_adesione.html",
         "contractTemplateVersion": "1.0.0",
         "attachments": []
@@ -1301,7 +1301,48 @@
     "id": "test-product",
     "identityTokenAudience": "string",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
+        "contractTemplatePath": "string",
+        "contractTemplateVersion": "string",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/test-product/logo",
+    "modifiedAt": "2022-11-17T10:14:36.626Z",
+    "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "roleMappings": {
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "string",
+            "description": "string",
+            "label": "string"
+          }
+        ]
+      }
+    },
+    "status": "TESTING",
+    "title": "test_prod2",
+    "urlBO": "https://mock.url/test-product/bo"
+  },
+  {
+    "alias": "test-product-2",
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2022-11-17T10:01:22.070Z",
+    "createdBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "depictImageUrl": "https://mock.url/test-product/depict-image",
+    "description": "string",
+    "enabled": false,
+    "id": "test-product-2",
+    "identityTokenAudience": "string",
+    "institutionContractMappings": {
+      "DEFAULT": {
         "contractTemplatePath": "string",
         "contractTemplateVersion": "string",
         "attachments": []
@@ -1341,7 +1382,7 @@
     "id": "test-test",
     "identityTokenAudience": "string",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "string",
         "contractTemplateVersion": "string",
         "attachments": []
@@ -1372,7 +1413,7 @@
     "urlBO": "https://mock.url/test-test/bo",
     "urlPublic": "https://mock.url/test-test/public",
     "userContractMappings": {
-      "default": {}
+      "DEFAULT": {}
     }
   },
   {
@@ -1388,7 +1429,7 @@
     "id": "test-product2",
     "identityTokenAudience": "string",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "string",
         "contractTemplateVersion": "string",
         "attachments": []
@@ -1426,7 +1467,7 @@
     "enabled": true,
     "id": "test-product-sub",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "string",
         "contractTemplateVersion": "string",
         "attachments": []
@@ -1450,7 +1491,7 @@
     "id": "prod-pagopa-5",
     "identityTokenAudience": "idpay.welfare.pagopa.it",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/dummy-accordo_di_adesione.html",
         "contractTemplateVersion": "1.0.0",
         "attachments": []
@@ -1537,7 +1578,7 @@
     "id": "prod-pagopa-ec",
     "identityTokenAudience": "api.platform.pagopa.it",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/pagopa/1.0.0/pagopa-accordo_di_adesione_ec-v.1.0.0.html",
         "contractTemplateVersion": "1.0.0",
         "attachments": []
@@ -1627,7 +1668,7 @@
     "id": "prod-test-1",
     "identityTokenAudience": "api.io.selfcare.pagopa.it",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/io/2.3.2/io-accordo_di_adesione-v.2.3.2.html",
         "contractTemplateVersion": "2.3.2",
         "attachments": []
@@ -1719,7 +1760,7 @@
     "id": "prod-idpay-gi",
     "identityTokenAudience": "idpay.welfare.pagopa.it",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/dummy-accordo_di_adesione.html",
         "contractTemplateVersion": "1.0.0",
         "attachments": []
@@ -1802,7 +1843,7 @@
     "id": "prod-io-sign",
     "identityTokenAudience": "firmaconio.selfcare.pagopa.it",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/io-sign/1.0.4/io_sign-accordo_di_adesione-v.1.0.4.html",
         "contractTemplateVersion": "1.0.4",
         "attachments": []
@@ -1856,7 +1897,7 @@
     "urlBO": "https://mock.url/prod-io-sign/bo",
     "urlPublic": "https://mock.url/prod-io-sign/public",
     "userContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/io-sign/user/1.0.1/io_sign-aggiunta-amministratore-v.1.0.1.html",
         "contractTemplateVersion": "1.0.1"
       }
@@ -1880,7 +1921,7 @@
         "contractTemplateVersion": "2.1.0",
         "attachments": []
       },
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/interop/2.0.0/interop-accordo_di_adesione-v.2.0.0.html",
         "contractTemplateVersion": "2.0.0",
         "attachments": []
@@ -1977,7 +2018,7 @@
         "contractTemplateVersion": "2.1.0",
         "attachments": []
       },
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/interop/2.0.0/interop-accordo_di_adesione-v.2.0.0.html",
         "contractTemplateVersion": "2.0.0",
         "attachments": []
@@ -2068,7 +2109,7 @@
     "id": "prod-pn-coll",
     "identityTokenAudience": "portale-pa.dev.pn.pagopa.it",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/pn/1.0.0/pn-accordo_di_adesione-v.1.0.0.html",
         "contractTemplateVersion": "1.0.0",
         "attachments": []
@@ -2148,7 +2189,7 @@
     "id": "prod-idpay-merchant",
     "identityTokenAudience": "idpay.merchant.welfare.pagopa.it",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/dummy-accordo_di_adesione.html",
         "contractTemplateVersion": "1.0.0",
         "attachments": []
@@ -2203,7 +2244,7 @@
     "id": "prod-fd",
     "identityTokenAudience": "fid00001fe.siachain.sv.sia.eu",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/fd/1.0.0/Regolamento di Piattaforma Garantito e Contraente PA_Cetif Advisory_FD_v. 1.0.pdf",
         "contractTemplateVersion": "v.1.0.0",
         "attachments": []
@@ -2298,7 +2339,7 @@
     "id": "testpp",
     "identityTokenAudience": "string",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/fd/1.2.0/CetifAdvisory_FideiussioniDigitali_Contrattod_v1.2.0.html",
         "contractTemplateVersion": "v.1.2.0",
         "attachments": []
@@ -2394,7 +2435,7 @@
     "id": "prod-fd-garantito",
     "identityTokenAudience": "fid00001fe.siachain.sv.sia.eu",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/fd/1.0.0/Regolamento di Piattaforma Garantito e Contraente PA_Cetif Advisory_FD_v. 1.0.pdf",
         "contractTemplateVersion": "v.1.0.0",
         "attachments": []
@@ -2500,7 +2541,7 @@
     "id": "prod-sendino",
     "identityTokenAudience": "portale-pa.dev.pn.pagopa.it",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/template/pn/2.0.0/pn-accordo_di_adesione-v.2.0.0.html",
         "contractTemplateVersion": "2.0.0",
         "attachments": []
@@ -2582,7 +2623,7 @@
     "id": "prod-piattaforma-unitaria",
     "identityTokenAudience": "dev.piattaformaunitaria.pagopa.it",
     "institutionContractMappings": {
-      "default": {
+      "DEFAULT": {
         "contractTemplatePath": "contracts/dummy-accordo_di_adesione.html",
         "contractTemplateVersion": "1.0.0",
         "attachments": []

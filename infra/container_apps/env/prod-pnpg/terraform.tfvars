@@ -60,10 +60,6 @@ app_settings = [
     value = "http://selc-p-pnpg-onboarding-ms-ca",
   },
   {
-    name  = "ONBOARDING_ALLOWED_INSTITUTIONS_PRODUCTS"
-    value = "{'prod-pn-pg':{'*'}}"
-  },
-  {
     name  = "REST_CLIENT_READ_TIMEOUT"
     value = "60000"
   },
@@ -102,6 +98,10 @@ app_settings = [
   {
     name  = "MS_USER_INSTITUTION_URL"
     value = "https://selc-p-user-ms-ca"
+  },
+  {
+    name  = "MS_PRODUCT_URL"
+    value = "http://selc-p-product-ms-ca"
   }
 ]
 

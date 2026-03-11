@@ -58,4 +58,6 @@ public interface InstitutionService {
     ManagerVerification verifyManager(String taxCode, String companyTaxCode);
 
     List<OnboardingResult> getOnboardingWithFilter(String taxCode, String status);
+
+    void validateOnboardingByProductOrInstitutionTaxCode(String taxCode, String productId);
 }
