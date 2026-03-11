@@ -4,7 +4,11 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "<= 3.112.0"
+      version = "~> 4.0"
+    }
+    dx = {
+      source  = "pagopa-dx/azure"
+      version = "~> 0.0"
     }
   }
 
@@ -13,12 +17,16 @@ terraform {
     storage_account_name = "tfappuatselfcare"
     container_name       = "terraform-state"
     key                  = "selfcare-onboarding.resources.tfstate"
+    use_azuread_auth     = true
   }
 }
 
 provider "azurerm" {
   features {}
+  storage_use_azuread = true
 }
+
+provider "dx" {}
 
 data "azurerm_subscription" "current" {}
 
@@ -27,7 +35,7 @@ data "azurerm_client_config" "current" {}
 module "mongodb_onboarding" {
   source = "../_modules/mongodb"
 
-  name                = "selcOnboarding"
+  name                = local.mongo_db.mongodb_name
   resource_group_name = local.mongo_db.mongodb_rg_name
   account_name        = local.mongo_db.cosmosdb_account_mongodb_name
 }

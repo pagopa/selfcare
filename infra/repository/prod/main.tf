@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "<= 3.112.0"
     }
+    dx = {
+      source  = "pagopa-dx/azure"
+      version = "~> 0.0"
+    }
     github = {
       source  = "integrations/github"
       version = "5.45.0"
@@ -23,6 +27,8 @@ terraform {
 provider "azurerm" {
   features {}
 }
+
+provider "dx" {}
 
 provider "github" {
   owner = "pagopa"

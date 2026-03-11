@@ -1,3 +1,4 @@
 locals {
-  prefix = "selc"
+  prefix         = "selc"
+  storage_prefix = "sc"
 }

@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
     }
+    dx = {
+      source  = "pagopa-dx/azure"
+      version = "~> 0.0"
+    }
     random = {
       source  = "hashicorp/random"
       version = ">= 3.0.0"
@@ -25,6 +29,8 @@ provider "azurerm" {
   features {}
   storage_use_azuread = true
 }
+
+provider "dx" {}
 
 data "azurerm_subscription" "current" {}
 

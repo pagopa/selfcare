@@ -4,7 +4,11 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "<= 3.112.0"
+      version = "~> 4.0"
+    }
+    dx = {
+      source  = "pagopa-dx/azure"
+      version = "~> 0.0"
     }
     github = {
       source  = "integrations/github"
@@ -17,12 +21,15 @@ terraform {
     storage_account_name = "tfappdevselfcare"
     container_name       = "terraform-state"
     key                  = "selfcare.repository.tfstate"
+    use_azuread_auth     = true
   }
 }
 
 provider "azurerm" {
   features {}
 }
+
+provider "dx" {}
 
 provider "github" {
   owner = "pagopa"
