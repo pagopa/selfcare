@@ -696,7 +696,7 @@ class DocumentServiceImpTest {
     }
 
     private File createTempPdf() throws IOException {
-        File tempFile = File.createTempFile("test-contract", ".pdf");
+        File tempFile = Files.createTempFile("test-contract", ".pdf").toFile();
         tempFile.deleteOnExit();
         try (PDDocument pdf = new PDDocument()) {
             pdf.addPage(new PDPage());
