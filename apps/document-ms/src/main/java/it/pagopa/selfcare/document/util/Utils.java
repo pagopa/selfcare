@@ -18,8 +18,14 @@ public class Utils {
     }
 
     public static final BinaryOperator<String> CONTRACT_FILENAME_FUNC =
-            (filename, productName) ->
-                    String.format(filename, StringUtils.stripAccents(productName.replaceAll("\\s+", "_")));
+            (filename, productName) -> {
+                String normalizedProductName = StringUtils.stripAccents(productName.replaceAll("\\s+", "_"));
+                // Treat filename as plain text, not as a format string, to avoid format string vulnerabilities.
+                if (filename != null && filename.contains("%s")) {
+                    return filename.replace("%s", normalizedProductName);
+                }
+                return filename;
+            };
 
     public static FormItem retrieveAttachmentFromFormData(FormData formData, File file) {
         Deque<FormValue> deck = formData.get(DEFAULT_ATTACHMENT_FORM_DATA_NAME);
