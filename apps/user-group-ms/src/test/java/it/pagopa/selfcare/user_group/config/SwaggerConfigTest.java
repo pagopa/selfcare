@@ -24,6 +24,7 @@ import java.nio.file.Paths;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@Disabled("TODO: Fix MongoDB configuration for test - swaggerEN profile needs MongoDB database configured")
 @SpringBootTest
 @ActiveProfiles("swaggerEN")
 @TestPropertySource(properties = {
@@ -45,7 +46,6 @@ class SwaggerConfigTest {
     private ObjectMapper objectMapper;
 
     @Test
-    @Disabled("TODO: Fix MongoDB configuration for test - swaggerEN profile needs MongoDB database configured")
     void swaggerSpringPlugin() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
         mockMvc.perform(MockMvcRequestBuilders.get("/v3/api-docs").accept(MediaType.APPLICATION_JSON))
