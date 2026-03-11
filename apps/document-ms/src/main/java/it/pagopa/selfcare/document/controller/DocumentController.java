@@ -5,13 +5,13 @@ import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.controller.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.controller.request.OnboardingDocumentRequest;
+import it.pagopa.selfcare.document.controller.request.UploadAttachmentForm;
 import it.pagopa.selfcare.document.controller.response.DocumentResponse;
 import it.pagopa.selfcare.document.mapper.DocumentMapper;
 import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.document.controller.response.ContractSignedReport;
 import it.pagopa.selfcare.document.entity.Document;
 import it.pagopa.selfcare.document.exception.ConflictException;
-import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.Valid;
@@ -28,7 +28,6 @@ import org.jboss.resteasy.reactive.RestResponse;
 
 import java.util.List;
 import org.apache.http.HttpStatus;
-import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
 import org.owasp.encoder.Encode;
 
@@ -102,10 +101,7 @@ public class DocumentController {
             @PathParam(value = "onboardingId") String onboardingId,
             @NotNull @QueryParam("templatePath") String templatePath,
             @NotNull @QueryParam("name") String name) {
-        AttachmentTemplate attachment = new AttachmentTemplate();
-        attachment.setTemplatePath(templatePath);
-        attachment.setName(name);
-        return documentService.retrieveTemplateAttachment(onboardingId, attachment);
+        return documentService.retrieveTemplateAttachment(onboardingId, templatePath, name);
     }
 
     @Operation(
@@ -155,6 +151,18 @@ public class DocumentController {
   }
 
   @Operation(
+          summary = "Retrieve attachment names for a given onboarding",
+          description = "Returns the list of attachment names associated with the specified onboarding ID."
+  )
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("/{onboardingId}/attachment-list")
+  public Uni<List<String>> getAttachments(@PathParam(value = "onboardingId") String onboardingId) {
+    log.info("Getting attachment names for onboardingId: {}", Encode.forJava(onboardingId));
+    return documentService.getAttachments(onboardingId);
+  }
+
+  @Operation(
           summary = "Check if contract signed is a CADES file",
           description = "Check if contract signed is a CADES file even if is not .p7m"
   )
@@ -171,12 +179,10 @@ public class DocumentController {
           description = "Perform upload  of the file passed in input verifying digest e put company signature"
   )
   @POST
-  @Path("/{onboardingId}/attachment")
+  @Path("/attachment")
   @Consumes(MediaType.MULTIPART_FORM_DATA)
-  public Uni<Response> uploadAttachment(@PathParam(value = "onboardingId") String onboardingId,
-                                        @NotNull @RestForm("file") File file, @Context ResteasyReactiveRequestContext ctx,
-                                        @NotNull @QueryParam(value = "name") String attachmentName) {
-    return documentService.uploadAttachment(onboardingId, retrieveAttachmentFromFormData(ctx.getFormData(), file), attachmentName)
+  public Uni<Response> uploadAttachment(@Valid @BeanParam UploadAttachmentForm form, @Context ResteasyReactiveRequestContext ctx) {
+      return documentService.uploadAttachment(form.getRequest(), retrieveAttachmentFromFormData(ctx.getFormData(), form.getFile()))
             .replaceWith(Response.status(HttpStatus.SC_NO_CONTENT).build())
             .onFailure(ConflictException.class)
             .recoverWithItem(err -> Response.status(HttpStatus.SC_CONFLICT).entity(err.getMessage()).build());

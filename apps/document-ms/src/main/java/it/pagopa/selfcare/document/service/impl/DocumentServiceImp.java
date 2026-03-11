@@ -13,12 +13,13 @@ import it.pagopa.selfcare.document.controller.request.OnboardingDocumentRequest;
 import it.pagopa.selfcare.document.controller.response.ContractSignedReport;
 import it.pagopa.selfcare.document.controller.response.DocumentBuilderResponse;
 import it.pagopa.selfcare.document.entity.Document;
+import it.pagopa.selfcare.document.exception.InternalException;
 import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.document.exception.UpdateNotAllowedException;
 import it.pagopa.selfcare.document.model.FormItem;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.document.service.DocumentService;
-import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
@@ -26,16 +27,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.bson.types.ObjectId;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.RestResponse;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
-import static it.pagopa.selfcare.document.util.ErrorMessage.ORIGINAL_DOCUMENT_NOT_FOUND;
+import static it.pagopa.selfcare.document.util.ErrorMessage.*;
 import static it.pagopa.selfcare.document.util.Utils.*;
 import static it.pagopa.selfcare.onboarding.common.TokenType.*;
 
@@ -48,6 +53,11 @@ public class DocumentServiceImp implements DocumentService {
     private final DocumentRepository documentRepository;
     private final AzureBlobClient azureBlobClient;
     private final DocumentMsConfig documentMsConfig;
+
+    @ConfigProperty(name = "onboarding-ms.signature.verify-enabled")
+    Boolean isVerifyEnabled;
+    @ConfigProperty(name = "onboarding-ms.blob-storage.path-contracts")
+    String pathContracts;
 
     public DocumentServiceImp(DocumentRepository documentRepository,
                               AzureBlobClient azureBlobClient,
@@ -133,15 +143,15 @@ public class DocumentServiceImp implements DocumentService {
     }
 
     @Override
-    public Uni<RestResponse<File>> retrieveTemplateAttachment(String onboardingId, AttachmentTemplate attachment) {
+    public Uni<RestResponse<File>> retrieveTemplateAttachment(String onboardingId, String templatePath, String attachmentName) {
         return Uni.createFrom()
-                .item(() -> azureBlobClient.getFileAsPdf(attachment.getTemplatePath()))
+                .item(() -> azureBlobClient.getFileAsPdf(templatePath))
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Template Attachment not found on storage for onboarding: %s", onboardingId)))
                 .runSubscriptionOn(Infrastructure.getDefaultExecutor())
                 .onItem().transform(file -> RestResponse.ResponseBuilder
                         .ok(file, MediaType.APPLICATION_OCTET_STREAM)
                         .header(HttpHeaders.CONTENT_DISPOSITION,
-                                HTTP_HEADER_VALUE_ATTACHMENT_FILENAME + attachment.getName())
+                                HTTP_HEADER_VALUE_ATTACHMENT_FILENAME + attachmentName)
                         .build());
     }
 
@@ -164,8 +174,112 @@ public class DocumentServiceImp implements DocumentService {
     }
 
     @Override
-    public Uni<Void> uploadAttachment(String onboardingId, FormItem file, String attachmentName) {
-        return null;
+    public Uni<Void> uploadAttachment(DocumentBuilderRequest request, FormItem file) {
+        log.info("Uploading attachment for onboardingId={}, documentName={}", request.getOnboardingId(), request.getDocumentName());
+        return existsAttachment(request.getOnboardingId(), request.getDocumentName())
+                .onItem().transformToUni(exists -> {
+                    if (Boolean.TRUE.equals(exists)) {
+                        return Uni.createFrom().failure(new UpdateNotAllowedException(ATTACHMENT_UPLOAD_ERROR.getCode(), ATTACHMENT_UPLOAD_ERROR.getMessage()));
+                    }
+                    return Uni.createFrom().voidItem();
+                })
+                .chain(() -> {
+                    if (Boolean.TRUE.equals(isVerifyEnabled)) {
+                        //TODO: implement signature verification logic
+                        // signatureService.verifySignature(file.getFile());
+                    }
+
+                    String digest = getTemplateAndVerifyDigest(file, request.getTemplatePath(), false);
+
+                    File fileToUpload = file.getFile();
+
+                    boolean isP7M = Optional.of(file.getFileName())
+                            .map(name -> name.toLowerCase(Locale.ROOT).endsWith(".p7m"))
+                            .orElse(false);
+
+                    return persistAttachment(request, digest, isP7M)
+                            .onItem().invoke(document ->
+                                    uploadFileToAzure(
+                                            document.getContractFilename(),
+                                            document.getOnboardingId(),
+                                            fileToUpload
+                                    )
+                            );
+                })
+                .replaceWithVoid();
+    }
+
+    private Uni<Document> persistAttachment(DocumentBuilderRequest request, String digest, boolean isP7M) {
+        Document document = createBaseDocument(
+                request.getOnboardingId(),
+                request.getProductId(),
+                request.getTemplatePath(),
+                request.getTemplateVersion()
+        );
+
+        document.setChecksum(digest);
+        document.setType(ATTACHMENT);
+        document.setName(request.getDocumentName());
+        document.setCreatedAt(LocalDateTime.now());
+        document.setUpdatedAt(LocalDateTime.now());
+
+        String signedContractFileName = extractFileName(request.getTemplatePath());
+        String filename = String.format("signed_%s", signedContractFileName);
+        if (isP7M) {
+            filename = String.format("%s.p7m", filename);
+        }
+        document.setContractFilename(filename);
+        document.setContractSigned(getAttachmentByOnboarding(request.getOnboardingId(), filename));
+
+        return documentRepository.persist(document).replaceWith(document);
+    }
+
+    public String getTemplateAndVerifyDigest(FormItem file, String documentTemplatePath, boolean skipDigestCheck) {
+        log.info("Start verifying uploaded content against template (templatePath={})", documentTemplatePath);
+        Objects.requireNonNull(file, "Uploaded file must not be null");
+        Objects.requireNonNull(documentTemplatePath, "Document template path must not be null");
+
+        DSSDocument uploadedDocument = new FileDocument(file.getFile());
+
+        File templateFile = azureBlobClient.getFileAsPdf(documentTemplatePath);
+        DSSDocument templateDocument = new FileDocument(templateFile);
+
+        //TODO implement signature verification logic
+        // DSSDocument uploadedPdf = signatureService.extractPdfFromSignedContainer(SignedDocumentValidator.fromDocument(uploadedDocument), uploadedDocument);
+        // DSSDocument templatePdf = signatureService.extractPdfFromSignedContainer(SignedDocumentValidator.fromDocument(templateDocument), templateDocument);
+
+        /*
+        SignedDocumentValidator uploadedPdfValidator = SignedDocumentValidator.fromDocument(uploadedPdf);
+        SignedDocumentValidator templatePdfValidator = SignedDocumentValidator.fromDocument(templatePdf);
+
+        String templateDigest = signatureService.computeDigestOfSignedRevision(templatePdfValidator, templatePdf);
+        String uploadedDigest = signatureService.computeDigestOfSignedRevision(uploadedPdfValidator, uploadedPdf);
+        log.debug("Template content digest (base64): {}", templateDigest);
+        log.debug("Uploaded  content digest (base64): {}", uploadedDigest);
+
+        if (!templateDigest.equals(uploadedDigest)) {
+            log.warn("Content mismatch ignoring signatures. templateDigest={} uploadedDigest={}", templateDigest, uploadedDigest);
+            if (!skipDigestCheck) {
+                throw new InvalidRequestException("File has been changed. It's not possible to complete upload");
+            }
+        } else {
+            log.info("Content check passed (ignoring signatures).");
+        }
+
+        return uploadedDigest;
+         */
+        return "";
+    }
+
+    private void uploadFileToAzure(String filename, String onboardingId, File signedFile) throws InternalException {
+        final String path = String.format("%s%s", pathContracts, onboardingId).concat("/attachments");
+
+        try {
+            azureBlobClient.uploadFile(path, filename, Files.readAllBytes(signedFile.toPath()));
+        } catch (IOException e) {
+            throw new InternalException(GENERIC_ERROR.getCode(),
+                    "Error on upload contract for onboarding with id " + onboardingId);
+        }
     }
 
     @Override
@@ -175,7 +289,10 @@ public class DocumentServiceImp implements DocumentService {
 
     @Override
     public Uni<List<String>> getAttachments(String onboardingId) {
-        return null;
+        return documentRepository.findAttachments(onboardingId)
+                .onItem().transform(attachments -> attachments.stream()
+                        .map(Document::getName)
+                        .toList());
     }
 
     @Override
@@ -277,6 +394,7 @@ public class DocumentServiceImp implements DocumentService {
     private Document createBaseDocument(String onboardingId, String productId,
                                         String contractTemplate, String contractVersion) {
         Document document = new Document();
+        document.setId(UUID.randomUUID().toString());
         document.setOnboardingId(onboardingId);
         document.setProductId(productId);
         document.setContractTemplate(contractTemplate);
@@ -314,7 +432,6 @@ public class DocumentServiceImp implements DocumentService {
                 request.getTemplatePath(),
                 request.getTemplateVersion()
         );
-        document.setId(UUID.randomUUID().toString());
         document.setChecksum(digest);
         document.setType(request.getDocumentType());
         document.setName(request.getDocumentName());

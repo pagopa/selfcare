@@ -1,6 +1,202 @@
 ---
 openapi: 3.1.0
+components:
+  schemas:
+    ContractSignedReport:
+      type: object
+      properties:
+        cades:
+          type: boolean
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: "#/components/schemas/TokenType"
+        onboardingId:
+          type: string
+        productId:
+          type: string
+        name:
+          type: string
+        checksum:
+          type: string
+        contractVersion:
+          type: string
+        contractTemplate:
+          type: string
+        contractSigned:
+          type: string
+        contractFilename:
+          type: string
+        createdAt:
+          $ref: "#/components/schemas/LocalDateTime"
+        updatedAt:
+          $ref: "#/components/schemas/LocalDateTime"
+        deletedAt:
+          $ref: "#/components/schemas/LocalDateTime"
+        activatedAt:
+          $ref: "#/components/schemas/LocalDateTime"
+    DocumentBuilderRequest:
+      type: object
+      required:
+      - onboardingId
+      - productId
+      - documentType
+      properties:
+        onboardingId:
+          type: string
+          pattern: \S
+        productId:
+          type: string
+          pattern: \S
+        documentType:
+          $ref: "#/components/schemas/TokenType"
+        documentName:
+          type: string
+        templatePath:
+          type: string
+        templateVersion:
+          type: string
+        pdfFormatFilename:
+          type: string
+        productTitle:
+          type: string
+        attachment:
+          type: boolean
+    DocumentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: "#/components/schemas/TokenType"
+        productId:
+          type: string
+        checksum:
+          type: string
+        contractVersion:
+          type: string
+        contractTemplate:
+          type: string
+        contractSigned:
+          type: string
+        createdAt:
+          $ref: "#/components/schemas/LocalDateTime"
+        updatedAt:
+          $ref: "#/components/schemas/LocalDateTime"
+        closedAt:
+          $ref: "#/components/schemas/LocalDateTime"
+        deletedAt:
+          $ref: "#/components/schemas/LocalDateTime"
+    LocalDateTime:
+      type: string
+      format: date-time
+      examples:
+      - 2022-03-10T12:15:50
+    OnboardingDocumentRequest:
+      type: object
+      required:
+      - onboardingId
+      - productId
+      - contractFilePath
+      properties:
+        onboardingId:
+          type: string
+          pattern: \S
+        productId:
+          type: string
+          pattern: \S
+        contractCreatedAt:
+          $ref: "#/components/schemas/LocalDateTime"
+        contractFilePath:
+          type: string
+          pattern: \S
+        contractFileName:
+          type: string
+        templatePath:
+          type: string
+        templateVersion:
+          type: string
+    TokenType:
+      type: string
+      enum:
+      - INSTITUTION
+      - LEGALS
+      - USER
+      - ATTACHMENT
+  securitySchemes:
+    SecurityScheme:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Authentication
 paths:
+  /v1/documents:
+    post:
+      summary: Save document (contract or attachment)
+      description: "Persists a document associated with an onboarding. For INSTITUTION/USER\
+        \ token types, saves a contract. For ATTACHMENT token type, saves an attachment."
+      operationId: saveDocument
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentBuilderRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      tags:
+      - Document Controller
+      security:
+      - SecurityScheme: []
+  /v1/documents/attachment:
+    post:
+      summary: "Upload attachment by verifying and signing document, then save into\
+        \ storage."
+      description: Perform upload  of the file passed in input verifying digest e
+        put company signature
+      operationId: uploadAttachment
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                request:
+                  $ref: "#/components/schemas/DocumentBuilderRequest"
+            encoding:
+              request:
+                contentType: application/json
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      tags:
+      - Document Controller
+      security:
+      - SecurityScheme: []
   /v1/documents/contract-files:
     put:
       summary: Update document contract files
@@ -54,38 +250,31 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
-  /v1/documents/contract-signed:
-    put:
-      summary: Find an attachment for a given onboarding id and update the contract
-        signed path
-      description: Find  an attachment for a given onboarding id and update the contract
-        signed path
-      operationId: updateContractSigned
-      tags:
-      - internal-v1
-      parameters:
-      - name: contractSigned
-        in: query
-        schema:
-          type: string
-        required: true
-      - name: onboardingId
-        in: query
-        schema:
-          type: string
+  /v1/documents/import:
+    post:
+      summary: Persist document for import
+      description: "Persists a document during the import process, associating it\
+        \ with the relevant onboarding and product."
+      operationId: persistDocumentForImport
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingDocumentRequest"
         required: true
       responses:
         "200":
           description: OK
           content:
-            application/json:
-              schema:
-                type: integer
-                format: int64
+            application/json: {}
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
+        "400":
+          description: Bad Request
+      tags:
+      - Document Controller
       security:
       - SecurityScheme: []
   /v1/documents/onboarding/{onboardingId}:
@@ -172,48 +361,6 @@ paths:
       security:
       - SecurityScheme: []
   /v1/documents/{onboardingId}/attachment:
-    post:
-      summary: "Upload attachment by verifying and signing document, then save into\
-        \ storage."
-      description: Perform upload  of the file passed in input verifying digest e
-        put company signature
-      operationId: uploadAttachment
-      parameters:
-      - name: onboardingId
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: name
-        in: query
-        schema:
-          type: string
-        required: true
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required:
-              - file
-              properties:
-                file:
-                  type: string
-                  format: binary
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json: {}
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      tags:
-      - Document Controller
-      security:
-      - SecurityScheme: []
     get:
       summary: Retrieve attachment for a given onboarding and filename
       description: Downloads the attachment file associated with the specified onboarding
@@ -238,6 +385,35 @@ paths:
               schema:
                 type: string
                 format: binary
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      tags:
+      - Document Controller
+      security:
+      - SecurityScheme: []
+  /v1/documents/{onboardingId}/attachment-list:
+    get:
+      summary: Retrieve attachment names for a given onboarding
+      description: Returns the list of attachment names associated with the specified
+        onboarding ID.
+      operationId: getAttachments
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
         "401":
           description: Not Authorized
         "403":
@@ -305,11 +481,41 @@ paths:
       - Document Controller
       security:
       - SecurityScheme: []
+  /v1/documents/{onboardingId}/contract-signed:
+    put:
+      summary: Update contract signed path for a given onboarding
+      description: Update contract signed path for a given onboarding
+      operationId: updateContractSigned
+      tags:
+      - internal-v1
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: contractSigned
+        in: query
+        schema:
+          type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
   /v1/documents/{onboardingId}/template-attachment:
     get:
-      summary: Retrieve template attachment for a given onboarding and filename
+      summary: Retrieve template attachment for a given onboarding and filename and
+        template path
       description: Downloads the template attachment file associated with the specified
-        onboarding ID and filename.
+        onboarding ID and filename and template path.
       operationId: getTemplateAttachment
       parameters:
       - name: onboardingId
@@ -318,6 +524,11 @@ paths:
         schema:
           type: string
       - name: name
+        in: query
+        schema:
+          type: string
+        required: true
+      - name: templatePath
         in: query
         schema:
           type: string
@@ -338,87 +549,31 @@ paths:
       - Document Controller
       security:
       - SecurityScheme: []
-components:
-  schemas:
-    ContractSignedReport:
-      type: object
-      properties:
-        cades:
-          type: boolean
-    Document:
-      type: object
-      properties:
-        id:
+  /v1/documents/{onboardingId}/updated-at:
+    put:
+      summary: Update document updatedAt field
+      description: Sets the updatedAt timestamp of the document associated with the
+        given onboarding ID to the current date and time.
+      operationId: updateDocumentUpdatedAt
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
           type: string
-        type:
-          $ref: "#/components/schemas/TokenType"
-        onboardingId:
-          type: string
-        productId:
-          type: string
-        name:
-          type: string
-        checksum:
-          type: string
-        contractVersion:
-          type: string
-        contractTemplate:
-          type: string
-        contractSigned:
-          type: string
-        contractFilename:
-          type: string
-        createdAt:
-          $ref: "#/components/schemas/LocalDateTime"
-        updatedAt:
-          $ref: "#/components/schemas/LocalDateTime"
-        deletedAt:
-          $ref: "#/components/schemas/LocalDateTime"
-        activatedAt:
-          $ref: "#/components/schemas/LocalDateTime"
-    DocumentResponse:
-      type: object
-      properties:
-        id:
-          type: string
-        type:
-          $ref: "#/components/schemas/TokenType"
-        productId:
-          type: string
-        checksum:
-          type: string
-        contractVersion:
-          type: string
-        contractTemplate:
-          type: string
-        contractSigned:
-          type: string
-        createdAt:
-          $ref: "#/components/schemas/LocalDateTime"
-        updatedAt:
-          $ref: "#/components/schemas/LocalDateTime"
-        closedAt:
-          $ref: "#/components/schemas/LocalDateTime"
-        deletedAt:
-          $ref: "#/components/schemas/LocalDateTime"
-    LocalDateTime:
-      type: string
-      format: date-time
-      examples:
-      - 2022-03-10T12:15:50
-    TokenType:
-      type: string
-      enum:
-      - INSTITUTION
-      - LEGALS
-      - USER
-      - ATTACHMENT
-  securitySchemes:
-    SecurityScheme:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      description: Authentication
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      tags:
+      - Document Controller
+      security:
+      - SecurityScheme: []
 tags:
 - name: internal-v1
 info:

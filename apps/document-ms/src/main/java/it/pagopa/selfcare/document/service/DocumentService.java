@@ -10,7 +10,6 @@ import java.io.File;
 import java.util.List;
 
 import it.pagopa.selfcare.document.model.FormItem;
-import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import org.jboss.resteasy.reactive.RestResponse;
 
 public interface DocumentService {
@@ -23,11 +22,11 @@ public interface DocumentService {
 
     Uni<RestResponse<File>> retrieveSignedFile(String id);
 
-    Uni<RestResponse<File>> retrieveTemplateAttachment(String onboardingId, AttachmentTemplate attachment);
+    Uni<RestResponse<File>> retrieveTemplateAttachment(String onboardingId, String templatePath, String attachmentName);
 
     Uni<RestResponse<File>> retrieveAttachment(String onboardingId, String attachmentName);
 
-    Uni<Void> uploadAttachment(String onboardingId, FormItem file, String attachmentName);
+    Uni<Void> uploadAttachment(DocumentBuilderRequest request, FormItem file);
 
     Uni<Long> updateContractSigned(String onboardingId, String documentSignedPath);
 

@@ -28,6 +28,10 @@ public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Do
                 .firstResult();
     }
 
+    public Uni<List<Document>> findAttachments(String onboardingId) {
+        return find("referenceOnboardingId = ?1 and type = ?2", onboardingId, ATTACHMENT.name()).list();
+    }
+
     public Uni<Document> findByOnboardingId(String onboardingId) {
         return find("onboardingId = ?1 and type in ?2", onboardingId, CONTRACT_TYPES)
                 .firstResult();

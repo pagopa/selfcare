@@ -29,4 +29,15 @@ public class Utils {
 
         return FormItem.builder().file(file).fileName(deck.getFirst().getFileName()).build();
     }
+
+    public static String extractFileName(String path) {
+        if (path == null || path.isBlank()) {
+            return null;
+        }
+
+        int lastSlash = path.lastIndexOf('/');
+        return lastSlash >= 0
+                ? path.substring(lastSlash + 1)
+                : path;
+    }
 }
