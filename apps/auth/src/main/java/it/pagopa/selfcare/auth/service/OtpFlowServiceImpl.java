@@ -82,82 +82,72 @@ public class OtpFlowServiceImpl implements OtpFlowService {
         forcedEmail = betaUser.getForcedEmail();
       }
     }
-
     Optional<String> maybeForcedEmail = Optional.ofNullable(forcedEmail);
+
     return userService
-        .getUserInfoEmail(userClaims)
-        .onFailure(GeneralUtils::checkNotFoundException)
-        .recoverWithNull()
-        .map(Optional::ofNullable)
-        .onFailure()
-        .transform(
-            failure ->
-                new InternalException(
-                    "Cannot get User Info Email on External Internal APIs:" + failure.toString()))
-        .map(optionalEmail -> optionalEmail.map(maybeForcedEmail::orElse))
-        .chain(
-            maybeUserEmail ->
-                maybeUserEmail
-                    .map(
-                        // User found with email
-                        institutionalEmail ->
-                            // check if last otp flow is present for user
-                            findLastOtpFlowByUserId(userClaims.getUid())
-                                .onFailure(GeneralUtils::checkNotFoundException)
-                                .recoverWithNull()
-                                .map(Optional::ofNullable)
-                                .onFailure()
-                                .transform(
-                                    failure ->
-                                        new InternalException(
-                                            "Cannot get last OTP Flow:" + failure.toString()))
-                                .chain(
-                                    maybeLastOtpFlow -> {
-                                      if (maybeLastOtpFlow.isPresent()) {
-                                        OtpFlow otpFlow = maybeLastOtpFlow.get();
-                                        // check if a new otp flow is required
-                                        return OtpUtils.isNewOtpFlowRequired(
-                                                        otpFlow, userClaims.getSameIdp(), otpLimitConfig.getDailyLimit())
-                                                .chain(isRequired -> {
-                                                  if (isRequired) {
-                                                    return createAndSendOtp(userClaims.getUid(), institutionalEmail)
-                                                            .map(createdOtpFlow ->
-                                                                    Optional.of(new OtpInfo(
-                                                                            createdOtpFlow.getUuid(),
-                                                                            institutionalEmail)));
-                                                  }
-                                                  //
-                                                  // A previous PENDING OTP flow is found, so we must ask for the same flow to be completed by user
-                                                  //
-                                                  else if (otpFlow.getStatus().equals(OtpStatus.PENDING)) {
-                                                    return Uni.createFrom().item(
-                                                            Optional.of(new OtpInfo(otpFlow.getUuid(), institutionalEmail)));
-                                                  }
-                                                  // a previous COMPLETED OTP flow in the last 6 months with
-                                                  // sameIdp=true is found. No OTP flow needed.
-                                                  else {
-                                                    return Uni.createFrom().item(emptyOtpInfo);
-                                                  }
-                                                });
-                                      } else {
-                                        // no otp flow found, check if periodic otp is required
-                                        return OtpUtils.isOtpRequiredWithNoLastOtp(userClaims.getSameIdp(), otpLimitConfig.getDailyLimit())
-                                                .chain(periodicRequired -> {
-                                                  if (periodicRequired) {
-                                                    return createAndSendOtp(userClaims.getUid(), institutionalEmail)
-                                                            .map(createdOtpFlow ->
-                                                                    Optional.of(new OtpInfo(
-                                                                            createdOtpFlow.getUuid(),
-                                                                            institutionalEmail)));
-                                                  } else {
-                                                    return Uni.createFrom().item(emptyOtpInfo);
-                                                  }
-                                                });
-                                      }
-                                    })
-                    )
-                    .orElse(Uni.createFrom().item(emptyOtpInfo))
-            );
+            .getUserInfoEmail(userClaims)
+            .onFailure(GeneralUtils::checkNotFoundException)
+            .recoverWithNull()
+            .map(Optional::ofNullable)
+            .onFailure()
+            .transform(
+                    failure ->
+                            new InternalException(
+                                    "Cannot get User Info Email on External Internal APIs:" + failure))
+            .map(optionalEmail -> optionalEmail.map(maybeForcedEmail::orElse))
+            .chain(
+                    maybeUserEmail ->
+                            maybeUserEmail
+                                    .map(email -> handleUserOtpFlow(userClaims, email))
+                                    .orElseGet(() -> Uni.createFrom().item(Optional.empty())));
+  }
+
+  private Uni<Optional<OtpInfo>> handleUserOtpFlow(UserClaims userClaims, String institutionalEmail) {
+
+    return findLastOtpFlowByUserId(userClaims.getUid())
+            .onFailure(GeneralUtils::checkNotFoundException)
+            .recoverWithNull()
+            .map(Optional::ofNullable)
+            .onFailure()
+            .transform(
+                    failure ->
+                            new InternalException("Cannot get last OTP Flow:" + failure))
+            .chain(
+                    maybeLastOtpFlow ->
+                            maybeLastOtpFlow
+                                    .map(flow -> handleExistingOtpFlow(flow, userClaims, institutionalEmail))
+                                    .orElseGet(() -> handleMissingOtpFlow(userClaims, institutionalEmail)));
+  }
+
+  private Uni<Optional<OtpInfo>> handleExistingOtpFlow(
+          OtpFlow otpFlow,
+          UserClaims userClaims,
+          String institutionalEmail) {
+
+    return OtpUtils.isNewOtpFlowRequired(
+                    otpFlow, userClaims.getSameIdp(), otpLimitConfig.getDailyLimit())
+            .chain(isRequired ->
+                    isRequired
+                            ? createAndSendOtp(userClaims.getUid(), institutionalEmail)
+                            .map(flow -> Optional.of(new OtpInfo(flow.getUuid(), institutionalEmail)))
+                            : otpFlow.getStatus().equals(OtpStatus.PENDING)
+                            ? Uni.createFrom().item(Optional.of(new OtpInfo(otpFlow.getUuid(), institutionalEmail)))
+                            : Uni.createFrom().item(Optional.empty()));
+  }
+
+
+  private Uni<Optional<OtpInfo>> handleMissingOtpFlow(
+          UserClaims userClaims,
+          String institutionalEmail) {
+
+    return OtpUtils.isOtpRequiredWithNoLastOtp(
+                    userClaims.getSameIdp(),
+                    otpLimitConfig.getDailyLimit())
+            .chain(periodicRequired ->
+                    periodicRequired
+                            ? createAndSendOtp(userClaims.getUid(), institutionalEmail)
+                            .map(flow -> Optional.of(new OtpInfo(flow.getUuid(), institutionalEmail)))
+                            : Uni.createFrom().item(Optional.empty()));
   }
 
   /**
