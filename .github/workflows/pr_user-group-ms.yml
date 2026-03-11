@@ -24,7 +24,7 @@ on:
 
 jobs:
   code_review:
-    uses: ./.github/workflows/call_code_review.yml
+    uses: ./.github/workflows/call_code_review_cdc.yml
     name: User Group MS Code Review
     secrets: inherit
     with:
