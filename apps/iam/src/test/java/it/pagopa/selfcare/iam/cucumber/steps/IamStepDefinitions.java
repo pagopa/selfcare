@@ -146,9 +146,8 @@ public class IamStepDefinitions {
 
   @Given("a user exists with UID {string} and email {string}")
   public void aUserExistsWithUIDAndEmail(String uid, String email) {
-    // Per semplicità, creiamo l'utente e poi lo recuperiamo
     iCreateAUserWithEmailAndName(email, "Test User");
-    createdUserUid = uid; // In un test reale, useresti il UID effettivo
+    createdUserUid = uid;
   }
 
   @Given("a user exists with the following product roles:")

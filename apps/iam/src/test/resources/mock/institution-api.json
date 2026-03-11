@@ -1,0 +1,39 @@
+[
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/institutions/{id}",
+      "pathParameters": {
+        "id": [
+          "cdd3d4bb-bae3-4187-af16-53ec40358267"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": {
+        "id": "cdd3d4bb-bae3-4187-af16-53ec40358267",
+        "externalId": "ext-001",
+        "originId": "origin-001",
+        "description": "Test Institution",
+        "digitalAddress": "test@pec.it",
+        "address": "Via Test 1",
+        "zipCode": "00100",
+        "taxCode": "00000000001",
+        "origin": "SELC",
+        "institutionType": "PA",
+        "onboarding": [
+          {
+            "productId": "product-B",
+            "status": "ACTIVE"
+          }
+        ]
+      },
+      "headers": {
+        "Content-Type": [
+          "application/json"
+        ]
+      }
+    }
+  }
+]

@@ -15,11 +15,11 @@ Feature: User Management
 
   Scenario: Create a user with product roles
     When I create a user with the following details:
-      | email       | john.doe@example.com |
-      | name        | John                 |
-      | familyName  | Doe                  |
-      | productId   | product-A            |
-      | roles       | ADMIN,OPERATOR       |
+      | email      | john.doe@example.com |
+      | name       | John                 |
+      | familyName | Doe                  |
+      | productId  | product-A            |
+      | roles      | ADMIN,OPERATOR       |
     Then the user should be created successfully
     And the user should have 1 product role
     And the user should have role "ADMIN" for product "product-A"
@@ -45,12 +45,6 @@ Feature: User Management
     Then the user should have 1 product role
     And the user should not have role "OPERATOR" for product "product-A"
 
-#  Scenario: Get user by UID
-#    Given a user exists with UID "user-123" and email "test@example.com"
-#    When I request the user with UID "user-123" for product "product-A"
-#    Then the user should be retrieved successfully
-#    And the response should contain the user details
-
   Scenario: Get user by UID - Not found
     When I request the user with UID "non-existing-uid" for product "product-A"
     Then I should receive a 404 Not Found response
@@ -62,17 +56,17 @@ Feature: User Management
     And the error message should contain "<errorMessage>"
 
     Examples:
-      | email                 | name | statusCode | errorMessage          |
-      |                       | John | 400        | Invalid email format  |
-      | invalid-email         | John | 400        | Invalid email format  |
-      | valid@example.com     |      | 200        |                       |
+      | email             | name | statusCode | errorMessage         |
+      |                   | John | 400        | Invalid email format |
+      | invalid-email     | John | 400        | Invalid email format |
+      | valid@example.com |      | 200        |                      |
 
   Scenario: Filter user product roles by productId
     Given a user exists with the following product roles:
       | productId | roles          |
       | product-A | ADMIN,OPERATOR |
       | product-B | SUPPORT        |
-      | product-C | SUPPORT         |
+      | product-C | SUPPORT        |
     When I request the user filtered by product "product-B"
     Then the response should contain only 1 product role
     And the product role should be for product "product-B"
@@ -91,7 +85,16 @@ Feature: User Management
     When I request the user product role permissions list with parameters:
       | uid       | a0530f76-3454-418c-9d65-eb3162075495 |
       | productId | product-A                            |
-   Then the user product role permissions list should be retrieved successfully
+    Then the user product role permissions list should be retrieved successfully
     And the user should have the following product role permissions:
-      | productId | role     | permissions            |
-      | product-A | OPERATOR | read:users             |
+      | productId | role     | permissions |
+      | product-A | OPERATOR | read:users  |
+
+  Scenario: Merge new product roles for existing user
+    Given a user exists with email "bob@example.com" and product "product-A" with roles "ADMIN"
+    When I add product "product-D" with roles "OPERATOR" to the user
+    And I request the user without product
+    Then the user should have 3 product roles
+    And the user should have role "ADMIN" for product "product-A"
+    And the user should have role "SUPPORT" for product "product-B"
+    And the user should have role "OPERATOR" for product "product-D"

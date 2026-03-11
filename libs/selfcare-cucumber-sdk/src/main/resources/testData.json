@@ -41,6 +41,27 @@
         "iss": "SPID",
         "jti": "_2f603a8bc36b1231b1a6"
       }
+    },
+    {
+      "username": "user-002",
+      "password": "test",
+      "jwtHeader": {
+        "alg": "RS256",
+        "typ": "JWT",
+        "kid": "jwt_test_kid"
+      },
+      "jwtPayload": {
+        "family_name": "",
+        "fiscal_number": "",
+        "name": "",
+        "spid_level": "https://www.spid.gov.it/SpidL2",
+        "from_aa": false,
+        "uid": "a0530f76-3454-418c-9d65-eb3162075495",
+        "level": "L2",
+        "aud": "api.dev.selfcare.pagopa.it",
+        "iss": "PAGOPA",
+        "jti": "_2f603a8bc36b1231b1a6"
+      }
     }
   ]
 }

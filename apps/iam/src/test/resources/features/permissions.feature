@@ -57,3 +57,50 @@ Feature: User Permissions
     Given a user with UID "72d4984f-d2bc-4584-a6a7-dd63068b7f48" has permissions for product "product-A" and institution "inst-001"
     When I check if user "72d4984f-d2bc-4584-a6a7-dd63068b7f48" has permission "read:users" for product "product-A" and institution "inst-001"
     Then the permission check should return true
+
+  Scenario: Check positive permission with institution filter and custom permission
+    Given User login with username "user-002" and password "test"
+    And The following query params:
+      | institutionId | cdd3d4bb-bae3-4187-af16-53ec40358267 |
+      | productId     | product-B                            |
+    And The following path params:
+      | userId     | a0530f76-3454-418c-9d65-eb3162075495 |
+      | permission | write:users                          |
+    When I send a GET request to "/iam/users/{userId}/permissions/{permission}"
+    Then The status code is 200
+    And The response body contains the string "true"
+
+  Scenario: Check negative permission with institution filter and custom permission
+    Given User login with username "user-002" and password "test"
+    And The following query params:
+      | institutionId | cdd3d4bb-bae3-4187-af16-53ec40358267 |
+      | productId     | product-A                            |
+    And The following path params:
+      | userId     | a0530f76-3454-418c-9d65-eb3162075495 |
+      | permission | write:users                          |
+    When I send a GET request to "/iam/users/{userId}/permissions/{permission}"
+    Then The status code is 200
+    And The response body contains the string "false"
+
+  Scenario: Permission not present with institution filter and custom permission
+    Given User login with username "user-002" and password "test"
+    And The following query params:
+      | institutionId | cdd3d4bb-bae3-4187-af16-53ec40358267 |
+      | productId     | product-C                            |
+    And The following path params:
+      | userId     | a0530f76-3454-418c-9d65-eb3162075495 |
+      | permission | write:users                          |
+    When I send a GET request to "/iam/users/{userId}/permissions/{permission}"
+    Then The status code is 200
+    And The response body contains the string "false"
+
+  Scenario: Check permission with institution filter and no productId
+    Given User login with username "user-002" and password "test"
+    And The following query params:
+      | institutionId | cdd3d4bb-bae3-4187-af16-53ec40358267 |  |
+    And The following path params:
+      | userId     | a0530f76-3454-418c-9d65-eb3162075495 |
+      | permission | read:users                           |
+    When I send a GET request to "/iam/users/{userId}/permissions/{permission}"
+    Then The status code is 200
+    And The response body contains the string "true"

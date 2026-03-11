@@ -1,11 +1,11 @@
-name: Release Cucumber sdk
+name: Release Selfcare Cucumber sdk
 
 on:
   push:
     branches:
       - main
     paths:
-      - './libs/cucumber-sdk/**'
+      - './libs/selfcare-cucumber-sdk/**'
 
   workflow_dispatch:
 
@@ -35,11 +35,11 @@ jobs:
 
       - name: Build with Maven
         shell: bash
-        run: mvn --projects :cucumber-sdk --also-make-dependents clean package -DskipTests
+        run: mvn --projects :selfcare-cucumber-sdk --also-make-dependents clean package -DskipTests
 
       - name: Deploy to GitHub Package Registry
         shell: bash
         run: |
-          mvn -B deploy -f libs/cucumber-sdk/pom.xml
+          mvn -B deploy -f libs/selfcare-cucumber-sdk/pom.xml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

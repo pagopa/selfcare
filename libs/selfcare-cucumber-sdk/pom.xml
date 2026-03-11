@@ -4,15 +4,15 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>cucumber-sdk</artifactId>
+  <artifactId>selfcare-cucumber-sdk</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.12</version>
+  <version>0.1.0</version>
   <groupId>it.pagopa.selfcare</groupId>
 
   <distributionManagement>
     <repository>
       <id>selfcare</id>
-      <name>Cucumber SDK</name>
+      <name>Selfcare Cucumber SDK</name>
       <url>https://maven.pkg.github.com/pagopa/selfcare</url>
     </repository>
   </distributionManagement>

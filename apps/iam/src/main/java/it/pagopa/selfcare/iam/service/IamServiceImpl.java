@@ -3,6 +3,7 @@ package it.pagopa.selfcare.iam.service;
 import static it.pagopa.selfcare.iam.util.GeneralUtils.PRODUCT_ALL;
 
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
 import it.pagopa.selfcare.iam.entity.UserClaims;
 import it.pagopa.selfcare.iam.exception.InvalidRequestException;
@@ -11,21 +12,40 @@ import it.pagopa.selfcare.iam.model.ProductRolePermissionsList;
 import it.pagopa.selfcare.iam.model.ProductRoles;
 import it.pagopa.selfcare.iam.repository.UserPermissionsRepository;
 import it.pagopa.selfcare.iam.util.DataEncryptionConfig;
+import it.pagopa.selfcare.iam.util.GeneralUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.openapi.quarkus.institution_openapi_json.api.InstitutionApi;
+import org.openapi.quarkus.institution_openapi_json.model.InstitutionResponse;
+import org.owasp.encoder.Encode;
 
 @Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class IamServiceImpl implements IamService {
 
+  @ConfigProperty(name = "iam-ms.retry.min-backoff")
+  Integer retryMinBackOff;
+
+  @ConfigProperty(name = "iam-ms.retry.max-backoff")
+  Integer retryMaxBackOff;
+
+  @ConfigProperty(name = "iam-ms.retry")
+  Integer maxRetry;
+
   @Inject private final UserPermissionsRepository userPermissionsRepository;
+
+  @RestClient @Inject InstitutionApi institutionApi;
 
   @Override
   public Uni<String> ping() {
@@ -336,11 +356,65 @@ public class IamServiceImpl implements IamService {
   @Override
   public Uni<Boolean> hasPermission(
       String userId, String permission, String productId, String institutionId) {
-    return userPermissionsRepository
-        .getUserPermissions(userId, permission, productId)
-        .onItem()
-        .transform(userPermissions -> userPermissions.getPermissions().contains(permission))
+    return getInstitutionProducts(institutionId, productId)
+        .chain(
+            products -> userPermissionsRepository.getUserPermissions(userId, permission, products))
+        .map(userPermissions -> userPermissions.getPermissions().contains(permission))
         .onFailure(ResourceNotFoundException.class)
         .recoverWithItem(ex -> false);
+  }
+
+  /**
+   * Retrieves an institution by its internal ID.
+   *
+   * @param institutionId the internal identifier of the institution
+   * @param productId the identifier of the product to filter onboarding products (optional)
+   * @return a Uni containing the list of product IDs the institution is onboarding for, or an empty
+   *     list if none found
+   */
+  @Override
+  public Uni<List<String>> getInstitutionProducts(String institutionId, String productId) {
+    List<String> fallback = Optional.ofNullable(productId).map(List::of).orElseGet(List::of);
+
+    return Optional.ofNullable(institutionId)
+        .filter(id -> !id.isBlank())
+        .map(
+            id ->
+                Uni.createFrom()
+                    .item(() -> institutionApi.retrieveInstitutionByIdUsingGET(id, productId))
+                    .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                    .onFailure(GeneralUtils::checkIfIsRetryableException)
+                    .retry()
+                    .withBackOff(
+                        Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))
+                    .atMost(maxRetry)
+                    .onItem()
+                    .transform(institution -> extractOnboardingProductIds(institution, productId))
+                    .onFailure()
+                    .recoverWithItem(
+                        ex -> {
+                          log.error(
+                              "Error while retrieving institution {}: {}",
+                              Encode.forJava(id),
+                              ex.getMessage(),
+                              ex);
+                          return fallback;
+                        }))
+        .orElseGet(() -> Uni.createFrom().item(fallback));
+  }
+
+  private List<String> extractOnboardingProductIds(
+      InstitutionResponse institution, String productId) {
+    if (institution == null || institution.getOnboarding() == null) {
+      return List.of();
+    }
+
+    return institution.getOnboarding().stream()
+        .map(onboarding -> onboarding != null ? onboarding.getProductId() : null)
+        .filter(Objects::nonNull)
+        .filter(product -> !product.isBlank())
+        .filter(product -> productId == null || product.equals(productId))
+        .distinct()
+        .toList();
   }
 }
