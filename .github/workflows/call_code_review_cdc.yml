@@ -49,6 +49,7 @@ jobs:
           PR_NUMBER: "${{ inputs.pr_number }}"
           SOURCE_BRANCH: "${{ inputs.source_branch }}"
           TARGET_BRANCH: "${{ inputs.target_branch }}"
+          MONGODB_NAME: "selcUserGroup"
         run: mvn --projects :test-coverage --also-make verify -P"$MODULE",report,coverage
           -Dsonar.organization=pagopa
           -Dsonar.projectKey="$SONAR_KEY"
