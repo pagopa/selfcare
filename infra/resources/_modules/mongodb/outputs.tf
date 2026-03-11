@@ -1,15 +1,11 @@
-output "mongodb_id" {
-  value = azurerm_cosmosdb_mongo_database.this.id
+output "mongodb_ids" {
+  value = { for k, v in azurerm_cosmosdb_mongo_database.this : k => v.id }
 }
 
-output "mongodb_name" {
-  value = azurerm_cosmosdb_mongo_database.this.name
+output "mongodb_names" {
+  value = { for k, v in azurerm_cosmosdb_mongo_database.this : k => v.name }
 }
 
-output "collection_onboardings_name" {
-  value = module.collection_onboardings.name
-}
-
-output "collection_tokens_name" {
-  value = module.collection_tokens.name
+output "collection_names" {
+  value = { for k, v in module.collections : k => v.name }
 }

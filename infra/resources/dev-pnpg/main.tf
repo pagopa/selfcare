@@ -6,9 +6,9 @@ module "mongodb_onboarding" {
 
   databases = {
     "selcOnboarding" = {
-      throughput = 1000
       collections = {
         "onboardings" = {
+          shard_key = "_id"
           indexes = [
             { keys = ["_id"], unique = true },
             { keys = ["createdAt"], unique = false },
@@ -21,6 +21,7 @@ module "mongodb_onboarding" {
           ]
         },
         "tokens" = {
+          shard_key = "_id"
           indexes = [
             { keys = ["_id"], unique = true },
             { keys = ["createdAt"], unique = false }
