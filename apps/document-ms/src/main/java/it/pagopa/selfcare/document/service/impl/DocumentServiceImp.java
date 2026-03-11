@@ -175,7 +175,11 @@ public class DocumentServiceImp implements DocumentService {
 
     @Override
     public Uni<Void> uploadAttachment(DocumentBuilderRequest request, FormItem file) {
-        log.info("Uploading attachment for onboardingId={}, documentName={}", request.getOnboardingId(), request.getDocumentName());
+        log.info(
+                "Uploading attachment for onboardingId={}, documentName={}",
+                request.getOnboardingId() == null ? null : request.getOnboardingId().replace("\n", "_").replace("\r", "_"),
+                request.getDocumentName() == null ? null : request.getDocumentName().replace("\n", "_").replace("\r", "_")
+        );
         return existsAttachment(request.getOnboardingId(), request.getDocumentName())
                 .onItem().transformToUni(exists -> {
                     if (Boolean.TRUE.equals(exists)) {
