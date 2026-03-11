@@ -1,0 +1,25 @@
+name: Swagger Detect Conflict and Update
+on:
+  pull_request:
+    branches:
+      - main
+      - releases/*
+    types: [ opened, synchronize, reopened ]
+    paths:
+      - "apps/user-ms/**"
+    
+permissions:
+  contents: write
+
+jobs:
+  swagger_conflict_update:  
+    runs-on: ubuntu-24.04
+    permissions: write-all
+    name: Swagger Detect Rule and Conflict
+    steps:
+      - id: swagger-conflict
+        uses: pagopa/selfcare-commons/github-actions-template/swagger-detect-conflict-quarkus@main
+        with:
+          path_openapi_docs: src/main/docs/openapi.json
+          module: user-ms
+          github_token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,36 @@
+[
+  {
+    "_id": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+    "institutions": [
+      {
+        "institutionId": "d0d28367-1695-4c50-a260-6fda526e9aab",
+        "institutionName": "Comune di Milano",
+        "status": "ACTIVE",
+        "role": "MANAGER"
+      },
+      {
+        "institutionId": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
+        "institutionName": "Regione Lazio",
+        "status": "ACTIVE",
+        "role": "MANAGER"
+      }
+    ]
+  },
+  {
+    "_id": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
+    "institutions": [
+      {
+        "institutionId": "f2e4d6c8-9876-5432-ba10-abcdef123456",
+        "institutionName": "Università di Bologna",
+        "status": "PENDING",
+        "role": "MANAGER"
+      },
+      {
+        "institutionId": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
+        "institutionName": "Regione Lazio",
+        "status": "ACTIVE",
+        "role": "SUB_DELEGATE"
+      }
+    ]
+  }
+]
