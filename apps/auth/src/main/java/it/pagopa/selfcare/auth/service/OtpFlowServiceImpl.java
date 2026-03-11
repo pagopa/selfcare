@@ -141,7 +141,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                                                 });
                                       } else {
                                         // no otp flow found, check if periodic otp is required
-                                        return OtpUtils.isPeriodicOtpRequiredWithNoLastOtp(userClaims.getSameIdp(), otpLimitConfig.getDailyLimit())
+                                        return OtpUtils.isOtpRequiredWithNoLastOtp(userClaims.getSameIdp(), otpLimitConfig.getDailyLimit())
                                                 .chain(periodicRequired -> {
                                                   if (periodicRequired) {
                                                     return createAndSendOtp(userClaims.getUid(), institutionalEmail)

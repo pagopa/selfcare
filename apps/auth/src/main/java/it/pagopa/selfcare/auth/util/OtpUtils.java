@@ -91,7 +91,7 @@ public class OtpUtils {
       return isPeriodicOtpRequired(limit);
     }
 
-  public static Uni<Boolean> isPeriodicOtpRequiredWithNoLastOtp(Boolean sameIdp, Integer limit) {
+  public static Uni<Boolean> isOtpRequiredWithNoLastOtp(Boolean sameIdp, Integer limit) {
     if (Boolean.FALSE.equals(sameIdp)) {
       return Uni.createFrom().item(true);
     }
