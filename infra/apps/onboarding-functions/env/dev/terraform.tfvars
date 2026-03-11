@@ -105,7 +105,7 @@ app_settings = {
   "JWT_TOKEN_KID"                                      = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/jwt-kid/)"
 
   ##WEBHOOK
-  "WEBHOOK_BASE_PATH"                                  = "https://selc-d-webhook-ms-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+  "WEBHOOK_BASE_PATH" = "https://selc-d-webhook-ms-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
 
   ##NAMIRIAL SIGNATURE
   "PAGOPA_SIGNATURE_SOURCE"                 = "namirial",

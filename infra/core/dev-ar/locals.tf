@@ -1,6 +1,7 @@
 locals {
   # general
   prefix              = "selc"
+  prefix_short        = "sc"
   env_short           = "d"
   env                 = "dev"
   location            = "westeurope"
@@ -16,8 +17,8 @@ locals {
   tags = {
     CreatedBy   = "Terraform"
     Environment = "Dev"
-    Owner       = "SelfCare"
-    Source      = "https://github.com/pagopa/selfcare-infra"
+    Owner       = "Selfcare"
+    Source      = "https://github.com/pagopa/selfcare"
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
   }
 

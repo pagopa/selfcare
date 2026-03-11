@@ -17,11 +17,11 @@ variable "resource_group_name" {
   type        = string
   description = "Name of the resource group where resources will be created"
 }
-
-# variable "pnpg_resource_group_name" {
-#   type        = string
-#   description = "Name of the PNPG resource group where resources will be created"
-# }
+variable "enable_log" {
+  type        = bool
+  description = "Enable or disable logging"
+  default     = true
+}
 
 variable "subnet_id" {
   type        = string
