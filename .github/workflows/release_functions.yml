@@ -1,0 +1,38 @@
+name: Deploy Functions
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options:
+          - dev
+          - uat
+          - prod
+        required: true
+      target:
+        type: choice
+        description: Target type
+        options:
+          - selc
+          - pnpg
+        required: true
+        default: selc
+      app:
+        type: choice
+        description: Function name
+        options:
+          - onboarding-functions
+        required: true
+        default: onboarding-functions
+
+jobs:
+  release:
+    uses: ./.github/workflows/call_release_functions.yml
+    name: Call Release Functions
+    secrets: inherit
+    with:
+      env: ${{ inputs.env }}
+      target: ${{ inputs.target }}
+      app: ${{ inputs.app }}

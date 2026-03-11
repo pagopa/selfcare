@@ -8,6 +8,7 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.restassured.response.Response;
+import it.pagopa.selfcare.iam.controller.response.PermissionResponse;
 import it.pagopa.selfcare.iam.cucumber.CucumberSuiteTest;
 import java.util.List;
 
@@ -73,7 +74,7 @@ public class PermissionStepDefinitions {
   public void thePermissionCheckShouldReturn(String expectedResult) {
     assertEquals(200, response.statusCode());
     boolean expected = Boolean.parseBoolean(expectedResult);
-    boolean actual = response.getBody().as(Boolean.class);
-    assertEquals(expected, actual);
+    PermissionResponse actual = response.getBody().as(PermissionResponse.class);
+    assertEquals(expected, actual.hasPermission());
   }
 }

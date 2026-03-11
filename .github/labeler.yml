@@ -1,26 +1,76 @@
-onboarding-functions:
+auth:
   - changed-files:
-      - any-glob-to-any-file: [ 'apps/onboarding-functions/**' ]
+      - any-glob-to-any-file: ["apps/auth/**", "infra/apps/auth/**"]
 
-onboarding-ms:
+document-ms:
   - changed-files:
-      - any-glob-to-any-file: [ 'apps/onboarding-ms/**' ]
+      - any-glob-to-any-file:
+          ["apps/document-ms/**", "infra/apps/document-ms/**"]
+
+iam:
+  - changed-files:
+      - any-glob-to-any-file: ["apps/iam/**", "infra/apps/iam/**"]
 
 onboarding-cdc:
   - changed-files:
-      - any-glob-to-any-file: [ 'apps/onboarding-cdc/**' ]
+      - any-glob-to-any-file:
+          ["apps/onboarding-cdc/**", "infra/apps/onboarding-cdc/**"]
+
+onboarding-functions:
+  - changed-files:
+      - any-glob-to-any-file:
+          ["apps/onboarding-functions/**", "infra/apps/onboarding-functions/**"]
+
+onboarding-ms:
+  - changed-files:
+      - any-glob-to-any-file:
+          ["apps/onboarding-ms/**", "infra/apps/onboarding-ms/**"]
+
+product:
+  - changed-files:
+      - any-glob-to-any-file: ["apps/product/**", "infra/apps/product/**"]
+
+product-cdc:
+  - changed-files:
+      - any-glob-to-any-file:
+          ["apps/product-cdc/**", "infra/apps/product-cdc/**"]
+
+webhook:
+  - changed-files:
+      - any-glob-to-any-file: ["apps/webhook/**", "infra/apps/webhook/**"]
+
+hub-spid-login:
+  - changed-files:
+      - any-glob-to-any-file: ["infra/apps/hub_spid_login/**"]
+
+namirial-sign:
+  - changed-files:
+      - any-glob-to-any-file: ["infra/apps/namirial-sign/**"]
+
+cucumber-sdk:
+  - changed-files:
+      - any-glob-to-any-file: ["libs/selfcare-cucumber-sdk/**"]
+
+onboarding-sdk:
+  - changed-files:
+      - any-glob-to-any-file: ["libs/selfcare-onboarding-sdk-**"]
+
+security-sdk:
+  - changed-files:
+      - any-glob-to-any-file: ["libs/selfcare-sdk-security/**"]
 
 libs:
   - changed-files:
-      - any-glob-to-any-file: [ 'libs/**' ]
+      - any-glob-to-any-file: ["libs/**"]
 
 ops:
   - changed-files:
-      - any-glob-to-any-file: [ '.github/**', 'infra/**', '.identity/**' ]
+      - any-glob-to-any-file:
+          [".github/**", "infra/**", ".identity/**", ".opex/**"]
 
 docs:
   - changed-files:
-      - any-glob-to-any-file: [ 'README.md' ]
+      - any-glob-to-any-file: ["README.md", "**/README.md", "**.md"]
 
 hotfix:
-  - base-branch: [ 'releases/*' ]
+  - base-branch: ["releases/*"]

@@ -19,7 +19,7 @@
         <java.version>17</java.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <junit-jupiter.version>5.7.2</junit-jupiter.version>
+        <junit-jupiter.version>5.8.0</junit-jupiter.version>
         <mockito.version>5.7.0</mockito.version>
         <sonar.skip>true</sonar.skip>
     </properties>

@@ -1,0 +1,148 @@
+name: Deploy Functions App
+
+on:
+  workflow_call:
+    inputs:
+      env:
+        type: string
+        description: Environment
+        required: true
+      target:
+        type: string
+        description: Target type
+        required: true
+      app:
+        type: string
+        description: Function name
+        required: true
+
+jobs:
+
+  release_dev:
+    name: ${{ inputs.target == 'selc' && '[Dev]' || '[Dev-PNPG]' }} - ${{ inputs.app }} Release
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    runs-on: ubuntu-24.04
+    environment:
+      name: dev-cd
+      url: ${{ format('https://selc-{0}-onboarding-fn.azurewebsites.net', inputs.target == 'selc' && 'd' || 'd-pnpg') }}
+    permissions:
+      id-token: write
+      packages: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Maven Action
+        uses: s4u/setup-maven-action@v1.11.0
+        with:
+          java-version: 17
+          java-distribution: 'temurin'
+          maven-version: '3.9.5'
+          cache-enabled: true
+      - name: Build & Deploy
+        shell: bash
+        run: |
+          mvn --projects :${{ inputs.app }} --also-make package install -DskipTests \
+            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'd' || 'd-pnpg') }}
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ vars.ARM_TENANT_ID }}
+          subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+      - name: Deploy Function App
+        shell: bash
+        working-directory: apps/${{ inputs.app }}
+        run: |
+          mvn -f pom.xml quarkus:deploy \
+            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'd' || 'd-pnpg') }} \
+            -Dquarkus.azure-functions.subscription-id=${{ vars.ARM_SUBSCRIPTION_ID }} \
+            -Dquarkus.azure-functions.resource-group=${{ format('selc-{0}-onboarding-fn-rg', inputs.target == 'selc' && 'd' || 'd-pnpg') }} \
+            -Dquarkus.azure-functions.region=westeurope \
+            -Dquarkus.azure-functions.app-service-plan-name=${{ format('selc-{0}-onboarding-fn-plan', inputs.target == 'selc' && 'd' || 'd-pnpg') }} \
+            -Dquarkus.azure-functions.runtime.java-version=17
+
+  release_uat:
+    name: ${{ inputs.target == 'selc' && '[Uat]' || '[Uat-PNPG]' }} - ${{ inputs.app }} Release
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    runs-on: ubuntu-24.04
+    environment:
+      name: uat-cd
+      url: ${{ format('https://selc-{0}-onboarding-fn.azurewebsites.net', inputs.target == 'selc' && 'u' || 'u-pnpg') }}
+    permissions:
+      id-token: write
+      packages: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Maven Action
+        uses: s4u/setup-maven-action@v1.11.0
+        with:
+          java-version: 17
+          java-distribution: 'temurin'
+          maven-version: '3.9.5'
+          cache-enabled: true
+      - name: Build & Deploy
+        shell: bash
+        run: |
+          mvn --projects :${{ inputs.app }} --also-make package install -DskipTests \
+            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'u' || 'u-pnpg') }}
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ vars.ARM_TENANT_ID }}
+          subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+      - name: Deploy Function App
+        shell: bash
+        working-directory: apps/${{ inputs.app }}
+        run: |
+          mvn -f pom.xml quarkus:deploy \
+            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'u' || 'u-pnpg') }} \
+            -Dquarkus.azure-functions.subscription-id=${{ vars.ARM_SUBSCRIPTION_ID }} \
+            -Dquarkus.azure-functions.resource-group=${{ format('selc-{0}-onboarding-fn-rg', inputs.target == 'selc' && 'u' || 'u-pnpg') }} \
+            -Dquarkus.azure-functions.region=westeurope \
+            -Dquarkus.azure-functions.app-service-plan-name=${{ format('selc-{0}-onboarding-fn-plan', inputs.target == 'selc' && 'u' || 'u-pnpg') }} \
+            -Dquarkus.azure-functions.runtime.java-version=17
+
+  release_prod:
+    name: ${{ inputs.target == 'selc' && '[Prod]' || '[Prod-PNPG]' }} - ${{ inputs.app }} Release
+    if: ${{ inputs.env == 'prod' }}
+    runs-on: ubuntu-24.04
+    environment:
+      name: prod-cd
+      url: ${{ format('https://selc-{0}-onboarding-fn.azurewebsites.net', inputs.target == 'selc' && 'p' || 'p-pnpg') }}
+    permissions:
+      id-token: write
+      packages: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Maven Action
+        uses: s4u/setup-maven-action@v1.11.0
+        with:
+          java-version: 17
+          java-distribution: 'temurin'
+          maven-version: '3.9.5'
+          cache-enabled: true
+      - name: Build & Deploy
+        shell: bash
+        run: |
+          mvn --projects :${{ inputs.app }} --also-make package install -DskipTests \
+            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'p' || 'p-pnpg') }}
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ vars.ARM_TENANT_ID }}
+          subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+      - name: Deploy Function App
+        shell: bash
+        working-directory: apps/${{ inputs.app }}
+        run: |
+          mvn -f pom.xml quarkus:deploy \
+            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'p' || 'p-pnpg') }} \
+            -Dquarkus.azure-functions.subscription-id=${{ vars.ARM_SUBSCRIPTION_ID }} \
+            -Dquarkus.azure-functions.resource-group=${{ format('selc-{0}-onboarding-fn-rg', inputs.target == 'selc' && 'p' || 'p-pnpg') }} \
+            -Dquarkus.azure-functions.region=westeurope \
+            -Dquarkus.azure-functions.app-service-plan-name=${{ format('selc-{0}-onboarding-fn-plan', inputs.target == 'selc' && 'p' || 'p-pnpg') }} \
+            -Dquarkus.azure-functions.runtime.java-version=17
