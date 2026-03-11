@@ -1,0 +1,31 @@
+name: Code Review - user-ms
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    branches:
+      - main
+      - releases/**
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - 'apps/user-ms/**'
+      - '.github/workflows/pr_ms.yml'
+      - '.github/workflows/call_code_review.yml'
+
+jobs:
+  code_review:
+    uses: ./.github/workflows/call_code_review.yml
+    name: User ms Code Review
+    secrets: inherit
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+      source_branch: ${{ github.head_ref }}
+      target_branch: ${{ github.base_ref }}
+      sonar_key: 'pagopa_selfcare-user'
+      module: 'user-ms'
