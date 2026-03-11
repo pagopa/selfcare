@@ -22,11 +22,11 @@ on:
       - "libs/user-sdk-event/**"
       - "libs/user-sdk-model/**"
       - ".github/workflows/pr_user-cdc.yml"
-      - ".github/workflows/call_code_review.yml"
+      - ".github/workflows/call_code_review_cdc.yml"
 
 jobs:
   code_review:
-    uses: ./.github/workflows/call_code_review.yml
+    uses: ./.github/workflows/call_code_review_cdc.yml
     name: User CDC Code Review
     secrets: inherit
     with:

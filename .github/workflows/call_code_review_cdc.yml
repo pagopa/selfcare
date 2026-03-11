@@ -1,0 +1,58 @@
+on:
+  workflow_call:
+    inputs:
+      pr_number:
+        type: string
+        required: true
+      module:
+        type: string
+        required: true
+      source_branch:
+        type: string
+        required: true
+      target_branch:
+        type: string
+        required: true
+      sonar_key:
+        type: string
+        required: true
+
+jobs:
+  code_review:
+    name: 'Build & Analysis'
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Set missing library for embedded MongoDB
+        run: |
+          wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+          sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+
+      - name: Setup Maven Action
+        uses: s4u/setup-maven-action@fa2c7e4517ed008b1f73e7e0195a9eecf5582cd4
+        with:
+          checkout-fetch-depth: 0
+          java-version: 17
+          java-distribution: 'temurin'
+          maven-version: '3.9.5'
+          cache-enabled: true
+
+      - uses: s4u/maven-settings-action@60912582505985be4cc55d2b890eb32767f8de5f # pin@v2.8.0
+        with:
+          servers: '[{"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
+      - name: Build and Analyze
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MODULE: "${{ inputs.module }}"
+          SONAR_KEY: "${{ inputs.sonar_key }}"
+          PR_NUMBER: "${{ inputs.pr_number }}"
+          SOURCE_BRANCH: "${{ inputs.source_branch }}"
+          TARGET_BRANCH: "${{ inputs.target_branch }}"
+        run: mvn --projects :test-coverage --also-make verify -P"$MODULE",report,coverage
+          -Dsonar.organization=pagopa
+          -Dsonar.projectKey="$SONAR_KEY"
+          -Dsonar.token="${{ secrets.SONAR_TOKEN }}"
+          -Dsonar.pullrequest.key="$PR_NUMBER"
+          -Dsonar.pullrequest.branch="$SOURCE_BRANCH"
+          -Dsonar.pullrequest.base=refs/remotes/origin/"$TARGET_BRANCH"
