@@ -12,6 +12,7 @@
         <!-- lookup parent from repository -->
     </parent>
 
+    <groupId>it.pagopa.selfcare</groupId>
     <artifactId>user-group-ms</artifactId>
     <packaging>jar</packaging>
     <version>1.0.0-SNAPSHOT</version>
