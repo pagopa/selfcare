@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
-@ActiveProfiles("swaggerEN")
+@ActiveProfiles({"test", "swaggerEN"})
 class SwaggerConfigTest {
 
     @MockBean
