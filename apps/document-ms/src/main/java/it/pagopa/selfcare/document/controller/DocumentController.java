@@ -29,8 +29,8 @@ import org.jboss.resteasy.reactive.RestResponse;
 import java.util.List;
 import org.apache.http.HttpStatus;
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
-import org.owasp.encoder.Encode;
 
+import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
 import static it.pagopa.selfcare.document.util.Utils.retrieveAttachmentFromFormData;
 
 @Authenticated
@@ -158,7 +158,7 @@ public class DocumentController {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/{onboardingId}/attachment-list")
   public Uni<List<String>> getAttachments(@PathParam(value = "onboardingId") String onboardingId) {
-    log.info("Getting attachment names for onboardingId: {}", Encode.forJava(onboardingId));
+    log.info("Getting attachment names for onboardingId: {}", sanitize(onboardingId));
     return documentService.getAttachments(onboardingId);
   }
 
@@ -199,7 +199,7 @@ public class DocumentController {
           @PathParam("onboardingId") String onboardingId,
           @NotNull @QueryParam("name") String attachmentName
   ) {
-    log.info("Head attachment for {} - {}", Encode.forJava(onboardingId), Encode.forJava(attachmentName));
+    log.info("Head attachment for {} - {}", sanitize(onboardingId), sanitize(attachmentName));
     return documentService.existsAttachment(onboardingId, attachmentName)
             .map(exists -> exists
                     ? Response.noContent().build()
@@ -216,7 +216,7 @@ public class DocumentController {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<Response> updateDocumentContractFiles(@Valid Document request) {
-    log.info("Updating document contract files for documentId: {}", Encode.forJava(request.getId()));
+    log.info("Updating document contract files for documentId: {}", sanitize(request.getId()));
     return documentService.updateDocumentContractFiles(
                     request)
             .map(updatedCount -> {
@@ -239,7 +239,7 @@ public class DocumentController {
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<Response> saveDocument(@Valid DocumentBuilderRequest request) {
     log.info("Saving document for onboardingId: {}, documentType: {}",
-            Encode.forJava(request.getOnboardingId()), request.getDocumentType());
+            sanitize(request.getOnboardingId()), request.getDocumentType());
     return documentService.saveDocument(request)
             .onItem().transform(response -> Response.status(Response.Status.CREATED).entity(response).build());
   }
@@ -251,7 +251,7 @@ public class DocumentController {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<Response> persistDocumentForImport(@Valid OnboardingDocumentRequest request) {
-    log.info("Persisting token for import, onboardingId: {}", request.getOnboardingId());
+    log.info("Persisting token for import, onboardingId: {}", sanitize(request.getOnboardingId()));
     return documentService.persistDocumentForImport(request)
             .onItem().transform(token -> Response.status(Response.Status.CREATED).entity(token).build());
   }
@@ -264,7 +264,7 @@ public class DocumentController {
   @Path("/{onboardingId}/updated-at")
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<Response> updateDocumentUpdatedAt(@NotNull @PathParam(value = "onboardingId") String onboardingId) {
-    log.info("Updating document 'updatedAt' for onboardingId: {}", Encode.forJava(onboardingId));
+    log.info("Updating document 'updatedAt' for onboardingId: {}", sanitize(onboardingId));
     return documentService.updateDocumentUpdatedAt(onboardingId)
             .replaceWith(Response.noContent().build());
   }

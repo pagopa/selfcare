@@ -41,6 +41,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static it.pagopa.selfcare.document.util.ErrorMessage.*;
+import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
 import static it.pagopa.selfcare.document.util.Utils.*;
 import static it.pagopa.selfcare.onboarding.common.TokenType.*;
 
@@ -177,8 +178,7 @@ public class DocumentServiceImp implements DocumentService {
     public Uni<Void> uploadAttachment(DocumentBuilderRequest request, FormItem file) {
         log.info(
                 "Uploading attachment for onboardingId={}, documentName={}",
-                request.getOnboardingId() == null ? null : request.getOnboardingId().replace("\n", "_").replace("\r", "_"),
-                request.getDocumentName() == null ? null : request.getDocumentName().replace("\n", "_").replace("\r", "_")
+                sanitize(request.getOnboardingId()), sanitize(request.getDocumentName())
         );
         return existsAttachment(request.getOnboardingId(), request.getDocumentName())
                 .onItem().transformToUni(exists -> {
@@ -239,7 +239,7 @@ public class DocumentServiceImp implements DocumentService {
     }
 
     public String getTemplateAndVerifyDigest(FormItem file, String documentTemplatePath, boolean skipDigestCheck) {
-        log.info("Start verifying uploaded content against template (templatePath={})", documentTemplatePath);
+        log.info("Start verifying uploaded content against template (templatePath={})", sanitize(documentTemplatePath));
         Objects.requireNonNull(file, "Uploaded file must not be null");
         Objects.requireNonNull(documentTemplatePath, "Document template path must not be null");
 
@@ -323,7 +323,7 @@ public class DocumentServiceImp implements DocumentService {
 
     @Override
     public Uni<Void> updateDocumentUpdatedAt(String onboardingId) {
-        log.info("Updating document 'updatedAt' for onboardingId={}", onboardingId);
+        log.info("Updating document 'updatedAt' for onboardingId={}", sanitize(onboardingId));
         LocalDateTime updatedAt = LocalDateTime.now();
         return documentRepository.updateUpdatedAt(onboardingId, updatedAt)
                 .onItem().transform(ignore -> null);
@@ -341,7 +341,7 @@ public class DocumentServiceImp implements DocumentService {
     @Override
     public Uni<DocumentBuilderResponse> saveDocument(DocumentBuilderRequest request) {
         log.info("Saving document for onboarding: {}, documentType: {}",
-                request.getOnboardingId(), request.getDocumentType());
+                sanitize(request.getOnboardingId()), sanitize(String.valueOf(request.getDocumentType())));
 
         if (request.isAttachment()) {
             return handleAttachmentDocument(request);
@@ -408,7 +408,7 @@ public class DocumentServiceImp implements DocumentService {
 
     @Override
     public Uni<Document> persistDocumentForImport(OnboardingDocumentRequest request) {
-        log.info("Creating document for import, onboardingId: {}", request.getOnboardingId());
+        log.info("Creating document for import, onboardingId: {}", sanitize(request.getOnboardingId()));
 
         Document document = createBaseDocument(request.getOnboardingId(),
                 request.getProductId(),
@@ -424,11 +424,11 @@ public class DocumentServiceImp implements DocumentService {
         return documentRepository.persist(document)
                 .replaceWith(document)
                 .onItem().invoke(() ->
-                        log.info("Document persisted for onboardingId: {}", request.getOnboardingId()));
+                        log.info("Document persisted for onboardingId: {}", sanitize(request.getOnboardingId())));
     }
 
     private Document buildDocument(DocumentBuilderRequest request, String digest) {
-        log.debug("Creating Document for onboarding {} ...", request.getOnboardingId());
+        log.debug("Creating Document for onboarding {} ...", sanitize(request.getOnboardingId()));
 
         Document document = createBaseDocument(
                 request.getOnboardingId(),
@@ -465,7 +465,7 @@ public class DocumentServiceImp implements DocumentService {
 
     private Uni<Boolean> checkAttachmentExists(Document document, String onboardingId, String attachmentName) {
         if (Objects.isNull(document)) {
-            log.info("Document not found onboardingId={}, documentName={}", onboardingId, attachmentName);
+            log.info("Document not found onboardingId={}, documentName={}", sanitize(onboardingId), sanitize(attachmentName));
             return Uni.createFrom().item(false);
         }
 
@@ -477,10 +477,10 @@ public class DocumentServiceImp implements DocumentService {
     private boolean verifyAttachmentInStorage(Document document, String onboardingId, String attachmentName) {
         try {
             azureBlobClient.getProperties(document.getContractSigned());
-            log.info("Attachment found in storage onboardingId={}, documentName={}", onboardingId, attachmentName);
+            log.info("Attachment found in storage onboardingId={}, documentName={}", sanitize(onboardingId), sanitize(attachmentName));
             return true;
         } catch (SelfcareAzureStorageException e) {
-            log.info("Attachment not found in storage onboardingId={}, documentName={}", onboardingId, attachmentName);
+            log.info("Attachment not found in storage onboardingId={}, documentName={}", sanitize(onboardingId), sanitize(attachmentName));
             return false;
         }
     }
