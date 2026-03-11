@@ -10,6 +10,8 @@ locals {
 
   pnpg_suffix = local.is_pnpg == true ? "-${local.location_short}-${local.domain}" : ""
 
+  project = "${local.prefix}-${local.env_short}"
+
   mongo_db = {
     mongodb_rg_name               = "${local.prefix}-${local.env_short}${local.pnpg_suffix}-cosmosdb-mongodb-rg",
     cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}${local.pnpg_suffix}-cosmosdb-mongodb-account"
@@ -25,4 +27,9 @@ locals {
     Source      = "https://github.com/pagopa/selfcare-onboarding"
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
   }
+
+  key_vault_resource_group_name = "${local.prefix}-${local.env_short}-sec-rg"
+  key_vault_name                = "${local.prefix}-${local.env_short}-kv"
+
+  resource_group_name_vnet = "${local.project}-vnet-rg"
 }
