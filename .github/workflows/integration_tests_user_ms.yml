@@ -1,0 +1,36 @@
+name: Integration Tests - User MS
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: '00 08 * * *'
+
+  push:
+    branches:
+      - main
+      - releases/**
+    paths:
+      - 'apps/user-ms/**'
+      - 'libs/user-sdk-**/**'
+
+jobs:
+  integration_test:
+    name: Integration Test User MS
+    runs-on: ubuntu-22.04
+    environment: dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+          cache: maven
+
+      - name: Run Integration Tests
+        working-directory: apps/user-ms
+        run: mvn clean verify -Pintegration-test

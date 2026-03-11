@@ -30,6 +30,10 @@ on:
           - webhook
           - onboarding-ms
           - onboarding-cdc
+          - user-ms
+          - user-cdc
+          - user-group-ms
+          - user-group-cdc
         required: true
         default: auth
 

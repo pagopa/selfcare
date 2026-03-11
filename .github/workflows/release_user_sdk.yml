@@ -1,0 +1,54 @@
+name: Release User SDK
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 0.1.0)'
+        required: true
+        type: string
+      skipTests:
+        description: 'Skip tests'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  release:
+    name: Release User SDK
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+          cache: maven
+          server-id: github
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+
+      - name: Set version
+        working-directory: libs
+        run: |
+          mvn versions:set -DnewVersion=${{ inputs.version }} --projects user-sdk-event,user-sdk-model
+          mvn versions:commit
+
+      - name: Build and Deploy
+        working-directory: libs
+        run: |
+          mvn clean deploy --projects user-sdk-event,user-sdk-model ${{ inputs.skipTests && '-DskipTests' || '' }}
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Git Tag
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag -a "user-sdk-v${{ inputs.version }}" -m "Release user-sdk version ${{ inputs.version }}"
+          git push origin "user-sdk-v${{ inputs.version }}"
