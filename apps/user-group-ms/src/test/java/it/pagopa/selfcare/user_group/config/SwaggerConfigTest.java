@@ -26,7 +26,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @SpringBootTest
 @ActiveProfiles("swaggerEN")
 @TestPropertySource(properties = {
-    "spring.data.mongodb.database=selcUserGroup"
+    "spring.data.mongodb.database=selcUserGroup",
+    "spring.data.mongodb.uri=mongodb://localhost:27017",
+    "management.health.mongo.enabled=false"
 })
 class SwaggerConfigTest {
 
