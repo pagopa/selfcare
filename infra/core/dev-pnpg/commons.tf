@@ -277,7 +277,7 @@ module "networking" {
 
   container_app_name_snet = "${local.project}-pnpg-cae-cp-snet"
 
-  delegation = []
+  # delegation = []
 
   tags = local.tags
 }
