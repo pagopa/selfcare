@@ -16,12 +16,14 @@ terraform {
     }
   }
 
-  backend "azurerm" {
-    resource_group_name  = "terraform-state-rg"
-    storage_account_name = "tfappdevselfcare"
-    container_name       = "terraform-state"
-    key                  = "selfcare.repository.tfstate"
+    backend "azurerm" {
+    resource_group_name  = "io-infra-rg"
+    storage_account_name = "selcdstinfraterraform"
+    container_name       = "azurermstate"
+    key                  = "selc.infra.repository.dev.tfstate"
+    use_azuread_auth     = true
   }
+
 }
 
 provider "azurerm" {
