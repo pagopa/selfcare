@@ -1,5 +1,5 @@
-output "mongodb_onboarding" {
-  value = module.mongodb_onboarding
+output "mongodb" {
+  value = module.mongodb
 }
 
 output "subscription_id" {
