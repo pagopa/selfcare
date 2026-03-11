@@ -212,7 +212,7 @@
     </dependency>
     <dependency>
       <groupId>it.pagopa.selfcare</groupId>
-      <artifactId>selfcare-cucumber-sdk</artifactId>
+      <artifactId>cucumber-sdk</artifactId>
       <version>${selfcare-cucumber-sdk.version}</version>
       <scope>test</scope>
     </dependency>
