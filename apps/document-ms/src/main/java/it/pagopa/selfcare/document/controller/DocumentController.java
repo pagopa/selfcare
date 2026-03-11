@@ -239,7 +239,7 @@ public class DocumentController {
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<Response> saveDocument(@Valid DocumentBuilderRequest request) {
     log.info("Saving document for onboardingId: {}, documentType: {}",
-            request.getOnboardingId(), request.getDocumentType());
+            Encode.forJava(request.getOnboardingId()), request.getDocumentType());
     return documentService.saveDocument(request)
             .onItem().transform(response -> Response.status(Response.Status.CREATED).entity(response).build());
   }
