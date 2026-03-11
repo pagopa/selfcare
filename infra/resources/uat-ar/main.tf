@@ -1,4 +1,4 @@
-module "mongodb_onboarding" {
+module "mongodb" {
   source = "../_modules/mongodb"
 
   resource_group_name = local.mongo_db.mongodb_rg_name
