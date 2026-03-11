@@ -9,7 +9,7 @@ import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
 import it.pagopa.selfcare.document.config.DocumentMsConfig;
 import it.pagopa.selfcare.document.controller.request.DocumentBuilderRequest;
-import it.pagopa.selfcare.document.controller.request.DocumentImportRequest;
+import it.pagopa.selfcare.document.controller.request.OnboardingDocumentRequest;
 import it.pagopa.selfcare.document.controller.response.ContractSignedReport;
 import it.pagopa.selfcare.document.controller.response.DocumentBuilderResponse;
 import it.pagopa.selfcare.document.entity.Document;
@@ -19,7 +19,6 @@ import it.pagopa.selfcare.document.model.FormItem;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
-import it.pagopa.selfcare.product.entity.ContractTemplate;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
@@ -275,23 +274,30 @@ public class DocumentServiceImp implements DocumentService {
                         .build());
     }
 
+    private Document createBaseDocument(String onboardingId, String productId,
+                                        String contractTemplate, String contractVersion) {
+        Document document = new Document();
+        document.setOnboardingId(onboardingId);
+        document.setProductId(productId);
+        document.setContractTemplate(contractTemplate);
+        document.setContractVersion(contractVersion);
+        return document;
+    }
+
     @Override
-    public Uni<Document> persistDocumentForImport(DocumentImportRequest request) {
+    public Uni<Document> persistDocumentForImport(OnboardingDocumentRequest request) {
         log.info("Creating document for import, onboardingId: {}", request.getOnboardingId());
 
-        Document document = new Document();
-        document.setOnboardingId(request.getOnboardingId());
-        document.setProductId(request.getProductId());
+        Document document = createBaseDocument(request.getOnboardingId(),
+                request.getProductId(),
+                request.getTemplatePath(),
+                request.getTemplateVersion()
+        );
         document.setContractSigned(request.getContractFilePath());
         document.setContractFilename(request.getContractFileName());
         document.setCreatedAt(request.getContractCreatedAt());
         document.setUpdatedAt(request.getContractCreatedAt());
         document.setType(INSTITUTION);
-
-        String contractTemplate = getContractTemplatePath(request.getInstitutionType(), request.getProduct());
-        String contractTemplateVersion = getContractTemplateVersion(request.getInstitutionType(), request.getProduct());
-        document.setContractTemplate(contractTemplate);
-        document.setContractVersion(contractTemplateVersion);
 
         return documentRepository.persist(document)
                 .replaceWith(document)
@@ -301,18 +307,21 @@ public class DocumentServiceImp implements DocumentService {
 
     private Document buildDocument(DocumentBuilderRequest request, String digest) {
         log.debug("Creating Document for onboarding {} ...", request.getOnboardingId());
-        Document document = new Document();
+
+        Document document = createBaseDocument(
+                request.getOnboardingId(),
+                request.getProductId(),
+                request.getTemplatePath(),
+                request.getTemplateVersion()
+        );
         document.setId(UUID.randomUUID().toString());
-        document.setOnboardingId(request.getOnboardingId());
-        document.setProductId(request.getProductId());
         document.setChecksum(digest);
         document.setType(request.getDocumentType());
-        document.setContractTemplate(request.getTemplatePath());
-        document.setContractVersion(request.getTemplateVersion());
-        setContractFileName(request, document);
         document.setName(request.getDocumentName());
         document.setCreatedAt(LocalDateTime.now());
         document.setUpdatedAt(LocalDateTime.now());
+        setContractFileName(request, document);
+
         return document;
     }
 

@@ -4,7 +4,7 @@ import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.controller.request.DocumentBuilderRequest;
-import it.pagopa.selfcare.document.controller.request.DocumentImportRequest;
+import it.pagopa.selfcare.document.controller.request.OnboardingDocumentRequest;
 import it.pagopa.selfcare.document.controller.response.DocumentResponse;
 import it.pagopa.selfcare.document.mapper.DocumentMapper;
 import it.pagopa.selfcare.document.service.DocumentService;
@@ -229,7 +229,6 @@ public class DocumentController {
                   "For INSTITUTION/USER token types, saves a contract. " +
                   "For ATTACHMENT token type, saves an attachment.")
   @POST
-  @Path("/save")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<Response> saveDocument(@Valid DocumentBuilderRequest request) {
@@ -245,7 +244,7 @@ public class DocumentController {
   @Path("/import")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Uni<Response> persistDocumentForImport(@Valid DocumentImportRequest request) {
+  public Uni<Response> persistDocumentForImport(@Valid OnboardingDocumentRequest request) {
     log.info("Persisting token for import, onboardingId: {}", request.getOnboardingId());
     return documentService.persistDocumentForImport(request)
             .onItem().transform(token -> Response.status(Response.Status.CREATED).entity(token).build());
