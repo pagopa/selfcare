@@ -10,7 +10,7 @@ locals {
 
   pnpg_suffix = local.is_pnpg == true ? "-${local.location_short}-${local.domain}" : ""
 
-  project                  = "${local.prefix}-${local.env_short}"
+  project = "${local.prefix}-${local.env_short}"
 
   mongo_db = {
     mongodb_rg_name               = "${local.prefix}-${local.env_short}${local.pnpg_suffix}-cosmosdb-mongodb-rg",

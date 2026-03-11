@@ -12,3 +12,7 @@ data "azurerm_key_vault" "key_vault" {
   resource_group_name = local.key_vault_resource_group_name
   name                = local.key_vault_name
 }
+
+data "azurerm_subscription" "current" {}
+
+data "azurerm_client_config" "current" {}
