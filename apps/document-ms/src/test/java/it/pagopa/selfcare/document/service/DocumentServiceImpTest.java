@@ -44,6 +44,8 @@ class DocumentServiceImpTest {
 
     private static final String ONBOARDING_ID = "onboardingId";
     private static final String DOCUMENT_ID = new ObjectId().toHexString();
+    private static final String INSTITUTION_DESCRIPTION = "Test Institution";
+    private static final String PRODUCT_ID = "Product-123";
 
     @Inject
     DocumentService documentService;
@@ -157,8 +159,12 @@ class DocumentServiceImpTest {
 
         when(azureBlobClient.getFileAsPdf(templatePath)).thenReturn(mockFile);
 
-        RestResponse<File> response = documentService.retrieveTemplateAttachment(ONBOARDING_ID, templatePath, attachmentName)
-                .await().indefinitely();
+        RestResponse<File> response =
+            documentService
+                .retrieveTemplateAttachment(
+                    ONBOARDING_ID, templatePath, attachmentName, INSTITUTION_DESCRIPTION, PRODUCT_ID)
+                .await()
+                .indefinitely();
 
         assertNotNull(response);
         assertEquals(RestResponse.Status.OK.getStatusCode(), response.getStatus());
@@ -171,7 +177,11 @@ class DocumentServiceImpTest {
 
         when(azureBlobClient.getFileAsPdf(templatePath)).thenReturn(null);
 
-        var awaiter = documentService.retrieveTemplateAttachment(ONBOARDING_ID, templatePath, attachmentName).await();
+        var awaiter =
+            documentService
+                .retrieveTemplateAttachment(
+                    ONBOARDING_ID, templatePath, attachmentName, INSTITUTION_DESCRIPTION, PRODUCT_ID)
+                .await();
 
         ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, awaiter::indefinitely);
         assertNotNull(ex);
@@ -501,8 +511,8 @@ class DocumentServiceImpTest {
         when(signatureService.computeDigestOfSignedRevision(any(), any()))
                 .thenReturn("same-digest");
 
-        assertDoesNotThrow(() ->
-                documentService.uploadAttachment(request, formItem).await().indefinitely());
+        var awaiter = documentService.uploadAttachment(request, formItem).await();
+        assertDoesNotThrow(awaiter::indefinitely);
     }
 
     @Test
@@ -532,8 +542,8 @@ class DocumentServiceImpTest {
         when(azureBlobClient.getProperties(existingDoc.getContractSigned()))
                 .thenReturn(Mockito.mock(BlobProperties.class));
 
-        assertThrows(UpdateNotAllowedException.class, () ->
-                documentService.uploadAttachment(request, formItem).await().indefinitely());
+        var awaiter = documentService.uploadAttachment(request, formItem).await();
+        assertThrows(UpdateNotAllowedException.class, awaiter::indefinitely);
     }
 
     // ---- saveDocument ----

@@ -148,10 +148,13 @@ public class DocumentServiceImp implements DocumentService {
     }
 
     @Override
-    public Uni<RestResponse<File>> retrieveTemplateAttachment(String onboardingId, String templatePath, String attachmentName) {
+    public Uni<RestResponse<File>> retrieveTemplateAttachment(String onboardingId, String templatePath,
+                                                              String attachmentName, String institutionDescription,
+                                                              String productId) {
         return Uni.createFrom()
                 .item(() -> azureBlobClient.getFileAsPdf(templatePath))
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Template Attachment not found on storage for onboarding: %s", onboardingId)))
+                .chain(file -> signatureService.signDocument(file, institutionDescription, productId))
                 .runSubscriptionOn(Infrastructure.getDefaultExecutor())
                 .onItem().transform(file -> RestResponse.ResponseBuilder
                         .ok(file, MediaType.APPLICATION_OCTET_STREAM)

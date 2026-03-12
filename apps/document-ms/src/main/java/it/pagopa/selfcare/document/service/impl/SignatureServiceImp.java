@@ -355,33 +355,31 @@ public class SignatureServiceImp implements SignatureService {
     }
 
     @Override
-    public Uni<RestResponse<File>> signDocument(File pdf, String institutionDescription, String productId) {
+    public Uni<File> signDocument(File pdf, String institutionDescription, String productId) {
         return Uni.createFrom().item(() -> {
-                    try {
-                        if (PAGOPA_SIGNATURE_DISABLED.equals(pagoPaSignatureConfig.source())) {
-                            log.info("Skipping PagoPA contract pdf sign due to global disabling");
-                            return pdf;
-                        }
-                        String signReason = pagoPaSignatureConfig
+            try {
+                if (PAGOPA_SIGNATURE_DISABLED.equals(pagoPaSignatureConfig.source())) {
+                    log.info("Skipping PagoPA contract pdf sign due to global disabling");
+                    return pdf;
+                }
+
+                String signReason =
+                        pagoPaSignatureConfig
                                 .applyOnboardingTemplateReason()
                                 .replace("${institutionName}", institutionDescription)
                                 .replace("${productName}", productId);
-                        log.info("Signing input file {} using reason {}", pdf.getName(), signReason);
-                        Path signedPdf = createSafeTempFile();
-                        padesSignService.padesSign(pdf, signedPdf.toFile(), buildSignatureInfo(signReason));
-                        return signedPdf.toFile();
-                    } catch (IOException e) {
-                        throw new IllegalArgumentException("Impossible to sign pdf. Error: " + e.getMessage(), e);
-                    }
-                })
-                .runSubscriptionOn(Infrastructure.getDefaultExecutor())
-                .onItem().transform(signedFile ->
-                        RestResponse.ResponseBuilder
-                                .ok(signedFile, MediaType.APPLICATION_OCTET_STREAM)
-                                .header(HttpHeaders.CONTENT_DISPOSITION,
-                                        HTTP_HEADER_VALUE_ATTACHMENT_FILENAME + signedFile.getName())
-                                .build()
-                );
+
+                log.info("Signing input file {} using reason {}", pdf.getName(), signReason);
+
+                Path signedPdf = createSafeTempFile();
+                padesSignService.padesSign(pdf, signedPdf.toFile(), buildSignatureInfo(signReason));
+                return signedPdf.toFile();
+
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Impossible to sign pdf. Error: " + e.getMessage(), e);
+            }
+        })
+        .runSubscriptionOn(Infrastructure.getDefaultExecutor());
     }
 
     public Path createSafeTempFile() throws IOException {

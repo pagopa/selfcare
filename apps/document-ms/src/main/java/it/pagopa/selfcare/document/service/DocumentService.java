@@ -22,7 +22,12 @@ public interface DocumentService {
 
     Uni<RestResponse<File>> retrieveSignedFile(String id);
 
-    Uni<RestResponse<File>> retrieveTemplateAttachment(String onboardingId, String templatePath, String attachmentName);
+  Uni<RestResponse<File>> retrieveTemplateAttachment(
+      String onboardingId,
+      String templatePath,
+      String attachmentName,
+      String institutionDescription,
+      String productId);
 
     Uni<RestResponse<File>> retrieveAttachment(String onboardingId, String attachmentName);
 

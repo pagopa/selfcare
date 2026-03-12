@@ -100,8 +100,10 @@ public class DocumentController {
     public Uni<RestResponse<File>> getTemplateAttachment(
             @PathParam(value = "onboardingId") String onboardingId,
             @NotNull @QueryParam("templatePath") String templatePath,
-            @NotNull @QueryParam("name") String name) {
-        return documentService.retrieveTemplateAttachment(onboardingId, templatePath, name);
+            @NotNull @QueryParam("name") String name,
+            @NotNull @QueryParam("institutionDescription") String institutionDescription,
+            @NotNull @QueryParam("productId") String productId) {
+        return documentService.retrieveTemplateAttachment(onboardingId, templatePath, name, institutionDescription, productId);
     }
 
     @Operation(

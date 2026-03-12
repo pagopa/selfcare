@@ -4,8 +4,6 @@ import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.spi.signature.AdvancedSignature;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import io.smallrye.mutiny.Uni;
-import org.jboss.resteasy.reactive.RestResponse;
-
 import java.io.File;
 import java.util.List;
 
@@ -22,5 +20,5 @@ public interface SignatureService {
 
     AdvancedSignature chooseEarliestSignature(List<AdvancedSignature> sigs);
 
-    Uni<RestResponse<File>> signDocument(File pdf, String institutionDescription, String productId);
+    Uni<File> signDocument(File pdf, String institutionDescription, String productId);
 }
