@@ -7,5 +7,5 @@ output "mongodb_names" {
 }
 
 output "collection_names" {
-  value = { for k, v in module.collections : k => v.name }
+  value = { for k, v in azurerm_cosmosdb_mongo_collection.this : k => v.name }
 }
