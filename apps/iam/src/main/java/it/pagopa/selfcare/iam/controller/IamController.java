@@ -72,6 +72,7 @@ public class IamController {
    * @throws Error if the request or email is null/blank
    */
   @Tag(name = "external-v2")
+  @Tag(name = "IAM")
   @Operation(
       description = "Saves or updates a user with their product-specific roles.",
       summary = "Saves IAM User",
@@ -121,6 +122,7 @@ public class IamController {
    * @throws ResourceNotFoundException if the user is not found
    */
   @Tag(name = "external-v2")
+  @Tag(name = "IAM")
   @Operation(
       description = "Retrieves a user by their ID and product ID.",
       summary = "Get IAM User",
@@ -132,7 +134,7 @@ public class IamController {
             description = "OK",
             content =
                 @Content(
-                    schema = @Schema(implementation = String.class),
+                    schema = @Schema(implementation = UserClaims.class),
                     mediaType = "application/json")),
         @APIResponse(
             responseCode = "400",
@@ -175,6 +177,7 @@ public class IamController {
    * @return a Uni containing the UserClaims if found
    */
   @Tag(name = "external-v2")
+  @Tag(name = "IAM")
   @Operation(
       description = "Retrieves a user by their email.",
       summary = "Get IAM User by Email",
@@ -222,6 +225,41 @@ public class IamController {
         .transform(user -> Response.ok(user).build());
   }
 
+  @Operation(
+      description = "Retrieves users by their product ID.",
+      summary = "Get IAM Users",
+      operationId = "getIAMUsers")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "OK",
+            content =
+                @Content(
+                    schema = @Schema(implementation = UserClaims[].class),
+                    mediaType = "application/json")),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "404",
+            description = "Not Found",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json"))
+      })
   @GET
   @Path(value = "/users")
   @Consumes(MediaType.APPLICATION_JSON)
@@ -238,6 +276,7 @@ public class IamController {
    * @return a Uni containing a ProductRolePermissionsList if found
    */
   @Tag(name = "external-v2")
+  @Tag(name = "IAM")
   @Operation(
       description = "Retrieves a list of product, role and permissions by user ID and product ID.",
       summary = "Get IAM user Product Role Permissions List",
@@ -291,7 +330,7 @@ public class IamController {
             description = "OK",
             content =
                 @Content(
-                    schema = @Schema(implementation = Boolean.class),
+                    schema = @Schema(implementation = PermissionResponse.class),
                     mediaType = "application/json")),
         @APIResponse(
             responseCode = "400",
