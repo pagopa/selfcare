@@ -183,7 +183,7 @@
         "summary" : "Saves IAM User",
         "description" : "Saves or updates a user with their product-specific roles.",
         "operationId" : "saveIAMUser",
-        "tags" : [ "external-v2" ],
+        "tags" : [ "external-v2", "IAM" ],
         "parameters" : [ {
           "name" : "productId",
           "in" : "query",
@@ -316,7 +316,7 @@
         "summary" : "Get IAM user Product Role Permissions List",
         "description" : "Retrieves a list of product, role and permissions by user ID and product ID.",
         "operationId" : "getIAMProductRolePermissionsList",
-        "tags" : [ "external-v2" ],
+        "tags" : [ "external-v2", "IAM" ],
         "parameters" : [ {
           "name" : "uid",
           "in" : "path",
@@ -369,7 +369,7 @@
         "summary" : "Get IAM User by Email",
         "description" : "Retrieves a user by their email.",
         "operationId" : "getIAMUserByEmail",
-        "tags" : [ "external-v2" ],
+        "tags" : [ "external-v2", "IAM" ],
         "parameters" : [ {
           "name" : "email",
           "in" : "query",
@@ -441,7 +441,7 @@
         "summary" : "Get IAM User",
         "description" : "Retrieves a user by their ID and product ID.",
         "operationId" : "getIAMUser",
-        "tags" : [ "external-v2" ],
+        "tags" : [ "external-v2", "IAM" ],
         "parameters" : [ {
           "name" : "uid",
           "in" : "path",
