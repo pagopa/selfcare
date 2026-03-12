@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.document.service;
 
 import com.azure.storage.blob.models.BlobProperties;
+import eu.europa.esig.dss.model.DSSDocument;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
@@ -53,6 +54,9 @@ class DocumentServiceImpTest {
 
     @InjectMock
     DocumentRepository documentRepository;
+
+    @InjectMock
+    SignatureService signatureService;
 
     // ---- getDocumentsByOnboardingId ----
 
@@ -269,6 +273,7 @@ class DocumentServiceImpTest {
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().item(doc));
         when(azureBlobClient.getFileAsPdf(doc.getContractSigned())).thenReturn(mockFile);
+        when(signatureService.verifySignature(any(File.class))).thenReturn(true);
 
         ContractSignedReport report = documentService.reportContractSigned(ONBOARDING_ID)
                 .await().indefinitely();
@@ -446,6 +451,8 @@ class DocumentServiceImpTest {
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().item(doc));
         when(azureBlobClient.retrieveFile(doc.getContractSigned())).thenReturn(tempPdf);
+        when(signatureService.verifySignature(any(File.class))).thenReturn(true);
+        when(signatureService.extractFile(any(File.class))).thenReturn(tempPdf);
 
         RestResponse<File> response = documentService.retrieveSignedFile(ONBOARDING_ID)
                 .await().indefinitely();
@@ -487,6 +494,12 @@ class DocumentServiceImpTest {
         // persist attachment
         when(documentRepository.persist(any(Document.class)))
                 .thenReturn(Uni.createFrom().item(persistedDoc));
+        // signatureService stubs
+        when(signatureService.verifySignature(any(File.class))).thenReturn(true);
+        when(signatureService.extractPdfFromSignedContainer(any(), any()))
+                .thenAnswer(inv -> inv.getArgument(1, DSSDocument.class));
+        when(signatureService.computeDigestOfSignedRevision(any(), any()))
+                .thenReturn("same-digest");
 
         assertDoesNotThrow(() ->
                 documentService.uploadAttachment(request, formItem).await().indefinitely());

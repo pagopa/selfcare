@@ -3,6 +3,7 @@ package it.pagopa.selfcare.document.service.impl;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
+import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
@@ -20,7 +21,9 @@ import it.pagopa.selfcare.document.exception.UpdateNotAllowedException;
 import it.pagopa.selfcare.document.model.FormItem;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.document.service.DocumentService;
+import it.pagopa.selfcare.document.service.SignatureService;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
@@ -59,6 +62,9 @@ public class DocumentServiceImp implements DocumentService {
     Boolean isVerifyEnabled;
     @ConfigProperty(name = "document-ms.blob-storage.path-contracts")
     String pathContracts;
+
+    @Inject
+    SignatureService signatureService;
 
     public DocumentServiceImp(DocumentRepository documentRepository,
                               AzureBlobClient azureBlobClient,
@@ -117,8 +123,7 @@ public class DocumentServiceImp implements DocumentService {
                                 isPdfValid(contract);
                             } else {
                                 isP7mValid(contract);
-                                //TODO: implement signature verification logic
-                                // fileToSend = signatureService.extractFile(contract);
+                                fileToSend = signatureService.extractFile(contract);
                                 isPdfValid(fileToSend);
                             }
                             RestResponse.ResponseBuilder<File> response = RestResponse.ResponseBuilder.ok(fileToSend, MediaType.APPLICATION_OCTET_STREAM);
@@ -138,9 +143,8 @@ public class DocumentServiceImp implements DocumentService {
         }
     }
 
-    public static void isP7mValid(File contract) {
-        //TODO: implement signature verification logic
-        // signatureService.verifySignature(contract);
+    private void isP7mValid(File contract) {
+        signatureService.verifySignature(contract);
     }
 
     @Override
@@ -189,8 +193,7 @@ public class DocumentServiceImp implements DocumentService {
                 })
                 .chain(() -> {
                     if (Boolean.TRUE.equals(isVerifyEnabled)) {
-                        //TODO: implement signature verification logic
-                        // signatureService.verifySignature(file.getFile());
+                        signatureService.verifySignature(file.getFile());
                     }
 
                     String digest = getTemplateAndVerifyDigest(file, request.getTemplatePath(), false);
@@ -248,11 +251,10 @@ public class DocumentServiceImp implements DocumentService {
         File templateFile = azureBlobClient.getFileAsPdf(documentTemplatePath);
         DSSDocument templateDocument = new FileDocument(templateFile);
 
-        //TODO implement signature verification logic
-        // DSSDocument uploadedPdf = signatureService.extractPdfFromSignedContainer(SignedDocumentValidator.fromDocument(uploadedDocument), uploadedDocument);
-        // DSSDocument templatePdf = signatureService.extractPdfFromSignedContainer(SignedDocumentValidator.fromDocument(templateDocument), templateDocument);
+        DSSDocument uploadedPdf = signatureService.extractPdfFromSignedContainer(SignedDocumentValidator.fromDocument(uploadedDocument), uploadedDocument);
+        DSSDocument templatePdf = signatureService.extractPdfFromSignedContainer(SignedDocumentValidator.fromDocument(templateDocument), templateDocument);
 
-        /*
+
         SignedDocumentValidator uploadedPdfValidator = SignedDocumentValidator.fromDocument(uploadedPdf);
         SignedDocumentValidator templatePdfValidator = SignedDocumentValidator.fromDocument(templatePdf);
 
@@ -271,8 +273,6 @@ public class DocumentServiceImp implements DocumentService {
         }
 
         return uploadedDigest;
-         */
-        return "";
     }
 
     private void uploadFileToAzure(String filename, String onboardingId, File signedFile) throws InternalException {
@@ -307,8 +307,7 @@ public class DocumentServiceImp implements DocumentService {
                         Uni.createFrom().item(() -> azureBlobClient.getFileAsPdf(document.getContractSigned()))
                                 .runSubscriptionOn(Infrastructure.getDefaultExecutor())
                                 .onItem().transform(contract -> {
-                                    //TODO: implement signature verification logic
-                                    // signatureService.verifySignature(contract);
+                                    signatureService.verifySignature(contract);
                                     return ContractSignedReport.cades(true);
                                 }))
                 .onFailure().recoverWithUni(() -> Uni.createFrom().item(ContractSignedReport.cades(false)));
