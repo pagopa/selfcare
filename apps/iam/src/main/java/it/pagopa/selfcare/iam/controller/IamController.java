@@ -132,7 +132,7 @@ public class IamController {
             description = "OK",
             content =
                 @Content(
-                    schema = @Schema(implementation = String.class),
+                    schema = @Schema(implementation = UserClaims.class),
                     mediaType = "application/json")),
         @APIResponse(
             responseCode = "400",
@@ -222,6 +222,41 @@ public class IamController {
         .transform(user -> Response.ok(user).build());
   }
 
+  @Operation(
+      description = "Retrieves users by their product ID.",
+      summary = "Get IAM Users",
+      operationId = "getIAMUsers")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "OK",
+            content =
+                @Content(
+                    schema = @Schema(implementation = UserClaims[].class),
+                    mediaType = "application/json")),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "404",
+            description = "Not Found",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json"))
+      })
   @GET
   @Path(value = "/users")
   @Consumes(MediaType.APPLICATION_JSON)
