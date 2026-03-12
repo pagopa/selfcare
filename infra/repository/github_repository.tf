@@ -1,5 +1,5 @@
 resource "github_repository" "this" {
-  name        = var.repository_name
+  name        = "selfcare"
   description = ""
 
   #tfsec:ignore:github-repositories-private
@@ -39,6 +39,6 @@ module "repository_settings" {
   source = "github.com/pagopa/selfcare-commons//infra/terraform-modules/github_repository_settings?ref=main"
 
   github = {
-    repository = var.repository_name
+    repository = "selfcare"
   }
 }
