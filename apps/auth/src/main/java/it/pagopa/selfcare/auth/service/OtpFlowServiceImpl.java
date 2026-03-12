@@ -105,8 +105,6 @@ public class OtpFlowServiceImpl implements OtpFlowService {
   private Uni<Optional<OtpInfo>> handleUserOtpFlow(UserClaims userClaims, String institutionalEmail) {
 
     return findLastOtpFlowByUserId(userClaims.getUid())
-            .onFailure(GeneralUtils::checkNotFoundException)
-            .recoverWithNull()
             .map(Optional::ofNullable)
             .onFailure()
             .transform(
@@ -130,9 +128,13 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                     isRequired
                             ? createAndSendOtp(userClaims.getUid(), institutionalEmail)
                             .map(flow -> Optional.of(new OtpInfo(flow.getUuid(), institutionalEmail)))
-                            : otpFlow.getStatus().equals(OtpStatus.PENDING)
-                            ? Uni.createFrom().item(Optional.of(new OtpInfo(otpFlow.getUuid(), institutionalEmail)))
-                            : Uni.createFrom().item(Optional.empty()));
+                            : checkPendingOtpFlow(otpFlow, institutionalEmail));
+  }
+
+  private static Uni<Optional<OtpInfo>> checkPendingOtpFlow(OtpFlow otpFlow, String institutionalEmail) {
+    return otpFlow.getStatus().equals(OtpStatus.PENDING)
+            ? Uni.createFrom().item(Optional.of(new OtpInfo(otpFlow.getUuid(), institutionalEmail)))
+            : Uni.createFrom().item(Optional.empty());
   }
 
 
@@ -140,11 +142,11 @@ public class OtpFlowServiceImpl implements OtpFlowService {
           UserClaims userClaims,
           String institutionalEmail) {
 
-    return OtpUtils.isOtpRequiredWithNoLastOtp(
+    return OtpUtils.isOtpRequiredWithMissingOtpFlow(
                     userClaims.getSameIdp(),
                     otpLimitConfig.getDailyLimit())
-            .chain(periodicRequired ->
-                    periodicRequired
+            .chain(isRequired ->
+                    isRequired
                             ? createAndSendOtp(userClaims.getUid(), institutionalEmail)
                             .map(flow -> Optional.of(new OtpInfo(flow.getUuid(), institutionalEmail)))
                             : Uni.createFrom().item(Optional.empty()));

@@ -65,33 +65,36 @@ public class OtpUtils {
    */
   public static Uni<Boolean> isNewOtpFlowRequired(OtpFlow lastOtpFlow, Boolean sameIdp, Integer limit) {
 
-    List<OtpStatus> otpStatusFinalKoStatuses = List.of(OtpStatus.EXPIRED, OtpStatus.REJECTED);
+    if (Boolean.FALSE.equals(sameIdp)) {
+      boolean isPendingAndNotExpired = lastOtpFlow.getStatus().equals(OtpStatus.PENDING) && lastOtpFlow.getExpiresAt().isAfter(OffsetDateTime.now());
+      return isPendingAndNotExpired ? Uni.createFrom().item(false) : Uni.createFrom().item(true);
+    }
 
-    boolean isSameIdpFalse = lastOtpFlow.getStatus().equals(OtpStatus.COMPLETED) && !sameIdp;
+    List<OtpStatus> otpStatusFinalKoStatuses = List.of(OtpStatus.EXPIRED, OtpStatus.REJECTED);
     boolean isOtpExpired = !lastOtpFlow.getStatus().equals(OtpStatus.COMPLETED)
             && lastOtpFlow.getExpiresAt().isBefore(OffsetDateTime.now());
     boolean isLastOtpKO = otpStatusFinalKoStatuses.contains(lastOtpFlow.getStatus());
 
-    if (isSameIdpFalse || isOtpExpired || isLastOtpKO) {
+    if (isOtpExpired || isLastOtpKO) {
       return Uni.createFrom().item(true);
     }
 
-    return isPeriodicOtpRequiredWithLastOpt(lastOtpFlow, sameIdp, limit);
+    return isPeriodicOtpRequiredWithLastOpt(lastOtpFlow, limit);
   }
 
-  public static Uni<Boolean> isPeriodicOtpRequiredWithLastOpt(OtpFlow lastOtpFlow, Boolean sameIdp, Integer limit) {
+  public static Uni<Boolean> isPeriodicOtpRequiredWithLastOpt(OtpFlow lastOtpFlow, Integer limit) {
 
       boolean isCompleted = lastOtpFlow.getStatus().equals(OtpStatus.COMPLETED);
       boolean isOlderThanSixMonths = lastOtpFlow.getCreatedAt().isBefore(OffsetDateTime.now().minusMonths(6));
 
-      if (!(isCompleted && sameIdp && isOlderThanSixMonths)) {
+      if (!(isCompleted && isOlderThanSixMonths)) {
         return Uni.createFrom().item(false);
       }
 
       return isPeriodicOtpRequired(limit);
     }
 
-  public static Uni<Boolean> isOtpRequiredWithNoLastOtp(Boolean sameIdp, Integer limit) {
+  public static Uni<Boolean> isOtpRequiredWithMissingOtpFlow(Boolean sameIdp, Integer limit) {
     if (Boolean.FALSE.equals(sameIdp)) {
       return Uni.createFrom().item(true);
     }
