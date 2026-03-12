@@ -1,9 +1,9 @@
 {
   "openapi" : "3.0.1",
   "info" : {
-    "title" : "selc-starter-parent",
+    "title" : "@project.parent.artifactId@",
     "description" : "The services described in this section deal with the management of UserGroup entity, providing the necessary  methods for its creation, consultation and activation.",
-    "version" : "1.0.0-SNAPSHOT"
+    "version" : "@project.version@"
   },
   "servers" : [ {
     "url" : "{url}:{port}{basePath}",

@@ -19,7 +19,8 @@
 
     <properties>
         <selc-commons.version>2.9.3</selc-commons.version>
-        <spring-boot.version>3.1.0</spring-boot.version>
+        <spring-boot.version>3.3.0</spring-boot.version>
+        <kubernetes-client.version>19.0.1</kubernetes-client.version>
         <sonar.host.url>https://sonarcloud.io/</sonar.host.url>
         <sonar.skip>true</sonar.skip>
         <maven.compiler.source>17</maven.compiler.source>
@@ -45,6 +46,21 @@
                 <version>5.10.1</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.kubernetes</groupId>
+                <artifactId>client-java</artifactId>
+                <version>${kubernetes-client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.kubernetes</groupId>
+                <artifactId>client-java-api</artifactId>
+                <version>${kubernetes-client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.kubernetes</groupId>
+                <artifactId>client-java-proto</artifactId>
+                <version>${kubernetes-client.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
