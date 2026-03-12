@@ -162,6 +162,25 @@
             </dependencies>
         </profile>
         <profile>
+            <id>document-ms</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>document-ms</artifactId>
+                    <version>0.1.0-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
             <id>product-cdc</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
@@ -243,9 +262,7 @@
                                 <phase>verify</phase>
                             </execution>
                         </executions>
-
                         <configuration>
-
                             <excludes>
                                 <exclude>**/config/*</exclude>
                                 <exclude>**/exception/**</exclude>
@@ -284,7 +301,6 @@
                             </execution>
                         </executions>
                         <configuration>
-
                         </configuration>
                     </plugin>
                 </plugins>
