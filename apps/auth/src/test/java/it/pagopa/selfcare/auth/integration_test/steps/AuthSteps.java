@@ -90,12 +90,14 @@ public class AuthSteps {
     String fiscalCode = userDetails.get("fiscalCode");
     boolean forceOtp = Boolean.parseBoolean(userDetails.getOrDefault("forceOtp", "false"));
     String forcedEmail = userDetails.get("forcedEmail");
+    boolean sameIdp = Boolean.parseBoolean(userDetails.getOrDefault("sameIdp", "false"));
 
     OtpBetaUser betaUser =
         OtpBetaUser.builder()
             .fiscalCode(fiscalCode)
             .forceOtp(forceOtp)
             .forcedEmail(forcedEmail)
+            .sameIdp(sameIdp)
             .build();
     otpFeatureFlag.setOtpBetaUsers(List.of(betaUser));
   }
@@ -151,16 +153,17 @@ public class AuthSteps {
   }
 
 
-  @And("An OTP flow with uuid {string} was already COMPLETED {int} months ago")
-  public void anOTPFlowWithUuidAlreadyExistsWithStatusAndMonths(String uuid, int months) {
+  @And("An OTP flow with uuid {string} was COMPLETED {int} months ago")
+  public void anOTPFlowWithUuidWasCompletedMonthsAgo(String uuid, int months) {
     String updateBuilder =
-            "{'$set': { 'status': ?1, 'attempts' : ?2, 'createdAt': ?3, 'updatedAt' : ?4 } }";
+            "{'$set': { 'status': ?1, 'attempts' : ?2, 'createdAt': ?3, 'updatedAt': ?4, 'expiresAt' : ?5 } }";
     OtpFlow.update(
                     updateBuilder,
                     COMPLETED,
                     0,
                     Date.from(OffsetDateTime.now().minusMonths(months).toInstant()),
-                    Date.from(OffsetDateTime.now().minusMonths(months).toInstant()))
+                    Date.from(OffsetDateTime.now().minusMonths(months).toInstant()),
+                    Date.from(OffsetDateTime.now().minusMonths(months).plusMinutes(5).toInstant()))
             .where(OtpFlow.Fields.uuid.name(), uuid)
             .await()
             .indefinitely();
