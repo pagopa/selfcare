@@ -20,26 +20,26 @@ on:
 
 jobs:
   code_review_dev:
-    uses: ./.github/workflows/onboarding_call_code_review_resources_infra.yml
+    uses: ./.github/workflows/call_code_review_infra_dx.yml
     name: '[DEV] Resources Infra Code Review'
     if: ${{ !startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
     with:
       environment: dev
-      dir: infra/resources/dev
+      dir: infra/resources/dev-ar
 
-  code_review_uat:
-    uses: ./.github/workflows/onboarding_call_code_review_resources_infra.yml
-    name: '[UAT] Resources Infra Code Review'
-    secrets: inherit
-    with:
-      environment: uat
-      dir: infra/resources/uat
+  # code_review_uat:
+  #   uses: ./.github/workflows/onboarding_call_code_review_resources_infra.yml
+  #   name: '[UAT] Resources Infra Code Review'
+  #   secrets: inherit
+  #   with:
+  #     environment: uat
+  #     dir: infra/resources/uat
 
-  code_review_prod:
-    uses: ./.github/workflows/onboarding_call_code_review_resources_infra.yml
-    name: '[PROD] Resources Infra Code Review'
-    secrets: inherit
-    with:
-      environment: prod
-      dir: infra/resources/prod
+  # code_review_prod:
+  #   uses: ./.github/workflows/onboarding_call_code_review_resources_infra.yml
+  #   name: '[PROD] Resources Infra Code Review'
+  #   secrets: inherit
+  #   with:
+  #     environment: prod
+  #     dir: infra/resources/prod
