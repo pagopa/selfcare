@@ -16,7 +16,7 @@ on:
     paths:
       - 'infra/resources/**'
       - './.github/workflows/onboarding_pr_resources_infra.yml'
-      - './.github/workflows/onboarding_call_code_review_resources_infra.yml'
+      - './.github/workflows/call_code_review_infra_dx.yml'
 
 jobs:
   code_review_dev:
@@ -29,7 +29,7 @@ jobs:
       dir: infra/resources/dev-ar
 
   # code_review_uat:
-  #   uses: ./.github/workflows/onboarding_call_code_review_resources_infra.yml
+  #   uses: ./.github/workflows/call_code_review_infra_dx.yml
   #   name: '[UAT] Resources Infra Code Review'
   #   secrets: inherit
   #   with:
@@ -37,7 +37,7 @@ jobs:
   #     dir: infra/resources/uat
 
   # code_review_prod:
-  #   uses: ./.github/workflows/onboarding_call_code_review_resources_infra.yml
+  #   uses: ./.github/workflows/call_code_review_infra_dx.yml
   #   name: '[PROD] Resources Infra Code Review'
   #   secrets: inherit
   #   with:
