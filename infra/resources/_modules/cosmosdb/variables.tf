@@ -8,20 +8,11 @@ variable "account_name" {
   description = "The name of the CosmosDB account."
 }
 
-variable "databases" {
-  type = list(object({
-    name           = string
-    throughput     = optional(number, 1000)
-    max_throughput = optional(number) # Se valorizzato, abilita l'autoscale
-  }))
-  default     = []
-  description = "Configuration for MongoDB databases"
-
-  validation {
-    condition     = length(var.databases) == length(distinct([for db in var.databases : db.name]))
-    error_message = "Each database name in var.databases must be unique."
-  }
+variable "database_name" {
+  type        = string
+  description = "The name of the CosmosDB database name."
 }
+
 
 variable "collections" {
   type = list(object({

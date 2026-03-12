@@ -1,5 +1,5 @@
-output "mongodb" {
-  value = module.mongodb
+output "cosmosdb" {
+  value = module.cosmosdb
 }
 
 output "storage_documents" {

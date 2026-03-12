@@ -1,20 +1,15 @@
-module "mongodb" {
-  source = "../_modules/mongodb"
+module "cosmosdb" {
+  source = "../_modules/cosmosdb"
 
   resource_group_name = local.mongo_db.mongodb_rg_name
   account_name        = local.mongo_db.cosmosdb_account_mongodb_name
 
-  databases = [
-    {
-      name = "selcOnboarding"
-    }
-  ]
+  database_name = "selcOnboarding"
 
   collections = [
     {
-      database_name = "selcOnboarding"
-      name          = "onboardings"
-      shard_key     = "_id"
+      name      = "onboardings"
+      shard_key = "_id"
       indexes = [
         { keys = ["_id"], unique = true },
         { keys = ["createdAt"], unique = false },
@@ -27,9 +22,8 @@ module "mongodb" {
       ]
     },
     {
-      database_name = "selcOnboarding"
-      name          = "tokens"
-      shard_key     = "_id"
+      name      = "tokens"
+      shard_key = "_id"
       indexes = [
         { keys = ["_id"], unique = true },
         { keys = ["createdAt"], unique = false }
