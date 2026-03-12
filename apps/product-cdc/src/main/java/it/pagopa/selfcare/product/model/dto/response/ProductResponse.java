@@ -14,5 +14,5 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 public class ProductResponse extends ProductBase {
-    private ProductMetadata metadata;
+  private ProductMetadata metadata;
 }

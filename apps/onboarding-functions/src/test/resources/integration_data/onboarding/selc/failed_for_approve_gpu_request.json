@@ -1,0 +1,28 @@
+{
+  "id": "89ad7142-24bb-48ad-8504-9c9231137e86",
+  "billing": {
+    "publicServices": false,
+    "recipientCode": "RC000"
+  },
+  "createdAt": "2025-05-13T12:37:49.054Z",
+  "institution": {
+    "imported": false,
+    "institutionType": "PSP",
+    "subunitCode": "subunitCode",
+    "taxCode": "taxCode"
+  },
+  "productId": "prod-pagopa",
+  "status": "REQUEST",
+  "users": [
+    {
+      "id": "actual-user-id",
+      "role": "MANAGER"
+    }
+  ],
+  "workflowType": "FOR_APPROVE_GPU",
+  "workflowInstanceId": "9acdc78f-26c3-4356-ad13-24bd01857edf",
+  "updatedAt": "2025-05-13T12:38:17.000Z",
+  "userRequester" : {
+    "userRequestUid": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1"
+  }
+}

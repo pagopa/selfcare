@@ -1,0 +1,13 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>it.pagopa.selfcare</groupId>
+        <artifactId>selfcare-onboarding-sdk-pom</artifactId>
+        <version>0.15.4</version>
+        <relativePath>../selfcare-onboarding-sdk-pom</relativePath>
+    </parent>
+    <artifactId>selfcare-onboarding-sdk-common</artifactId>
+    <name>selfcare-onboarding-sdk-common</name>
+    <description>Selfcare Onboarding SDK Common</description>
+</project>

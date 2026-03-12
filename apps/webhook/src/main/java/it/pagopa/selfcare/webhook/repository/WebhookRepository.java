@@ -4,10 +4,9 @@ import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoRepository;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.webhook.entity.Webhook;
 import jakarta.enterprise.context.ApplicationScoped;
+import java.util.List;
 import org.bson.Document;
 import org.bson.types.ObjectId;
-
-import java.util.List;
 
 @ApplicationScoped
 public class WebhookRepository implements ReactivePanacheMongoRepository<Webhook> {
@@ -18,16 +17,14 @@ public class WebhookRepository implements ReactivePanacheMongoRepository<Webhook
 
   public Uni<List<Webhook>> findActiveWebhooksByProduct(String productId) {
     // MongoDB query: { "status": "ACTIVE", "products": { "$in": ["productId"] } }
-    Document query = new Document()
-      .append("status", Webhook.WebhookStatus.ACTIVE)
-      .append("products", productId);
+    Document query =
+        new Document().append("status", Webhook.WebhookStatus.ACTIVE).append("products", productId);
     return find(query).list();
   }
 
   public Uni<Webhook> findWebhookByProduct(String productId) {
     // MongoDB query: { "productId": "productId" }
-    Document query = new Document()
-      .append("productId", productId);
+    Document query = new Document().append("productId", productId);
     return find(query).firstResult();
   }
 

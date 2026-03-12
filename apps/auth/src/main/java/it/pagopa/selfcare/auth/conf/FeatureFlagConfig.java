@@ -7,11 +7,10 @@ import it.pagopa.selfcare.auth.model.FeatureFlagEnum;
 import it.pagopa.selfcare.auth.model.otp.OtpBetaUser;
 import it.pagopa.selfcare.auth.model.otp.OtpFeatureFlag;
 import jakarta.enterprise.context.ApplicationScoped;
-import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @Slf4j
 @ApplicationScoped
@@ -22,7 +21,10 @@ public class FeatureFlagConfig {
       @ConfigProperty(name = "otp.ff.enabled") String otpFf,
       @ConfigProperty(name = "otp.ff.beta-users") String otpBetaUsers) {
 
-    log.info("Initializing OtpFeatureFlag with otp.ff.enabled={}, and otp.ff.beta-users={}", otpFf, otpBetaUsers);
+    log.info(
+        "Initializing OtpFeatureFlag with otp.ff.enabled={}, and otp.ff.beta-users={}",
+        otpFf,
+        otpBetaUsers);
     ObjectMapper objectMapper = new ObjectMapper();
     TypeReference<List<OtpBetaUser>> jacksonTypeReference = new TypeReference<>() {};
     List<OtpBetaUser> betaUsers = new ArrayList<>();
@@ -31,10 +33,11 @@ public class FeatureFlagConfig {
     } catch (JsonProcessingException e) {
       log.error(e.toString());
     }
-    OtpFeatureFlag otpFeatureFlag = OtpFeatureFlag.builder()
-        .featureFlag(FeatureFlagEnum.valueOf(otpFf))
-        .otpBetaUsers(betaUsers)
-        .build();
+    OtpFeatureFlag otpFeatureFlag =
+        OtpFeatureFlag.builder()
+            .featureFlag(FeatureFlagEnum.valueOf(otpFf))
+            .otpBetaUsers(betaUsers)
+            .build();
 
     log.info("Using OtpFeatureFlag:{}", otpFeatureFlag);
     return otpFeatureFlag;

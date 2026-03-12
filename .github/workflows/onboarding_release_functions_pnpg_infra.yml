@@ -1,0 +1,55 @@
+name: Deploy PNPG functions infra
+
+on:
+  push:
+    branches:
+      - main
+      - releases/*
+    paths:
+      - 'infra/apps/onboarding-functions/env/dev-pnpg'
+      - 'infra/apps/onboarding-functions/env/uat-pnpg'
+      - 'infra/apps/onboarding-functions/env/prod-pnpg'
+      - '!infra/apps/onboarding-functions/env/**'
+      - 'infra/apps/onboarding-functions/**'
+
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options:
+          - dev
+          - uat
+          - prod
+
+jobs:
+
+  release_dev:
+    uses: ./.github/workflows/onboarding_call_release_infra.yml
+    name: '[Dev] Functions Infra Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+      tf_environment: dev-pnpg
+      dir: infra/apps/onboarding-functions
+
+  release_uat:
+    uses: ./.github/workflows/onboarding_call_release_infra.yml
+    name: '[UAT] Functions Infra Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    secrets: inherit
+    with:
+      environment: uat
+      tf_environment: uat-pnpg
+      dir: infra/apps/onboarding-functions
+
+  release_prod:
+    uses: ./.github/workflows/onboarding_call_release_infra.yml
+    name: '[Prod] Functions Infra Release'
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod
+      tf_environment: prod-pnpg
+      dir: infra/apps/onboarding-functions

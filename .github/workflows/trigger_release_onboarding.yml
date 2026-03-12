@@ -1,0 +1,99 @@
+name: Onboarding - Trigger Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options:
+          - dev
+          - uat
+          - prod
+        required: true
+      branch:
+        type: string
+        description: Branch name
+        required: true
+
+jobs:
+  release:
+    name: "Trigger Release Workflows"
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: write
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      version: ${{ env.VERSION }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Extract Version
+        run: |
+          echo "VERSION=$(echo "${{ inputs.branch }}" | sed 's/.*_//;s/^v//')" >> $GITHUB_ENV
+
+      - name: Trigger Functions Infra Release
+        run: |
+          gh workflow run onboarding_release_functions_infra.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }}
+
+      - name: Trigger Mongo Infra Release
+        run: |
+          gh workflow run onboarding_release_mongo_infra.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }}
+
+      - name: Trigger PNPG Functions Infra Release
+        run: |
+          gh workflow run onboarding_release_functions_pnpg_infra.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }}
+
+      - name: Trigger PNPG Mongo Infra Release
+        run: |
+          gh workflow run onboarding_release_mongo_pnpg_infra.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }}
+
+      - name: Trigger Functions Release
+        run: |
+          gh workflow run release_functions.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=selc -f app=onboarding-functions
+
+      - name: Trigger Onboarding ms Release
+        run: |
+          gh workflow run release_app.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=selc -f app=onboarding-ms
+
+      - name: Trigger Onboarding CDC Release
+        run: |
+          gh workflow run release_app.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=selc -f app=onboarding-cdc
+
+      - name: Trigger PNPG Functions Release
+        run: |
+          gh workflow run release_functions.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=onboarding-functions
+
+      - name: Trigger PNPG Onboarding ms Release
+        run: |
+          gh workflow run release_app.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=onboarding-ms
+
+      - name: Trigger PNPG Onboarding CDC Release
+        run: |
+          gh workflow run release_app.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=onboarding-cdc
+
+  update_prod_variable:
+    name: "Update PROD Version Variable"
+    needs: release
+    if: ${{ inputs.env == 'prod' }}
+    uses: ./.github/workflows/call_update_gh_variable.yml
+    with:
+      domain: onboarding
+      env: prod
+      version: ${{ needs.release.outputs.version }}
+    secrets: inherit

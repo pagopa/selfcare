@@ -18,10 +18,8 @@ import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.exception.OtpForbiddenException;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.auth.model.OtpStatus;
-import it.pagopa.selfcare.auth.service.OidcService;
 import it.pagopa.selfcare.auth.service.OtpFlowService;
 import org.apache.http.HttpStatus;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
@@ -90,20 +88,20 @@ class OtpControllerTest {
     request.setOtp("123456");
     request.setOtpUuid("uuid");
     OtpForbiddenException wrongCodeException =
-            new OtpForbiddenException(
-                    "Max Attempts reached", OtpForbiddenCode.CODE_002, 0, OtpStatus.REJECTED);
+        new OtpForbiddenException(
+            "Max Attempts reached", OtpForbiddenCode.CODE_002, 0, OtpStatus.REJECTED);
     when(otpFlowService.verifyOtp(anyString(), anyString()))
-            .thenReturn(Uni.createFrom().failure(wrongCodeException));
+        .thenReturn(Uni.createFrom().failure(wrongCodeException));
 
     given()
-            .body(request)
-            .when()
-            .contentType(ContentType.JSON)
-            .post("/verify")
-            .then()
-            .statusCode(HttpStatus.SC_FORBIDDEN)
-            .body("otpForbiddenCode", equalTo(wrongCodeException.getCode().name()))
-            .body("remainingAttempts", equalTo(wrongCodeException.getRemainingAttempts()));
+        .body(request)
+        .when()
+        .contentType(ContentType.JSON)
+        .post("/verify")
+        .then()
+        .statusCode(HttpStatus.SC_FORBIDDEN)
+        .body("otpForbiddenCode", equalTo(wrongCodeException.getCode().name()))
+        .body("remainingAttempts", equalTo(wrongCodeException.getRemainingAttempts()));
   }
 
   @Test
@@ -115,12 +113,12 @@ class OtpControllerTest {
         .thenReturn(Uni.createFrom().failure(new ConflictException("Conflict")));
 
     given()
-            .body(request)
-            .when()
-            .contentType(ContentType.JSON)
-            .post("/verify")
-            .then()
-            .statusCode(HttpStatus.SC_CONFLICT);
+        .body(request)
+        .when()
+        .contentType(ContentType.JSON)
+        .post("/verify")
+        .then()
+        .statusCode(HttpStatus.SC_CONFLICT);
   }
 
   @Test
@@ -132,12 +130,12 @@ class OtpControllerTest {
         .thenReturn(Uni.createFrom().failure(new InternalException("Internal server error")));
 
     given()
-            .body(request)
-            .when()
-            .contentType(ContentType.JSON)
-            .post("/verify")
-            .then()
-            .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+        .body(request)
+        .when()
+        .contentType(ContentType.JSON)
+        .post("/verify")
+        .then()
+        .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
   }
 
   @Test
@@ -145,12 +143,12 @@ class OtpControllerTest {
     OtpResendRequest request = new OtpResendRequest();
 
     given()
-            .body(request)
-            .when()
-            .contentType(ContentType.JSON)
-            .post("/resend")
-            .then()
-            .statusCode(HttpStatus.SC_BAD_REQUEST);
+        .body(request)
+        .when()
+        .contentType(ContentType.JSON)
+        .post("/resend")
+        .then()
+        .statusCode(HttpStatus.SC_BAD_REQUEST);
   }
 
   @Test
@@ -158,16 +156,16 @@ class OtpControllerTest {
     OtpResendRequest request = new OtpResendRequest();
     request.setOtpUuid("uuid");
     when(otpFlowService.resendOtp(anyString()))
-            .thenReturn(
-                    Uni.createFrom().failure(new ResourceNotFoundException("Cannot find Otp Flow")));
+        .thenReturn(
+            Uni.createFrom().failure(new ResourceNotFoundException("Cannot find Otp Flow")));
 
     given()
-            .body(request)
-            .when()
-            .contentType(ContentType.JSON)
-            .post("/resend")
-            .then()
-            .statusCode(HttpStatus.SC_NOT_FOUND);
+        .body(request)
+        .when()
+        .contentType(ContentType.JSON)
+        .post("/resend")
+        .then()
+        .statusCode(HttpStatus.SC_NOT_FOUND);
   }
 
   @Test
@@ -175,15 +173,15 @@ class OtpControllerTest {
     OtpResendRequest request = new OtpResendRequest();
     request.setOtpUuid("uuid");
     when(otpFlowService.resendOtp(anyString()))
-            .thenReturn(Uni.createFrom().failure(new ConflictException("Conflict")));
+        .thenReturn(Uni.createFrom().failure(new ConflictException("Conflict")));
 
     given()
-            .body(request)
-            .when()
-            .contentType(ContentType.JSON)
-            .post("/resend")
-            .then()
-            .statusCode(HttpStatus.SC_CONFLICT);
+        .body(request)
+        .when()
+        .contentType(ContentType.JSON)
+        .post("/resend")
+        .then()
+        .statusCode(HttpStatus.SC_CONFLICT);
   }
 
   @Test
@@ -191,14 +189,14 @@ class OtpControllerTest {
     OtpResendRequest request = new OtpResendRequest();
     request.setOtpUuid("uuid");
     when(otpFlowService.resendOtp(anyString()))
-            .thenReturn(Uni.createFrom().failure(new InternalException("Internal server error")));
+        .thenReturn(Uni.createFrom().failure(new InternalException("Internal server error")));
 
     given()
-            .body(request)
-            .when()
-            .contentType(ContentType.JSON)
-            .post("/resend")
-            .then()
-            .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+        .body(request)
+        .when()
+        .contentType(ContentType.JSON)
+        .post("/resend")
+        .then()
+        .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
   }
 }

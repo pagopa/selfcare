@@ -1,0 +1,22 @@
+package it.pagopa.selfcare.document.controller.response;
+
+
+import it.pagopa.selfcare.onboarding.common.TokenType;
+import java.time.LocalDateTime;
+import lombok.Data;
+
+@Data
+public class DocumentResponse {
+
+    private String id;
+    private TokenType type;
+    private String productId;
+    private String checksum;
+    private String contractVersion;
+    private String contractTemplate;
+    private String contractSigned;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private LocalDateTime closedAt;
+    private LocalDateTime deletedAt;
+}

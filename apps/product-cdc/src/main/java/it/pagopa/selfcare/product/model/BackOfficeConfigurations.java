@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BackOfficeConfigurations {
-    private String url;
-    private String identityTokenAudience;
+  private String url;
+  private String identityTokenAudience;
 }

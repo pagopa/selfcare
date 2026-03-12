@@ -14,12 +14,14 @@
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
+        <sonar.skip>true</sonar.skip>
     </properties>
 
     <modules>
-        <module>cucumber-sdk</module>
+        <module>selfcare-cucumber-sdk</module>
         <module>selfcare-sdk-security</module>
         <module>selfcare-sdk-pom</module>
+        <module>selfcare-onboarding-sdk-pom</module>
     </modules>
 
 

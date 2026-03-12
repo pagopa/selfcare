@@ -6,5 +6,4 @@ import org.openapi.quarkus.internal_json.api.UserApi;
 
 @RegisterRestClient(configKey = "internal.external-ms")
 @RegisterClientHeaders(TestExternalInternalUserHeaderFactory.class)
-public interface TestExternalInternalUserApi extends UserApi {
-}
+public interface TestExternalInternalUserApi extends UserApi {}

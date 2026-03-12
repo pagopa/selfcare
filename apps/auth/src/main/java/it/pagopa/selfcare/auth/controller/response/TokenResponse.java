@@ -7,6 +7,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TokenResponse extends OidcExchangeResponse{
-    private String sessionToken;
+public class TokenResponse extends OidcExchangeResponse {
+  private String sessionToken;
 }

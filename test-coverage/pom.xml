@@ -8,14 +8,19 @@
         <artifactId>root</artifactId>
         <version>0.0.1</version>
     </parent>
+    
     <artifactId>test-coverage</artifactId>
     <packaging>pom</packaging>
     <name>test-coverage</name>
 
     <properties>
         <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-        <sonar.coverage.exclusions>**/exception/**, **/response/**, **/request/**, **/entity/**, **/common/**, **/utils/**, **/*Constant*, **/*Config.java, **/error/**, org/**</sonar.coverage.exclusions>
+        <sonar.coverage.exclusions>
+            src/test/**,**/steps/**,**/cucumber/**,**/*IT.java,**/*Test.java,**/*Tests.java,**/*TestCase.java,**/exception/**,**/response/**,**/request/**,**/entity/**,**/common/**,**/utils/**,**/*Constant*,**/*Config.java,**/error/**,**/filter/**,org/**
+        </sonar.coverage.exclusions>
+        <sonar.test.exclusions>src/test/**,**/steps/**,**/cucumber/**,**/*IT.java,**/*Test.java</sonar.test.exclusions>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <commons-sdk-version>0.15.4</commons-sdk-version>
     </properties>
 
     <build>
@@ -62,6 +67,186 @@
             </dependencies>
         </profile>
         <profile>
+            <id>onboarding-ms</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>onboarding-ms</artifactId>
+                    <version>1.0.0-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>onboarding-functions</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>onboarding-functions</artifactId>
+                    <version>1.0.0-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>onboarding-cdc</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>onboarding-cdc</artifactId>
+                    <version>1.0.0-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>iam</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>iam</artifactId>
+                    <version>0.1.0-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>product</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>product</artifactId>
+                    <version>0.1.0-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>document-ms</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>document-ms</artifactId>
+                    <version>0.1.0-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>product-cdc</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>product-cdc</artifactId>
+                    <version>0.1.0-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>webhook</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>webhook</artifactId>
+                    <version>0.1.0-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>onboarding-sdk</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>selfcare-onboarding-sdk-product</artifactId>
+                    <version>${commons-sdk-version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>selfcare-onboarding-sdk-common</artifactId>
+                    <version>${commons-sdk-version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>selfcare-onboarding-sdk-azure-storage</artifactId>
+                    <version>${commons-sdk-version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>selfcare-onboarding-sdk-crypto</artifactId>
+                    <version>${commons-sdk-version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
             <id>report</id>
             <build>
                 <plugins>
@@ -77,9 +262,7 @@
                                 <phase>verify</phase>
                             </execution>
                         </executions>
-
                         <configuration>
-
                             <excludes>
                                 <exclude>**/config/*</exclude>
                                 <exclude>**/exception/**</exclude>
@@ -91,6 +274,10 @@
                                 <exclude>**/error/**</exclude>
                                 <exclude>**/*Constant*</exclude>
                                 <exclude>org/**</exclude>
+                                <exclude>**/*Test*</exclude>
+                                <exclude>**/*IT*</exclude>
+                                <exclude>**/cucumber/**</exclude>
+                                <exclude>**/steps/**</exclude>
                             </excludes>
                         </configuration>
                     </plugin>
@@ -114,7 +301,6 @@
                             </execution>
                         </executions>
                         <configuration>
-
                         </configuration>
                     </plugin>
                 </plugins>

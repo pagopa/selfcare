@@ -19,18 +19,13 @@ import org.openapi.quarkus.internal_json.model.UserInfoResource;
 @ApplicationScoped
 public class ApimProxyController {
 
-    @RestClient
-    @Inject
-    private TestExternalInternalUserApi testExternalInternalUserApi;
+  @RestClient @Inject private TestExternalInternalUserApi testExternalInternalUserApi;
 
-    @POST
-    @Path("/users")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Uni<UserInfoResource> apimProxyV2getUserInfoUsingGET(SearchUserDto searchUserDto) {
-        return testExternalInternalUserApi.v2getUserInfoUsingGET(null, searchUserDto);
-    }
+  @POST
+  @Path("/users")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<UserInfoResource> apimProxyV2getUserInfoUsingGET(SearchUserDto searchUserDto) {
+    return testExternalInternalUserApi.v2getUserInfoUsingGET(null, searchUserDto);
+  }
 }
-
-
-

@@ -4,6 +4,7 @@ import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
+import it.pagopa.selfcare.iam.controller.response.PermissionResponse;
 import it.pagopa.selfcare.iam.controller.response.Problem;
 import it.pagopa.selfcare.iam.entity.UserClaims;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
@@ -13,6 +14,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -21,8 +23,6 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-
-import javax.validation.Valid;
 
 @Authenticated
 @Tag(name = "IAM")
@@ -33,17 +33,26 @@ public class IamController {
 
   private final IamService iamService;
 
-  @Inject
-  SecurityIdentity securityIdentity;
+  @Inject SecurityIdentity securityIdentity;
 
-  @Operation(
-    summary = "Ping endpoint",
-    operationId = "ping"
-  )
-  @APIResponses(value = {
-    @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = String.class), mediaType = "application/problem+json")),
-    @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
-  })
+  @Operation(summary = "Ping endpoint", operationId = "ping")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "OK",
+            content =
+                @Content(
+                    schema = @Schema(implementation = String.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json"))
+      })
   @GET
   @Path(value = "/ping")
   @Consumes(MediaType.APPLICATION_JSON)
@@ -53,9 +62,9 @@ public class IamController {
   }
 
   /**
-   * Saves or updates a user with their product-specific roles.
-   * If the user doesn't exist, creates a new user with a generated UID.
-   * If the user exists, updates their information and merges product roles.
+   * Saves or updates a user with their product-specific roles. If the user doesn't exist, creates a
+   * new user with a generated UID. If the user exists, updates their information and merges product
+   * roles.
    *
    * @param saveUserRequest the request containing user details and product roles
    * @param productId optional product ID to filter roles for a specific product
@@ -63,24 +72,45 @@ public class IamController {
    * @throws Error if the request or email is null/blank
    */
   @Tag(name = "external-v2")
+  @Tag(name = "IAM")
   @Operation(
-    description = "Saves or updates a user with their product-specific roles.",
-    summary = "Saves IAM User",
-    operationId = "saveIAMUser"
-  )
-  @APIResponses(value = {
-    @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UserClaims.class), mediaType = "application/json")),
-    @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
-    @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
-  })
+      description = "Saves or updates a user with their product-specific roles.",
+      summary = "Saves IAM User",
+      operationId = "saveIAMUser")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "OK",
+            content =
+                @Content(
+                    schema = @Schema(implementation = UserClaims.class),
+                    mediaType = "application/json")),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json"))
+      })
   @PATCH
   @Path(value = "/users")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Uni<Response> users(@Valid SaveUserRequest saveUserRequest, @QueryParam("productId") String productId) {
-    return iamService.saveUser(saveUserRequest, productId)
-      .onItem().transform(user -> Response.ok(user).build());
-
+  public Uni<Response> users(
+      @Valid SaveUserRequest saveUserRequest, @QueryParam("productId") String productId) {
+    return iamService
+        .saveUser(saveUserRequest, productId)
+        .onItem()
+        .transform(user -> Response.ok(user).build());
   }
 
   /**
@@ -92,24 +122,150 @@ public class IamController {
    * @throws ResourceNotFoundException if the user is not found
    */
   @Tag(name = "external-v2")
+  @Tag(name = "IAM")
   @Operation(
-    description = "Retrieves a user by their ID and product ID.",
-    summary = "Get IAM User",
-    operationId = "getIAMUser"
-  )
-  @APIResponses(value = {
-    @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = String.class), mediaType = "application/json")),
-    @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
-    @APIResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
-    @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
-  })
+      description = "Retrieves a user by their ID and product ID.",
+      summary = "Get IAM User",
+      operationId = "getIAMUser")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "OK",
+            content =
+                @Content(
+                    schema = @Schema(implementation = UserClaims.class),
+                    mediaType = "application/json")),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "404",
+            description = "Not Found",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json"))
+      })
   @GET
   @Path(value = "/users/{uid}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Uni<Response> getUser(@PathParam("uid") String userId, @QueryParam("productId") String productId) {
-    return iamService.getUser(userId, productId)
-      .onItem().transform(user -> Response.ok(user).build());
+  public Uni<Response> getUser(
+      @PathParam("uid") String userId, @QueryParam("productId") String productId) {
+    return iamService
+        .getUser(userId, productId)
+        .onItem()
+        .transform(user -> Response.ok(user).build());
+  }
+
+  /**
+   * Retrieves a user by their email.
+   *
+   * @param email the email of the user
+   * @return a Uni containing the UserClaims if found
+   */
+  @Tag(name = "external-v2")
+  @Tag(name = "IAM")
+  @Operation(
+      description = "Retrieves a user by their email.",
+      summary = "Get IAM User by Email",
+      operationId = "getIAMUserByEmail")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "OK",
+            content =
+                @Content(
+                    schema = @Schema(implementation = UserClaims.class),
+                    mediaType = "application/json")),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "404",
+            description = "Not Found",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json"))
+      })
+  @GET
+  @Path(value = "/users/search")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<Response> getUserByEmail(
+      @QueryParam("email") String email, @QueryParam("productId") String productId) {
+    return iamService
+        .getUserByEmail(email, productId)
+        .onItem()
+        .transform(user -> Response.ok(user).build());
+  }
+
+  @Operation(
+      description = "Retrieves users by their product ID.",
+      summary = "Get IAM Users",
+      operationId = "getIAMUsers")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "OK",
+            content =
+                @Content(
+                    schema = @Schema(implementation = UserClaims[].class),
+                    mediaType = "application/json")),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "404",
+            description = "Not Found",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json"))
+      })
+  @GET
+  @Path(value = "/users")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<Response> getUsers(@QueryParam("productId") String productId) {
+    return iamService.getUsers(productId).onItem().transform(user -> Response.ok(user).build());
   }
 
   /**
@@ -120,22 +276,38 @@ public class IamController {
    * @return a Uni containing a ProductRolePermissionsList if found
    */
   @Tag(name = "external-v2")
+  @Tag(name = "IAM")
   @Operation(
-          description = "Retrieves a list of product, role and permissions by user ID and product ID.",
-          summary = "Get IAM user Product Role Permissions List",
-          operationId = "getIAMProductRolePermissionsList"
-  )
-  @APIResponses(value = {
-          @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = ProductRolePermissionsList.class), mediaType = "application/json")),
-          @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
-  })
+      description = "Retrieves a list of product, role and permissions by user ID and product ID.",
+      summary = "Get IAM user Product Role Permissions List",
+      operationId = "getIAMProductRolePermissionsList")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "OK",
+            content =
+                @Content(
+                    schema = @Schema(implementation = ProductRolePermissionsList.class),
+                    mediaType = "application/json")),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json"))
+      })
   @GET
   @Path(value = "/users/role/permissions/{uid}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Uni<Response> getProductRolePermissionsList(@PathParam("uid") String userId, @QueryParam("productId") String productId) {
-    return iamService.getProductRolePermissionsList(userId, productId)
-            .onItem().transform(user -> Response.ok(user).build());
+  public Uni<Response> getProductRolePermissionsList(
+      @PathParam("uid") String userId, @QueryParam("productId") String productId) {
+    return iamService
+        .getProductRolePermissionsList(userId, productId)
+        .onItem()
+        .transform(user -> Response.ok(user).build());
   }
 
   /**
@@ -148,26 +320,52 @@ public class IamController {
    * @return a Uni containing true if the user has the permission, false otherwise
    */
   @Operation(
-    description = "Checks if a user has a specific permission for a product.",
-    summary = "Check IAM User hasPermission",
-    operationId = "hasIAMUserPermission"
-  )
-  @APIResponses(value = {
-    @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = Boolean.class), mediaType = "application/json")),
-    @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
-    @APIResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
-    @APIResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
-  })
+      description = "Checks if a user has a specific permission for a product.",
+      summary = "Check IAM User hasPermission",
+      operationId = "hasIAMUserPermission")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "OK",
+            content =
+                @Content(
+                    schema = @Schema(implementation = PermissionResponse.class),
+                    mediaType = "application/json")),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "404",
+            description = "Not Found",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json"))
+      })
   @GET
   @Path(value = "/users/{uid}/permissions/{permission}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Uni<Response> hasPermission(@PathParam("uid") String userId,
-                                     @PathParam("permission") String permission,
-                                     @QueryParam("productId") String productId,
-                                     @QueryParam("institutionId") String institutionId) {
-    return iamService.hasPermission(userId, permission, productId, institutionId)
-      .onItem().transform(hasPermission -> Response.ok(hasPermission).build());
+  public Uni<Response> hasPermission(
+      @PathParam("uid") String userId,
+      @PathParam("permission") String permission,
+      @QueryParam("productId") String productId,
+      @QueryParam("institutionId") String institutionId) {
+    return iamService
+        .hasPermission(userId, permission, productId, institutionId)
+        .onItem()
+        .transform(hasPermission -> Response.ok(new PermissionResponse(hasPermission)).build());
   }
 }
-

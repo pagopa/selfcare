@@ -1,0 +1,31 @@
+name: Update GitHub Variable
+
+on:
+  workflow_call:
+    inputs:
+      domain:
+        required: true
+        type: string
+      env:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+    steps:
+      - name: Update Variable
+        run: |
+          VAR_DOMAIN=$(echo "${{ inputs.domain }}" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+          VAR_ENV=$(echo "${{ inputs.env }}" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+          VAR_NAME="${VAR_DOMAIN}_CURRENT_${VAR_ENV}_VERSION"
+
+          echo "Updating variable $VAR_NAME to ${{ inputs.version }} in repo ${{ github.repository }}"
+          gh variable set "$VAR_NAME" --body "${{ inputs.version }}" --repo ${{ github.repository }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT_VARIABLES }}

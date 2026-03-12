@@ -5,11 +5,10 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.quarkus.test.junit.QuarkusTestProfile;
+import java.util.Map;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.ConfigProvider;
-
-import java.util.Map;
 
 @Slf4j
 @NoArgsConstructor
@@ -28,8 +27,8 @@ public class IntegrationProfile implements QuarkusTestProfile {
   public static MongoDatabase getMongoClientConnection() {
     log.info("Starting getMongoClientConnection...");
     ConnectionString connectionString =
-      new ConnectionString(
-        ConfigProvider.getConfig().getValue("quarkus.mongodb.connection-string", String.class));
+        new ConnectionString(
+            ConfigProvider.getConfig().getValue("quarkus.mongodb.connection-string", String.class));
     MongoClient mongoClient = MongoClients.create(connectionString);
     return mongoClient.getDatabase("testProduct");
   }

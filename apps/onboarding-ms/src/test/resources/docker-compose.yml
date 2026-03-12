@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  mongo-db:
+    image: mongo:latest
+    command: ["--replSet", "rs0"]
+    ports:
+      - "28017:27017"
+    networks:
+      - develop-network
+    volumes:
+      - "./mongo-init/:/docker-entrypoint-initdb.d"
+
+  mock-server:
+    image: mockserver/mockserver@sha256:adec675a93253dcd503cda331dbc8c88383c1c79ceb2370ec9766ad3f010d255
+    ports:
+      - "1080:1080"
+    networks:
+      - develop-network
+    environment:
+      - MOCKSERVER_INITIALIZATION_JSON_PATH=/config/*.json
+      - MOCKSERVER_ENABLE_CORS_FOR_API="true"
+      - MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES="true"
+    volumes:
+      - "./mock:/config"
+
+networks:
+  develop-network:
+    name: selfcare-develop-network

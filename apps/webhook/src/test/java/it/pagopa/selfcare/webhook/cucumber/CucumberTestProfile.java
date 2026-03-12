@@ -7,17 +7,16 @@ import com.mongodb.client.MongoDatabase;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import it.pagopa.selfcare.webhook.util.JwtData;
 import it.pagopa.selfcare.webhook.util.JwtUtils;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.microprofile.config.ConfigProvider;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.ConfigProvider;
 
 @Slf4j
 @NoArgsConstructor
@@ -26,17 +25,17 @@ public class CucumberTestProfile implements QuarkusTestProfile {
   @Override
   public Map<String, String> getConfigOverrides() {
     return Map.of(
-      "mp.jwt.verify.publickey",
-      getPublicKey(),
-      "custom.jwt-token-test",
-      Objects.requireNonNull(
-        JwtUtils.generateToken(
-          JwtData.builder()
-            .username("f.rossi")
-            .password("test")
-            .jwtHeader(buildJwtHeader())
-            .jwtPayload(buildJwtPayload())
-            .build())));
+        "mp.jwt.verify.publickey",
+        getPublicKey(),
+        "custom.jwt-token-test",
+        Objects.requireNonNull(
+            JwtUtils.generateToken(
+                JwtData.builder()
+                    .username("f.rossi")
+                    .password("test")
+                    .jwtHeader(buildJwtHeader())
+                    .jwtPayload(buildJwtPayload())
+                    .build())));
   }
 
   private String getPublicKey() {
@@ -75,8 +74,8 @@ public class CucumberTestProfile implements QuarkusTestProfile {
 
   public static MongoDatabase getMongoClientConnection() {
     ConnectionString connectionString =
-      new ConnectionString(
-        ConfigProvider.getConfig().getValue("quarkus.mongodb.connection-string", String.class));
+        new ConnectionString(
+            ConfigProvider.getConfig().getValue("quarkus.mongodb.connection-string", String.class));
     MongoClient mongoClient = MongoClients.create(connectionString);
     return mongoClient.getDatabase("selcProduct");
   }

@@ -1,11 +1,10 @@
 package it.pagopa.selfcare.iam.model;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Data
 @Builder
@@ -13,5 +12,5 @@ import java.util.List;
 @AllArgsConstructor
 public class ProductRolePermissionsList {
 
-    private List<ProductRolePermissions> items;
+  private List<ProductRolePermissions> items;
 }

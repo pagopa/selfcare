@@ -15,7 +15,7 @@ resource "azurerm_management_lock" "mongodb_selc_product" {
 
 module "mongodb_collection_product" {
   count  = var.is_pnpg ? 0 : 1
-  source = "github.com/pagopa/terraform-azurerm-v4.git//cosmosdb_mongodb_collection?ref=v6.6.0"
+  source = "github.com/pagopa/terraform-azurerm-v4.git//cosmosdb_mongodb_collection?ref=v8.5.3"
 
   name                = "products"
   resource_group_name = local.mongo_db.mongodb_rg_name
@@ -39,7 +39,7 @@ module "mongodb_collection_product" {
 
 module "mongodb_collection_contract_templates" {
   count  = var.is_pnpg ? 0 : 1
-  source = "github.com/pagopa/terraform-azurerm-v4.git//cosmosdb_mongodb_collection?ref=v6.6.0"
+  source = "github.com/pagopa/terraform-azurerm-v4.git//cosmosdb_mongodb_collection?ref=v8.5.3"
 
   name                = "contractTemplates"
   resource_group_name = local.mongo_db.mongodb_rg_name

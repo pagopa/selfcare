@@ -1,0 +1,100 @@
+{
+  "productId": "prod-pagopa",
+  "users": [
+    {
+      "taxCode": "FRDSMN80A01F205Z",
+      "name": "Sigmund",
+      "surname": "Freud",
+      "email": "s.freud@test.email.it",
+      "role": "MANAGER"
+    },
+    {
+      "taxCode": "CLVTLI80A01F839V",
+      "name": "Italo",
+      "surname": "Calvino",
+      "email": "i.calvino@test.email.it",
+      "role": "DELEGATE"
+    }
+  ],
+  "aggregates": [
+    {
+      "address": "Via del Melangolo, 26",
+      "city": "Roma",
+      "county": "RM",
+      "description": "50&PIU’",
+      "digitalAddress": "50epiu.associazione@pec.50epiu.it",
+      "geographicTaxonomies": [],
+      "origin": "SELC",
+      "originId": "80055410585",
+      "taxCode": "80055410585",
+      "vatNumber": "80055410585",
+      "zipCode": "00186"
+    },
+    {
+      "address": "Via del Melangolo, 26",
+      "city": "Roma",
+      "county": "RM",
+      "description": "50&Più ENASCO",
+      "digitalAddress": "enasco.dg@legalmail.it",
+      "geographicTaxonomies": [],
+      "origin": "SELC",
+      "originId": "80041150584",
+      "taxCode": "80041150584",
+      "vatNumber": "80041150584",
+      "zipCode": "00186"
+    },
+    {
+      "address": "Via L. Masi, 7",
+      "city": "Roma",
+      "county": "RM",
+      "description": "CAAF 50 & PIU’ srl",
+      "digitalAddress": "caaf50piusrl@pec.50epiu.it",
+      "geographicTaxonomies": [],
+      "origin": "SELC",
+      "originId": "04407781006",
+      "taxCode": "04407781006",
+      "vatNumber": "04407781006",
+      "zipCode": "00153"
+    },
+    {
+      "address": "Via Delle Zoccolette, 5",
+      "city": "Roma",
+      "county": "RM",
+      "description": "50&PIU’ TURISMO srl",
+      "digitalAddress": "50piuturismosrl@pec.50epiu.it",
+      "geographicTaxonomies": [],
+      "origin": "SELC",
+      "originId": "03408900375",
+      "taxCode": "03408900375",
+      "vatNumber": "03408900375",
+      "zipCode": "00186"
+    }
+  ],
+  "isAggregator": true,
+  "institution": {
+    "address": "VIA DOMENICO NICOLAI 8 - BARI (BA)",
+    "city": "Bari",
+    "country": "IT",
+    "county": "BA",
+    "description": "Progetti e Soluzioni SPA",
+    "digitalAddress": "progettiesoluzioni@pec.it",
+    "imported": false,
+    "institutionType": "GPU",
+    "origin": "SELC",
+    "originId": "06423240727",
+    "taxCode": "06423240727",
+    "zipCode": "70122",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ]
+  },
+  "billing": {
+    "publicServices": false,
+    "vatNumber": "06423240727",
+    "recipientCode": "KUPCRMI"
+  }
+}
+

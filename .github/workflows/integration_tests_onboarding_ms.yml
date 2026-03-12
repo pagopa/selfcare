@@ -1,0 +1,61 @@
+name: "Integration Tests (onboarding-ms)"
+
+permissions:
+  contents: read
+  actions: write
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+    paths:
+      - "apps/onboarding-ms/**"
+  workflow_dispatch:
+
+
+jobs:
+  integration_tests_ms:
+    name: "Integration Tests (onboarding-ms)"
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
+      - name: Set missing library
+        run: |
+          wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+          sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+
+      - name: Setup Maven Action
+        uses: s4u/setup-maven-action@fa2c7e4517ed008b1f73e7e0195a9eecf5582cd4
+        with:
+          checkout-fetch-depth: 0
+          java-version: 17
+          java-distribution: "temurin"
+          maven-version: "3.9.5"
+          cache-enabled: true
+
+      # Selfcare-onboarding
+      - uses: s4u/maven-settings-action@7802f6aec16c9098b4798ad1f1d8ac75198194bd # v3.0.0
+        with:
+          servers: >
+            [
+              {"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}
+            ]
+
+      - name: Run Integration Tests
+        id: int_tests
+        working-directory: apps/onboarding-ms
+        run: mvn test -Dtest=it.pagopa.selfcare.onboarding.steps.OnboardingStep -Dsurefire.failIfNoSpecifiedTests=false
+        shell: bash
+        env:
+          APP_SERVER_PORT: 8082
+
+      - name: Upload Test Results
+        if: always() && (steps.int_tests.conclusion == 'success' || steps.int_tests.conclusion == 'failure')
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cucumber-report
+          path: apps/onboarding-ms/target/cucumber-report/cucumber.html

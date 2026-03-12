@@ -2,7 +2,6 @@ package it.pagopa.selfcare.auth.util;
 
 import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.model.OtpStatus;
-
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.util.List;

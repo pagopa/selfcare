@@ -13,9 +13,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmailTemplateConfig {
-    private WorkflowType type;
-    private InstitutionType institutionType;
-    private String path;
-    private String version;
-    private OnboardingStatus status;
+  private WorkflowType type;
+  private InstitutionType institutionType;
+  private String path;
+  private String version;
+  private OnboardingStatus status;
 }

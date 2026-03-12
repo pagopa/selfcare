@@ -103,12 +103,8 @@ public class ExceptionHandler {
   public Response toResponse(SamlSignatureException exception) {
     LOGGER.error(PREFIX_LOGGER, SAML, exception.getMessage());
     Problem problem =
-      new Problem(
-        exception.getMessage(),
-        null,
-        HttpStatus.SC_BAD_REQUEST,
-        exception.getMessage(),
-        null);
+        new Problem(
+            exception.getMessage(), null, HttpStatus.SC_BAD_REQUEST, exception.getMessage(), null);
     return Response.status(Response.Status.BAD_REQUEST).entity(problem).build();
   }
 }

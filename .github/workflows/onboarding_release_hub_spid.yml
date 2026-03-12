@@ -1,0 +1,141 @@
+name: Release - hub-spid-login
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options:
+          - dev
+          - uat
+          - prod
+      release_version:
+        type: string
+        description: Hub-Sping-Login release version
+
+env:
+  dir: infra/apps/hub_spid_login
+  ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+  ARM_USE_OIDC: true
+  ARM_USE_AZUREAD: true
+  ARM_STORAGE_USE_AZUREAD: true
+
+jobs:
+
+
+  tf_plan:
+    name: 'Terraform Plan'
+    runs-on: ubuntu-24.04
+    environment: ${{ inputs.env }}-ci
+    permissions:
+      id-token: write
+      contents: read
+    outputs:
+      terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version}}
+      image_tag: ${{ steps.setsha.outputs.short_sha }}
+
+    steps:
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        name: Checkout
+
+      - name: Set Short Git Commit SHA
+        id: setsha
+        run: |
+          calculatedSha=$(git rev-parse --short ${{ github.sha }})
+          echo "short_sha=sha-$calculatedSha" >> $GITHUB_OUTPUT
+
+      - name: Set Terraform Version
+        id: set-terraform-version
+        run: |
+          echo "terraform_version=$(cat .terraform-version)" >> $GITHUB_OUTPUT
+
+      - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # v3.0.0
+        name: Setup Terraform
+        with:
+          terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version}}
+
+      - name: Terraform Plan
+        uses: pagopa/terraform-preapply-azure-action@54ded8cda3437c3f6a9f46baf69cb321ce82f5cd
+        with:
+          client_id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant_id: ${{ vars.ARM_TENANT_ID }}
+          subscription_id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+          dir: ${{ env.dir }}
+          azure_environment: ${{ inputs.env }}
+        env:
+          TF_VAR_image_tag: ${{ inputs.release_version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Terraform Plan as Artifact
+        uses: pagopa/dx/actions/terraform-plan-upload@main
+        env:
+          ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
+        with:
+          plan-file: tfplan-${{ inputs.env }}-${{ github.sha }}
+          working-directory: ${{ env.dir }}
+          artifact-name: terraform-plan
+          retention-days: 1
+
+  release:
+    name: 'Release'
+    runs-on: ubuntu-24.04
+    needs: [ tf_plan ]
+    environment: ${{ inputs.env }}-cd
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        name: Checkout
+
+      - name: Azure Login
+        uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ vars.ARM_TENANT_ID }}
+          subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+
+      - name: Download Terraform Plan as Artifact
+        uses: pagopa/dx/actions/terraform-plan-download@main
+        env:
+          ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
+        with:
+          plan-file: tfplan-${{ inputs.env }}-${{ github.sha }}
+          working-directory: ${{ env.dir }}
+          artifact-name: terraform-plan
+
+      - name: Retrieve Terraform Modules from Cache
+        id: cache-terraform-modules
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4 # latest-version
+        with:
+          path: ${{ env.dir }}/.terraform
+          key: terraform-${{ env.dir }}-${{ github.sha }}
+          restore-keys: |
+            terraform-${{ env.dir }}
+
+      - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # v3.0.0
+        name: Setup Terraform
+        with:
+          terraform_version: ${{ needs.tf_plan.outputs.terraform_version }}
+
+      - name: Terraform Init
+        shell: bash
+        working-directory: ${{ env.dir }}
+        run: |
+          bash ./terraform.sh init ${{ inputs.env }}
+
+      - name: Terraform Apply
+        shell: bash
+        working-directory: ${{ env.dir }}
+        run: |
+          terraform apply -lock-timeout=3000s -auto-approve -input=false tfplan-${{ inputs.env }}-${{ github.sha }}
+        env:
+          TF_VAR_image_tag: ${{ needs.tf_plan.outputs.image_tag }}

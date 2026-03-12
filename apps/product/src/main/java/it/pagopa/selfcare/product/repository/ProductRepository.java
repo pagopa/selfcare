@@ -9,9 +9,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class ProductRepository implements ReactivePanacheMongoRepositoryBase<Product, String> {
 
-    public Uni<Product> findProductById(String productId) {
-        return find("productId = ?1", Sort.descending("version"), productId)
-                .firstResult();
-    }
-
+  public Uni<Product> findProductById(String productId) {
+    return find("productId = ?1", Sort.descending("version"), productId).firstResult();
+  }
 }

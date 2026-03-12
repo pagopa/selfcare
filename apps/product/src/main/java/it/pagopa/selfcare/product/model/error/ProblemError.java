@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 @Builder
 public class ProblemError {
-    private String code;
-    private String detail;
+  private String code;
+  private String detail;
 }

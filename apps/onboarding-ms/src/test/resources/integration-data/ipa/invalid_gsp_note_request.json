@@ -1,0 +1,54 @@
+{
+  "productId": "prod-pagopa",
+  "users": [
+    {
+      "taxCode": "FRDSMN80A01F205Z",
+      "name": "Sigmund",
+      "surname": "Freud",
+      "email": "s.freud@test.email.it",
+      "role": "MANAGER"
+    },
+    {
+      "taxCode": "CLVTLI80A01F839V",
+      "name": "Italo",
+      "surname": "Calvino",
+      "email": "i.calvino@test.email.it",
+      "role": "DELEGATE"
+    }
+  ],
+  "institution": {
+    "institutionType": "GSP",
+    "taxCode": "03309030652",
+    "origin": "IPA",
+    "originId": "5AMFGRN8",
+    "description": "SALERNO SOLIDALE SPA",
+    "city": "Salerno",
+    "country": "IT",
+    "county": "SA",
+    "digitalAddress": "presidenza@pec.salernosolidale.it",
+    "address": "Via GUIDO VESTUTI",
+    "zipCode": "84133",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ],
+    "imported": false
+  },
+  "billing": {
+    "vatNumber": "03309030652",
+    "recipientCode": "DNHAKT",
+    "publicServices": true
+  },
+  "additionalInformations":{
+    "agentOfPublicService":false,
+    "agentOfPublicServiceNote":"",
+    "belongRegulatedMarket":false,
+    "regulatedMarketNote":"",
+    "establishedByRegulatoryProvision":false,
+    "establishedByRegulatoryProvisionNote":"",
+    "ipa":false,
+    "ipaCode":"5AMFGRN8"
+  }
+}

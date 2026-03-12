@@ -1,0 +1,46 @@
+{
+  "productId": "prod-pagopa",
+  "users": [
+    {
+      "taxCode": "FRDSMN80A01F205Z",
+      "name": "Sigmund",
+      "surname": "Freud",
+      "email": "s.freud@test.email.it",
+      "role": "MANAGER"
+    },
+    {
+      "taxCode": "CLVTLI80A01F839V",
+      "name": "Italo",
+      "surname": "Calvino",
+      "email": "i.calvino@test.email.it",
+      "role": "DELEGATE"
+    }
+  ],
+  "institution": {
+    "institutionType": "PT",
+    "taxCode": "83001010616",
+    "origin": "SELC",
+    "originId": "AL7RYI5",
+    "subunitCode": "AL7RYI5",
+    "subunitType": "AOO",
+    "city": "Roccamonfina",
+    "country": "IT",
+    "county": "CE",
+    "description": "Comune di Roccamonfina",
+    "digitalAddress": "protocollo.roccamonfina@asmepec.it",
+    "address": "Via Municipio N. 8",
+    "zipCode": "81035",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ],
+    "imported": false
+  },
+  "billing": {
+    "vatNumber": "83001010616",
+    "recipientCode": "UFO5LL",
+    "publicServices": true
+  }
+}

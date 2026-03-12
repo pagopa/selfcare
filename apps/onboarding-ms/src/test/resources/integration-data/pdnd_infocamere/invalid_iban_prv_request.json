@@ -1,0 +1,42 @@
+{
+  "productId": "prod-idpay-merchant",
+  "users": [
+    {
+      "taxCode": "GRSGNT71A62C950S",
+      "name": "Gianantonio",
+      "surname": "Grassi",
+      "email": "g.grassi@test.it",
+      "role": "MANAGER"
+    }
+  ],
+  "institution": {
+    "institutionType": "PRV",
+    "taxCode": "00876320409",
+    "origin": "PDND_INFOCAMERE",
+    "city": "FORLI",
+    "originId": "00876320409",
+    "country": "IT",
+    "county": "FC",
+    "description": "UNIEURO  S.P.A.",
+    "digitalAddress": "UFFICIOPAGHE@PEC.SGMDISTRIBUZIONE.IT",
+    "address": "VIA PIERO MARONCELLI 10",
+    "zipCode": "47121",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ],
+    "imported": false,
+    "atecoCodes": ["01.11.00", "01.12.00"]
+  },
+  "billing": {
+    "vatNumber": "00876320409",
+    "recipientCode": "UFR0DM",
+    "publicServices": true
+  },
+  "payment": {
+    "iban": "FR60X0542811101000000123456",
+    "holder": "Antonello Golfini"
+  }
+}

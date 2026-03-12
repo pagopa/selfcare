@@ -23,6 +23,7 @@
   "roleMappings": [
     {
      "role": "ADMIN_EA",
+      "institutionType": "DEFAULT",
      "multiroleAllowed":false,
       "phasesAdditionAllowed":["onboarding"],
       "skipUserCreation": false,
@@ -37,6 +38,7 @@
     },
     {
      "role": "DELEGATE",
+      "institutionType": "DEFAULT",
      "multiroleAllowed":false,
       "phasesAdditionAllowed":["onboarding"],
       "skipUserCreation": false,
@@ -51,6 +53,7 @@
     },
     {
      "role": "MANAGER",
+      "institutionType": "DEFAULT",
      "multiroleAllowed":false,
       "phasesAdditionAllowed":["onboarding"],
       "skipUserCreation": false,
@@ -65,6 +68,7 @@
     },
     {
      "role": "OPERATOR",
+      "institutionType": "DEFAULT",
      "multiroleAllowed":false,
       "phasesAdditionAllowed":["dashboard"],
       "skipUserCreation": false,
@@ -79,6 +83,7 @@
     },
     {
      "role": "SUB_DELEGATE",
+      "institutionType": "DEFAULT",
      "multiroleAllowed":false,
       "phasesAdditionAllowed":["dashboard-async", "dashboard-aggregator"],
       "skipUserCreation": false,
@@ -88,6 +93,72 @@
           "description": "Amministratore",
           "label": "Amministratore",
           "productLabel": "Amministratore"
+        }
+      ]
+    },
+    {
+      "role": "ADMIN_EA",
+      "institutionType": "GPU",
+      "multiroleAllowed": false,
+      "phasesAdditionAllowed": ["onboarding"],
+      "backOfficeRoles": [
+        {
+          "code": "admin",
+          "description": "Ha tutti i permessi e gestisce gli utenti",
+          "label": "Referente dei Pagamenti"
+        }
+      ]
+    },
+    {
+      "role": "DELEGATE",
+      "institutionType": "GPU",
+      "multiroleAllowed": false,
+      "phasesAdditionAllowed": ["onboarding"],
+      "backOfficeRoles": [
+        {
+          "code": "admin",
+          "description": "Ha tutti i permessi e gestisce gli utenti",
+          "label": "Referente dei Pagamenti"
+        }
+      ]
+    },
+    {
+      "role": "MANAGER",
+      "institutionType": "GPU",
+      "multiroleAllowed": false,
+      "phasesAdditionAllowed": ["onboarding"],
+      "backOfficeRoles": [
+        {
+          "code": "admin",
+          "description": "Stipula il contratto e identifica gli amministratori",
+          "label": "Referente dei Pagamenti"
+        }
+      ]
+    },
+    {
+      "role": "SUB_DELEGATE",
+      "institutionType": "GPU",
+      "multiroleAllowed": false,
+      "phasesAdditionAllowed": ["dashboard-async"],
+      "backOfficeRoles": [
+        {
+          "code": "admin",
+          "description": "Ha tutti i permessi e gestisce gli utenti",
+          "label": "Referente dei Pagamenti"
+        }
+      ]
+    },
+    {
+      "role": "OPERATOR",
+      "institutionType": "GPU",
+      "multiroleAllowed": false,
+      "phasesAdditionAllowed": ["dashboard"],
+      "backOfficeRoles": [
+        {
+          "code": "operator",
+          "description": "Gestisce l’integrazione tecnologica e/o l'operatività dei servizi",
+          "label": "Operatore",
+          "productLabel": "Referente Tecnico"
         }
       ]
     }
@@ -222,7 +293,8 @@
       "identityTokenAudience": "identity.it"
     }
   ],
-  "metadata": {
+   "testEnvProductIds": ["prod-interop-coll", "prod-interop-atst"],
+   "metadata": {
     "createdAt": "2021-12-15T15:54:55.190Z",
     "createdBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8"
   }

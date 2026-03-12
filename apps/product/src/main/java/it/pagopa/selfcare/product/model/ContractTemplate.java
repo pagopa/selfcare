@@ -2,14 +2,13 @@ package it.pagopa.selfcare.product.model;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import it.pagopa.selfcare.product.model.enums.ContractTemplateFileType;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bson.codecs.pojo.annotations.BsonId;
-
-import java.time.Instant;
-import java.util.UUID;
 
 @Data
 @Builder
@@ -18,23 +17,19 @@ import java.util.UUID;
 @NoArgsConstructor
 public class ContractTemplate {
 
-    @BsonId
-    @Builder.Default
-    private String id = UUID.randomUUID().toString();
+  @BsonId @Builder.Default private String id = UUID.randomUUID().toString();
 
-    private String productId;
+  private String productId;
 
-    private String name;
+  private String name;
 
-    private String version;
+  private String version;
 
-    private String description;
+  private String description;
 
-    private ContractTemplateFileType fileType;
+  private ContractTemplateFileType fileType;
 
-    @Builder.Default
-    private Instant createdAt = Instant.now();
+  @Builder.Default private Instant createdAt = Instant.now();
 
-    private String createdBy;
-
+  private String createdBy;
 }
