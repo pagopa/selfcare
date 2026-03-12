@@ -5,6 +5,11 @@ tags:
 - name: external-v2
 components:
   schemas:
+    PermissionResponse:
+      type: object
+      properties:
+        hasPermission:
+          type: boolean
     Problem:
       type: object
       properties:
@@ -341,7 +346,7 @@ paths:
           content:
             application/json:
               schema:
-                type: boolean
+                $ref: "#/components/schemas/PermissionResponse"
         "400":
           description: Bad Request
           content:

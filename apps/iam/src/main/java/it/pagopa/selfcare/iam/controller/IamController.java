@@ -291,7 +291,7 @@ public class IamController {
             description = "OK",
             content =
                 @Content(
-                    schema = @Schema(implementation = Boolean.class),
+                    schema = @Schema(implementation = PermissionResponse.class),
                     mediaType = "application/json")),
         @APIResponse(
             responseCode = "400",

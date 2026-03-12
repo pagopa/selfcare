@@ -7,6 +7,14 @@
   } ],
   "components" : {
     "schemas" : {
+      "PermissionResponse" : {
+        "type" : "object",
+        "properties" : {
+          "hasPermission" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "Problem" : {
         "type" : "object",
         "properties" : {
@@ -502,7 +510,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "boolean"
+                  "$ref" : "#/components/schemas/PermissionResponse"
                 }
               }
             }
