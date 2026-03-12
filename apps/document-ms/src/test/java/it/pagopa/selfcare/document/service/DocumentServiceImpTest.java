@@ -423,7 +423,7 @@ class DocumentServiceImpTest {
     void retrieveSignedFile_shouldReturnNotFoundResponse_whenPdfIsInvalid() throws IOException {
         Document doc = buildDocument();
         doc.setContractSigned("/path/to/signed/contract.pdf");
-        File invalidFile = File.createTempFile("invalid", ".pdf");
+        File invalidFile = Files.createTempFile("invalid", ".pdf").toFile();
         Files.write(invalidFile.toPath(), "not-a-pdf-content".getBytes());
 
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
