@@ -72,6 +72,7 @@ public class IamController {
    * @throws Error if the request or email is null/blank
    */
   @Tag(name = "external-v2")
+  @Tag(name = "IAM")
   @Operation(
       description = "Saves or updates a user with their product-specific roles.",
       summary = "Saves IAM User",
@@ -121,6 +122,7 @@ public class IamController {
    * @throws ResourceNotFoundException if the user is not found
    */
   @Tag(name = "external-v2")
+  @Tag(name = "IAM")
   @Operation(
       description = "Retrieves a user by their ID and product ID.",
       summary = "Get IAM User",
@@ -175,6 +177,7 @@ public class IamController {
    * @return a Uni containing the UserClaims if found
    */
   @Tag(name = "external-v2")
+  @Tag(name = "IAM")
   @Operation(
       description = "Retrieves a user by their email.",
       summary = "Get IAM User by Email",
@@ -273,6 +276,7 @@ public class IamController {
    * @return a Uni containing a ProductRolePermissionsList if found
    */
   @Tag(name = "external-v2")
+  @Tag(name = "IAM")
   @Operation(
       description = "Retrieves a list of product, role and permissions by user ID and product ID.",
       summary = "Get IAM user Product Role Permissions List",
