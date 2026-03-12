@@ -78,7 +78,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
       }
       OtpBetaUser betaUser = maybeOtpBetaUser.get();
       if (betaUser.getForceOtp()) {
-        userClaims.setSameIdp(Boolean.FALSE);
+        userClaims.setSameIdp(betaUser.getSameIdp());
         forcedEmail = betaUser.getForcedEmail();
       }
     }
