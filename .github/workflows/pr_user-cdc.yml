@@ -1,0 +1,37 @@
+name: Code Review - User CDC
+
+permissions:
+  contents: read
+  pull-requests: read
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    branches:
+      - main
+      - releases/**
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - "apps/user-cdc/**"
+      - "libs/user-sdk-event/**"
+      - "libs/user-sdk-model/**"
+      - ".github/workflows/pr_user-cdc.yml"
+      - ".github/workflows/call_code_review_cdc.yml"
+
+jobs:
+  code_review:
+    uses: ./.github/workflows/call_code_review_cdc.yml
+    name: User CDC Code Review
+    secrets: inherit
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+      source_branch: ${{ github.head_ref }}
+      target_branch: ${{ github.base_ref }}
+      sonar_key: "pagopa_selfcare"
+      module: "user-cdc"
