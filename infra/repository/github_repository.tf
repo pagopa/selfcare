@@ -35,7 +35,7 @@ resource "github_repository" "this" {
   }
 }
 
-module "repository_settings" {
+module "repository" {
   source = "github.com/pagopa/selfcare-commons//infra/terraform-modules/github_repository_settings?ref=main"
 
   github = {

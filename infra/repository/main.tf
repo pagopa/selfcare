@@ -1,4 +1,5 @@
 terraform {
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -20,9 +21,14 @@ terraform {
 }
 
 provider "azurerm" {
-  features {}
+  features {
+  }
 }
 
 provider "github" {
   owner = "pagopa"
 }
+
+data "azurerm_client_config" "current" {}
+
+data "azurerm_subscription" "current" {}
