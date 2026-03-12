@@ -99,6 +99,10 @@ app_settings = [
   {
     name  = "IAM_API_URL"
     value = "https://selc-p-iam-ms-ca.lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
+  },
+  {
+    name  = "OTP_DAILY_LIMIT"
+    value = 0
   }
 ]
 

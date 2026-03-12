@@ -1,8 +1,5 @@
 package it.pagopa.selfcare.auth.service;
 
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.quarkus.panache.mock.PanacheMock;
@@ -19,13 +16,17 @@ import it.pagopa.selfcare.auth.model.otp.OtpInfo;
 import it.pagopa.selfcare.auth.profile.BetaFFTestProfile;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
-import java.time.OffsetDateTime;
-import java.util.Optional;
-import java.util.UUID;
 import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import java.time.OffsetDateTime;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @QuarkusTest
 @TestProfile(BetaFFTestProfile.class)
@@ -240,6 +241,7 @@ public class OtpFlowBetaServiceTest {
             .uuid("uuid")
             .otp("123456")
             .status(OtpStatus.PENDING)
+            .createdAt(OffsetDateTime.now())
             .expiresAt(OffsetDateTime.now().plusMinutes(10))
             .build();
     when(query.firstResult()).thenReturn(Uni.createFrom().item(foundOtpFlow));

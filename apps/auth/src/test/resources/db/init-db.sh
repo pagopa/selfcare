@@ -7,7 +7,7 @@ echo "insert Institutions"
 mongoimport --host localhost --db selcMsCore --collection Institution --file /docker-entrypoint-initdb.d/institution.json --jsonArray
 
 echo "insert otpFlows"
-mongoimport --host localhost --db selcUser --collection otpFlows --file /docker-entrypoint-initdb.d/otpFlows.json --jsonArray
+mongoimport --host localhost --db selcAuth --collection otpFlows --file /docker-entrypoint-initdb.d/otpFlows.json --jsonArray
 
 echo "insert userClaims"
 mongoimport --host localhost --db selcIam --collection userClaims --file /docker-entrypoint-initdb.d/userClaims.json --jsonArray

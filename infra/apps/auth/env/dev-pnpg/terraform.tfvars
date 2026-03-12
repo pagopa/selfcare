@@ -76,6 +76,10 @@ app_settings = [
   {
     name  = "FEATURE_FLAG_OTP_ENABLED"
     value = "NONE"
+  },
+  {
+    name  = "OTP_DAILY_LIMIT"
+    value = 0
   }
 ]
 
