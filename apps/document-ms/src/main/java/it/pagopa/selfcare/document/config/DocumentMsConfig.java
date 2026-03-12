@@ -24,19 +24,19 @@ public class DocumentMsConfig {
     public static final String SIGNATURE_SOURCE_NAMIRIAL = "namirial";
     public static final String SIGNATURE_SOURCE_DISABLED = "disabled";
 
-    @ConfigProperty(name = "onboarding-ms.blob-storage.container-product")
+    @ConfigProperty(name = "document-ms.blob-storage.container-product")
     String containerProduct;
 
-    @ConfigProperty(name = "onboarding-ms.blob-storage.filepath-product")
+    @ConfigProperty(name = "document-ms.blob-storage.filepath-product")
     String filepathProduct;
 
-    @ConfigProperty(name = "onboarding-ms.blob-storage.connection-string-product")
+    @ConfigProperty(name = "document-ms.blob-storage.connection-string-product")
     String connectionStringProduct;
 
-    @ConfigProperty(name = "onboarding-ms.blob-storage.path-contracts")
+    @ConfigProperty(name = "document-ms.blob-storage.path-contracts")
     String contractPath;
 
-    @ConfigProperty(name = "onboarding-ms.blob-storage.path-aggregates")
+    @ConfigProperty(name = "document-ms.blob-storage.path-aggregates")
     String aggregatesPath;
 
     void onStart(@Observes StartupEvent ev) {
@@ -49,9 +49,9 @@ public class DocumentMsConfig {
     }
 
     @ApplicationScoped
-    public AzureBlobClient azureBobClientContract(@ConfigProperty(name = "onboarding-ms.blob-storage.connection-string-contracts")
+    public AzureBlobClient azureBobClientContract(@ConfigProperty(name = "document-ms.blob-storage.connection-string-contracts")
                                                       String connectionStringContracts,
-                                                  @ConfigProperty(name = "onboarding-ms.blob-storage.container-contracts")
+                                                  @ConfigProperty(name = "document-ms.blob-storage.container-contracts")
                                                       String containerContracts){
         return new AzureBlobClientDefault(connectionStringContracts, containerContracts);
     }
@@ -87,7 +87,7 @@ public class DocumentMsConfig {
         return new Pkcs7HashSignServiceImpl();
     }
     @ApplicationScoped
-    public PadesSignService padesSignService(@ConfigProperty(name = "onboarding-ms.pagopa-signature.source") String source){
+    public PadesSignService padesSignService(@ConfigProperty(name = "document-ms.pagopa-signature.source") String source){
         return switch (source) {
             case SIGNATURE_SOURCE_ARUBA -> new PadesSignServiceImpl(arubaPkcs7HashSignService());
             case SIGNATURE_SOURCE_NAMIRIAL -> new PadesSignServiceImpl(namirialPkcs7HashSignService());

@@ -55,9 +55,9 @@ public class DocumentServiceImp implements DocumentService {
     private final AzureBlobClient azureBlobClient;
     private final DocumentMsConfig documentMsConfig;
 
-    @ConfigProperty(name = "onboarding-ms.signature.verify-enabled")
+    @ConfigProperty(name = "document-ms.signature.verify-enabled")
     Boolean isVerifyEnabled;
-    @ConfigProperty(name = "onboarding-ms.blob-storage.path-contracts")
+    @ConfigProperty(name = "document-ms.blob-storage.path-contracts")
     String pathContracts;
 
     public DocumentServiceImp(DocumentRepository documentRepository,
