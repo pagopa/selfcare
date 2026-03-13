@@ -9,11 +9,11 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
 import it.pagopa.selfcare.document.config.DocumentMsConfig;
-import it.pagopa.selfcare.document.controller.request.DocumentBuilderRequest;
-import it.pagopa.selfcare.document.controller.request.OnboardingDocumentRequest;
-import it.pagopa.selfcare.document.controller.response.ContractSignedReport;
-import it.pagopa.selfcare.document.controller.response.DocumentBuilderResponse;
-import it.pagopa.selfcare.document.entity.Document;
+import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
+import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
+import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
+import it.pagopa.selfcare.document.model.dto.response.DocumentBuilderResponse;
+import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.exception.InternalException;
 import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
@@ -58,8 +58,6 @@ public class DocumentServiceImp implements DocumentService {
     private final AzureBlobClient azureBlobClient;
     private final DocumentMsConfig documentMsConfig;
 
-    @ConfigProperty(name = "document-ms.signature.verify-enabled")
-    Boolean isVerifyEnabled;
     @ConfigProperty(name = "document-ms.blob-storage.path-contracts")
     String pathContracts;
 
@@ -183,23 +181,26 @@ public class DocumentServiceImp implements DocumentService {
 
     @Override
     public Uni<Void> uploadAttachment(DocumentBuilderRequest request, FormItem file) {
-        log.info(
-                "Uploading attachment for onboardingId={}, documentName={}",
-                sanitize(request.getOnboardingId()), sanitize(request.getDocumentName())
-        );
+        log.info("Uploading attachment for onboardingId={}, documentName={}",
+                sanitize(request.getOnboardingId()), sanitize(request.getDocumentName()));
+
         return existsAttachment(request.getOnboardingId(), request.getDocumentName())
                 .onItem().transformToUni(exists -> {
                     if (Boolean.TRUE.equals(exists)) {
-                        return Uni.createFrom().failure(new UpdateNotAllowedException(ATTACHMENT_UPLOAD_ERROR.getCode(), ATTACHMENT_UPLOAD_ERROR.getMessage()));
+                        return Uni.createFrom().failure(new UpdateNotAllowedException(
+                                ATTACHMENT_UPLOAD_ERROR.getCode(),
+                                ATTACHMENT_UPLOAD_ERROR.getMessage()
+                        ));
                     }
                     return Uni.createFrom().voidItem();
                 })
                 .chain(() -> {
-                    if (Boolean.TRUE.equals(isVerifyEnabled)) {
+                    if (signatureService.isSignatureVerificationEnabled()) {
                         signatureService.verifySignature(file.getFile());
                     }
 
-                    String digest = getTemplateAndVerifyDigest(file, request.getTemplatePath(), false);
+                    String templateDigest = getTemplateDigest(request.getTemplatePath());
+                    String uploadedDigest = signatureService.verifyUploadedFileDigest(file, templateDigest, false);
 
                     File fileToUpload = file.getFile();
 
@@ -207,7 +208,7 @@ public class DocumentServiceImp implements DocumentService {
                             .map(name -> name.toLowerCase(Locale.ROOT).endsWith(".p7m"))
                             .orElse(false);
 
-                    return persistAttachment(request, digest, isP7M)
+                    return persistAttachment(request, uploadedDigest, isP7M)
                             .onItem().invoke(document ->
                                     uploadFileToAzure(
                                             document.getContractFilename(),
@@ -244,38 +245,23 @@ public class DocumentServiceImp implements DocumentService {
         return documentRepository.persist(document).replaceWith(document);
     }
 
-    public String getTemplateAndVerifyDigest(FormItem file, String documentTemplatePath, boolean skipDigestCheck) {
-        log.info("Start verifying uploaded content against template (templatePath={})", sanitize(documentTemplatePath));
-        Objects.requireNonNull(file, "Uploaded file must not be null");
+    public String getTemplateDigest(String documentTemplatePath) {
+        log.info("Retrieving template and computing digest (templatePath={})", sanitize(documentTemplatePath));
         Objects.requireNonNull(documentTemplatePath, "Document template path must not be null");
-
-        DSSDocument uploadedDocument = new FileDocument(file.getFile());
 
         File templateFile = azureBlobClient.getFileAsPdf(documentTemplatePath);
         DSSDocument templateDocument = new FileDocument(templateFile);
 
-        DSSDocument uploadedPdf = signatureService.extractPdfFromSignedContainer(SignedDocumentValidator.fromDocument(uploadedDocument), uploadedDocument);
-        DSSDocument templatePdf = signatureService.extractPdfFromSignedContainer(SignedDocumentValidator.fromDocument(templateDocument), templateDocument);
+        DSSDocument templatePdf = signatureService.extractPdfFromSignedContainer(
+                SignedDocumentValidator.fromDocument(templateDocument),
+                templateDocument
+        );
 
-
-        SignedDocumentValidator uploadedPdfValidator = SignedDocumentValidator.fromDocument(uploadedPdf);
         SignedDocumentValidator templatePdfValidator = SignedDocumentValidator.fromDocument(templatePdf);
-
         String templateDigest = signatureService.computeDigestOfSignedRevision(templatePdfValidator, templatePdf);
-        String uploadedDigest = signatureService.computeDigestOfSignedRevision(uploadedPdfValidator, uploadedPdf);
+
         log.debug("Template content digest (base64): {}", templateDigest);
-        log.debug("Uploaded  content digest (base64): {}", uploadedDigest);
-
-        if (!templateDigest.equals(uploadedDigest)) {
-            log.warn("Content mismatch ignoring signatures. templateDigest={} uploadedDigest={}", templateDigest, uploadedDigest);
-            if (!skipDigestCheck) {
-                throw new InvalidRequestException("File has been changed. It's not possible to complete upload");
-            }
-        } else {
-            log.info("Content check passed (ignoring signatures).");
-        }
-
-        return uploadedDigest;
+        return templateDigest;
     }
 
     private void uploadFileToAzure(String filename, String onboardingId, File signedFile) throws InternalException {

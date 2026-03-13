@@ -1,11 +1,11 @@
 package it.pagopa.selfcare.document.service;
 
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.document.controller.request.DocumentBuilderRequest;
-import it.pagopa.selfcare.document.controller.request.OnboardingDocumentRequest;
-import it.pagopa.selfcare.document.controller.response.ContractSignedReport;
-import it.pagopa.selfcare.document.controller.response.DocumentBuilderResponse;
-import it.pagopa.selfcare.document.entity.Document;
+import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
+import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
+import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
+import it.pagopa.selfcare.document.model.dto.response.DocumentBuilderResponse;
+import it.pagopa.selfcare.document.model.entity.Document;
 import java.io.File;
 import java.util.List;
 

@@ -9,11 +9,11 @@ import io.quarkus.test.mongodb.MongoTestResource;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
-import it.pagopa.selfcare.document.controller.request.DocumentBuilderRequest;
-import it.pagopa.selfcare.document.controller.request.OnboardingDocumentRequest;
-import it.pagopa.selfcare.document.controller.response.ContractSignedReport;
-import it.pagopa.selfcare.document.controller.response.DocumentBuilderResponse;
-import it.pagopa.selfcare.document.entity.Document;
+import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
+import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
+import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
+import it.pagopa.selfcare.document.model.dto.response.DocumentBuilderResponse;
+import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.exception.UpdateNotAllowedException;
 import it.pagopa.selfcare.document.model.FormItem;
@@ -27,6 +27,9 @@ import org.jboss.resteasy.reactive.RestResponse;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import it.pagopa.selfcare.document.exception.InvalidRequestException;
+import it.pagopa.selfcare.document.service.impl.DocumentServiceImp;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -35,8 +38,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @QuarkusTest
 @QuarkusTestResource(value = MongoTestResource.class, restrictToAnnotatedClass = true)
@@ -726,5 +728,501 @@ class DocumentServiceImpTest {
             pdf.save(tempFile);
         }
         return tempFile;
+    }
+
+    // ---- isPdfValid (static method) ----
+
+    @Test
+    void isPdfValid_shouldNotThrow_whenPdfIsValid() throws IOException {
+        File validPdf = createTempPdf();
+        assertDoesNotThrow(() -> DocumentServiceImp.isPdfValid(validPdf));
+    }
+
+    @Test
+    void isPdfValid_shouldThrowInvalidRequestException_whenPdfHasNoPages() throws IOException {
+        File emptyPdf = Files.createTempFile("empty", ".pdf").toFile();
+        emptyPdf.deleteOnExit();
+        try (PDDocument pdf = new PDDocument()) {
+            pdf.save(emptyPdf);
+        }
+        assertThrows(InvalidRequestException.class, () -> DocumentServiceImp.isPdfValid(emptyPdf));
+    }
+
+    @Test
+    void isPdfValid_shouldThrowInvalidRequestException_whenFileIsNotPdf() throws IOException {
+        File invalidFile = Files.createTempFile("invalid", ".pdf").toFile();
+        invalidFile.deleteOnExit();
+        Files.write(invalidFile.toPath(), "this is not a pdf".getBytes());
+        assertThrows(InvalidRequestException.class, () -> DocumentServiceImp.isPdfValid(invalidFile));
+    }
+
+    @Test
+    void isPdfValid_shouldThrowInvalidRequestException_whenFileDoesNotExist() {
+        File nonExistentFile = new File("/non/existent/path/file.pdf");
+        assertThrows(InvalidRequestException.class, () -> DocumentServiceImp.isPdfValid(nonExistentFile));
+    }
+
+    // ---- uploadAttachment with P7M file ----
+
+    @Test
+    void uploadAttachment_shouldCompleteSuccessfully_withP7MFile() throws IOException {
+        File tempFile = createTempPdf();
+        FormItem formItem = FormItem.builder()
+                .file(tempFile)
+                .fileName("attachment.pdf.p7m")
+                .build();
+
+        DocumentBuilderRequest request = DocumentBuilderRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId("prod-io")
+                .documentType(TokenType.ATTACHMENT)
+                .documentName("myAttachment")
+                .templatePath("/templates/template.pdf")
+                .templateVersion("1.0")
+                .build();
+
+        Document persistedDoc = buildDocument();
+        persistedDoc.setType(TokenType.ATTACHMENT);
+        persistedDoc.setName("myAttachment");
+        persistedDoc.setContractFilename("signed_template.pdf.p7m");
+        persistedDoc.setContractSigned("/parties/docs/" + ONBOARDING_ID + "/attachments/signed_template.pdf.p7m");
+
+        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "myAttachment"))
+                .thenReturn(Uni.createFrom().nullItem());
+        when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(tempFile);
+        when(documentRepository.persist(any(Document.class)))
+                .thenReturn(Uni.createFrom().item(persistedDoc));
+        when(signatureService.isSignatureVerificationEnabled()).thenReturn(false);
+        when(signatureService.extractPdfFromSignedContainer(any(), any()))
+                .thenAnswer(inv -> inv.getArgument(1, DSSDocument.class));
+        when(signatureService.computeDigestOfSignedRevision(any(), any()))
+                .thenReturn("same-digest");
+        when(signatureService.verifyUploadedFileDigest(any(), any(), anyBoolean()))
+                .thenReturn("uploaded-digest");
+
+        var awaiter = documentService.uploadAttachment(request, formItem).await();
+        assertDoesNotThrow(awaiter::indefinitely);
+
+        // Verify the document filename ends with .p7m
+        assertTrue(persistedDoc.getContractFilename().endsWith(".p7m"));
+    }
+
+    @Test
+    void uploadAttachment_shouldVerifySignature_whenSignatureVerificationEnabled() throws IOException {
+        File tempFile = createTempPdf();
+        FormItem formItem = FormItem.builder()
+                .file(tempFile)
+                .fileName("attachment.pdf")
+                .build();
+
+        DocumentBuilderRequest request = DocumentBuilderRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId("prod-io")
+                .documentType(TokenType.ATTACHMENT)
+                .documentName("myAttachment")
+                .templatePath("/templates/template.pdf")
+                .templateVersion("1.0")
+                .build();
+
+        Document persistedDoc = buildDocument();
+        persistedDoc.setType(TokenType.ATTACHMENT);
+        persistedDoc.setName("myAttachment");
+
+        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "myAttachment"))
+                .thenReturn(Uni.createFrom().nullItem());
+        when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(tempFile);
+        when(documentRepository.persist(any(Document.class)))
+                .thenReturn(Uni.createFrom().item(persistedDoc));
+        when(signatureService.isSignatureVerificationEnabled()).thenReturn(true);
+        when(signatureService.verifySignature(any(File.class))).thenReturn(true);
+        when(signatureService.extractPdfFromSignedContainer(any(), any()))
+                .thenAnswer(inv -> inv.getArgument(1, DSSDocument.class));
+        when(signatureService.computeDigestOfSignedRevision(any(), any()))
+                .thenReturn("same-digest");
+        when(signatureService.verifyUploadedFileDigest(any(), any(), anyBoolean()))
+                .thenReturn("uploaded-digest");
+
+        var awaiter = documentService.uploadAttachment(request, formItem).await();
+        assertDoesNotThrow(awaiter::indefinitely);
+
+        verify(signatureService).verifySignature(tempFile);
+    }
+
+    // ---- retrieveSignedFile edge cases ----
+
+    @Test
+    void retrieveSignedFile_shouldReturnNotFound_whenP7mExtractionFails() throws IOException {
+        Document doc = buildDocument();
+        doc.setContractSigned("/path/to/signed/contract.pdf.p7m");
+        File tempP7m = createTempPdf();
+
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(doc));
+        when(azureBlobClient.retrieveFile(doc.getContractSigned())).thenReturn(tempP7m);
+        when(signatureService.verifySignature(any(File.class))).thenReturn(true);
+        when(signatureService.extractFile(any(File.class)))
+                .thenThrow(new RuntimeException("Extraction failed"));
+
+        RestResponse<File> response = documentService.retrieveSignedFile(ONBOARDING_ID)
+                .await().indefinitely();
+
+        assertNotNull(response);
+        assertEquals(RestResponse.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void retrieveSignedFile_shouldReturnNotFound_whenExtractedPdfFromP7mIsInvalid() throws IOException {
+        Document doc = buildDocument();
+        doc.setContractSigned("/path/to/signed/contract.pdf.p7m");
+        File tempP7m = createTempPdf();
+        File invalidPdf = Files.createTempFile("invalid", ".pdf").toFile();
+        Files.write(invalidPdf.toPath(), "not-a-pdf".getBytes());
+
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(doc));
+        when(azureBlobClient.retrieveFile(doc.getContractSigned())).thenReturn(tempP7m);
+        when(signatureService.verifySignature(any(File.class))).thenReturn(true);
+        when(signatureService.extractFile(any(File.class))).thenReturn(invalidPdf);
+
+        RestResponse<File> response = documentService.retrieveSignedFile(ONBOARDING_ID)
+                .await().indefinitely();
+
+        assertNotNull(response);
+        assertEquals(RestResponse.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void retrieveSignedFile_shouldReturnNotFound_whenP7mSignatureVerificationFails() throws IOException {
+        Document doc = buildDocument();
+        doc.setContractSigned("/path/to/signed/contract.pdf.p7m");
+        File tempP7m = createTempPdf();
+
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(doc));
+        when(azureBlobClient.retrieveFile(doc.getContractSigned())).thenReturn(tempP7m);
+        when(signatureService.verifySignature(any(File.class)))
+                .thenThrow(new RuntimeException("Signature verification failed"));
+
+        RestResponse<File> response = documentService.retrieveSignedFile(ONBOARDING_ID)
+                .await().indefinitely();
+
+        assertNotNull(response);
+        assertEquals(RestResponse.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+    }
+
+    // ---- retrieveAttachment with buildAttachmentPath ----
+
+    @Test
+    void retrieveAttachment_shouldUseContractSignedPath_whenContractSignedIsNotNull() {
+        Document doc = buildDocument();
+        doc.setType(TokenType.ATTACHMENT);
+        doc.setName("myAttachment");
+        doc.setContractSigned("/path/to/signed/attachment.pdf");
+        File mockFile = Mockito.mock(File.class);
+
+        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "myAttachment"))
+                .thenReturn(Uni.createFrom().item(doc));
+        when(azureBlobClient.getFileAsPdf("/path/to/signed/attachment.pdf")).thenReturn(mockFile);
+
+        RestResponse<File> response = documentService.retrieveAttachment(ONBOARDING_ID, "myAttachment")
+                .await().indefinitely();
+
+        assertNotNull(response);
+        assertEquals(RestResponse.Status.OK.getStatusCode(), response.getStatus());
+        verify(azureBlobClient).getFileAsPdf("/path/to/signed/attachment.pdf");
+    }
+
+    @Test
+    void retrieveAttachment_shouldBuildPath_whenContractSignedIsNull() {
+        Document doc = buildDocument();
+        doc.setType(TokenType.ATTACHMENT);
+        doc.setName("myAttachment");
+        doc.setContractSigned(null);
+        doc.setContractFilename("attachment.pdf");
+        File mockFile = Mockito.mock(File.class);
+
+        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "myAttachment"))
+                .thenReturn(Uni.createFrom().item(doc));
+        when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(mockFile);
+
+        RestResponse<File> response = documentService.retrieveAttachment(ONBOARDING_ID, "myAttachment")
+                .await().indefinitely();
+
+        assertNotNull(response);
+        assertEquals(RestResponse.Status.OK.getStatusCode(), response.getStatus());
+    }
+
+    // ---- retrieveTemplateAttachment with signDocument ----
+
+    @Test
+    void retrieveTemplateAttachment_shouldCallSignDocument() {
+        File mockFile = Mockito.mock(File.class);
+        File signedFile = Mockito.mock(File.class);
+        String templatePath = "/templates/template.pdf";
+        String attachmentName = "template.pdf";
+
+        when(azureBlobClient.getFileAsPdf(templatePath)).thenReturn(mockFile);
+        when(signatureService.signDocument(mockFile, INSTITUTION_DESCRIPTION, PRODUCT_ID))
+                .thenReturn(Uni.createFrom().item(signedFile));
+
+        RestResponse<File> response = documentService
+                .retrieveTemplateAttachment(ONBOARDING_ID, templatePath, attachmentName, INSTITUTION_DESCRIPTION, PRODUCT_ID)
+                .await().indefinitely();
+
+        assertNotNull(response);
+        assertEquals(RestResponse.Status.OK.getStatusCode(), response.getStatus());
+        verify(signatureService).signDocument(mockFile, INSTITUTION_DESCRIPTION, PRODUCT_ID);
+    }
+
+    @Test
+    void retrieveTemplateAttachment_shouldPropagateError_whenSignDocumentFails() {
+        File mockFile = Mockito.mock(File.class);
+        String templatePath = "/templates/template.pdf";
+        String attachmentName = "template.pdf";
+
+        when(azureBlobClient.getFileAsPdf(templatePath)).thenReturn(mockFile);
+        when(signatureService.signDocument(mockFile, INSTITUTION_DESCRIPTION, PRODUCT_ID))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("Sign failed")));
+
+        var awaiter = documentService
+                .retrieveTemplateAttachment(ONBOARDING_ID, templatePath, attachmentName, INSTITUTION_DESCRIPTION, PRODUCT_ID)
+                .await();
+
+        assertThrows(RuntimeException.class, awaiter::indefinitely);
+    }
+
+    // ---- saveDocument for USER type ----
+
+    @Test
+    void saveDocument_shouldPersistNewUserDocument_whenDocumentTypeIsUser() throws IOException {
+        File tempPdf = createTempPdf();
+
+        DocumentBuilderRequest request = DocumentBuilderRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId("prod-io")
+                .documentType(TokenType.USER)
+                .templatePath("/templates/template.pdf")
+                .templateVersion("1.0")
+                .pdfFormatFilename("user_contract_%s.pdf")
+                .productTitle("Product IO")
+                .build();
+
+        Document docForContract = buildDocument();
+        Document newDoc = buildDocument();
+        newDoc.setId("new-user-doc-id");
+        newDoc.setType(TokenType.USER);
+
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().nullItem())
+                .thenReturn(Uni.createFrom().item(docForContract));
+        when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(tempPdf);
+        when(documentRepository.persist(any(Document.class)))
+                .thenReturn(Uni.createFrom().item(newDoc));
+
+        DocumentBuilderResponse response = documentService.saveDocument(request).await().indefinitely();
+
+        assertNotNull(response);
+        assertFalse(response.isAlreadyExists());
+        assertEquals("new-user-doc-id", response.getDocumentId());
+    }
+
+    // ---- saveDocument attachment not found ----
+
+    @Test
+    void saveDocument_shouldThrowResourceNotFound_whenAttachmentNotFound() {
+        DocumentBuilderRequest request = DocumentBuilderRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId("prod-io")
+                .documentType(TokenType.ATTACHMENT)
+                .documentName("missingAttachment")
+                .templatePath("/templates/template.pdf")
+                .templateVersion("1.0")
+                .build();
+
+        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "missingAttachment"))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        var awaiter = documentService.saveDocument(request).await();
+        assertThrows(ResourceNotFoundException.class, awaiter::indefinitely);
+    }
+
+    // ---- reportContractSigned edge cases ----
+
+    @Test
+    void reportContractSigned_shouldReturnCadesFalse_whenSignatureVerificationFails() {
+        Document doc = buildDocument();
+        doc.setContractSigned("/path/signed.pdf");
+        File mockFile = Mockito.mock(File.class);
+
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(doc));
+        when(azureBlobClient.getFileAsPdf(doc.getContractSigned())).thenReturn(mockFile);
+        when(signatureService.verifySignature(any(File.class)))
+                .thenThrow(new RuntimeException("Signature verification failed"));
+
+        ContractSignedReport report = documentService.reportContractSigned(ONBOARDING_ID)
+                .await().indefinitely();
+
+        assertNotNull(report);
+        assertFalse(report.isCades());
+    }
+
+    // ---- getTemplateDigest ----
+
+    @Test
+    void getTemplateDigest_shouldThrowNullPointerException_whenTemplatePathIsNull() {
+        assertThrows(NullPointerException.class, () ->
+                ((DocumentServiceImp) documentService).getTemplateDigest(null));
+    }
+
+    @Test
+    void getTemplateDigest_shouldReturnDigest_whenTemplateExists() throws IOException {
+        File tempPdf = createTempPdf();
+        String templatePath = "/templates/template.pdf";
+
+        when(azureBlobClient.getFileAsPdf(templatePath)).thenReturn(tempPdf);
+        when(signatureService.extractPdfFromSignedContainer(any(), any()))
+                .thenAnswer(inv -> inv.getArgument(1, DSSDocument.class));
+        when(signatureService.computeDigestOfSignedRevision(any(), any()))
+                .thenReturn("computed-digest-value");
+
+        String digest = ((DocumentServiceImp) documentService).getTemplateDigest(templatePath);
+
+        assertNotNull(digest);
+        assertEquals("computed-digest-value", digest);
+        verify(azureBlobClient).getFileAsPdf(templatePath);
+        verify(signatureService).computeDigestOfSignedRevision(any(), any());
+    }
+
+    // ---- retrieveSignedFile with PDF validation ----
+
+    @Test
+    void retrieveSignedFile_shouldReturnNotFound_whenPdfIsInvalid() throws IOException {
+        Document doc = buildDocument();
+        doc.setContractSigned("/path/to/signed/contract.pdf");
+        File invalidPdf = Files.createTempFile("invalid", ".pdf").toFile();
+        Files.write(invalidPdf.toPath(), "not-a-valid-pdf".getBytes());
+
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(doc));
+        when(azureBlobClient.retrieveFile(doc.getContractSigned())).thenReturn(invalidPdf);
+
+        RestResponse<File> response = documentService.retrieveSignedFile(ONBOARDING_ID)
+                .await().indefinitely();
+
+        assertNotNull(response);
+        assertEquals(RestResponse.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+    }
+
+    // ---- uploadAttachment when upload to Azure fails ----
+
+    @Test
+    void uploadAttachment_shouldThrowInternalException_whenAzureUploadFails() throws IOException {
+        File tempFile = createTempPdf();
+        FormItem formItem = FormItem.builder()
+                .file(tempFile)
+                .fileName("attachment.pdf")
+                .build();
+
+        DocumentBuilderRequest request = DocumentBuilderRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId("prod-io")
+                .documentType(TokenType.ATTACHMENT)
+                .documentName("myAttachment")
+                .templatePath("/templates/template.pdf")
+                .templateVersion("1.0")
+                .build();
+
+        Document persistedDoc = buildDocument();
+        persistedDoc.setType(TokenType.ATTACHMENT);
+        persistedDoc.setName("myAttachment");
+        persistedDoc.setContractFilename("signed_template.pdf");
+        persistedDoc.setContractSigned("/parties/docs/" + ONBOARDING_ID + "/attachments/signed_template.pdf");
+
+        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "myAttachment"))
+                .thenReturn(Uni.createFrom().nullItem());
+        when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(tempFile);
+        when(documentRepository.persist(any(Document.class)))
+                .thenReturn(Uni.createFrom().item(persistedDoc));
+        when(signatureService.isSignatureVerificationEnabled()).thenReturn(false);
+        when(signatureService.extractPdfFromSignedContainer(any(), any()))
+                .thenAnswer(inv -> inv.getArgument(1, DSSDocument.class));
+        when(signatureService.computeDigestOfSignedRevision(any(), any()))
+                .thenReturn("same-digest");
+        when(signatureService.verifyUploadedFileDigest(any(), any(), anyBoolean()))
+                .thenReturn("uploaded-digest");
+        doThrow(new SelfcareAzureStorageException("Upload failed", "500"))
+                .when(azureBlobClient).uploadFile(anyString(), anyString(), any(byte[].class));
+
+        var awaiter = documentService.uploadAttachment(request, formItem).await();
+        assertThrows(SelfcareAzureStorageException.class, awaiter::indefinitely);
+    }
+
+    // ---- retrieveContract edge cases ----
+
+    @Test
+    void retrieveContract_shouldUseSignedPath_whenIsSignedTrue() {
+        Document doc = buildDocument();
+        doc.setContractSigned("/path/to/signed/contract_signed.pdf");
+        File mockFile = Mockito.mock(File.class);
+
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(doc));
+        when(azureBlobClient.getFileAsPdf("/path/to/signed/contract_signed.pdf")).thenReturn(mockFile);
+
+        RestResponse<File> response = documentService.retrieveContract(ONBOARDING_ID, true)
+                .await().indefinitely();
+
+        assertNotNull(response);
+        assertEquals(RestResponse.Status.OK.getStatusCode(), response.getStatus());
+        verify(azureBlobClient).getFileAsPdf("/path/to/signed/contract_signed.pdf");
+    }
+
+    // ---- existsAttachment when storage throws exception ----
+
+    @Test
+    void existsAttachment_shouldReturnFalse_whenStorageThrowsException() {
+        Document doc = buildDocument();
+        doc.setContractSigned("/path/to/attachment.pdf");
+
+        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "myAttachment"))
+                .thenReturn(Uni.createFrom().item(doc));
+        doThrow(new SelfcareAzureStorageException("Storage error", "500"))
+                .when(azureBlobClient).getProperties(anyString());
+
+        Boolean result = documentService.existsAttachment(ONBOARDING_ID, "myAttachment")
+                .await().indefinitely();
+
+        assertFalse(result);
+    }
+
+    // ---- updateContractSigned with different paths ----
+
+    @Test
+    void updateContractSigned_shouldReturnZero_whenNoDocumentUpdated() {
+        when(documentRepository.updateContractSignedByOnboardingId(ONBOARDING_ID, "/new/path/signed.pdf"))
+                .thenReturn(Uni.createFrom().item(0L));
+
+        Long result = documentService.updateContractSigned(ONBOARDING_ID, "/new/path/signed.pdf")
+                .await().indefinitely();
+
+        assertEquals(0L, result);
+    }
+
+    // ---- updateDocumentContractFiles ----
+
+    @Test
+    void updateDocumentContractFiles_shouldReturnZero_whenNoDocumentUpdated() {
+        Document doc = buildDocument();
+        doc.setContractSigned("/path/signed.pdf");
+        doc.setContractFilename("signed.pdf");
+
+        when(documentRepository.updateContractFiles(doc.getOnboardingId(), doc.getContractSigned(), doc.getContractFilename()))
+                .thenReturn(Uni.createFrom().item(0L));
+
+        Long result = documentService.updateDocumentContractFiles(doc)
+                .await().indefinitely();
+
+        assertEquals(0L, result);
     }
 }

@@ -23,12 +23,14 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.document.config.PagoPaSignatureConfig;
 import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.document.model.FormItem;
+import it.pagopa.selfcare.document.model.entity.Document;
+import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.document.service.SignatureService;
 import it.pagopa.selfcare.onboarding.crypto.PadesSignService;
 import it.pagopa.selfcare.onboarding.crypto.entity.SignatureInformation;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -42,13 +44,19 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.jboss.resteasy.reactive.RestResponse;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import static it.pagopa.selfcare.document.util.ErrorMessage.*;
 
 @Slf4j
 @ApplicationScoped
 public class SignatureServiceImp implements SignatureService {
+
+    @Inject
+    DocumentService documentService;
+
+    @ConfigProperty(name = "document-ms.signature.verify-enabled")
+    Boolean isVerifyEnabled;
 
   public static final String HTTP_HEADER_VALUE_ATTACHMENT_FILENAME = "attachment;filename=";
   private static final Integer CF_MATCHER_GROUP = 2;
@@ -190,6 +198,48 @@ public class SignatureServiceImp implements SignatureService {
       throw new InvalidRequestException(GENERIC_ERROR.getMessage(), GENERIC_ERROR.getCode());
     }
   }
+
+    /**
+     * Verifica la firma del contratto recuperando il digest dal token
+     * e validando la firma con i codici fiscali forniti.
+     */
+    public Uni<Void> verifyContractSignature(
+            String onboardingId,
+            File file,
+            List<String> fiscalCodes) {
+
+        log.info("Verifying contract signature for onboardingId: {}", onboardingId);
+
+        if (!isSignatureVerificationEnabled()) {
+            log.info("Signature verification is disabled, skipping");
+            return Uni.createFrom().voidItem();
+        }
+
+        return retrieveContractDigest(onboardingId)
+                .onItem()
+                .transformToUni(digest ->
+                        Uni.createFrom()
+                                .item(() -> {
+                                    verifySignature(file, digest, fiscalCodes);
+                                    return null;
+                                })
+                                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                )
+                .replaceWithVoid();
+    }
+
+    public boolean isSignatureVerificationEnabled() {
+        return Boolean.TRUE.equals(isVerifyEnabled);
+    }
+
+    /**
+     * Recupera il digest del contratto dal token associato all'onboarding.
+     */
+    private Uni<String> retrieveContractDigest(String onboardingId) {
+        return documentService.getDocumentById(onboardingId)
+                .onItem()
+                .transform(Document::getChecksum);
+    }
 
   @Override
   public boolean verifySignature(File file) {
@@ -342,6 +392,35 @@ public class SignatureServiceImp implements SignatureService {
         String digest = contentDoc.getDigest(DigestAlgorithm.SHA256).getBase64Value();
         log.debug("Computed content digest (base64) for signature id='{}': {}", chosen.getId(), digest);
         return digest;
+    }
+
+    public String verifyUploadedFileDigest(FormItem file, String templateDigest, boolean skipDigestCheck) {
+        log.info("Verifying uploaded file digest");
+        Objects.requireNonNull(file, "Uploaded file must not be null");
+        Objects.requireNonNull(templateDigest, "Template digest must not be null");
+
+        DSSDocument uploadedDocument = new FileDocument(file.getFile());
+        DSSDocument uploadedPdf = extractPdfFromSignedContainer(
+                SignedDocumentValidator.fromDocument(uploadedDocument),
+                uploadedDocument
+        );
+
+        SignedDocumentValidator uploadedPdfValidator = SignedDocumentValidator.fromDocument(uploadedPdf);
+        String uploadedDigest = computeDigestOfSignedRevision(uploadedPdfValidator, uploadedPdf);
+
+        log.debug("Uploaded content digest (base64): {}", uploadedDigest);
+
+        if (!templateDigest.equals(uploadedDigest)) {
+            log.warn("Content mismatch ignoring signatures. templateDigest={} uploadedDigest={}",
+                    templateDigest, uploadedDigest);
+            if (!skipDigestCheck) {
+                throw new InvalidRequestException("File has been changed. It's not possible to complete upload");
+            }
+        } else {
+            log.info("Content check passed (ignoring signatures).");
+        }
+
+        return uploadedDigest;
     }
 
     /**
