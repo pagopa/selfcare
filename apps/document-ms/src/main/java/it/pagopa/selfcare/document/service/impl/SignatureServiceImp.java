@@ -29,6 +29,7 @@ import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.document.service.SignatureService;
 import it.pagopa.selfcare.onboarding.crypto.PadesSignService;
 import it.pagopa.selfcare.onboarding.crypto.entity.SignatureInformation;
+import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.io.File;
@@ -209,7 +210,7 @@ public class SignatureServiceImp implements SignatureService {
             File file,
             List<String> fiscalCodes) {
 
-        log.info("Verifying contract signature for onboardingId: {}", onboardingId);
+        log.info("Verifying contract signature for onboardingId: {}", sanitize(onboardingId));
 
         if (!isSignatureVerificationEnabled()) {
             log.info("Signature verification is disabled, skipping");
@@ -472,7 +473,7 @@ public class SignatureServiceImp implements SignatureService {
                                 .replace("${institutionName}", institutionDescription)
                                 .replace("${productName}", productId);
 
-                log.info("Signing input file {} using reason {}", pdf.getName(), signReason);
+                log.info("Signing input file {} using reason {}", sanitize(pdf.getName()), sanitize(signReason));
 
                 Path signedPdf = createSafeTempFile();
                 padesSignService.padesSign(pdf, signedPdf.toFile(), buildSignatureInfo(signReason));
@@ -495,7 +496,7 @@ public class SignatureServiceImp implements SignatureService {
             boolean writable = f.setWritable(true, true);
             boolean executable = f.setExecutable(false); // Importante: NO esecuzione
             if (!readable || !writable || !executable) {
-                log.warn("Could not set restricted permissions on temporary file: {}", f.getAbsolutePath());
+                log.warn("Could not set restricted permissions on temporary file: {}", sanitize(f.getAbsolutePath()));
             }
             return f.toPath();
         }
