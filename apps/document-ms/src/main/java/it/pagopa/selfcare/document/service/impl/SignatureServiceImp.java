@@ -221,13 +221,11 @@ public class SignatureServiceImp implements SignatureService {
                 .onItem()
                 .transformToUni(digest ->
                         Uni.createFrom()
-                                .item(() -> {
-                                    verifySignature(file, digest, fiscalCodes);
-                                    return null;
-                                })
+                                .voidItem()
+                                .invoke(() -> verifySignature(file, digest, fiscalCodes))
                                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                )
-                .replaceWithVoid();
+                );
+
     }
 
     public boolean isSignatureVerificationEnabled() {
