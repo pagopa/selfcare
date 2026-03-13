@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.document.controller.response;
+package it.pagopa.selfcare.document.model.dto.response;
 
 
 import it.pagopa.selfcare.onboarding.common.TokenType;

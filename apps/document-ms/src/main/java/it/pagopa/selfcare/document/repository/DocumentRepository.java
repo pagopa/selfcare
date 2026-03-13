@@ -2,7 +2,7 @@ package it.pagopa.selfcare.document.repository;
 
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoRepositoryBase;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.document.entity.Document;
+import it.pagopa.selfcare.document.model.entity.Document;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.bson.types.ObjectId;
 
