@@ -180,7 +180,8 @@ public class SignatureServiceImp implements SignatureService {
   @Override
   public void verifySignature(File file, String checksum, List<String> usersTaxCode) {
     try {
-      byte[] byteData = Files.readAllBytes(file.toPath());
+      Path safePath = validateUploadedFile(file);
+      byte[] byteData = Files.readAllBytes(safePath);
 
       SignedDocumentValidator validator = createDocumentValidator(byteData);
       isDocumentSigned(validator);
@@ -199,10 +200,10 @@ public class SignatureServiceImp implements SignatureService {
     }
   }
 
-    /**
-     * Verifica la firma del contratto recuperando il digest dal token
-     * e validando la firma con i codici fiscali forniti.
-     */
+  /**
+   * Verifica la firma del contratto recuperando il digest dal token
+   * e validando la firma con i codici fiscali forniti.
+   */
     public Uni<Void> verifyContractSignature(
             String onboardingId,
             File file,
@@ -244,7 +245,8 @@ public class SignatureServiceImp implements SignatureService {
   @Override
   public boolean verifySignature(File file) {
     try {
-      byte[] byteData = Files.readAllBytes(file.toPath());
+      Path safePath = validateUploadedFile(file);
+      byte[] byteData = Files.readAllBytes(safePath);
 
       SignedDocumentValidator validator = createDocumentValidator(byteData);
       isDocumentSigned(validator);
@@ -257,6 +259,28 @@ public class SignatureServiceImp implements SignatureService {
     } catch (Exception e) {
       throw new InvalidRequestException(GENERIC_ERROR.getMessage(), GENERIC_ERROR.getCode());
     }
+  }
+
+  /**
+   * Validates that the provided file points to a regular file within the configured
+   * upload directory (java.io.tmpdir) and returns its normalized absolute path.
+   *
+   * @param file the file to validate
+   * @return a normalized, absolute and safe {@link Path} to the file
+   */
+  private Path validateUploadedFile(File file) {
+    if (file == null) {
+      throw new InvalidRequestException(GENERIC_ERROR.getMessage(), GENERIC_ERROR.getCode());
+    }
+
+    Path uploadDir = Path.of(System.getProperty("java.io.tmpdir")).toAbsolutePath().normalize();
+    Path filePath = file.toPath().toAbsolutePath().normalize();
+
+    if (!filePath.startsWith(uploadDir) || !Files.isRegularFile(filePath)) {
+      throw new InvalidRequestException(GENERIC_ERROR.getMessage(), GENERIC_ERROR.getCode());
+    }
+
+    return filePath;
   }
 
   public void verifyManagerTaxCode(Reports reports, List<String> usersTaxCode) {
