@@ -27,6 +27,13 @@ import io.quarkus.runtime.Startup;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
@@ -112,12 +119,32 @@ public class TrustedListsCertificateSourceConfig {
     }
 
     private File tlCacheDirectory() {
-        File rootFolder = new File(System.getProperty("java.io.tmpdir"));
-        File tslCache   = new File(rootFolder, "dss-tsl-loader");
-        if (tslCache.mkdirs()) {
-            log.debug("TL Cache folder : {}", tslCache.getAbsolutePath());
+        String tmpDir = System.getProperty("java.io.tmpdir");
+        Path cacheDir = Path.of(tmpDir, "dss-tsl-loader");
+        try {
+            if (cacheDir.getFileSystem().supportedFileAttributeViews().contains("posix")) {
+                EnumSet<PosixFilePermission> permissions = EnumSet.of(
+                        PosixFilePermission.OWNER_READ,
+                        PosixFilePermission.OWNER_WRITE,
+                        PosixFilePermission.OWNER_EXECUTE
+                );
+                if (Files.exists(cacheDir)) {
+                    Files.setPosixFilePermissions(cacheDir, permissions);
+                } else {
+                    Files.createDirectories(cacheDir,
+                            PosixFilePermissions.asFileAttribute(permissions));
+                    log.debug("TL Cache folder created : {}", cacheDir.toAbsolutePath());
+                }
+            } else {
+                if (Files.notExists(cacheDir)) {
+                    Files.createDirectories(cacheDir);
+                    log.debug("TL Cache folder created (non-POSIX) : {}", cacheDir.toAbsolutePath());
+                }
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to create or configure TL cache directory", e);
         }
-        return tslCache;
+        return cacheDir.toFile();
     }
 
     private TLAlert tlSigningAlert() {
