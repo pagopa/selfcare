@@ -25,13 +25,12 @@ import it.pagopa.selfcare.document.service.impl.SignatureServiceImp;
 import it.pagopa.selfcare.onboarding.crypto.PadesSignService;
 import it.pagopa.selfcare.onboarding.crypto.entity.SignatureInformation;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import java.io.File;
@@ -53,15 +52,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @QuarkusTest
-@DisplayName("SignatureServiceImp - Test Suite Completa")
 class SignatureServiceImpTest {
 
     private TrustedListsCertificateSource trustedListsCertificateSource;
@@ -161,1051 +161,1190 @@ class SignatureServiceImpTest {
 
     // ==================== isDocumentSigned ====================
 
-    @Nested
-    @DisplayName("isDocumentSigned")
-    class IsDocumentSignedTests {
+    @Test
+    void isDocumentSigned_shouldThrowWhenNoSignatures() {
+        SignedDocumentValidator validator = createMockValidator(Collections.emptyList());
 
-        @Test
-        @DisplayName("Should throw InvalidRequestException when no signatures present")
-        void shouldThrowWhenNoSignatures() {
-            SignedDocumentValidator validator = createMockValidator(Collections.emptyList());
+        assertThatThrownBy(() -> service.isDocumentSigned(validator))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.isDocumentSigned(validator))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void isDocumentSigned_shouldNotThrowWhenSignaturesPresent() {
+        AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
+        SignedDocumentValidator validator = createMockValidator(List.of(sig));
 
-        @Test
-        @DisplayName("Should not throw when signatures are present")
-        void shouldNotThrowWhenSignaturesPresent() {
-            AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
-            SignedDocumentValidator validator = createMockValidator(List.of(sig));
+        assertThatCode(() -> service.isDocumentSigned(validator)).doesNotThrowAnyException();
+    }
 
-            assertThatCode(() -> service.isDocumentSigned(validator)).doesNotThrowAnyException();
-        }
+    @Test
+    void isDocumentSigned_shouldNotThrowWhenMultipleSignatures() {
+        List<AdvancedSignature> sigs = List.of(
+                createMockSignature("sig1", new Date(), SignatureForm.CAdES),
+                createMockSignature("sig2", new Date(), SignatureForm.PAdES)
+        );
+        SignedDocumentValidator validator = createMockValidator(sigs);
 
-        @Test
-        @DisplayName("Should not throw when multiple signatures are present")
-        void shouldNotThrowWhenMultipleSignatures() {
-            List<AdvancedSignature> sigs = List.of(
-                    createMockSignature("sig1", new Date(), SignatureForm.CAdES),
-                    createMockSignature("sig2", new Date(), SignatureForm.PAdES)
-            );
-            SignedDocumentValidator validator = createMockValidator(sigs);
-
-            assertThatCode(() -> service.isDocumentSigned(validator)).doesNotThrowAnyException();
-        }
+        assertThatCode(() -> service.isDocumentSigned(validator)).doesNotThrowAnyException();
     }
 
     // ==================== verifyOriginalDocument ====================
 
-    @Nested
-    @DisplayName("verifyOriginalDocument")
-    class VerifyOriginalDocumentTests {
+    @Test
+    void verifyOriginalDocument_shouldThrowWhenSignaturesNull() {
+        SignedDocumentValidator validator = createMockValidator(null);
 
-        @Test
-        @DisplayName("Should throw when signatures list is null")
-        void shouldThrowWhenSignaturesNull() {
-            SignedDocumentValidator validator = createMockValidator(null);
+        assertThatThrownBy(() -> service.verifyOriginalDocument(validator))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifyOriginalDocument(validator))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifyOriginalDocument_shouldThrowWhenSignaturesEmpty() {
+        SignedDocumentValidator validator = createMockValidator(Collections.emptyList());
 
-        @Test
-        @DisplayName("Should throw when signatures list is empty")
-        void shouldThrowWhenSignaturesEmpty() {
-            SignedDocumentValidator validator = createMockValidator(Collections.emptyList());
+        assertThatThrownBy(() -> service.verifyOriginalDocument(validator))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifyOriginalDocument(validator))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifyOriginalDocument_shouldThrowWhenNoOriginalDocuments() {
+        AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
+        SignedDocumentValidator validator = createMockValidator(List.of(sig));
+        when(validator.getOriginalDocuments("sig1")).thenReturn(Collections.emptyList());
 
-        @Test
-        @DisplayName("Should throw when no original documents found")
-        void shouldThrowWhenNoOriginalDocuments() {
-            AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
-            SignedDocumentValidator validator = createMockValidator(List.of(sig));
-            when(validator.getOriginalDocuments("sig1")).thenReturn(Collections.emptyList());
+        assertThatThrownBy(() -> service.verifyOriginalDocument(validator))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifyOriginalDocument(validator))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifyOriginalDocument_shouldThrowWhenOriginalDocumentsNull() {
+        AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
+        SignedDocumentValidator validator = createMockValidator(List.of(sig));
+        when(validator.getOriginalDocuments("sig1")).thenReturn(null);
 
-        @Test
-        @DisplayName("Should throw when getOriginalDocuments returns null")
-        void shouldThrowWhenOriginalDocumentsNull() {
-            AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
-            SignedDocumentValidator validator = createMockValidator(List.of(sig));
-            when(validator.getOriginalDocuments("sig1")).thenReturn(null);
+        assertThatThrownBy(() -> service.verifyOriginalDocument(validator))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifyOriginalDocument(validator))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifyOriginalDocument_shouldNotThrowWhenOriginalDocumentsPresent() {
+        AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
+        SignedDocumentValidator validator = createMockValidator(List.of(sig));
+        when(validator.getOriginalDocuments("sig1")).thenReturn(List.of(mock(DSSDocument.class)));
 
-        @Test
-        @DisplayName("Should not throw when original documents are present")
-        void shouldNotThrowWhenOriginalDocumentsPresent() {
-            AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
-            SignedDocumentValidator validator = createMockValidator(List.of(sig));
-            when(validator.getOriginalDocuments("sig1")).thenReturn(List.of(mock(DSSDocument.class)));
+        assertThatCode(() -> service.verifyOriginalDocument(validator)).doesNotThrowAnyException();
+    }
 
-            assertThatCode(() -> service.verifyOriginalDocument(validator)).doesNotThrowAnyException();
-        }
+    @Test
+    void verifyOriginalDocument_shouldNotThrowWhenAtLeastOneHasOriginals() {
+        AdvancedSignature sig1 = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
+        AdvancedSignature sig2 = createMockSignature("sig2", new Date(), SignatureForm.CAdES);
+        SignedDocumentValidator validator = createMockValidator(List.of(sig1, sig2));
+        when(validator.getOriginalDocuments("sig1")).thenReturn(Collections.emptyList());
+        when(validator.getOriginalDocuments("sig2")).thenReturn(List.of(mock(DSSDocument.class)));
 
-        @Test
-        @DisplayName("Should not throw when at least one signature has original documents")
-        void shouldNotThrowWhenAtLeastOneHasOriginals() {
-            AdvancedSignature sig1 = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
-            AdvancedSignature sig2 = createMockSignature("sig2", new Date(), SignatureForm.CAdES);
-            SignedDocumentValidator validator = createMockValidator(List.of(sig1, sig2));
-            when(validator.getOriginalDocuments("sig1")).thenReturn(Collections.emptyList());
-            when(validator.getOriginalDocuments("sig2")).thenReturn(List.of(mock(DSSDocument.class)));
-
-            assertThatCode(() -> service.verifyOriginalDocument(validator)).doesNotThrowAnyException();
-        }
+        assertThatCode(() -> service.verifyOriginalDocument(validator)).doesNotThrowAnyException();
     }
 
     // ==================== verifySignatureForm ====================
 
-    @Nested
-    @DisplayName("verifySignatureForm")
-    class VerifySignatureFormTests {
+    @Test
+    void verifySignatureForm_shouldNotThrowWhenAllCAdES() {
+        List<AdvancedSignature> sigs = List.of(
+                createMockSignature("sig1", new Date(), SignatureForm.CAdES),
+                createMockSignature("sig2", new Date(), SignatureForm.CAdES)
+        );
+        SignedDocumentValidator validator = createMockValidator(sigs);
 
-        @Test
-        @DisplayName("Should not throw when all signatures are CAdES")
-        void shouldNotThrowWhenAllCAdES() {
-            List<AdvancedSignature> sigs = List.of(
-                    createMockSignature("sig1", new Date(), SignatureForm.CAdES),
-                    createMockSignature("sig2", new Date(), SignatureForm.CAdES)
-            );
-            SignedDocumentValidator validator = createMockValidator(sigs);
+        assertThatCode(() -> service.verifySignatureForm(validator)).doesNotThrowAnyException();
+    }
 
-            assertThatCode(() -> service.verifySignatureForm(validator)).doesNotThrowAnyException();
-        }
+    @ParameterizedTest
+    @EnumSource(value = SignatureForm.class, names = {"PAdES", "XAdES", "JAdES"})
+    void verifySignatureForm_shouldThrowForNonCAdESForm(SignatureForm invalidForm) {
+        AdvancedSignature sig = createMockSignature("sig1", new Date(), invalidForm);
+        SignedDocumentValidator validator = createMockValidator(List.of(sig));
 
-        @ParameterizedTest
-        @EnumSource(value = SignatureForm.class, names = {"PAdES", "XAdES", "JAdES"})
-        @DisplayName("Should throw when signature form is not CAdES")
-        void shouldThrowForNonCAdESForm(SignatureForm invalidForm) {
-            AdvancedSignature sig = createMockSignature("sig1", new Date(), invalidForm);
-            SignedDocumentValidator validator = createMockValidator(List.of(sig));
+        assertThatThrownBy(() -> service.verifySignatureForm(validator))
+                .isInstanceOf(InvalidRequestException.class)
+                .hasMessageContaining(invalidForm.toString());
+    }
 
-            assertThatThrownBy(() -> service.verifySignatureForm(validator))
-                    .isInstanceOf(InvalidRequestException.class)
-                    .hasMessageContaining(invalidForm.toString());
-        }
+    @Test
+    void verifySignatureForm_shouldThrowListingAllInvalidForms() {
+        List<AdvancedSignature> sigs = List.of(
+                createMockSignature("sig1", new Date(), SignatureForm.CAdES),
+                createMockSignature("sig2", new Date(), SignatureForm.PAdES),
+                createMockSignature("sig3", new Date(), SignatureForm.XAdES)
+        );
+        SignedDocumentValidator validator = createMockValidator(sigs);
 
-        @Test
-        @DisplayName("Should throw listing all invalid forms")
-        void shouldThrowListingAllInvalidForms() {
-            List<AdvancedSignature> sigs = List.of(
-                    createMockSignature("sig1", new Date(), SignatureForm.CAdES),
-                    createMockSignature("sig2", new Date(), SignatureForm.PAdES),
-                    createMockSignature("sig3", new Date(), SignatureForm.XAdES)
-            );
-            SignedDocumentValidator validator = createMockValidator(sigs);
-
-            assertThatThrownBy(() -> service.verifySignatureForm(validator))
-                    .isInstanceOf(InvalidRequestException.class)
-                    .hasMessageContaining("PAdES")
-                    .hasMessageContaining("XAdES");
-        }
+        assertThatThrownBy(() -> service.verifySignatureForm(validator))
+                .isInstanceOf(InvalidRequestException.class)
+                .hasMessageContaining("PAdES")
+                .hasMessageContaining("XAdES");
     }
 
     // ==================== verifySignature(Reports) ====================
 
-    @Nested
-    @DisplayName("verifySignature(Reports)")
-    class VerifySignatureReportsTests {
+    @Test
+    void verifySignatureReports_shouldNotThrowWhenTotalPassed() {
+        Reports reports = createMockReports(Indication.TOTAL_PASSED);
 
-        @Test
-        @DisplayName("Should not throw when TOTAL_PASSED")
-        void shouldNotThrowWhenTotalPassed() {
-            Reports reports = createMockReports(Indication.TOTAL_PASSED);
+        assertThatCode(() -> service.verifySignature(reports)).doesNotThrowAnyException();
+    }
 
-            assertThatCode(() -> service.verifySignature(reports)).doesNotThrowAnyException();
-        }
+    @ParameterizedTest
+    @EnumSource(value = Indication.class, names = {"INDETERMINATE", "TOTAL_FAILED", "FAILED", "PASSED"})
+    void verifySignatureReports_shouldThrowForNonTotalPassedIndications(Indication indication) {
+        Reports reports = createMockReports(indication);
 
-        @ParameterizedTest
-        @EnumSource(value = Indication.class, names = {"INDETERMINATE", "TOTAL_FAILED", "FAILED", "PASSED"})
-        @DisplayName("Should throw for non-TOTAL_PASSED indications")
-        void shouldThrowForNonTotalPassedIndications(Indication indication) {
-            Reports reports = createMockReports(indication);
+        assertThatThrownBy(() -> service.verifySignature(reports))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifySignature(reports))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifySignatureReports_shouldThrowWhenEtsiReportNull() {
+        Reports reports = mock(Reports.class);
+        when(reports.getEtsiValidationReportJaxb()).thenReturn(null);
 
-        @Test
-        @DisplayName("Should throw when ETSI report is null")
-        void shouldThrowWhenEtsiReportNull() {
-            Reports reports = mock(Reports.class);
-            when(reports.getEtsiValidationReportJaxb()).thenReturn(null);
+        assertThatThrownBy(() -> service.verifySignature(reports))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifySignature(reports))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifySignatureReports_shouldThrowWhenReportsListEmpty() {
+        Reports reports = mock(Reports.class);
+        ValidationReportType etsi = mock(ValidationReportType.class);
+        when(etsi.getSignatureValidationReport()).thenReturn(Collections.emptyList());
+        when(reports.getEtsiValidationReportJaxb()).thenReturn(etsi);
 
-        @Test
-        @DisplayName("Should throw when signature validation reports list is empty")
-        void shouldThrowWhenReportsListEmpty() {
-            Reports reports = mock(Reports.class);
-            ValidationReportType etsi = mock(ValidationReportType.class);
-            when(etsi.getSignatureValidationReport()).thenReturn(Collections.emptyList());
-            when(reports.getEtsiValidationReportJaxb()).thenReturn(etsi);
+        assertThatThrownBy(() -> service.verifySignature(reports))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifySignature(reports))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifySignatureReports_shouldThrowWhenValidationStatusNull() {
+        Reports reports = mock(Reports.class);
+        ValidationReportType etsi = mock(ValidationReportType.class);
+        SignatureValidationReportType sigReport = mock(SignatureValidationReportType.class);
+        when(sigReport.getSignatureValidationStatus()).thenReturn(null);
+        when(etsi.getSignatureValidationReport()).thenReturn(List.of(sigReport));
+        when(reports.getEtsiValidationReportJaxb()).thenReturn(etsi);
 
-        @Test
-        @DisplayName("Should throw when validation status is null")
-        void shouldThrowWhenValidationStatusNull() {
-            Reports reports = mock(Reports.class);
-            ValidationReportType etsi = mock(ValidationReportType.class);
+        assertThatThrownBy(() -> service.verifySignature(reports))
+                .isInstanceOf(InvalidRequestException.class);
+    }
+
+    @Test
+    void verifySignatureReports_shouldThrowWhenAnyReportNotTotalPassed() {
+        Reports reports = mock(Reports.class);
+        ValidationReportType etsi = mock(ValidationReportType.class);
+
+        SignatureValidationReportType goodReport = mock(SignatureValidationReportType.class);
+        ValidationStatusType goodStatus = mock(ValidationStatusType.class);
+        when(goodStatus.getMainIndication()).thenReturn(Indication.TOTAL_PASSED);
+        when(goodReport.getSignatureValidationStatus()).thenReturn(goodStatus);
+
+        SignatureValidationReportType badReport = mock(SignatureValidationReportType.class);
+        ValidationStatusType badStatus = mock(ValidationStatusType.class);
+        when(badStatus.getMainIndication()).thenReturn(Indication.INDETERMINATE);
+        when(badReport.getSignatureValidationStatus()).thenReturn(badStatus);
+
+        when(etsi.getSignatureValidationReport()).thenReturn(List.of(goodReport, badReport));
+        when(reports.getEtsiValidationReportJaxb()).thenReturn(etsi);
+
+        assertThatThrownBy(() -> service.verifySignature(reports))
+                .isInstanceOf(InvalidRequestException.class);
+    }
+
+    @Test
+    void verifySignatureReports_shouldNotThrowWhenAllReportsTotalPassed() {
+        Reports reports = mock(Reports.class);
+        ValidationReportType etsi = mock(ValidationReportType.class);
+
+        List<SignatureValidationReportType> sigReports = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
             SignatureValidationReportType sigReport = mock(SignatureValidationReportType.class);
-            when(sigReport.getSignatureValidationStatus()).thenReturn(null);
-            when(etsi.getSignatureValidationReport()).thenReturn(List.of(sigReport));
-            when(reports.getEtsiValidationReportJaxb()).thenReturn(etsi);
-
-            assertThatThrownBy(() -> service.verifySignature(reports))
-                    .isInstanceOf(InvalidRequestException.class);
+            ValidationStatusType status = mock(ValidationStatusType.class);
+            when(status.getMainIndication()).thenReturn(Indication.TOTAL_PASSED);
+            when(sigReport.getSignatureValidationStatus()).thenReturn(status);
+            sigReports.add(sigReport);
         }
 
-        @Test
-        @DisplayName("Should throw when any report is not TOTAL_PASSED")
-        void shouldThrowWhenAnyReportNotTotalPassed() {
-            Reports reports = mock(Reports.class);
-            ValidationReportType etsi = mock(ValidationReportType.class);
+        when(etsi.getSignatureValidationReport()).thenReturn(sigReports);
+        when(reports.getEtsiValidationReportJaxb()).thenReturn(etsi);
 
-            SignatureValidationReportType goodReport = mock(SignatureValidationReportType.class);
-            ValidationStatusType goodStatus = mock(ValidationStatusType.class);
-            when(goodStatus.getMainIndication()).thenReturn(Indication.TOTAL_PASSED);
-            when(goodReport.getSignatureValidationStatus()).thenReturn(goodStatus);
-
-            SignatureValidationReportType badReport = mock(SignatureValidationReportType.class);
-            ValidationStatusType badStatus = mock(ValidationStatusType.class);
-            when(badStatus.getMainIndication()).thenReturn(Indication.INDETERMINATE);
-            when(badReport.getSignatureValidationStatus()).thenReturn(badStatus);
-
-            when(etsi.getSignatureValidationReport()).thenReturn(List.of(goodReport, badReport));
-            when(reports.getEtsiValidationReportJaxb()).thenReturn(etsi);
-
-            assertThatThrownBy(() -> service.verifySignature(reports))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
-
-        @Test
-        @DisplayName("Should not throw when all reports are TOTAL_PASSED")
-        void shouldNotThrowWhenAllReportsTotalPassed() {
-            Reports reports = mock(Reports.class);
-            ValidationReportType etsi = mock(ValidationReportType.class);
-
-            List<SignatureValidationReportType> sigReports = new ArrayList<>();
-            for (int i = 0; i < 3; i++) {
-                SignatureValidationReportType sigReport = mock(SignatureValidationReportType.class);
-                ValidationStatusType status = mock(ValidationStatusType.class);
-                when(status.getMainIndication()).thenReturn(Indication.TOTAL_PASSED);
-                when(sigReport.getSignatureValidationStatus()).thenReturn(status);
-                sigReports.add(sigReport);
-            }
-
-            when(etsi.getSignatureValidationReport()).thenReturn(sigReports);
-            when(reports.getEtsiValidationReportJaxb()).thenReturn(etsi);
-
-            assertThatCode(() -> service.verifySignature(reports)).doesNotThrowAnyException();
-        }
+        assertThatCode(() -> service.verifySignature(reports)).doesNotThrowAnyException();
     }
 
     // ==================== checkSignature(Reports) ====================
 
-    @Nested
-    @DisplayName("checkSignature(Reports)")
-    class CheckSignatureTests {
+    @Test
+    void checkSignature_shouldNotThrowWhenStatusPresent() {
+        Reports reports = createMockReports(Indication.TOTAL_PASSED);
 
-        @Test
-        @DisplayName("Should not throw when validation status is present")
-        void shouldNotThrowWhenStatusPresent() {
-            Reports reports = createMockReports(Indication.TOTAL_PASSED);
+        assertThatCode(() -> service.checkSignature(reports)).doesNotThrowAnyException();
+    }
 
-            assertThatCode(() -> service.checkSignature(reports)).doesNotThrowAnyException();
-        }
+    @Test
+    void checkSignature_shouldThrowWhenEtsiNull() {
+        Reports reports = mock(Reports.class);
+        when(reports.getEtsiValidationReportJaxb()).thenReturn(null);
 
-        @Test
-        @DisplayName("Should throw when ETSI report is null")
-        void shouldThrowWhenEtsiNull() {
-            Reports reports = mock(Reports.class);
-            when(reports.getEtsiValidationReportJaxb()).thenReturn(null);
+        assertThatThrownBy(() -> service.checkSignature(reports))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.checkSignature(reports))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void checkSignature_shouldThrowWhenReportsEmpty() {
+        Reports reports = mock(Reports.class);
+        ValidationReportType etsi = mock(ValidationReportType.class);
+        when(etsi.getSignatureValidationReport()).thenReturn(Collections.emptyList());
+        when(reports.getEtsiValidationReportJaxb()).thenReturn(etsi);
 
-        @Test
-        @DisplayName("Should throw when reports list is empty")
-        void shouldThrowWhenReportsEmpty() {
-            Reports reports = mock(Reports.class);
-            ValidationReportType etsi = mock(ValidationReportType.class);
-            when(etsi.getSignatureValidationReport()).thenReturn(Collections.emptyList());
-            when(reports.getEtsiValidationReportJaxb()).thenReturn(etsi);
+        assertThatThrownBy(() -> service.checkSignature(reports))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.checkSignature(reports))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void checkSignature_shouldThrowWhenStatusNull() {
+        Reports reports = mock(Reports.class);
+        ValidationReportType etsi = mock(ValidationReportType.class);
+        SignatureValidationReportType sigReport = mock(SignatureValidationReportType.class);
+        when(sigReport.getSignatureValidationStatus()).thenReturn(null);
+        when(etsi.getSignatureValidationReport()).thenReturn(List.of(sigReport));
+        when(reports.getEtsiValidationReportJaxb()).thenReturn(etsi);
 
-        @Test
-        @DisplayName("Should throw when validation status is null")
-        void shouldThrowWhenStatusNull() {
-            Reports reports = mock(Reports.class);
-            ValidationReportType etsi = mock(ValidationReportType.class);
-            SignatureValidationReportType sigReport = mock(SignatureValidationReportType.class);
-            when(sigReport.getSignatureValidationStatus()).thenReturn(null);
-            when(etsi.getSignatureValidationReport()).thenReturn(List.of(sigReport));
-            when(reports.getEtsiValidationReportJaxb()).thenReturn(etsi);
-
-            assertThatThrownBy(() -> service.checkSignature(reports))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+        assertThatThrownBy(() -> service.checkSignature(reports))
+                .isInstanceOf(InvalidRequestException.class);
     }
 
     // ==================== verifyDigest ====================
 
-    @Nested
-    @DisplayName("verifyDigest")
-    class VerifyDigestTests {
+    @Test
+    void verifyDigest_shouldNotThrowWhenDigestMatches() {
+        String checksum = "correctChecksum";
+        DSSDocument doc = createMockDocWithDigest(checksum);
+        AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
+        SignedDocumentValidator validator = createMockValidator(List.of(sig));
+        when(validator.getOriginalDocuments("sig1")).thenReturn(List.of(doc));
 
-        @Test
-        @DisplayName("Should not throw when digest matches")
-        void shouldNotThrowWhenDigestMatches() {
-            String checksum = "correctChecksum";
-            DSSDocument doc = createMockDocWithDigest(checksum);
-            AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
-            SignedDocumentValidator validator = createMockValidator(List.of(sig));
-            when(validator.getOriginalDocuments("sig1")).thenReturn(List.of(doc));
+        assertThatCode(() -> service.verifyDigest(validator, checksum)).doesNotThrowAnyException();
+    }
 
-            assertThatCode(() -> service.verifyDigest(validator, checksum)).doesNotThrowAnyException();
-        }
+    @Test
+    void verifyDigest_shouldThrowWhenDigestMismatch() {
+        DSSDocument doc = createMockDocWithDigest("wrongChecksum");
+        AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
+        SignedDocumentValidator validator = createMockValidator(List.of(sig));
+        when(validator.getOriginalDocuments("sig1")).thenReturn(List.of(doc));
 
-        @Test
-        @DisplayName("Should throw when digest does not match")
-        void shouldThrowWhenDigestMismatch() {
-            DSSDocument doc = createMockDocWithDigest("wrongChecksum");
-            AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
-            SignedDocumentValidator validator = createMockValidator(List.of(sig));
-            when(validator.getOriginalDocuments("sig1")).thenReturn(List.of(doc));
+        assertThatThrownBy(() -> service.verifyDigest(validator, "expectedChecksum"))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifyDigest(validator, "expectedChecksum"))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifyDigest_shouldNotThrowWhenSignaturesNull() {
+        SignedDocumentValidator validator = createMockValidator(null);
 
-        @Test
-        @DisplayName("Should not throw when signatures list is null")
-        void shouldNotThrowWhenSignaturesNull() {
-            SignedDocumentValidator validator = createMockValidator(null);
+        assertThatCode(() -> service.verifyDigest(validator, "anyChecksum")).doesNotThrowAnyException();
+    }
 
-            assertThatCode(() -> service.verifyDigest(validator, "anyChecksum")).doesNotThrowAnyException();
-        }
+    @Test
+    void verifyDigest_shouldNotThrowWhenSignaturesEmpty() {
+        SignedDocumentValidator validator = createMockValidator(Collections.emptyList());
 
-        @Test
-        @DisplayName("Should not throw when signatures list is empty")
-        void shouldNotThrowWhenSignaturesEmpty() {
-            SignedDocumentValidator validator = createMockValidator(Collections.emptyList());
+        assertThatCode(() -> service.verifyDigest(validator, "anyChecksum")).doesNotThrowAnyException();
+    }
 
-            assertThatCode(() -> service.verifyDigest(validator, "anyChecksum")).doesNotThrowAnyException();
-        }
+    @Test
+    void verifyDigest_shouldThrowWhenAnySignatureHasWrongDigest() {
+        String checksum = "correctChecksum";
+        DSSDocument doc1 = createMockDocWithDigest(checksum);
+        DSSDocument doc2 = createMockDocWithDigest("wrongChecksum");
+        AdvancedSignature sig1 = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
+        AdvancedSignature sig2 = createMockSignature("sig2", new Date(), SignatureForm.CAdES);
+        SignedDocumentValidator validator = createMockValidator(List.of(sig1, sig2));
 
-        @Test
-        @DisplayName("Should throw when any signature has wrong digest")
-        void shouldThrowWhenAnySignatureHasWrongDigest() {
-            String checksum = "correctChecksum";
-            DSSDocument doc1 = createMockDocWithDigest(checksum);
-            DSSDocument doc2 = createMockDocWithDigest("wrongChecksum");
-            AdvancedSignature sig1 = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
-            AdvancedSignature sig2 = createMockSignature("sig2", new Date(), SignatureForm.CAdES);
-            SignedDocumentValidator validator = createMockValidator(List.of(sig1, sig2));
+        when(validator.getOriginalDocuments("sig1")).thenReturn(List.of(doc1));
+        when(validator.getOriginalDocuments("sig2")).thenReturn(List.of(doc2));
 
-            when(validator.getOriginalDocuments("sig1")).thenReturn(List.of(doc1));
-            when(validator.getOriginalDocuments("sig2")).thenReturn(List.of(doc2));
+        assertThatThrownBy(() -> service.verifyDigest(validator, checksum))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifyDigest(validator, checksum))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifyDigest_shouldNotThrowWhenAllSignaturesHaveCorrectDigest() {
+        String checksum = "correctChecksum";
+        DSSDocument doc1 = createMockDocWithDigest(checksum);
+        DSSDocument doc2 = createMockDocWithDigest(checksum);
+        AdvancedSignature sig1 = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
+        AdvancedSignature sig2 = createMockSignature("sig2", new Date(), SignatureForm.CAdES);
+        SignedDocumentValidator validator = createMockValidator(List.of(sig1, sig2));
 
-        @Test
-        @DisplayName("Should not throw when all signatures have correct digest")
-        void shouldNotThrowWhenAllSignaturesHaveCorrectDigest() {
-            String checksum = "correctChecksum";
-            DSSDocument doc1 = createMockDocWithDigest(checksum);
-            DSSDocument doc2 = createMockDocWithDigest(checksum);
-            AdvancedSignature sig1 = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
-            AdvancedSignature sig2 = createMockSignature("sig2", new Date(), SignatureForm.CAdES);
-            SignedDocumentValidator validator = createMockValidator(List.of(sig1, sig2));
+        when(validator.getOriginalDocuments("sig1")).thenReturn(List.of(doc1));
+        when(validator.getOriginalDocuments("sig2")).thenReturn(List.of(doc2));
 
-            when(validator.getOriginalDocuments("sig1")).thenReturn(List.of(doc1));
-            when(validator.getOriginalDocuments("sig2")).thenReturn(List.of(doc2));
-
-            assertThatCode(() -> service.verifyDigest(validator, checksum)).doesNotThrowAnyException();
-        }
+        assertThatCode(() -> service.verifyDigest(validator, checksum)).doesNotThrowAnyException();
     }
 
     // ==================== verifyManagerTaxCode ====================
 
-    @Nested
-    @DisplayName("verifyManagerTaxCode")
-    class VerifyManagerTaxCodeTests {
+    @Test
+    void verifyManagerTaxCode_shouldNotThrowWhenTaxCodeMatches() {
+        Reports reports = createMockReportsWithCertificates(List.of("TINIT-RSSMRA80A01H501R"));
 
-        @Test
-        @DisplayName("Should not throw when tax code matches")
-        void shouldNotThrowWhenTaxCodeMatches() {
-            Reports reports = createMockReportsWithCertificates(List.of("TINIT-RSSMRA80A01H501R"));
+        assertThatCode(() -> service.verifyManagerTaxCode(reports, List.of("RSSMRA80A01H501R")))
+                .doesNotThrowAnyException();
+    }
 
-            assertThatCode(() -> service.verifyManagerTaxCode(reports, List.of("RSSMRA80A01H501R")))
-                    .doesNotThrowAnyException();
-        }
+    @Test
+    void verifyManagerTaxCode_shouldThrowWhenDiagnosticDataNull() {
+        Reports reports = mock(Reports.class);
+        when(reports.getDiagnosticData()).thenReturn(null);
 
-        @Test
-        @DisplayName("Should throw when diagnostic data is null")
-        void shouldThrowWhenDiagnosticDataNull() {
-            Reports reports = mock(Reports.class);
-            when(reports.getDiagnosticData()).thenReturn(null);
+        assertThatThrownBy(() -> service.verifyManagerTaxCode(reports, List.of("RSSMRA80A01H501R")))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifyManagerTaxCode(reports, List.of("RSSMRA80A01H501R")))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifyManagerTaxCode_shouldThrowWhenUsedCertificatesNull() {
+        Reports reports = mock(Reports.class);
+        DiagnosticData diagnosticData = mock(DiagnosticData.class);
+        when(diagnosticData.getUsedCertificates()).thenReturn(null);
+        when(reports.getDiagnosticData()).thenReturn(diagnosticData);
 
-        @Test
-        @DisplayName("Should throw when used certificates is null")
-        void shouldThrowWhenUsedCertificatesNull() {
-            Reports reports = mock(Reports.class);
-            DiagnosticData diagnosticData = mock(DiagnosticData.class);
-            when(diagnosticData.getUsedCertificates()).thenReturn(null);
-            when(reports.getDiagnosticData()).thenReturn(diagnosticData);
+        assertThatThrownBy(() -> service.verifyManagerTaxCode(reports, List.of("RSSMRA80A01H501R")))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifyManagerTaxCode(reports, List.of("RSSMRA80A01H501R")))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifyManagerTaxCode_shouldThrowWhenUsedCertificatesEmpty() {
+        Reports reports = mock(Reports.class);
+        DiagnosticData diagnosticData = mock(DiagnosticData.class);
+        when(diagnosticData.getUsedCertificates()).thenReturn(Collections.emptyList());
+        when(reports.getDiagnosticData()).thenReturn(diagnosticData);
 
-        @Test
-        @DisplayName("Should throw when used certificates is empty")
-        void shouldThrowWhenUsedCertificatesEmpty() {
-            Reports reports = mock(Reports.class);
-            DiagnosticData diagnosticData = mock(DiagnosticData.class);
-            when(diagnosticData.getUsedCertificates()).thenReturn(Collections.emptyList());
-            when(reports.getDiagnosticData()).thenReturn(diagnosticData);
+        assertThatThrownBy(() -> service.verifyManagerTaxCode(reports, List.of("RSSMRA80A01H501R")))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifyManagerTaxCode(reports, List.of("RSSMRA80A01H501R")))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifyManagerTaxCode_shouldThrowWhenNoTinitPrefix() {
+        Reports reports = createMockReportsWithCertificates(List.of("NO_MATCH_PREFIX"));
 
-        @Test
-        @DisplayName("Should throw when no TINIT prefix match")
-        void shouldThrowWhenNoTinitPrefix() {
-            Reports reports = createMockReportsWithCertificates(List.of("NO_MATCH_PREFIX"));
+        assertThatThrownBy(() -> service.verifyManagerTaxCode(reports, List.of("RSSMRA80A01H501R")))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifyManagerTaxCode(reports, List.of("RSSMRA80A01H501R")))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifyManagerTaxCode_shouldThrowWhenTaxCodeNotInUserList() {
+        Reports reports = createMockReportsWithCertificates(List.of("TINIT-DIFFERENT"));
 
-        @Test
-        @DisplayName("Should throw when tax code not in user list")
-        void shouldThrowWhenTaxCodeNotInUserList() {
-            Reports reports = createMockReportsWithCertificates(List.of("TINIT-DIFFERENT"));
+        assertThatThrownBy(() -> service.verifyManagerTaxCode(reports, List.of("RSSMRA80A01H501R")))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifyManagerTaxCode(reports, List.of("RSSMRA80A01H501R")))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifyManagerTaxCode_shouldThrowWhenUsersTaxCodeEmpty() {
+        Reports reports = createMockReportsWithCertificates(List.of("TINIT-RSSMRA80A01H501R"));
 
-        @Test
-        @DisplayName("Should throw when users tax code list is empty")
-        void shouldThrowWhenUsersTaxCodeEmpty() {
-            Reports reports = createMockReportsWithCertificates(List.of("TINIT-RSSMRA80A01H501R"));
+        assertThatThrownBy(() -> service.verifyManagerTaxCode(reports, Collections.emptyList()))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifyManagerTaxCode(reports, Collections.emptyList()))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifyManagerTaxCode_shouldNotThrowWhenMultipleSignersCoverAllUsers() {
+        Reports reports = createMockReportsWithCertificates(List.of("TINIT-AAA111", "TINIT-BBB222"));
 
-        @Test
-        @DisplayName("Should not throw when multiple signers cover all users")
-        void shouldNotThrowWhenMultipleSignersCoverAllUsers() {
-            Reports reports = createMockReportsWithCertificates(List.of("TINIT-AAA111", "TINIT-BBB222"));
+        assertThatCode(() -> service.verifyManagerTaxCode(reports, List.of("AAA111", "BBB222")))
+                .doesNotThrowAnyException();
+    }
 
-            assertThatCode(() -> service.verifyManagerTaxCode(reports, List.of("AAA111", "BBB222")))
-                    .doesNotThrowAnyException();
-        }
+    @Test
+    void verifyManagerTaxCode_shouldThrowWhenOnlySomeUsersCovered() {
+        Reports reports = createMockReportsWithCertificates(List.of("TINIT-AAA111"));
 
-        @Test
-        @DisplayName("Should throw when only some users are covered")
-        void shouldThrowWhenOnlySomeUsersCovered() {
-            Reports reports = createMockReportsWithCertificates(List.of("TINIT-AAA111"));
+        assertThatThrownBy(() -> service.verifyManagerTaxCode(reports, List.of("AAA111", "BBB222")))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifyManagerTaxCode(reports, List.of("AAA111", "BBB222")))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifyManagerTaxCode_shouldIgnoreNullSerialNumbers() {
+        Reports reports = mock(Reports.class);
+        DiagnosticData diagnosticData = mock(DiagnosticData.class);
+        CertificateWrapper cert = mock(CertificateWrapper.class);
+        when(cert.getSubjectSerialNumber()).thenReturn(null);
+        when(diagnosticData.getUsedCertificates()).thenReturn(List.of(cert));
+        when(reports.getDiagnosticData()).thenReturn(diagnosticData);
 
-        @Test
-        @DisplayName("Should ignore null serial numbers")
-        void shouldIgnoreNullSerialNumbers() {
-            Reports reports = mock(Reports.class);
-            DiagnosticData diagnosticData = mock(DiagnosticData.class);
-            CertificateWrapper cert = mock(CertificateWrapper.class);
-            when(cert.getSubjectSerialNumber()).thenReturn(null);
-            when(diagnosticData.getUsedCertificates()).thenReturn(List.of(cert));
-            when(reports.getDiagnosticData()).thenReturn(diagnosticData);
+        assertThatThrownBy(() -> service.verifyManagerTaxCode(reports, List.of("RSSMRA80A01H501R")))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifyManagerTaxCode(reports, List.of("RSSMRA80A01H501R")))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifyManagerTaxCode_shouldIgnoreEmptySerialNumbers() {
+        Reports reports = mock(Reports.class);
+        DiagnosticData diagnosticData = mock(DiagnosticData.class);
+        CertificateWrapper cert = mock(CertificateWrapper.class);
+        when(cert.getSubjectSerialNumber()).thenReturn("");
+        when(diagnosticData.getUsedCertificates()).thenReturn(List.of(cert));
+        when(reports.getDiagnosticData()).thenReturn(diagnosticData);
 
-        @Test
-        @DisplayName("Should ignore empty serial numbers")
-        void shouldIgnoreEmptySerialNumbers() {
-            Reports reports = mock(Reports.class);
-            DiagnosticData diagnosticData = mock(DiagnosticData.class);
-            CertificateWrapper cert = mock(CertificateWrapper.class);
-            when(cert.getSubjectSerialNumber()).thenReturn("");
-            when(diagnosticData.getUsedCertificates()).thenReturn(List.of(cert));
-            when(reports.getDiagnosticData()).thenReturn(diagnosticData);
-
-            assertThatThrownBy(() -> service.verifyManagerTaxCode(reports, List.of("RSSMRA80A01H501R")))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+        assertThatThrownBy(() -> service.verifyManagerTaxCode(reports, List.of("RSSMRA80A01H501R")))
+                .isInstanceOf(InvalidRequestException.class);
     }
 
     // ==================== isSignatureVerificationEnabled ====================
 
-    @Nested
-    @DisplayName("isSignatureVerificationEnabled")
-    class IsSignatureVerificationEnabledTests {
+    @Test
+    void isSignatureVerificationEnabled_shouldReturnTrueWhenEnabled() {
+        setField(service, "isVerifyEnabled", Boolean.TRUE);
+        assertTrue(service.isSignatureVerificationEnabled());
+    }
 
-        @Test
-        @DisplayName("Should return true when enabled")
-        void shouldReturnTrueWhenEnabled() {
-            setField(service, "isVerifyEnabled", Boolean.TRUE);
-            assertTrue(service.isSignatureVerificationEnabled());
-        }
+    @Test
+    void isSignatureVerificationEnabled_shouldReturnFalseWhenDisabled() {
+        setField(service, "isVerifyEnabled", Boolean.FALSE);
+        assertFalse(service.isSignatureVerificationEnabled());
+    }
 
-        @Test
-        @DisplayName("Should return false when disabled")
-        void shouldReturnFalseWhenDisabled() {
-            setField(service, "isVerifyEnabled", Boolean.FALSE);
-            assertFalse(service.isSignatureVerificationEnabled());
-        }
-
-        @Test
-        @DisplayName("Should return false when null")
-        void shouldReturnFalseWhenNull() {
-            setField(service, "isVerifyEnabled", null);
-            assertFalse(service.isSignatureVerificationEnabled());
-        }
+    @Test
+    void isSignatureVerificationEnabled_shouldReturnFalseWhenNull() {
+        setField(service, "isVerifyEnabled", null);
+        assertFalse(service.isSignatureVerificationEnabled());
     }
 
     // ==================== verifyContractSignature ====================
 
-    @Nested
-    @DisplayName("verifyContractSignature")
-    class VerifyContractSignatureTests {
+    @Test
+    void verifyContractSignature_shouldReturnImmediatelyWhenDisabled() throws IOException {
+        setField(service, "isVerifyEnabled", Boolean.FALSE);
+        File file = createTempFile("test");
 
-        @Test
-        @DisplayName("Should return immediately when verification disabled")
-        void shouldReturnImmediatelyWhenDisabled() throws IOException {
-            setField(service, "isVerifyEnabled", Boolean.FALSE);
-            File file = createTempFile("test");
+        Uni<Void> result = service.verifyContractSignature("onboarding-id", file, List.of("CF1"));
 
-            Uni<Void> result = service.verifyContractSignature("onboarding-id", file, List.of("CF1"));
+        assertThatCode(() -> result.await().indefinitely()).doesNotThrowAnyException();
+        verifyNoInteractions(documentService);
+    }
 
-            assertThatCode(() -> result.await().indefinitely()).doesNotThrowAnyException();
-            verifyNoInteractions(documentService);
-        }
+    @Test
+    void verifyContractSignature_shouldCallDocumentServiceWhenEnabled() throws IOException {
+        setField(service, "isVerifyEnabled", Boolean.TRUE);
+        Document document = mock(Document.class);
+        when(document.getChecksum()).thenReturn("checksum");
+        when(documentService.getDocumentById("onboarding-id")).thenReturn(Uni.createFrom().item(document));
 
-        @Test
-        @DisplayName("Should call documentService when verification enabled")
-        void shouldCallDocumentServiceWhenEnabled() throws IOException {
-            setField(service, "isVerifyEnabled", Boolean.TRUE);
-            Document document = mock(Document.class);
-            when(document.getChecksum()).thenReturn("checksum");
-            when(documentService.getDocumentById("onboarding-id")).thenReturn(Uni.createFrom().item(document));
+        File file = createTempFile("test");
+        Uni<Void> result = service.verifyContractSignature("onboarding-id", file, List.of("CF1"));
 
-            File file = createTempFile("test");
-            Uni<Void> result = service.verifyContractSignature("onboarding-id", file, List.of("CF1"));
+        assertThatThrownBy(() -> result.await().indefinitely()).isInstanceOf(Exception.class);
+        verify(documentService).getDocumentById("onboarding-id");
+    }
 
-            assertThatThrownBy(() -> result.await().indefinitely()).isInstanceOf(Exception.class);
-            verify(documentService).getDocumentById("onboarding-id");
-        }
+    @Test
+    void verifyContractSignature_shouldPropagateExceptionWhenDocumentServiceFails() throws IOException {
+        setField(service, "isVerifyEnabled", Boolean.TRUE);
+        when(documentService.getDocumentById("onboarding-id"))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("DB error")));
 
-        @Test
-        @DisplayName("Should propagate exception when documentService fails")
-        void shouldPropagateExceptionWhenDocumentServiceFails() throws IOException {
-            setField(service, "isVerifyEnabled", Boolean.TRUE);
-            when(documentService.getDocumentById("onboarding-id"))
-                    .thenReturn(Uni.createFrom().failure(new RuntimeException("DB error")));
+        File file = createTempFile("test");
+        Uni<Void> result = service.verifyContractSignature("onboarding-id", file, List.of("CF1"));
 
-            File file = createTempFile("test");
-            Uni<Void> result = service.verifyContractSignature("onboarding-id", file, List.of("CF1"));
-
-            assertThatThrownBy(() -> result.await().indefinitely())
-                    .hasMessageContaining("DB error");
-            verify(documentService).getDocumentById("onboarding-id");
-        }
+        assertThatThrownBy(() -> result.await().indefinitely())
+                .hasMessageContaining("DB error");
+        verify(documentService).getDocumentById("onboarding-id");
     }
 
     // ==================== chooseEarliestSignature ====================
 
-    @Nested
-    @DisplayName("chooseEarliestSignature")
-    class ChooseEarliestSignatureTests {
+    @Test
+    void chooseEarliestSignature_shouldReturnEarliestBySigningTime() {
+        Date earlier = Date.from(Instant.parse("2024-01-01T00:00:00Z"));
+        Date later = Date.from(Instant.parse("2024-06-01T00:00:00Z"));
+        List<AdvancedSignature> sigs = List.of(
+                createMockSignature("sig-later", later, SignatureForm.CAdES),
+                createMockSignature("sig-earlier", earlier, SignatureForm.CAdES)
+        );
 
-        @Test
-        @DisplayName("Should return earliest by signing time")
-        void shouldReturnEarliestBySigningTime() {
-            Date earlier = Date.from(Instant.parse("2024-01-01T00:00:00Z"));
-            Date later = Date.from(Instant.parse("2024-06-01T00:00:00Z"));
-            List<AdvancedSignature> sigs = List.of(
-                    createMockSignature("sig-later", later, SignatureForm.CAdES),
-                    createMockSignature("sig-earlier", earlier, SignatureForm.CAdES)
-            );
+        AdvancedSignature result = service.chooseEarliestSignature(sigs);
 
-            AdvancedSignature result = service.chooseEarliestSignature(sigs);
+        assertThat(result.getId()).isEqualTo("sig-earlier");
+    }
 
-            assertThat(result.getId()).isEqualTo("sig-earlier");
-        }
+    @Test
+    void chooseEarliestSignature_shouldFallbackToIdWhenSameSigningTime() {
+        Date sameDate = new Date();
+        List<AdvancedSignature> sigs = List.of(
+                createMockSignature("sig-B", sameDate, SignatureForm.CAdES),
+                createMockSignature("sig-A", sameDate, SignatureForm.CAdES)
+        );
 
-        @Test
-        @DisplayName("Should fallback to id when same signing time")
-        void shouldFallbackToIdWhenSameTime() {
-            Date sameDate = new Date();
-            List<AdvancedSignature> sigs = List.of(
-                    createMockSignature("sig-B", sameDate, SignatureForm.CAdES),
-                    createMockSignature("sig-A", sameDate, SignatureForm.CAdES)
-            );
+        AdvancedSignature result = service.chooseEarliestSignature(sigs);
 
-            AdvancedSignature result = service.chooseEarliestSignature(sigs);
+        assertThat(result.getId()).isEqualTo("sig-A");
+    }
 
-            assertThat(result.getId()).isEqualTo("sig-A");
-        }
+    @Test
+    void chooseEarliestSignature_shouldHandleNullSigningTime() {
+        Date realDate = new Date();
+        List<AdvancedSignature> sigs = List.of(
+                createMockSignature("sig-null", null, SignatureForm.CAdES),
+                createMockSignature("sig-real", realDate, SignatureForm.CAdES)
+        );
 
-        @Test
-        @DisplayName("Should handle null signing time (null-last)")
-        void shouldHandleNullSigningTime() {
-            Date realDate = new Date();
-            List<AdvancedSignature> sigs = List.of(
-                    createMockSignature("sig-null", null, SignatureForm.CAdES),
-                    createMockSignature("sig-real", realDate, SignatureForm.CAdES)
-            );
+        AdvancedSignature result = service.chooseEarliestSignature(sigs);
 
-            AdvancedSignature result = service.chooseEarliestSignature(sigs);
+        assertThat(result.getId()).isEqualTo("sig-real");
+    }
 
-            assertThat(result.getId()).isEqualTo("sig-real");
-        }
+    @Test
+    void chooseEarliestSignature_shouldReturnSingleSignature() {
+        AdvancedSignature sig = createMockSignature("only-sig", new Date(), SignatureForm.CAdES);
 
-        @Test
-        @DisplayName("Should return single signature")
-        void shouldReturnSingleSignature() {
-            AdvancedSignature sig = createMockSignature("only-sig", new Date(), SignatureForm.CAdES);
+        AdvancedSignature result = service.chooseEarliestSignature(List.of(sig));
 
-            AdvancedSignature result = service.chooseEarliestSignature(List.of(sig));
+        assertThat(result.getId()).isEqualTo("only-sig");
+    }
 
-            assertThat(result.getId()).isEqualTo("only-sig");
-        }
+    @Test
+    void chooseEarliestSignature_shouldHandleAllNullSigningTimes() {
+        List<AdvancedSignature> sigs = List.of(
+                createMockSignature("sig-B", null, SignatureForm.CAdES),
+                createMockSignature("sig-A", null, SignatureForm.CAdES)
+        );
 
-        @Test
-        @DisplayName("Should handle all null signing times")
-        void shouldHandleAllNullSigningTimes() {
-            List<AdvancedSignature> sigs = List.of(
-                    createMockSignature("sig-B", null, SignatureForm.CAdES),
-                    createMockSignature("sig-A", null, SignatureForm.CAdES)
-            );
+        AdvancedSignature result = service.chooseEarliestSignature(sigs);
 
-            AdvancedSignature result = service.chooseEarliestSignature(sigs);
-
-            assertThat(result.getId()).isEqualTo("sig-A");
-        }
+        assertThat(result.getId()).isEqualTo("sig-A");
     }
 
     // ==================== extractPdfFromSignedContainer ====================
 
-    @Nested
-    @DisplayName("extractPdfFromSignedContainer")
-    class ExtractPdfFromSignedContainerTests {
+    @Test
+    void extractPdfFromSignedContainer_shouldReturnOriginalDocument() {
+        DSSDocument inputDoc = mock(DSSDocument.class);
+        DSSDocument originalDoc = mock(DSSDocument.class);
+        AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
+        SignedDocumentValidator validator = createMockValidator(List.of(sig));
+        when(validator.getOriginalDocuments("sig1")).thenReturn(List.of(originalDoc));
 
-        @Test
-        @DisplayName("Should return original document when present")
-        void shouldReturnOriginalDocument() {
-            DSSDocument inputDoc = mock(DSSDocument.class);
-            DSSDocument originalDoc = mock(DSSDocument.class);
-            AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
-            SignedDocumentValidator validator = createMockValidator(List.of(sig));
-            when(validator.getOriginalDocuments("sig1")).thenReturn(List.of(originalDoc));
+        DSSDocument result = service.extractPdfFromSignedContainer(validator, inputDoc);
 
-            DSSDocument result = service.extractPdfFromSignedContainer(validator, inputDoc);
+        assertThat(result).isSameAs(originalDoc);
+    }
 
-            assertThat(result).isSameAs(originalDoc);
-        }
+    @Test
+    void extractPdfFromSignedContainer_shouldReturnInputWhenSignaturesNull() {
+        DSSDocument inputDoc = mock(DSSDocument.class);
+        SignedDocumentValidator validator = createMockValidator(null);
 
-        @Test
-        @DisplayName("Should return input document when signatures null")
-        void shouldReturnInputWhenSignaturesNull() {
-            DSSDocument inputDoc = mock(DSSDocument.class);
-            SignedDocumentValidator validator = createMockValidator(null);
+        DSSDocument result = service.extractPdfFromSignedContainer(validator, inputDoc);
 
-            DSSDocument result = service.extractPdfFromSignedContainer(validator, inputDoc);
+        assertThat(result).isSameAs(inputDoc);
+    }
 
-            assertThat(result).isSameAs(inputDoc);
-        }
+    @Test
+    void extractPdfFromSignedContainer_shouldReturnInputWhenSignaturesEmpty() {
+        DSSDocument inputDoc = mock(DSSDocument.class);
+        SignedDocumentValidator validator = createMockValidator(Collections.emptyList());
 
-        @Test
-        @DisplayName("Should return input document when signatures empty")
-        void shouldReturnInputWhenSignaturesEmpty() {
-            DSSDocument inputDoc = mock(DSSDocument.class);
-            SignedDocumentValidator validator = createMockValidator(Collections.emptyList());
+        DSSDocument result = service.extractPdfFromSignedContainer(validator, inputDoc);
 
-            DSSDocument result = service.extractPdfFromSignedContainer(validator, inputDoc);
+        assertThat(result).isSameAs(inputDoc);
+    }
 
-            assertThat(result).isSameAs(inputDoc);
-        }
+    @Test
+    void extractPdfFromSignedContainer_shouldReturnInputWhenNoOriginals() {
+        DSSDocument inputDoc = mock(DSSDocument.class);
+        AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
+        SignedDocumentValidator validator = createMockValidator(List.of(sig));
+        when(validator.getOriginalDocuments("sig1")).thenReturn(Collections.emptyList());
 
-        @Test
-        @DisplayName("Should return input document when no originals")
-        void shouldReturnInputWhenNoOriginals() {
-            DSSDocument inputDoc = mock(DSSDocument.class);
-            AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
-            SignedDocumentValidator validator = createMockValidator(List.of(sig));
-            when(validator.getOriginalDocuments("sig1")).thenReturn(Collections.emptyList());
+        DSSDocument result = service.extractPdfFromSignedContainer(validator, inputDoc);
 
-            DSSDocument result = service.extractPdfFromSignedContainer(validator, inputDoc);
+        assertThat(result).isSameAs(inputDoc);
+    }
 
-            assertThat(result).isSameAs(inputDoc);
-        }
+    @Test
+    void extractPdfFromSignedContainer_shouldReturnInputWhenOriginalsNull() {
+        DSSDocument inputDoc = mock(DSSDocument.class);
+        AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
+        SignedDocumentValidator validator = createMockValidator(List.of(sig));
+        when(validator.getOriginalDocuments("sig1")).thenReturn(null);
 
-        @Test
-        @DisplayName("Should return input document when originals null")
-        void shouldReturnInputWhenOriginalsNull() {
-            DSSDocument inputDoc = mock(DSSDocument.class);
-            AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
-            SignedDocumentValidator validator = createMockValidator(List.of(sig));
-            when(validator.getOriginalDocuments("sig1")).thenReturn(null);
+        DSSDocument result = service.extractPdfFromSignedContainer(validator, inputDoc);
 
-            DSSDocument result = service.extractPdfFromSignedContainer(validator, inputDoc);
-
-            assertThat(result).isSameAs(inputDoc);
-        }
+        assertThat(result).isSameAs(inputDoc);
     }
 
     // ==================== computeDigestOfSignedRevision ====================
 
-    @Nested
-    @DisplayName("computeDigestOfSignedRevision")
-    class ComputeDigestOfSignedRevisionTests {
+    @Test
+    void computeDigestOfSignedRevision_shouldComputeFullDocDigestWhenNoSignatures() {
+        DSSDocument doc = createMockDocWithDigest("fullDocDigest");
+        SignedDocumentValidator validator = createMockValidator(Collections.emptyList());
 
-        @Test
-        @DisplayName("Should compute full doc digest when no signatures")
-        void shouldComputeFullDocDigestWhenNoSignatures() {
-            DSSDocument doc = createMockDocWithDigest("fullDocDigest");
-            SignedDocumentValidator validator = createMockValidator(Collections.emptyList());
+        String result = service.computeDigestOfSignedRevision(validator, doc);
 
-            String result = service.computeDigestOfSignedRevision(validator, doc);
+        assertThat(result).isEqualTo("fullDocDigest");
+    }
 
-            assertThat(result).isEqualTo("fullDocDigest");
-        }
+    @Test
+    void computeDigestOfSignedRevision_shouldComputeFullDocDigestWhenSignaturesNull() {
+        DSSDocument doc = createMockDocWithDigest("fullDocDigest");
+        SignedDocumentValidator validator = createMockValidator(null);
 
-        @Test
-        @DisplayName("Should compute full doc digest when signatures null")
-        void shouldComputeFullDocDigestWhenSignaturesNull() {
-            DSSDocument doc = createMockDocWithDigest("fullDocDigest");
-            SignedDocumentValidator validator = createMockValidator(null);
+        String result = service.computeDigestOfSignedRevision(validator, doc);
 
-            String result = service.computeDigestOfSignedRevision(validator, doc);
+        assertThat(result).isEqualTo("fullDocDigest");
+    }
 
-            assertThat(result).isEqualTo("fullDocDigest");
-        }
+    @Test
+    void computeDigestOfSignedRevision_shouldComputeDigestOfOriginalDocument() {
+        DSSDocument inputDoc = mock(DSSDocument.class);
+        DSSDocument originalDoc = createMockDocWithDigest("originalDigest");
+        AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
+        SignedDocumentValidator validator = createMockValidator(List.of(sig));
+        when(validator.getOriginalDocuments("sig1")).thenReturn(List.of(originalDoc));
 
-        @Test
-        @DisplayName("Should compute digest of original document")
-        void shouldComputeDigestOfOriginalDocument() {
-            DSSDocument inputDoc = mock(DSSDocument.class);
-            DSSDocument originalDoc = createMockDocWithDigest("originalDigest");
-            AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
-            SignedDocumentValidator validator = createMockValidator(List.of(sig));
-            when(validator.getOriginalDocuments("sig1")).thenReturn(List.of(originalDoc));
+        String result = service.computeDigestOfSignedRevision(validator, inputDoc);
 
-            String result = service.computeDigestOfSignedRevision(validator, inputDoc);
+        assertThat(result).isEqualTo("originalDigest");
+    }
 
-            assertThat(result).isEqualTo("originalDigest");
-        }
+    @Test
+    void computeDigestOfSignedRevision_shouldComputeDigestOfInputDocWhenNoOriginals() {
+        DSSDocument inputDoc = createMockDocWithDigest("inputDigest");
+        AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
+        SignedDocumentValidator validator = createMockValidator(List.of(sig));
+        when(validator.getOriginalDocuments("sig1")).thenReturn(Collections.emptyList());
 
-        @Test
-        @DisplayName("Should compute digest of input doc when no originals")
-        void shouldComputeDigestOfInputDocWhenNoOriginals() {
-            DSSDocument inputDoc = createMockDocWithDigest("inputDigest");
-            AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
-            SignedDocumentValidator validator = createMockValidator(List.of(sig));
-            when(validator.getOriginalDocuments("sig1")).thenReturn(Collections.emptyList());
+        String result = service.computeDigestOfSignedRevision(validator, inputDoc);
 
-            String result = service.computeDigestOfSignedRevision(validator, inputDoc);
-
-            assertThat(result).isEqualTo("inputDigest");
-        }
+        assertThat(result).isEqualTo("inputDigest");
     }
 
     // ==================== verifyUploadedFileDigest ====================
 
-    @Nested
-    @DisplayName("verifyUploadedFileDigest")
-    class VerifyUploadedFileDigestTests {
+    @Test
+    void verifyUploadedFileDigest_shouldThrowWhenFormItemNull() {
+        assertThatThrownBy(() -> service.verifyUploadedFileDigest(null, "digest", false))
+                .isInstanceOf(NullPointerException.class);
+    }
 
-        @Test
-        @DisplayName("Should throw NullPointerException when FormItem is null")
-        void shouldThrowWhenFormItemNull() {
-            assertThatThrownBy(() -> service.verifyUploadedFileDigest(null, "digest", false))
-                    .isInstanceOf(NullPointerException.class);
+    @Test
+    void verifyUploadedFileDigest_shouldThrowWhenTemplateDigestNull() throws IOException {
+        File file = createTempFile("content");
+        FormItem formItem = mock(FormItem.class);
+        when(formItem.getFile()).thenReturn(file);
+
+        assertThatThrownBy(() -> service.verifyUploadedFileDigest(formItem, null, false))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void verifyUploadedFileDigest_shouldReturnDigestWhenMatches() throws IOException {
+        // Arrange
+        File testFile = createTempFile("pdf-content");
+        FormItem formItem = mock(FormItem.class);
+        when(formItem.getFile()).thenReturn(testFile);
+
+        String templateDigest = "matchingDigest123";
+
+        DSSDocument mockDocument = mock(DSSDocument.class);
+        Digest mockDigest = mock(Digest.class);
+        when(mockDigest.getBase64Value()).thenReturn(templateDigest);
+        when(mockDocument.getDigest(DigestAlgorithm.SHA256)).thenReturn(mockDigest);
+
+        SignedDocumentValidator mockValidator = mock(SignedDocumentValidator.class);
+        when(mockValidator.getSignatures()).thenReturn(Collections.emptyList());
+
+        try (MockedStatic<SignedDocumentValidator> validatorMock = Mockito.mockStatic(SignedDocumentValidator.class)) {
+            validatorMock.when(() -> SignedDocumentValidator.fromDocument(any(DSSDocument.class)))
+                    .thenReturn(mockValidator);
+
+            // Create spy to control extractPdfFromSignedContainer and computeDigestOfSignedRevision
+            SignatureServiceImp spyService = spy(new SignatureServiceImp(
+                    trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
+            setField(spyService, "isVerifyEnabled", Boolean.TRUE);
+            setField(spyService, "documentService", documentService);
+
+            doReturn(mockDocument).when(spyService).extractPdfFromSignedContainer(any(), any());
+            doReturn(templateDigest).when(spyService).computeDigestOfSignedRevision(any(), any());
+
+            // Act
+            String result = spyService.verifyUploadedFileDigest(formItem, templateDigest, false);
+
+            // Assert
+            assertThat(result).isEqualTo(templateDigest);
         }
+    }
 
-        @Test
-        @DisplayName("Should throw NullPointerException when templateDigest is null")
-        void shouldThrowWhenTemplateDigestNull() throws IOException {
-            File file = createTempFile("content");
-            FormItem formItem = FormItem.builder().file(file).build();
+    @Test
+    void verifyUploadedFileDigest_shouldThrowWhenDigestMismatchAndSkipCheckFalse() throws IOException {
+        // Arrange
+        File testFile = createTempFile("pdf-content");
+        FormItem formItem = mock(FormItem.class);
+        when(formItem.getFile()).thenReturn(testFile);
 
-            assertThatThrownBy(() -> service.verifyUploadedFileDigest(formItem, null, false))
-                    .isInstanceOf(NullPointerException.class);
+        String templateDigest = "expectedDigest";
+        String uploadedDigest = "differentDigest";
+
+        DSSDocument mockDocument = mock(DSSDocument.class);
+        SignedDocumentValidator mockValidator = mock(SignedDocumentValidator.class);
+        when(mockValidator.getSignatures()).thenReturn(Collections.emptyList());
+
+        try (MockedStatic<SignedDocumentValidator> validatorMock = Mockito.mockStatic(SignedDocumentValidator.class)) {
+            validatorMock.when(() -> SignedDocumentValidator.fromDocument(any(DSSDocument.class)))
+                    .thenReturn(mockValidator);
+
+            SignatureServiceImp spyService = spy(new SignatureServiceImp(
+                    trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
+            setField(spyService, "isVerifyEnabled", Boolean.TRUE);
+            setField(spyService, "documentService", documentService);
+
+            doReturn(mockDocument).when(spyService).extractPdfFromSignedContainer(any(), any());
+            doReturn(uploadedDigest).when(spyService).computeDigestOfSignedRevision(any(), any());
+
+            // Act & Assert
+            assertThatThrownBy(() -> spyService.verifyUploadedFileDigest(formItem, templateDigest, false))
+                    .isInstanceOf(InvalidRequestException.class)
+                    .hasMessageContaining("File has been changed");
+        }
+    }
+
+    @Test
+    void verifyUploadedFileDigest_shouldReturnDigestWhenMismatchButSkipCheckTrue() throws IOException {
+        // Arrange
+        File testFile = createTempFile("pdf-content");
+        FormItem formItem = mock(FormItem.class);
+        when(formItem.getFile()).thenReturn(testFile);
+
+        String templateDigest = "expectedDigest";
+        String uploadedDigest = "differentDigest";
+
+        DSSDocument mockDocument = mock(DSSDocument.class);
+        SignedDocumentValidator mockValidator = mock(SignedDocumentValidator.class);
+        when(mockValidator.getSignatures()).thenReturn(Collections.emptyList());
+
+        try (MockedStatic<SignedDocumentValidator> validatorMock = Mockito.mockStatic(SignedDocumentValidator.class)) {
+            validatorMock.when(() -> SignedDocumentValidator.fromDocument(any(DSSDocument.class)))
+                    .thenReturn(mockValidator);
+
+            SignatureServiceImp spyService = spy(new SignatureServiceImp(
+                    trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
+            setField(spyService, "isVerifyEnabled", Boolean.TRUE);
+            setField(spyService, "documentService", documentService);
+
+            doReturn(mockDocument).when(spyService).extractPdfFromSignedContainer(any(), any());
+            doReturn(uploadedDigest).when(spyService).computeDigestOfSignedRevision(any(), any());
+
+            // Act - skipDigestCheck = true, should not throw
+            String result = spyService.verifyUploadedFileDigest(formItem, templateDigest, true);
+
+            // Assert
+            assertThat(result).isEqualTo(uploadedDigest);
+        }
+    }
+
+    @Test
+    void verifyUploadedFileDigest_shouldProcessSignedDocument() throws IOException {
+        // Arrange
+        File testFile = createTempFile("signed-pdf-content");
+        FormItem formItem = mock(FormItem.class);
+        when(formItem.getFile()).thenReturn(testFile);
+
+        String templateDigest = "signedDocDigest";
+
+        DSSDocument mockUploadedDoc = mock(DSSDocument.class);
+        DSSDocument mockExtractedPdf = mock(DSSDocument.class);
+
+        AdvancedSignature mockSig = createMockSignature("sig1", new Date(), SignatureForm.PAdES);
+        SignedDocumentValidator mockValidator = mock(SignedDocumentValidator.class);
+        when(mockValidator.getSignatures()).thenReturn(List.of(mockSig));
+        when(mockValidator.getOriginalDocuments("sig1")).thenReturn(List.of(mockExtractedPdf));
+
+        Digest mockDigest = mock(Digest.class);
+        when(mockDigest.getBase64Value()).thenReturn(templateDigest);
+        when(mockExtractedPdf.getDigest(DigestAlgorithm.SHA256)).thenReturn(mockDigest);
+
+        try (MockedStatic<SignedDocumentValidator> validatorMock = Mockito.mockStatic(SignedDocumentValidator.class)) {
+            validatorMock.when(() -> SignedDocumentValidator.fromDocument(any(DSSDocument.class)))
+                    .thenReturn(mockValidator);
+
+            SignatureServiceImp spyService = spy(new SignatureServiceImp(
+                    trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
+            setField(spyService, "isVerifyEnabled", Boolean.TRUE);
+            setField(spyService, "documentService", documentService);
+
+            // Don't mock internal methods - let them run to cover lines 427-448
+            // But we need to mock the static validator creation
+
+            // Act
+            String result = spyService.verifyUploadedFileDigest(formItem, templateDigest, false);
+
+            // Assert
+            assertThat(result).isEqualTo(templateDigest);
         }
     }
 
     // ==================== signDocument ====================
 
-    @Nested
-    @DisplayName("signDocument")
-    class SignDocumentTests {
+    @Test
+    void signDocument_shouldReturnOriginalFileWhenDisabled() throws Exception {
+        when(pagoPaSignatureConfig.source()).thenReturn("disabled");
+        File pdf = createTempFile("content");
 
-        @Test
-        @DisplayName("Should return original file when signature disabled")
-        void shouldReturnOriginalFileWhenDisabled() throws Exception {
-            when(pagoPaSignatureConfig.source()).thenReturn("disabled");
-            File pdf = createTempFile("content");
+        File result = service.signDocument(pdf, "Institution", "product").await().indefinitely();
 
-            File result = service.signDocument(pdf, "Institution", "product").await().indefinitely();
+        assertThat(result).isEqualTo(pdf);
+        verifyNoInteractions(padesSignService);
+    }
 
-            assertThat(result).isEqualTo(pdf);
-            verifyNoInteractions(padesSignService);
-        }
+    @Test
+    void signDocument_shouldCallPadesSignServiceWhenEnabled() throws Exception {
+        when(pagoPaSignatureConfig.source()).thenReturn("enabled");
+        when(pagoPaSignatureConfig.applyOnboardingTemplateReason()).thenReturn("Reason");
+        when(pagoPaSignatureConfig.signer()).thenReturn("Signer");
+        when(pagoPaSignatureConfig.location()).thenReturn("Location");
 
-        @Test
-        @DisplayName("Should call padesSignService when enabled")
-        void shouldCallPadesSignServiceWhenEnabled() throws Exception {
-            when(pagoPaSignatureConfig.source()).thenReturn("enabled");
-            when(pagoPaSignatureConfig.applyOnboardingTemplateReason()).thenReturn("Reason");
-            when(pagoPaSignatureConfig.signer()).thenReturn("Signer");
-            when(pagoPaSignatureConfig.location()).thenReturn("Location");
+        File pdf = createTempFile("content");
+        doNothing().when(padesSignService).padesSign(any(File.class), any(File.class), any());
 
-            File pdf = createTempFile("content");
-            doNothing().when(padesSignService).padesSign(any(File.class), any(File.class), any());
+        File result = service.signDocument(pdf, "Institution", "product").await().indefinitely();
 
-            File result = service.signDocument(pdf, "Institution", "product").await().indefinitely();
+        assertThat(result).isNotNull();
+        verify(padesSignService).padesSign(eq(pdf), any(File.class), any(SignatureInformation.class));
+    }
 
-            assertThat(result).isNotNull();
-            verify(padesSignService).padesSign(eq(pdf), any(File.class), any(SignatureInformation.class));
-        }
+    @Test
+    void signDocument_shouldInterpolatePlaceholders() throws Exception {
+        when(pagoPaSignatureConfig.source()).thenReturn("active");
+        when(pagoPaSignatureConfig.applyOnboardingTemplateReason())
+                .thenReturn("Firma per ${institutionName} - ${productName}");
+        when(pagoPaSignatureConfig.signer()).thenReturn("Signer");
+        when(pagoPaSignatureConfig.location()).thenReturn("Location");
 
-        @Test
-        @DisplayName("Should interpolate placeholders in reason")
-        void shouldInterpolatePlaceholders() throws Exception {
-            when(pagoPaSignatureConfig.source()).thenReturn("active");
-            when(pagoPaSignatureConfig.applyOnboardingTemplateReason())
-                    .thenReturn("Firma per ${institutionName} - ${productName}");
-            when(pagoPaSignatureConfig.signer()).thenReturn("Signer");
-            when(pagoPaSignatureConfig.location()).thenReturn("Location");
+        File pdf = createTempFile("content");
 
-            File pdf = createTempFile("content");
+        ArgumentCaptor<SignatureInformation> captor = ArgumentCaptor.forClass(SignatureInformation.class);
+        doNothing().when(padesSignService).padesSign(any(), any(), captor.capture());
 
-            ArgumentCaptor<SignatureInformation> captor = ArgumentCaptor.forClass(SignatureInformation.class);
-            doNothing().when(padesSignService).padesSign(any(), any(), captor.capture());
+        service.signDocument(pdf, "TestInstitution", "TestProduct").await().indefinitely();
 
-            service.signDocument(pdf, "TestInstitution", "TestProduct").await().indefinitely();
+        assertThat(captor.getValue().getReason()).isEqualTo("Firma per TestInstitution - TestProduct");
+    }
 
-            assertThat(captor.getValue().getReason()).isEqualTo("Firma per TestInstitution - TestProduct");
-        }
+    @Test
+    void signDocument_shouldThrowWhenPadesSignServiceFails() throws Exception {
+        when(pagoPaSignatureConfig.source()).thenReturn("enabled");
+        when(pagoPaSignatureConfig.applyOnboardingTemplateReason()).thenReturn("Reason");
+        when(pagoPaSignatureConfig.signer()).thenReturn("Signer");
+        when(pagoPaSignatureConfig.location()).thenReturn("Location");
 
-        @Test
-        @DisplayName("Should throw when padesSignService fails")
-        void shouldThrowWhenPadesSignServiceFails() throws Exception {
-            when(pagoPaSignatureConfig.source()).thenReturn("enabled");
-            when(pagoPaSignatureConfig.applyOnboardingTemplateReason()).thenReturn("Reason");
-            when(pagoPaSignatureConfig.signer()).thenReturn("Signer");
-            when(pagoPaSignatureConfig.location()).thenReturn("Location");
+        File pdf = createTempFile("content");
+        doThrow(new RuntimeException("Signing failed")).when(padesSignService)
+                .padesSign(any(File.class), any(File.class), any());
 
-            File pdf = createTempFile("content");
-            doThrow(new RuntimeException("Signing failed")).when(padesSignService)
-                    .padesSign(any(File.class), any(File.class), any());
-
-            assertThatThrownBy(() -> service.signDocument(pdf, "Institution", "product").await().indefinitely())
-                    .isInstanceOf(RuntimeException.class);
-        }
+        assertThatThrownBy(() -> service.signDocument(pdf, "Institution", "product").await().indefinitely())
+                .isInstanceOf(RuntimeException.class);
     }
 
     // ==================== createSafeTempFile / createTempFileWithPosix ====================
 
-    @Nested
-    @DisplayName("createSafeTempFile and createTempFileWithPosix")
-    class CreateTempFileTests {
+    @Test
+    void createTempFileWithPosix_shouldCreateFileWithPdfExtension() throws IOException {
+        Path tempFile = service.createTempFileWithPosix();
 
-        @Test
-        @DisplayName("createTempFileWithPosix should create file with .pdf extension")
-        void shouldCreateFileWithPdfExtension() throws IOException {
-            Path tempFile = service.createTempFileWithPosix();
+        assertThat(tempFile).isNotNull();
+        assertThat(tempFile.toFile()).exists();
+        assertThat(tempFile.toString()).endsWith(".pdf");
 
-            assertThat(tempFile).isNotNull();
-            assertThat(tempFile.toFile()).exists();
-            assertThat(tempFile.toString()).endsWith(".pdf");
+        Files.deleteIfExists(tempFile);
+    }
 
-            Files.deleteIfExists(tempFile);
-        }
+    @Test
+    void createSafeTempFile_shouldReturnValidPath() throws IOException {
+        Path result = service.createSafeTempFile();
 
-        @Test
-        @DisplayName("createSafeTempFile should return valid path")
-        void shouldReturnValidPath() throws IOException {
-            Path result = service.createSafeTempFile();
+        assertThat(result).isNotNull();
+        assertThat(result.toFile()).exists();
 
-            assertThat(result).isNotNull();
-            assertThat(result.toFile()).exists();
-
-            Files.deleteIfExists(result);
-        }
+        Files.deleteIfExists(result);
     }
 
     // ==================== validateDocument ====================
 
-    @Nested
-    @DisplayName("validateDocument")
-    class ValidateDocumentTests {
+    @Test
+    void validateDocument_shouldThrowOnValidationFailure() {
+        SignedDocumentValidator validator = mock(SignedDocumentValidator.class);
+        when(validator.validateDocument()).thenThrow(new RuntimeException("validation failed"));
 
-        @Test
-        @DisplayName("Should throw InvalidRequestException on validation failure")
-        void shouldThrowOnValidationFailure() {
-            SignedDocumentValidator validator = mock(SignedDocumentValidator.class);
-            when(validator.validateDocument()).thenThrow(new RuntimeException("validation failed"));
+        assertThatThrownBy(() -> service.validateDocument(validator))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.validateDocument(validator))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void validateDocument_shouldReturnReportsOnSuccess() {
+        SignedDocumentValidator validator = mock(SignedDocumentValidator.class);
+        Reports expectedReports = mock(Reports.class);
+        when(validator.validateDocument()).thenReturn(expectedReports);
 
-        @Test
-        @DisplayName("Should return reports on success")
-        void shouldReturnReportsOnSuccess() {
-            SignedDocumentValidator validator = mock(SignedDocumentValidator.class);
-            Reports expectedReports = mock(Reports.class);
-            when(validator.validateDocument()).thenReturn(expectedReports);
+        Reports result = service.validateDocument(validator);
 
-            Reports result = service.validateDocument(validator);
-
-            assertThat(result).isSameAs(expectedReports);
-        }
+        assertThat(result).isSameAs(expectedReports);
     }
 
     // ==================== verifySignature(File) ====================
 
-    @Nested
-    @DisplayName("verifySignature(File)")
-    class VerifySignatureFileTests {
+    @Test
+    void verifySignatureFile_shouldThrowWhenNotSignedDocument() throws IOException {
+        File invalidFile = createTempFile("not-a-signed-document");
 
-        @Test
-        @DisplayName("Should throw when file is not signed document")
-        void shouldThrowWhenNotSignedDocument() throws IOException {
-            File invalidFile = createTempFile("not-a-signed-document");
+        assertThatThrownBy(() -> service.verifySignature(invalidFile))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifySignature(invalidFile))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifySignatureFile_shouldThrowWhenFileDoesNotExist() {
+        File nonExistentFile = tempDir.resolve("nonexistent.pdf").toFile();
 
-        @Test
-        @DisplayName("Should throw when file does not exist")
-        void shouldThrowWhenFileDoesNotExist() {
-            File nonExistentFile = tempDir.resolve("nonexistent.pdf").toFile();
-
-            assertThatThrownBy(() -> service.verifySignature(nonExistentFile))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+        assertThatThrownBy(() -> service.verifySignature(nonExistentFile))
+                .isInstanceOf(InvalidRequestException.class);
     }
 
     // ==================== verifySignature(File, String, List) ====================
 
-    @Nested
-    @DisplayName("verifySignature(File, String, List)")
-    class VerifySignatureFileChecksumTaxCodeTests {
+    @Test
+    void verifySignatureFileChecksumTaxCode_shouldThrowWhenInvalidData() throws IOException {
+        File invalidFile = createTempFile("garbage");
 
-        @Test
-        @DisplayName("Should throw when file contains invalid data")
-        void shouldThrowWhenInvalidData() throws IOException {
-            File invalidFile = createTempFile("garbage");
+        assertThatThrownBy(() -> service.verifySignature(invalidFile, "checksum", List.of("CF1")))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifySignature(invalidFile, "checksum", List.of("CF1")))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifySignatureFileChecksumTaxCode_shouldRethrowInvalidRequestExceptionDirectly() throws IOException {
+        File invalidFile = createTempFile("garbage-data");
 
-        @Test
-        @DisplayName("Should rethrow InvalidRequestException directly")
-        void shouldRethrowInvalidRequestExceptionDirectly() throws IOException {
-            File invalidFile = createTempFile("garbage-data");
+        assertThatThrownBy(() -> service.verifySignature(invalidFile, "checksum", List.of("CF1")))
+                .isExactlyInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifySignature(invalidFile, "checksum", List.of("CF1")))
-                    .isExactlyInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifySignatureFileChecksumTaxCode_shouldThrowWhenFileDoesNotExist() {
+        File missingFile = tempDir.resolve("missing.p7m").toFile();
 
-        @Test
-        @DisplayName("Should throw when file does not exist")
-        void shouldThrowWhenFileDoesNotExist() {
-            File missingFile = tempDir.resolve("missing.p7m").toFile();
+        assertThatThrownBy(() -> service.verifySignature(missingFile, "checksum", List.of("CF1")))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.verifySignature(missingFile, "checksum", List.of("CF1")))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void verifySignatureFileChecksumTaxCode_shouldExecuteFullValidationChain() throws IOException {
+        // Arrange: create spy to mock createDocumentValidator
+        SignatureServiceImp spyService = spy(new SignatureServiceImp(
+                trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
+        setField(spyService, "isVerifyEnabled", Boolean.TRUE);
+        setField(spyService, "documentService", documentService);
+
+        File testFile = createTempFile("test-content");
+        String checksum = "correctChecksum";
+        List<String> usersTaxCode = List.of("RSSMRA80A01H501R");
+
+        // Mock validator with signatures
+        SignedDocumentValidator mockValidator = mock(SignedDocumentValidator.class);
+        AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
+        when(mockValidator.getSignatures()).thenReturn(List.of(sig));
+
+        // Mock original documents with correct checksum
+        DSSDocument originalDoc = createMockDocWithDigest(checksum);
+        when(mockValidator.getOriginalDocuments("sig1")).thenReturn(List.of(originalDoc));
+
+        // Mock reports with TOTAL_PASSED and valid tax code
+        Reports mockReports = mock(Reports.class);
+        ValidationReportType etsi = mock(ValidationReportType.class);
+        SignatureValidationReportType sigReport = mock(SignatureValidationReportType.class);
+        ValidationStatusType statusType = mock(ValidationStatusType.class);
+        when(statusType.getMainIndication()).thenReturn(Indication.TOTAL_PASSED);
+        when(sigReport.getSignatureValidationStatus()).thenReturn(statusType);
+        when(etsi.getSignatureValidationReport()).thenReturn(List.of(sigReport));
+        when(mockReports.getEtsiValidationReportJaxb()).thenReturn(etsi);
+
+        // Mock diagnostic data with tax code
+        DiagnosticData diagnosticData = mock(DiagnosticData.class);
+        CertificateWrapper cert = mock(CertificateWrapper.class);
+        when(cert.getSubjectSerialNumber()).thenReturn("TINIT-RSSMRA80A01H501R");
+        when(diagnosticData.getUsedCertificates()).thenReturn(List.of(cert));
+        when(mockReports.getDiagnosticData()).thenReturn(diagnosticData);
+
+        // Mock validateDocument to return our mock reports
+        when(mockValidator.validateDocument()).thenReturn(mockReports);
+
+        // Stub createDocumentValidator to return our mock
+        doReturn(mockValidator).when(spyService).createDocumentValidator(any(byte[].class));
+
+        // Act & Assert: should complete without exception
+        assertThatCode(() -> spyService.verifySignature(testFile, checksum, usersTaxCode))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void verifySignatureFileChecksumTaxCode_shouldThrowWhenSignatureFormInvalid() throws IOException {
+        // Arrange: create spy to mock createDocumentValidator
+        SignatureServiceImp spyService = spy(new SignatureServiceImp(
+                trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
+        setField(spyService, "isVerifyEnabled", Boolean.TRUE);
+        setField(spyService, "documentService", documentService);
+
+        File testFile = createTempFile("test-content");
+        String checksum = "correctChecksum";
+        List<String> usersTaxCode = List.of("RSSMRA80A01H501R");
+
+        // Mock validator with PAdES signature (invalid form)
+        SignedDocumentValidator mockValidator = mock(SignedDocumentValidator.class);
+        AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.PAdES);
+        when(mockValidator.getSignatures()).thenReturn(List.of(sig));
+
+        // Mock original documents
+        DSSDocument originalDoc = createMockDocWithDigest(checksum);
+        when(mockValidator.getOriginalDocuments("sig1")).thenReturn(List.of(originalDoc));
+
+        // Mock reports
+        Reports mockReports = mock(Reports.class);
+        when(mockValidator.validateDocument()).thenReturn(mockReports);
+
+        // Stub createDocumentValidator
+        doReturn(mockValidator).when(spyService).createDocumentValidator(any(byte[].class));
+
+        // Act & Assert: should throw for invalid signature form
+        assertThatThrownBy(() -> spyService.verifySignature(testFile, checksum, usersTaxCode))
+                .isInstanceOf(InvalidRequestException.class)
+                .hasMessageContaining("PAdES");
+    }
+
+    @Test
+    void verifySignatureFileChecksumTaxCode_shouldThrowWhenDigestMismatch() throws IOException {
+        // Arrange: create spy
+        SignatureServiceImp spyService = spy(new SignatureServiceImp(
+                trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
+        setField(spyService, "isVerifyEnabled", Boolean.TRUE);
+        setField(spyService, "documentService", documentService);
+
+        File testFile = createTempFile("test-content");
+        String expectedChecksum = "expectedChecksum";
+        List<String> usersTaxCode = List.of("RSSMRA80A01H501R");
+
+        // Mock validator with CAdES signature
+        SignedDocumentValidator mockValidator = mock(SignedDocumentValidator.class);
+        AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
+        when(mockValidator.getSignatures()).thenReturn(List.of(sig));
+
+        // Mock original documents with WRONG checksum
+        DSSDocument originalDoc = createMockDocWithDigest("wrongChecksum");
+        when(mockValidator.getOriginalDocuments("sig1")).thenReturn(List.of(originalDoc));
+
+        // Mock reports with TOTAL_PASSED
+        Reports mockReports = mock(Reports.class);
+        ValidationReportType etsi = mock(ValidationReportType.class);
+        SignatureValidationReportType sigReport = mock(SignatureValidationReportType.class);
+        ValidationStatusType statusType = mock(ValidationStatusType.class);
+        when(statusType.getMainIndication()).thenReturn(Indication.TOTAL_PASSED);
+        when(sigReport.getSignatureValidationStatus()).thenReturn(statusType);
+        when(etsi.getSignatureValidationReport()).thenReturn(List.of(sigReport));
+        when(mockReports.getEtsiValidationReportJaxb()).thenReturn(etsi);
+        when(mockValidator.validateDocument()).thenReturn(mockReports);
+
+        // Stub createDocumentValidator
+        doReturn(mockValidator).when(spyService).createDocumentValidator(any(byte[].class));
+
+        // Act & Assert: should throw for digest mismatch
+        assertThatThrownBy(() -> spyService.verifySignature(testFile, expectedChecksum, usersTaxCode))
+                .isInstanceOf(InvalidRequestException.class);
+    }
+
+    @Test
+    void verifySignatureFileChecksumTaxCode_shouldThrowWhenTaxCodeMismatch() throws IOException {
+        // Arrange: create spy
+        SignatureServiceImp spyService = spy(new SignatureServiceImp(
+                trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
+        setField(spyService, "isVerifyEnabled", Boolean.TRUE);
+        setField(spyService, "documentService", documentService);
+
+        File testFile = createTempFile("test-content");
+        String checksum = "correctChecksum";
+        List<String> usersTaxCode = List.of("EXPECTED_TAX_CODE");
+
+        // Mock validator with CAdES signature
+        SignedDocumentValidator mockValidator = mock(SignedDocumentValidator.class);
+        AdvancedSignature sig = createMockSignature("sig1", new Date(), SignatureForm.CAdES);
+        when(mockValidator.getSignatures()).thenReturn(List.of(sig));
+
+        // Mock original documents with correct checksum
+        DSSDocument originalDoc = createMockDocWithDigest(checksum);
+        when(mockValidator.getOriginalDocuments("sig1")).thenReturn(List.of(originalDoc));
+
+        // Mock reports with TOTAL_PASSED
+        Reports mockReports = mock(Reports.class);
+        ValidationReportType etsi = mock(ValidationReportType.class);
+        SignatureValidationReportType sigReport = mock(SignatureValidationReportType.class);
+        ValidationStatusType statusType = mock(ValidationStatusType.class);
+        when(statusType.getMainIndication()).thenReturn(Indication.TOTAL_PASSED);
+        when(sigReport.getSignatureValidationStatus()).thenReturn(statusType);
+        when(etsi.getSignatureValidationReport()).thenReturn(List.of(sigReport));
+        when(mockReports.getEtsiValidationReportJaxb()).thenReturn(etsi);
+
+        // Mock diagnostic data with DIFFERENT tax code
+        DiagnosticData diagnosticData = mock(DiagnosticData.class);
+        CertificateWrapper cert = mock(CertificateWrapper.class);
+        when(cert.getSubjectSerialNumber()).thenReturn("TINIT-DIFFERENT_TAX_CODE");
+        when(diagnosticData.getUsedCertificates()).thenReturn(List.of(cert));
+        when(mockReports.getDiagnosticData()).thenReturn(diagnosticData);
+
+        when(mockValidator.validateDocument()).thenReturn(mockReports);
+
+        // Stub createDocumentValidator
+        doReturn(mockValidator).when(spyService).createDocumentValidator(any(byte[].class));
+
+        // Act & Assert: should throw for tax code mismatch
+        assertThatThrownBy(() -> spyService.verifySignature(testFile, checksum, usersTaxCode))
+                .isInstanceOf(InvalidRequestException.class);
     }
 
     // ==================== extractOriginalDocument ====================
 
-    @Nested
-    @DisplayName("extractOriginalDocument")
-    class ExtractOriginalDocumentTests {
+    @Test
+    void extractOriginalDocument_shouldThrowWhenFileNotSigned() throws IOException {
+        File invalidFile = createTempFile("not a signed document");
 
-        @Test
-        @DisplayName("Should throw when file is not signed")
-        void shouldThrowWhenFileNotSigned() throws IOException {
-            File invalidFile = createTempFile("not a signed document");
+        assertThatThrownBy(() -> SignatureServiceImp.extractOriginalDocument(invalidFile))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> SignatureServiceImp.extractOriginalDocument(invalidFile))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void extractOriginalDocument_shouldThrowWhenFileDoesNotExist() {
+        File nonExistentFile = tempDir.resolve("nonexistent.p7m").toFile();
 
-        @Test
-        @DisplayName("Should throw when file does not exist")
-        void shouldThrowWhenFileDoesNotExist() {
-            File nonExistentFile = tempDir.resolve("nonexistent.p7m").toFile();
-
-            assertThatThrownBy(() -> SignatureServiceImp.extractOriginalDocument(nonExistentFile))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+        assertThatThrownBy(() -> SignatureServiceImp.extractOriginalDocument(nonExistentFile))
+                .isInstanceOf(InvalidRequestException.class);
     }
 
     // ==================== extractFile ====================
 
-    @Nested
-    @DisplayName("extractFile")
-    class ExtractFileTests {
+    @Test
+    void extractFile_shouldThrowWhenContractNotSigned() throws IOException {
+        File invalidContract = createTempFile("not a signed contract");
 
-        @Test
-        @DisplayName("Should throw when contract is not signed")
-        void shouldThrowWhenContractNotSigned() throws IOException {
-            File invalidContract = createTempFile("not a signed contract");
+        assertThatThrownBy(() -> service.extractFile(invalidContract))
+                .isInstanceOf(InvalidRequestException.class);
+    }
 
-            assertThatThrownBy(() -> service.extractFile(invalidContract))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+    @Test
+    void extractFile_shouldThrowWhenFileDoesNotExist() {
+        File nonExistentFile = tempDir.resolve("missing-contract.p7m").toFile();
 
-        @Test
-        @DisplayName("Should throw when file does not exist")
-        void shouldThrowWhenFileDoesNotExist() {
-            File nonExistentFile = tempDir.resolve("missing-contract.p7m").toFile();
-
-            assertThatThrownBy(() -> service.extractFile(nonExistentFile))
-                    .isInstanceOf(InvalidRequestException.class);
-        }
+        assertThatThrownBy(() -> service.extractFile(nonExistentFile))
+                .isInstanceOf(InvalidRequestException.class);
     }
 }
