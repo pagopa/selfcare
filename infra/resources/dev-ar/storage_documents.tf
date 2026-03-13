@@ -39,17 +39,17 @@ module "storage_documents" {
     }
   }
 
-  base_blob_tier_to_cool_after_days_since_modification_greater_than = 30
-  base_blob_tier_to_cold_after_days_since_creation_greater_than     = 90
-  base_delete_after_days_since_creation_greater_than                = 3651
+  base_blob_tier_to_cool_after_days_since_modification_greater_than = 1
+  base_blob_tier_to_cold_after_days_since_creation_greater_than     = 1
+  base_delete_after_days_since_creation_greater_than                = 1
 
   # snapshot_change_tier_to_archive_after_days_since_creation    = 30
-  snapshot_change_tier_to_cool_after_days_since_creation = 90
-  snapshot_delete_after_days_since_creation_greater_than = 3651
+  snapshot_change_tier_to_cool_after_days_since_creation = 1
+  snapshot_delete_after_days_since_creation_greater_than = 1
 
   # version_change_tier_to_archive_after_days_since_creation    = 30
-  version_change_tier_to_cool_after_days_since_creation = 90
-  version_delete_after_days_since_creation              = 3651
+  version_change_tier_to_cool_after_days_since_creation = 1
+  version_delete_after_days_since_creation              = 1
 
   key_vault_resource_group_name = local.key_vault_resource_group_name
   key_vault_name                = local.key_vault_name
@@ -67,22 +67,30 @@ data "azurerm_key_vault_secret" "selc_documents_storage_connection_string" {
   depends_on   = [module.storage_documents]
 }
 
-data "local_file" "resources_logo" {
-  filename = "${path.module}/../logo.png"
-}
+# data "local_file" "resources_logo" {
+#   filename = "${path.module}/../logo.png"
+# }
 
-resource "null_resource" "upload_resources_logo" {
-  triggers = {
-    "changes-in-config" : md5(data.local_file.resources_logo.content)
-  }
+# resource "null_resource" "upload_resources_logo" {
+#   triggers = {
+#     "changes-in-config" : md5(data.local_file.resources_logo.content)
+#   }
 
-  provisioner "local-exec" {
-    command = <<EOT
-              az storage blob upload --container '${local.prefix}-${local.env_short}-${local.naming_config}-blob' \
-                --connection-string '${local.selc_documents_storage_connection_string}' \
-                --file ${data.local_file.resources_logo.filename} \
-                --overwrite true \
-                --name resources/logo.png
-          EOT
-  }
+#   provisioner "local-exec" {
+#     command = <<EOT
+#               az storage blob upload --container '${local.prefix}-${local.env_short}-${local.naming_config}-blob' \
+#                 --connection-string '${local.selc_documents_storage_connection_string}' \
+#                 --file ${data.local_file.resources_logo.filename} \
+#                 --overwrite true \
+#                 --name resources/logo.png
+#           EOT
+#   }
+# }
+
+module "upload_file_logo" {
+  source = "../../core//_modules/upload_file"
+
+  file_path                 = "${path.module}/../logo.png"
+  container                 = module.storage_documents.storage_container_name
+  primary_connection_string = module.storage_documents.storage_account.primary_connection_string
 }

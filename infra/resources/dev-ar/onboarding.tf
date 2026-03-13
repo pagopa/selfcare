@@ -20,7 +20,6 @@ module "collection_onboardings" {
 
   lock_enable = true
 
-  shard_key = "_id"
   indexes = [
     { keys = ["_id"], unique = true },
     { keys = ["createdAt"], unique = false },
@@ -43,7 +42,6 @@ module "collection_tokens" {
 
   lock_enable = true
 
-  shard_key = "_id"
   indexes = [
     { keys = ["_id"], unique = true },
     { keys = ["createdAt"], unique = false }

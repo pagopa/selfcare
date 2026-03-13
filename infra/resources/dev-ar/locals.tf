@@ -17,9 +17,9 @@ locals {
 
   tags = {
     CreatedBy   = "Terraform"
-    Environment = "DEV"
-    Owner       = "SelfCare"
-    Source      = "https://github.com/pagopa/selfcare-onboarding"
+    Environment = "Dev"
+    Owner       = "Selfcare"
+    Source      = "https://github.com/pagopa/selfcare"
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
   }
 
