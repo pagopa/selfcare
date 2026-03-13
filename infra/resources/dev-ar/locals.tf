@@ -11,6 +11,7 @@ locals {
   mongo_db = {
     mongodb_rg_name               = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-rg",
     cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-account"
+    database_onboarding_name      = "selcOnboarding"
   }
 
   function_name = "${local.project}-onboarding-fn"

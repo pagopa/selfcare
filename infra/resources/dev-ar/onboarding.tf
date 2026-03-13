@@ -1,11 +1,7 @@
-locals {
-  database_name = "selcOnboarding"
-}
-
 module "cosmosdb" {
   source = "../_modules/cosmosdb_database"
 
-  database_name               = local.database_name
+  database_name               = local.mongo_db.database_onboarding_name
   resource_group_name         = local.mongo_db.mongodb_rg_name
   cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
 }
@@ -16,7 +12,7 @@ module "collection_onboardings" {
   name                        = "onboardings"
   resource_group_name         = local.mongo_db.mongodb_rg_name
   cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
-  database_name               = local.database_name
+  database_name               = local.mongo_db.database_onboarding_name
 
   lock_enable = true
 
@@ -38,7 +34,7 @@ module "collection_tokens" {
   name                        = "tokens"
   resource_group_name         = local.mongo_db.mongodb_rg_name
   cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
-  database_name               = local.database_name
+  database_name               = local.mongo_db.database_onboarding_name
 
   lock_enable = true
 

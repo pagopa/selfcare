@@ -12,11 +12,11 @@ terraform {
     }
   }
 
-    backend "azurerm" {
+  backend "azurerm" {
     resource_group_name  = "io-infra-rg"
     storage_account_name = "selcdstinfraterraform"
     container_name       = "azurermstate"
-    key                  = "selc.infra.resources.dev.tfstate"
+    key                  = "selc.infra.resources.dev-pnpg.tfstate"
     use_azuread_auth     = true
   }
 

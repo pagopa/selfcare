@@ -1,34 +1,46 @@
 module "cosmosdb" {
-  source = "../_modules/cosmosdb"
+  source = "../_modules/cosmosdb_database"
 
-  resource_group_name = local.mongo_db.mongodb_rg_name
-  account_name        = local.mongo_db.cosmosdb_account_mongodb_name
+  database_name               = local.mongo_db.database_onboarding_name
+  resource_group_name         = local.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
+}
 
-  database_name = "selcOnboarding"
+module "collection_onboardings" {
+  source = "../_modules/cosmosdb_collection"
 
-  collections = [
-    {
-      name      = "onboardings"
-      shard_key = "_id"
-      indexes = [
-        { keys = ["_id"], unique = true },
-        { keys = ["createdAt"], unique = false },
-        { keys = ["origin"], unique = false },
-        { keys = ["originId"], unique = false },
-        { keys = ["taxCode"], unique = false },
-        { keys = ["subunitCode"], unique = false },
-        { keys = ["productId"], unique = false },
-        { keys = ["status"], unique = false }
-      ]
-    },
-    {
-      name      = "tokens"
-      shard_key = "_id"
-      indexes = [
-        { keys = ["_id"], unique = true },
-        { keys = ["createdAt"], unique = false }
-      ]
-    }
+  name                        = "onboardings"
+  resource_group_name         = local.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
+  database_name               = local.mongo_db.database_onboarding_name
+
+  lock_enable = true
+
+  indexes = [
+    { keys = ["_id"], unique = true },
+    { keys = ["createdAt"], unique = false },
+    { keys = ["origin"], unique = false },
+    { keys = ["originId"], unique = false },
+    { keys = ["taxCode"], unique = false },
+    { keys = ["subunitCode"], unique = false },
+    { keys = ["productId"], unique = false },
+    { keys = ["status"], unique = false }
+  ]
+}
+
+module "collection_tokens" {
+  source = "../_modules/cosmosdb_collection"
+
+  name                        = "tokens"
+  resource_group_name         = local.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
+  database_name               = local.mongo_db.database_onboarding_name
+
+  lock_enable = true
+
+  indexes = [
+    { keys = ["_id"], unique = true },
+    { keys = ["createdAt"], unique = false }
   ]
 }
 
@@ -39,6 +51,10 @@ resource "random_password" "encryption_key" {
   keepers = {
     version = 1
   }
+
+  lifecycle {
+    ignore_changes = all
+  }
 }
 
 resource "random_password" "encryption_iv" {
@@ -48,6 +64,10 @@ resource "random_password" "encryption_iv" {
   keepers = {
     version = 1
   }
+
+  lifecycle {
+    ignore_changes = all
+  }
 }
 
 resource "azurerm_key_vault_secret" "encryption_iv_secret" {
@@ -56,6 +76,10 @@ resource "azurerm_key_vault_secret" "encryption_iv_secret" {
   content_type = "text/plain"
 
   key_vault_id = data.azurerm_key_vault.key_vault.id
+
+  lifecycle {
+    ignore_changes = all
+  }
 }
 
 resource "azurerm_key_vault_secret" "encryption_key_secret" {
@@ -64,4 +88,8 @@ resource "azurerm_key_vault_secret" "encryption_key_secret" {
   content_type = "text/plain"
 
   key_vault_id = data.azurerm_key_vault.key_vault.id
+
+  lifecycle {
+    ignore_changes = all
+  }
 }

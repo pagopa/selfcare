@@ -6,16 +6,14 @@ locals {
   location_short = "weu"
   domain         = "pnpg"
 
-  is_pnpg = true
-
-  pnpg_suffix = local.is_pnpg == true ? "-${local.location_short}-${local.domain}" : ""
+  pnpg_suffix = "${local.location_short}-${local.domain}"
 
   project = "${local.prefix}-${local.env_short}"
 
   mongo_db = {
-    mongodb_rg_name               = "${local.prefix}-${local.env_short}${local.pnpg_suffix}-cosmosdb-mongodb-rg",
-    cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}${local.pnpg_suffix}-cosmosdb-mongodb-account"
-    mongodb_name                  = "selcOnboarding"
+    mongodb_rg_name               = "${local.prefix}-${local.env_short}-${local.pnpg_suffix}-cosmosdb-mongodb-rg",
+    cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}-${local.pnpg_suffix}-cosmosdb-mongodb-account"
+    database_onboarding_name      = "selcOnboarding"
   }
 
   function_name = "${local.storage_prefix}-onboarding-fn"
@@ -23,13 +21,13 @@ locals {
   tags = {
     CreatedBy   = "Terraform"
     Environment = "Dev"
-    Owner       = "SelfCare"
-    Source      = "https://github.com/pagopa/selfcare-onboarding"
+    Owner       = "Selfcare"
+    Source      = "https://github.com/pagopa/selfcare"
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
   }
 
-  key_vault_resource_group_name = "${local.prefix}-${local.env_short}-sec-rg"
-  key_vault_name                = "${local.prefix}-${local.env_short}-kv"
+  key_vault_resource_group_name = "${local.prefix}-${local.env_short}-${local.domain}-sec-rg"
+  key_vault_name                = "${local.prefix}-${local.env_short}-${local.domain}-kv"
 
   resource_group_name_vnet = "${local.project}-vnet-rg"
 }
