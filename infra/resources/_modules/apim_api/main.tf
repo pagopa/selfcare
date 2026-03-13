@@ -1,41 +1,32 @@
-locals {
-  apim_name    = "selc-${var.env_short}-apim-v2"
-  apim_rg      = "selc-${var.env_short}-apim-rg"
-  api_name     = var.is_pnpg ? "selc-${var.env_short}-pnpg-api-auth" : "selc-${var.env_short}-api-auth"
-  display_name = var.is_pnpg ? "PNPG Auth API" : "Auth API"
-  base_path    = var.is_pnpg ? "imprese/auth" : "auth"
-}
-
-
-resource "azurerm_api_management_api_version_set" "apim_api_auth" {
-  name                = local.api_name
-  resource_group_name = local.apim_rg
-  api_management_name = local.apim_name
-  display_name        = local.display_name
+resource "azurerm_api_management_api_version_set" "apim_api_version_set" {
+  name                = var.api_name
+  resource_group_name = var.apim_rg
+  api_management_name = var.apim_name
+  display_name        = var.display_name
   versioning_scheme   = "Segment"
 }
 
 
-module "apim_api_auth_ms" {
+module "apim_api" {
   source              = "github.com/pagopa/terraform-azurerm-v4.git//api_management_api?ref=v7.26.5"
-  name                = local.api_name
-  api_management_name = local.apim_name
-  resource_group_name = local.apim_rg
-  version_set_id      = azurerm_api_management_api_version_set.apim_api_auth.id
+  name                = var.api_name
+  api_management_name = var.apim_name
+  resource_group_name = var.apim_rg
+  version_set_id      = azurerm_api_management_api_version_set.apim_api_version_set.id
 
-  description  = local.display_name
-  display_name = local.display_name
-  path         = local.base_path
+  description  = var.display_name
+  display_name = var.display_name
+  path         = var.base_path
   protocols = [
     "https"
   ]
 
-  service_url = format("https://%s", var.private_dns_name)
+  service_url = "https://${var.private_dns_name}"
 
   content_format = "openapi+json"
-  content_value = templatefile("../../../apps/auth/src/main/docs/openapi.json", {
+  content_value = templatefile(var.openapi_path, {
     url      = format("%s.%s", var.api_dns_zone_prefix, var.external_domain)
-    basePath = local.base_path
+    basePath = var.base_path
   })
 
   subscription_required = false

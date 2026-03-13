@@ -4,7 +4,13 @@ locals {
   env_short      = "d"
   location       = "westeurope"
   location_short = "weu"
+
+  dns_zone_prefix     = "dev.selfcare"
+  api_dns_zone_prefix = "api.dev.selfcare"
   # suffix_increment = "-002"
+
+  apim_name = "selc-${local.env_short}-apim-v2"
+  apim_rg   = "selc-${local.env_short}-api-v2-rg"
 
   project = "${local.prefix}-${local.env_short}"
 
@@ -12,6 +18,12 @@ locals {
     mongodb_rg_name               = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-rg",
     cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-account"
     database_onboarding_name      = "selcOnboarding"
+    database_auth_name            = "selcAuth"
+  }
+
+  private_dns_name_domain = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+  private_dns_name_ms = {
+    private_dns_name_auth_ms = "selc-d-auth-ms-ca.${local.private_dns_name_domain}"
   }
 
   function_name = "${local.project}-onboarding-fn"
