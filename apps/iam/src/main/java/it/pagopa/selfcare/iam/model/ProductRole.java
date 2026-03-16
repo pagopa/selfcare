@@ -10,9 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductRolePermissions {
+public class ProductRole {
   private String productId;
-  private String role;
-  private String group;
-  private List<String> permissions;
+  private List<Role> roles;
 }

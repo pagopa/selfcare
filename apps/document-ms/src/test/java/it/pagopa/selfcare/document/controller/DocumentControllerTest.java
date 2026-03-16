@@ -9,12 +9,12 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.document.controller.request.DocumentBuilderRequest;
-import it.pagopa.selfcare.document.controller.request.OnboardingDocumentRequest;
-import it.pagopa.selfcare.document.controller.response.ContractSignedReport;
-import it.pagopa.selfcare.document.controller.response.DocumentBuilderResponse;
-import it.pagopa.selfcare.document.controller.response.DocumentResponse;
-import it.pagopa.selfcare.document.entity.Document;
+import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
+import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
+import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
+import it.pagopa.selfcare.document.model.dto.response.DocumentBuilderResponse;
+import it.pagopa.selfcare.document.model.dto.response.DocumentResponse;
+import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.exception.ConflictException;
 import it.pagopa.selfcare.document.mapper.DocumentMapper;
 import it.pagopa.selfcare.document.model.FormItem;
@@ -38,6 +38,8 @@ class DocumentControllerTest {
   private static final String ATTACHMENT_NAME = "attachment.pdf";
   private static final String TEMPLATE_PATH = "templates/contract.ftl";
   private static final String CONTRACT_SIGNED_PATH = "contracts/signed/contract-signed.pdf";
+  private static final String INSTITUTION_DESCRIPTION = "Test Institution";
+  private static final String PRODUCT_ID = "Product-123";
 
   @InjectMock DocumentService documentService;
   @InjectMock DocumentMapper documentMapper;
@@ -142,13 +144,17 @@ class DocumentControllerTest {
     File tempFile = Files.createTempFile("template", ".pdf").toFile();
     tempFile.deleteOnExit();
 
-    Mockito.when(documentService.retrieveTemplateAttachment(ONBOARDING_ID, TEMPLATE_PATH, ATTACHMENT_NAME))
+    Mockito.when(
+            documentService.retrieveTemplateAttachment(
+                ONBOARDING_ID, TEMPLATE_PATH, ATTACHMENT_NAME, INSTITUTION_DESCRIPTION, PRODUCT_ID))
         .thenReturn(Uni.createFrom().item(RestResponse.ok(tempFile)));
 
     given()
         .when()
         .queryParam("templatePath", TEMPLATE_PATH)
         .queryParam("name", ATTACHMENT_NAME)
+        .queryParam("institutionDescription", INSTITUTION_DESCRIPTION)
+        .queryParam("productId", PRODUCT_ID)
         .get("/v1/documents/" + ONBOARDING_ID + "/template-attachment")
         .then()
         .statusCode(200);
@@ -580,13 +586,17 @@ class DocumentControllerTest {
 
   @Test
   void getTemplateAttachment_shouldReturnInternalServerError_whenServiceFails() {
-    Mockito.when(documentService.retrieveTemplateAttachment(ONBOARDING_ID, TEMPLATE_PATH, ATTACHMENT_NAME))
+    Mockito.when(
+            documentService.retrieveTemplateAttachment(
+                ONBOARDING_ID, TEMPLATE_PATH, ATTACHMENT_NAME, INSTITUTION_DESCRIPTION, PRODUCT_ID))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Template processing error")));
 
     given()
         .when()
         .queryParam("templatePath", TEMPLATE_PATH)
         .queryParam("name", ATTACHMENT_NAME)
+        .queryParam("institutionDescription", INSTITUTION_DESCRIPTION)
+        .queryParam("productId", PRODUCT_ID)
         .get("/v1/documents/" + ONBOARDING_ID + "/template-attachment")
         .then()
         .statusCode(500);

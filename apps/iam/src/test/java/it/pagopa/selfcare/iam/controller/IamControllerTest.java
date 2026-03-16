@@ -13,9 +13,12 @@ import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
 import it.pagopa.selfcare.iam.entity.UserClaims;
+import it.pagopa.selfcare.iam.exception.InternalException;
 import it.pagopa.selfcare.iam.exception.InvalidRequestException;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.iam.model.ProductRole;
 import it.pagopa.selfcare.iam.model.ProductRoles;
+import it.pagopa.selfcare.iam.model.Role;
 import it.pagopa.selfcare.iam.service.IamServiceImpl;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -301,36 +304,98 @@ public class IamControllerTest {
         .then()
         .statusCode(404);
   }
-  //  @Test
-  //  void getProductRolePermissionsList_shouldReturn200() {
-  //    String uid = "user-1";
-  //    String productId = "productA";
-  //
-  //    Mockito.when(iamService.getProductRolePermissionsList(uid, productId))
-  //            .thenReturn(Uni.createFrom().item(Mockito.any(ProductRolePermissionsList.class)));
-  //
-  //    given()
-  //      .when()
-  //      .get("/users/roles/{uid}", uid)
-  //      .then()
-  //      .log().all()
-  //      .statusCode(200);
-  //  }
-  //
-  //  @Test
-  //  void getProductRolePermissionsList_shouldReturn500_serviceError() {
-  //    String uid = "user-1";
-  //    String productId = "productA";
-  //
-  //    Mockito.when(iamService.getProductRolePermissionsList(uid, productId))
-  //            .thenReturn(Uni.createFrom().failure(
-  //                    new InternalException("Database error")
-  //            ));
-  //
-  //    given()
-  //            .when()
-  //            .get("/users/roles/{uid}", uid)
-  //            .then()
-  //            .statusCode(500);
-  //  }
+
+  @Test
+  void getProductRoles_shouldReturn200_withRoles() {
+    String uid = "042b311a-7b99-4eaa-8c7d-9e5b5f6bb9ae";
+    String productId = "product-C";
+
+    Role role = Role.builder().role("CUSTOM").group("CUSTOM").build();
+    ProductRole productRole =
+        ProductRole.builder().productId(productId).roles(List.of(role)).build();
+
+    Mockito.when(iamService.getProductRoles(uid, productId))
+        .thenReturn(Uni.createFrom().item(List.of(productRole)));
+
+    given()
+        .accept(ContentType.JSON)
+        .queryParam("productId", productId)
+        .when()
+        .get("/users/{uid}/roles/", uid)
+        .then()
+        .log()
+        .all()
+        .statusCode(200)
+        .body("[0].productId", equalTo(productId))
+        .body("[0].roles[0].role", equalTo("CUSTOM"))
+        .body("[0].roles[0].group", equalTo("CUSTOM"));
+  }
+
+  @Test
+  void getProductRoles_shouldReturn200_withMultipleProducts() {
+    String uid = "user-multi";
+
+    Role adminRole = Role.builder().role("ADMIN").group("SUPPORT").build();
+    Role operatorRole = Role.builder().role("OPERATOR").group("SUPPORT").build();
+    ProductRole productA =
+        ProductRole.builder()
+            .productId("product-A")
+            .roles(List.of(adminRole, operatorRole))
+            .build();
+    ProductRole productB =
+        ProductRole.builder().productId("product-B").roles(List.of(operatorRole)).build();
+
+    Mockito.when(iamService.getProductRoles(uid, null))
+        .thenReturn(Uni.createFrom().item(List.of(productA, productB)));
+
+    given()
+        .accept(ContentType.JSON)
+        .when()
+        .get("/users/{uid}/roles/", uid)
+        .then()
+        .statusCode(200)
+        .body("$.size()", equalTo(2));
+  }
+
+  @Test
+  void getProductRoles_shouldReturn200_withEmptyList() {
+    String uid = "user-no-roles";
+
+    Mockito.when(iamService.getProductRoles(uid, null))
+        .thenReturn(Uni.createFrom().item(List.of()));
+
+    given()
+        .accept(ContentType.JSON)
+        .when()
+        .get("/users/{uid}/roles/", uid)
+        .then()
+        .statusCode(200)
+        .body("$.size()", equalTo(0));
+  }
+
+  @Test
+  void getProductRoles_shouldReturn404_whenUserNotFound() {
+    String uid = "non-existing-user";
+
+    Mockito.when(iamService.getProductRoles(uid, null))
+        .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("User not found")));
+
+    given()
+        .accept(ContentType.JSON)
+        .when()
+        .get("/users/{uid}/roles/", uid)
+        .then()
+        .statusCode(404)
+        .body(containsString("User not found"));
+  }
+
+  @Test
+  void getProductRoles_shouldReturn500_onInternalError() {
+    String uid = "user-error";
+
+    Mockito.when(iamService.getProductRoles(uid, null))
+        .thenReturn(Uni.createFrom().failure(new InternalException("Database error")));
+
+    given().accept(ContentType.JSON).when().get("/users/{uid}/roles/", uid).then().statusCode(500);
+  }
 }

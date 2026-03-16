@@ -53,5 +53,6 @@ import org.bson.codecs.pojo.annotations.BsonId;
 public class Roles extends ReactivePanacheMongoEntityBase {
 
   @BsonId private String name;
+  private String group;
   private List<String> permissions;
 }

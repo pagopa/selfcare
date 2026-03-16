@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.document.entity;
+package it.pagopa.selfcare.document.model.entity;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
