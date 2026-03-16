@@ -4,6 +4,7 @@ import com.mongodb.client.model.Accumulators;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Projections;
+import com.mongodb.client.model.UnwindOptions;
 import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.smallrye.mutiny.Uni;
@@ -134,11 +135,16 @@ public class UserPermissionsRepository {
         Arrays.asList(
             Aggregates.unwind("$productRoles.roles"),
             Aggregates.lookup("roles", "productRoles.roles", "_id", "roleDetails"),
-            Aggregates.unwind("$roleDetails"),
+            Aggregates.unwind("$roleDetails", new UnwindOptions().preserveNullAndEmptyArrays(true)),
             Aggregates.project(
                 Projections.fields(
-                    Projections.computed("role", "$roleDetails._id"),
-                    Projections.computed("group", "$roleDetails.group"),
+                    Projections.computed(
+                        "role",
+                        new Document(
+                            "$ifNull", Arrays.asList("$roleDetails._id", "$productRoles.roles"))),
+                    Projections.computed(
+                        "group",
+                        new Document("$ifNull", Arrays.asList("$roleDetails.group", null))),
                     Projections.computed("productId", "$productRoles.productId"),
                     Projections.excludeId())),
             Aggregates.group(
