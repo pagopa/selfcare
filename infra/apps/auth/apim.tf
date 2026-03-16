@@ -1,6 +1,6 @@
 locals {
   apim_name    = "selc-${var.env_short}-apim-v2"
-  apim_rg      = "selc-${var.env_short}-apim-v2-rg"
+  apim_rg      = "selc-${var.env_short}-api-v2-rg"
   api_name     = var.is_pnpg ? "selc-${var.env_short}-pnpg-api-auth" : "selc-${var.env_short}-api-auth"
   display_name = var.is_pnpg ? "PNPG Auth API" : "Auth API"
   base_path    = var.is_pnpg ? "imprese/auth" : "auth"
