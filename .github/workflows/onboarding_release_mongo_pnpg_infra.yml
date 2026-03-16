@@ -21,7 +21,7 @@ on:
 jobs:
 
   release_dev:
-    uses: ./.github/workflows/onboarding_call_release_infra.yml
+    uses: ./.github/workflows/call_release_infra.yml
     name: '[Dev] Mongo Infra Release'
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     secrets: inherit
@@ -31,7 +31,7 @@ jobs:
       dir: infra/mongo
 
   release_uat:
-    uses: ./.github/workflows/onboarding_call_release_infra.yml
+    uses: ./.github/workflows/call_release_infra.yml
     name: '[UAT] Mongo Infra Release'
     if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
     secrets: inherit
@@ -41,7 +41,7 @@ jobs:
       dir: infra/mongo
 
   release_prod:
-    uses: ./.github/workflows/onboarding_call_release_infra.yml
+    uses: ./.github/workflows/call_release_infra.yml
     name: '[Prod] Mongo Infra Release'
     if: ${{ inputs.env == 'prod' }}
     secrets: inherit

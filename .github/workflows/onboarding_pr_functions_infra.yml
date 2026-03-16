@@ -16,11 +16,11 @@ on:
     paths:
       - 'infra/apps/onboarding-functions/**'
       - './.github/workflows/onboarding_pr_functions_infra.yml'
-      - './.github/workflows/onboarding_call_code_review_infra.yml'
+      - './.github/workflows/call_code_review_infra.yml'
 
 jobs:
   code_review_dev:
-    uses: ./.github/workflows/onboarding_call_code_review_infra.yml
+    uses: ./.github/workflows/call_code_review_infra.yml
     name: '[DEV] Functions Infra Code Review'
     if: ${{ !startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
@@ -29,7 +29,7 @@ jobs:
       dir: infra/apps/onboarding-functions
 
   code_review_uat:
-    uses: ./.github/workflows/onboarding_call_code_review_infra.yml
+    uses: ./.github/workflows/call_code_review_infra.yml
     name: '[UAT] Functions Infra Code Review'
     secrets: inherit
     with:
@@ -37,7 +37,7 @@ jobs:
       dir: infra/apps/onboarding-functions
 
   code_review_prod:
-    uses: ./.github/workflows/onboarding_call_code_review_infra.yml
+    uses: ./.github/workflows/call_code_review_infra.yml
     name: '[PROD] Functions Infra Code Review'
     secrets: inherit
     with:

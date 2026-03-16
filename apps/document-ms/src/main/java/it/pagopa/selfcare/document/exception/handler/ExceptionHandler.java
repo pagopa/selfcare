@@ -105,4 +105,13 @@ public class ExceptionHandler {
             null);
     return Response.status(Response.Status.METHOD_NOT_ALLOWED).entity(problem).build();
   }
+
+  @ServerExceptionMapper
+  public Response toResponse(UpdateNotAllowedException exception) {
+    LOGGER.error(PREFIX_LOGGER, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
+    Problem problem =
+        new Problem(
+            exception.getMessage(), null, HttpStatus.SC_CONFLICT, exception.getCode(), null);
+    return Response.status(Response.Status.CONFLICT).entity(problem).build();
+  }
 }

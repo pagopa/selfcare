@@ -7,10 +7,13 @@ permissions:
 on:
   pull_request:
     types: [ opened, synchronize, reopened ]
+    branches:
+      - main
+      - releases/*
     paths:
       - "apps/onboarding-ms/**"
+      - ".github/workflows/integration_tests_onboarding_ms.yml"
   workflow_dispatch:
-
 
 jobs:
   integration_tests_ms:

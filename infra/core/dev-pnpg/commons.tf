@@ -289,11 +289,13 @@ module "container_app_environments" {
   location            = local.location
   resource_group_name = azurerm_resource_group.selc_container_app_rg.name
 
+  infrastructure_resource_group_name = "ME_selc-d-pnpg-cae-cp_selc-d-container-app-rg_westeurope"
+
   enable_log = false
   subnet_id  = module.networking.subnet.id
   cae_name   = "${local.project}-pnpg-cae-cp"
 
-  workload_profiles = []
+  # workload_profiles = []
 
   zone_redundant = false
 
