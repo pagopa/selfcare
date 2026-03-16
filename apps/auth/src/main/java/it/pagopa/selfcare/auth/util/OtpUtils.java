@@ -1,6 +1,5 @@
 package it.pagopa.selfcare.auth.util;
 
-import com.mongodb.client.model.Filters;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.model.OtpStatus;
@@ -117,18 +116,19 @@ public class OtpUtils {
             });
   }
 
-  public static Uni<Long> otpCountTodayDistinctUsers() {
+  private static Uni<Long> otpCountTodayDistinctUsers() {
 
     OffsetDateTime now = OffsetDateTime.now();
     OffsetDateTime startOfDay = now.toLocalDate()
             .atStartOfDay()
             .atOffset(now.getOffset());
 
-    return OtpFlow.mongoCollection()
-            .distinct("userId", Filters.gte("createdAt", startOfDay.toInstant()), String.class)
-            .collect()
-            .asList()
-            .map(list -> (long) list.size());
+    return OtpFlow.<OtpFlow>find("createdAt >= ?1", startOfDay.toInstant())
+            .list()
+            .map(list -> list.stream()
+                    .map(OtpFlow::getUserId)
+                    .distinct()
+                    .count());
   }
 
 }
