@@ -58,7 +58,7 @@ public class OtpFlowBetaServiceTest {
         Mockito.mock(ReactivePanacheQuery.class);
     when(OtpFlow.builder()).thenCallRealMethod();
     when(query.firstResult())
-        .thenReturn(Uni.createFrom().failure(new WebApplicationException(404)));
+        .thenReturn(Uni.createFrom().nullItem());
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
     Optional<OtpInfo> maybeOtpInfo =
         otpFlowService
@@ -85,7 +85,7 @@ public class OtpFlowBetaServiceTest {
         Mockito.mock(ReactivePanacheQuery.class);
     when(OtpFlow.builder()).thenCallRealMethod();
     when(query.firstResult())
-        .thenReturn(Uni.createFrom().failure(new WebApplicationException(404)));
+        .thenReturn(Uni.createFrom().nullItem());
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
     Optional<OtpInfo> maybeOtpInfo =
         otpFlowService
@@ -113,7 +113,7 @@ public class OtpFlowBetaServiceTest {
         Mockito.mock(ReactivePanacheQuery.class);
     when(OtpFlow.builder()).thenCallRealMethod();
     when(query.firstResult())
-        .thenReturn(Uni.createFrom().failure(new WebApplicationException(404)));
+        .thenReturn(Uni.createFrom().nullItem());
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
     Optional<OtpInfo> maybeOtpInfo =
         otpFlowService
