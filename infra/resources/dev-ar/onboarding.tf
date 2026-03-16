@@ -200,6 +200,93 @@ locals {
       initialDelaySeconds = 5
     }
   ]
+
+  onboarding_cdc_container_app = {
+    min_replicas = 0
+    max_replicas = 1
+    scale_rules = [
+      {
+        custom = {
+          metadata = {
+            "desiredReplicas" = "1"
+            "start"           = "0 8 * * MON-FRI"
+            "end"             = "0 19 * * MON-FRI"
+            "timezone"        = "Europe/Rome"
+          }
+          type = "cron"
+        }
+        name = "cron-scale-rule"
+      }
+    ]
+    cpu    = 1
+    memory = "2Gi"
+  }
+
+  onboarding_cdc_app_settings = [
+    {
+      name  = "JAVA_TOOL_OPTIONS"
+      value = "-javaagent:applicationinsights-agent.jar"
+    },
+    {
+      name  = "APPLICATIONINSIGHTS_ROLE_NAME"
+      value = "onboarding-cdc"
+    },
+    {
+      name  = "ONBOARDING_FUNCTIONS_URL"
+      value = "https://selc-d-onboarding-fn.azurewebsites.net"
+    },
+    {
+      name  = "ONBOARDING-CDC-MONGODB-WATCH-ENABLED"
+      value = "true"
+    },
+    {
+      name  = "ONBOARDING-CDC-MINUTES-THRESHOLD-FOR-UPDATE-NOTIFICATION"
+      value = "5"
+    }
+  ]
+
+  onboarding_cdc_secrets_names = {
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
+    "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
+    "NOTIFICATION-FUNCTIONS-API-KEY"        = "fn-onboarding-primary-key"
+  }
+
+  onboarding_cdc_probes = [
+    {
+      httpGet = {
+        path   = "q/health/live"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 5
+      type                = "Liveness"
+      failureThreshold    = 3
+      initialDelaySeconds = 1
+    },
+    {
+      httpGet = {
+        path   = "q/health/ready"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 5
+      type                = "Readiness"
+      failureThreshold    = 30
+      initialDelaySeconds = 3
+    },
+    {
+      httpGet = {
+        path   = "q/health/started"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 5
+      failureThreshold    = 5
+      type                = "Startup"
+      initialDelaySeconds = 5
+    }
+  ]
 }
 
 module "container_app_onboarding_ms" {
@@ -217,5 +304,23 @@ module "container_app_onboarding_ms" {
   key_vault_resource_group_name  = local.key_vault_resource_group_name
   key_vault_name                 = local.key_vault_name
   probes                         = local.onboarding_ms_probes
+  tags                           = local.tags
+}
+
+module "container_app_onboarding_cdc" {
+  source = "../_modules/container_app_microservice"
+
+  env_short                      = local.env_short
+  resource_group_name            = local.ca_resource_group_name
+  container_app                  = local.onboarding_cdc_container_app
+  container_app_name             = "onboarding-cdc"
+  container_app_environment_name = local.container_app_environment_name
+  image_name                     = "selfcare-onboarding-cdc"
+  image_tag                      = var.image_tag
+  app_settings                   = local.onboarding_cdc_app_settings
+  secrets_names                  = local.onboarding_cdc_secrets_names
+  key_vault_resource_group_name  = local.key_vault_resource_group_name
+  key_vault_name                 = local.key_vault_name
+  probes                         = local.onboarding_cdc_probes
   tags                           = local.tags
 }
