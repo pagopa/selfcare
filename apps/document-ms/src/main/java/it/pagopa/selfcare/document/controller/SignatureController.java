@@ -33,7 +33,8 @@ public class SignatureController {
     return signatureService.verifyContractSignature(
             request.getOnboardingId(),
             request.getFile(),
-            request.getFiscalCodes()
+            request.getFiscalCodes(),
+            request.getSkipSignatureVerification()
     );
   }
 

@@ -208,11 +208,12 @@ public class SignatureServiceImp implements SignatureService {
     public Uni<Void> verifyContractSignature(
             String onboardingId,
             File file,
-            List<String> fiscalCodes) {
+            List<String> fiscalCodes,
+            boolean skipSignatureVerification) {
 
         log.info("Verifying contract signature for onboardingId: {}", sanitize(onboardingId));
 
-        if (!isSignatureVerificationEnabled()) {
+        if (!isSignatureVerificationEnabled() || skipSignatureVerification) {
             log.info("Signature verification is disabled, skipping");
             return Uni.createFrom().voidItem();
         }

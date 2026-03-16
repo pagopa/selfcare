@@ -39,13 +39,14 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes)))
+                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), any(Boolean.class)))
         .thenReturn(Uni.createFrom().voidItem());
 
     given()
         .multiPart("onboardingId", ONBOARDING_ID)
         .multiPart("file", tempFile, MediaType.APPLICATION_OCTET_STREAM)
         .multiPart("fiscalCodes", fiscalCodes, MediaType.APPLICATION_JSON)
+        .multiPart("skipSignatureVerification", Boolean.FALSE)
         .when()
         .post("/v1/signature/verify")
         .then()
@@ -61,13 +62,14 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes)))
+                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), any(Boolean.class)))
         .thenReturn(Uni.createFrom().voidItem());
 
     given()
         .multiPart("onboardingId", ONBOARDING_ID)
         .multiPart("file", tempFile, MediaType.APPLICATION_OCTET_STREAM)
         .multiPart("fiscalCodes", fiscalCodes, MediaType.APPLICATION_JSON)
+        .multiPart("skipSignatureVerification", Boolean.FALSE)
         .when()
         .post("/v1/signature/verify")
         .then()
@@ -84,13 +86,14 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes)))
+                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), any(Boolean.class)))
         .thenReturn(Uni.createFrom().voidItem());
 
     given()
         .multiPart("onboardingId", ONBOARDING_ID)
         .multiPart("file", tempFile, MediaType.APPLICATION_OCTET_STREAM)
         .multiPart("fiscalCodes", fiscalCodes, MediaType.APPLICATION_JSON)
+        .multiPart("skipSignatureVerification", Boolean.FALSE)
         .when()
         .post("/v1/signature/verify")
         .then()
@@ -171,13 +174,14 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                anyString(), any(File.class), anyList()))
+                anyString(), any(File.class), anyList(), any(Boolean.class)))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Signature verification failed")));
 
     given()
         .multiPart("onboardingId", ONBOARDING_ID)
         .multiPart("file", tempFile, MediaType.APPLICATION_OCTET_STREAM)
         .multiPart("fiscalCodes", fiscalCodes, MediaType.APPLICATION_JSON)
+        .multiPart("skipSignatureVerification", Boolean.FALSE)
         .when()
         .post("/v1/signature/verify")
         .then()
@@ -194,7 +198,7 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                anyString(), any(File.class), anyList()))
+                anyString(), any(File.class), anyList(), any(Boolean.class)))
         .thenReturn(
             Uni.createFrom().failure(new IllegalStateException("Invalid signature format")));
 
@@ -202,6 +206,7 @@ class SignatureControllerTest {
         .multiPart("onboardingId", ONBOARDING_ID)
         .multiPart("file", tempFile, MediaType.APPLICATION_OCTET_STREAM)
         .multiPart("fiscalCodes", fiscalCodes, MediaType.APPLICATION_JSON)
+        .multiPart("skipSignatureVerification", Boolean.FALSE)
         .when()
         .post("/v1/signature/verify")
         .then()
@@ -218,13 +223,14 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                anyString(), any(File.class), anyList()))
+                anyString(), any(File.class), anyList(), any(Boolean.class)))
         .thenReturn(Uni.createFrom().failure(new java.io.IOException("Cannot read file")));
 
     given()
         .multiPart("onboardingId", ONBOARDING_ID)
         .multiPart("file", tempFile, MediaType.APPLICATION_OCTET_STREAM)
         .multiPart("fiscalCodes", fiscalCodes, MediaType.APPLICATION_JSON)
+        .multiPart("skipSignatureVerification", Boolean.FALSE)
         .when()
         .post("/v1/signature/verify")
         .then()
@@ -241,7 +247,7 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                anyString(), any(File.class), anyList()))
+                anyString(), any(File.class), anyList(), any(Boolean.class)))
         .thenReturn(
             Uni.createFrom()
                 .failure(new IllegalArgumentException("Fiscal code does not match signature")));
@@ -250,6 +256,7 @@ class SignatureControllerTest {
         .multiPart("onboardingId", ONBOARDING_ID)
         .multiPart("file", tempFile, MediaType.APPLICATION_OCTET_STREAM)
         .multiPart("fiscalCodes", fiscalCodes, MediaType.APPLICATION_JSON)
+        .multiPart("skipSignatureVerification", Boolean.FALSE)
         .when()
         .post("/v1/signature/verify")
         .then()
@@ -265,20 +272,21 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                anyString(), any(File.class), anyList()))
+                anyString(), any(File.class), anyList(), any(Boolean.class)))
         .thenReturn(Uni.createFrom().voidItem());
 
     given()
         .multiPart("onboardingId", ONBOARDING_ID)
         .multiPart("file", tempFile, MediaType.APPLICATION_OCTET_STREAM)
         .multiPart("fiscalCodes", fiscalCodes, MediaType.APPLICATION_JSON)
+        .multiPart("skipSignatureVerification", Boolean.FALSE)
         .when()
         .post("/v1/signature/verify")
         .then()
         .statusCode(204);
 
     Mockito.verify(signatureService, Mockito.times(1))
-        .verifyContractSignature(eq(ONBOARDING_ID), any(File.class), anyList());
+        .verifyContractSignature(eq(ONBOARDING_ID), any(File.class), anyList(), any(Boolean.class));
   }
 
   @Test
@@ -290,13 +298,14 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes)))
+                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), any(Boolean.class)))
         .thenReturn(Uni.createFrom().voidItem());
 
     given()
         .multiPart("onboardingId", ONBOARDING_ID)
         .multiPart("file", tempFile, MediaType.APPLICATION_OCTET_STREAM)
         .multiPart("fiscalCodes", fiscalCodes, MediaType.APPLICATION_JSON)
+        .multiPart("skipSignatureVerification", Boolean.FALSE)
         .when()
         .post("/v1/signature/verify")
         .then()
@@ -312,13 +321,14 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes)))
+                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), any(Boolean.class)))
         .thenReturn(Uni.createFrom().voidItem());
 
     given()
         .multiPart("onboardingId", ONBOARDING_ID)
         .multiPart("file", tempFile, MediaType.APPLICATION_OCTET_STREAM)
         .multiPart("fiscalCodes", fiscalCodes, MediaType.APPLICATION_JSON)
+        .multiPart("skipSignatureVerification", Boolean.FALSE)
         .when()
         .post("/v1/signature/verify")
         .then()
@@ -335,13 +345,14 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes)))
+                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), any(Boolean.class)))
         .thenReturn(Uni.createFrom().voidItem());
 
     given()
         .multiPart("onboardingId", ONBOARDING_ID)
         .multiPart("file", tempFile, MediaType.APPLICATION_OCTET_STREAM)
         .multiPart("fiscalCodes", fiscalCodes, MediaType.APPLICATION_JSON)
+        .multiPart("skipSignatureVerification", Boolean.FALSE)
         .when()
         .post("/v1/signature/verify")
         .then()
@@ -358,13 +369,14 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                eq(specialOnboardingId), any(File.class), eq(fiscalCodes)))
+                eq(specialOnboardingId), any(File.class), eq(fiscalCodes), any(Boolean.class)))
         .thenReturn(Uni.createFrom().voidItem());
 
     given()
         .multiPart("onboardingId", specialOnboardingId)
         .multiPart("file", tempFile, MediaType.APPLICATION_OCTET_STREAM)
         .multiPart("fiscalCodes", fiscalCodes, MediaType.APPLICATION_JSON)
+        .multiPart("skipSignatureVerification", Boolean.FALSE)
         .when()
         .post("/v1/signature/verify")
         .then()

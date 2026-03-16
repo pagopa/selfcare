@@ -26,4 +26,8 @@ public class SignatureRequest {
     @NotNull
     @PartType(MediaType.APPLICATION_JSON)
     private List<String> fiscalCodes;
+
+    @FormParam("skipSignatureVerification")
+    @NotNull
+    private Boolean skipSignatureVerification;
 }

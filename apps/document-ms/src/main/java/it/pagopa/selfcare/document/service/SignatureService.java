@@ -24,7 +24,7 @@ public interface SignatureService {
 
     Uni<File> signDocument(File pdf, String institutionDescription, String productId);
 
-    Uni<Void> verifyContractSignature(String onboardingId, File file, List<String> fiscalCodes);
+    Uni<Void> verifyContractSignature(String onboardingId, File file, List<String> fiscalCodes, boolean skipSignatureVerification);
 
     String verifyUploadedFileDigest(FormItem file, String templateDigest, boolean skipDigestCheck);
 
