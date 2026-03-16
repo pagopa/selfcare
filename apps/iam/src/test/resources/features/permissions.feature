@@ -104,3 +104,36 @@ Feature: User Permissions
     When I send a GET request to "/iam/users/{userId}/permissions/{permission}"
     Then The status code is 200
     And The response body contains the string "true"
+
+  Scenario: Update user permissions with PATCH
+    Given User login with username "user-002" and password "test"
+    And The following request body:
+          """
+          {
+            "email": "user-001@mail.xyz"
+            "productRoles": [
+              {
+                  "productId": "product-B",
+                  "roles": [
+                      "CUSTOM"
+                  ]
+              }
+          }
+          """
+    When I send a PATCH request to "/users" with content type "application/json"
+    Then The status code is 200
+
+  Scenario: Check roles permission with institution filter and custom permission
+    Given User login with username "user-002" and password "test"
+    And The following query params:
+      | productId | product-B |
+    And The following path params:
+      | userId | d8880750-906a-4c43-8d48-983693fe24a4 |
+    When I send a GET request to "/users/{userId}/roles"
+    Then The status code is 200
+    And The response body contains the list "roles" of size 1
+    And The response body contains field "CUSTOM"
+    And The response body contains at path "roles" the following list of objects in any order:
+      | role       |
+      | ["CUSTOM"] |
+

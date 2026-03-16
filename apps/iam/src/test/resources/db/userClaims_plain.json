@@ -1,9 +1,9 @@
 [
   {
     "_id": "d8880750-906a-4c43-8d48-983693fe24a4",
-    "email": "q0okYRuOl6hrum0qnGeOt4ljQw0/qiZjBggLPYv+Z9w3",
-    "familyName": "s1gofxjG3uPDYsYPvqgHVO0RBhxTdvrB",
-    "name": "q0okYRuOl6iXA/kWS3GLUsGWZysqf3Hh",
+    "email": "user-001@mail.xyz",
+    "name": "user-001",
+    "familyName": "mail.xyz",
     "productRoles": [
       {
         "productId": "product-A",
@@ -15,9 +15,9 @@
   },
   {
     "_id": "a0530f76-3454-418c-9d65-eb3162075495",
-    "email": "q0okYRuOl6trum0qnGeOt4kEQgHPGRnMhizQ4v7z2MIk",
-    "familyName": "s1gofxjG3uPDYsYPvqgHVO0RBhxTdvrB",
-    "name": "q0okYRuOl6sFE1ypwWiCqGWSVPfXMxJe",
+    "email": "user-002@mail.xyz",
+    "name": "user-002",
+    "familyName": "mail.xyz",
     "productRoles": [
       {
         "productId": "product-A",
@@ -36,17 +36,16 @@
   },
   {
     "_id": "042b311a-7b99-4eaa-8c7d-9e5b5f6bb9ae",
-    "email": "q0okYRuOl6prum0qnGeOt4mYvQWfd/NWBjCZqC33Tcgq",
-    "familyName": "s1gofxjG3uPDYsYPvqgHVO0RBhxTdvrB",
-    "name": "q0okYRuOl6rK4z/DR2B6AfmRukOD9zM0",
+    "email": "user-003@mail.xyz",
     "name": "user-003",
+    "familyName": "mail.xyz",
     "productRoles": []
   },
   {
     "_id": "72d4984f-d2bc-4584-a6a7-dd63068b7f48",
-    "email": "q0okYRuOl61rum0qnGeOt4nKQBguf2aThmVnXBTopv4C",
-    "familyName": "s1gofxjG3uPDYsYPvqgHVO0RBhxTdvrB",
-    "name": "q0okYRuOl63jMhfW1VqRXS2aM04tq9Uh",
+    "email": "user-004@mail.xyz",
+    "name": "user-004",
+    "familyName": "mail.xyz",
     "productRoles": [
       {
         "productId": "product-A",
