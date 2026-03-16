@@ -21,7 +21,7 @@ on:
 jobs:
 
   release_dev:
-    uses: ./.github/workflows/onboarding_call_release_infra.yml
+    uses: ./.github/workflows/call_release_infra.yml
     name: '[Dev] Functions Infra Release'
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     secrets: inherit
@@ -30,7 +30,7 @@ jobs:
       dir: infra/apps/onboarding-functions
 
   release_uat:
-    uses: ./.github/workflows/onboarding_call_release_infra.yml
+    uses: ./.github/workflows/call_release_infra.yml
     name: '[UAT] Functions Infra Release'
     if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
     secrets: inherit
@@ -39,7 +39,7 @@ jobs:
       dir: infra/apps/onboarding-functions
 
   release_prod:
-    uses: ./.github/workflows/onboarding_call_release_infra.yml
+    uses: ./.github/workflows/call_release_infra.yml
     name: '[Prod] Functions Infra Release'
     if: ${{ inputs.env == 'prod' }}
     secrets: inherit

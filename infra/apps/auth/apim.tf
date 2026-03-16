@@ -1,7 +1,7 @@
 locals {
-  apim_name    = format("selc-%s-apim-v2", var.env_short)
-  apim_rg      = format("selc-%s-api-v2-rg", var.env_short)
-  api_name     = var.is_pnpg ? format("selc-%s-pnpg-api-auth", var.env_short) : format("selc-%s-api-auth", var.env_short)
+  apim_name    = "selc-${var.env_short}-apim-v2"
+  apim_rg      = "selc-${var.env_short}-apim-rg"
+  api_name     = var.is_pnpg ? "selc-${var.env_short}-pnpg-api-auth" : "selc-${var.env_short}-api-auth"
   display_name = var.is_pnpg ? "PNPG Auth API" : "Auth API"
   base_path    = var.is_pnpg ? "imprese/auth" : "auth"
 }

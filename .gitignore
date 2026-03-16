@@ -59,8 +59,7 @@ infra/cert/env/lib
 **/pyvenv.cfg
 
 ### INTELLIJ RUN CONFIG ###
-.run/product.run.xml
-.run/jvm-remote.run.xml
+.run/**
 
 ### Build outputs ###
 bin/

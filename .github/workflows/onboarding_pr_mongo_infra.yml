@@ -16,11 +16,11 @@ on:
     paths:
       - 'infra/mongo/**'
       - './.github/workflows/onboarding_pr_mongo_infra.yml'
-      - './.github/workflows/onboarding_call_code_review_infra.yml'
+      - './.github/workflows/call_code_review_infra.yml'
 
 jobs:
   code_review_dev:
-    uses: ./.github/workflows/onboarding_call_code_review_infra.yml
+    uses: ./.github/workflows/call_code_review_infra.yml
     name: '[DEV] Mongo Infra Code Review'
     if: ${{ !startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
@@ -29,7 +29,7 @@ jobs:
       dir: infra/mongo
 
   code_review_uat:
-    uses: ./.github/workflows/onboarding_call_code_review_infra.yml
+    uses: ./.github/workflows/call_code_review_infra.yml
     name: '[UAT] Mongo Infra Code Review'
     secrets: inherit
     with:
