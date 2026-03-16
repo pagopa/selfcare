@@ -65,3 +65,116 @@ resource "azurerm_key_vault_secret" "encryption_key_secret" {
 
   key_vault_id = data.azurerm_key_vault.key_vault.id
 }
+
+locals {
+  onboarding_ms_app_settings = [
+    {
+      name  = "JAVA_TOOL_OPTIONS"
+      value = "-javaagent:applicationinsights-agent.jar"
+    },
+    {
+      name  = "APPLICATIONINSIGHTS_ROLE_NAME"
+      value = "onboarding-ms"
+    },
+    {
+      name  = "USER_REGISTRY_URL"
+      value = "https://api.pdv.pagopa.it/user-registry/v1"
+    },
+    {
+      name  = "ONBOARDING_FUNCTIONS_URL"
+      value = "https://selc-p-pnpg-onboarding-fn.azurewebsites.net"
+    },
+    {
+      name  = "STORAGE_CONTAINER_PRODUCT"
+      value = "selc-p-product"
+    },
+    {
+      name  = "MS_CORE_URL"
+      value = "http://selc-p-pnpg-ms-core-ca"
+    },
+    {
+      name  = "MS_PARTY_REGISTRY_URL"
+      value = "http://selc-p-pnpg-party-reg-proxy-ca"
+    },
+    {
+      name  = "SIGNATURE_VALIDATION_ENABLED"
+      value = "false"
+    },
+    {
+      name  = "MS_USER_URL"
+      value = "http://selc-p-pnpg-user-ms-ca"
+    },
+    {
+      name  = "JWT_BEARER_TOKEN"
+      value = "@Microsoft.KeyVault(SecretUri=https://${local.key_vault_name}.vault.azure.net/secrets/jwt-bearer-token-functions/)"
+    },
+    {
+      name  = "ONBOARDING-UPDATE-USER-REQUESTER"
+      value = "true"
+    }
+  ]
+
+  onboarding_ms_secrets_names = {
+    "JWT-PUBLIC-KEY"                          = "jwt-public-key"
+    "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
+    "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
+    "ONBOARDING-FUNCTIONS-API-KEY"            = "fn-onboarding-primary-key"
+    "BLOB-STORAGE-PRODUCT-CONNECTION-STRING"  = "blob-storage-product-connection-string"
+    "BLOB-STORAGE-CONTRACT-CONNECTION-STRING" = "blob-storage-contract-connection-string"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
+  }
+
+  onboarding_ms_probes = [
+    {
+      httpGet = {
+        path   = "q/health/live"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 5
+      type                = "Liveness"
+      failureThreshold    = 3
+      initialDelaySeconds = 1
+    },
+    {
+      httpGet = {
+        path   = "q/health/ready"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 5
+      type                = "Readiness"
+      failureThreshold    = 30
+      initialDelaySeconds = 3
+    },
+    {
+      httpGet = {
+        path   = "q/health/started"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 5
+      failureThreshold    = 5
+      type                = "Startup"
+      initialDelaySeconds = 5
+    }
+  ]
+}
+
+module "container_app_onboarding_ms" {
+  source = "../_modules/container_app_microservice"
+
+  env_short                      = local.env_short
+  resource_group_name            = local.ca_resource_group_name
+  container_app                  = local.container_app
+  container_app_name             = "onboarding-ms"
+  container_app_environment_name = local.container_app_environment_name
+  image_name                     = "selfcare-onboarding-ms"
+  image_tag                      = var.image_tag
+  app_settings                   = local.onboarding_ms_app_settings
+  secrets_names                  = local.onboarding_ms_secrets_names
+  key_vault_resource_group_name  = local.key_vault_resource_group_name
+  key_vault_name                 = local.key_vault_name
+  probes                         = local.onboarding_ms_probes
+  tags                           = local.tags
+}
