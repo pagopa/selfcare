@@ -39,8 +39,14 @@
     "email": "q0okYRuOl6prum0qnGeOt4mYvQWfd/NWBjCZqC33Tcgq",
     "familyName": "s1gofxjG3uPDYsYPvqgHVO0RBhxTdvrB",
     "name": "q0okYRuOl6rK4z/DR2B6AfmRukOD9zM0",
-    "name": "user-003",
-    "productRoles": []
+    "productRoles": [
+      {
+        "productId": "product-C",
+        "roles": [
+          "CUSTOM"
+        ]
+      }
+    ]
   },
   {
     "_id": "72d4984f-d2bc-4584-a6a7-dd63068b7f48",

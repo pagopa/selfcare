@@ -110,7 +110,7 @@ Feature: User Permissions
     And The following request body:
           """
           {
-            "email": "user-001@mail.xyz"
+            "email": "user-001@mail.xyz",
             "productRoles": [
               {
                   "productId": "product-B",
@@ -118,22 +118,23 @@ Feature: User Permissions
                       "CUSTOM"
                   ]
               }
+            ]
           }
           """
-    When I send a PATCH request to "/users" with content type "application/json"
+    When I send a PATCH request to "/iam/users" with content type "application/json"
     Then The status code is 200
 
   Scenario: Check roles permission with institution filter and custom permission
     Given User login with username "user-002" and password "test"
     And The following query params:
-      | productId | product-B |
+      | productId | product-C |
     And The following path params:
-      | userId | d8880750-906a-4c43-8d48-983693fe24a4 |
-    When I send a GET request to "/users/{userId}/roles"
+      | userId | 042b311a-7b99-4eaa-8c7d-9e5b5f6bb9ae |
+    When I send a GET request to "/iam/users/{userId}/roles"
     Then The status code is 200
-    And The response body contains the list "roles" of size 1
-    And The response body contains field "CUSTOM"
-    And The response body contains at path "roles" the following list of objects in any order:
-      | role       |
-      | ["CUSTOM"] |
+    And The response body contains the list "[0].roles" of size 1
+    And The response body contains the string "CUSTOM"
+    And The response body contains at path "[0].roles" the following list of objects in any order:
+      | role   |
+      | CUSTOM |
 

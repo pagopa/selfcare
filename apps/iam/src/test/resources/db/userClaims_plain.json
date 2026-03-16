@@ -39,7 +39,14 @@
     "email": "user-003@mail.xyz",
     "name": "user-003",
     "familyName": "mail.xyz",
-    "productRoles": []
+    "productRoles": [
+      {
+        "productId": "product-C",
+        "roles": [
+          "CUSTOM"
+        ]
+      }
+    ]
   },
   {
     "_id": "72d4984f-d2bc-4584-a6a7-dd63068b7f48",
