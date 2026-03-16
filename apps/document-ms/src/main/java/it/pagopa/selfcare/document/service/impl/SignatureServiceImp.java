@@ -486,54 +486,27 @@ public class SignatureServiceImp implements SignatureService {
     }
 
     public Path createSafeTempFile() throws IOException {
-        Path secureDir = createOwnerRestrictedTempDirectory();
         try {
-            return createTempFileWithPosix(secureDir);
+            return createTempFileWithPosix();
         } catch (UnsupportedOperationException e) {
-            // Fallback per Windows/Non-POSIX: usa directory privata e permessi restrittivi
-            Path tempFile = Files.createTempFile(secureDir, "signed", ".pdf");
-            hardenTempFilePermissions(tempFile.toFile());
-            return tempFile;
-        }
-    }
-
-    private Path createOwnerRestrictedTempDirectory() throws IOException {
-        try {
-            FileAttribute<Set<PosixFilePermission>> dirAttr =
-                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------"));
-            return Files.createTempDirectory("signed-", dirAttr);
-        } catch (UnsupportedOperationException e) {
-            Path dir = Files.createTempDirectory("signed-");
-            File dirFile = dir.toFile();
-            boolean readable = dirFile.setReadable(true, true);
-            boolean writable = dirFile.setWritable(true, true);
-            boolean executable = dirFile.setExecutable(true, true);
+            // Fallback per Windows/Non-POSIX
+            File f = Files.createTempFile("signed", ".pdf").toFile();
+            boolean readable = f.setReadable(true, true);
+            boolean writable = f.setWritable(true, true);
+            boolean executable = f.setExecutable(false); // Importante: NO esecuzione
             if (!readable || !writable || !executable) {
-                log.warn("Could not set restricted permissions on temporary directory: {}", sanitize(dirFile.getAbsolutePath()));
+                log.warn("Could not set restricted permissions on temporary file: {}", sanitize(f.getAbsolutePath()));
             }
-            return dir;
+            return f.toPath();
         }
     }
     
     public Path createTempFileWithPosix() throws IOException {
-        return createTempFileWithPosix(createOwnerRestrictedTempDirectory());
-    }
-
-    private Path createTempFileWithPosix(Path directory) throws IOException {
         FileAttribute<Set<PosixFilePermission>> attr =
                 PosixFilePermissions.asFileAttribute(
                         PosixFilePermissions.fromString("rw-------")
                 );
-        return Files.createTempFile(directory, "signed", ".pdf", attr);
-    }
-
-    private void hardenTempFilePermissions(File f) {
-        boolean readable = f.setReadable(true, true);
-        boolean writable = f.setWritable(true, true);
-        boolean executable = f.setExecutable(false); // Importante: NO esecuzione
-        if (!readable || !writable || !executable) {
-            log.warn("Could not set restricted permissions on temporary file: {}", sanitize(f.getAbsolutePath()));
-        }
+        return Files.createTempFile("signed", ".pdf", attr);
     }
 
     private SignatureInformation buildSignatureInfo(String signReason) {
