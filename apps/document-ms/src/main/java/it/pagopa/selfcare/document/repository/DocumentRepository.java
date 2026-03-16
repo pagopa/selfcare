@@ -14,13 +14,14 @@ import static it.pagopa.selfcare.onboarding.common.TokenType.*;
 @ApplicationScoped
 public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Document, ObjectId> {
 
-    private static final String ONBOARDING_ID = "onboardingId";
     private static final List<String> CONTRACT_TYPES = List.of(INSTITUTION.name(), USER.name());
+    private static final String ONBOARDING_AND_TYPES_FILTER = "onboardingId = ?1 and type in ?2";
+    private static final String ONBOARDING_ID = "onboardingId";
 
     public Uni<Long> updateContractFiles(String onboardingId, String contractSigned, String contractFilename) {
         return update("contractSigned = ?1 and contractFilename = ?2 and updatedAt = ?3",
                 contractSigned, contractFilename, LocalDateTime.now())
-                .where("onboardingId = ?1 and type in ?2", onboardingId, CONTRACT_TYPES);
+                .where(ONBOARDING_AND_TYPES_FILTER, onboardingId, CONTRACT_TYPES);
     }
 
     public Uni<Document> findAttachment(String onboardingId, String type, String name) {
@@ -33,7 +34,7 @@ public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Do
     }
 
     public Uni<Document> findByOnboardingId(String onboardingId) {
-        return find("onboardingId = ?1 and type in ?2", onboardingId, CONTRACT_TYPES)
+        return find(ONBOARDING_AND_TYPES_FILTER, onboardingId, CONTRACT_TYPES)
                 .firstResult();
     }
 
@@ -43,12 +44,12 @@ public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Do
 
     public Uni<Long> updateContractSignedByOnboardingId(String onboardingId, String contractSignedPath) {
         return update("contractSigned = ?1", contractSignedPath)
-                .where("onboardingId = ?1 and type in ?2", onboardingId, CONTRACT_TYPES);
+                .where(ONBOARDING_AND_TYPES_FILTER, onboardingId, CONTRACT_TYPES);
     }
 
     public Uni<Long> updateUpdatedAt(String onboardingId, LocalDateTime updatedAt) {
         return update("updatedAt = ?1", updatedAt)
-                .where("onboardingId = ?1 and type in ?2", onboardingId, CONTRACT_TYPES);
+                .where(ONBOARDING_AND_TYPES_FILTER, onboardingId, CONTRACT_TYPES);
     }
 
 }
