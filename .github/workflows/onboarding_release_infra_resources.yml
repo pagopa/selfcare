@@ -17,32 +17,80 @@ on:
           - dev
           - uat
           - prod
+      target:
+        type: choice
+        description: Target type
+        options:
+          - ar
+          - pnpg
+        default: ar
+      image_tag:
+        type: string
+        description: Docker image tag for onboarding-ms
+        required: false
+        default: latest
 
 jobs:
 
-  release_dev:
+  release_dev_ar:
     uses: ./.github/workflows/onboarding_call_release_resources_infra.yml
-    name: '[Dev] Functions Resources Infra Release'
-    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    name: '[Dev] Resources Infra Release (AR)'
+    if: ${{ ((startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev') && inputs.target != 'pnpg' }}
     secrets: inherit
     with:
       environment: dev
-      dir: infra/resources/dev
+      dir: infra/resources/dev-ar
+      env_vars: ${{ github.event_name == 'workflow_dispatch' && format('TF_VAR_image_tag={0}', inputs.image_tag) || '' }}
 
-  release_uat:
+  release_uat_ar:
     uses: ./.github/workflows/onboarding_call_release_resources_infra.yml
-    name: '[UAT] Functions Resources Infra Release'
-    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    name: '[UAT] Resources Infra Release (AR)'
+    if: ${{ ((startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat') && inputs.target != 'pnpg' }}
     secrets: inherit
     with:
       environment: uat
-      dir: infra/resources/uat
+      dir: infra/resources/uat-ar
+      env_vars: ${{ github.event_name == 'workflow_dispatch' && format('TF_VAR_image_tag={0}', inputs.image_tag) || '' }}
 
-  release_prod:
+  release_prod_ar:
     uses: ./.github/workflows/onboarding_call_release_resources_infra.yml
-    name: '[Prod] Functions Resources Infra Release'
-    if: ${{ inputs.env == 'prod' }}
+    name: '[Prod] Resources Infra Release (AR)'
+    if: ${{ inputs.env == 'prod' && inputs.target != 'pnpg' }}
     secrets: inherit
     with:
       environment: prod
-      dir: infra/resources/prod
+      dir: infra/resources/prod-ar
+      env_vars: ${{ github.event_name == 'workflow_dispatch' && format('TF_VAR_image_tag={0}', inputs.image_tag) || '' }}
+
+  release_dev_pnpg:
+    uses: ./.github/workflows/onboarding_call_release_resources_infra.yml
+    name: '[Dev] Resources Infra Release (PNPG)'
+    if: ${{ ((startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev') && inputs.target == 'pnpg' }}
+    secrets: inherit
+    with:
+      environment: dev
+      tf_environment: dev-pnpg
+      dir: infra/resources/dev-pnpg
+      env_vars: ${{ github.event_name == 'workflow_dispatch' && format('TF_VAR_image_tag={0}', inputs.image_tag) || '' }}
+
+  release_uat_pnpg:
+    uses: ./.github/workflows/onboarding_call_release_resources_infra.yml
+    name: '[UAT] Resources Infra Release (PNPG)'
+    if: ${{ ((startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat') && inputs.target == 'pnpg' }}
+    secrets: inherit
+    with:
+      environment: uat
+      tf_environment: uat-pnpg
+      dir: infra/resources/uat-pnpg
+      env_vars: ${{ github.event_name == 'workflow_dispatch' && format('TF_VAR_image_tag={0}', inputs.image_tag) || '' }}
+
+  release_prod_pnpg:
+    uses: ./.github/workflows/onboarding_call_release_resources_infra.yml
+    name: '[Prod] Resources Infra Release (PNPG)'
+    if: ${{ inputs.env == 'prod' && inputs.target == 'pnpg' }}
+    secrets: inherit
+    with:
+      environment: prod
+      tf_environment: prod-pnpg
+      dir: infra/resources/prod-pnpg
+      env_vars: ${{ github.event_name == 'workflow_dispatch' && format('TF_VAR_image_tag={0}', inputs.image_tag) || '' }}
