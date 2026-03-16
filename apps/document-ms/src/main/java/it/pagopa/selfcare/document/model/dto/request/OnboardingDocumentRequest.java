@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.document.controller.request;
+package it.pagopa.selfcare.document.model.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

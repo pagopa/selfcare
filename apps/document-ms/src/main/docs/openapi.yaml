@@ -119,6 +119,23 @@ components:
           type: string
         templateVersion:
           type: string
+    SignatureRequest:
+      type: object
+      required:
+      - onboardingId
+      - file
+      - fiscalCodes
+      properties:
+        onboardingId:
+          type: string
+          pattern: \S
+        file:
+          type: string
+          format: binary
+        fiscalCodes:
+          type: array
+          items:
+            type: string
     TokenType:
       type: string
       enum:
@@ -523,7 +540,17 @@ paths:
         required: true
         schema:
           type: string
+      - name: institutionDescription
+        in: query
+        schema:
+          type: string
+        required: true
       - name: name
+        in: query
+        schema:
+          type: string
+        required: true
+      - name: productId
         in: query
         schema:
           type: string
@@ -572,6 +599,27 @@ paths:
           description: Not Allowed
       tags:
       - Document Controller
+      security:
+      - SecurityScheme: []
+  /v1/signature/verify:
+    post:
+      summary: Verify the signature of a contract
+      operationId: verifyContractSignature
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/SignatureRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      tags:
+      - Signature Controller
       security:
       - SecurityScheme: []
 tags:
