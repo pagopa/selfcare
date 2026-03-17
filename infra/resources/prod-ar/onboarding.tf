@@ -176,7 +176,7 @@ module "container_app_onboarding_ms" {
   container_app_name             = "onboarding-ms"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-onboarding-ms"
-  image_tag                      = var.image_tag
+  image_tag                      = var.onboarding_image_tag
   app_settings                   = local.onboarding_ms_app_settings
   secrets_names                  = local.onboarding_ms_secrets_names
   key_vault_resource_group_name  = local.key_vault_resource_group_name
@@ -194,7 +194,7 @@ module "container_app_onboarding_cdc" {
   container_app_name             = "onboarding-cdc"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-onboarding-cdc"
-  image_tag                      = var.image_tag
+  image_tag                      = var.onboarding_image_tag
   app_settings                   = local.onboarding_cdc_app_settings
   secrets_names                  = local.onboarding_cdc_secrets_names
   key_vault_resource_group_name  = local.key_vault_resource_group_name

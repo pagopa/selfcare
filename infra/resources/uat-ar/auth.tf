@@ -1,72 +1,16 @@
 ###############################################################################
-# Container App 
+# Container App
 ###############################################################################
-
-# api_name     = var.is_pnpg ? "selc-${var.env_short}-pnpg-api-auth" : "selc-${var.env_short}-api-auth"
-#   display_name = var.is_pnpg ? "PNPG Auth API" : "Auth API"
-#   base_path    = var.is_pnpg ? "imprese/auth" : "auth"
-
-module "apim_api_auth" {
-  source              = "../_modules/apim_api"
-  apim_name           = local.apim_name
-  apim_rg             = local.apim_rg
-  api_name            = "selc-${local.env_short}-api-auth"
-  display_name        = "Auth API"
-  base_path           = "auth"
-  private_dns_name    = local.private_dns_name_ms.private_dns_name_auth_ms
-  dns_zone_prefix     = local.dns_zone_prefix
-  api_dns_zone_prefix = local.api_dns_zone_prefix
-  openapi_path        = "../../../apps/auth/src/main/docs/openapi.json"
-}
-
-###############################################################################
-# CosmosDB
-###############################################################################
-
-
-module "cosmosdb_auth" {
-  source = "../_modules/cosmosdb_database"
-
-  database_name               = local.mongo_db.database_auth_name
-  resource_group_name         = local.mongo_db.mongodb_rg_name
-  cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
-}
-
-module "collection_auth_otp_flows" {
-  source = "../_modules/cosmosdb_collection"
-
-  name                        = "otpFlows"
-  resource_group_name         = local.mongo_db.mongodb_rg_name
-  cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
-  database_name               = local.mongo_db.database_auth_name
-
-  lock_enable = true
-
-  indexes = [
-    { keys = ["_id"], unique = true },
-    { keys = ["uuid"], unique = true },
-    { keys = ["userId"], unique = false },
-    { keys = ["expiresAt"], unique = false },
-    { keys = ["status"], unique = false },
-    { keys = ["userId", "createdAt"], unique = false },
-    { keys = ["createdAt"], unique = false }
-  ]
-}
-
-###############################################################################
-# Container App 
-###############################################################################
-
 
 locals {
   app_settings_auth_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar",
+      value = "-javaagent:applicationinsights-agent.jar"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
-      value = "auth-ms",
+      value = "auth-ms"
     },
     {
       name  = "SHARED_ACCESS_KEY_NAME"
@@ -90,7 +34,7 @@ locals {
     },
     {
       name  = "SESSION_TOKEN_AUDIENCE"
-      value = "api.dev.selfcare.pagopa.it"
+      value = "api.uat.selfcare.pagopa.it"
     },
     {
       name  = "USER_REGISTRY_URL"
@@ -106,25 +50,26 @@ locals {
     },
     {
       name  = "INTERNAL_API_URL"
-      value = "https://api.dev.selfcare.pagopa.it/external/internal/v1"
+      value = "https://api.uat.selfcare.pagopa.it/external/internal/v1"
     },
     {
       name  = "INTERNAL_MS_USER_API_URL"
-      value = "https://api.dev.selfcare.pagopa.it/internal/user"
+      value = "https://api.uat.selfcare.pagopa.it/internal/user"
     },
     {
       name  = "SAML_SP_ACS_URL"
-      value = "https://dev.selfcare.pagopa.it/saml/acs"
+      value = "https://uat.selfcare.pagopa.it/saml/acs"
     },
     {
       name  = "SAML_SP_ENTITY_ID"
-      value = "https://dev.selfcare.pagopa.it"
+      value = "https://uat.selfcare.pagopa.it"
     },
     {
       name  = "IAM_API_URL"
-      value = "https://selc-d-iam-ms-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+      value = "https://selc-u-iam-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
     }
   ]
+
   secrets_names_auth_ms = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
     "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
@@ -140,25 +85,22 @@ locals {
     "SAML_IDP_CERT"                         = "saml-idp-cert"
   }
 }
+
 module "container_app_auth_ms" {
   source = "../_modules/container_app_microservice"
 
   env_short                      = local.env_short
   resource_group_name            = local.ca_resource_group_name
-  container_app                  = local.container_app
+  container_app                  = local.microservice_container_app
   container_app_name             = "${local.project}-auth-ms"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-auth-ms"
   image_tag                      = var.auth_image_tag
   app_settings                   = local.app_settings_auth_ms
   secrets_names                  = local.secrets_names_auth_ms
-  workload_profile_name          = "Consumption"
 
   key_vault_resource_group_name = local.key_vault_resource_group_name
   key_vault_name                = local.key_vault_name
-
-  # user_assigned_identity_id           = data.azurerm_user_assigned_identity.cae_identity.id
-  # user_assigned_identity_principal_id = data.azurerm_user_assigned_identity.cae_identity.principal_id
 
   probes = local.quarkus_health_probes
 

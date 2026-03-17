@@ -42,6 +42,27 @@ locals {
     memory = "1Gi"
   }
 
+  microservice_container_app = {
+    min_replicas = 1
+    max_replicas = 1
+    scale_rules = [
+      {
+        custom = {
+          metadata = {
+            "desiredReplicas" = "1"
+            "start"           = "0 8 * * MON-FRI"
+            "end"             = "0 19 * * MON-FRI"
+            "timezone"        = "Europe/Rome"
+          }
+          type = "cron"
+        }
+        name = "cron-scale-rule"
+      }
+    ]
+    cpu    = 0.5
+    memory = "1Gi"
+  }
+
   quarkus_health_probes = [
     {
       httpGet = {
