@@ -32,7 +32,7 @@ jobs:
       id-token: write
       contents: read
     env:
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_CI }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
@@ -51,7 +51,7 @@ jobs:
       - name: Azure Login
         uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
         with:
-          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID_CI }}
           tenant-id: ${{ vars.ARM_TENANT_ID }}
           subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
 

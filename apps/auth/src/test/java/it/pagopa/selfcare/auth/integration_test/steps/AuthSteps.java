@@ -1,7 +1,5 @@
 package it.pagopa.selfcare.auth.integration_test.steps;
 
-import static org.junit.jupiter.api.Assertions.fail;
-
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
@@ -10,18 +8,23 @@ import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.model.FeatureFlagEnum;
 import it.pagopa.selfcare.auth.model.OtpStatus;
 import it.pagopa.selfcare.auth.model.otp.OtpBetaUser;
+import it.pagopa.selfcare.auth.model.otp.OtpDailyLimit;
 import it.pagopa.selfcare.auth.model.otp.OtpFeatureFlag;
 import it.pagopa.selfcare.auth.service.JwtService;
 import it.pagopa.selfcare.cucumber.utils.SharedStepData;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
+import org.junit.jupiter.api.Assertions;
+
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
-import org.junit.jupiter.api.Assertions;
+
+import static it.pagopa.selfcare.auth.model.OtpStatus.COMPLETED;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @Slf4j
 @ApplicationScoped
@@ -32,9 +35,28 @@ public class AuthSteps {
 
   @Inject OtpFeatureFlag otpFeatureFlag;
 
-  @Before
+  @Inject OtpDailyLimit otpDailyLimit;
+
+  @Before(order = 0)
   public void setUp() {
     resetTestState();
+  }
+
+  @Before(value = "@OidcBelowLimit", order = 10)
+  public void setHighLimit() {
+    otpDailyLimit.setDailyLimit(20);
+    writeOptFlowToDatabase();
+  }
+
+  @Before(value = "@OidcAboveLimit", order = 10)
+  public void setLowLimit() {
+    otpDailyLimit.setDailyLimit(2);
+    writeOptFlowToDatabase();
+  }
+
+  @Before(value = "@OidcOpenLimit", order = 10)
+  public void setLimitOpen() {
+    otpDailyLimit.setDailyLimit(-1);
   }
 
   @After
@@ -68,12 +90,14 @@ public class AuthSteps {
     String fiscalCode = userDetails.get("fiscalCode");
     boolean forceOtp = Boolean.parseBoolean(userDetails.getOrDefault("forceOtp", "false"));
     String forcedEmail = userDetails.get("forcedEmail");
+    boolean sameIdp = Boolean.parseBoolean(userDetails.getOrDefault("sameIdp", "false"));
 
     OtpBetaUser betaUser =
         OtpBetaUser.builder()
             .fiscalCode(fiscalCode)
             .forceOtp(forceOtp)
             .forcedEmail(forcedEmail)
+            .sameIdp(sameIdp)
             .build();
     otpFeatureFlag.setOtpBetaUsers(List.of(betaUser));
   }
@@ -128,6 +152,23 @@ public class AuthSteps {
         .indefinitely();
   }
 
+
+  @And("An OTP flow with uuid {string} was COMPLETED {int} months ago")
+  public void anOTPFlowWithUuidWasCompletedMonthsAgo(String uuid, int months) {
+    String updateBuilder =
+            "{'$set': { 'status': ?1, 'attempts' : ?2, 'createdAt': ?3, 'updatedAt': ?4, 'expiresAt' : ?5 } }";
+    OtpFlow.update(
+                    updateBuilder,
+                    COMPLETED,
+                    0,
+                    Date.from(OffsetDateTime.now().minusMonths(months).toInstant()),
+                    Date.from(OffsetDateTime.now().minusMonths(months).toInstant()),
+                    Date.from(OffsetDateTime.now().minusMonths(months).plusMinutes(5).toInstant()))
+            .where(OtpFlow.Fields.uuid.name(), uuid)
+            .await()
+            .indefinitely();
+  }
+
   @And("The OTP flow with uuid {string} has been updated to status {string}")
   public void theOTPFlowStatusHasBeenUpdatedTo(String uuid, String status) {
     OtpFlow otpFlow =
@@ -147,5 +188,57 @@ public class AuthSteps {
   private void resetTestState() {
     otpFeatureFlag.setFeatureFlag(FeatureFlagEnum.NONE);
     otpFeatureFlag.setOtpBetaUsers(List.of());
+    otpDailyLimit.setDailyLimit(0);
+    deleteOtpFlowFromDatabase();
   }
+
+  private void writeOptFlowToDatabase() {
+    OffsetDateTime now = OffsetDateTime.now();
+
+    OtpFlow otpFlow =
+            OtpFlow.builder()
+                    .userId("35a78332-d038-4bfa-8e85-2cba7f6b7323")
+                    .status(OtpStatus.PENDING)
+                    .attempts(0)
+                    .createdAt(now)
+                    .updatedAt(now)
+                    .expiresAt(now)
+                    .build();
+
+    OtpFlow otpFlow2 =
+            OtpFlow.builder()
+                    .userId("35a78332-d038-4bfa-8e85-2cba7f6b7322")
+                    .status(OtpStatus.PENDING)
+                    .attempts(0)
+                    .createdAt(now)
+                    .updatedAt(now)
+                    .expiresAt(now)
+                    .build();
+
+    OtpFlow otpFlowSameUser =
+            OtpFlow.builder()
+                    .userId("35a78332-d038-4bfa-8e85-2cba7f6b7322")
+                    .status(OtpStatus.PENDING)
+                    .attempts(0)
+                    .createdAt(now)
+                    .updatedAt(now)
+                    .expiresAt(now)
+                    .build();
+
+    otpFlow.persist().await().indefinitely();
+    otpFlow2.persist().await().indefinitely();
+    otpFlowSameUser.persist().await().indefinitely();
+  }
+
+  private void deleteOtpFlowFromDatabase() {
+    OtpFlow.delete("userId", "35a78332-d038-4bfa-8e85-2cba7f6b7323")
+            .await()
+            .indefinitely();
+
+    OtpFlow.delete("userId", "35a78332-d038-4bfa-8e85-2cba7f6b7322")
+            .await()
+            .indefinitely();
+  }
+
+
 }

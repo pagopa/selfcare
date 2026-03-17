@@ -67,6 +67,10 @@ locals {
     {
       name  = "IAM_API_URL"
       value = "https://selc-u-iam-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
+    },
+    {
+      name  = "OTP_DAILY_LIMIT"
+      value = 0
     }
   ]
 
