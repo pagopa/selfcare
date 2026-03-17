@@ -1,9 +1,14 @@
 package it.pagopa.selfcare.document.service;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.document.model.FormItem;
 import it.pagopa.selfcare.document.model.dto.request.CreateAttachmentPdfRequest;
 import it.pagopa.selfcare.document.model.dto.request.CreateContractPdfRequest;
+import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.response.CreatePdfResponse;
+import org.jboss.resteasy.reactive.RestResponse;
+
+import java.io.File;
 
 /**
  * Service for creating PDF documents (contracts and attachments).
@@ -28,4 +33,17 @@ public interface DocumentContentService {
      * @return response with storage path and filename
      */
     Uni<CreatePdfResponse> createAttachmentPdf(CreateAttachmentPdfRequest request);
+
+    Uni<RestResponse<File>> retrieveSignedFile(String id);
+
+    Uni<RestResponse<File>> retrieveTemplateAttachment(
+            String onboardingId,
+            String templatePath,
+            String attachmentName,
+            String institutionDescription,
+            String productId);
+
+    Uni<RestResponse<File>> retrieveAttachment(String onboardingId, String attachmentName);
+
+    Uni<Void> uploadAttachment(DocumentBuilderRequest request, FormItem file);
 }

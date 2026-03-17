@@ -9,7 +9,6 @@ import it.pagopa.selfcare.document.model.entity.Document;
 import java.io.File;
 import java.util.List;
 
-import it.pagopa.selfcare.document.model.FormItem;
 import org.jboss.resteasy.reactive.RestResponse;
 
 public interface DocumentService {
@@ -19,19 +18,6 @@ public interface DocumentService {
     Uni<Document> getDocumentById(String id);
 
     Uni<RestResponse<File>> retrieveContract(String onboardingId, boolean isSigned);
-
-    Uni<RestResponse<File>> retrieveSignedFile(String id);
-
-  Uni<RestResponse<File>> retrieveTemplateAttachment(
-      String onboardingId,
-      String templatePath,
-      String attachmentName,
-      String institutionDescription,
-      String productId);
-
-    Uni<RestResponse<File>> retrieveAttachment(String onboardingId, String attachmentName);
-
-    Uni<Void> uploadAttachment(DocumentBuilderRequest request, FormItem file);
 
     Uni<Long> updateContractSigned(String onboardingId, String documentSignedPath);
 

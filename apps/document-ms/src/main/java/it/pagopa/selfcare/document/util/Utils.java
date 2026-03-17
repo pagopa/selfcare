@@ -4,8 +4,10 @@ import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.model.FormItem;
 import java.io.File;
 import java.util.Deque;
+import java.util.UUID;
 import java.util.function.BinaryOperator;
 
+import it.pagopa.selfcare.document.model.entity.Document;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.reactive.server.core.multipart.FormData;
 import org.jboss.resteasy.reactive.server.multipart.FormValue;
@@ -45,5 +47,25 @@ public class Utils {
         return lastSlash >= 0
                 ? path.substring(lastSlash + 1)
                 : path;
+    }
+
+    public static String getCurrentContractName(Document document, boolean isSigned) {
+        return isSigned ? getContractSignedName(document) : document.getContractFilename();
+    }
+
+    private static String getContractSignedName(Document document) {
+        File file = new File(document.getContractSigned());
+        return file.getName();
+    }
+
+    public static Document createBaseDocument(String onboardingId, String productId,
+                                        String contractTemplate, String contractVersion) {
+        Document document = new Document();
+        document.setId(UUID.randomUUID().toString());
+        document.setOnboardingId(onboardingId);
+        document.setProductId(productId);
+        document.setContractTemplate(contractTemplate);
+        document.setContractVersion(contractVersion);
+        return document;
     }
 }
