@@ -1,3 +1,7 @@
+###############################################################################
+# CosmosDB
+###############################################################################
+
 module "cosmosdb" {
   source = "../_modules/cosmosdb_database"
 
@@ -43,6 +47,10 @@ module "collection_tokens" {
     { keys = ["createdAt"], unique = false }
   ]
 }
+
+###############################################################################
+# Encryption
+###############################################################################
 
 resource "random_password" "encryption_key" {
   length  = 32
@@ -94,15 +102,19 @@ resource "azurerm_key_vault_secret" "encryption_key_secret" {
   }
 }
 
+###############################################################################
+# Container App
+###############################################################################
+
 locals {
-  onboarding_ms_app_settings = [
+  app_settings_onboarding_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      value = "-javaagent:applicationinsights-agent.jar",
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
-      value = "onboarding-ms"
+      value = "onboarding-ms",
     },
     {
       name  = "USER_REGISTRY_URL"
@@ -150,7 +162,7 @@ locals {
     }
   ]
 
-  onboarding_ms_secrets_names = {
+  secrets_names_onboarding_ms = {
     "JWT-PUBLIC-KEY"                          = "jwt-public-key"
     "JWT_BEARER_TOKEN"                        = "jwt-bearer-token-functions"
     "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
@@ -165,43 +177,7 @@ locals {
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
   }
 
-  onboarding_ms_probes = [
-    {
-      httpGet = {
-        path   = "q/health/live"
-        port   = 8080
-        scheme = "HTTP"
-      }
-      timeoutSeconds      = 5
-      type                = "Liveness"
-      failureThreshold    = 3
-      initialDelaySeconds = 1
-    },
-    {
-      httpGet = {
-        path   = "q/health/ready"
-        port   = 8080
-        scheme = "HTTP"
-      }
-      timeoutSeconds      = 5
-      type                = "Readiness"
-      failureThreshold    = 30
-      initialDelaySeconds = 3
-    },
-    {
-      httpGet = {
-        path   = "q/health/started"
-        port   = 8080
-        scheme = "HTTP"
-      }
-      timeoutSeconds      = 5
-      failureThreshold    = 5
-      type                = "Startup"
-      initialDelaySeconds = 5
-    }
-  ]
-
-  onboarding_cdc_container_app = {
+  container_app_onboarding_cdc = {
     min_replicas = 0
     max_replicas = 1
     scale_rules = [
@@ -222,14 +198,14 @@ locals {
     memory = "2Gi"
   }
 
-  onboarding_cdc_app_settings = [
+  app_settings_onboarding_cdc = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      value = "-javaagent:applicationinsights-agent.jar",
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
-      value = "onboarding-cdc"
+      value = "onboarding-cdc",
     },
     {
       name  = "ONBOARDING_FUNCTIONS_URL"
@@ -245,48 +221,13 @@ locals {
     }
   ]
 
-  onboarding_cdc_secrets_names = {
+  secrets_names_onboarding_cdc = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
     "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
     "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
     "NOTIFICATION-FUNCTIONS-API-KEY"        = "fn-onboarding-primary-key"
   }
 
-  onboarding_cdc_probes = [
-    {
-      httpGet = {
-        path   = "q/health/live"
-        port   = 8080
-        scheme = "HTTP"
-      }
-      timeoutSeconds      = 5
-      type                = "Liveness"
-      failureThreshold    = 3
-      initialDelaySeconds = 1
-    },
-    {
-      httpGet = {
-        path   = "q/health/ready"
-        port   = 8080
-        scheme = "HTTP"
-      }
-      timeoutSeconds      = 5
-      type                = "Readiness"
-      failureThreshold    = 30
-      initialDelaySeconds = 3
-    },
-    {
-      httpGet = {
-        path   = "q/health/started"
-        port   = 8080
-        scheme = "HTTP"
-      }
-      timeoutSeconds      = 5
-      failureThreshold    = 5
-      type                = "Startup"
-      initialDelaySeconds = 5
-    }
-  ]
 }
 
 module "container_app_onboarding_ms" {
@@ -299,11 +240,11 @@ module "container_app_onboarding_ms" {
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-onboarding-ms"
   image_tag                      = var.image_tag
-  app_settings                   = local.onboarding_ms_app_settings
-  secrets_names                  = local.onboarding_ms_secrets_names
+  app_settings                   = local.app_settings_onboarding_ms
+  secrets_names                  = local.secrets_names_onboarding_ms
   key_vault_resource_group_name  = local.key_vault_resource_group_name
   key_vault_name                 = local.key_vault_name
-  probes                         = local.onboarding_ms_probes
+  probes                         = local.quarkus_health_probes
   tags                           = local.tags
 }
 
@@ -312,18 +253,22 @@ module "container_app_onboarding_cdc" {
 
   env_short                      = local.env_short
   resource_group_name            = local.ca_resource_group_name
-  container_app                  = local.onboarding_cdc_container_app
+  container_app                  = local.container_app_onboarding_cdc
   container_app_name             = "onboarding-cdc"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-onboarding-cdc"
   image_tag                      = var.image_tag
-  app_settings                   = local.onboarding_cdc_app_settings
-  secrets_names                  = local.onboarding_cdc_secrets_names
+  app_settings                   = local.app_settings_onboarding_cdc
+  secrets_names                  = local.secrets_names_onboarding_cdc
   key_vault_resource_group_name  = local.key_vault_resource_group_name
   key_vault_name                 = local.key_vault_name
-  probes                         = local.onboarding_cdc_probes
+  probes                         = local.quarkus_health_probes
   tags                           = local.tags
 }
+
+###############################################################################
+# Functions
+###############################################################################
 
 locals {
   onboarding_functions = {

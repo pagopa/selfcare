@@ -141,42 +141,6 @@ locals {
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
   }
 
-  onboarding_ms_probes = [
-    {
-      httpGet = {
-        path   = "q/health/live"
-        port   = 8080
-        scheme = "HTTP"
-      }
-      timeoutSeconds      = 5
-      type                = "Liveness"
-      failureThreshold    = 3
-      initialDelaySeconds = 1
-    },
-    {
-      httpGet = {
-        path   = "q/health/ready"
-        port   = 8080
-        scheme = "HTTP"
-      }
-      timeoutSeconds      = 5
-      type                = "Readiness"
-      failureThreshold    = 30
-      initialDelaySeconds = 3
-    },
-    {
-      httpGet = {
-        path   = "q/health/started"
-        port   = 8080
-        scheme = "HTTP"
-      }
-      timeoutSeconds      = 5
-      failureThreshold    = 5
-      type                = "Startup"
-      initialDelaySeconds = 5
-    }
-  ]
-
   onboarding_cdc_container_app = {
     min_replicas = 1
     max_replicas = 1
@@ -228,41 +192,6 @@ locals {
     "NOTIFICATION-FUNCTIONS-API-KEY"        = "fn-onboarding-primary-key"
   }
 
-  onboarding_cdc_probes = [
-    {
-      httpGet = {
-        path   = "q/health/live"
-        port   = 8080
-        scheme = "HTTP"
-      }
-      timeoutSeconds      = 5
-      type                = "Liveness"
-      failureThreshold    = 3
-      initialDelaySeconds = 1
-    },
-    {
-      httpGet = {
-        path   = "q/health/ready"
-        port   = 8080
-        scheme = "HTTP"
-      }
-      timeoutSeconds      = 5
-      type                = "Readiness"
-      failureThreshold    = 30
-      initialDelaySeconds = 3
-    },
-    {
-      httpGet = {
-        path   = "q/health/started"
-        port   = 8080
-        scheme = "HTTP"
-      }
-      timeoutSeconds      = 5
-      failureThreshold    = 5
-      type                = "Startup"
-      initialDelaySeconds = 5
-    }
-  ]
 }
 
 module "container_app_onboarding_ms" {
@@ -279,7 +208,7 @@ module "container_app_onboarding_ms" {
   secrets_names                  = local.onboarding_ms_secrets_names
   key_vault_resource_group_name  = local.key_vault_resource_group_name
   key_vault_name                 = local.key_vault_name
-  probes                         = local.onboarding_ms_probes
+  probes                         = local.quarkus_health_probes
   tags                           = local.tags
 }
 
@@ -297,7 +226,7 @@ module "container_app_onboarding_cdc" {
   secrets_names                  = local.onboarding_cdc_secrets_names
   key_vault_resource_group_name  = local.key_vault_resource_group_name
   key_vault_name                 = local.key_vault_name
-  probes                         = local.onboarding_cdc_probes
+  probes                         = local.quarkus_health_probes
   tags                           = local.tags
 }
 
