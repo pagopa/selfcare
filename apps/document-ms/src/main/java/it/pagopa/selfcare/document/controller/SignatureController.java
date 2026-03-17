@@ -12,11 +12,13 @@ import jakarta.ws.rs.core.MediaType;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @Authenticated
 @Path("/v1/signature")
 @AllArgsConstructor
 @Slf4j
+@Tag(name = "Signature Controller", description = "Endpoints for verifying contract signatures")
 public class SignatureController {
 
   @Inject

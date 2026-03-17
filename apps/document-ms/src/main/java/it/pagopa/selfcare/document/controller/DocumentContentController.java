@@ -19,6 +19,8 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
 
 import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
 
@@ -31,6 +33,7 @@ import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
 @Path("/v1/document-content")
 @AllArgsConstructor
 @Slf4j
+@Tag(name = "Document Content Controller", description = "Endpoints for creating PDF document content (contracts and attachments)")
 public class DocumentContentController {
 
     private final DocumentContentService documentContentService;

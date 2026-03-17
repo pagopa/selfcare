@@ -37,6 +37,7 @@ import static it.pagopa.selfcare.document.util.Utils.retrieveAttachmentFromFormD
 @Path("/v1/documents")
 @AllArgsConstructor
 @Slf4j
+@Tag(name = "Document Controller", description = "Endpoints for managing documents (contracts and attachments) associated with onboardings")
 public class DocumentController {
 
   @Inject
