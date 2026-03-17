@@ -10,6 +10,8 @@ locals {
 
   pnpg_suffix = local.is_pnpg == true ? "-${local.location_short}-${local.domain}" : ""
 
+  onboarding_image_tag  = var.onboarding_image_tag
+
   mongo_db = {
     mongodb_rg_name               = "${local.prefix}-${local.env_short}${local.pnpg_suffix}-cosmosdb-mongodb-rg",
     cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}${local.pnpg_suffix}-cosmosdb-mongodb-account"
