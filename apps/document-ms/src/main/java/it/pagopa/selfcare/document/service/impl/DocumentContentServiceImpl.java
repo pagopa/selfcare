@@ -34,7 +34,7 @@ import static it.pagopa.selfcare.onboarding.common.ProductId.*;
 public class DocumentContentServiceImpl implements DocumentContentService {
 
     private static final BiFunction<String, String, String> CONTRACT_FILENAME_FUNC =
-            (format, productName) -> String.format(format, productName.replace(" ", "_"));
+            (prefix, productName) -> prefix + productName.replace(" ", "_");
 
     private final AzureBlobClient azureBlobClient;
     private final DocumentMsConfig documentMsConfig;
@@ -90,7 +90,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                         request.getAttachmentTemplatePath(),
                         () -> createPdfFileAttachment(request)
                 );
-                String filename = buildFilename("%s_" + request.getAttachmentName() + ".pdf", request.getProductName());
+                String sanitizedProductName = request.getProductName().replace(" ", "_");
+                String filename = sanitizedProductName + "_" + request.getAttachmentName() + ".pdf";
                 String storagePath = buildAttachmentStoragePath(request.getOnboardingId());
 
                 return new PdfContext(pdfFile, filename, storagePath);
