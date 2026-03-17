@@ -35,6 +35,9 @@ import org.jboss.resteasy.reactive.RestResponse;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.Map;
@@ -246,6 +249,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                   signatureService.verifyUploadedFileDigest(file, templateDigest, false);
 
               File fileToUpload = file.getFile();
+              // Validate the uploaded file path before further processing
+              validateUploadedFile(fileToUpload);
 
               boolean isP7M =
                   Optional.of(file.getFileName())
@@ -312,10 +317,34 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         final String path = String.format("%s%s", pathContracts, onboardingId).concat("/attachments");
 
         try {
+            validateUploadedFile(signedFile);
             azureBlobClient.uploadFile(path, filename, Files.readAllBytes(signedFile.toPath()));
         } catch (IOException e) {
             throw new InternalException(GENERIC_ERROR.getCode(),
                     "Error on upload contract for onboarding with id " + onboardingId);
+        }
+    }
+
+    /**
+     * Validate that the uploaded file is a regular file located under the system temporary directory.
+     * This helps prevent using attacker-controlled paths for reading local files.
+     *
+     * @param file the file to validate
+     */
+    private void validateUploadedFile(File file) {
+        if (file == null) {
+            throw new InvalidRequestException("Uploaded file must not be null", "0000");
+        }
+
+        Path filePath = file.toPath().toAbsolutePath().normalize();
+        Path tempDirPath = Paths.get(System.getProperty("java.io.tmpdir")).toAbsolutePath().normalize();
+
+        if (!filePath.startsWith(tempDirPath)) {
+            throw new InvalidRequestException("Invalid uploaded file location", "0000");
+        }
+
+        if (!Files.exists(filePath, LinkOption.NOFOLLOW_LINKS) || !Files.isRegularFile(filePath, LinkOption.NOFOLLOW_LINKS)) {
+            throw new InvalidRequestException("Uploaded file does not exist or is not a regular file", "0000");
         }
     }
 
