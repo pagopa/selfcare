@@ -33,3 +33,21 @@ variable "iam_image_tag" {
   description = "Image tag to use for iam-ms container app"
   default     = "latest"
 }
+
+variable "document_image_tag" {
+  type        = string
+  description = "Image tag to use for document-ms container app"
+  default     = "latest"
+}
+
+variable "webhook_image_tag" {
+  type        = string
+  description = "Image tag to use for webhook-ms container app"
+  default     = "latest"
+}
+
+variable "namirial_sign_image_tag" {
+  type        = string
+  description = "Image tag to use for namirial-sign container app"
+  default     = "3.0.0"
+}
