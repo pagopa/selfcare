@@ -13,6 +13,7 @@ import it.pagopa.selfcare.auth.model.FeatureFlagEnum;
 import it.pagopa.selfcare.auth.model.OtpStatus;
 import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.model.otp.OtpBetaUser;
+import it.pagopa.selfcare.auth.model.otp.OtpDailyLimit;
 import it.pagopa.selfcare.auth.model.otp.OtpFeatureFlag;
 import it.pagopa.selfcare.auth.model.otp.OtpInfo;
 import it.pagopa.selfcare.auth.util.GeneralUtils;
@@ -20,16 +21,17 @@ import it.pagopa.selfcare.auth.util.OtpUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
-import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.util.Date;
-import java.util.Optional;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.bson.Document;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.Date;
+import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @ApplicationScoped
@@ -40,7 +42,11 @@ public class OtpFlowServiceImpl implements OtpFlowService {
   private final OtpNotificationService otpNotificationService;
   private final SessionService sessionService;
 
-  @Inject OtpFeatureFlag otpFeatureFlag;
+  @Inject
+  OtpFeatureFlag otpFeatureFlag;
+
+  @Inject
+  OtpDailyLimit otpLimitConfig;
 
   @ConfigProperty(name = "auth-ms.retry.min-backoff")
   Integer retryMinBackOff;
@@ -72,87 +78,78 @@ public class OtpFlowServiceImpl implements OtpFlowService {
       }
       OtpBetaUser betaUser = maybeOtpBetaUser.get();
       if (betaUser.getForceOtp()) {
-        userClaims.setSameIdp(Boolean.FALSE);
+        userClaims.setSameIdp(betaUser.getSameIdp());
         forcedEmail = betaUser.getForcedEmail();
       }
     }
-
     Optional<String> maybeForcedEmail = Optional.ofNullable(forcedEmail);
+
     return userService
-        .getUserInfoEmail(userClaims)
-        .onFailure(GeneralUtils::checkNotFoundException)
-        .recoverWithNull()
-        .map(Optional::ofNullable)
-        .onFailure()
-        .transform(
-            failure ->
-                new InternalException(
-                    "Cannot get User Info Email on External Internal APIs:" + failure.toString()))
-        .map(optionalEmail -> optionalEmail.map(maybeForcedEmail::orElse))
-        .chain(
-            maybeUserEmail ->
-                maybeUserEmail
-                    .map(
-                        // User found with email
-                        institutionalEmail ->
-                            // check if last otp flow is present for user
-                            findLastOtpFlowByUserId(userClaims.getUid())
-                                .onFailure(GeneralUtils::checkNotFoundException)
-                                .recoverWithNull()
-                                .map(Optional::ofNullable)
-                                .onFailure()
-                                .transform(
-                                    failure ->
-                                        new InternalException(
-                                            "Cannot get last OTP Flow:" + failure.toString()))
-                                .chain(
-                                    maybeLastOtpFlow ->
-                                        maybeLastOtpFlow
-                                            .map(
-                                                otpFlow ->
-                                                    OtpUtils.isNewOtpFlowRequired(
-                                                            otpFlow, userClaims.getSameIdp())
-                                                        ? createAndSendOtp(
-                                                                userClaims.getUid(),
-                                                                institutionalEmail)
-                                                            .map(
-                                                                createdOtpFlow ->
-                                                                    Optional.of(
-                                                                        new OtpInfo(
-                                                                            createdOtpFlow
-                                                                                .getUuid(),
-                                                                            institutionalEmail)))
-                                                        /*
-                                                         * A previous PENDING OTP flow is found so we must ask for the same flow to be completed by user
-                                                         */
-                                                        : otpFlow
-                                                                .getStatus()
-                                                                .equals(OtpStatus.PENDING)
-                                                            ? Uni.createFrom()
-                                                                .item(
-                                                                    Optional.of(
-                                                                        new OtpInfo(
-                                                                            otpFlow.getUuid(),
-                                                                            institutionalEmail)))
-                                                            // a previous COMPLETED OTP flow with
-                                                            // sameIdp=true is found. No OTP flow
-                                                            // needed.
-                                                            : Uni.createFrom().item(emptyOtpInfo))
-                                            .orElse(
-                                                !userClaims.getSameIdp()
-                                                    // This is the first time a user is asked for an
-                                                    // OTP flow
-                                                    ? createAndSendOtp(
-                                                            userClaims.getUid(), institutionalEmail)
-                                                        .map(
-                                                            createdOtpFlow ->
-                                                                Optional.of(
-                                                                    new OtpInfo(
-                                                                        createdOtpFlow.getUuid(),
-                                                                        institutionalEmail)))
-                                                    : Uni.createFrom().item(emptyOtpInfo))))
-                    // User is not present on Self care so we can proceed without OTP Flow
-                    .orElse(Uni.createFrom().item(emptyOtpInfo)));
+            .getUserInfoEmail(userClaims)
+            .onFailure(GeneralUtils::checkNotFoundException)
+            .recoverWithNull()
+            .map(Optional::ofNullable)
+            .onFailure()
+            .transform(
+                    failure ->
+                            new InternalException(
+                                    "Cannot get User Info Email on External Internal APIs:" + failure))
+            .map(optionalEmail -> optionalEmail.map(maybeForcedEmail::orElse))
+            .chain(
+                    maybeUserEmail ->
+                            maybeUserEmail
+                                    .map(email -> handleUserOtpFlow(userClaims, email))
+                                    .orElseGet(() -> Uni.createFrom().item(Optional.empty())));
+  }
+
+  private Uni<Optional<OtpInfo>> handleUserOtpFlow(UserClaims userClaims, String institutionalEmail) {
+
+    return findLastOtpFlowByUserId(userClaims.getUid())
+            .map(Optional::ofNullable)
+            .onFailure()
+            .transform(
+                    failure ->
+                            new InternalException("Cannot get last OTP Flow:" + failure))
+            .chain(
+                    maybeLastOtpFlow ->
+                            maybeLastOtpFlow
+                                    .map(flow -> handleExistingOtpFlow(flow, userClaims, institutionalEmail))
+                                    .orElseGet(() -> handleMissingOtpFlow(userClaims, institutionalEmail)));
+  }
+
+  private Uni<Optional<OtpInfo>> handleExistingOtpFlow(
+          OtpFlow otpFlow,
+          UserClaims userClaims,
+          String institutionalEmail) {
+
+    return OtpUtils.isNewOtpFlowRequired(
+                    otpFlow, userClaims.getSameIdp(), otpLimitConfig.getDailyLimit())
+            .chain(isRequired ->
+                    isRequired
+                            ? createAndSendOtp(userClaims.getUid(), institutionalEmail)
+                            .map(flow -> Optional.of(new OtpInfo(flow.getUuid(), institutionalEmail)))
+                            : checkPendingOtpFlow(otpFlow, institutionalEmail));
+  }
+
+  private static Uni<Optional<OtpInfo>> checkPendingOtpFlow(OtpFlow otpFlow, String institutionalEmail) {
+    return otpFlow.getStatus().equals(OtpStatus.PENDING)
+            ? Uni.createFrom().item(Optional.of(new OtpInfo(otpFlow.getUuid(), institutionalEmail)))
+            : Uni.createFrom().item(Optional.empty());
+  }
+
+
+  private Uni<Optional<OtpInfo>> handleMissingOtpFlow(
+          UserClaims userClaims,
+          String institutionalEmail) {
+
+    return OtpUtils.isOtpRequiredWithMissingOtpFlow(
+                    userClaims.getSameIdp(),
+                    otpLimitConfig.getDailyLimit())
+            .chain(isRequired ->
+                    isRequired
+                            ? createAndSendOtp(userClaims.getUid(), institutionalEmail)
+                            .map(flow -> Optional.of(new OtpInfo(flow.getUuid(), institutionalEmail)))
+                            : Uni.createFrom().item(Optional.empty()));
   }
 
   /**

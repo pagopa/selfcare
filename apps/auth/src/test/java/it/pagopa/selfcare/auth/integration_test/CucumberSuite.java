@@ -3,17 +3,18 @@ package it.pagopa.selfcare.auth.integration_test;
 import io.quarkiverse.cucumber.CucumberOptions;
 import io.quarkiverse.cucumber.CucumberQuarkusTest;
 import io.restassured.RestAssured;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.testcontainers.containers.ComposeContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Scanner;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.testcontainers.containers.ComposeContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
 
 @Slf4j
 @CucumberOptions(
@@ -47,45 +48,14 @@ public class CucumberSuite extends CucumberQuarkusTest {
     RestAssured.baseURI = "http://localhost";
     RestAssured.port = 8081;
 
-    //    composeContainer =
-    //        new ComposeContainer(new File("docker-compose.yml"))
-    //            .withPull(true)
-    //            .withExposedService("userms", 8084)
-    //            .withExposedService("iamms", 8085)
-    //            .withExposedService("institutionms", 8083)
-    //            .withExposedService("externalms", 8082)
-    //            .waitingFor("mongodb", Wait.forLogMessage(".*Waiting for connections.*\\n", 1))
-    //            .waitingFor(
-    //                "userms",
-    //                Wait.forHttp("/q/health/ready")
-    //                    .forPort(8084)
-    //                    .forStatusCode(200)
-    //                    .withStartupTimeout(Duration.ofMinutes(2)))
-    //            .waitingFor(
-    //                "iamms",
-    //                Wait.forHttp("/q/health/ready")
-    //                    .forPort(8085)
-    //                    .forStatusCode(200)
-    //                    .withStartupTimeout(Duration.ofMinutes(2)))
-    //            .waitingFor(
-    //                "institutionms",
-    // Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(3)))
-    //            .waitingFor(
-    //                "externalms",
-    // Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(3)))
-    //            .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1))
-    //            .withStartupTimeout(Duration.ofMinutes(5));
-
     composeContainer =
         new ComposeContainer(new File("docker-compose.yml"))
+            .withLocalCompose(true)
             .withPull(true)
-            .withExposedService("userms", 8080)
-            .waitingFor("mongodb", Wait.forListeningPort())
-            .waitingFor("userms", Wait.forHttp("/q/health/ready").forPort(8080).forStatusCode(200))
-            .waitingFor("iamms", Wait.forHttp("/q/health/ready").forPort(8085).forStatusCode(200))
-            .waitingFor("institutionms", Wait.forLogMessage(".*Running with Spring Boot.*\\n", 1))
-            .waitingFor("externalms", Wait.forLogMessage(".*Running with Spring Boot.*\\n", 1))
-            .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1))
+            .waitingFor("institutionms", Wait.forLogMessage(".*Started SelfCareCoreApplication.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
+            .waitingFor("userms", Wait.forLogMessage(".*user-ms.*started in.*Listening on.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
+            .waitingFor("iamms", Wait.forLogMessage(".*iam.*started in.*Listening on.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
+            .waitingFor("externalms", Wait.forLogMessage(".*Started SelfCareExternalAPIApplication in.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
             .withStartupTimeout(Duration.ofMinutes(5));
 
     composeContainer.start();
