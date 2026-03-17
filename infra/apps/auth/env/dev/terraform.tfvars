@@ -102,7 +102,7 @@ app_settings = [
   },
   {
     name  = "OTP_DAILY_LIMIT"
-    value = 1
+    value = 0
   }
 ]
 

@@ -123,6 +123,10 @@ locals {
     {
       name  = "IAM_API_URL"
       value = "https://selc-d-iam-ms-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+    },
+    {
+      name  = "OTP_DAILY_LIMIT"
+      value = 0
     }
   ]
   secrets_names_auth_ms = {
