@@ -28,6 +28,15 @@ jobs:
       environment: dev
       dir: infra/resources/dev-ar
 
+  code_review_dev_pnpg:
+    uses: ./.github/workflows/call_code_review_infra_dx.yml
+    name: '[DEV-PNPG] Resources Infra Code Review'
+    if: ${{ !startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: dev
+      dir: infra/resources/dev-pnpg
+
   # code_review_uat:
   #   uses: ./.github/workflows/call_code_review_infra_dx.yml
   #   name: '[UAT] Resources Infra Code Review'
