@@ -148,6 +148,32 @@
       <artifactId>jsoup</artifactId>
       <version>1.21.2</version>
     </dependency>
+    <!-- PDF generation dependencies -->
+    <dependency>
+      <groupId>com.openhtmltopdf</groupId>
+      <artifactId>openhtmltopdf-core</artifactId>
+      <version>1.0.10</version>
+    </dependency>
+    <dependency>
+      <groupId>com.openhtmltopdf</groupId>
+      <artifactId>openhtmltopdf-pdfbox</artifactId>
+      <version>1.0.10</version>
+    </dependency>
+    <dependency>
+      <groupId>com.openhtmltopdf</groupId>
+      <artifactId>openhtmltopdf-svg-support</artifactId>
+      <version>1.0.10</version>
+    </dependency>
+    <dependency>
+      <groupId>com.openhtmltopdf</groupId>
+      <artifactId>openhtmltopdf-slf4j</artifactId>
+      <version>1.0.10</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-text</artifactId>
+      <version>1.10.0</version>
+    </dependency>
     <dependency>
       <groupId>org.freemarker</groupId>
       <artifactId>freemarker</artifactId>
