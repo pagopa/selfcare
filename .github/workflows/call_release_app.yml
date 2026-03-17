@@ -34,7 +34,7 @@ on:
 
 env:
   APP_PATH: 'apps/${{ inputs.app }}'
-  INFRA_PATH: 'infra/apps/${{ inputs.app }}'
+  INFRA_PATH: 'infra/resources'
   APPS_POM: "apps/pom.xml"
   POM: "pom.xml"
 
@@ -47,8 +47,8 @@ jobs:
     secrets: inherit
     with:
       environment: dev
-      tf_environment: ${{ inputs.target == 'selc' && 'dev' || 'dev-pnpg' }}
-      dir: ${{ inputs.INFRA_PATH }}
+      tf_environment: ${{ inputs.target == 'selc' && 'dev-ar' || 'dev-pnpg' }}
+      dir: ${{ inputs.target == 'selc' && 'infra/resources/dev-ar' || 'infra/resources/dev-pnpg' }}
       dockerfile_path: ./${{ inputs.APP_PATH }}/Dockerfile
       docker_image_name: ${{ endsWith(inputs.app, '-cdc') && format('pagopa/selfcare-{0}', inputs.app) || endsWith(inputs.app, '-ms')  && format('pagopa/selfcare-{0}', inputs.app) || format('pagopa/selfcare-{0}-ms', inputs.app) }}
       path_openapi_docs: ./${{ inputs.APP_PATH }}/src/main/docs/openapi.json
@@ -61,8 +61,8 @@ jobs:
     secrets: inherit
     with:
       environment: uat
-      tf_environment: ${{ inputs.target == 'selc' && 'uat' || 'uat-pnpg' }}
-      dir: ${{ inputs.INFRA_PATH }}
+      tf_environment: ${{ inputs.target == 'selc' && 'uat-ar' || 'uat-pnpg' }}
+      dir: ${{ inputs.target == 'selc' && 'infra/resources/uat-ar' || 'infra/resources/uat-pnpg' }}
       dockerfile_path: ./${{ inputs.APP_PATH }}/Dockerfile
       docker_image_name: ${{ endsWith(inputs.app, '-cdc') && format('pagopa/selfcare-{0}', inputs.app) || endsWith(inputs.app, '-ms')  && format('pagopa/selfcare-{0}', inputs.app) || format('pagopa/selfcare-{0}-ms', inputs.app) }}
       path_openapi_docs: ./${{ inputs.APP_PATH }}/src/main/docs/openapi.json
@@ -75,8 +75,8 @@ jobs:
     secrets: inherit
     with:
       environment: prod
-      tf_environment: ${{ inputs.target == 'selc' && 'prod' || 'prod-pnpg' }}
-      dir: ${{ inputs.INFRA_PATH }}
+      tf_environment: ${{ inputs.target == 'selc' && 'prod-ar' || 'prod-pnpg' }}
+      dir: ${{ inputs.target == 'selc' && 'infra/resources/prod-ar' || 'infra/resources/prod-pnpg' }}
       dockerfile_path: ./${{ inputs.APP_PATH }}/Dockerfile
       docker_image_name: ${{ endsWith(inputs.app, '-cdc') && format('pagopa/selfcare-{0}', inputs.app) || endsWith(inputs.app, '-ms')  && format('pagopa/selfcare-{0}', inputs.app) || format('pagopa/selfcare-{0}-ms', inputs.app) }}
       path_openapi_docs: ./${{ inputs.APP_PATH }}/src/main/docs/openapi.json
