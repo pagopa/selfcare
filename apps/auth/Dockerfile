@@ -35,7 +35,7 @@ ARG REPO_PASSWORD
 
 RUN mvn --global-settings settings.xml --projects :auth -DrepositoryId=${REPO_SELFCARE} -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} --also-make clean package -DskipTests
 
-FROM amazoncorretto:17@sha256:3f08e3e4271666c2bb048bbd084f7cb0dad2471fa0058e5b080b4c1004c3abf0 AS runtime
+FROM eclipse-temurin:17@sha256:d838da85ec7aa8fd72b613e30b5f7629d8f5ac70a4264d45735a8a2ed9af447c AS runtime
 
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
 ENV JAVA_OPTIONS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
@@ -53,4 +53,4 @@ RUN chmod 755 ./applicationinsights-agent.jar
 EXPOSE 8080
 USER 1001
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTIONS -jar /app/quarkus-run.jar"]
+ENTRYPOINT ["bash", "-c", "java $JAVA_OPTIONS -jar /app/quarkus-run.jar"]

@@ -12,6 +12,8 @@ import java.util.List;
 @Slf4j
 public class OtpUtils {
 
+  private OtpUtils() {}
+
   private static final SecureRandom random = new SecureRandom();
 
   public static String maskEmail(String email) {
