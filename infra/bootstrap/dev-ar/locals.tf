@@ -40,12 +40,18 @@ locals {
     "AZURE_CLIENT_ID_CI"    = module.identity_ci.identity_client_id
     "AZURE_SUBSCRIPTION_ID" = data.azurerm_client_config.current.subscription_id
     "AZURE_TENANT_ID"       = data.azurerm_client_config.current.tenant_id,
+    "ARM_CLIENT_ID_CI"      = module.identity_ci.identity_client_id
+    "ARM_SUBSCRIPTION_ID"   = data.azurerm_client_config.current.subscription_id
+    "ARM_TENANT_ID"         = data.azurerm_client_config.current.tenant_id,
   }
 
   env_cd_secrets = {
     "AZURE_CLIENT_ID_CD"    = module.identity_cd.identity_client_id
     "AZURE_SUBSCRIPTION_ID" = data.azurerm_client_config.current.subscription_id
     "AZURE_TENANT_ID"       = data.azurerm_client_config.current.tenant_id,
+    "ARM_CLIENT_ID_CD"      = module.identity_cd.identity_client_id
+    "ARM_SUBSCRIPTION_ID"   = data.azurerm_client_config.current.subscription_id
+    "ARM_TENANT_ID"         = data.azurerm_client_config.current.tenant_id,
   }
 
   ci_github_federations = [
