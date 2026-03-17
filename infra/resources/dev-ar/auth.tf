@@ -149,7 +149,7 @@ module "container_app_auth_ms" {
   container_app_name             = "${local.project}-auth-ms"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-auth-ms"
-  image_tag                      = var.auth_image_tag
+  image_tag                      = local.auth_image_tag
   app_settings                   = local.app_settings_auth_ms
   secrets_names                  = local.secrets_names_auth_ms
   workload_profile_name          = "Consumption"

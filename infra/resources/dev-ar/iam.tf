@@ -52,7 +52,7 @@ module "container_app_iam_ms" {
   container_app_name             = "${local.project}-iam-ms"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-iam-ms"
-  image_tag                      = var.iam_image_tag
+  image_tag                      = local.iam_image_tag
   app_settings                   = local.app_settings_iam_ms
   secrets_names                  = local.secrets_names_iam_ms
 
