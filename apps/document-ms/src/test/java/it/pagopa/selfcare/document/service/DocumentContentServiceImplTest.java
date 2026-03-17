@@ -1,6 +1,5 @@
 package it.pagopa.selfcare.document.service;
 
-import com.azure.storage.blob.models.BlobProperties;
 import eu.europa.esig.dss.model.DSSDocument;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
@@ -13,10 +12,13 @@ import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.exception.UpdateNotAllowedException;
 import it.pagopa.selfcare.document.model.FormItem;
-import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
+import it.pagopa.selfcare.document.model.dto.request.*;
+import it.pagopa.selfcare.document.model.dto.response.CreatePdfResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.document.service.impl.DocumentContentServiceImpl;
+import it.pagopa.selfcare.onboarding.common.InstitutionType;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.common.TokenType;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -29,6 +31,7 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -50,10 +54,17 @@ public class DocumentContentServiceImplTest {
     private static final String DOCUMENT_ID = new ObjectId().toHexString();
     private static final String INSTITUTION_DESCRIPTION = "Test Institution";
     private static final String PRODUCT_ID = "Product-123";
+    private static final String CONTRACT_TEMPLATE_PATH = "templates/contract.ftl";
+    private static final String CONTRACT_TEMPLATE_PDF_PATH = "templates/contract.pdf";
+    private static final String ATTACHMENT_TEMPLATE_PATH = "templates/attachment.ftl";
+    private static final String PRODUCT_NAME = "PagoPA";
+    private static final String PDF_FORMAT_FILENAME = "contract_%s.pdf";
+    private static final String ATTACHMENT_NAME = "allegato-1";
 
     @InjectMock DocumentRepository documentRepository;
     @InjectMock AzureBlobClient azureBlobClient;
     @InjectMock SignatureService signatureService;
+    @InjectMock DocumentService documentService;
     @Inject DocumentContentService documentContentService;
 
     // ---- retrieveAttachment with buildAttachmentPath ----
@@ -420,9 +431,9 @@ public class DocumentContentServiceImplTest {
         persistedDoc.setContractFilename("signed_template.pdf");
         persistedDoc.setContractSigned("/parties/docs/" + ONBOARDING_ID + "/attachments/signed_template.pdf");
 
-        // existsAttachment → document not found in DB
-        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "myAttachment"))
-                .thenReturn(Uni.createFrom().nullItem());
+        // existsAttachment → returns false (attachment does not exist)
+        when(documentService.existsAttachment(ONBOARDING_ID, "myAttachment"))
+                .thenReturn(Uni.createFrom().item(false));
         // getTemplateAndVerifyDigest → template file from Azure
         when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(tempFile);
         // persist attachment
@@ -456,15 +467,9 @@ public class DocumentContentServiceImplTest {
                 .templateVersion("1.0")
                 .build();
 
-        Document existingDoc = buildDocument();
-        existingDoc.setType(TokenType.ATTACHMENT);
-        existingDoc.setContractSigned("/path/to/attachment.pdf");
-
-        // existsAttachment → document found in DB AND in storage
-        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "myAttachment"))
-                .thenReturn(Uni.createFrom().item(existingDoc));
-        when(azureBlobClient.getProperties(existingDoc.getContractSigned()))
-                .thenReturn(Mockito.mock(BlobProperties.class));
+        // existsAttachment → returns true (attachment already exists)
+        when(documentService.existsAttachment(ONBOARDING_ID, "myAttachment"))
+                .thenReturn(Uni.createFrom().item(true));
 
         var awaiter = documentContentService.uploadAttachment(request, formItem).await();
         assertThrows(UpdateNotAllowedException.class, awaiter::indefinitely);
@@ -495,8 +500,8 @@ public class DocumentContentServiceImplTest {
         persistedDoc.setContractFilename("signed_template.pdf.p7m");
         persistedDoc.setContractSigned("/parties/docs/" + ONBOARDING_ID + "/attachments/signed_template.pdf.p7m");
 
-        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "myAttachment"))
-                .thenReturn(Uni.createFrom().nullItem());
+        when(documentService.existsAttachment(ONBOARDING_ID, "myAttachment"))
+                .thenReturn(Uni.createFrom().item(false));
         when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(tempFile);
         when(documentRepository.persist(any(Document.class)))
                 .thenReturn(Uni.createFrom().item(persistedDoc));
@@ -536,8 +541,8 @@ public class DocumentContentServiceImplTest {
         persistedDoc.setType(TokenType.ATTACHMENT);
         persistedDoc.setName("myAttachment");
 
-        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "myAttachment"))
-                .thenReturn(Uni.createFrom().nullItem());
+        when(documentService.existsAttachment(ONBOARDING_ID, "myAttachment"))
+                .thenReturn(Uni.createFrom().item(false));
         when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(tempFile);
         when(documentRepository.persist(any(Document.class)))
                 .thenReturn(Uni.createFrom().item(persistedDoc));
@@ -610,8 +615,8 @@ public class DocumentContentServiceImplTest {
         persistedDoc.setContractFilename("signed_template.pdf");
         persistedDoc.setContractSigned("/parties/docs/" + ONBOARDING_ID + "/attachments/signed_template.pdf");
 
-        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "myAttachment"))
-                .thenReturn(Uni.createFrom().nullItem());
+        when(documentService.existsAttachment(ONBOARDING_ID, "myAttachment"))
+                .thenReturn(Uni.createFrom().item(false));
         when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(tempFile);
         when(documentRepository.persist(any(Document.class)))
                 .thenReturn(Uni.createFrom().item(persistedDoc));
@@ -649,5 +654,502 @@ public class DocumentContentServiceImplTest {
             pdf.save(tempFile);
         }
         return tempFile;
+    }
+
+    // ============================================
+    // createContractPdf - Success scenarios
+    // ============================================
+
+    @Test
+    void createContractPdf_shouldReturnSuccess_whenValidRequestWithHtmlTemplate() throws IOException {
+        CreateContractPdfRequest request = buildValidContractRequest();
+        File signedPdf = createTempPdf();
+
+        when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
+        when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq(PRODUCT_ID)))
+                .thenReturn(Uni.createFrom().item(signedPdf));
+
+        CreatePdfResponse response = documentContentService.createContractPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+        assertNotNull(response.getStoragePath());
+        assertNotNull(response.getFilename());
+        assertTrue(response.getFilename().contains(PRODUCT_NAME.replace(" ", "_")));
+        verify(azureBlobClient).uploadFile(anyString(), anyString(), any(byte[].class));
+    }
+
+    @Test
+    void createContractPdf_shouldReturnSuccess_whenValidRequestWithPdfTemplate() throws IOException {
+        CreateContractPdfRequest request = buildValidContractRequest();
+        request.setContractTemplatePath(CONTRACT_TEMPLATE_PDF_PATH);
+        File pdfTemplate = createTempPdf();
+        File signedPdf = createTempPdf();
+
+        when(azureBlobClient.getFileAsPdf(CONTRACT_TEMPLATE_PDF_PATH)).thenReturn(pdfTemplate);
+        when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq(PRODUCT_ID)))
+                .thenReturn(Uni.createFrom().item(signedPdf));
+
+        CreatePdfResponse response = documentContentService.createContractPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+        assertNotNull(response.getStoragePath());
+        verify(azureBlobClient).getFileAsPdf(CONTRACT_TEMPLATE_PDF_PATH);
+    }
+
+    @Test
+    void createContractPdf_shouldReturnSuccess_withPSPInstitutionType() throws IOException {
+        CreateContractPdfRequest request = buildValidContractRequest();
+        request.setProductId("prod-pagopa");
+        request.getInstitution().setInstitutionType(InstitutionType.PSP);
+        request.getInstitution().setPaymentServiceProvider(buildPaymentServiceProviderData());
+        File signedPdf = createTempPdf();
+
+        when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
+        when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq("prod-pagopa")))
+                .thenReturn(Uni.createFrom().item(signedPdf));
+
+        CreatePdfResponse response = documentContentService.createContractPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+    }
+
+    @Test
+    void createContractPdf_shouldReturnSuccess_withPRVInstitutionType() throws IOException {
+        CreateContractPdfRequest request = buildValidContractRequest();
+        request.setProductId("prod-pagopa");
+        request.getInstitution().setInstitutionType(InstitutionType.PRV);
+        request.setPayment(PaymentPdfData.builder().holder("Holder").iban("IT123").build());
+        File signedPdf = createTempPdf();
+
+        when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
+        when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq("prod-pagopa")))
+                .thenReturn(Uni.createFrom().item(signedPdf));
+
+        CreatePdfResponse response = documentContentService.createContractPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+    }
+
+    @Test
+    void createContractPdf_shouldReturnSuccess_withGPUInstitutionType() throws IOException {
+        CreateContractPdfRequest request = buildValidContractRequest();
+        request.setProductId("prod-pagopa");
+        request.getInstitution().setInstitutionType(InstitutionType.GPU);
+        File signedPdf = createTempPdf();
+
+        when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
+        when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq("prod-pagopa")))
+                .thenReturn(Uni.createFrom().item(signedPdf));
+
+        CreatePdfResponse response = documentContentService.createContractPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+    }
+
+    @Test
+    void createContractPdf_shouldReturnSuccess_withPRV_PFInstitutionType() throws IOException {
+        CreateContractPdfRequest request = buildValidContractRequest();
+        request.setProductId("prod-pagopa");
+        request.getInstitution().setInstitutionType(InstitutionType.PRV_PF);
+        File signedPdf = createTempPdf();
+
+        when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
+        when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq("prod-pagopa")))
+                .thenReturn(Uni.createFrom().item(signedPdf));
+
+        CreatePdfResponse response = documentContentService.createContractPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+    }
+
+    @Test
+    void createContractPdf_shouldReturnSuccess_withECInstitutionType() throws IOException {
+        CreateContractPdfRequest request = buildValidContractRequest();
+        request.setProductId("prod-pagopa");
+        request.getInstitution().setInstitutionType(InstitutionType.PA);
+        File signedPdf = createTempPdf();
+
+        when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
+        when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq("prod-pagopa")))
+                .thenReturn(Uni.createFrom().item(signedPdf));
+
+        CreatePdfResponse response = documentContentService.createContractPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+    }
+
+    @Test
+    void createContractPdf_shouldReturnSuccess_withProdIO() throws IOException {
+        CreateContractPdfRequest request = buildValidContractRequest();
+        request.setProductId("prod-io");
+        File signedPdf = createTempPdf();
+
+        when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
+        when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq("prod-io")))
+                .thenReturn(Uni.createFrom().item(signedPdf));
+
+        CreatePdfResponse response = documentContentService.createContractPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+    }
+
+    @Test
+    void createContractPdf_shouldReturnSuccess_withProdIOPremium() throws IOException {
+        CreateContractPdfRequest request = buildValidContractRequest();
+        request.setProductId("prod-io-premium");
+        File signedPdf = createTempPdf();
+
+        when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
+        when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq("prod-io-premium")))
+                .thenReturn(Uni.createFrom().item(signedPdf));
+
+        CreatePdfResponse response = documentContentService.createContractPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+    }
+
+    @Test
+    void createContractPdf_shouldReturnSuccess_withProdIOSign() throws IOException {
+        CreateContractPdfRequest request = buildValidContractRequest();
+        request.setProductId("prod-io-sign");
+        File signedPdf = createTempPdf();
+
+        when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
+        when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq("prod-io-sign")))
+                .thenReturn(Uni.createFrom().item(signedPdf));
+
+        CreatePdfResponse response = documentContentService.createContractPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+    }
+
+    @Test
+    void createContractPdf_shouldReturnSuccess_withProdPN() throws IOException {
+        CreateContractPdfRequest request = buildValidContractRequest();
+        request.setProductId("prod-pn");
+        request.setBilling(BillingPdfData.builder().vatNumber("123").recipientCode("ABC").build());
+        File signedPdf = createTempPdf();
+
+        when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
+        when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq("prod-pn")))
+                .thenReturn(Uni.createFrom().item(signedPdf));
+
+        CreatePdfResponse response = documentContentService.createContractPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+    }
+
+    @Test
+    void createContractPdf_shouldReturnSuccess_withProdInterop() throws IOException {
+        CreateContractPdfRequest request = buildValidContractRequest();
+        request.setProductId("prod-interop");
+        File signedPdf = createTempPdf();
+
+        when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
+        when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq("prod-interop")))
+                .thenReturn(Uni.createFrom().item(signedPdf));
+
+        CreatePdfResponse response = documentContentService.createContractPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+    }
+
+    @Test
+    void createContractPdf_shouldReturnSuccess_withDashboardPSP() throws IOException {
+        CreateContractPdfRequest request = buildValidContractRequest();
+        request.setProductId("prod-dashboard-psp");
+        request.getInstitution().setInstitutionType(InstitutionType.PSP);
+        request.getInstitution().setPaymentServiceProvider(buildPaymentServiceProviderData());
+        File signedPdf = createTempPdf();
+
+        when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
+        when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq("prod-dashboard-psp")))
+                .thenReturn(Uni.createFrom().item(signedPdf));
+
+        CreatePdfResponse response = documentContentService.createContractPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+    }
+
+    @Test
+    void createContractPdf_shouldReturnSuccess_withIdpayMerchant() throws IOException {
+        CreateContractPdfRequest request = buildValidContractRequest();
+        request.setProductId("prod-idpay-merchant");
+        request.getInstitution().setInstitutionType(InstitutionType.PRV);
+        File signedPdf = createTempPdf();
+
+        when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
+        when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq("prod-idpay-merchant")))
+                .thenReturn(Uni.createFrom().item(signedPdf));
+
+        CreatePdfResponse response = documentContentService.createContractPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+    }
+
+    @Test
+    void createContractPdf_shouldReturnSuccess_withDelegates() throws IOException {
+        CreateContractPdfRequest request = buildValidContractRequest();
+        request.setDelegates(List.of(
+                buildValidUserPdfData("delegate-1", "DLGTAX001"),
+                buildValidUserPdfData("delegate-2", "DLGTAX002")
+        ));
+        File signedPdf = createTempPdf();
+
+        when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
+        when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq(PRODUCT_ID)))
+                .thenReturn(Uni.createFrom().item(signedPdf));
+
+        CreatePdfResponse response = documentContentService.createContractPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+    }
+
+    @Test
+    void createContractPdf_shouldReturnSuccess_withAggregator() throws IOException {
+        CreateContractPdfRequest request = buildValidContractRequest();
+        request.setIsAggregator(true);
+        request.setAggregatesCsvBaseUrl("https://example.com/aggregates");
+        File signedPdf = createTempPdf();
+
+        when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
+        when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq(PRODUCT_ID)))
+                .thenReturn(Uni.createFrom().item(signedPdf));
+
+        CreatePdfResponse response = documentContentService.createContractPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+    }
+
+    @Test
+    void createContractPdf_shouldReturnSuccess_withPricingPlan() throws IOException {
+        CreateContractPdfRequest request = buildValidContractRequest();
+        request.setPricingPlan("C1");
+        File signedPdf = createTempPdf();
+
+        when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
+        when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq(PRODUCT_ID)))
+                .thenReturn(Uni.createFrom().item(signedPdf));
+
+        CreatePdfResponse response = documentContentService.createContractPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+    }
+
+    // ============================================
+    // createContractPdf - Error scenarios
+    // ============================================
+
+    @Test
+    void createContractPdf_shouldThrowInternalException_whenTemplateLoadFails() {
+        CreateContractPdfRequest request = buildValidContractRequest();
+
+        when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH))
+                .thenThrow(new SelfcareAzureStorageException("Template not found", "404"));
+
+        var awaiter = documentContentService.createContractPdf(request).await();
+        assertThrows(SelfcareAzureStorageException.class, awaiter::indefinitely);
+    }
+
+    @Test
+    void createContractPdf_shouldThrowInternalException_whenSignatureFails() throws IOException {
+        CreateContractPdfRequest request = buildValidContractRequest();
+
+        when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
+        when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq(PRODUCT_ID)))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("Signature failed")));
+
+        var awaiter = documentContentService.createContractPdf(request).await();
+        assertThrows(RuntimeException.class, awaiter::indefinitely);
+    }
+
+    @Test
+    void createContractPdf_shouldThrowException_whenUploadFails() throws IOException {
+        CreateContractPdfRequest request = buildValidContractRequest();
+        File signedPdf = createTempPdf();
+
+        when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
+        when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq(PRODUCT_ID)))
+                .thenReturn(Uni.createFrom().item(signedPdf));
+        doThrow(new SelfcareAzureStorageException("Upload failed", "500"))
+                .when(azureBlobClient).uploadFile(anyString(), anyString(), any(byte[].class));
+
+        var awaiter = documentContentService.createContractPdf(request).await();
+        assertThrows(SelfcareAzureStorageException.class, awaiter::indefinitely);
+    }
+
+    // ============================================
+    // createAttachmentPdf - Success scenarios
+    // ============================================
+
+    @Test
+    void createAttachmentPdf_shouldReturnSuccess_whenValidRequestWithHtmlTemplate() throws IOException {
+        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+
+        when(azureBlobClient.getFileAsText(ATTACHMENT_TEMPLATE_PATH)).thenReturn("<html><body>Attachment</body></html>");
+
+        CreatePdfResponse response = documentContentService.createAttachmentPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+        assertNotNull(response.getStoragePath());
+        assertNotNull(response.getFilename());
+        assertTrue(response.getFilename().contains(ATTACHMENT_NAME));
+        assertTrue(response.getStoragePath().contains("/attachments"));
+        verify(azureBlobClient).uploadFile(anyString(), anyString(), any(byte[].class));
+    }
+
+    @Test
+    void createAttachmentPdf_shouldReturnSuccess_whenValidRequestWithPdfTemplate() throws IOException {
+        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        request.setAttachmentTemplatePath("templates/attachment.pdf");
+        File pdfTemplate = createTempPdf();
+
+        when(azureBlobClient.getFileAsPdf("templates/attachment.pdf")).thenReturn(pdfTemplate);
+
+        CreatePdfResponse response = documentContentService.createAttachmentPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+        assertNotNull(response.getStoragePath());
+        verify(azureBlobClient).getFileAsPdf("templates/attachment.pdf");
+    }
+
+    @Test
+    void createAttachmentPdf_shouldReturnSuccess_withGpuData() throws IOException {
+        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        request.getInstitution().setGpuData(GpuDataPdfData.builder()
+                .businessRegisterNumber("BR123")
+                .legalRegisterNumber("LR456")
+                .legalRegisterName("Legal Register")
+                .build());
+
+        when(azureBlobClient.getFileAsText(ATTACHMENT_TEMPLATE_PATH)).thenReturn("<html><body>Attachment</body></html>");
+
+        CreatePdfResponse response = documentContentService.createAttachmentPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+    }
+
+    @Test
+    void createAttachmentPdf_shouldReturnSuccess_withProductNameContainingSpaces() throws IOException {
+        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        request.setProductName("Product With Spaces");
+
+        when(azureBlobClient.getFileAsText(ATTACHMENT_TEMPLATE_PATH)).thenReturn("<html><body>Attachment</body></html>");
+
+        CreatePdfResponse response = documentContentService.createAttachmentPdf(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+        assertTrue(response.getFilename().contains("Product_With_Spaces"));
+    }
+
+    // ============================================
+    // createAttachmentPdf - Error scenarios
+    // ============================================
+
+    @Test
+    void createAttachmentPdf_shouldThrowInternalException_whenTemplateLoadFails() {
+        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+
+        when(azureBlobClient.getFileAsText(ATTACHMENT_TEMPLATE_PATH))
+                .thenThrow(new SelfcareAzureStorageException("Template not found", "404"));
+
+        var awaiter = documentContentService.createAttachmentPdf(request).await();
+        assertThrows(SelfcareAzureStorageException.class, awaiter::indefinitely);
+    }
+
+    @Test
+    void createAttachmentPdf_shouldThrowException_whenUploadFails() throws IOException {
+        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+
+        when(azureBlobClient.getFileAsText(ATTACHMENT_TEMPLATE_PATH)).thenReturn("<html><body>Attachment</body></html>");
+        doThrow(new SelfcareAzureStorageException("Upload failed", "500"))
+                .when(azureBlobClient).uploadFile(anyString(), anyString(), any(byte[].class));
+
+        var awaiter = documentContentService.createAttachmentPdf(request).await();
+        assertThrows(SelfcareAzureStorageException.class, awaiter::indefinitely);
+    }
+
+    // ============================================
+    // Helper methods for building test objects
+    // ============================================
+
+    private CreateContractPdfRequest buildValidContractRequest() {
+        return CreateContractPdfRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .contractTemplatePath(CONTRACT_TEMPLATE_PATH)
+                .productId(PRODUCT_ID)
+                .productName(PRODUCT_NAME)
+                .pdfFormatFilename(PDF_FORMAT_FILENAME)
+                .institution(buildValidInstitutionPdfData())
+                .manager(buildValidUserPdfData("manager-1", "MNGTAX001"))
+                .build();
+    }
+
+    private CreateAttachmentPdfRequest buildValidAttachmentRequest() {
+        return CreateAttachmentPdfRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .attachmentTemplatePath(ATTACHMENT_TEMPLATE_PATH)
+                .productId(PRODUCT_ID)
+                .productName(PRODUCT_NAME)
+                .attachmentName(ATTACHMENT_NAME)
+                .institution(buildValidInstitutionPdfData())
+                .manager(buildValidUserPdfData("manager-1", "MNGTAX001"))
+                .build();
+    }
+
+    private InstitutionPdfData buildValidInstitutionPdfData() {
+        return InstitutionPdfData.builder()
+                .id("inst-123")
+                .taxCode("12345678901")
+                .description(INSTITUTION_DESCRIPTION)
+                .digitalAddress("pec@test.it")
+                .address("Via Test 123")
+                .zipCode("00100")
+                .city("Roma")
+                .county("RM")
+                .country("Italia")
+                .build();
+    }
+
+    private UserPdfData buildValidUserPdfData(String id, String taxCode) {
+        return UserPdfData.builder()
+                .id(id)
+                .taxCode(taxCode)
+                .name("Mario")
+                .surname("Rossi")
+                .email("mario.rossi@test.it")
+                .role(PartyRole.MANAGER)
+                .build();
+    }
+
+    private PaymentServiceProviderPdfData buildPaymentServiceProviderData() {
+        return PaymentServiceProviderPdfData.builder()
+                .abiCode("12345")
+                .businessRegisterNumber("BR123")
+                .legalRegisterNumber("LR456")
+                .legalRegisterName("Register Name")
+                .vatNumberGroup(false)
+                .build();
     }
 }
