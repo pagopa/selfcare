@@ -4,11 +4,13 @@ import com.mongodb.client.model.Accumulators;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Projections;
+import com.mongodb.client.model.UnwindOptions;
 import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.iam.exception.InternalException;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.iam.model.ProductRole;
 import it.pagopa.selfcare.iam.model.ProductRolePermissions;
 import it.pagopa.selfcare.iam.model.UserPermissions;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -84,7 +86,7 @@ public class UserPermissionsRepository {
         .failWith(() -> new ResourceNotFoundException("Permission not found"));
   }
 
-  /** Aggregation query to extract a list of pruduct, role and permissions for a specific user. */
+  /** Aggregation query to extract a list of product, role and permissions for a specific user. */
   public Uni<List<ProductRolePermissions>> getUserProductRolePermissionsList(
       String uid, String productId) {
     List<Bson> pipeline = new ArrayList<>();
@@ -102,6 +104,7 @@ public class UserPermissionsRepository {
             Aggregates.project(
                 Projections.fields(
                     Projections.computed("role", "$roleDetails._id"),
+                    Projections.computed("group", "$roleDetails.group"),
                     Projections.computed("productId", "$productRoles.productId"),
                     Projections.computed("permissions", "$roleDetails.permissions"),
                     Projections.excludeId())));
@@ -117,6 +120,70 @@ public class UserPermissionsRepository {
             failure ->
                 new InternalException(
                     "Error retrieving product role permissions list: " + failure.toString()));
+  }
+
+  /** Aggregation query to extract a list of product, role for a specific user. */
+  public Uni<List<ProductRole>> getUserProductRoles(String uid, String productId) {
+    List<Bson> pipeline = new ArrayList<>();
+    pipeline.add(Aggregates.match(Filters.eq("_id", uid)));
+    pipeline.add(Aggregates.unwind("$productRoles"));
+    Optional.ofNullable(productId)
+        .ifPresent(
+            pid -> pipeline.add(Aggregates.match(Filters.eq("productRoles.productId", pid))));
+
+    List<Bson> pipelinePost =
+        Arrays.asList(
+            Aggregates.unwind("$productRoles.roles"),
+            Aggregates.lookup("roles", "productRoles.roles", "_id", "roleDetails"),
+            Aggregates.unwind("$roleDetails", new UnwindOptions().preserveNullAndEmptyArrays(true)),
+            Aggregates.project(
+                Projections.fields(
+                    Projections.computed(
+                        "role",
+                        new Document(
+                            "$ifNull", Arrays.asList("$roleDetails._id", "$productRoles.roles"))),
+                    Projections.computed(
+                        "group",
+                        new Document("$ifNull", Arrays.asList("$roleDetails.group", null))),
+                    Projections.computed("productId", "$productRoles.productId"),
+                    Projections.excludeId())),
+            Aggregates.group(
+                "$productId",
+                Accumulators.addToSet(
+                    "roles", new Document("role", "$role").append("group", "$group"))),
+            Aggregates.project(
+                Projections.fields(
+                    Projections.computed("productId", "$_id"),
+                    Projections.include("roles"),
+                    Projections.excludeId())));
+
+    pipeline.addAll(pipelinePost);
+
+    return getCollection()
+        .aggregate(pipeline, Document.class)
+        .collect()
+        .asList()
+        .map(docs -> docs.stream().map(this::documentToProductRole).toList())
+        .onFailure()
+        .transform(
+            failure ->
+                new InternalException("Error retrieving product role list: " + failure.toString()));
+  }
+
+  private ProductRole documentToProductRole(Document doc) {
+    List<Document> roleDocs = (List<Document>) doc.get("roles");
+    List<it.pagopa.selfcare.iam.model.Role> roles =
+        roleDocs == null
+            ? List.of()
+            : roleDocs.stream()
+                .map(
+                    r ->
+                        it.pagopa.selfcare.iam.model.Role.builder()
+                            .role(r.getString("role"))
+                            .group(r.getString("group"))
+                            .build())
+                .toList();
+    return ProductRole.builder().productId(doc.getString("productId")).roles(roles).build();
   }
 
   private ReactiveMongoCollection<Document> getCollection() {

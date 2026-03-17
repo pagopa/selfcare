@@ -13,5 +13,6 @@ import lombok.NoArgsConstructor;
 public class ProductRolePermissions {
   private String productId;
   private String role;
+  private String group;
   private List<String> permissions;
 }

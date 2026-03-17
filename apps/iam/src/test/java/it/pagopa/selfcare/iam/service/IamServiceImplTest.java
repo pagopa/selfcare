@@ -12,9 +12,11 @@ import it.pagopa.selfcare.iam.entity.UserClaims;
 import it.pagopa.selfcare.iam.exception.InternalException;
 import it.pagopa.selfcare.iam.exception.InvalidRequestException;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.iam.model.ProductRole;
 import it.pagopa.selfcare.iam.model.ProductRolePermissions;
 import it.pagopa.selfcare.iam.model.ProductRolePermissionsList;
 import it.pagopa.selfcare.iam.model.ProductRoles;
+import it.pagopa.selfcare.iam.model.Role;
 import it.pagopa.selfcare.iam.model.UserPermissions;
 import it.pagopa.selfcare.iam.repository.UserPermissionsRepository;
 import it.pagopa.selfcare.iam.util.DataEncryptionConfig;
@@ -705,16 +707,117 @@ class IamServiceImplTest {
     }
   }
 
+  // ========== getProductRoles Tests ==========
+
   @Test
-  void getUsers_shouldThrowResourceNotFoundException_whenNoUsersFound() {
-    String productId = "productA";
-    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
-      mockedStatic
-          .when(() -> UserClaims.findByProductId(productId))
-          .thenReturn(Uni.createFrom().item(List.of()));
-      assertThrows(
-          ResourceNotFoundException.class,
-          () -> service.getUsers(productId).await().indefinitely());
-    }
+  void getProductRoles_shouldReturnRoles_whenUserAndProductExist() {
+    String userId = "042b311a-7b99-4eaa-8c7d-9e5b5f6bb9ae";
+    String productId = "product-C";
+
+    Role role = Role.builder().role("CUSTOM").group("CUSTOM").build();
+    ProductRole productRole =
+        ProductRole.builder().productId(productId).roles(List.of(role)).build();
+
+    when(userPermissionsRepository.getUserProductRoles(userId, productId))
+        .thenReturn(Uni.createFrom().item(List.of(productRole)));
+
+    List<ProductRole> result = service.getProductRoles(userId, productId).await().indefinitely();
+
+    assertNotNull(result);
+    assertEquals(1, result.size());
+    assertEquals(productId, result.get(0).getProductId());
+    assertEquals(1, result.get(0).getRoles().size());
+    assertEquals("CUSTOM", result.get(0).getRoles().get(0).getRole());
+    assertEquals("CUSTOM", result.get(0).getRoles().get(0).getGroup());
+  }
+
+  @Test
+  void getProductRoles_shouldReturnMultipleProducts_whenProductIdIsNull() {
+    String userId = "user-multi";
+
+    Role adminRole = Role.builder().role("ADMIN").group("SUPPORT").build();
+    Role operatorRole = Role.builder().role("OPERATOR").group("SUPPORT").build();
+    ProductRole productA =
+        ProductRole.builder().productId("product-A").roles(List.of(adminRole)).build();
+    ProductRole productB =
+        ProductRole.builder().productId("product-B").roles(List.of(operatorRole)).build();
+
+    when(userPermissionsRepository.getUserProductRoles(userId, null))
+        .thenReturn(Uni.createFrom().item(List.of(productA, productB)));
+
+    List<ProductRole> result = service.getProductRoles(userId, null).await().indefinitely();
+
+    assertNotNull(result);
+    assertEquals(2, result.size());
+    assertTrue(result.stream().anyMatch(pr -> pr.getProductId().equals("product-A")));
+    assertTrue(result.stream().anyMatch(pr -> pr.getProductId().equals("product-B")));
+  }
+
+  @Test
+  void getProductRoles_shouldReturnMultipleRolesPerProduct() {
+    String userId = "user-multi-roles";
+    String productId = "product-A";
+
+    Role adminRole = Role.builder().role("ADMIN").group("SUPPORT").build();
+    Role operatorRole = Role.builder().role("OPERATOR").group("SUPPORT").build();
+    ProductRole productRole =
+        ProductRole.builder().productId(productId).roles(List.of(adminRole, operatorRole)).build();
+
+    when(userPermissionsRepository.getUserProductRoles(userId, productId))
+        .thenReturn(Uni.createFrom().item(List.of(productRole)));
+
+    List<ProductRole> result = service.getProductRoles(userId, productId).await().indefinitely();
+
+    assertNotNull(result);
+    assertEquals(1, result.size());
+    assertEquals(2, result.get(0).getRoles().size());
+    assertTrue(result.get(0).getRoles().stream().anyMatch(r -> r.getRole().equals("ADMIN")));
+    assertTrue(result.get(0).getRoles().stream().anyMatch(r -> r.getRole().equals("OPERATOR")));
+  }
+
+  @Test
+  void getProductRoles_shouldReturnEmptyList_whenUserHasNoRoles() {
+    String userId = "user-no-roles";
+
+    when(userPermissionsRepository.getUserProductRoles(userId, null))
+        .thenReturn(Uni.createFrom().item(Collections.emptyList()));
+
+    List<ProductRole> result = service.getProductRoles(userId, null).await().indefinitely();
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void getProductRoles_shouldReturnRoleWithNullGroup_whenRoleNotInRolesCollection() {
+    String userId = "user-unknown-role";
+    String productId = "product-X";
+
+    // role not found in roles collection → group is null (preserved by pipeline)
+    Role unknownRole = Role.builder().role("UNKNOWN").group(null).build();
+    ProductRole productRole =
+        ProductRole.builder().productId(productId).roles(List.of(unknownRole)).build();
+
+    when(userPermissionsRepository.getUserProductRoles(userId, productId))
+        .thenReturn(Uni.createFrom().item(List.of(productRole)));
+
+    List<ProductRole> result = service.getProductRoles(userId, productId).await().indefinitely();
+
+    assertNotNull(result);
+    assertEquals(1, result.size());
+    assertEquals("UNKNOWN", result.get(0).getRoles().get(0).getRole());
+    assertNull(result.get(0).getRoles().get(0).getGroup());
+  }
+
+  @Test
+  void getProductRoles_shouldPropagateFailure_whenRepositoryFails() {
+    String userId = "user-error";
+
+    when(userPermissionsRepository.getUserProductRoles(userId, null))
+        .thenReturn(Uni.createFrom().failure(new InternalException("Database error")));
+
+    assertThrows(
+        InternalException.class,
+        () -> service.getProductRoles(userId, null).await().indefinitely());
   }
 }

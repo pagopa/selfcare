@@ -8,7 +8,7 @@ resource "azurerm_api_management_api_version_set" "apim_api_version_set" {
 
 
 module "apim_api" {
-  source              = "github.com/pagopa/terraform-azurerm-v4.git//api_management_api?ref=v7.26.5"
+  source              = "github.com/pagopa/terraform-azurerm-v4.git//api_management_api?ref=v9.4.0"
   name                = var.api_name
   api_management_name = var.apim_name
   resource_group_name = var.apim_rg

@@ -311,6 +311,62 @@ public class IamController {
   }
 
   /**
+   * Retrieves a list of product, role by user ID
+   *
+   * @param userId the ID of the user
+   * @param productId the ID of the product
+   * @return a Uni containing a ProductRolePermissionsList if found
+   */
+  @Tag(name = "external-v2")
+  @Tag(name = "IAM")
+  @Operation(
+      description = "Retrieves a list of product, role and permissions by user ID and product ID.",
+      summary = "Get IAM user Product Role Permissions List",
+      operationId = "getIAMProductRoles")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "OK",
+            content =
+                @Content(
+                    schema = @Schema(implementation = ProductRolePermissionsList.class),
+                    mediaType = "application/json")),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "404",
+            description = "Not Found",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json"))
+      })
+  @GET
+  @Path(value = "/users/{uid}/roles/")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<Response> getProductRoles(
+      @PathParam("uid") String userId, @QueryParam("productId") String productId) {
+    return iamService
+        .getProductRoles(userId, productId)
+        .onItem()
+        .transform(roles -> Response.ok(roles).build());
+  }
+
+  /**
    * Checks if a user has a specific permission for a product.
    *
    * @param userId the ID of the user

@@ -8,6 +8,7 @@ import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
 import it.pagopa.selfcare.iam.entity.UserClaims;
 import it.pagopa.selfcare.iam.exception.InvalidRequestException;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.iam.model.ProductRole;
 import it.pagopa.selfcare.iam.model.ProductRolePermissionsList;
 import it.pagopa.selfcare.iam.model.ProductRoles;
 import it.pagopa.selfcare.iam.repository.UserPermissionsRepository;
@@ -292,6 +293,18 @@ public class IamServiceImpl implements IamService {
     return userPermissionsRepository
         .getUserProductRolePermissionsList(userId, productId)
         .map(ProductRolePermissionsList::new);
+  }
+
+  /**
+   * Retrieves a list of product, role by user ID and product ID.
+   *
+   * @param userId the ID of the user
+   * @param productId the ID of the product
+   * @return a Uni containing a List of ProductRole if found
+   */
+  @Override
+  public Uni<List<ProductRole>> getProductRoles(String userId, String productId) {
+    return userPermissionsRepository.getUserProductRoles(userId, productId);
   }
 
   /**

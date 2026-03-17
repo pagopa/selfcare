@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.document.controller.request;
+package it.pagopa.selfcare.document.model.dto.request;
 
 import it.pagopa.selfcare.onboarding.common.TokenType;
 import jakarta.validation.constraints.NotBlank;
