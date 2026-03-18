@@ -359,6 +359,7 @@ locals {
   github_federations_ms = {
     "selfcare-dashboard-backend"       = "dev"
     "selfcare-external-api-backend"    = "dev"
+    "selfcare-infra"                   = "dev"
     "selfcare-institution"             = "dev"
     "selfcare-ms-external-interceptor" = "dev"
     "selfcare-ms-party-registry-proxy" = "dev"

@@ -359,6 +359,7 @@ locals {
   github_federations_ms = {
     "selfcare-dashboard-backend"       = "uat"
     "selfcare-external-api-backend"    = "uat"
+    "selfcare-infra"                   = "uat"
     "selfcare-institution"             = "uat"
     "selfcare-ms-external-interceptor" = "uat"
     "selfcare-ms-party-registry-proxy" = "uat"
