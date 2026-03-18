@@ -63,8 +63,8 @@ jobs:
     name: Infra plan
     secrets: inherit
     with:
-      environment: ${{ inputs.environment }}
-      base_path: './infra/core/${{ inputs.environment }}-${{ inputs.domain }}'
+      environment: '${{ inputs.environment }}-${{ inputs.domain }}'
+      base_path: './infra/core'
       # Optional parameters
       env_vars: ""
       use_private_agent: true
