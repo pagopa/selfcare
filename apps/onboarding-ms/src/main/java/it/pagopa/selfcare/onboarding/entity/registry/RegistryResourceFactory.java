@@ -92,6 +92,8 @@ public class RegistryResourceFactory {
   private RegistryManager<?> getRegistryManagerSELC(Onboarding onboarding) {
     if (PT.equals(onboarding.getInstitution().getInstitutionType())) {
       return new RegistryManagerPT(onboarding);
+    } else if (GSP.equals(onboarding.getInstitution().getInstitutionType())) {
+        return new RegistryManagerSELCGsp(onboarding);
     }
     return new RegistryManagerSELC(onboarding);
   }
