@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.entity.registry;
 import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_PAGOPA;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.onboarding.common.Origin;
 import it.pagopa.selfcare.onboarding.entity.IPAEntity;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
@@ -40,8 +41,7 @@ public class RegistryManagerIPAGps extends RegistryManagerIPAUo {
                 .onItem()
                 .transformToUni(
                         onboarding -> {
-                            if (PROD_PAGOPA.getValue().equals(onboarding.getProductId())
-                                    && Objects.isNull(onboarding.getAdditionalInformations())) {
+                            if (verifyAdditionalInformation(onboarding)) {
                                 return Uni.createFrom()
                                         .failure(
                                                 new InvalidRequestException(
@@ -57,6 +57,12 @@ public class RegistryManagerIPAGps extends RegistryManagerIPAUo {
                             }
                             return Uni.createFrom().item(onboarding);
                         });
+    }
+
+    private static boolean verifyAdditionalInformation(Onboarding onboarding) {
+        return PROD_PAGOPA.getValue().equals(onboarding.getProductId())
+                && Objects.isNull(onboarding.getAdditionalInformations())
+                && !Origin.IPA.equals(onboarding.getInstitution().getOrigin());
     }
 
     @Override
