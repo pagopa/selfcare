@@ -1,0 +1,64 @@
+{
+  "modules": [
+    {
+      "name": "auth",
+      "module": "auth",
+      "sonarKey": "pagopa_selfcare",
+      "paths": ["apps/auth/**"]
+    },
+    {
+      "name": "iam",
+      "module": "iam",
+      "sonarKey": "pagopa_selfcare",
+      "paths": ["apps/iam/**"]
+    },
+    {
+      "name": "product",
+      "module": "product",
+      "sonarKey": "pagopa_selfcare",
+      "paths": ["apps/product/**"]
+    },
+    {
+      "name": "product-cdc",
+      "module": "product-cdc",
+      "sonarKey": "pagopa_selfcare",
+      "paths": ["apps/product-cdc/**"]
+    },
+    {
+      "name": "document-ms",
+      "module": "document-ms",
+      "sonarKey": "pagopa_selfcare",
+      "paths": ["apps/document-ms/**"]
+    },
+    {
+      "name": "webhook",
+      "module": "webhook",
+      "sonarKey": "pagopa_selfcare",
+      "paths": ["apps/webhook/**"]
+    },
+    {
+      "name": "onboarding-ms",
+      "module": "onboarding-ms",
+      "sonarKey": "pagopa_selfcare",
+      "paths": ["apps/onboarding-ms/**"]
+    },
+    {
+      "name": "onboarding-cdc",
+      "module": "onboarding-cdc",
+      "sonarKey": "pagopa_selfcare",
+      "paths": ["apps/onboarding-cdc/**"]
+    },
+    {
+      "name": "onboarding-functions",
+      "module": "onboarding-functions",
+      "sonarKey": "pagopa_selfcare",
+      "paths": ["apps/onboarding-functions/**"]
+    },
+    {
+      "name": "libs",
+      "module": "libs",
+      "sonarKey": "pagopa_selfcare",
+      "paths": ["libs/**"]
+    }
+  ]
+}
