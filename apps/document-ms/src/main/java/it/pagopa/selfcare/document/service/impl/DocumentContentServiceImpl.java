@@ -44,7 +44,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 
 import static it.pagopa.selfcare.document.util.ErrorMessage.ATTACHMENT_UPLOAD_ERROR;
@@ -101,7 +100,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                         request.getContractTemplatePath(),
                         () -> createPdfFileContract(request)
                 );
-                String filename = buildFilename(request.getPdfFormatFilename(), request.getProductName());
+                String filename = buildFilename(request.getPdfFormatFilename(), request.getProductName(), null);
                 String storagePath = buildContractStoragePath(request.getOnboardingId());
 
                 return new PdfContext(pdfFile, filename, storagePath);
@@ -130,8 +129,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                         request.getAttachmentTemplatePath(),
                         () -> createPdfFileAttachment(request)
                 );
-                String sanitizedProductName = request.getProductName().replace(" ", "_");
-                String filename = sanitizedProductName + "_" + request.getAttachmentName() + ".pdf";
+                String filename = CONTRACT_FILENAME_FUNC.apply("%s_" + request.getAttachmentName() + ".pdf", request.getProductName());
                 String storagePath = buildAttachmentStoragePath(request.getOnboardingId());
 
                 return new PdfContext(pdfFile, filename, storagePath);
@@ -418,7 +416,10 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     /**
      * Builds the filename for the PDF document.
      */
-    private String buildFilename(String format, String productName) {
+    private String buildFilename(String format, String productName, String attachmentName) {
+        if (Objects.nonNull(attachmentName)) {
+            return CONTRACT_FILENAME_FUNC.apply(String.format("%s_%s.pdf", format, attachmentName), productName);
+        }
         return CONTRACT_FILENAME_FUNC.apply(format, productName);
     }
 
@@ -521,7 +522,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         Map<String, Object> data = PdfMapperData.setUpAttachmentData(request);
 
         log.debug("Building PDF attachment template context: dataMap keys={}, size={}", data.keySet(), data.size());
-        return PdfBuilder.generateDocument("_allegato_interoperabilita.", attachmentTemplateText, data);
+        String filename = buildFilename("%s", request.getProductName(), request.getAttachmentName());
+        return PdfBuilder.generateDocument(filename, attachmentTemplateText, data);
     }
 
     // ==================== Inner types ====================
