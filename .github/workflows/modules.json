@@ -59,6 +59,18 @@
       "module": "libs",
       "sonarKey": "pagopa_selfcare",
       "paths": ["libs/**"]
+    },
+    {
+      "name": "selfcare-sdk-security",
+      "module": "selfcare-sdk-security",
+      "sonarKey": "pagopa_selfcare",
+      "paths": ["libs/selfcare-sdk-security/**"]
+    },
+    {
+      "name": "selfcare-cucumber-sdk",
+      "module": "selfcare-cucumber-sdk",
+      "sonarKey": "pagopa_selfcare",
+      "paths": ["libs/selfcare-cucumber-sdk/**"]
     }
   ]
 }

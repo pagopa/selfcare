@@ -214,6 +214,44 @@
             </dependencies>
         </profile>
         <profile>
+            <id>selfcare-sdk-security</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>selfcare-sdk-security</artifactId>
+                    <version>0.2.3</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>selfcare-cucumber-sdk</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>selfcare-cucumber-sdk</artifactId>
+                    <version>0.1.0</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
             <id>webhook</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
