@@ -343,4 +343,24 @@ locals {
     reviewers_teams        = []
     branch_pattern         = null
   }
+
+  github_federations = {
+    "selfcare-assistance-frontend"            = "uat"
+    "selfcare-pnpg-onboarding-frontend"       = "uat"
+    "selfcare-token-exchange-frontend"        = "uat"
+    "selfcare-login-frontend"                 = "uat"
+    "selfcare-dashboard-frontend"             = "uat"
+    "selfcare-dashboard-admin-microfrontend"  = "uat"
+    "selfcare-dashboard-groups-microfrontend" = "uat"
+    "selfcare-dashboard-users-microfrontend"  = "uat"
+    "selfcare-onboarding-frontend"            = "uat"
+    "selfcare-pnpg-dashboard-frontend"        = "uat"
+    "selfcare-dashboard-backend"              = "uat"
+    "selfcare-external-api-backend"           = "uat"
+    "selfcare-institution"                    = "uat"
+    "selfcare-ms-external-interceptor"        = "uat"
+    "selfcare-ms-party-registry-proxy"        = "uat"
+    "selfcare-onboarding-backend"             = "uat"
+    "selfcare-user"                           = "uat"
+  }
 }
