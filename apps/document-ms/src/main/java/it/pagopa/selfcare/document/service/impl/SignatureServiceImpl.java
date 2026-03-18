@@ -59,7 +59,6 @@ public class SignatureServiceImpl implements SignatureService {
     @ConfigProperty(name = "document-ms.signature.verify-enabled")
     Boolean isVerifyEnabled;
 
-  public static final String HTTP_HEADER_VALUE_ATTACHMENT_FILENAME = "attachment;filename=";
   private static final Integer CF_MATCHER_GROUP = 2;
   private static final String PAGOPA_SIGNATURE_DISABLED = "disabled";
   private static final Pattern signatureRegex = Pattern.compile("(TINIT-)(.*)");
