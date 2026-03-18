@@ -38,9 +38,9 @@ env:
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
-  CDN_PROFILE: selc-${{ env.ENV_SHORT }}-${{ inputs.profile_name }}
-  ENDPOINT_NAME: selc-${{ env.ENV_SHORT }}-${{ inputs.endpoint_name }}
-  RESOURCE_GROUP: selc-${{ env.ENV_SHORT }}-${{ inputs.resource_group_name }}
+  CDN_PROFILE: selc-${{ inputs.environment_short }}-${{ inputs.profile_name }}
+  ENDPOINT_NAME: selc-${{ inputs.environment_short }}-${{ inputs.endpoint_name }}
+  RESOURCE_GROUP: selc-${{ inputs.environment_short }}-${{ inputs.resource_group_name }}
 
 jobs:
   

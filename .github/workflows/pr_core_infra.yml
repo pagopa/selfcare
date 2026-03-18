@@ -45,12 +45,27 @@ permissions:
   packages: read
 
 
+# jobs:
+#   plan:
+#     uses: ./.github/workflows/call_code_review_infra_dx.yml
+#     name: Core Code Review
+#     secrets: inherit
+#     with:
+#       environment: ${{ inputs.environment }}
+#       dir: './infra/core/${{ inputs.environment }}-${{ inputs.domain }}'
+#       agent: self-hosted
+
 jobs:
-  plan:
-    uses: ./.github/workflows/call_code_review_infra_dx.yml
-    name: Core Code Review
+  infra_plan:
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    name: Infra plan
     secrets: inherit
     with:
       environment: ${{ inputs.environment }}
-      dir: './infra/core/${{ inputs.environment }}-${{ inputs.domain }}'
-      agent: self-hosted
+      base_path: './infra/core/${{ inputs.environment }}-${{ inputs.domain }}'
+      # Optional parameters
+      env_vars: ""
+      use_private_agent: true
+      # override_github_environment: pe-prod
+      use_labels: true
+      override_labels: ""
