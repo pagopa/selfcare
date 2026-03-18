@@ -2,8 +2,8 @@ package it.pagopa.selfcare.document.service;
 
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.model.FormItem;
-import it.pagopa.selfcare.document.model.dto.request.CreateAttachmentPdfRequest;
-import it.pagopa.selfcare.document.model.dto.request.CreateContractPdfRequest;
+import it.pagopa.selfcare.document.model.dto.request.AttachmentPdfRequest;
+import it.pagopa.selfcare.document.model.dto.request.ContractPdfRequest;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.UploadVisuraRequest;
 import it.pagopa.selfcare.document.model.dto.response.CreatePdfResponse;
@@ -24,7 +24,7 @@ public interface DocumentContentService {
      * @param request the contract creation request containing all necessary data
      * @return response with storage path and filename
      */
-    Uni<CreatePdfResponse> createContractPdf(CreateContractPdfRequest request);
+    Uni<CreatePdfResponse> createContractPdf(ContractPdfRequest request);
 
     /**
      * Creates an attachment PDF document from the provided data.
@@ -33,7 +33,7 @@ public interface DocumentContentService {
      * @param request the attachment creation request containing all necessary data
      * @return response with storage path and filename
      */
-    Uni<CreatePdfResponse> createAttachmentPdf(CreateAttachmentPdfRequest request);
+    Uni<CreatePdfResponse> createAttachmentPdf(AttachmentPdfRequest request);
 
     Uni<RestResponse<File>> retrieveSignedFile(String id);
 

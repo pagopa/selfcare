@@ -753,7 +753,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_whenValidRequestWithHtmlTemplate() throws IOException {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         File signedPdf = createTempPdf();
 
         when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
@@ -772,7 +772,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_whenValidRequestWithPdfTemplate() throws IOException {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setContractTemplatePath(CONTRACT_TEMPLATE_PDF_PATH);
         File pdfTemplate = createTempPdf();
         File signedPdf = createTempPdf();
@@ -791,7 +791,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_withPSPInstitutionType() throws IOException {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setProductId("prod-pagopa");
         request.getInstitution().setInstitutionType(InstitutionType.PSP);
         request.getInstitution().setPaymentServiceProvider(buildPaymentServiceProviderData());
@@ -809,7 +809,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_withPRVInstitutionType() throws IOException {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setProductId("prod-pagopa");
         request.getInstitution().setInstitutionType(InstitutionType.PRV);
         request.setPayment(PaymentPdfData.builder().holder("Holder").iban("IT123").build());
@@ -827,7 +827,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_withGPUInstitutionType() throws IOException {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setProductId("prod-pagopa");
         request.getInstitution().setInstitutionType(InstitutionType.GPU);
         File signedPdf = createTempPdf();
@@ -844,7 +844,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_withPRV_PFInstitutionType() throws IOException {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setProductId("prod-pagopa");
         request.getInstitution().setInstitutionType(InstitutionType.PRV_PF);
         File signedPdf = createTempPdf();
@@ -861,7 +861,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_withECInstitutionType() throws IOException {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setProductId("prod-pagopa");
         request.getInstitution().setInstitutionType(InstitutionType.PA);
         File signedPdf = createTempPdf();
@@ -878,7 +878,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_withProdIO() throws IOException {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setProductId("prod-io");
         File signedPdf = createTempPdf();
 
@@ -894,7 +894,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_withProdIOPremium() throws IOException {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setProductId("prod-io-premium");
         File signedPdf = createTempPdf();
 
@@ -910,7 +910,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_withProdIOSign() throws IOException {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setProductId("prod-io-sign");
         File signedPdf = createTempPdf();
 
@@ -926,7 +926,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_withProdPN() throws IOException {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setProductId("prod-pn");
         request.setBilling(BillingPdfData.builder().vatNumber("123").recipientCode("ABC").build());
         File signedPdf = createTempPdf();
@@ -943,7 +943,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_withProdInterop() throws IOException {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setProductId("prod-interop");
         File signedPdf = createTempPdf();
 
@@ -959,7 +959,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_withDashboardPSP() throws IOException {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setProductId("prod-dashboard-psp");
         request.getInstitution().setInstitutionType(InstitutionType.PSP);
         request.getInstitution().setPaymentServiceProvider(buildPaymentServiceProviderData());
@@ -977,7 +977,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_withIdpayMerchant() throws IOException {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setProductId("prod-idpay-merchant");
         request.getInstitution().setInstitutionType(InstitutionType.PRV);
         File signedPdf = createTempPdf();
@@ -994,7 +994,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_withDelegates() throws IOException {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setDelegates(List.of(
                 buildValidUserPdfData("delegate-1", "DLGTAX001"),
                 buildValidUserPdfData("delegate-2", "DLGTAX002")
@@ -1013,7 +1013,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_withAggregator() throws IOException {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setIsAggregator(true);
         request.setAggregatesCsvBaseUrl("https://example.com/aggregates");
         File signedPdf = createTempPdf();
@@ -1030,7 +1030,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_withPricingPlan() throws IOException {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setPricingPlan("C1");
         File signedPdf = createTempPdf();
 
@@ -1050,7 +1050,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldThrowInternalException_whenTemplateLoadFails() {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
 
         when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH))
                 .thenThrow(new SelfcareAzureStorageException("Template not found", "404"));
@@ -1061,7 +1061,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldThrowInternalException_whenSignatureFails() throws IOException {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
 
         when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
         when(signatureService.signDocument(any(File.class), eq(INSTITUTION_DESCRIPTION), eq(PRODUCT_ID)))
@@ -1073,7 +1073,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createContractPdf_shouldThrowException_whenUploadFails() throws IOException {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         File signedPdf = createTempPdf();
 
         when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
@@ -1092,7 +1092,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createAttachmentPdf_shouldReturnSuccess_whenValidRequestWithHtmlTemplate() throws IOException {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
 
         when(azureBlobClient.getFileAsText(ATTACHMENT_TEMPLATE_PATH)).thenReturn("<html><body>Attachment</body></html>");
 
@@ -1109,7 +1109,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createAttachmentPdf_shouldReturnSuccess_whenValidRequestWithPdfTemplate() throws IOException {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
         request.setAttachmentTemplatePath("templates/attachment.pdf");
         File pdfTemplate = createTempPdf();
 
@@ -1125,7 +1125,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createAttachmentPdf_shouldReturnSuccess_withGpuData() throws IOException {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
         request.getInstitution().setGpuData(GpuDataPdfData.builder()
                 .businessRegisterNumber("BR123")
                 .legalRegisterNumber("LR456")
@@ -1142,7 +1142,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createAttachmentPdf_shouldReturnSuccess_withProductNameContainingSpaces() throws IOException {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
         request.setProductName("Product With Spaces");
 
         when(azureBlobClient.getFileAsText(ATTACHMENT_TEMPLATE_PATH)).thenReturn("<html><body>Attachment</body></html>");
@@ -1160,7 +1160,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createAttachmentPdf_shouldThrowInternalException_whenTemplateLoadFails() {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
 
         when(azureBlobClient.getFileAsText(ATTACHMENT_TEMPLATE_PATH))
                 .thenThrow(new SelfcareAzureStorageException("Template not found", "404"));
@@ -1171,7 +1171,7 @@ public class DocumentContentServiceImplTest {
 
     @Test
     void createAttachmentPdf_shouldThrowException_whenUploadFails() throws IOException {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
 
         when(azureBlobClient.getFileAsText(ATTACHMENT_TEMPLATE_PATH)).thenReturn("<html><body>Attachment</body></html>");
         doThrow(new SelfcareAzureStorageException("Upload failed", "500"))
@@ -1185,8 +1185,8 @@ public class DocumentContentServiceImplTest {
     // Helper methods for building test objects
     // ============================================
 
-    private CreateContractPdfRequest buildValidContractRequest() {
-        return CreateContractPdfRequest.builder()
+    private ContractPdfRequest buildValidContractRequest() {
+        return ContractPdfRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .contractTemplatePath(CONTRACT_TEMPLATE_PATH)
                 .productId(PRODUCT_ID)
@@ -1197,8 +1197,8 @@ public class DocumentContentServiceImplTest {
                 .build();
     }
 
-    private CreateAttachmentPdfRequest buildValidAttachmentRequest() {
-        return CreateAttachmentPdfRequest.builder()
+    private AttachmentPdfRequest buildValidAttachmentRequest() {
+        return AttachmentPdfRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .attachmentTemplatePath(ATTACHMENT_TEMPLATE_PATH)
                 .productId(PRODUCT_ID)

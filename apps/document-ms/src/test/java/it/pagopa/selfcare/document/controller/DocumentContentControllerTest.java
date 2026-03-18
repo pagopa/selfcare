@@ -334,13 +334,13 @@ public class DocumentContentControllerTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_whenValidRequestProvided() {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         CreatePdfResponse response = CreatePdfResponse.builder()
                 .storagePath(STORAGE_PATH)
                 .filename(FILENAME)
                 .build();
 
-        when(documentContentService.createContractPdf(any(CreateContractPdfRequest.class)))
+        when(documentContentService.createContractPdf(any(ContractPdfRequest.class)))
                 .thenReturn(Uni.createFrom().item(response));
 
         given()
@@ -353,12 +353,12 @@ public class DocumentContentControllerTest {
                 .body("storagePath", equalTo(STORAGE_PATH))
                 .body("filename", equalTo(FILENAME));
 
-        verify(documentContentService).createContractPdf(any(CreateContractPdfRequest.class));
+        verify(documentContentService).createContractPdf(any(ContractPdfRequest.class));
     }
 
     @Test
     void createContractPdf_shouldReturnSuccess_whenRequestHasDelegates() {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         UserPdfData delegate1 = buildValidUserPdfData("delegate-1", "DLGTAX001");
         UserPdfData delegate2 = buildValidUserPdfData("delegate-2", "DLGTAX002");
         request.setDelegates(List.of(delegate1, delegate2));
@@ -368,7 +368,7 @@ public class DocumentContentControllerTest {
                 .filename(FILENAME)
                 .build();
 
-        when(documentContentService.createContractPdf(any(CreateContractPdfRequest.class)))
+        when(documentContentService.createContractPdf(any(ContractPdfRequest.class)))
                 .thenReturn(Uni.createFrom().item(response));
 
         given()
@@ -383,7 +383,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_whenRequestHasOptionalFields() {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setPricingPlan("PREMIUM");
         request.setIsAggregator(true);
         request.setAggregatesCsvBaseUrl("https://example.com/aggregates");
@@ -393,7 +393,7 @@ public class DocumentContentControllerTest {
                 .filename(FILENAME)
                 .build();
 
-        when(documentContentService.createContractPdf(any(CreateContractPdfRequest.class)))
+        when(documentContentService.createContractPdf(any(ContractPdfRequest.class)))
                 .thenReturn(Uni.createFrom().item(response));
 
         given()
@@ -407,7 +407,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createContractPdf_shouldReturnSuccess_whenRequestHasEmptyDelegatesList() {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setDelegates(Collections.emptyList());
 
         CreatePdfResponse response = CreatePdfResponse.builder()
@@ -415,7 +415,7 @@ public class DocumentContentControllerTest {
                 .filename(FILENAME)
                 .build();
 
-        when(documentContentService.createContractPdf(any(CreateContractPdfRequest.class)))
+        when(documentContentService.createContractPdf(any(ContractPdfRequest.class)))
                 .thenReturn(Uni.createFrom().item(response));
 
         given()
@@ -433,7 +433,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createContractPdf_shouldReturn400_whenOnboardingIdIsNull() {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setOnboardingId(null);
 
         given()
@@ -449,7 +449,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createContractPdf_shouldReturn400_whenOnboardingIdIsBlank() {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setOnboardingId("   ");
 
         given()
@@ -465,7 +465,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createContractPdf_shouldReturn400_whenContractTemplatePathIsNull() {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setContractTemplatePath(null);
 
         given()
@@ -479,7 +479,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createContractPdf_shouldReturn400_whenProductIdIsNull() {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setProductId(null);
 
         given()
@@ -493,7 +493,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createContractPdf_shouldReturn400_whenProductNameIsNull() {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setProductName(null);
 
         given()
@@ -507,7 +507,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createContractPdf_shouldReturn400_whenPdfFormatFilenameIsNull() {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setPdfFormatFilename(null);
 
         given()
@@ -521,7 +521,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createContractPdf_shouldReturn400_whenInstitutionIsNull() {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setInstitution(null);
 
         given()
@@ -535,7 +535,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createContractPdf_shouldReturn400_whenManagerIsNull() {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.setManager(null);
 
         given()
@@ -549,7 +549,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createContractPdf_shouldReturn400_whenManagerTaxCodeIsNull() {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.getManager().setTaxCode(null);
 
         given()
@@ -563,7 +563,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createContractPdf_shouldReturn400_whenManagerIdIsNull() {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
         request.getManager().setId(null);
 
         given()
@@ -581,9 +581,9 @@ public class DocumentContentControllerTest {
 
     @Test
     void createContractPdf_shouldReturn500_whenServiceThrowsException() {
-        CreateContractPdfRequest request = buildValidContractRequest();
+        ContractPdfRequest request = buildValidContractRequest();
 
-        when(documentContentService.createContractPdf(any(CreateContractPdfRequest.class)))
+        when(documentContentService.createContractPdf(any(ContractPdfRequest.class)))
                 .thenReturn(Uni.createFrom().failure(new RuntimeException("PDF generation failed")));
 
         given()
@@ -601,13 +601,13 @@ public class DocumentContentControllerTest {
 
     @Test
     void createAttachmentPdf_shouldReturnSuccess_whenValidRequestProvided() {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
         CreatePdfResponse response = CreatePdfResponse.builder()
                 .storagePath(STORAGE_PATH)
                 .filename("attachment-1.pdf")
                 .build();
 
-        when(documentContentService.createAttachmentPdf(any(CreateAttachmentPdfRequest.class)))
+        when(documentContentService.createAttachmentPdf(any(AttachmentPdfRequest.class)))
                 .thenReturn(Uni.createFrom().item(response));
 
         given()
@@ -620,12 +620,12 @@ public class DocumentContentControllerTest {
                 .body("storagePath", equalTo(STORAGE_PATH))
                 .body("filename", equalTo("attachment-1.pdf"));
 
-        verify(documentContentService).createAttachmentPdf(any(CreateAttachmentPdfRequest.class));
+        verify(documentContentService).createAttachmentPdf(any(AttachmentPdfRequest.class));
     }
 
     @Test
     void createAttachmentPdf_shouldReturnSuccess_whenInstitutionHasOptionalFields() {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
         request.getInstitution().setCity("Rome");
         request.getInstitution().setCountry("Italy");
         request.getInstitution().setCounty("RM");
@@ -635,7 +635,7 @@ public class DocumentContentControllerTest {
                 .filename("attachment-1.pdf")
                 .build();
 
-        when(documentContentService.createAttachmentPdf(any(CreateAttachmentPdfRequest.class)))
+        when(documentContentService.createAttachmentPdf(any(AttachmentPdfRequest.class)))
                 .thenReturn(Uni.createFrom().item(response));
 
         given()
@@ -653,7 +653,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createAttachmentPdf_shouldReturn400_whenOnboardingIdIsNull() {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
         request.setOnboardingId(null);
 
         given()
@@ -669,7 +669,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createAttachmentPdf_shouldReturn400_whenOnboardingIdIsBlank() {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
         request.setOnboardingId("");
 
         given()
@@ -683,7 +683,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createAttachmentPdf_shouldReturn400_whenAttachmentTemplatePathIsNull() {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
         request.setAttachmentTemplatePath(null);
 
         given()
@@ -697,7 +697,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createAttachmentPdf_shouldReturn400_whenProductIdIsNull() {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
         request.setProductId(null);
 
         given()
@@ -711,7 +711,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createAttachmentPdf_shouldReturn400_whenProductNameIsNull() {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
         request.setProductName(null);
 
         given()
@@ -725,7 +725,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createAttachmentPdf_shouldReturn400_whenAttachmentNameIsNull() {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
         request.setAttachmentName(null);
 
         given()
@@ -739,7 +739,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createAttachmentPdf_shouldReturn400_whenAttachmentNameIsBlank() {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
         request.setAttachmentName("   ");
 
         given()
@@ -753,7 +753,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createAttachmentPdf_shouldReturn400_whenInstitutionIsNull() {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
         request.setInstitution(null);
 
         given()
@@ -767,7 +767,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createAttachmentPdf_shouldReturn400_whenManagerIsNull() {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
         request.setManager(null);
 
         given()
@@ -781,7 +781,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createAttachmentPdf_shouldReturn400_whenManagerTaxCodeIsBlank() {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
         request.getManager().setTaxCode("");
 
         given()
@@ -795,7 +795,7 @@ public class DocumentContentControllerTest {
 
     @Test
     void createAttachmentPdf_shouldReturn400_whenManagerIdIsBlank() {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
         request.getManager().setId("");
 
         given()
@@ -813,9 +813,9 @@ public class DocumentContentControllerTest {
 
     @Test
     void createAttachmentPdf_shouldReturn500_whenServiceThrowsException() {
-        CreateAttachmentPdfRequest request = buildValidAttachmentRequest();
+        AttachmentPdfRequest request = buildValidAttachmentRequest();
 
-        when(documentContentService.createAttachmentPdf(any(CreateAttachmentPdfRequest.class)))
+        when(documentContentService.createAttachmentPdf(any(AttachmentPdfRequest.class)))
                 .thenReturn(Uni.createFrom().failure(new RuntimeException("Attachment generation failed")));
 
         given()
@@ -831,8 +831,8 @@ public class DocumentContentControllerTest {
     // Helper methods
     // ============================================
 
-    private CreateContractPdfRequest buildValidContractRequest() {
-        return CreateContractPdfRequest.builder()
+    private ContractPdfRequest buildValidContractRequest() {
+        return ContractPdfRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .contractTemplatePath(CONTRACT_TEMPLATE_PATH)
                 .productId(PRODUCT_ID)
@@ -843,8 +843,8 @@ public class DocumentContentControllerTest {
                 .build();
     }
 
-    private CreateAttachmentPdfRequest buildValidAttachmentRequest() {
-        return CreateAttachmentPdfRequest.builder()
+    private AttachmentPdfRequest buildValidAttachmentRequest() {
+        return AttachmentPdfRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .attachmentTemplatePath(ATTACHMENT_TEMPLATE_PATH)
                 .productId(PRODUCT_ID)

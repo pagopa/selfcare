@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateAttachmentPdfRequest {
+public class AttachmentPdfRequest {
 
     @NotBlank
     private String onboardingId;

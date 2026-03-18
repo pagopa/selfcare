@@ -18,7 +18,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateContractPdfRequest {
+public class ContractPdfRequest {
 
     @NotBlank
     private String onboardingId;

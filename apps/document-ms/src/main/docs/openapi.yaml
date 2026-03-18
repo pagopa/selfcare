@@ -11,23 +11,7 @@ tags:
 - name: internal-v1
 components:
   schemas:
-    BillingPdfData:
-      type: object
-      properties:
-        vatNumber:
-          type: string
-        recipientCode:
-          type: string
-        publicServices:
-          type: boolean
-        taxCodeInvoicing:
-          type: string
-    ContractSignedReport:
-      type: object
-      properties:
-        cades:
-          type: boolean
-    CreateAttachmentPdfRequest:
+    AttachmentPdfRequest:
       type: object
       required:
       - onboardingId
@@ -57,7 +41,18 @@ components:
           $ref: "#/components/schemas/InstitutionPdfData"
         manager:
           $ref: "#/components/schemas/UserPdfData"
-    CreateContractPdfRequest:
+    BillingPdfData:
+      type: object
+      properties:
+        vatNumber:
+          type: string
+        recipientCode:
+          type: string
+        publicServices:
+          type: boolean
+        taxCodeInvoicing:
+          type: string
+    ContractPdfRequest:
       type: object
       required:
       - onboardingId
@@ -101,6 +96,11 @@ components:
           $ref: "#/components/schemas/BillingPdfData"
         payment:
           $ref: "#/components/schemas/PaymentPdfData"
+    ContractSignedReport:
+      type: object
+      properties:
+        cades:
+          type: boolean
     CreatePdfResponse:
       type: object
       properties:
@@ -412,6 +412,22 @@ components:
       - LEGALS
       - USER
       - ATTACHMENT
+    UploadVisuraRequest:
+      type: object
+      required:
+      - onboardingId
+      - filename
+      - fileContent
+      properties:
+        onboardingId:
+          type: string
+          pattern: \S
+        filename:
+          type: string
+          pattern: \S
+        fileContent:
+          type: string
+          format: binary
     UserPdfData:
       type: object
       required:
@@ -453,7 +469,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateAttachmentPdfRequest"
+              $ref: "#/components/schemas/AttachmentPdfRequest"
         required: true
       responses:
         "200":
@@ -484,7 +500,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateContractPdfRequest"
+              $ref: "#/components/schemas/ContractPdfRequest"
         required: true
       responses:
         "200":
@@ -540,6 +556,33 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
+  /v1/document-content/visura:
+    post:
+      summary: Store the Visura in Azure Blob Storage
+      description: Receives the Visura data (filename and content) and stores it in
+        Azure Blob Storage.
+      operationId: saveVisuraForMerchant
+      tags:
+      - Document Content Controller
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadVisuraRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      security:
+      - SecurityScheme: []
   /v1/document-content/{id}/contract-signed:
     get:
       summary: Retrieve contract signed for a given onboarding
@@ -587,6 +630,34 @@ paths:
         schema:
           type: string
         required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /v1/document-content/{onboardingId}/contract:
+    get:
+      summary: Retrieve contract not signed for a given onboarding
+      description: Downloads the unsigned contract file associated with the specified
+        onboarding ID.
+      operationId: getContract
+      tags:
+      - Document Content Controller
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
       responses:
         "200":
           description: OK
@@ -866,34 +937,6 @@ paths:
           description: OK
           content:
             application/json: {}
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /v1/documents/{onboardingId}/contract:
-    get:
-      summary: Retrieve contract not signed for a given onboarding
-      description: Downloads the unsigned contract file associated with the specified
-        onboarding ID.
-      operationId: getContract
-      tags:
-      - Document Controller
-      parameters:
-      - name: onboardingId
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
         "401":
           description: Not Authorized
         "403":

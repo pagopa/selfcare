@@ -3,8 +3,8 @@ package it.pagopa.selfcare.document.controller;
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.exception.UpdateNotAllowedException;
-import it.pagopa.selfcare.document.model.dto.request.CreateAttachmentPdfRequest;
-import it.pagopa.selfcare.document.model.dto.request.CreateContractPdfRequest;
+import it.pagopa.selfcare.document.model.dto.request.AttachmentPdfRequest;
+import it.pagopa.selfcare.document.model.dto.request.ContractPdfRequest;
 import it.pagopa.selfcare.document.model.dto.request.UploadAttachmentForm;
 import it.pagopa.selfcare.document.model.dto.request.UploadVisuraRequest;
 import it.pagopa.selfcare.document.model.dto.response.CreatePdfResponse;
@@ -82,7 +82,7 @@ public class DocumentContentController {
     @Path("/contract")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<CreatePdfResponse> createContractPdf(@Valid CreateContractPdfRequest request) {
+    public Uni<CreatePdfResponse> createContractPdf(@Valid ContractPdfRequest request) {
         log.info("Creating contract PDF for onboardingId: {}, productId: {}",
                 sanitize(request.getOnboardingId()), sanitize(request.getProductId()));
         return documentContentService.createContractPdf(request);
@@ -116,7 +116,7 @@ public class DocumentContentController {
     @Path("/attachment")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<CreatePdfResponse> createAttachmentPdf(@Valid CreateAttachmentPdfRequest request) {
+    public Uni<CreatePdfResponse> createAttachmentPdf(@Valid AttachmentPdfRequest request) {
         log.info("Creating attachment PDF for onboardingId: {}, attachmentName: {}",
                 sanitize(request.getOnboardingId()), sanitize(request.getAttachmentName()));
         return documentContentService.createAttachmentPdf(request);

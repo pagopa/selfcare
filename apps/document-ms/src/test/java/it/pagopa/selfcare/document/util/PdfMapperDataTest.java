@@ -66,7 +66,7 @@ class PdfMapperDataTest {
                 .recipientCode("ABC123")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -132,7 +132,7 @@ class PdfMapperDataTest {
                 .email("mario.rossi@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -177,7 +177,7 @@ class PdfMapperDataTest {
                 .email("test@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -212,7 +212,7 @@ class PdfMapperDataTest {
                 .email("test@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -245,7 +245,7 @@ class PdfMapperDataTest {
                 .email(null) // Missing email
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -278,7 +278,7 @@ class PdfMapperDataTest {
                 .email("test@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -314,7 +314,7 @@ class PdfMapperDataTest {
                 .email("test@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -357,7 +357,7 @@ class PdfMapperDataTest {
                 .taxCode("RSSMRA80A01H501U")
                 .build();
 
-        CreateAttachmentPdfRequest request = CreateAttachmentPdfRequest.builder()
+        AttachmentPdfRequest request = AttachmentPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -400,7 +400,7 @@ class PdfMapperDataTest {
                 .taxCode("RSSMRA80A01H501U")
                 .build();
 
-        CreateAttachmentPdfRequest request = CreateAttachmentPdfRequest.builder()
+        AttachmentPdfRequest request = AttachmentPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -439,7 +439,7 @@ class PdfMapperDataTest {
                 .taxCode("RSSMRA80A01H501U")
                 .build();
 
-        CreateAttachmentPdfRequest request = CreateAttachmentPdfRequest.builder()
+        AttachmentPdfRequest request = AttachmentPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -495,7 +495,7 @@ class PdfMapperDataTest {
                 .email("manager@pec.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -545,7 +545,7 @@ class PdfMapperDataTest {
                 .email("manager@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -580,7 +580,7 @@ class PdfMapperDataTest {
                 .email("manager@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -670,7 +670,7 @@ class PdfMapperDataTest {
                 .email("manager@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -710,7 +710,7 @@ class PdfMapperDataTest {
                 .email("manager@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -758,7 +758,7 @@ class PdfMapperDataTest {
                 .email("giovanni@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-io")
                 .productName("IO")
@@ -803,7 +803,7 @@ class PdfMapperDataTest {
                 .email("mario@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-io")
                 .productName("IO")
@@ -841,7 +841,7 @@ class PdfMapperDataTest {
                 .email("manager@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-io")
                 .productName("IO")
@@ -879,7 +879,7 @@ class PdfMapperDataTest {
                 .email("manager@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-io")
                 .productName("IO")
@@ -917,7 +917,7 @@ class PdfMapperDataTest {
                 .email("manager@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -958,7 +958,7 @@ class PdfMapperDataTest {
                 .email("manager@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-io")
                 .productName("IO")
@@ -995,7 +995,7 @@ class PdfMapperDataTest {
                 .email("manager@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-io")
                 .productName("IO")
@@ -1149,7 +1149,7 @@ class PdfMapperDataTest {
                 .email("test@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -1191,7 +1191,7 @@ class PdfMapperDataTest {
                 .email("test@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -1225,7 +1225,7 @@ class PdfMapperDataTest {
                 .email("test@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-io")
                 .productName("IO")
@@ -1261,7 +1261,7 @@ class PdfMapperDataTest {
                 .email("test@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-456")
                 .productId("prod-pn")
                 .productName("PN")
@@ -1297,7 +1297,7 @@ class PdfMapperDataTest {
                 .email("test@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-io")
                 .productName("IO")
@@ -1331,7 +1331,7 @@ class PdfMapperDataTest {
                 .email("test@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-io")
                 .productName("IO")
@@ -1375,7 +1375,7 @@ class PdfMapperDataTest {
                 .email("test@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -1423,7 +1423,7 @@ class PdfMapperDataTest {
                 .email("test@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -1475,7 +1475,7 @@ class PdfMapperDataTest {
                 .email("test@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -1522,7 +1522,7 @@ class PdfMapperDataTest {
                 .email("test@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
@@ -1570,7 +1570,7 @@ class PdfMapperDataTest {
                 .email("test@test.it")
                 .build();
 
-        CreateContractPdfRequest request = CreateContractPdfRequest.builder()
+        ContractPdfRequest request = ContractPdfRequest.builder()
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")

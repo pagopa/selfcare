@@ -27,6 +27,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -44,6 +45,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 
 import static it.pagopa.selfcare.document.util.ErrorMessage.ATTACHMENT_UPLOAD_ERROR;
 import static it.pagopa.selfcare.document.util.ErrorMessage.GENERIC_ERROR;
@@ -60,8 +62,9 @@ import static it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT;
 @ApplicationScoped
 public class DocumentContentServiceImpl implements DocumentContentService {
 
-    private static final BiFunction<String, String, String> CONTRACT_FILENAME_FUNC =
-            (prefix, productName) -> prefix + productName.replace(" ", "_");
+    public static final BinaryOperator<String> CONTRACT_FILENAME_FUNC =
+            (filename, productName) ->
+                    String.format(filename, StringUtils.stripAccents(productName.replaceAll("\\s+", "_")));
     public static final String HTTP_HEADER_VALUE_ATTACHMENT_FILENAME = "attachment;filename=";
 
     private final AzureBlobClient azureBlobClient;
@@ -88,7 +91,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     }
 
     @Override
-    public Uni<CreatePdfResponse> createContractPdf(CreateContractPdfRequest request) {
+    public Uni<CreatePdfResponse> createContractPdf(ContractPdfRequest request) {
         log.info("START - createContractPdf for template: {} with onboardingId: {}",
                 sanitize(request.getContractTemplatePath()), sanitize(request.getOnboardingId()));
 
@@ -117,7 +120,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     }
 
     @Override
-    public Uni<CreatePdfResponse> createAttachmentPdf(CreateAttachmentPdfRequest request) {
+    public Uni<CreatePdfResponse> createAttachmentPdf(AttachmentPdfRequest request) {
         log.info("START - createAttachmentPdf for template: {} with onboardingId: {}",
                 sanitize(request.getAttachmentTemplatePath()), sanitize(request.getOnboardingId()));
 
@@ -457,7 +460,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
     // ==================== Contract-specific methods ====================
 
-    private File createPdfFileContract(CreateContractPdfRequest request) throws IOException {
+    private File createPdfFileContract(ContractPdfRequest request) throws IOException {
         String contractTemplateText = azureBlobClient.getFileAsText(request.getContractTemplatePath());
         Map<String, Object> data = PdfMapperData.setUpCommonData(request);
         setupProductSpecificData(data, request);
@@ -466,7 +469,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         return PdfBuilder.generateDocument("_contratto_interoperabilita.", contractTemplateText, data);
     }
 
-    private void setupProductSpecificData(Map<String, Object> data, CreateContractPdfRequest request) {
+    private void setupProductSpecificData(Map<String, Object> data, ContractPdfRequest request) {
         String productId = request.getProductId();
         InstitutionPdfData institution = request.getInstitution();
         InstitutionType institutionType = institution.getInstitutionType();
@@ -513,7 +516,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
     // ==================== Attachment-specific methods ====================
 
-    private File createPdfFileAttachment(CreateAttachmentPdfRequest request) throws IOException {
+    private File createPdfFileAttachment(AttachmentPdfRequest request) throws IOException {
         String attachmentTemplateText = azureBlobClient.getFileAsText(request.getAttachmentTemplatePath());
         Map<String, Object> data = PdfMapperData.setUpAttachmentData(request);
 

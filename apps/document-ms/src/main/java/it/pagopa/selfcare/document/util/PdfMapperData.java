@@ -53,7 +53,7 @@ public class PdfMapperData {
     /**
      * Sets up common data for contract PDF generation.
      */
-    public static Map<String, Object> setUpCommonData(CreateContractPdfRequest request) {
+    public static Map<String, Object> setUpCommonData(ContractPdfRequest request) {
         Map<String, Object> map = new HashMap<>();
         InstitutionPdfData institution = request.getInstitution();
         UserPdfData manager = request.getManager();
@@ -81,7 +81,7 @@ public class PdfMapperData {
     /**
      * Sets up data for attachment PDF generation.
      */
-    public static Map<String, Object> setUpAttachmentData(CreateAttachmentPdfRequest request) {
+    public static Map<String, Object> setUpAttachmentData(AttachmentPdfRequest request) {
         Map<String, Object> map = new HashMap<>();
         InstitutionPdfData institution = request.getInstitution();
         UserPdfData manager = request.getManager();
@@ -145,7 +145,7 @@ public class PdfMapperData {
         map.put("delegatesSend", delegatesSendToText(delegates));
     }
 
-    private static void mapBillingData(Map<String, Object> map, CreateContractPdfRequest request) {
+    private static void mapBillingData(Map<String, Object> map, ContractPdfRequest request) {
         BillingPdfData billing = request.getBilling();
         map.put("institutionVatNumber", Optional.ofNullable(billing).map(BillingPdfData::getVatNumber).orElse(UNDERSCORE));
         map.put("taxCodeInvoicing", Optional.ofNullable(billing).map(BillingPdfData::getTaxCodeInvoicing).orElse(UNDERSCORE));
@@ -155,7 +155,7 @@ public class PdfMapperData {
     /**
      * Sets up PSP-specific data for PDF generation.
      */
-    public static void setupPSPData(Map<String, Object> map, UserPdfData manager, CreateContractPdfRequest request) {
+    public static void setupPSPData(Map<String, Object> map, UserPdfData manager, ContractPdfRequest request) {
         InstitutionPdfData institution = request.getInstitution();
         if (Objects.nonNull(institution.getPaymentServiceProvider())) {
             PaymentServiceProviderPdfData psp = institution.getPaymentServiceProvider();
@@ -194,7 +194,7 @@ public class PdfMapperData {
     /**
      * Sets up PRV-specific data for PDF generation.
      */
-    public static void setupPRVData(Map<String, Object> map, CreateContractPdfRequest request) {
+    public static void setupPRVData(Map<String, Object> map, ContractPdfRequest request) {
         addInstitutionRegisterLabelValue(request.getInstitution(), map);
         map.put("delegatesPrv", delegatesPrvToText(request.getDelegates()));
         appendRecipientCode(map, request.getBilling());
@@ -205,7 +205,7 @@ public class PdfMapperData {
     /**
      * Sets up prod-io specific data.
      */
-    public static void setupProdIOData(CreateContractPdfRequest request, Map<String, Object> map, UserPdfData manager) {
+    public static void setupProdIOData(ContractPdfRequest request, Map<String, Object> map, UserPdfData manager) {
         InstitutionPdfData institution = request.getInstitution();
         InstitutionType type = institution.getInstitutionType();
 
@@ -263,7 +263,7 @@ public class PdfMapperData {
         map.put(PRICING_PLAN_PREMIUM_CHECKBOX, isC0 ? CHECKBOX_X : EMPTY_STR);
     }
 
-    private static void addAggregatesCsvLink(CreateContractPdfRequest request, Map<String, Object> map) {
+    private static void addAggregatesCsvLink(ContractPdfRequest request, Map<String, Object> map) {
         String csvLink = EMPTY_STR;
         if (Boolean.TRUE.equals(request.getIsAggregator()) && StringUtils.isNotEmpty(request.getAggregatesCsvBaseUrl())) {
             String url = String.format("%s%s/products/%s/aggregates",
