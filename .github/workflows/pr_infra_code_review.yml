@@ -79,6 +79,9 @@ jobs:
   code_review:
     needs: detect
     if: ${{ needs.detect.outputs.matrix != '[]' }}
+    permissions:
+      id-token: write
+      contents: read
     strategy:
       fail-fast: false
       matrix:
