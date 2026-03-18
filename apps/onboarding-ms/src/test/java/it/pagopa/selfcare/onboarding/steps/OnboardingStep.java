@@ -102,7 +102,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
             .waitingFor("mongo-db", Wait.forListeningPort())
             .withStartupTimeout(Duration.ofMinutes(5));
 
-    composeContainer.start();
+    //composeContainer.start();
     Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
 
     log.info("Test containers started successfully");

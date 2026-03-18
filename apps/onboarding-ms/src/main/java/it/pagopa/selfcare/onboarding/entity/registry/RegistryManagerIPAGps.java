@@ -1,21 +1,16 @@
 package it.pagopa.selfcare.onboarding.entity.registry;
 
-import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_PAGOPA;
-
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.onboarding.common.Origin;
 import it.pagopa.selfcare.onboarding.entity.IPAEntity;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
-import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
-import it.pagopa.selfcare.product.entity.Product;
 import jakarta.ws.rs.WebApplicationException;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.util.Objects;
 import org.openapi.quarkus.party_registry_proxy_json.api.InstitutionApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.UoApi;
 import org.openapi.quarkus.party_registry_proxy_json.model.InstitutionResource;
+
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 public class RegistryManagerIPAGps extends RegistryManagerIPAUo {
 

@@ -66,7 +66,7 @@ Feature: Onboarding collection
     And the response should contain the text "Additional Information is required when institutionType is GSP and productId is pagopa"
 
   Scenario: Successfully perform onboarding for GSP with additional information
-    Given I have a request object named "success_gsp_request"
+    Given I have a request object named "success_gsp_ipa_request"
     When I send a POST request to "/pa" with this request
     Then the response status code should be 200
 
