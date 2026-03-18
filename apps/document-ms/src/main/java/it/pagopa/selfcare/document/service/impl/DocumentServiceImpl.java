@@ -223,10 +223,6 @@ public class DocumentServiceImpl implements DocumentService {
         document.setContractFilename(CONTRACT_FILENAME_FUNC.apply(filenamePattern, request.getProductTitle()));
     }
 
-    private String getAttachmentByOnboarding(String onboardingId, String filename) {
-        return String.format("%s%s%s%s", documentMsConfig.getContractPath(), onboardingId, "/attachments", "/" + filename);
-    }
-
     private Uni<Boolean> checkAttachmentExists(Document document, String onboardingId, String attachmentName) {
         if (Objects.isNull(document)) {
             log.info("Document not found onboardingId={}, documentName={}", sanitize(onboardingId), sanitize(attachmentName));

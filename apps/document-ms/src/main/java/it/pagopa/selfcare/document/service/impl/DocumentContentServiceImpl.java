@@ -44,7 +44,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 
 import static it.pagopa.selfcare.document.util.ErrorMessage.ATTACHMENT_UPLOAD_ERROR;
@@ -396,10 +395,10 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 .transform(e -> {
                     log.error(
                             "Impossible to store visura document for onboardingId: {}, filename: {}. Error: {}",
-                            uploadVisuraRequest.getOnboardingId(), filename, e.getMessage(), e);
+                            sanitize(uploadVisuraRequest.getOnboardingId()), filename, e.getMessage(), e);
                     return new InternalException(
                             GENERIC_ERROR.getCode(),
-                            String.format("Error storing visura document for onboardingId: %s", uploadVisuraRequest.getOnboardingId()));
+                            String.format("Error storing visura document for onboardingId: %s", sanitize(uploadVisuraRequest.getOnboardingId())));
                 })
                 .replaceWithVoid();
     }
