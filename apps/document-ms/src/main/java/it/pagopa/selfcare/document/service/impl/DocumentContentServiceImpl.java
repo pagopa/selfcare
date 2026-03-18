@@ -395,7 +395,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 .transform(e -> {
                     log.error(
                             "Impossible to store visura document for onboardingId: {}, filename: {}. Error: {}",
-                            sanitize(uploadVisuraRequest.getOnboardingId()), filename, e.getMessage(), e);
+                            sanitize(uploadVisuraRequest.getOnboardingId()), sanitize(filename), e.getMessage(), e);
                     return new InternalException(
                             GENERIC_ERROR.getCode(),
                             String.format("Error storing visura document for onboardingId: %s", sanitize(uploadVisuraRequest.getOnboardingId())));

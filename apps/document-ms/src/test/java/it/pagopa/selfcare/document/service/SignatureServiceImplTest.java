@@ -993,7 +993,6 @@ class SignatureServiceImplTest {
 
         String templateDigest = "signedDocDigest";
 
-        DSSDocument mockUploadedDoc = mock(DSSDocument.class);
         DSSDocument mockExtractedPdf = mock(DSSDocument.class);
 
         AdvancedSignature mockSig = createMockSignature("sig1", new Date(), SignatureForm.PAdES);

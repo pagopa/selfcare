@@ -7,7 +7,6 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
-import it.pagopa.selfcare.document.config.DocumentMsConfig;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
@@ -36,11 +35,8 @@ import static it.pagopa.selfcare.onboarding.common.TokenType.*;
 @ApplicationScoped
 public class DocumentServiceImpl implements DocumentService {
 
-    public static final String HTTP_HEADER_VALUE_ATTACHMENT_FILENAME = "attachment;filename=";
-
     private final DocumentRepository documentRepository;
     private final AzureBlobClient azureBlobClient;
-    private final DocumentMsConfig documentMsConfig;
     private final DocumentContentService documentContentService;
 
     @Inject
@@ -48,11 +44,9 @@ public class DocumentServiceImpl implements DocumentService {
 
     public DocumentServiceImpl(DocumentRepository documentRepository,
                                AzureBlobClient azureBlobClient,
-                               DocumentMsConfig documentMsConfig,
                                DocumentContentService documentContentService) {
         this.documentRepository = documentRepository;
         this.azureBlobClient = azureBlobClient;
-        this.documentMsConfig = documentMsConfig;
         this.documentContentService = documentContentService;
     }
 
