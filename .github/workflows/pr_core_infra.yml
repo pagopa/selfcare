@@ -43,6 +43,8 @@ concurrency:
 permissions:
   contents: read
   packages: read
+  pull-requests: write
+  id-token: write
 
 
 # jobs:
