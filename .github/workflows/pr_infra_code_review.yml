@@ -82,14 +82,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJson(needs.detect.outputs.matrix) }}
+        module: ${{ fromJson(needs.detect.outputs.matrix) }}
+        environment: [dev-ar, dev-pnpg, uat-ar, uat-pnpg, prod-ar, prod-pnpg]
 
     uses: ./.github/workflows/call_code_review_infra.yml
-    name: Infra Code Review (${{ matrix.name }})
+    name: Infra Code Review (${{ matrix.module.name }} - ${{ matrix.environment }})
     secrets: inherit
     with:
-      environments: ${{ needs.detect.outputs.environments }}
-      dir: ./${{ matrix.dir }}
+      environment: ${{ matrix.environment }}
+      tf_environment: ${{ matrix.environment }}
+      dir: ./${{ matrix.module.dir }}
       env_vars: |
         TF_VAR_image_tag=sha-${{ github.sha }}
 

@@ -1,10 +1,9 @@
 on:
   workflow_call:
     inputs:
-      environments:
+      environment:
         type: string
         required: true
-        description: "Comma-separated list of environments (es: dev-ar,uat-ar,prod-ar)"
       tf_environment:
         type: string
         required: false
@@ -22,23 +21,19 @@ env:
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
+  TERRAFORM_ENVIRONMENT: ${{ inputs.tf_environment || inputs.environment }}
 
 jobs:
   tf_plan:
-    name: 'Terraform Plan (${{ matrix.environment }})'
-    strategy:
-      fail-fast: false
-      matrix:
-        environment: ${{ fromJSON(format('[\"{0}\"]', replace(inputs.environments, ',', '\",\"'))) }}
+    name: 'Terraform Plan'
     runs-on: ubuntu-24.04
-    environment: ${{ matrix.environment }}-ci
+    environment: ${{ inputs.environment }}-ci
     permissions:
       id-token: write
       contents: read
     env:
       ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_CI }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      TERRAFORM_ENVIRONMENT: ${{ inputs.tf_environment || matrix.environment }}
 
     steps:
 
