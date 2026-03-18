@@ -40,7 +40,7 @@ public class DocumentMsConfig {
     String aggregatesPath;
 
     void onStart(@Observes StartupEvent ev) {
-        log.info(String.format("Database %s is starting...", Document.mongoDatabase().getName()));
+        log.info("Database {} is starting...", Document.mongoDatabase().getName());
     }
 
     @ApplicationScoped

@@ -55,6 +55,7 @@ public class DocumentController {
     @GET
     @Path("/onboarding/{onboardingId}")
     public Uni<List<DocumentResponse>> getDocumentByOnboardingId(@PathParam(value = "onboardingId") String onboardingId) {
+        log.info("Getting documents for onboardingId: {}", sanitize(onboardingId));
         return documentService.getDocumentsByOnboardingId(onboardingId)
                 .map(documents -> documents.stream()
                         .map(documentMapper::toResponse)
@@ -68,6 +69,7 @@ public class DocumentController {
     @GET
     @Path("/{id}")
     public Uni<DocumentResponse> getDocumentById(@PathParam(value = "id") String id) {
+        log.info("Getting document for documentId: {}", sanitize(id));
         return documentService.getDocumentById(id)
                 .map(documentMapper::toResponse);
     }
@@ -82,6 +84,7 @@ public class DocumentController {
   @Path("/{onboardingId}/contract-signed")
   public Uni<Response> updateContractSigned(@NotNull @PathParam(value = "onboardingId") String onboardingId,
                                             @NotNull @QueryParam(value = "contractSigned") String contractSigned) {
+        log.info("Updating contract signed for onboardingId: {}, contractSigned: {}", sanitize(onboardingId), sanitize(contractSigned));
         return documentService.updateContractSigned(onboardingId, contractSigned)
                 .map(updatedCount -> {
                     if (updatedCount > 0) {
@@ -115,7 +118,8 @@ public class DocumentController {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/contract-report")
   public Uni<ContractSignedReport> reportContractSigned(@NotNull @QueryParam(value = "onboardingId") String onboardingId) {
-    return documentService.reportContractSigned(onboardingId);
+        log.info("Checking if contract signed is a CADES file for onboardingId: {}", sanitize(onboardingId));
+        return documentService.reportContractSigned(onboardingId);
   }
 
   @Operation(

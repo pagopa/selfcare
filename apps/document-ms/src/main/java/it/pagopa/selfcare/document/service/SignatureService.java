@@ -20,8 +20,6 @@ public interface SignatureService {
 
     String computeDigestOfSignedRevision(SignedDocumentValidator validator, DSSDocument doc);
 
-    AdvancedSignature chooseEarliestSignature(List<AdvancedSignature> sigs);
-
     Uni<File> signDocument(File pdf, String institutionDescription, String productId);
 
     Uni<Void> verifyContractSignature(String onboardingId, File file, List<String> fiscalCodes, boolean skipSignatureVerification);

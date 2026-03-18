@@ -326,17 +326,16 @@ public class PdfMapperData {
             return EMPTY_STR;
         }
         StringBuilder builder = new StringBuilder();
-        users.forEach(user -> {
-            builder.append("</br>")
-                    .append("<p class=\"c141\"><span class=\"c6\">Nome e Cognome: ")
-                    .append(Optional.ofNullable(user.getName()).orElse(EMPTY_STR)).append(" ")
-                    .append(Optional.ofNullable(user.getSurname()).orElse(EMPTY_STR)).append("&nbsp;</span></p>\n")
-                    .append("<p class=\"c141\"><span class=\"c6\">Codice Fiscale: ")
-                    .append(user.getTaxCode()).append("</span></p>\n")
-                    .append("<p class=\"c141\"><span class=\"c6\">e-mail: ")
-                    .append(Optional.ofNullable(user.getEmail()).orElse(EMPTY_STR))
-                    .append("&nbsp;</span></p>\n").append("</br>");
-        });
+        users.forEach(user ->
+                builder.append("</br>")
+                .append("<p class=\"c141\"><span class=\"c6\">Nome e Cognome: ")
+                .append(Optional.ofNullable(user.getName()).orElse(EMPTY_STR)).append(" ")
+                .append(Optional.ofNullable(user.getSurname()).orElse(EMPTY_STR)).append("&nbsp;</span></p>\n")
+                .append("<p class=\"c141\"><span class=\"c6\">Codice Fiscale: ")
+                .append(user.getTaxCode()).append("</span></p>\n")
+                .append("<p class=\"c141\"><span class=\"c6\">e-mail: ")
+                .append(Optional.ofNullable(user.getEmail()).orElse(EMPTY_STR))
+                .append("&nbsp;</span></p>\n").append("</br>"));
         return builder.toString();
     }
 
@@ -345,18 +344,16 @@ public class PdfMapperData {
             return EMPTY_STR;
         }
         StringBuilder builder = new StringBuilder("<p class=\"c2\"><span class=\"c1\"><ol class=\"c0\">");
-        users.forEach(user -> {
-            builder.append("<br><li class=\"c1\"><br>")
-                    .append("<p class=\"c2\"><span class=\"c1\">Cognome: ")
-                    .append(Optional.ofNullable(user.getSurname()).orElse(EMPTY_STR)).append("&nbsp;</span></p>\n")
-                    .append("<p class=\"c2\"><span class=\"c1\">Nome: ")
-                    .append(Optional.ofNullable(user.getName()).orElse(EMPTY_STR)).append("&nbsp;</span></p>\n")
-                    .append("<p class=\"c2\"><span class=\"c1\">Codice Fiscale: ")
-                    .append(user.getTaxCode()).append("</span></p>\n")
-                    .append("<p class=\"c2\"><span class=\"c1\">Posta Elettronica aziendale: ")
-                    .append(Optional.ofNullable(user.getEmail()).orElse(EMPTY_STR))
-                    .append("&nbsp;</span></p>\n").append("</li>\n");
-        });
+        users.forEach(user -> builder.append("<br><li class=\"c1\"><br>")
+                .append("<p class=\"c2\"><span class=\"c1\">Cognome: ")
+                .append(Optional.ofNullable(user.getSurname()).orElse(EMPTY_STR)).append("&nbsp;</span></p>\n")
+                .append("<p class=\"c2\"><span class=\"c1\">Nome: ")
+                .append(Optional.ofNullable(user.getName()).orElse(EMPTY_STR)).append("&nbsp;</span></p>\n")
+                .append("<p class=\"c2\"><span class=\"c1\">Codice Fiscale: ")
+                .append(user.getTaxCode()).append("</span></p>\n")
+                .append("<p class=\"c2\"><span class=\"c1\">Posta Elettronica aziendale: ")
+                .append(Optional.ofNullable(user.getEmail()).orElse(EMPTY_STR))
+                .append("&nbsp;</span></p>\n").append("</li>\n"));
         return builder.append("</ol></span></p>").toString();
     }
 
@@ -365,16 +362,15 @@ public class PdfMapperData {
             return EMPTY_STR;
         }
         StringBuilder builder = new StringBuilder("<p class=\"c2\"><span class=\"c1\"><ol class=\"c34 lst-kix_list_23-0 start\" start=\"1\"");
-        users.forEach(user -> {
-            builder.append("<br><li class=\"c2 c16 li-bullet-3\"><span class=\"c1\">Nome e Cognome: ")
-                    .append(Optional.ofNullable(user.getName()).orElse(EMPTY_STR)).append(" ")
-                    .append(Optional.ofNullable(user.getSurname()).orElse(EMPTY_STR)).append("</span></li>")
-                    .append("<li class=\"c2 c16 li-bullet-3\"><span class=\"c1\">Codice Fiscale: ")
-                    .append(user.getTaxCode()).append("</span></li>")
-                    .append("<li class=\"c2 c16 li-bullet-3\"><span class=\"c1\">Posta Elettronica aziendale: ")
-                    .append(Optional.ofNullable(user.getEmail()).orElse(EMPTY_STR))
-                    .append("</span></li><br>");
-        });
+        users.forEach(user ->
+                builder.append("<br><li class=\"c2 c16 li-bullet-3\"><span class=\"c1\">Nome e Cognome: ")
+                .append(Optional.ofNullable(user.getName()).orElse(EMPTY_STR)).append(" ")
+                .append(Optional.ofNullable(user.getSurname()).orElse(EMPTY_STR)).append("</span></li>")
+                .append("<li class=\"c2 c16 li-bullet-3\"><span class=\"c1\">Codice Fiscale: ")
+                .append(user.getTaxCode()).append("</span></li>")
+                .append("<li class=\"c2 c16 li-bullet-3\"><span class=\"c1\">Posta Elettronica aziendale: ")
+                .append(Optional.ofNullable(user.getEmail()).orElse(EMPTY_STR))
+                .append("</span></li><br>"));
         return builder.append("</ol></span></p>").toString();
     }
 
