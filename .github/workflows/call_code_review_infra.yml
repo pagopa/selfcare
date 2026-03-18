@@ -4,9 +4,6 @@ on:
       environment:
         type: string
         required: true
-      tf_environment:
-        type: string
-        required: false
       dir:
         type: string
         required: true
@@ -21,7 +18,6 @@ env:
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
-  TERRAFORM_ENVIRONMENT: ${{ inputs.tf_environment || inputs.environment }}
 
 jobs:
   tf_plan:
@@ -32,7 +28,7 @@ jobs:
       id-token: write
       contents: read
     env:
-      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_CI }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
@@ -51,7 +47,7 @@ jobs:
       - name: Azure Login
         uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID_CI }}
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
           tenant-id: ${{ vars.ARM_TENANT_ID }}
           subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
 
@@ -64,6 +60,12 @@ jobs:
         name: Setup Terraform
         with:
           terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
+
+      - name: Terraform Init
+        working-directory: ${{ inputs.dir }}
+        shell: bash
+        run: |
+          terraform init
 
       - name: Terraform Plan
         working-directory: ${{ inputs.dir }}
