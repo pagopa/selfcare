@@ -344,7 +344,7 @@ locals {
     branch_pattern         = null
   }
 
-  github_federations = {
+  github_federations_fe = {
     "selfcare-assistance-frontend"            = "uat"
     "selfcare-pnpg-onboarding-frontend"       = "uat"
     "selfcare-token-exchange-frontend"        = "uat"
@@ -355,12 +355,14 @@ locals {
     "selfcare-dashboard-users-microfrontend"  = "uat"
     "selfcare-onboarding-frontend"            = "uat"
     "selfcare-pnpg-dashboard-frontend"        = "uat"
-    "selfcare-dashboard-backend"              = "uat"
-    "selfcare-external-api-backend"           = "uat"
-    "selfcare-institution"                    = "uat"
-    "selfcare-ms-external-interceptor"        = "uat"
-    "selfcare-ms-party-registry-proxy"        = "uat"
-    "selfcare-onboarding-backend"             = "uat"
-    "selfcare-user"                           = "uat"
+  }
+  github_federations_ms = {
+    "selfcare-dashboard-backend"       = "uat"
+    "selfcare-external-api-backend"    = "uat"
+    "selfcare-institution"             = "uat"
+    "selfcare-ms-external-interceptor" = "uat"
+    "selfcare-ms-party-registry-proxy" = "uat"
+    "selfcare-onboarding-backend"      = "uat"
+    "selfcare-user"                    = "uat"
   }
 }

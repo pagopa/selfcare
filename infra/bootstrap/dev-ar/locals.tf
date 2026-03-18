@@ -344,7 +344,7 @@ locals {
     branch_pattern         = null
   }
 
-  github_federations = {
+  github_federations_fe = {
     "selfcare-assistance-frontend"            = "dev"
     "selfcare-pnpg-onboarding-frontend"       = "dev"
     "selfcare-token-exchange-frontend"        = "dev"
@@ -355,12 +355,14 @@ locals {
     "selfcare-dashboard-users-microfrontend"  = "dev"
     "selfcare-onboarding-frontend"            = "dev"
     "selfcare-pnpg-dashboard-frontend"        = "dev"
-    "selfcare-dashboard-backend"              = "dev"
-    "selfcare-external-api-backend"           = "dev"
-    "selfcare-institution"                    = "dev"
-    "selfcare-ms-external-interceptor"        = "dev"
-    "selfcare-ms-party-registry-proxy"        = "dev"
-    "selfcare-onboarding-backend"             = "dev"
-    "selfcare-user"                           = "dev"
+  }
+  github_federations_ms = {
+    "selfcare-dashboard-backend"       = "dev"
+    "selfcare-external-api-backend"    = "dev"
+    "selfcare-institution"             = "dev"
+    "selfcare-ms-external-interceptor" = "dev"
+    "selfcare-ms-party-registry-proxy" = "dev"
+    "selfcare-onboarding-backend"      = "dev"
+    "selfcare-user"                    = "dev"
   }
 }
