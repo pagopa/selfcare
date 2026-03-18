@@ -141,6 +141,7 @@ public class DocumentContentController {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Path("/{onboardingId}/contract")
     public Uni<RestResponse<File>> getContract(@PathParam(value = "onboardingId") String onboardingId) {
+        log.info("Retrieving contract for onboardingId: {}", sanitize(onboardingId));
         return documentContentService.retrieveContract(onboardingId, Boolean.FALSE);
     }
 
@@ -157,6 +158,8 @@ public class DocumentContentController {
             @NotNull @QueryParam("name") String name,
             @NotNull @QueryParam("institutionDescription") String institutionDescription,
             @NotNull @QueryParam("productId") String productId) {
+        log.info("Retrieving template attachment for onboardingId: {}, name: {}, institutionDescription: {}, productId: {}",
+                sanitize(onboardingId), sanitize(name), sanitize(institutionDescription), sanitize(productId));
         return documentContentService.retrieveTemplateAttachment(onboardingId, templatePath, name, institutionDescription, productId);
     }
 
@@ -169,6 +172,8 @@ public class DocumentContentController {
     @Path("/{onboardingId}/attachment")
     public Uni<RestResponse<File>> getAttachment(@PathParam(value = "onboardingId") String onboardingId,
                                                  @NotNull @QueryParam(value = "name") String attachmentName) {
+        log.info("Retrieving attachment for onboardingId: {}, attachmentName: {}",
+                sanitize(onboardingId), sanitize(attachmentName));
         return documentContentService.retrieveAttachment(onboardingId, attachmentName);
 
     }
@@ -181,6 +186,10 @@ public class DocumentContentController {
     @Path("/upload-attachment")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Uni<Response> uploadAttachment(@Valid @BeanParam UploadAttachmentForm form, @Context ResteasyReactiveRequestContext ctx) {
+    log.info(
+        "Uploading attachment for onboardingId: {}, filename: {}",
+        sanitize(form.getRequest().getOnboardingId()),
+        sanitize(form.getFile().getName()));
         return documentContentService.uploadAttachment(form.getRequest(), retrieveAttachmentFromFormData(ctx.getFormData(), form.getFile()))
                 .replaceWith(Response.status(HttpStatus.SC_NO_CONTENT).build())
                 .onFailure(UpdateNotAllowedException.class)
@@ -195,6 +204,10 @@ public class DocumentContentController {
     @Path("/visura")
     @Consumes(MediaType.APPLICATION_JSON)
     public Uni<Response> saveVisuraForMerchant(@Valid UploadVisuraRequest request) {
+        log.info(
+                "Saving Visura for onboardingId: {}, filename: {}",
+                sanitize(request.getOnboardingId()),
+                sanitize(request.getFilename()));
         return documentContentService.saveVisuraForMerchant(request)
                 .replaceWith(Response.status(HttpStatus.SC_NO_CONTENT).build())
                 .onFailure()
