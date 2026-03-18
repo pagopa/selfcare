@@ -16,12 +16,10 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.io.File;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import org.jboss.resteasy.reactive.RestResponse;
 
 import java.util.List;
 
@@ -72,17 +70,6 @@ public class DocumentController {
     public Uni<DocumentResponse> getDocumentById(@PathParam(value = "id") String id) {
         return documentService.getDocumentById(id)
                 .map(documentMapper::toResponse);
-    }
-
-    @Operation(
-            summary = "Retrieve contract not signed for a given onboarding",
-            description = "Downloads the unsigned contract file associated with the specified onboarding ID."
-    )
-    @GET
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Path("/{onboardingId}/contract")
-    public Uni<RestResponse<File>> getContract(@PathParam(value = "onboardingId") String onboardingId) {
-        return documentService.retrieveContract(onboardingId, Boolean.FALSE);
     }
 
     @Operation(

@@ -2,10 +2,11 @@ package it.pagopa.selfcare.document.controller;
 
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.document.exception.ConflictException;
+import it.pagopa.selfcare.document.exception.UpdateNotAllowedException;
 import it.pagopa.selfcare.document.model.dto.request.CreateAttachmentPdfRequest;
 import it.pagopa.selfcare.document.model.dto.request.CreateContractPdfRequest;
 import it.pagopa.selfcare.document.model.dto.request.UploadAttachmentForm;
+import it.pagopa.selfcare.document.model.dto.request.UploadVisuraRequest;
 import it.pagopa.selfcare.document.model.dto.response.CreatePdfResponse;
 import it.pagopa.selfcare.document.service.DocumentContentService;
 import jakarta.validation.Valid;
@@ -133,6 +134,17 @@ public class DocumentContentController {
     }
 
     @Operation(
+            summary = "Retrieve contract not signed for a given onboarding",
+            description = "Downloads the unsigned contract file associated with the specified onboarding ID."
+    )
+    @GET
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Path("/{onboardingId}/contract")
+    public Uni<RestResponse<File>> getContract(@PathParam(value = "onboardingId") String onboardingId) {
+        return documentContentService.retrieveContract(onboardingId, Boolean.FALSE);
+    }
+
+    @Operation(
             summary = "Retrieve template attachment for a given onboarding and filename and template path",
             description = "Downloads the template attachment file associated with the specified onboarding ID and filename and template path."
     )
@@ -171,7 +183,21 @@ public class DocumentContentController {
     public Uni<Response> uploadAttachment(@Valid @BeanParam UploadAttachmentForm form, @Context ResteasyReactiveRequestContext ctx) {
         return documentContentService.uploadAttachment(form.getRequest(), retrieveAttachmentFromFormData(ctx.getFormData(), form.getFile()))
                 .replaceWith(Response.status(HttpStatus.SC_NO_CONTENT).build())
-                .onFailure(ConflictException.class)
+                .onFailure(UpdateNotAllowedException.class)
                 .recoverWithItem(err -> Response.status(HttpStatus.SC_CONFLICT).entity(err.getMessage()).build());
+    }
+
+    @Operation(
+            summary = "Store the Visura in Azure Blob Storage",
+            description = "Receives the Visura data (filename and content) and stores it in Azure Blob Storage."
+    )
+    @POST
+    @Path("/visura")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Uni<Response> saveVisuraForMerchant(@Valid UploadVisuraRequest request) {
+        return documentContentService.saveVisuraForMerchant(request)
+                .replaceWith(Response.status(HttpStatus.SC_NO_CONTENT).build())
+                .onFailure()
+                .recoverWithItem(err -> Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(err.getMessage()).build());
     }
 }

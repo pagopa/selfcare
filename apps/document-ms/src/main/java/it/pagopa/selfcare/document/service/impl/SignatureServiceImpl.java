@@ -51,7 +51,7 @@ import static it.pagopa.selfcare.document.util.ErrorMessage.*;
 
 @Slf4j
 @ApplicationScoped
-public class SignatureServiceImp implements SignatureService {
+public class SignatureServiceImpl implements SignatureService {
 
     @Inject
     DocumentService documentService;
@@ -69,9 +69,9 @@ public class SignatureServiceImp implements SignatureService {
   private final TrustedListsCertificateSource trustedListsCertificateSource;
   private final PadesSignService padesSignService;
 
-  public SignatureServiceImp(TrustedListsCertificateSource trustedListsCertificateSource,
-                             PagoPaSignatureConfig pagoPaSignatureConfig,
-                             PadesSignService padesSignService) {
+  public SignatureServiceImpl(TrustedListsCertificateSource trustedListsCertificateSource,
+                              PagoPaSignatureConfig pagoPaSignatureConfig,
+                              PadesSignService padesSignService) {
     this.trustedListsCertificateSource = trustedListsCertificateSource;
     this.pagoPaSignatureConfig = pagoPaSignatureConfig;
     this.padesSignService = padesSignService;

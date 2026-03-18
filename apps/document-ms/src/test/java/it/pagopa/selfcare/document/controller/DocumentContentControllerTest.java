@@ -4,7 +4,7 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.document.exception.ConflictException;
+import it.pagopa.selfcare.document.exception.UpdateNotAllowedException;
 import it.pagopa.selfcare.document.model.FormItem;
 import it.pagopa.selfcare.document.model.dto.request.*;
 import it.pagopa.selfcare.document.model.dto.response.CreatePdfResponse;
@@ -226,7 +226,7 @@ public class DocumentContentControllerTest {
                 .build();
 
         Mockito.when(documentContentService.uploadAttachment(any(DocumentBuilderRequest.class), any(FormItem.class)))
-                .thenReturn(Uni.createFrom().failure(new ConflictException("Attachment already exists")));
+                .thenReturn(Uni.createFrom().failure(new UpdateNotAllowedException("Attachment already exists")));
 
         given()
                 .multiPart("file", tempFile, "application/pdf")
@@ -257,6 +257,73 @@ public class DocumentContentControllerTest {
                 .multiPart("request", request, "application/json")
                 .when()
                 .post("/v1/document-content/upload-attachment")
+                .then()
+                .statusCode(500);
+    }
+
+    @Test
+    void saveVisuraForMerchant_shouldReturnNoContent_whenUploadSuccessful() {
+        UploadVisuraRequest request = UploadVisuraRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .filename("VISURA_test.xml")
+                .fileContent(new byte[]{1, 2, 3})
+                .build();
+
+        Mockito.when(documentContentService.saveVisuraForMerchant(any(UploadVisuraRequest.class)))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        given()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
+                .when()
+                .post("/v1/document-content/visura")
+                .then()
+                .statusCode(204);
+    }
+
+    @Test
+    void saveVisuraForMerchant_shouldReturnInternalServerError_whenServiceFails() {
+        UploadVisuraRequest request = UploadVisuraRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .filename("VISURA_test.xml")
+                .fileContent(new byte[]{1, 2, 3})
+                .build();
+
+        Mockito.when(documentContentService.saveVisuraForMerchant(any(UploadVisuraRequest.class)))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("Generic error")));
+
+        given()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
+                .when()
+                .post("/v1/document-content/visura")
+                .then()
+                .statusCode(500);
+    }
+
+    @Test
+    void getContract_shouldReturnFile_whenContractExists() throws Exception {
+        File tempFile = Files.createTempFile("contract", ".pdf").toFile();
+        tempFile.deleteOnExit();
+
+        Mockito.when(documentContentService.retrieveContract(ONBOARDING_ID, Boolean.FALSE))
+                .thenReturn(Uni.createFrom().item(RestResponse.ok(tempFile)));
+
+        given()
+                .when()
+                .get("/v1/document-content/" + ONBOARDING_ID + "/contract")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
+    void getContract_shouldReturnInternalServerError_whenServiceFails() {
+        Mockito.when(documentContentService.retrieveContract(ONBOARDING_ID, Boolean.FALSE))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("Storage error")));
+
+        given()
+                .when()
+                .get("/v1/document-content/" + ONBOARDING_ID + "/contract")
                 .then()
                 .statusCode(500);
     }

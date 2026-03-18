@@ -177,6 +177,40 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     }
 
     @Override
+    public Uni<RestResponse<File>> retrieveContract(String onboardingId, boolean isSigned) {
+    return documentRepository
+        .findByOnboardingId(onboardingId)
+        .onItem()
+        .transformToUni(
+            document ->
+                Uni.createFrom()
+                    .item(
+                        () ->
+                            azureBlobClient.getFileAsPdf(
+                                isSigned
+                                    ? document.getContractSigned()
+                                    : getContractNotSigned(onboardingId, document)))
+                    .runSubscriptionOn(Infrastructure.getDefaultExecutor())
+                    .onItem()
+                    .transform(
+                        contract -> {
+                          RestResponse.ResponseBuilder<File> response =
+                              RestResponse.ResponseBuilder.ok(
+                                  contract, MediaType.APPLICATION_OCTET_STREAM);
+                          response.header(
+                              HttpHeaders.CONTENT_DISPOSITION,
+                              HTTP_HEADER_VALUE_ATTACHMENT_FILENAME
+                                  + getCurrentContractName(document, isSigned));
+                          return response.build();
+                        }));
+    }
+
+    private String getContractNotSigned(String onboardingId, Document document) {
+        return String.format("%s%s/%s", documentMsConfig.getContractPath(), onboardingId,
+                document.getContractFilename());
+    }
+
+    @Override
     public Uni<RestResponse<File>> retrieveTemplateAttachment(String onboardingId, String templatePath,
                                                               String attachmentName, String institutionDescription,
                                                               String productId) {
@@ -346,6 +380,25 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         if (!Files.exists(filePath, LinkOption.NOFOLLOW_LINKS) || !Files.isRegularFile(filePath, LinkOption.NOFOLLOW_LINKS)) {
             throw new InvalidRequestException("Uploaded file does not exist or is not a regular file", "0000");
         }
+    }
+
+    @Override
+    public Uni<Void> saveVisuraForMerchant(UploadVisuraRequest uploadVisuraRequest) {
+        final String filename = uploadVisuraRequest.getFilename();
+        final String path = String.format("%s%s/visura", documentMsConfig.getContractPath(), uploadVisuraRequest.getOnboardingId());
+
+        return Uni.createFrom().item(uploadVisuraRequest::getFileContent)
+                .invoke(bytes -> azureBlobClient.uploadFile(path, filename, bytes))
+                .onFailure()
+                .transform(e -> {
+                    log.error(
+                            "Impossible to store visura document for onboardingId: {}, filename: {}. Error: {}",
+                            uploadVisuraRequest.getOnboardingId(), filename, e.getMessage(), e);
+                    return new InternalException(
+                            GENERIC_ERROR.getCode(),
+                            String.format("Error storing visura document for onboardingId: %s", uploadVisuraRequest.getOnboardingId()));
+                })
+                .replaceWithVoid();
     }
 
     // ==================== Common utility methods ====================

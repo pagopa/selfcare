@@ -6,18 +6,14 @@ import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
 import it.pagopa.selfcare.document.model.dto.response.DocumentBuilderResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
-import java.io.File;
-import java.util.List;
 
-import org.jboss.resteasy.reactive.RestResponse;
+import java.util.List;
 
 public interface DocumentService {
 
     Uni<List<Document>> getDocumentsByOnboardingId(String onboardingId);
 
     Uni<Document> getDocumentById(String id);
-
-    Uni<RestResponse<File>> retrieveContract(String onboardingId, boolean isSigned);
 
     Uni<Long> updateContractSigned(String onboardingId, String documentSignedPath);
 

@@ -18,12 +18,11 @@ import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.mapper.DocumentMapper;
 import it.pagopa.selfcare.document.service.DocumentService;
 import jakarta.ws.rs.core.MediaType;
-import java.io.File;
-import java.nio.file.Files;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.jboss.resteasy.reactive.RestResponse;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -34,10 +33,7 @@ class DocumentControllerTest {
   private static final String ONBOARDING_ID = "onboarding-123";
   private static final String DOCUMENT_ID = "doc-456";
   private static final String ATTACHMENT_NAME = "attachment.pdf";
-  private static final String TEMPLATE_PATH = "templates/contract.ftl";
   private static final String CONTRACT_SIGNED_PATH = "contracts/signed/contract-signed.pdf";
-  private static final String INSTITUTION_DESCRIPTION = "Test Institution";
-  private static final String PRODUCT_ID = "Product-123";
 
   @InjectMock DocumentService documentService;
   @InjectMock DocumentMapper documentMapper;
@@ -120,21 +116,6 @@ class DocumentControllerTest {
         .then()
         .statusCode(200)
         .body("id", equalTo(DOCUMENT_ID));
-  }
-
-  @Test
-  void getContract_shouldReturnFile_whenContractExists() throws Exception {
-    File tempFile = Files.createTempFile("contract", ".pdf").toFile();
-    tempFile.deleteOnExit();
-
-    Mockito.when(documentService.retrieveContract(ONBOARDING_ID, Boolean.FALSE))
-        .thenReturn(Uni.createFrom().item(RestResponse.ok(tempFile)));
-
-    given()
-        .when()
-        .get("/v1/documents/" + ONBOARDING_ID + "/contract")
-        .then()
-        .statusCode(200);
   }
 
   @Test
@@ -395,18 +376,6 @@ class DocumentControllerTest {
     given()
         .when()
         .get("/v1/documents/" + DOCUMENT_ID)
-        .then()
-        .statusCode(500);
-  }
-
-  @Test
-  void getContract_shouldReturnInternalServerError_whenServiceFails() {
-    Mockito.when(documentService.retrieveContract(ONBOARDING_ID, Boolean.FALSE))
-        .thenReturn(Uni.createFrom().failure(new RuntimeException("Storage error")));
-
-    given()
-        .when()
-        .get("/v1/documents/" + ONBOARDING_ID + "/contract")
         .then()
         .statusCode(500);
   }

@@ -20,11 +20,8 @@ import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.document.service.SignatureService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
-import org.jboss.resteasy.reactive.RestResponse;
 
 import java.io.File;
 import java.time.LocalDateTime;
@@ -37,7 +34,7 @@ import static it.pagopa.selfcare.onboarding.common.TokenType.*;
 
 @Slf4j
 @ApplicationScoped
-public class DocumentServiceImp implements DocumentService {
+public class DocumentServiceImpl implements DocumentService {
 
     public static final String HTTP_HEADER_VALUE_ATTACHMENT_FILENAME = "attachment;filename=";
 
@@ -49,10 +46,10 @@ public class DocumentServiceImp implements DocumentService {
     @Inject
     SignatureService signatureService;
 
-    public DocumentServiceImp(DocumentRepository documentRepository,
-                              AzureBlobClient azureBlobClient,
-                              DocumentMsConfig documentMsConfig,
-                              DocumentContentService documentContentService) {
+    public DocumentServiceImpl(DocumentRepository documentRepository,
+                               AzureBlobClient azureBlobClient,
+                               DocumentMsConfig documentMsConfig,
+                               DocumentContentService documentContentService) {
         this.documentRepository = documentRepository;
         this.azureBlobClient = azureBlobClient;
         this.documentMsConfig = documentMsConfig;
@@ -68,24 +65,6 @@ public class DocumentServiceImp implements DocumentService {
     public Uni<Document> getDocumentById(String documentId) {
         return documentRepository.findById(new ObjectId(documentId))
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Document with id %s not found", documentId)));
-    }
-
-    @Override
-    public Uni<RestResponse<File>> retrieveContract(String onboardingId, boolean isSigned) {
-        return documentRepository.findByOnboardingId(onboardingId)
-                .onItem().transformToUni(document ->
-                        Uni.createFrom().item(() -> azureBlobClient.getFileAsPdf(isSigned ? document.getContractSigned() : getContractNotSigned(onboardingId, document)))
-                                .runSubscriptionOn(Infrastructure.getDefaultExecutor())
-                                .onItem().transform(contract -> {
-                                    RestResponse.ResponseBuilder<File> response = RestResponse.ResponseBuilder.ok(contract, MediaType.APPLICATION_OCTET_STREAM);
-                                    response.header(HttpHeaders.CONTENT_DISPOSITION, HTTP_HEADER_VALUE_ATTACHMENT_FILENAME + getCurrentContractName(document, isSigned));
-                                    return response.build();
-                                }));
-    }
-
-    private String getContractNotSigned(String onboardingId, Document document) {
-        return String.format("%s%s/%s", documentMsConfig.getContractPath(), onboardingId,
-                document.getContractFilename());
     }
 
     @Override
@@ -163,7 +142,7 @@ public class DocumentServiceImp implements DocumentService {
                                 .build());
                     }
 
-                    return retrieveContract(onboardingId, false)
+                    return documentContentService.retrieveContract(onboardingId, false)
                             .onItem().transform(restResponse -> {
                                 File contract = restResponse.getEntity();
                                 DSSDocument dssDocument = new FileDocument(contract);

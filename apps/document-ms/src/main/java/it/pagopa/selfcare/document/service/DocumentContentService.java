@@ -5,6 +5,7 @@ import it.pagopa.selfcare.document.model.FormItem;
 import it.pagopa.selfcare.document.model.dto.request.CreateAttachmentPdfRequest;
 import it.pagopa.selfcare.document.model.dto.request.CreateContractPdfRequest;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
+import it.pagopa.selfcare.document.model.dto.request.UploadVisuraRequest;
 import it.pagopa.selfcare.document.model.dto.response.CreatePdfResponse;
 import org.jboss.resteasy.reactive.RestResponse;
 
@@ -36,6 +37,8 @@ public interface DocumentContentService {
 
     Uni<RestResponse<File>> retrieveSignedFile(String id);
 
+    Uni<RestResponse<File>> retrieveContract(String onboardingId, boolean isSigned);
+
     Uni<RestResponse<File>> retrieveTemplateAttachment(
             String onboardingId,
             String templatePath,
@@ -46,4 +49,6 @@ public interface DocumentContentService {
     Uni<RestResponse<File>> retrieveAttachment(String onboardingId, String attachmentName);
 
     Uni<Void> uploadAttachment(DocumentBuilderRequest request, FormItem file);
+
+    Uni<Void> saveVisuraForMerchant(UploadVisuraRequest uploadVisuraRequest);
 }

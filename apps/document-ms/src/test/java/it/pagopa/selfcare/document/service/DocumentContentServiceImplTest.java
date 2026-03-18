@@ -9,6 +9,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
 import it.pagopa.selfcare.document.exception.InvalidRequestException;
+import it.pagopa.selfcare.document.exception.InternalException;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.exception.UpdateNotAllowedException;
 import it.pagopa.selfcare.document.model.FormItem;
@@ -66,6 +67,61 @@ public class DocumentContentServiceImplTest {
     @InjectMock SignatureService signatureService;
     @InjectMock DocumentService documentService;
     @Inject DocumentContentService documentContentService;
+
+    // ---- retrieveContract ----
+
+    @Test
+    void retrieveContract_notSigned_shouldReturnOkResponse() {
+        Document doc = buildDocument();
+        File mockFile = Mockito.mock(File.class);
+
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(doc));
+        when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(mockFile);
+
+        RestResponse<File> response = documentContentService.retrieveContract(ONBOARDING_ID, false)
+                .await().indefinitely();
+
+        assertNotNull(response);
+        assertEquals(RestResponse.Status.OK.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void retrieveContract_signed_shouldReturnOkResponse() {
+        Document doc = buildDocument();
+        doc.setContractSigned("/path/to/signed/contract.pdf");
+        File mockFile = Mockito.mock(File.class);
+
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(doc));
+        when(azureBlobClient.getFileAsPdf(doc.getContractSigned())).thenReturn(mockFile);
+
+        RestResponse<File> response = documentContentService.retrieveContract(ONBOARDING_ID, true)
+                .await().indefinitely();
+
+        assertNotNull(response);
+        assertEquals(RestResponse.Status.OK.getStatusCode(), response.getStatus());
+    }
+
+    // ---- retrieveContract edge cases ----
+
+    @Test
+    void retrieveContract_shouldUseSignedPath_whenIsSignedTrue() {
+        Document doc = buildDocument();
+        doc.setContractSigned("/path/to/signed/contract_signed.pdf");
+        File mockFile = Mockito.mock(File.class);
+
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(doc));
+        when(azureBlobClient.getFileAsPdf("/path/to/signed/contract_signed.pdf")).thenReturn(mockFile);
+
+        RestResponse<File> response = documentContentService.retrieveContract(ONBOARDING_ID, true)
+                .await().indefinitely();
+
+        assertNotNull(response);
+        assertEquals(RestResponse.Status.OK.getStatusCode(), response.getStatus());
+        verify(azureBlobClient).getFileAsPdf("/path/to/signed/contract_signed.pdf");
+    }
 
     // ---- retrieveAttachment with buildAttachmentPath ----
 
@@ -632,6 +688,41 @@ public class DocumentContentServiceImplTest {
 
         var awaiter = documentContentService.uploadAttachment(request, formItem).await();
         assertThrows(SelfcareAzureStorageException.class, awaiter::indefinitely);
+    }
+
+    // ---- saveVisuraForMerchant ----
+
+    @Test
+    void saveVisuraForMerchant_shouldUploadVisuraSuccessfully() {
+        byte[] content = new byte[]{1, 2, 3};
+        UploadVisuraRequest request = UploadVisuraRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .filename("VISURA_test.xml")
+                .fileContent(content)
+                .build();
+
+        var awaiter = documentContentService.saveVisuraForMerchant(request).await();
+
+        assertDoesNotThrow(awaiter::indefinitely);
+        verify(azureBlobClient).uploadFile(anyString(), eq("VISURA_test.xml"), eq(content));
+    }
+
+    @Test
+    void saveVisuraForMerchant_shouldThrowInternalException_whenUploadFails() {
+        byte[] content = new byte[]{4, 5, 6};
+        UploadVisuraRequest request = UploadVisuraRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .filename("VISURA_test.xml")
+                .fileContent(content)
+                .build();
+
+        doThrow(new RuntimeException("upload error"))
+                .when(azureBlobClient)
+                .uploadFile(anyString(), anyString(), any());
+
+        var awaiter = documentContentService.saveVisuraForMerchant(request).await();
+
+        assertThrows(InternalException.class, awaiter::indefinitely);
     }
 
     // ---- helper ----

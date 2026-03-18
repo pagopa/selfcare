@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.document.service;
 
 import com.azure.storage.blob.models.BlobProperties;
-import eu.europa.esig.dss.model.DSSDocument;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
@@ -15,20 +14,14 @@ import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
 import it.pagopa.selfcare.document.model.dto.response.DocumentBuilderResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
-import it.pagopa.selfcare.document.exception.UpdateNotAllowedException;
-import it.pagopa.selfcare.document.model.FormItem;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.onboarding.common.TokenType;
 import jakarta.inject.Inject;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.bson.types.ObjectId;
-import org.jboss.resteasy.reactive.RestResponse;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-
-import it.pagopa.selfcare.document.exception.InvalidRequestException;
-import it.pagopa.selfcare.document.service.impl.DocumentServiceImp;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,12 +35,10 @@ import static org.mockito.Mockito.*;
 
 @QuarkusTest
 @QuarkusTestResource(value = MongoTestResource.class, restrictToAnnotatedClass = true)
-class DocumentServiceImpTest {
+class DocumentServiceImplTest {
 
     private static final String ONBOARDING_ID = "onboardingId";
     private static final String DOCUMENT_ID = new ObjectId().toHexString();
-    private static final String INSTITUTION_DESCRIPTION = "Test Institution";
-    private static final String PRODUCT_ID = "Product-123";
 
     @Inject
     DocumentService documentService;
@@ -114,41 +105,6 @@ class DocumentServiceImpTest {
         var awaiter = documentService.getDocumentById(DOCUMENT_ID).await();
 
         assertThrows(ResourceNotFoundException.class, awaiter::indefinitely);
-    }
-
-    // ---- retrieveContract ----
-
-    @Test
-    void retrieveContract_notSigned_shouldReturnOkResponse() {
-        Document doc = buildDocument();
-        File mockFile = Mockito.mock(File.class);
-
-        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
-                .thenReturn(Uni.createFrom().item(doc));
-        when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(mockFile);
-
-        RestResponse<File> response = documentService.retrieveContract(ONBOARDING_ID, false)
-                .await().indefinitely();
-
-        assertNotNull(response);
-        assertEquals(RestResponse.Status.OK.getStatusCode(), response.getStatus());
-    }
-
-    @Test
-    void retrieveContract_signed_shouldReturnOkResponse() {
-        Document doc = buildDocument();
-        doc.setContractSigned("/path/to/signed/contract.pdf");
-        File mockFile = Mockito.mock(File.class);
-
-        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
-                .thenReturn(Uni.createFrom().item(doc));
-        when(azureBlobClient.getFileAsPdf(doc.getContractSigned())).thenReturn(mockFile);
-
-        RestResponse<File> response = documentService.retrieveContract(ONBOARDING_ID, true)
-                .await().indefinitely();
-
-        assertNotNull(response);
-        assertEquals(RestResponse.Status.OK.getStatusCode(), response.getStatus());
     }
 
     // ---- getAttachments ----
@@ -585,26 +541,6 @@ class DocumentServiceImpTest {
 
         assertNotNull(report);
         assertFalse(report.isCades());
-    }
-
-    // ---- retrieveContract edge cases ----
-
-    @Test
-    void retrieveContract_shouldUseSignedPath_whenIsSignedTrue() {
-        Document doc = buildDocument();
-        doc.setContractSigned("/path/to/signed/contract_signed.pdf");
-        File mockFile = Mockito.mock(File.class);
-
-        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
-                .thenReturn(Uni.createFrom().item(doc));
-        when(azureBlobClient.getFileAsPdf("/path/to/signed/contract_signed.pdf")).thenReturn(mockFile);
-
-        RestResponse<File> response = documentService.retrieveContract(ONBOARDING_ID, true)
-                .await().indefinitely();
-
-        assertNotNull(response);
-        assertEquals(RestResponse.Status.OK.getStatusCode(), response.getStatus());
-        verify(azureBlobClient).getFileAsPdf("/path/to/signed/contract_signed.pdf");
     }
 
     // ---- existsAttachment when storage throws exception ----
