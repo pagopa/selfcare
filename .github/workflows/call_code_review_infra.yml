@@ -4,7 +4,7 @@ on:
       environments:
         type: string
         required: true
-        description: Comma-separated list of environments (es: dev-ar,uat-ar,prod-ar)
+        description: "Comma-separated list of environments (es: dev-ar,uat-ar,prod-ar)"
       tf_environment:
         type: string
         required: false
