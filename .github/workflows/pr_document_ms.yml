@@ -1,0 +1,35 @@
+name: Code Review - Document MS
+
+permissions:
+  contents: read
+  pull-requests: read
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    branches:
+      - main
+      - releases/**
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - "apps/document-ms/**"
+      - ".github/workflows/pr_document_ms.yml"
+      - ".github/workflows/call_code_review.yml"
+
+jobs:
+  code_review:
+    uses: ./.github/workflows/call_code_review.yml
+    name: Document MS Code Review
+    secrets: inherit
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+      source_branch: ${{ github.head_ref }}
+      target_branch: ${{ github.base_ref }}
+      sonar_key: "pagopa_selfcare"
+      module: "document-ms"
