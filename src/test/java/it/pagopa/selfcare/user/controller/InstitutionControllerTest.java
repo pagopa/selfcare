@@ -26,6 +26,7 @@ import java.util.List;
 import static io.restassured.RestAssured.given;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 
 @QuarkusTest
 @TestHTTPEndpoint(InstitutionController.class)
@@ -35,7 +36,7 @@ class InstitutionControllerTest {
     private UserService userService;
 
     /**
-     * Method under test: {@link InstitutionController#getInstitutionUsers(String)}
+     * Method under test: {@link InstitutionController#getInstitutionUsers(String, List, List, String)}
      */
     @Test
     void getInstitutionUsersNotAuthorized() {
@@ -52,13 +53,13 @@ class InstitutionControllerTest {
     }
 
     /**
-     * Method under test: {@link InstitutionController#getInstitutionUsers(String)}
+     * Method under test: {@link InstitutionController#getInstitutionUsers(String, List, List, String) }
      */
     @Test
     @TestSecurity(user = "userJwt")
     void getInstitutionUsers() {
 
-        Mockito.when(userService.getUserProductsByInstitution(anyString()))
+        Mockito.when(userService.getUserProductsByInstitution(anyString(), any(), any(), anyString()))
                 .thenReturn(Multi.createFrom().item(new UserProductResponse()));
 
         var institutionId = "institutionId";
@@ -70,6 +71,33 @@ class InstitutionControllerTest {
                 .get("/{institutionId}/users")
                 .then()
                 .statusCode(200);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void getInstitutionUsers_withFilters() {
+
+        Mockito.when(userService.getUserProductsByInstitution(anyString(), any(), any(), anyString()))
+                .thenReturn(Multi.createFrom().item(new UserProductResponse()));
+
+        String institutionId = "institutionId";
+        String userId= "userId";
+        List<String> products= List.of("prod-io");
+        List<String> roles = List.of("MANAGER", "DELEGATE");
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("institutionId", institutionId)
+                .queryParam("products", products)
+                .queryParam("roles", roles)
+                .queryParam("userId", userId)
+                .get("/{institutionId}/users")
+                .then()
+                .statusCode(200);
+
+        verify(userService).getUserProductsByInstitution(institutionId, products, roles, userId);
+
     }
 
     /**

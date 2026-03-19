@@ -131,8 +131,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Multi<UserProductResponse> getUserProductsByInstitution(String institutionId) {
-        Multi<UserInstitution> userInstitutions = UserInstitution.find(UserInstitution.Fields.institutionId.name(), institutionId).stream();
+    public Multi<UserProductResponse> getUserProductsByInstitution(String institutionId, List<String> products, List<String> roles, String userId) {
+        Multi<UserInstitutionResponse> userInstitutions = findAllUserInstitutions(institutionId, userId, roles, null, products, null);
         return userInstitutions.onItem()
                 .transformToUni(userInstitution -> userRegistryService.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
                         .map(userResource -> UserProductResponse.builder()
@@ -140,7 +140,7 @@ public class UserServiceImpl implements UserService {
                                 .name(userResource.getName().getValue())
                                 .surname(userResource.getFamilyName().getValue())
                                 .taxCode(userResource.getFiscalCode())
-                                .products(onboardedProductMapper.toList(userInstitution.getProducts()))
+                                .products(userInstitution.getProducts())
                                 .email(UserUtils.getMailByMailUuid(userResource.getWorkContacts(), userInstitution.getUserMailUuid()).orElse(null))
                                 .mobilePhone(UserUtils.getMobilePhoneByMailUuid(userResource.getWorkContacts(), userInstitution.getUserMailUuid()).orElse(null))
                                 .telephone(UserUtils.getTelephoneByMailUuid(userResource.getWorkContacts(), userInstitution.getUserMailUuid()).orElse(null))

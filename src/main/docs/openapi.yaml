@@ -379,9 +379,9 @@ paths:
   /institutions/{institutionId}/users:
     get:
       tags:
+      - Institution
       - support
       - support-pnpg
-      - Institution
       summary: Retrieve user's information including product role details
       description: "Fetches detailed information about users associated with a specific\
         \ institution, including their roles on various products. This endpoint is\
@@ -392,6 +392,22 @@ paths:
       - name: institutionId
         in: path
         required: true
+        schema:
+          type: string
+      - name: products
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+      - name: roles
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+      - name: userId
+        in: query
         schema:
           type: string
       responses:

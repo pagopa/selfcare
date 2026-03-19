@@ -532,7 +532,7 @@
     },
     "/institutions/{institutionId}/users" : {
       "get" : {
-        "tags" : [ "support", "support-pnpg", "Institution" ],
+        "tags" : [ "Institution", "support", "support-pnpg" ],
         "summary" : "Retrieve user's information including product role details",
         "description" : "Fetches detailed information about users associated with a specific institution, including their roles on various products. This endpoint is useful for administrators to obtain comprehensive user-role mappings within an institution.",
         "operationId" : "getInstitutionUsersUsingGET",
@@ -540,6 +540,30 @@
           "name" : "institutionId",
           "in" : "path",
           "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "products",
+          "in" : "query",
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }, {
+          "name" : "roles",
+          "in" : "query",
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }, {
+          "name" : "userId",
+          "in" : "query",
           "schema" : {
             "type" : "string"
           }

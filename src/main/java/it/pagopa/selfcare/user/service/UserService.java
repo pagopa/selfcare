@@ -20,7 +20,7 @@ import java.util.List;
 public interface UserService {
     Uni<List<String>> getUsersEmails(String institutionId, String productId);
 
-    Multi<UserProductResponse> getUserProductsByInstitution(String institutionId);
+    Multi<UserProductResponse> getUserProductsByInstitution(String institutionId, List<String> products, List<String> roles, String userId);
 
     Uni<UserResponse> retrievePerson(String userId, String productId, String institutionId);
 

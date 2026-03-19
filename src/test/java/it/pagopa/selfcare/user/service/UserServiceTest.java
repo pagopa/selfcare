@@ -2,7 +2,6 @@ package it.pagopa.selfcare.user.service;
 
 
 import com.microsoft.applicationinsights.TelemetryClient;
-import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.quarkus.panache.mock.PanacheMock;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
@@ -308,23 +307,20 @@ class UserServiceTest {
     }
 
     @Test
-    void getUserProductsByInstitutionTest() {
+    void getUserProductsByInstitutionWithFiltersTest() {
         final UserInstitution userInstitution = createUserInstitution();
         final UserInstitution userInstitutionWithoutMail = createUserInstitution();
         userInstitutionWithoutMail.setUserMailUuid(null);
 
         PanacheMock.mock(UserInstitution.class);
-        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
-        when(query.stream()).thenReturn(Multi.createFrom().items(userInstitution, userInstitutionWithoutMail));
-        when(UserInstitution.find(any(), (Object) any()))
-                .thenReturn(query);
+        when(userInstitutionService.findAllWithFilter(any())).thenReturn(Multi.createFrom().items(userInstitution, userInstitutionWithoutMail));
         when(userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId()))
                 .thenReturn(Uni.createFrom().item(userResource));
         when(userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitutionWithoutMail.getUserId()))
                 .thenReturn(Uni.createFrom().item(userResource));
 
         AssertSubscriber<UserProductResponse> subscriber = userService
-                .getUserProductsByInstitution(userInstitution.getInstitutionId())
+                .getUserProductsByInstitution(userInstitution.getInstitutionId(), List.of("test"), List.of(MANAGER.name()), userId.toString())
                 .subscribe()
                 .withSubscriber(AssertSubscriber.create(10));
 
