@@ -216,7 +216,7 @@ public class DocumentContentController {
     @Path("/contract")
     @Consumes(MediaType.APPLICATION_JSON)
     public Uni<Response> deleteContract(
-            @NotBlank(message = "Il parametro fileName non può essere nullo o vuoto")
+            @NotBlank(message = "Param fileName cannot be null")
             @QueryParam("fileName") String fileName,
             @QueryParam("absolutePath") boolean absolutePath) {
 
