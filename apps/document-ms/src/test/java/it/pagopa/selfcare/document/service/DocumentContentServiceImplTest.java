@@ -1186,12 +1186,12 @@ public class DocumentContentServiceImplTest {
     @Test
     void deleteContract_withAbsolutePath_shouldMoveFileAndReturnDeletedPath() throws IOException {
         // Arrange
-        String fileName = "/contracts/onboardingId/contract.pdf";
+        String fileName = "contracts/onboardingId/contract.pdf";
         boolean absolutePath = true;
         File tempFile = createTempPdf();
 
-        when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
-        when(documentMsConfig.getDeletePath()).thenReturn("/deleted/");
+        when(documentMsConfig.getContractPath()).thenReturn("contracts/");
+        when(documentMsConfig.getDeletePath()).thenReturn("deleted/");
         when(azureBlobClient.retrieveFile(fileName)).thenReturn(tempFile);
 
         // Act
@@ -1200,10 +1200,10 @@ public class DocumentContentServiceImplTest {
 
         // Assert
         assertNotNull(result);
-        assertEquals("/deleted/onboardingId/contract.pdf", result);
+        assertEquals("deleted/onboardingId/contract.pdf", result);
 
         verify(azureBlobClient).retrieveFile(fileName);
-        verify(azureBlobClient).uploadFilePath(eq("/deleted/onboardingId/contract.pdf"), any(byte[].class));
+        verify(azureBlobClient).uploadFilePath(eq("deleted/onboardingId/contract.pdf"), any(byte[].class));
         verify(azureBlobClient).removeFile(fileName);
     }
 
