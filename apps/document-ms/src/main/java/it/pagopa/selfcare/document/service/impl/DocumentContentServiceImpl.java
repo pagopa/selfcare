@@ -201,6 +201,46 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     }
 
     /**
+     * Safely builds and validates the contract file path starting from user-provided input.
+     * <p>
+     * Rejects path traversal attempts and disallows path separators that could escape
+     * the expected blob namespace.
+     *
+     * @param fileName    user-provided file name or blob path
+     * @param absolutePath if true, {@code fileName} is treated as a full blob path; otherwise it is
+     *                     appended to the configured contractPath.
+     * @return a validated logical path to be used with Azure Blob Storage
+     * @throws InvalidRequestException if the provided name is not acceptable
+     */
+    private String buildAndValidateContractFilePath(String fileName, boolean absolutePath) {
+        if (fileName == null || fileName.isBlank()) {
+            throw new InvalidRequestException("Invalid fileName");
+        }
+
+        String trimmed = fileName.trim();
+
+        // Basic traversal and separator checks
+        if (trimmed.contains("..")
+                || trimmed.contains("\\")
+                || trimmed.startsWith("/")) {
+            throw new InvalidRequestException("Invalid fileName");
+        }
+
+        String basePath = documentMsConfig.getContractPath();
+        if (absolutePath) {
+            // Even for absolute paths we keep the same safety checks above.
+            return trimmed;
+        } else {
+            String fullPath = basePath + trimmed;
+            // Simple defensive check to ensure the prefix is preserved.
+            if (!fullPath.startsWith(basePath)) {
+                throw new InvalidRequestException("Invalid fileName");
+            }
+            return fullPath;
+        }
+    }
+
+    /**
      * Uploads an externally provided attachment.
      * Validates the file digest, verifies signatures if enabled, saves metadata to DB, and uploads to Azure.
      */
@@ -231,7 +271,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     @Override
     public Uni<String> deleteContract(String fileName, boolean absolutePath) {
         return Uni.createFrom().item(() -> {
-                    String filePath = absolutePath ? fileName : documentMsConfig.getContractPath() + fileName;
+                    String filePath = buildAndValidateContractFilePath(fileName, absolutePath);
                     log.info("START - deleteContract fileName: {}", sanitize(filePath));
 
                     try {
