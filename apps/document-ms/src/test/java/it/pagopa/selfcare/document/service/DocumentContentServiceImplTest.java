@@ -8,6 +8,7 @@ import io.quarkus.test.mongodb.MongoTestResource;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
+import it.pagopa.selfcare.document.config.DocumentMsConfig;
 import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.exception.InternalException;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
@@ -66,6 +67,7 @@ public class DocumentContentServiceImplTest {
     @InjectMock AzureBlobClient azureBlobClient;
     @InjectMock SignatureService signatureService;
     @InjectMock DocumentService documentService;
+    @InjectMock DocumentMsConfig documentMsConfig;
     @Inject DocumentContentService documentContentService;
 
     // ---- retrieveContract ----
@@ -1179,6 +1181,83 @@ public class DocumentContentServiceImplTest {
 
         var awaiter = documentContentService.createAttachmentPdf(request).await();
         assertThrows(SelfcareAzureStorageException.class, awaiter::indefinitely);
+    }
+
+    @Test
+    void deleteContract_withAbsolutePath_shouldMoveFileAndReturnDeletedPath() throws IOException {
+        // Arrange
+        String fileName = "/contracts/onboardingId/contract.pdf";
+        boolean absolutePath = true;
+        File tempFile = createTempPdf();
+
+        when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
+        when(documentMsConfig.getDeletePath()).thenReturn("/deleted/");
+        when(azureBlobClient.retrieveFile(fileName)).thenReturn(tempFile);
+
+        // Act
+        String result = documentContentService.deleteContract(fileName, absolutePath)
+                .await().indefinitely();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("/deleted/onboardingId/contract.pdf", result);
+
+        verify(azureBlobClient).retrieveFile(fileName);
+        verify(azureBlobClient).uploadFilePath(eq("/deleted/onboardingId/contract.pdf"), any(byte[].class));
+        verify(azureBlobClient).removeFile(fileName);
+    }
+
+    @Test
+    void deleteContract_withRelativePath_shouldMoveFileAndReturnDeletedPath() throws IOException {
+        // Arrange
+        String fileName = "onboardingId/contract.pdf";
+        boolean absolutePath = false;
+        String expectedOriginalPath = "/contracts/onboardingId/contract.pdf";
+        File tempFile = createTempPdf();
+
+        when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
+        when(documentMsConfig.getDeletePath()).thenReturn("/deleted/");
+        when(azureBlobClient.retrieveFile(expectedOriginalPath)).thenReturn(tempFile);
+
+        // Act
+        String result = documentContentService.deleteContract(fileName, absolutePath)
+                .await().indefinitely();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("/deleted/onboardingId/contract.pdf", result);
+
+        verify(azureBlobClient).retrieveFile(expectedOriginalPath);
+        verify(azureBlobClient).uploadFilePath(eq("/deleted/onboardingId/contract.pdf"), any(byte[].class));
+        verify(azureBlobClient).removeFile(expectedOriginalPath);
+    }
+
+    @Test
+    void deleteContract_shouldCatchIOException_andReturnOriginalPath() throws IOException {
+        // Arrange
+        String fileName = "onboardingId/contract.pdf";
+        boolean absolutePath = false;
+        String expectedOriginalPath = "/contracts/onboardingId/contract.pdf";
+
+        File phantomFile = File.createTempFile("phantom", ".pdf");
+        phantomFile.delete();
+
+        when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
+        when(documentMsConfig.getDeletePath()).thenReturn("/deleted/");
+        when(azureBlobClient.retrieveFile(expectedOriginalPath)).thenReturn(phantomFile);
+
+        // Act
+        String result = documentContentService.deleteContract(fileName, absolutePath)
+                .await().indefinitely();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(expectedOriginalPath, result);
+
+        verify(azureBlobClient).retrieveFile(expectedOriginalPath);
+        // Assicuriamoci che l'upload non sia mai stato chiamato a causa dell'eccezione
+        verify(azureBlobClient, Mockito.never()).uploadFilePath(anyString(), any(byte[].class));
+        verify(azureBlobClient, Mockito.never()).removeFile(anyString());
     }
 
     // ============================================

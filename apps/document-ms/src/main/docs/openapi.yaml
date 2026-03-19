@@ -489,6 +489,35 @@ paths:
       security:
       - SecurityScheme: []
   /v1/document-content/contract:
+    delete:
+      summary: Delete contract from Azure Blob Storage
+      description: Deletes the contract file associated with the specified onboarding
+        ID from Azure Blob Storage.
+      operationId: deleteContract
+      tags:
+      - Document Content Controller
+      parameters:
+      - name: absolutePath
+        in: query
+        schema:
+          type: boolean
+      - name: fileName
+        in: query
+        schema:
+          type: string
+          pattern: \S
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
     post:
       summary: Create contract PDF
       description: "Generates a contract PDF document from the provided data, signs\

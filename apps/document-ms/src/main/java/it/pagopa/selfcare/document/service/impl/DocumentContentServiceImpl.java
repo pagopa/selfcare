@@ -27,7 +27,6 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -44,7 +43,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BinaryOperator;
 
 import static it.pagopa.selfcare.document.util.ErrorMessage.ATTACHMENT_UPLOAD_ERROR;
 import static it.pagopa.selfcare.document.util.ErrorMessage.GENERIC_ERROR;
@@ -55,15 +53,14 @@ import static it.pagopa.selfcare.onboarding.common.ProductId.*;
 import static it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT;
 
 /**
- * Implementation of DocumentContentService for creating PDF documents.
+ * Implementation of DocumentContentService for creating, retrieving, and managing PDF documents.
+ * It integrates with Azure Blob Storage for persistence and DSS for digital signatures.
+ * The class uses a reactive approach (Mutiny), isolating blocking I/O and CPU-bound tasks
+ * to worker threads to prevent Quarkus Event Loop starvation.
  */
 @Slf4j
 @ApplicationScoped
 public class DocumentContentServiceImpl implements DocumentContentService {
-
-    public static final BinaryOperator<String> CONTRACT_FILENAME_FUNC =
-            (filename, productName) ->
-                    String.format(filename, StringUtils.stripAccents(productName.replaceAll("\\s+", "_")));
     public static final String HTTP_HEADER_VALUE_ATTACHMENT_FILENAME = "attachment;filename=";
 
     private final AzureBlobClient azureBlobClient;
@@ -89,78 +86,47 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         this.documentService = documentService;
     }
 
+    /**
+     * Orchestrates the reactive flow to create, sign, and upload a new contract PDF.
+     */
     @Override
     public Uni<CreatePdfResponse> createContractPdf(ContractPdfRequest request) {
         log.info("START - createContractPdf for template: {} with onboardingId: {}",
                 sanitize(request.getContractTemplatePath()), sanitize(request.getOnboardingId()));
 
-        return Uni.createFrom().item(() -> {
-            try {
-                File pdfFile = loadOrGeneratePdf(
-                        request.getContractTemplatePath(),
-                        () -> createPdfFileContract(request)
-                );
-                String filename = buildFilename(request.getPdfFormatFilename(), request.getProductName(), null);
-                String storagePath = buildContractStoragePath(request.getOnboardingId());
-
-                return new PdfContext(pdfFile, filename, storagePath);
-            } catch (IOException e) {
-                throw new InternalException(
-                        String.format("Cannot create contract PDF, message: %s", e.getMessage()), "0031");
-            }
-        })
-        .runSubscriptionOn(Infrastructure.getDefaultExecutor())
-        .chain(ctx -> signatureService.signDocument(
-                ctx.pdfFile,
-                request.getInstitution().getDescription(),
-                request.getProductId()
-        ).map(signedFile -> new PdfContext(signedFile, ctx.filename, ctx.storagePath)))
-        .chain(ctx -> uploadAndBuildResponse(ctx, "contract"));
+        return buildContractContextAsync(request)
+                // Wait for the document to be signed before proceeding to upload
+                .chain(ctx -> signPdfContextAsync(ctx, request))
+                .chain(ctx -> uploadAndBuildResponse(ctx, "contract"));
     }
 
+    /**
+     * Orchestrates the reactive flow to create and upload a new attachment PDF.
+     * Unlike contracts, attachments are not automatically signed during creation.
+     */
     @Override
     public Uni<CreatePdfResponse> createAttachmentPdf(AttachmentPdfRequest request) {
         log.info("START - createAttachmentPdf for template: {} with onboardingId: {}",
                 sanitize(request.getAttachmentTemplatePath()), sanitize(request.getOnboardingId()));
 
-        return Uni.createFrom().item(() -> {
-            try {
-                File pdfFile = loadOrGeneratePdf(
-                        request.getAttachmentTemplatePath(),
-                        () -> createPdfFileAttachment(request)
-                );
-                String filename = CONTRACT_FILENAME_FUNC.apply("%s_" + request.getAttachmentName() + ".pdf", request.getProductName());
-                String storagePath = buildAttachmentStoragePath(request.getOnboardingId());
-
-                return new PdfContext(pdfFile, filename, storagePath);
-            } catch (IOException e) {
-                throw new InternalException(
-                        String.format("Cannot create attachment PDF, message: %s", e.getMessage()), "0033");
-            }
-        })
-        .runSubscriptionOn(Infrastructure.getDefaultExecutor())
-        .chain(ctx -> uploadAndBuildResponse(ctx, "attachment"));
+        return buildAttachmentContextAsync(request)
+                .chain(ctx -> uploadAndBuildResponse(ctx, "attachment"));
     }
 
+    /**
+     * Retrieves a signed file from Azure, verifying its validity (PDF or P7M).
+     */
     @Override
     public Uni<RestResponse<File>> retrieveSignedFile(String onboardingId) {
         return documentRepository.findByOnboardingId(onboardingId)
-                .onItem().transformToUni(document -> Uni.createFrom().item(() -> azureBlobClient.retrieveFile(document.getContractSigned()))
-                        .runSubscriptionOn(Infrastructure.getDefaultExecutor())
-                        .onItem().transform(contract -> {
-                            File fileToSend = contract;
-                            if (document.getContractSigned().endsWith(".pdf")) {
-                                isPdfValid(contract);
-                            } else {
-                                isP7mValid(contract);
-                                fileToSend = signatureService.extractFile(contract);
-                                isPdfValid(fileToSend);
-                            }
-                            RestResponse.ResponseBuilder<File> response = RestResponse.ResponseBuilder.ok(fileToSend, MediaType.APPLICATION_OCTET_STREAM);
-                            String filename = getCurrentContractName(document, true);
-                            response.header(HttpHeaders.CONTENT_DISPOSITION, HTTP_HEADER_VALUE_ATTACHMENT_FILENAME + filename);
-                            return response.build();
-                        }).onFailure().recoverWithUni(() -> Uni.createFrom().item(RestResponse.ResponseBuilder.<File>notFound().build())));
+                .onItem().transformToUni(document ->
+                        fetchFileFromAzureAsync(document.getContractSigned())
+                                // Offload CPU-bound validation (P7M extraction/PDF parsing) to the worker pool
+                                .emitOn(Infrastructure.getDefaultWorkerPool())
+                                .onItem().transform(contract -> validateAndExtractSignedFile(contract, document.getContractSigned()))
+                                .onItem().transform(processedFile -> buildDownloadResponse(processedFile, document, true))
+                )
+                .onFailure().recoverWithItem(() -> RestResponse.ResponseBuilder.<File>notFound().build());
     }
 
     public static void isPdfValid(File contract) {
@@ -179,31 +145,11 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
     @Override
     public Uni<RestResponse<File>> retrieveContract(String onboardingId, boolean isSigned) {
-    return documentRepository
-        .findByOnboardingId(onboardingId)
-        .onItem()
-        .transformToUni(
-            document ->
-                Uni.createFrom()
-                    .item(
-                        () ->
-                            azureBlobClient.getFileAsPdf(
-                                isSigned
-                                    ? document.getContractSigned()
-                                    : getContractNotSigned(onboardingId, document)))
-                    .runSubscriptionOn(Infrastructure.getDefaultExecutor())
-                    .onItem()
-                    .transform(
-                        contract -> {
-                          RestResponse.ResponseBuilder<File> response =
-                              RestResponse.ResponseBuilder.ok(
-                                  contract, MediaType.APPLICATION_OCTET_STREAM);
-                          response.header(
-                              HttpHeaders.CONTENT_DISPOSITION,
-                              HTTP_HEADER_VALUE_ATTACHMENT_FILENAME
-                                  + getCurrentContractName(document, isSigned));
-                          return response.build();
-                        }));
+        return documentRepository.findByOnboardingId(onboardingId)
+                .onItem().transformToUni(document ->
+                        fetchPdfFromAzureAsync(document, onboardingId, isSigned)
+                                .onItem().transform(contractFile -> buildDownloadResponse(contractFile, document, isSigned))
+                );
     }
 
     private String getContractNotSigned(String onboardingId, Document document) {
@@ -217,9 +163,10 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                                                               String productId) {
         return Uni.createFrom()
                 .item(() -> azureBlobClient.getFileAsPdf(templatePath))
+                // Offloads Azure Blob sync client to avoid blocking the Event Loop
+                .runSubscriptionOn(Infrastructure.getDefaultExecutor())
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Template Attachment not found on storage for onboarding: %s", onboardingId)))
                 .chain(file -> signatureService.signDocument(file, institutionDescription, productId))
-                .runSubscriptionOn(Infrastructure.getDefaultExecutor())
                 .onItem().transform(file -> RestResponse.ResponseBuilder
                         .ok(file, MediaType.APPLICATION_OCTET_STREAM)
                         .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -253,55 +200,112 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         return String.format("%s%s%s%s", documentMsConfig.getContractPath(), onboardingId, "/attachments", "/" + filename);
     }
 
+    /**
+     * Uploads an externally provided attachment.
+     * Validates the file digest, verifies signatures if enabled, saves metadata to DB, and uploads to Azure.
+     */
     @Override
     public Uni<Void> uploadAttachment(DocumentBuilderRequest request, FormItem file) {
-    log.info(
-        "Uploading attachment for onboardingId={}, documentName={}",
-        sanitize(request.getOnboardingId()),
-        sanitize(request.getDocumentName()));
+        log.info("Uploading attachment for onboardingId={}, documentName={}",
+                sanitize(request.getOnboardingId()),
+                sanitize(request.getDocumentName()));
 
-    return documentService.existsAttachment(request.getOnboardingId(), request.getDocumentName())
-        .onItem()
-        .transformToUni(
-            exists -> {
-              if (Boolean.TRUE.equals(exists)) {
-                return Uni.createFrom()
-                    .failure(
-                        new UpdateNotAllowedException(
-                            ATTACHMENT_UPLOAD_ERROR.getCode(),
-                            ATTACHMENT_UPLOAD_ERROR.getMessage()));
-              }
-              return Uni.createFrom().voidItem();
-            })
-        .chain(
-            () -> {
-              if (signatureService.isSignatureVerificationEnabled()) {
-                signatureService.verifySignature(file.getFile());
-              }
+        return verifyAttachmentDoesNotExist(request)
+                // Shift execution to the worker pool to safely perform CPU-intensive security validations
+                .emitOn(Infrastructure.getDefaultWorkerPool())
+                .chain(() -> {
+                    // 1. Synchronous security validations (digest and signatures)
+                    String uploadedDigest = performSecurityValidationsAndGetDigest(request, file);
 
-              String templateDigest = getTemplateDigest(request.getTemplatePath());
-              String uploadedDigest =
-                  signatureService.verifyUploadedFileDigest(file, templateDigest, false);
+                    // 2. Extension check
+                    boolean isP7M = isP7MFile(file);
 
-              File fileToUpload = file.getFile();
-              // Validate the uploaded file path before further processing
-              validateUploadedFile(fileToUpload);
+                    // 3. Persist metadata to database
+                    return persistAttachment(request, uploadedDigest, isP7M);
+                })
+                // 4. Trigger the asynchronous Azure upload
+                .call(document -> uploadToAzureReactive(document, file))
+                .replaceWithVoid();
+    }
 
-              boolean isP7M =
-                  Optional.of(file.getFileName())
-                      .map(name -> name.toLowerCase(Locale.ROOT).endsWith(".p7m"))
-                      .orElse(false);
+    @Override
+    public Uni<String> deleteContract(String fileName, boolean absolutePath) {
+        return Uni.createFrom().item(() -> {
+                    String filePath = absolutePath ? fileName : documentMsConfig.getContractPath() + fileName;
+                    log.info("START - deleteContract fileName: {}", filePath);
 
-              return persistAttachment(request, uploadedDigest, isP7M)
-                  .onItem()
-                  .invoke(
-                      document ->
-                          uploadFileToAzure(
-                              document.getContractFilename(),
-                              document.getOnboardingId(),
-                              fileToUpload));
-            })
-        .replaceWithVoid();
+                    try {
+                        File temporaryFile = azureBlobClient.retrieveFile(filePath);
+                        String deletedFileName = filePath.replace(documentMsConfig.getContractPath(), documentMsConfig.getDeletePath());
+
+                        // Moves the file from active path to deleted path
+                        azureBlobClient.uploadFilePath(deletedFileName, Files.readAllBytes(temporaryFile.toPath()));
+                        azureBlobClient.removeFile(filePath);
+
+                        return deletedFileName;
+                    } catch (IOException e) {
+                        log.error("Error deleting contract {}: {}", filePath, e.getMessage());
+                        return filePath; // Returns the original path on failure without breaking the flow
+                    }
+                })
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+    }
+
+    // ==================== Private Reactive I/O isolation methods ====================
+
+    // Handles ONLY the asynchronous retrieval from Azure, isolating the blocking I/O
+    private Uni<File> fetchPdfFromAzureAsync(Document document, String onboardingId, boolean isSigned) {
+        return Uni.createFrom().item(() -> {
+                    String filePath = isSigned
+                            ? document.getContractSigned()
+                            : getContractNotSigned(onboardingId, document);
+
+                    return azureBlobClient.getFileAsPdf(filePath);
+                })
+                .runSubscriptionOn(Infrastructure.getDefaultExecutor()); // Safe for Event Loop
+    }
+
+    private Uni<Void> verifyAttachmentDoesNotExist(DocumentBuilderRequest request) {
+        return documentService.existsAttachment(request.getOnboardingId(), request.getDocumentName())
+                .onItem().transformToUni(exists -> {
+                    if (Boolean.TRUE.equals(exists)) {
+                        return Uni.createFrom().failure(
+                                new UpdateNotAllowedException(
+                                        ATTACHMENT_UPLOAD_ERROR.getCode(),
+                                        ATTACHMENT_UPLOAD_ERROR.getMessage()));
+                    }
+                    return Uni.createFrom().voidItem();
+                });
+    }
+
+    // Groups all synchronous security validations and returns the file digest
+    private String performSecurityValidationsAndGetDigest(DocumentBuilderRequest request, FormItem file) {
+        File fileToUpload = file.getFile();
+        validateUploadedFile(fileToUpload);
+
+        if (signatureService.isSignatureVerificationEnabled()) {
+            signatureService.verifySignature(fileToUpload);
+        }
+
+        String templateDigest = getTemplateDigest(request.getTemplatePath());
+        return signatureService.verifyUploadedFileDigest(file, templateDigest, false);
+    }
+
+    private boolean isP7MFile(FormItem file) {
+        return Optional.ofNullable(file.getFileName())
+                .map(name -> name.toLowerCase(Locale.ROOT).endsWith(".p7m"))
+                .orElse(false);
+    }
+
+    // Encapsulates the blocking Azure upload call in an isolated Uni
+    private Uni<Void> uploadToAzureReactive(Document document, FormItem file) {
+        return Uni.createFrom().voidItem()
+                .invoke(() -> uploadFileToAzure(
+                        document.getContractFilename(),
+                        document.getOnboardingId(),
+                        file.getFile()
+                ))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 
     public String getTemplateDigest(String documentTemplatePath) {
@@ -362,7 +366,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
     /**
      * Validate that the uploaded file is a regular file located under the system temporary directory.
-     * This helps prevent using attacker-controlled paths for reading local files.
+     * This helps prevent using attacker-controlled paths for reading local files (Path Traversal prevention).
      *
      * @param file the file to validate
      */
@@ -389,6 +393,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         final String path = String.format("%s%s/visura", documentMsConfig.getContractPath(), uploadVisuraRequest.getOnboardingId());
 
         return Uni.createFrom().item(uploadVisuraRequest::getFileContent)
+                .emitOn(Infrastructure.getDefaultWorkerPool())
                 .invoke(bytes -> azureBlobClient.uploadFile(path, filename, bytes))
                 .onFailure()
                 .transform(e -> {
@@ -413,9 +418,6 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 : generator.generate();
     }
 
-    /**
-     * Builds the filename for the PDF document.
-     */
     private String buildFilename(String format, String productName, String attachmentName) {
         if (Objects.nonNull(attachmentName)) {
             return CONTRACT_FILENAME_FUNC.apply(String.format("%s_%s.pdf", format, attachmentName), productName);
@@ -423,23 +425,14 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         return CONTRACT_FILENAME_FUNC.apply(format, productName);
     }
 
-    /**
-     * Builds the storage path for contract documents.
-     */
     private String buildContractStoragePath(String onboardingId) {
         return String.format("%s%s", documentMsConfig.getContractPath(), onboardingId);
     }
 
-    /**
-     * Builds the storage path for attachment documents.
-     */
     private String buildAttachmentStoragePath(String onboardingId) {
         return String.format("%s%s/attachments", documentMsConfig.getContractPath(), onboardingId);
     }
 
-    /**
-     * Uploads the PDF to storage and builds the response.
-     */
     private Uni<CreatePdfResponse> uploadAndBuildResponse(PdfContext ctx, String documentType) {
         return Uni.createFrom().item(() -> {
             try {
@@ -464,12 +457,19 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     private File createPdfFileContract(ContractPdfRequest request) throws IOException {
         String contractTemplateText = azureBlobClient.getFileAsText(request.getContractTemplatePath());
         Map<String, Object> data = PdfMapperData.setUpCommonData(request);
+
+        // Populate the data map based on specific PagoPA product business rules
         setupProductSpecificData(data, request);
 
         log.debug("Building PDF template context: dataMap keys={}, size={}", data.keySet(), data.size());
         return PdfBuilder.generateDocument("_contratto_interoperabilita.", contractTemplateText, data);
     }
 
+    /**
+     * Routes the PDF data mapping based on the combination of Product ID and Institution Type.
+     * Different institution types (e.g., PSP vs EC) or products (e.g., IO vs PagoPA) require
+     * different placeholders to be filled in their respective contract templates.
+     */
     private void setupProductSpecificData(Map<String, Object> data, ContractPdfRequest request) {
         String productId = request.getProductId();
         InstitutionPdfData institution = request.getInstitution();
@@ -515,6 +515,68 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 || PROD_IO_SIGN.getValue().equalsIgnoreCase(productId);
     }
 
+    private Uni<PdfContext> buildContractContextAsync(ContractPdfRequest request) {
+        return Uni.createFrom().item(() -> {
+            try {
+                File pdfFile = loadOrGeneratePdf(request.getContractTemplatePath(), () -> createPdfFileContract(request));
+                String filename = buildFilename(request.getPdfFormatFilename(), request.getProductName(), null);
+                String storagePath = buildContractStoragePath(request.getOnboardingId());
+                return new PdfContext(pdfFile, filename, storagePath);
+            } catch (IOException e) {
+                throw new InternalException(String.format("Cannot create contract PDF, message: %s", e.getMessage()), "0031");
+            }
+        }).runSubscriptionOn(Infrastructure.getDefaultExecutor()); // Safe for Event Loop
+    }
+
+    private Uni<PdfContext> buildAttachmentContextAsync(AttachmentPdfRequest request) {
+        return Uni.createFrom().item(() -> {
+            try {
+                File pdfFile = loadOrGeneratePdf(request.getAttachmentTemplatePath(), () -> createPdfFileAttachment(request));
+                String filename = CONTRACT_FILENAME_FUNC.apply("%s_" + request.getAttachmentName() + ".pdf", request.getProductName());
+                String storagePath = buildAttachmentStoragePath(request.getOnboardingId());
+                return new PdfContext(pdfFile, filename, storagePath);
+            } catch (IOException e) {
+                throw new InternalException(String.format("Cannot create attachment PDF, message: %s", e.getMessage()), "0033");
+            }
+        }).runSubscriptionOn(Infrastructure.getDefaultExecutor()); // Safe for Event Loop
+    }
+
+    private Uni<PdfContext> signPdfContextAsync(PdfContext ctx, ContractPdfRequest request) {
+        return signatureService.signDocument(
+                ctx.pdfFile,
+                request.getInstitution().getDescription(),
+                request.getProductId()
+        ).map(signedFile -> new PdfContext(signedFile, ctx.filename, ctx.storagePath));
+    }
+
+    private File validateAndExtractSignedFile(File contract, String contractSignedPath) {
+        // Handle normal PDF files
+        if (contractSignedPath.endsWith(".pdf")) {
+            isPdfValid(contract);
+            return contract;
+        } else {
+            // Handle PKCS #7 detached signatures (.p7m)
+            isP7mValid(contract);
+            File extractedFile = signatureService.extractFile(contract);
+            isPdfValid(extractedFile);
+            return extractedFile;
+        }
+    }
+
+    // Reusable method for any Azure Blob download
+    private Uni<File> fetchFileFromAzureAsync(String filePath) {
+        return Uni.createFrom().item(() -> azureBlobClient.retrieveFile(filePath))
+                .runSubscriptionOn(Infrastructure.getDefaultExecutor());
+    }
+
+    // Centralizes the creation of HTTP headers for file downloads
+    private RestResponse<File> buildDownloadResponse(File file, Document document, boolean isSigned) {
+        String filename = getCurrentContractName(document, isSigned);
+        return RestResponse.ResponseBuilder.ok(file, MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION, HTTP_HEADER_VALUE_ATTACHMENT_FILENAME + filename)
+                .build();
+    }
+
     // ==================== Attachment-specific methods ====================
 
     private File createPdfFileAttachment(AttachmentPdfRequest request) throws IOException {
@@ -537,7 +599,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     }
 
     /**
-     * Internal record to hold PDF context during processing.
+     * Internal record to hold PDF context during the reactive processing chain.
      */
     private record PdfContext(File pdfFile, String filename, String storagePath) {}
 }

@@ -39,6 +39,9 @@ public class DocumentMsConfig {
     @ConfigProperty(name = "document-ms.blob-storage.path-aggregates")
     String aggregatesPath;
 
+    @ConfigProperty(name = "document-ms.blob-storage.path-deleted")
+    String deletePath;
+
     void onStart(@Observes StartupEvent ev) {
         log.info("Database {} is starting...", Document.mongoDatabase().getName());
     }

@@ -826,6 +826,52 @@ public class DocumentContentControllerTest {
                 .statusCode(500);
     }
 
+    @Test
+    void deleteContract_shouldReturnOk_whenDeletionSuccessful() {
+        String fileName = "testFile.txt";
+        boolean absolutePath = false;
+        String deletedFileName = "deletedFile.txt";
+
+        Mockito.when(documentContentService.deleteContract(eq(fileName), eq(absolutePath)))
+                .thenReturn(Uni.createFrom().item(deletedFileName));
+
+        given()
+                .queryParam("fileName", fileName)
+                .queryParam("absolutePath", absolutePath)
+                .when()
+                .delete("/v1/document-content/contract")
+                .then()
+                .statusCode(200)
+                .body(equalTo(deletedFileName));
+    }
+
+    @Test
+    void deleteContract_shouldReturnBadRequest_whenFileNameMissing() {
+        given()
+                .queryParam("absolutePath", false)
+                .when()
+                .delete("/v1/document-content/contract")
+                .then()
+                .statusCode(400);
+    }
+
+    @Test
+    void deleteContract_shouldReturnInternalServerError_whenServiceFails() {
+        String fileName = "testFile.txt";
+        boolean absolutePath = false;
+
+        Mockito.when(documentContentService.deleteContract(eq(fileName), eq(absolutePath)))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("Deletion error")));
+
+        given()
+                .queryParam("fileName", fileName)
+                .queryParam("absolutePath", absolutePath)
+                .when()
+                .delete("/v1/document-content/contract")
+                .then()
+                .statusCode(500);
+    }
+
     // ============================================
     // Helper methods
     // ============================================

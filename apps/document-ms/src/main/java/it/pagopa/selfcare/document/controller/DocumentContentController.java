@@ -10,15 +10,9 @@ import it.pagopa.selfcare.document.model.dto.request.UploadVisuraRequest;
 import it.pagopa.selfcare.document.model.dto.response.CreatePdfResponse;
 import it.pagopa.selfcare.document.service.DocumentContentService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.ws.rs.BeanParam;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -212,5 +206,22 @@ public class DocumentContentController {
                 .replaceWith(Response.status(HttpStatus.SC_NO_CONTENT).build())
                 .onFailure()
                 .recoverWithItem(err -> Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(err.getMessage()).build());
+    }
+
+    @Operation(
+            summary = "Delete contract from Azure Blob Storage",
+            description = "Deletes the contract file associated with the specified onboarding ID from Azure Blob Storage."
+    )
+    @DELETE
+    @Path("/contract")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Uni<Response> deleteContract(
+            @NotBlank(message = "Il parametro fileName non può essere nullo o vuoto")
+            @QueryParam("fileName") String fileName,
+            @QueryParam("absolutePath") boolean absolutePath) {
+
+        // Il controller si limita a mappare l'Uni<String> restituito dal service in un Uni<Response>
+        return documentContentService.deleteContract(fileName, absolutePath)
+                .onItem().transform(deletedFileName -> Response.ok(deletedFileName).build());
     }
 }
