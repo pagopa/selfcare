@@ -19,7 +19,7 @@ data "azurerm_storage_container" "tfstate" {
 }
 
 # Uncomment if needed:
-# resource "azurerm_role_assignment" "storage_blob_contributor" {
+# resource "azurerm_role_assignment" "storage_blob_contributor_developers" {
 #   scope                = data.azurerm_storage_account.tfstate.id
 #   role_definition_name = "Storage Blob Data Contributor"
 #   principal_id         = var.adgroup_developers_object_id
