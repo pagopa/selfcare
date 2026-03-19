@@ -1239,7 +1239,7 @@ public class DocumentContentServiceImplTest {
         boolean absolutePath = false;
         String expectedOriginalPath = "/contracts/onboardingId/contract.pdf";
 
-        File phantomFile = File.createTempFile("phantom", ".pdf");
+        File phantomFile = Files.createTempFile("phantom", ".pdf").toFile();
         phantomFile.delete();
 
         when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
