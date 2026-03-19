@@ -1,0 +1,7 @@
+{
+  "warning-banner": {
+    "severity": "warning",
+    "description": "Attivazione temporaneamente non disponibile A causa di un problema tecnico, al momento non è possibile completare la registrazione di nuove imprese su SEND. Stiamo lavorando per ripristinare il servizio nel più breve tempo possibile. Ci scusiamo per il disagio e ti invitiamo a riprovare più tardi.",
+    "enable": false
+  }
+}
