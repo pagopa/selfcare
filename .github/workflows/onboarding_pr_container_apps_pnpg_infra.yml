@@ -14,11 +14,7 @@ on:
       - reopened
       - ready_for_review
     paths:
-      - 'infra/apps/onboarding-ms/env/dev-pnpg'
-      - 'infra/apps/onboarding-ms/env/uat-pnpg'
-      - 'infra/apps/onboarding-ms/env/prod-pnpg'
-      - '!infra/apps/onboarding-ms/env/**'
-      - 'infra/apps/onboarding-ms/**'
+      - 'infra/resources/**'
       - './.github/workflows/onboarding_pr_container_apps_infra.yml'
       - './.github/workflows/call_code_review_infra.yml'
 
@@ -31,7 +27,7 @@ jobs:
     with:
       environment: dev
       tf_environment: dev-pnpg
-      dir: infra/apps/onboarding-ms
+      dir: infra/resources/dev-pnpg
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
 
@@ -42,7 +38,7 @@ jobs:
     with:
       environment: uat
       tf_environment: uat-pnpg
-      dir: infra/apps/onboarding-ms
+      dir: infra/resources/uat-pnpg
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
 
@@ -53,6 +49,6 @@ jobs:
     with:
       environment: prod
       tf_environment: prod-pnpg
-      dir: infra/apps/onboarding-ms
+      dir: infra/resources/prod-pnpg
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})

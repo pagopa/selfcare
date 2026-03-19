@@ -27,6 +27,7 @@ jobs:
     with:
       environment: dev
       dir: infra/resources/dev-ar
+      tf_environment: dev-ar
 
   code_review_dev_pnpg:
     uses: ./.github/workflows/call_code_review_infra.yml
@@ -36,6 +37,7 @@ jobs:
     with:
       environment: dev
       dir: infra/resources/dev-pnpg
+      tf_environment: dev-pnpg
 
   # code_review_uat:
   #   uses: ./.github/workflows/call_code_review_infra.yml

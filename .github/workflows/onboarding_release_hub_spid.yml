@@ -15,7 +15,7 @@ on:
         description: Hub-Sping-Login release version
 
 env:
-  dir: infra/apps/hub_spid_login
+  dir: infra/resources/${{ inputs.env }}-ar
   ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
   ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
   ARM_USE_OIDC: true
@@ -64,7 +64,7 @@ jobs:
           tenant_id: ${{ vars.ARM_TENANT_ID }}
           subscription_id: ${{ vars.ARM_SUBSCRIPTION_ID }}
           dir: ${{ env.dir }}
-          azure_environment: ${{ inputs.env }}
+          azure_environment: ${{ inputs.env }}-ar
         env:
           TF_VAR_image_tag: ${{ inputs.release_version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

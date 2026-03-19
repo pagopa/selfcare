@@ -14,32 +14,67 @@ on:
       - reopened
       - ready_for_review
     paths:
-      - 'infra/apps/onboarding-functions/**'
+      - 'infra/resources/**'
       - './.github/workflows/onboarding_pr_functions_infra.yml'
       - './.github/workflows/call_code_review_infra.yml'
 
 jobs:
-  code_review_dev:
+  code_review_dev_ar:
     uses: ./.github/workflows/call_code_review_infra.yml
-    name: '[DEV] Functions Infra Code Review'
+    name: '[DEV-AR] Functions Infra Code Review'
     if: ${{ !startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
     with:
       environment: dev
-      dir: infra/apps/onboarding-functions
+      dir: infra/resources/dev-ar
+      tf_environment: dev-ar
 
-  code_review_uat:
+  code_review_dev_pnpg:
     uses: ./.github/workflows/call_code_review_infra.yml
-    name: '[UAT] Functions Infra Code Review'
+    name: '[DEV-PNPG] Functions Infra Code Review'
+    if: ${{ !startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: dev
+      dir: infra/resources/dev-pnpg
+      tf_environment: dev-pnpg
+
+  code_review_uat_ar:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[UAT-AR] Functions Infra Code Review'
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
     with:
       environment: uat
-      dir: infra/apps/onboarding-functions
+      dir: infra/resources/uat-ar
+      tf_environment: uat-ar
 
-  code_review_prod:
+  code_review_uat_pnpg:
     uses: ./.github/workflows/call_code_review_infra.yml
-    name: '[PROD] Functions Infra Code Review'
+    name: '[UAT-PNPG] Functions Infra Code Review'
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: uat
+      dir: infra/resources/uat-pnpg
+      tf_environment: uat-pnpg
+
+  code_review_prod_ar:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[PROD-AR] Functions Infra Code Review'
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
     with:
       environment: prod
-      dir: infra/apps/onboarding-functions
+      dir: infra/resources/prod-ar
+      tf_environment: prod-ar
+
+  code_review_prod_pnpg:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[PROD-PNPG] Functions Infra Code Review'
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: prod
+      dir: infra/resources/prod-pnpg
+      tf_environment: prod-pnpg

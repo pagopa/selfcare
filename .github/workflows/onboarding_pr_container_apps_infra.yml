@@ -14,39 +14,79 @@ on:
       - reopened
       - ready_for_review
     paths:
-      - '!infra/apps/onboarding-ms/env/**-pnpg'
-      - 'infra/apps/onboarding-ms/**'
+      - 'infra/resources/**'
       - './.github/workflows/onboarding_pr_container_apps_infra.yml'
       - './.github/workflows/call_code_review_infra.yml'
 
 jobs:
-  code_review_dev:
+  code_review_dev_ar:
     uses: ./.github/workflows/call_code_review_infra.yml
-    name: '[DEV] Container Apps Infra Code Review'
+    name: '[DEV-AR] Container Apps Infra Code Review'
     if: ${{ !startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
     with:
       environment: dev
-      dir: infra/apps/onboarding-ms
+      dir: infra/resources/dev-ar
+      tf_environment: dev-ar
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
 
-  code_review_uat:
+  code_review_dev_pnpg:
     uses: ./.github/workflows/call_code_review_infra.yml
-    name: '[UAT] Container Apps Infra Code Review'
+    name: '[DEV-PNPG] Container Apps Infra Code Review'
+    if: ${{ !startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: dev
+      dir: infra/resources/dev-pnpg
+      tf_environment: dev-pnpg
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+
+  code_review_uat_ar:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[UAT-AR] Container Apps Infra Code Review'
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
     with:
       environment: uat
-      dir: infra/apps/onboarding-ms
+      dir: infra/resources/uat-ar
+      tf_environment: uat-ar
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
 
-  code_review_prod:
+  code_review_uat_pnpg:
     uses: ./.github/workflows/call_code_review_infra.yml
-    name: '[PROD] Container Apps Infra Code Review'
+    name: '[UAT-PNPG] Container Apps Infra Code Review'
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: uat
+      dir: infra/resources/uat-pnpg
+      tf_environment: uat-pnpg
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+
+  code_review_prod_ar:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[PROD-AR] Container Apps Infra Code Review'
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
     with:
       environment: prod
-      dir: infra/apps/onboarding-ms
+      dir: infra/resources/prod-ar
+      tf_environment: prod-ar
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+
+  code_review_prod_pnpg:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[PROD-PNPG] Container Apps Infra Code Review'
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: prod
+      dir: infra/resources/prod-pnpg
+      tf_environment: prod-pnpg
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
