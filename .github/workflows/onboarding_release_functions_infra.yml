@@ -6,7 +6,7 @@ on:
       - main
       - releases/*
     paths:
-      - 'infra/apps/onboarding-functions/**'
+      - 'infra/resources/**'
 
   workflow_dispatch:
     inputs:
@@ -27,7 +27,8 @@ jobs:
     secrets: inherit
     with:
       environment: dev
-      dir: infra/apps/onboarding-functions
+      dir: infra/resources/dev-ar
+      tf_environment: dev-ar
 
   release_uat:
     uses: ./.github/workflows/call_release_infra.yml
@@ -36,7 +37,8 @@ jobs:
     secrets: inherit
     with:
       environment: uat
-      dir: infra/apps/onboarding-functions
+      dir: infra/resources/uat-ar
+      tf_environment: uat-ar
 
   release_prod:
     uses: ./.github/workflows/call_release_infra.yml
@@ -45,4 +47,5 @@ jobs:
     secrets: inherit
     with:
       environment: prod
-      dir: infra/apps/onboarding-functions
+      dir: infra/resources/prod-ar
+      tf_environment: prod-ar
