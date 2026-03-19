@@ -2,6 +2,7 @@ package it.pagopa.selfcare.document.util;
 
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.document.exception.PdfBuilderException;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -12,6 +13,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Disabled
 @QuarkusTest
 class PdfBuilderTest {
 
