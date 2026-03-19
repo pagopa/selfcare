@@ -31,6 +31,25 @@ module "network" {
 }
 
 
+###############################################################################
+# User groups
+###############################################################################
+
+
+data "azuread_group" "adgroup_admin" {
+  display_name = "${local.prefix}-${local.env_short}-adgroup-admin"
+}
+
+data "azuread_group" "adgroup_developers" {
+  display_name = "${local.prefix}-${local.env_short}-adgroup-developers"
+}
+
+data "azuread_group" "adgroup_externals" {
+  display_name = "${local.prefix}-${local.env_short}-adgroup-externals"
+}
+
+
+
 # ###############################################################################
 # # key_vault
 # ###############################################################################
@@ -105,6 +124,24 @@ module "logs_storage" {
 
   enable_management_lock           = true
   enable_spid_logs_encryption_keys = true
+}
+
+resource "azurerm_role_assignment" "storage_blob_contributor_developers" {
+  scope                = module.logs_storage.storage_account_id
+  role_definition_name = "Storage Blob Data Reader"
+  principal_id         = data.azuread_group.adgroup_developers.object_id
+}
+
+resource "azurerm_role_assignment" "storage_blob_contributor_admin" {
+  scope                = module.logs_storage.storage_account_id
+  role_definition_name = "Storage Blob Data Reader"
+  principal_id         = data.azuread_group.adgroup_admin.object_id
+}
+
+resource "azurerm_role_assignment" "storage_blob_contributor_externals" {
+  scope                = module.logs_storage.storage_account_id
+  role_definition_name = "Storage Blob Data Reader"
+  principal_id         = data.azuread_group.adgroup_externals.object_id
 }
 
 # ###############################################################################
