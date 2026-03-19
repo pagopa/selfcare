@@ -1155,6 +1155,22 @@ class SignatureServiceImplTest {
     }
 
     @Test
+    void verifySignatureFile_shouldThrowWhenFileIsNull() {
+        assertThatThrownBy(() -> service.verifySignature((File) null))
+                .isInstanceOf(InvalidRequestException.class);
+    }
+
+    @Test
+    void verifySignatureFile_shouldThrowWhenFileOutsideTempDir() throws IOException {
+        Path outsideDir = Files.createDirectories(Path.of("target", "verify-signature-outside"));
+        File outsideFile = outsideDir.resolve("outside.pdf").toFile();
+        Files.writeString(outsideFile.toPath(), "content-outside");
+
+        assertThatThrownBy(() -> service.verifySignature(outsideFile))
+                .isInstanceOf(InvalidRequestException.class);
+    }
+
+    @Test
     void verifySignatureFile_shouldReturnTrueWhenFullValidationChainPasses() throws IOException {
         SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
                 trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
