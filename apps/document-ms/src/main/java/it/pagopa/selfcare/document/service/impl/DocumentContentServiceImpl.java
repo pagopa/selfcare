@@ -232,7 +232,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     public Uni<String> deleteContract(String fileName, boolean absolutePath) {
         return Uni.createFrom().item(() -> {
                     String filePath = absolutePath ? fileName : documentMsConfig.getContractPath() + fileName;
-                    log.info("START - deleteContract fileName: {}", filePath);
+                    log.info("START - deleteContract fileName: {}", sanitize(filePath));
 
                     try {
                         File temporaryFile = azureBlobClient.retrieveFile(filePath);
@@ -244,7 +244,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
                         return deletedFileName;
                     } catch (IOException e) {
-                        log.error("Error deleting contract {}: {}", filePath, e.getMessage());
+                        log.error("Error deleting contract {}: {}", sanitize(filePath), e.getMessage());
                         return filePath; // Returns the original path on failure without breaking the flow
                     }
                 })
