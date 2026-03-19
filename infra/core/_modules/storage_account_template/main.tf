@@ -86,7 +86,7 @@ resource "azurerm_private_endpoint" "this" {
   name                = "${var.project}-${var.name}_storage"
   location            = var.location
   resource_group_name = azurerm_resource_group.this.name
-  subnet_id           = module.subnet.id
+  subnet_id           = var.private_endpoint_id == null ? module.subnet.id : var.private_endpoint_id
 
   private_service_connection {
     name                           = "${var.project}-${var.name}_storage-private-endpoint"
@@ -101,33 +101,33 @@ resource "azurerm_private_endpoint" "this" {
   }
 }
 
-data "azuread_group" "adgroup_admin" {
-  display_name = "${var.project}-adgroup-admin"
-}
+# data "azuread_group" "adgroup_admin" {
+#   display_name = "${var.project}-adgroup-admin"
+# }
 
-data "azuread_group" "adgroup_developers" {
-  display_name = "${var.project}-adgroup-developers"
-}
+# data "azuread_group" "adgroup_developers" {
+#   display_name = "${var.project}-adgroup-developers"
+# }
 
-data "azuread_group" "adgroup_externals" {
-  display_name = "${var.project}-adgroup-externals"
-}
+# data "azuread_group" "adgroup_externals" {
+#   display_name = "${var.project}-adgroup-externals"
+# }
 
 
-resource "azurerm_role_assignment" "storage_blob_contributor_developers" {
-  scope                = module.storage_account.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = data.azuread_group.adgroup_developers.object_id
-}
+# resource "azurerm_role_assignment" "storage_blob_contributor_developers" {
+#   scope                = module.storage_account.id
+#   role_definition_name = "Storage Blob Data Contributor"
+#   principal_id         = data.azuread_group.adgroup_developers.object_id
+# }
 
-resource "azurerm_role_assignment" "storage_blob_contributor_admin" {
-  scope                = module.storage_account.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = data.azuread_group.adgroup_admin.object_id
-}
+# resource "azurerm_role_assignment" "storage_blob_contributor_admin" {
+#   scope                = module.storage_account.id
+#   role_definition_name = "Storage Blob Data Contributor"
+#   principal_id         = data.azuread_group.adgroup_admin.object_id
+# }
 
-resource "azurerm_role_assignment" "storage_blob_contributor_externals" {
-  scope                = module.storage_account.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = data.azuread_group.adgroup_externals.object_id
-}
+# resource "azurerm_role_assignment" "storage_blob_contributor_externals" {
+#   scope                = module.storage_account.id
+#   role_definition_name = "Storage Blob Data Contributor"
+#   principal_id         = data.azuread_group.adgroup_externals.object_id
+# }
