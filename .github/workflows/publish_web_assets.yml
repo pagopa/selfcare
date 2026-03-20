@@ -1,0 +1,74 @@
+name: Publish web assets
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "/assets/**"
+
+  workflow_dispatch:
+    inputs:
+      env:
+        required: true
+        type: choice
+        description: 'Select the Environment'
+        default: 'dev'
+        options: 
+        - dev
+        - uat
+        - prod
+      domain:
+        required: true
+        type: choice
+        description: 'Select the Domain'
+        default: 'ar'
+        options: 
+        - ar
+        - pnpg
+
+jobs:
+  release_dev:
+    uses: ./.github/workflows/call_publish_web_assets.yml
+    name: DEV Selfcare Infra Release contracts template
+    if: ${{ inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+      environment_short: d
+      agent: self-hosted
+      storage_account_name: "weu${{ inputs.domain }}checkoutst01"
+      profile_name: "weu-${ inputs.domain }}-checkout-afd-01"
+      endpoint_name: "weu-${{ inputs.domain }}-checkout-fde-01"
+      resource_group_name: "${{ (inputs.domain == 'ar') ? 'checkout-fe-rg' : 'weu-pnpg-selc-d-checkout-fe-rg' }}"
+      domain: ${{ inputs.domain }}
+
+  release_uat:
+    uses: ./.github/workflows/call_publish_web_assets.yml
+    name: UAT Selfcare Infra Release contracts template
+    if: ${{ inputs.env == 'uat' }}
+    secrets: inherit
+    with:
+      environment: uat
+      environment_short: u
+      agent: self-hosted
+      storage_account_name: "weu${{ inputs.domain }}checkoutst01"
+      profile_name: "weu-${ inputs.domain }}-checkout-afd-01"
+      endpoint_name: "weu-${{ inputs.domain }}-checkout-fde-01"
+      resource_group_name: "${{ (inputs.domain == 'ar') ? 'checkout-fe-rg' : 'weu-pnpg-selc-d-checkout-fe-rg' }}"
+      domain: ${{ inputs.domain }}
+
+  release_prod:
+    uses: ./.github/workflows/call_publish_web_assets.yml
+    name: PROD Selfcare Infra Release contracts template
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod
+      environment_short: p
+      agent: self-hosted
+      storage_account_name: "weu${{ inputs.domain }}checkoutst01"
+      profile_name: "weu-${ inputs.domain }}-checkout-afd-01"
+      endpoint_name: "weu-${{ inputs.domain }}-checkout-fde-01"
+      resource_group_name: "${{ (inputs.domain == 'ar') ? 'checkout-fe-rg' : 'weu-pnpg-selc-d-checkout-fe-rg' }}"
+      domain: ${{ inputs.domain }}

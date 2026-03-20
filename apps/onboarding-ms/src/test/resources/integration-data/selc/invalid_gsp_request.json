@@ -19,7 +19,7 @@
   "institution": {
     "institutionType": "GSP",
     "taxCode": "03309030652",
-    "origin": "IPA",
+    "origin": "SELC",
     "originId": "5AMFGRN8",
     "description": "SALERNO SOLIDALE SPA",
     "city": "Salerno",
@@ -40,15 +40,5 @@
     "vatNumber": "03309030652",
     "recipientCode": "DNHAKT",
     "publicServices": true
-  },
-  "additionalInformations":{
-    "agentOfPublicService":false,
-    "agentOfPublicServiceNote":"",
-    "belongRegulatedMarket":false,
-    "regulatedMarketNote":"",
-    "establishedByRegulatoryProvision":false,
-    "establishedByRegulatoryProvisionNote":"",
-    "ipa":false,
-    "ipaCode":"5AMFGRN8"
   }
 }

@@ -1,0 +1,43 @@
+name: Publish core infra
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "/infra/core/**"
+
+  workflow_dispatch:
+    inputs:
+      env:
+        required: true
+        type: choice
+        description: 'Select the Environment'
+        default: 'dev'
+        options: 
+        - dev
+        - uat
+        - prod
+      domain:
+        required: true
+        type: choice
+        description: 'Select the Domain'
+        default: 'ar'
+        options: 
+        - ar
+        - pnpg
+
+jobs:
+  release_dev:
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    name: DEV Selfcare Infra Core Release 
+    if: ${{ inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+      base_path: infra/core/dev-${{ inputs.domain }}
+      env_vars: ""
+      use_private_agent: true
+      # override_github_environment: pe-prod
+      use_labels: true
+      override_labels: ""
