@@ -170,14 +170,15 @@ module "cosmos_db" {
   cosmosdb_mongodb_offer_type                    = local.cosmosdb_mongodb_offer_type
   cosmosdb_mongodb_public_network_access_enabled = local.cosmosdb_mongodb_public_network_access_enabled
 
-  cosmosdb_mongodb_additional_geo_locations = local.cosmosdb_mongodb_additional_geo_locations
-  cosmosdb_mongodb_throughput               = local.cosmosdb_mongodb_throughput
-  cosmosdb_mongodb_max_throughput           = local.cosmosdb_mongodb_max_throughput
-  cosmosdb_mongodb_enable_autoscaling       = local.cosmosdb_mongodb_enable_autoscaling
-  cosmosdb_mongodb_private_endpoint_enabled = local.cosmosdb_mongodb_private_endpoint_enabled
-  cosmosdb_mongodb_consistency_policy       = local.cosmosdb_mongodb_consistency_policy
-
-  cosmosdb_mongodb_enable_free_tier = false
+  cosmosdb_mongodb_additional_geo_locations      = local.cosmosdb_mongodb_additional_geo_locations
+  cosmosdb_mongodb_throughput                    = local.cosmosdb_mongodb_throughput
+  cosmosdb_mongodb_max_throughput                = local.cosmosdb_mongodb_max_throughput
+  cosmosdb_mongodb_enable_autoscaling            = local.cosmosdb_mongodb_enable_autoscaling
+  cosmosdb_mongodb_private_endpoint_enabled      = local.cosmosdb_mongodb_private_endpoint_enabled
+  cosmosdb_mongodb_consistency_policy            = local.cosmosdb_mongodb_consistency_policy
+  cosmosdb_private_endpoint_mongo_name           = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-cosmosdb-mongodb-account"
+  cosmosdb_private_service_connection_mongo_name = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-cosmosdb-mongodb-account-private-endpoint-mongo"
+  cosmosdb_mongodb_enable_free_tier              = false
 }
 
 ###############################################################################

@@ -414,6 +414,8 @@ module "cosmos_db" {
   # CosmosDB MongoDB
   cosmosdb_mongodb_extra_capabilities               = local.cosmosdb_mongodb_extra_capabilities
   cosmosdb_mongodb_main_geo_location_zone_redundant = local.cosmosdb_mongodb_main_geo_location_zone_redundant
+  cosmosdb_private_endpoint_mongo_name              = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-account"
+  cosmosdb_private_service_connection_mongo_name    = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-account-private-endpoint-mongo"
 }
 
 

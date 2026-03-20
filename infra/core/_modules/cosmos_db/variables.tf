@@ -90,6 +90,17 @@ variable "cosmosdb_mongodb_private_endpoint_enabled" {
   default     = true
 }
 
+variable "cosmosdb_private_endpoint_mongo_name" {
+  type        = string
+  description = "Name of the private endpoint for MongoDB API"
+}
+
+variable "cosmosdb_private_service_connection_mongo_name" {
+  type        = string
+  description = "Name of the private service connection for MongoDB API"
+}
+
+
 variable "cosmosdb_mongodb_consistency_policy" {
   type = object({
     consistency_level       = string

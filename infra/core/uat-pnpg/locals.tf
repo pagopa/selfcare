@@ -39,8 +39,8 @@ locals {
   cidr_subnet_contract_storage      = ["10.1.137.0/24"]
   cidr_subnet_eventhub              = ["10.1.138.0/24"]
   cidr_subnet_logs_storage          = ["10.1.139.0/24"]
-  cidr_subnet_pnpg_cosmosdb_mongodb = ["10.1.140.0/24"] #this is a place holder for pnpg mongo
-  cidr_subnet_private_endpoints     = ["10.1.141.0/24"]
+  cidr_subnet_private_endpoints     = ["10.1.140.0/24"] #this is a place holder for pnpg mongo
+  cidr_subnet_pnpg_cosmosdb_mongodb = ["10.1.141.0/24"]
   cidr_subnet_load_tests            = ["10.1.142.0/24"]
   cidr_subnet_pnpg_redis            = ["10.1.143.0/29"]
   cidr_subnet_pnpg_logs_storage     = ["10.1.143.8/29"]
@@ -146,8 +146,8 @@ locals {
     max_interval_in_seconds = null
     max_staleness_prefix    = null
   }
-  cosmosdb_mongodb_extra_capabilities               = ["EnableServerless"]
-  cosmosdb_mongodb_main_geo_location_zone_redundant = false
+  cosmosdb_mongodb_extra_capabilities               = []
+  cosmosdb_mongodb_main_geo_location_zone_redundant = true
   cosmosdb_mongodb_additional_geo_locations         = []
   cosmosdb_mongodb_throughput                       = 1000
   cosmosdb_mongodb_max_throughput                   = 1000
