@@ -2,11 +2,11 @@
 # Monitoring
 ###############################################################################
 
-# data "azurerm_resource_group" "monitor_rg" {
+#NO data "azurerm_resource_group" "monitor_rg" {
 #   name = "${local.prefix}-${local.env_short}-monitor-rg"
 # }
 
-# data "azurerm_log_analytics_workspace" "log_analytics" {
+#NO data "azurerm_log_analytics_workspace" "log_analytics" {
 #   name                = "${local.prefix}-${local.env_short}-law"
 #   resource_group_name = data.azurerm_resource_group.monitor_rg.name
 # }
@@ -16,9 +16,9 @@ data "azurerm_application_insights" "application_insights" {
   resource_group_name = data.azurerm_resource_group.monitor_rg.name
 }
 
-###############################################################################
-# Action
-###############################################################################
+# ###############################################################################
+# # Action
+# ###############################################################################
 
 data "azurerm_monitor_action_group" "slack" {
   resource_group_name = data.azurerm_resource_group.monitor_rg.name
@@ -136,9 +136,9 @@ resource "azurerm_monitor_metric_alert" "functions_exceptions" {
   }
 }
 
-###############################################################################
-# Network
-###############################################################################
+# ###############################################################################
+# # Network
+# ###############################################################################
 
 
 data "azurerm_dns_zone" "public" {
@@ -160,11 +160,11 @@ resource "azurerm_private_dns_a_record" "ingress" {
 }
 
 
-###############################################################################
-# Secrets
-###############################################################################
+# ###############################################################################
+# # Secrets
+# ###############################################################################
 
-#tfsec:ignore:azure-keyvault-ensure-secret-expiry
+# #tfsec:ignore:azure-keyvault-ensure-secret-expiry
 resource "azurerm_key_vault_secret" "appinsights-instrumentation-key" {
   key_vault_id = module.key_vault.key_vault_id
   name         = "appinsights-instrumentation-key"
@@ -172,9 +172,9 @@ resource "azurerm_key_vault_secret" "appinsights-instrumentation-key" {
   content_type = "text/plain"
 }
 
-###############################################################################
-# NAT
-###############################################################################
+# ###############################################################################
+# # NAT
+# ###############################################################################
 
 resource "azurerm_resource_group" "nat_rg" {
   name     = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-nat-rg"
@@ -220,9 +220,9 @@ resource "azurerm_nat_gateway" "nat_gateway" {
 
 
 
-###############################################################################
-# assets
-###############################################################################
+# ###############################################################################
+# # assets
+# ###############################################################################
 
 module "assets" {
   source = "../_modules/assets"
@@ -236,9 +236,9 @@ module "assets" {
   checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
 }
 
-###############################################################################
-# one trust
-###############################################################################
+# ###############################################################################
+# # one trust
+# ###############################################################################
 
 module "one_trust" {
   source = "../_modules/one_trust"
@@ -251,6 +251,6 @@ module "one_trust" {
 }
 
 
-###############################################################################
-# Action
-###############################################################################
+# ###############################################################################
+# # Action
+# ###############################################################################

@@ -357,6 +357,7 @@ locals {
     "selfcare-pnpg-dashboard-frontend"        = "uat"
   }
   github_federations_ms = {
+    "selfcare"                         = "uat"
     "selfcare-dashboard-backend"       = "uat"
     "selfcare-external-api-backend"    = "uat"
     "selfcare-infra"                   = "uat"

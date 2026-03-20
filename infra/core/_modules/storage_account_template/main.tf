@@ -65,7 +65,7 @@ resource "azurerm_key_vault_secret" "blob_connection_string" {
 
 resource "azurerm_storage_container" "this" {
   name                  = "${var.project}-${var.name}-blob"
-  storage_account_name  = module.storage_account.name
+  storage_account_id    = module.storage_account.id
   container_access_type = "private"
 }
 
@@ -86,7 +86,7 @@ resource "azurerm_private_endpoint" "this" {
   name                = "${var.project}-${var.name}_storage"
   location            = var.location
   resource_group_name = azurerm_resource_group.this.name
-  subnet_id           = module.subnet.id
+  subnet_id           = var.private_endpoint_id == null ? module.subnet.id : var.private_endpoint_id
 
   private_service_connection {
     name                           = "${var.project}-${var.name}_storage-private-endpoint"
@@ -100,4 +100,3 @@ resource "azurerm_private_endpoint" "this" {
     private_dns_zone_ids = var.private_dns_zone_ids
   }
 }
-

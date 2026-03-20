@@ -166,7 +166,7 @@ module "checkout_cdn" {
   ]
 
   diagnostic_settings = {
-    enabled                    = var.log_analytics_workspace_id != null
+    enabled                    = var.log_analytics_workspace_enabled
     log_analytics_workspace_id = var.log_analytics_workspace_id
   }
 

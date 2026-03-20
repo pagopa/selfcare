@@ -39,8 +39,8 @@ locals {
   cidr_subnet_contract_storage      = ["10.1.137.0/24"]
   cidr_subnet_eventhub              = ["10.1.138.0/24"]
   cidr_subnet_logs_storage          = ["10.1.139.0/24"]
-  cidr_subnet_pnpg_cosmosdb_mongodb = ["10.1.140.0/24"] #this is a place holder for pnpg mongo
-  cidr_subnet_private_endpoints     = ["10.1.141.0/24"]
+  cidr_subnet_private_endpoints     = ["10.1.140.0/24"]
+  cidr_subnet_pnpg_cosmosdb_mongodb = ["10.1.141.0/24"] #this is a place holder for pnpg mongo
   cidr_subnet_load_tests            = ["10.1.142.0/24"]
   cidr_subnet_eventhub_rds          = ["10.1.153.0/26"]
 
@@ -358,9 +358,9 @@ locals {
     partitions        = 30
     message_retention = 7
     consumers         = ["conservazione", "interceptor", "datalake", "piattaforma-unitaria", "selc-proxy"]
-    iam_roles = {
-      "ee71d0ec-0023-44ae-93dd-871d25ab7003" = "Azure Event Hubs Data Receiver" # io-p-sign-backoffice-func
-    }
+    # iam_roles = {
+    #   "ee71d0ec-0023-44ae-93dd-871d25ab7003" = "Azure Event Hubs Data Receiver" # io-p-sign-backoffice-func
+    # }
     keys = [
       {
         name   = "selfcare-wo"
