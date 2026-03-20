@@ -46,6 +46,7 @@ jobs:
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     secrets: inherit
     with:
+      app: ${{ inputs.app }}
       environment: dev
       tf_environment: ${{ inputs.target == 'selc' && 'dev-ar' || 'dev-pnpg' }}
       dir: ${{ inputs.target == 'selc' && 'infra/resources/dev-ar' || 'infra/resources/dev-pnpg' }}
@@ -60,6 +61,7 @@ jobs:
     if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
     secrets: inherit
     with:
+      app: ${{ inputs.app }}
       environment: uat
       tf_environment: ${{ inputs.target == 'selc' && 'uat-ar' || 'uat-pnpg' }}
       dir: ${{ inputs.target == 'selc' && 'infra/resources/uat-ar' || 'infra/resources/uat-pnpg' }}
@@ -74,6 +76,7 @@ jobs:
     if: ${{ inputs.env == 'prod' }}
     secrets: inherit
     with:
+      app: ${{ inputs.app }}
       environment: prod
       tf_environment: ${{ inputs.target == 'selc' && 'prod-ar' || 'prod-pnpg' }}
       dir: ${{ inputs.target == 'selc' && 'infra/resources/prod-ar' || 'infra/resources/prod-pnpg' }}

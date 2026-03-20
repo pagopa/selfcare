@@ -1,6 +1,11 @@
 on:
   workflow_call:
     inputs:
+      app:
+        type: string
+        description: 'Microservice name'
+        required: false
+        default: 'app'
       dir:
         type: string
         required: true
@@ -43,7 +48,7 @@ env:
 jobs:
 
   build_push_docker:
-    name: 'Build and Push Docker'
+    name: ${{ inputs.app }} - Build and Push Docker
     runs-on: ubuntu-24.04
     environment: ${{ inputs.environment }}-cd
     permissions:
@@ -96,7 +101,7 @@ jobs:
             REPO_PASSWORD=${{ secrets.GITHUB_TOKEN }}
 
   tf_plan:
-    name: 'Terraform Plan'
+    name: ${{ inputs.app }} - Terraform Plan
     runs-on: ubuntu-24.04
     environment: ${{ inputs.environment }}-ci
     permissions:
@@ -159,7 +164,7 @@ jobs:
           retention-days: 1
 
   release:
-    name: 'Release'
+    name: ${{ inputs.app }} - Release
     runs-on: ubuntu-24.04
     needs: [ build_push_docker, tf_plan ]
     environment: ${{ inputs.environment }}-cd
@@ -220,7 +225,7 @@ jobs:
           TF_VAR_image_tag: ${{ needs.tf_plan.outputs.image_tag }}
 
   upload_openapi:
-    name: 'Upload OpenAPI'
+    name: ${{ inputs.app }} - Upload OpenAPI
     runs-on: ubuntu-24.04
     needs: [ release ]
     if: ${{ inputs.upload_openapi_enabled }}
