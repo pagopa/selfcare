@@ -39,23 +39,23 @@ locals {
   }
 }
 
-module "container_app_document_ms" {
-  source = "../_modules/container_app_microservice"
+# module "container_app_document_ms" {
+#   source = "../_modules/container_app_microservice"
 
-  env_short                      = local.env_short
-  resource_group_name            = local.ca_resource_group_name
-  container_app                  = local.microservice_container_app
-  container_app_name             = "${local.project}-document-ms"
-  container_app_environment_name = local.container_app_environment_name
-  image_name                     = "selfcare-document-ms"
-  image_tag                      = local.document_image_tag
-  app_settings                   = local.app_settings_document_ms
-  secrets_names                  = local.secrets_names_document_ms
+#   env_short                      = local.env_short
+#   resource_group_name            = local.ca_resource_group_name
+#   container_app                  = local.microservice_container_app
+#   container_app_name             = "${local.project}-document-ms"
+#   container_app_environment_name = local.container_app_environment_name
+#   image_name                     = "selfcare-document-ms"
+#   image_tag                      = local.document_image_tag
+#   app_settings                   = local.app_settings_document_ms
+#   secrets_names                  = local.secrets_names_document_ms
 
-  key_vault_resource_group_name = local.key_vault_resource_group_name
-  key_vault_name                = local.key_vault_name
+#   key_vault_resource_group_name = local.key_vault_resource_group_name
+#   key_vault_name                = local.key_vault_name
 
-  probes = local.quarkus_health_probes
+#   probes = local.quarkus_health_probes
 
-  tags = local.tags
-}
+#   tags = local.tags
+# }
