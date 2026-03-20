@@ -56,6 +56,11 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
+    public Uni<Document> getDocumentInstitutionByOnboardingId(String onboardingId) {
+        return documentRepository.findDocumentInstitutionByOnboardingId(onboardingId);
+    }
+
+    @Override
     public Uni<Document> getDocumentById(String documentId) {
         return documentRepository.findById(new ObjectId(documentId))
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Document with id %s not found", documentId)));

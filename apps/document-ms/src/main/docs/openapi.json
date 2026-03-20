@@ -617,8 +617,17 @@
             "content" : {
               "application/json" : { }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
-        }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/document-content/attachment" : {
@@ -653,8 +662,17 @@
           },
           "500" : {
             "description" : "Internal server error during PDF generation"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
-        }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/document-content/contract" : {
@@ -664,13 +682,7 @@
         "operationId" : "deleteContract",
         "tags" : [ "Document Content Controller" ],
         "parameters" : [ {
-          "name" : "absolutePath",
-          "in" : "query",
-          "schema" : {
-            "type" : "boolean"
-          }
-        }, {
-          "name" : "fileName",
+          "name" : "document",
           "in" : "query",
           "schema" : {
             "type" : "string",
@@ -684,8 +696,17 @@
             "content" : {
               "application/json" : { }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
-        }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       },
       "post" : {
         "summary" : "Create contract PDF",
@@ -718,8 +739,17 @@
           },
           "500" : {
             "description" : "Internal server error during PDF generation"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
-        }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/document-content/upload-attachment" : {
@@ -759,8 +789,17 @@
             "content" : {
               "application/json" : { }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
-        }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/document-content/visura" : {
@@ -785,8 +824,17 @@
             "content" : {
               "application/json" : { }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
-        }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/document-content/{id}/contract-signed" : {
@@ -814,8 +862,17 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
-        }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/document-content/{onboardingId}/attachment" : {
@@ -850,8 +907,17 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
-        }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/document-content/{onboardingId}/contract" : {
@@ -879,8 +945,17 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
-        }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/document-content/{onboardingId}/template-attachment" : {
@@ -936,8 +1011,17 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
-        }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/documents" : {

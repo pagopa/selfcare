@@ -38,6 +38,11 @@ public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Do
                 .firstResult();
     }
 
+    public Uni<Document> findDocumentInstitutionByOnboardingId(String onboardingId) {
+        return find(ONBOARDING_AND_TYPES_FILTER, onboardingId, INSTITUTION.name())
+                .firstResult();
+    }
+
     public Uni<List<Document>> findAllByOnboardingId(String onboardingId) {
         return find(ONBOARDING_ID, onboardingId).list();
     }

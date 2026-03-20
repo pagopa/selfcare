@@ -869,27 +869,26 @@ public class DocumentContentControllerTest {
 
     @Test
     void deleteContract_shouldReturnOk_whenDeletionSuccessful() {
-        String fileName = "testFile.txt";
-        boolean absolutePath = false;
-        String deletedFileName = "deletedFile.txt";
+        String onboardingId = "test-onboarding-123";
+        String expectedMessage = "Contract deleted successfully";
 
-        Mockito.when(documentContentService.deleteContract(eq(fileName), eq(absolutePath)))
-                .thenReturn(Uni.createFrom().item(deletedFileName));
+        Mockito.when(documentContentService.deleteContract(eq(onboardingId)))
+                .thenReturn(Uni.createFrom().item(expectedMessage));
 
         given()
-                .queryParam("fileName", fileName)
-                .queryParam("absolutePath", absolutePath)
+                .queryParam("document", onboardingId) // <-- CAMBIATO DA "onboardingId" A "document"
                 .when()
                 .delete("/v1/document-content/contract")
                 .then()
                 .statusCode(200)
-                .body(equalTo(deletedFileName));
+                .body(equalTo(expectedMessage));
     }
 
     @Test
-    void deleteContract_shouldReturnBadRequest_whenFileNameMissing() {
+    void deleteContract_shouldReturnBadRequest_whenOnboardingIdMissing() {
+        // Act & Assert
+        // Non passiamo il parametro "document" per far scattare il @NotBlank e ottenere un 400
         given()
-                .queryParam("absolutePath", false)
                 .when()
                 .delete("/v1/document-content/contract")
                 .then()
@@ -898,15 +897,16 @@ public class DocumentContentControllerTest {
 
     @Test
     void deleteContract_shouldReturnInternalServerError_whenServiceFails() {
-        String fileName = "testFile.txt";
-        boolean absolutePath = false;
+        // Arrange
+        String onboardingId = "test-onboarding-123";
 
-        Mockito.when(documentContentService.deleteContract(eq(fileName), eq(absolutePath)))
-                .thenReturn(Uni.createFrom().failure(new RuntimeException("Deletion error")));
+        // Simuliamo il fallimento del service (es. eccezione di I/O o DB)
+        Mockito.when(documentContentService.deleteContract(eq(onboardingId)))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("Error deleting contract files from Azure")));
 
+        // Act & Assert
         given()
-                .queryParam("fileName", fileName)
-                .queryParam("absolutePath", absolutePath)
+                .queryParam("document", onboardingId) // <-- Usiamo "document" per allinearci al controller!
                 .when()
                 .delete("/v1/document-content/contract")
                 .then()

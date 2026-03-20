@@ -3,11 +3,7 @@ package it.pagopa.selfcare.document.controller;
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.exception.UpdateNotAllowedException;
-import it.pagopa.selfcare.document.model.dto.request.AttachmentPdfRequest;
-import it.pagopa.selfcare.document.model.dto.request.ContractPdfRequest;
-import it.pagopa.selfcare.document.model.dto.request.UploadAggregateCsvRequest;
-import it.pagopa.selfcare.document.model.dto.request.UploadAttachmentForm;
-import it.pagopa.selfcare.document.model.dto.request.UploadVisuraRequest;
+import it.pagopa.selfcare.document.model.dto.request.*;
 import it.pagopa.selfcare.document.model.dto.response.CreatePdfResponse;
 import it.pagopa.selfcare.document.service.DocumentContentService;
 import jakarta.validation.Valid;
@@ -40,7 +36,7 @@ import static it.pagopa.selfcare.document.util.Utils.retrieveAttachmentFromFormD
  * This controller receives complete data from the calling service (e.g., onboarding-ms)
  * and generates the PDF documents without making external calls.
  */
-//@Authenticated
+@Authenticated
 @Path("/v1/document-content")
 @AllArgsConstructor
 @Slf4j
@@ -213,12 +209,11 @@ public class DocumentContentController {
     @Path("/contract")
     @Consumes(MediaType.APPLICATION_JSON)
     public Uni<Response> deleteContract(
-            @NotBlank(message = "Param fileName cannot be null")
-            @QueryParam("fileName") String fileName,
-            @QueryParam("absolutePath") boolean absolutePath) {
+            @NotBlank(message = "Param onboardingId cannot be null")
+            @QueryParam("document") String onboardingId) {
 
         // Il controller si limita a mappare l'Uni<String> restituito dal service in un Uni<Response>
-        return documentContentService.deleteContract(fileName, absolutePath)
+        return documentContentService.deleteContract(onboardingId)
                 .onItem().transform(deletedFileName -> Response.ok(deletedFileName).build());
     }
 

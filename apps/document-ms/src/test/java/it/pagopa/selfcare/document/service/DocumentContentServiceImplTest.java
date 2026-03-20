@@ -33,13 +33,10 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -1241,81 +1238,108 @@ public class DocumentContentServiceImplTest {
         assertThrows(SelfcareAzureStorageException.class, awaiter::indefinitely);
     }
 
-    @Test
-    void deleteContract_withAbsolutePath_shouldMoveFileAndReturnDeletedPath() throws IOException {
-        // Arrange
-        String fileName = "contracts/onboardingId/contract.pdf";
-        boolean absolutePath = true;
-        File tempFile = createTempPdf();
-
-        when(documentMsConfig.getContractPath()).thenReturn("contracts/");
-        when(documentMsConfig.getDeletePath()).thenReturn("deleted/");
-        when(azureBlobClient.retrieveFile(fileName)).thenReturn(tempFile);
-
-        // Act
-        String result = documentContentService.deleteContract(fileName, absolutePath)
-                .await().indefinitely();
-
-        // Assert
-        assertNotNull(result);
-        assertEquals("deleted/onboardingId/contract.pdf", result);
-
-        verify(azureBlobClient).retrieveFile(fileName);
-        verify(azureBlobClient).uploadFilePath(eq("deleted/onboardingId/contract.pdf"), any(byte[].class));
-        verify(azureBlobClient).removeFile(fileName);
-    }
+    // ============================================
+    // deleteContract
+    // ============================================
 
     @Test
-    void deleteContract_withRelativePath_shouldMoveFileAndReturnDeletedPath() throws IOException {
+    void deleteContract_shouldDeleteFilesAndReturnSuccessMessage() throws IOException {
         // Arrange
-        String fileName = "onboardingId/contract.pdf";
-        boolean absolutePath = false;
-        String expectedOriginalPath = "/contracts/onboardingId/contract.pdf";
-        File tempFile = createTempPdf();
+        String onboardingId = "test-onboarding-123";
+        Document doc = buildDocument();
+        doc.setOnboardingId(onboardingId);
+        doc.setContractSigned("contracts/test-onboarding-123/signed_contract.pdf");
+        doc.setContractFilename("contract.pdf");
 
+        // 1. Mock DB
+        when(documentService.getDocumentInstitutionByOnboardingId(onboardingId))
+                .thenReturn(Uni.createFrom().item(doc));
+
+        // 2. Mock Config
         when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
         when(documentMsConfig.getDeletePath()).thenReturn("/deleted/");
-        when(azureBlobClient.retrieveFile(expectedOriginalPath)).thenReturn(tempFile);
+
+        // 3. Mock Azure: Usiamo thenAnswer per generare un file NUOVO ad ogni chiamata!
+        // Memorizziamo i file creati in una lista per poter verificare dopo che siano stati cancellati.
+        List<File> generatedFiles = new ArrayList<>();
+        when(azureBlobClient.retrieveFile(anyString())).thenAnswer(invocation -> {
+            File newTempFile = createTempPdf(); // Il tuo metodo helper
+            generatedFiles.add(newTempFile);
+            return newTempFile;
+        });
+
+        // 4. Mock DB update
+        when(documentService.updateDocumentContractFiles(any(Document.class)))
+                .thenReturn(Uni.createFrom().item(1L));
 
         // Act
-        String result = documentContentService.deleteContract(fileName, absolutePath)
+        String result = documentContentService.deleteContract(onboardingId)
                 .await().indefinitely();
 
         // Assert
         assertNotNull(result);
-        assertEquals("/deleted/onboardingId/contract.pdf", result);
+        assertEquals("Contract deleted successfully", result);
 
-        verify(azureBlobClient).retrieveFile(expectedOriginalPath);
-        verify(azureBlobClient).uploadFilePath(eq("/deleted/onboardingId/contract.pdf"), any(byte[].class));
-        verify(azureBlobClient).removeFile(expectedOriginalPath);
+        // Verifica chiamate ad Azure e DB
+        verify(azureBlobClient, Mockito.times(2)).retrieveFile(anyString());
+        verify(azureBlobClient, Mockito.times(2)).uploadFilePath(anyString(), any(byte[].class));
+        verify(azureBlobClient, Mockito.times(2)).removeFile(anyString());
+        verify(documentService).updateDocumentContractFiles(doc);
+
+        // NUOVA ASSERZIONE: Verifichiamo che il blocco finally abbia fatto il suo dovere!
+        assertEquals(2, generatedFiles.size(), "2 files should have been processed");
+        for (File f : generatedFiles) {
+            assertFalse(f.exists(), "temporary file " + f.getName() + "should have been removed from the finally block!");
+        }
     }
 
     @Test
-    void deleteContract_shouldCatchIOException_andReturnOriginalPath() throws IOException {
+    void deleteContract_shouldFail_whenAzureThrowsIOException() throws IOException {
         // Arrange
-        String fileName = "onboardingId/contract.pdf";
-        boolean absolutePath = false;
-        String expectedOriginalPath = "/contracts/onboardingId/contract.pdf";
+        String onboardingId = "test-onboarding-123";
+        Document doc = buildDocument();
+        doc.setOnboardingId(onboardingId);
+        doc.setContractSigned("contracts/test-onboarding-123/signed_contract.pdf");
+        doc.setContractFilename("contract.pdf");
 
+        // Creiamo un file e lo cancelliamo subito per far fallire Files.readAllBytes
         File phantomFile = Files.createTempFile("phantom", ".pdf").toFile();
         phantomFile.delete();
 
+        when(documentService.getDocumentInstitutionByOnboardingId(onboardingId))
+                .thenReturn(Uni.createFrom().item(doc));
         when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
         when(documentMsConfig.getDeletePath()).thenReturn("/deleted/");
-        when(azureBlobClient.retrieveFile(expectedOriginalPath)).thenReturn(phantomFile);
 
-        // Act
-        String result = documentContentService.deleteContract(fileName, absolutePath)
-                .await().indefinitely();
+        when(azureBlobClient.retrieveFile(anyString())).thenReturn(phantomFile);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(expectedOriginalPath, result);
+        // Act & Assert
+        var awaiter = documentContentService.deleteContract(onboardingId).await();
 
-        verify(azureBlobClient).retrieveFile(expectedOriginalPath);
-        // Assicuriamoci che l'upload non sia mai stato chiamato a causa dell'eccezione
-        verify(azureBlobClient, Mockito.never()).uploadFilePath(anyString(), any(byte[].class));
-        verify(azureBlobClient, Mockito.never()).removeFile(anyString());
+        RuntimeException ex = assertThrows(RuntimeException.class, awaiter::indefinitely);
+        assertTrue(ex.getMessage().contains("Error deleting contract files from Azure"));
+
+        // Il finally farà "if(phantomFile.exists())", che sarà false, quindi non andrà in NullPointerException
+        verify(documentService, Mockito.never()).updateDocumentContractFiles(any());
+    }
+
+    @Test
+    void deleteContract_shouldFail_whenDocumentNotFoundInDB() {
+        // Arrange
+        String onboardingId = "invalid-onboarding-id";
+
+        // Simuliamo che il DB non trovi l'onboarding e restituisca una failure
+        when(documentService.getDocumentInstitutionByOnboardingId(onboardingId))
+                .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("Document not found")));
+
+        // Act & Assert
+        var awaiter = documentContentService.deleteContract(onboardingId).await();
+
+        // Verifichiamo che l'eccezione si propaghi correttamente
+        assertThrows(ResourceNotFoundException.class, awaiter::indefinitely);
+
+        // Se il documento non esiste, Azure non deve MAI essere chiamato
+        verify(azureBlobClient, Mockito.never()).retrieveFile(anyString());
     }
 
     // ============================================

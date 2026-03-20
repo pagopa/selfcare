@@ -13,6 +13,8 @@ public interface DocumentService {
 
     Uni<List<Document>> getDocumentsByOnboardingId(String onboardingId);
 
+    Uni<Document> getDocumentInstitutionByOnboardingId(String onboardingId);
+
     Uni<Document> getDocumentById(String id);
 
     Uni<Long> updateContractSigned(String onboardingId, String documentSignedPath);

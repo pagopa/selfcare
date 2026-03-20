@@ -492,6 +492,12 @@ paths:
           description: OK
           content:
             application/json: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
   /v1/document-content/attachment:
     post:
       summary: Create attachment PDF
@@ -517,6 +523,12 @@ paths:
           description: Invalid request data
         "500":
           description: Internal server error during PDF generation
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
   /v1/document-content/contract:
     delete:
       summary: Delete contract from Azure Blob Storage
@@ -526,11 +538,7 @@ paths:
       tags:
       - Document Content Controller
       parameters:
-      - name: absolutePath
-        in: query
-        schema:
-          type: boolean
-      - name: fileName
+      - name: document
         in: query
         schema:
           type: string
@@ -541,6 +549,12 @@ paths:
           description: OK
           content:
             application/json: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
     post:
       summary: Create contract PDF
       description: "Generates a contract PDF document from the provided data, signs\
@@ -565,6 +579,12 @@ paths:
           description: Invalid request data
         "500":
           description: Internal server error during PDF generation
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
   /v1/document-content/upload-attachment:
     post:
       summary: "Upload attachment by verifying and signing document, then save into\
@@ -596,6 +616,12 @@ paths:
           description: OK
           content:
             application/json: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
   /v1/document-content/visura:
     post:
       summary: Store the Visura in Azure Blob Storage
@@ -615,6 +641,12 @@ paths:
           description: OK
           content:
             application/json: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
   /v1/document-content/{id}/contract-signed:
     get:
       summary: Retrieve contract signed for a given onboarding
@@ -637,6 +669,12 @@ paths:
               schema:
                 type: string
                 format: binary
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
   /v1/document-content/{onboardingId}/attachment:
     get:
       summary: Retrieve attachment for a given onboarding and filename
@@ -664,6 +702,12 @@ paths:
               schema:
                 type: string
                 format: binary
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
   /v1/document-content/{onboardingId}/contract:
     get:
       summary: Retrieve contract not signed for a given onboarding
@@ -686,6 +730,12 @@ paths:
               schema:
                 type: string
                 format: binary
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
   /v1/document-content/{onboardingId}/template-attachment:
     get:
       summary: Retrieve template attachment for a given onboarding and filename and
@@ -729,6 +779,12 @@ paths:
               schema:
                 type: string
                 format: binary
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
   /v1/documents:
     post:
       summary: Save document (contract or attachment)
