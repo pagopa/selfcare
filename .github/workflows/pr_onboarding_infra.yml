@@ -1,0 +1,86 @@
+name: Code Review resources infra
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    branches:
+      - main
+      - releases/**
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - 'infra/resources/**'
+      - './.github/workflows/pr_onboarding_infra.yml'
+      - './.github/workflows/call_code_review_infra.yml'
+
+jobs:
+  code_review_dev:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[DEV] Resources Infra Code Review'
+    if: ${{ !startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: dev
+      dir: infra/resources/dev-ar
+      tf_environment: dev-ar
+      env_vars: TF_VAR_image_tag=sha-${{ github.event.pull_request.head.sha && format('{0}', cut(github.event.pull_request.head.sha, 1, 7)) || format('{0}', cut(github.sha, 1, 7)) }}
+
+  code_review_dev_pnpg:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[DEV-PNPG] Resources Infra Code Review'
+    if: ${{ !startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: dev
+      dir: infra/resources/dev-pnpg
+      tf_environment: dev-pnpg
+      env_vars: TF_VAR_image_tag=sha-${{ github.event.pull_request.head.sha && format('{0}', cut(github.event.pull_request.head.sha, 1, 7)) || format('{0}', cut(github.sha, 1, 7)) }}
+
+  code_review_uat_ar:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[UAT-AR] Resources Infra Code Review'
+    if: ${{ github.event_name == 'pull_request' && startsWith(github.base_ref, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: uat
+      dir: infra/resources/uat-ar
+      tf_environment: uat-ar
+      env_vars: TF_VAR_image_tag=sha-${{ github.event.pull_request.head.sha && format('{0}', cut(github.event.pull_request.head.sha, 1, 7)) || format('{0}', cut(github.sha, 1, 7)) }}
+
+  code_review_uat_pnpg:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[UAT-PNPG] Resources Infra Code Review'
+    if: ${{ github.event_name == 'pull_request' && startsWith(github.base_ref, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: uat
+      dir: infra/resources/uat-pnpg
+      tf_environment: uat-pnpg
+      env_vars: TF_VAR_image_tag=sha-${{ github.event.pull_request.head.sha && format('{0}', cut(github.event.pull_request.head.sha, 1, 7)) || format('{0}', cut(github.sha, 1, 7)) }}
+
+  code_review_prod_ar:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[PROD-AR] Resources Infra Code Review'
+    if: ${{ github.event_name == 'pull_request' && startsWith(github.base_ref, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: prod
+      dir: infra/resources/prod-ar
+      tf_environment: prod-ar
+      env_vars: TF_VAR_image_tag=sha-${{ github.event.pull_request.head.sha && format('{0}', cut(github.event.pull_request.head.sha, 1, 7)) || format('{0}', cut(github.sha, 1, 7)) }}
+
+  code_review_prod_pnpg:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[PROD-PNPG] Resources Infra Code Review'
+    if: ${{ github.event_name == 'pull_request' && startsWith(github.base_ref, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: prod
+      dir: infra/resources/prod-pnpg
+      tf_environment: prod-pnpg
+      env_vars: TF_VAR_image_tag=sha-${{ github.event.pull_request.head.sha && format('{0}', cut(github.event.pull_request.head.sha, 1, 7)) || format('{0}', cut(github.sha, 1, 7)) }}

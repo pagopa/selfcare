@@ -15,15 +15,15 @@ on:
       - ready_for_review
     paths:
       - 'apps/onboarding-functions/**'
-      - '.github/workflows/onboarding_pr_functions.yml'
-      - '.github/workflows/onboarding_call_code_review.yml'
+      - '.github/workflows/pr_onboarding_functions.yml'
+      - '.github/workflows/call_onboarding_code_review.yml'
 
 jobs:
 
   code_review:
     permissions:
       packages: read
-    uses: ./.github/workflows/onboarding_call_code_review.yml
+    uses: ./.github/workflows/call_onboarding_code_review.yml
     name: Onboarding function Code Review
     secrets: inherit
     with:

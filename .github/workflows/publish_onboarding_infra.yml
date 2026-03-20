@@ -40,7 +40,7 @@ jobs:
           echo "short_sha=sha-$calculatedSha" >> $GITHUB_OUTPUT
 
   release_dev_ar:
-    uses: ./.github/workflows/onboarding_call_release_resources_infra.yml
+    uses: ./.github/workflows/call_onboarding_release_resources_infra.yml
     name: '[Dev] Resources Infra Release (AR)'
     needs: [prepare]
     if: ${{ ((startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev') && inputs.target != 'pnpg' }}
@@ -51,7 +51,7 @@ jobs:
       env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
 
   release_uat_ar:
-    uses: ./.github/workflows/onboarding_call_release_resources_infra.yml
+    uses: ./.github/workflows/call_onboarding_release_resources_infra.yml
     name: '[UAT] Resources Infra Release (AR)'
     needs: [prepare]
     if: ${{ ((startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat') && inputs.target != 'pnpg' }}
@@ -62,7 +62,7 @@ jobs:
       env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
 
   release_prod_ar:
-    uses: ./.github/workflows/onboarding_call_release_resources_infra.yml
+    uses: ./.github/workflows/call_onboarding_release_resources_infra.yml
     name: '[Prod] Resources Infra Release (AR)'
     needs: [prepare]
     if: ${{ inputs.env == 'prod' && inputs.target != 'pnpg' }}
@@ -73,7 +73,7 @@ jobs:
       env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
 
   release_dev_pnpg:
-    uses: ./.github/workflows/onboarding_call_release_resources_infra.yml
+    uses: ./.github/workflows/call_onboarding_release_resources_infra.yml
     name: '[Dev] Resources Infra Release (PNPG)'
     needs: [prepare]
     if: ${{ ((startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev') && inputs.target == 'pnpg' }}
@@ -85,7 +85,7 @@ jobs:
       env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
 
   release_uat_pnpg:
-    uses: ./.github/workflows/onboarding_call_release_resources_infra.yml
+    uses: ./.github/workflows/call_onboarding_release_resources_infra.yml
     name: '[UAT] Resources Infra Release (PNPG)'
     needs: [prepare]
     if: ${{ ((startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat') && inputs.target == 'pnpg' }}
@@ -97,7 +97,7 @@ jobs:
       env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
 
   release_prod_pnpg:
-    uses: ./.github/workflows/onboarding_call_release_resources_infra.yml
+    uses: ./.github/workflows/call_onboarding_release_resources_infra.yml
     name: '[Prod] Resources Infra Release (PNPG)'
     needs: [prepare]
     if: ${{ inputs.env == 'prod' && inputs.target == 'pnpg' }}
