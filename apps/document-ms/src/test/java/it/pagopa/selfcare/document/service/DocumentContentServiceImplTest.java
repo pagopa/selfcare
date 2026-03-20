@@ -19,6 +19,7 @@ import it.pagopa.selfcare.document.model.dto.response.CreatePdfResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.document.service.impl.DocumentContentServiceImpl;
+import it.pagopa.selfcare.document.util.DocumentFileUtils;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.common.TokenType;
@@ -353,7 +354,7 @@ public class DocumentContentServiceImplTest {
     @Test
     void isPdfValid_shouldNotThrow_whenPdfIsValid() throws IOException {
         File validPdf = createTempPdf();
-        assertDoesNotThrow(() -> DocumentContentServiceImpl.isPdfValid(validPdf));
+        assertDoesNotThrow(() -> DocumentFileUtils.isPdfValid(validPdf));
     }
 
     @Test
@@ -363,7 +364,7 @@ public class DocumentContentServiceImplTest {
         try (PDDocument pdf = new PDDocument()) {
             pdf.save(emptyPdf);
         }
-        assertThrows(InvalidRequestException.class, () -> DocumentContentServiceImpl.isPdfValid(emptyPdf));
+        assertThrows(InvalidRequestException.class, () -> DocumentFileUtils.isPdfValid(emptyPdf));
     }
 
     @Test
@@ -371,13 +372,13 @@ public class DocumentContentServiceImplTest {
         File invalidFile = Files.createTempFile("invalid", ".pdf").toFile();
         invalidFile.deleteOnExit();
         Files.write(invalidFile.toPath(), "this is not a pdf".getBytes());
-        assertThrows(InvalidRequestException.class, () -> DocumentContentServiceImpl.isPdfValid(invalidFile));
+        assertThrows(InvalidRequestException.class, () -> DocumentFileUtils.isPdfValid(invalidFile));
     }
 
     @Test
     void isPdfValid_shouldThrowInvalidRequestException_whenFileDoesNotExist() {
         File nonExistentFile = new File("/non/existent/path/file.pdf");
-        assertThrows(InvalidRequestException.class, () -> DocumentContentServiceImpl.isPdfValid(nonExistentFile));
+        assertThrows(InvalidRequestException.class, () -> DocumentFileUtils.isPdfValid(nonExistentFile));
     }
 
     // ---- retrieveSignedFile edge cases ----
@@ -768,7 +769,7 @@ public class DocumentContentServiceImplTest {
         var awaiter = documentContentService.uploadAggregatesCsv(request).await();
 
         assertThrows(InternalException.class, awaiter::indefinitely);
-        verify(azureBlobClient)
+        verify(azureBlobClient, org.mockito.Mockito.times(4))
                 .uploadFile(eq("aggregates/" + ONBOARDING_ID + "/" + PRODUCT_ID), eq("aggregates.csv"), any(byte[].class));
     }
 

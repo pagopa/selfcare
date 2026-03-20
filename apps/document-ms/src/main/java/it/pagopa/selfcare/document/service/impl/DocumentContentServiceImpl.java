@@ -8,7 +8,6 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.document.config.DocumentMsConfig;
 import it.pagopa.selfcare.document.exception.InternalException;
-import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.exception.UpdateNotAllowedException;
 import it.pagopa.selfcare.document.model.FormItem;
@@ -18,37 +17,31 @@ import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.document.service.DocumentContentService;
 import it.pagopa.selfcare.document.service.DocumentService;
+import it.pagopa.selfcare.document.service.PdfGenerationService;
 import it.pagopa.selfcare.document.service.SignatureService;
+import it.pagopa.selfcare.document.util.DocumentFileUtils;
 import it.pagopa.selfcare.document.util.PdfBuilder;
 import it.pagopa.selfcare.document.util.PdfMapperData;
-import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.RestResponse;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
-import static it.pagopa.selfcare.document.util.ErrorMessage.*;
+import static it.pagopa.selfcare.document.util.ErrorMessage.ATTACHMENT_UPLOAD_ERROR;
+import static it.pagopa.selfcare.document.util.ErrorMessage.GENERIC_ERROR;
 import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
 import static it.pagopa.selfcare.document.util.Utils.*;
-import static it.pagopa.selfcare.onboarding.common.ProductId.*;
 import static it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT;
 
 /**
@@ -66,9 +59,19 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     private final SignatureService signatureService;
     private final DocumentRepository documentRepository;
     private final DocumentService documentService;
+    private final PdfGenerationService pdfGenerationService; // <-- NUOVA INIECTION
 
     @ConfigProperty(name = "document-ms.blob-storage.path-contracts")
     String pathContracts;
+
+    @ConfigProperty(name = "document-ms.retry.min-backoff-ms", defaultValue = "500")
+    long retryMinBackoff;
+
+    @ConfigProperty(name = "document-ms.retry.max-backoff-ms", defaultValue = "2000")
+    long retryMaxBackoff;
+
+    @ConfigProperty(name = "document-ms.retry.max-attempts", defaultValue = "3")
+    int retryMaxAttempts;
 
     @Inject
     public DocumentContentServiceImpl(
@@ -76,12 +79,13 @@ public class DocumentContentServiceImpl implements DocumentContentService {
             DocumentMsConfig documentMsConfig,
             SignatureService signatureService,
             DocumentRepository documentRepository,
-            DocumentService documentService) {
+            DocumentService documentService, PdfGenerationService pdfGenerationService) {
         this.azureBlobClient = azureBlobClient;
         this.documentMsConfig = documentMsConfig;
         this.signatureService = signatureService;
         this.documentRepository = documentRepository;
         this.documentService = documentService;
+        this.pdfGenerationService = pdfGenerationService;
     }
 
     @Override
@@ -106,24 +110,13 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     @Override
     public Uni<RestResponse<File>> retrieveSignedFile(String onboardingId) {
         return documentRepository.findByOnboardingId(onboardingId)
-                .onFailure().retry().withBackOff(Duration.ofMillis(500), Duration.ofSeconds(2)).atMost(3)
-                .onItem().transformToUni(document ->
+                .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)                .onItem().transformToUni(document ->
                         fetchFileFromAzureAsync(document.getContractSigned())
                                 .emitOn(Infrastructure.getDefaultWorkerPool())
                                 .onItem().transform(contract -> validateAndExtractSignedFile(contract, document.getContractSigned()))
                                 .onItem().transform(processedFile -> buildDownloadResponse(processedFile, document, true))
                 )
                 .onFailure().recoverWithItem(() -> RestResponse.ResponseBuilder.<File>notFound().build());
-    }
-
-    public static void isPdfValid(File contract) {
-        try (PDDocument document = Loader.loadPDF(contract)) {
-            if (document.getNumberOfPages() == 0) {
-                throw new InvalidRequestException(ORIGINAL_DOCUMENT_NOT_FOUND.getMessage(), ORIGINAL_DOCUMENT_NOT_FOUND.getCode());
-            }
-        } catch (IOException e) {
-            throw new InvalidRequestException(ORIGINAL_DOCUMENT_NOT_FOUND.getMessage(), ORIGINAL_DOCUMENT_NOT_FOUND.getCode());
-        }
     }
 
     private void isP7mValid(File contract) {
@@ -133,8 +126,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     @Override
     public Uni<RestResponse<File>> retrieveContract(String onboardingId, boolean isSigned) {
         return documentRepository.findByOnboardingId(onboardingId)
-                .onFailure().retry().withBackOff(Duration.ofMillis(500), Duration.ofSeconds(2)).atMost(3)
-                .onItem().transformToUni(document ->
+                .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)                .onItem().transformToUni(document ->
                         fetchPdfFromAzureAsync(document, onboardingId, isSigned)
                                 .onItem().transform(contractFile -> buildDownloadResponse(contractFile, document, isSigned))
                 );
@@ -164,8 +156,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     @Override
     public Uni<RestResponse<File>> retrieveAttachment(String onboardingId, String attachmentName) {
         return documentRepository.findAttachment(onboardingId, ATTACHMENT.name(), attachmentName)
-                .onFailure().retry().withBackOff(Duration.ofMillis(500), Duration.ofSeconds(2)).atMost(3)
-                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Attachment with id %s not found", onboardingId)))
+                .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Attachment with id %s not found", onboardingId)))
                 .onItem().transformToUni(document ->
                         Uni.createFrom()
                                 .item(() -> azureBlobClient.getFileAsPdf(buildAttachmentPath(document)))
@@ -188,29 +179,6 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         return String.format("%s%s%s%s", documentMsConfig.getContractPath(), onboardingId, "/attachments", "/" + filename);
     }
 
-    private String buildAndValidateContractFilePath(String fileName, boolean absolutePath) {
-        if (fileName == null || fileName.isBlank()) {
-            throw new InvalidRequestException("Invalid fileName");
-        }
-
-        String trimmed = fileName.trim();
-
-        if (trimmed.contains("..") || trimmed.contains("\\") || trimmed.startsWith("/")) {
-            throw new InvalidRequestException("Invalid fileName");
-        }
-
-        String basePath = documentMsConfig.getContractPath();
-        if (absolutePath) {
-            return trimmed;
-        } else {
-            String fullPath = basePath + trimmed;
-            if (!fullPath.startsWith(basePath)) {
-                throw new InvalidRequestException("Invalid fileName");
-            }
-            return fullPath;
-        }
-    }
-
     @Override
     public Uni<Void> uploadAttachment(DocumentBuilderRequest request, FormItem file) {
         log.info("Uploading attachment for onboardingId={}, productId={}, documentName={}",
@@ -222,7 +190,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 .emitOn(Infrastructure.getDefaultWorkerPool())
                 .chain(() -> {
                     String uploadedDigest = performSecurityValidationsAndGetDigest(request, file);
-                    boolean isP7M = isP7MFile(file);
+                    boolean isP7M = DocumentFileUtils.isP7MFile(file.getFileName());
 
                     // 1. Salvataggio su DB
                     return persistAttachment(request, uploadedDigest, isP7M);
@@ -245,15 +213,16 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         return documentService.getDocumentInstitutionByOnboardingId(onboardingId)
                 .emitOn(Infrastructure.getDefaultWorkerPool())
                 .chain(document -> {
-                    String originalSignedPath = buildAndValidateContractFilePath(document.getContractSigned(), true);
-                    String originalContractPath = buildAndValidateContractFilePath(onboardingId + "/" + document.getContractFilename(), false);
+                    String basePath = documentMsConfig.getContractPath();
+                    String originalSignedPath = DocumentFileUtils.buildAndValidateContractFilePath(document.getContractSigned(), basePath, true);
+                    String originalContractPath = DocumentFileUtils.buildAndValidateContractFilePath(onboardingId + "/" + document.getContractFilename(), basePath, false);
 
                     String deletedSignedContract;
                     String deletedContractFile;
 
                     try {
-                        deletedSignedContract = deleteFileFromAzure(originalSignedPath);
-                        deletedContractFile = deleteFileFromAzure(originalContractPath);
+                        deletedSignedContract = deleteFileFromAzure(originalSignedPath, basePath);
+                        deletedContractFile = deleteFileFromAzure(originalContractPath, basePath);
                     } catch (Exception e) {
                         log.error("Error deleting contract files from Azure for onboardingId {}: {}", sanitize(onboardingId), e.getMessage());
                         return Uni.createFrom().failure(new RuntimeException("Error deleting contract files from Azure", e));
@@ -263,8 +232,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                     document.setContractFilename(deletedContractFile);
 
                     return documentService.updateDocumentContractFiles(document)
-                            .onFailure().retry().withBackOff(Duration.ofMillis(500), Duration.ofSeconds(2)).atMost(3)
-                            .onFailure().call(dbError -> {
+                            .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)                            .onFailure().call(dbError -> {
                                 log.error("DB update failed for onboardingId {}. Triggering Azure Rollback...", onboardingId);
                                 return rollbackAzureFiles(deletedSignedContract, originalSignedPath, deletedContractFile, originalContractPath);
                             });
@@ -291,8 +259,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                         throw new RuntimeException("Error during Azure upload", e);
                     }
                 })
-                .onFailure().retry().withBackOff(Duration.ofMillis(500), Duration.ofSeconds(2)).atMost(3)
-                .onFailure()
+                .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)                .onFailure()
                 .transform(e -> {
                     log.error(
                             "Impossible to store csv aggregate for onboardingId: {}, filename: {}. Error: {}",
@@ -320,8 +287,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                         throw new RuntimeException("Error during Azure upload", e);
                     }
                 })
-                .onFailure().retry().withBackOff(Duration.ofMillis(500), Duration.ofSeconds(2)).atMost(3)
-                .onFailure()
+                .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)                .onFailure()
                 .transform(e -> {
                     log.error(
                             "Impossible to store visura document for onboardingId: {}, filename: {}. Error: {}",
@@ -361,7 +327,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
     private String performSecurityValidationsAndGetDigest(DocumentBuilderRequest request, FormItem file) {
         File fileToUpload = file.getFile();
-        validateUploadedFile(fileToUpload);
+        DocumentFileUtils.validateUploadedFile(fileToUpload);
 
         if (signatureService.isSignatureVerificationEnabled()) {
             signatureService.verifySignature(fileToUpload);
@@ -369,12 +335,6 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
         String templateDigest = getTemplateDigest(request.getTemplatePath());
         return signatureService.verifyUploadedFileDigest(file, templateDigest, false);
-    }
-
-    private boolean isP7MFile(FormItem file) {
-        return Optional.ofNullable(file.getFileName())
-                .map(name -> name.toLowerCase(Locale.ROOT).endsWith(".p7m"))
-                .orElse(false);
     }
 
     private Uni<Void> uploadToAzureReactive(Document document, FormItem file) {
@@ -435,28 +395,11 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         final String path = String.format("%s%s", pathContracts, onboardingId).concat("/attachments");
 
         try {
-            validateUploadedFile(signedFile);
+            DocumentFileUtils.validateUploadedFile(signedFile);
             azureBlobClient.uploadFile(path, filename, Files.readAllBytes(signedFile.toPath()));
         } catch (IOException e) {
             throw new InternalException(GENERIC_ERROR.getCode(),
                     "Error on upload contract for onboarding with id " + onboardingId);
-        }
-    }
-
-    private void validateUploadedFile(File file) {
-        if (file == null) {
-            throw new InvalidRequestException("Uploaded file must not be null", "0000");
-        }
-
-        Path filePath = file.toPath().toAbsolutePath().normalize();
-        Path tempDirPath = Paths.get(System.getProperty("java.io.tmpdir")).toAbsolutePath().normalize();
-
-        if (!filePath.startsWith(tempDirPath)) {
-            throw new InvalidRequestException("Invalid uploaded file location", "0000");
-        }
-
-        if (!Files.exists(filePath, LinkOption.NOFOLLOW_LINKS) || !Files.isRegularFile(filePath, LinkOption.NOFOLLOW_LINKS)) {
-            throw new InvalidRequestException("Uploaded file does not exist or is not a regular file", "0000");
         }
     }
 
@@ -504,65 +447,16 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
     // ==================== Contract-specific methods ====================
 
-    private File createPdfFileContract(ContractPdfRequest request) throws IOException {
-        String contractTemplateText = azureBlobClient.getFileAsText(request.getContractTemplatePath());
-        Map<String, Object> data = PdfMapperData.setUpCommonData(request);
-
-        setupProductSpecificData(data, request);
-
-        log.debug("Building PDF template context: dataMap keys={}, size={}", data.keySet(), data.size());
-        return PdfBuilder.generateDocument("_contratto_interoperabilita.", contractTemplateText, data);
-    }
-
-    private void setupProductSpecificData(Map<String, Object> data, ContractPdfRequest request) {
-        String productId = request.getProductId();
-        InstitutionPdfData institution = request.getInstitution();
-        InstitutionType institutionType = institution.getInstitutionType();
-
-        if (isPspAndPagoPaOrDashboard(productId, institutionType)) {
-            PdfMapperData.setupPSPData(data, request.getManager(), request);
-        } else if (isPrvOrGpuAndPagoPaOrIdpay(productId, institutionType)) {
-            PdfMapperData.setupPRVData(data, request);
-            if (Objects.nonNull(request.getPayment())) {
-                PdfMapperData.setupPaymentData(data, request.getPayment());
-            }
-        } else if (isEcAndPagoPa(productId, institutionType)) {
-            PdfMapperData.setECData(data, institution);
-        } else if (isProdIO(productId)) {
-            PdfMapperData.setupProdIOData(request, data, request.getManager());
-        } else if (PROD_PN.getValue().equalsIgnoreCase(productId)) {
-            PdfMapperData.setupProdPNData(data, institution, request.getBilling());
-        } else if (PROD_INTEROP.getValue().equalsIgnoreCase(productId)) {
-            PdfMapperData.setupSAProdInteropData(data, institution);
-        }
-    }
-
-    private boolean isPspAndPagoPaOrDashboard(String productId, InstitutionType institutionType) {
-        return (PROD_PAGOPA.getValue().equalsIgnoreCase(productId) || PROD_DASHBOARD_PSP.getValue().equalsIgnoreCase(productId))
-                && InstitutionType.PSP == institutionType;
-    }
-
-    private boolean isPrvOrGpuAndPagoPaOrIdpay(String productId, InstitutionType institutionType) {
-        return (PROD_PAGOPA.getValue().equalsIgnoreCase(productId) || PROD_IDPAY_MERCHANT.getValue().equalsIgnoreCase(productId))
-                && (InstitutionType.PRV == institutionType || InstitutionType.GPU == institutionType || InstitutionType.PRV_PF == institutionType);
-    }
-
-    private boolean isEcAndPagoPa(String productId, InstitutionType institutionType) {
-        return PROD_PAGOPA.getValue().equalsIgnoreCase(productId)
-                && InstitutionType.PSP != institutionType
-                && InstitutionType.PT != institutionType;
-    }
-
-    private boolean isProdIO(String productId) {
-        return PROD_IO.getValue().equalsIgnoreCase(productId)
-                || PROD_IO_PREMIUM.getValue().equalsIgnoreCase(productId)
-                || PROD_IO_SIGN.getValue().equalsIgnoreCase(productId);
-    }
 
     private Uni<PdfContext> buildContractContextAsync(ContractPdfRequest request) {
         return Uni.createFrom().item(() -> {
             try {
-                File pdfFile = loadOrGeneratePdf(request.getContractTemplatePath(), () -> createPdfFileContract(request));
+                File pdfFile = DocumentFileUtils.isPdfFile(request.getContractTemplatePath())
+                        ? azureBlobClient.getFileAsPdf(request.getContractTemplatePath())
+                        : pdfGenerationService.generateContractPdf(
+                        azureBlobClient.getFileAsText(request.getContractTemplatePath()),
+                        request);
+
                 String filename = buildFilename(request.getPdfFormatFilename(), request.getProductName(), null);
                 String storagePath = buildContractStoragePath(request.getOnboardingId());
                 return new PdfContext(pdfFile, filename, storagePath);
@@ -575,8 +469,14 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     private Uni<PdfContext> buildAttachmentContextAsync(AttachmentPdfRequest request) {
         return Uni.createFrom().item(() -> {
             try {
-                File pdfFile = loadOrGeneratePdf(request.getAttachmentTemplatePath(), () -> createPdfFileAttachment(request));
-                String filename = CONTRACT_FILENAME_FUNC.apply("%s_" + request.getAttachmentName() + ".pdf", request.getProductName());
+                String filename = buildFilename("%s", request.getProductName(), request.getAttachmentName());
+                File pdfFile = DocumentFileUtils.isPdfFile(request.getAttachmentTemplatePath())
+                        ? azureBlobClient.getFileAsPdf(request.getAttachmentTemplatePath())
+                        : pdfGenerationService.generateAttachmentPdf(
+                        azureBlobClient.getFileAsText(request.getAttachmentTemplatePath()),
+                        request,
+                        filename);
+
                 String storagePath = buildAttachmentStoragePath(request.getOnboardingId());
                 return new PdfContext(pdfFile, filename, storagePath);
             } catch (IOException e) {
@@ -593,9 +493,9 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         ).map(signedFile -> new PdfContext(signedFile, ctx.filename, ctx.storagePath));
     }
 
-    private String deleteFileFromAzure(String filePath) throws IOException {
+    private String deleteFileFromAzure(String filePath, String basePath) throws IOException {
         File temporaryFile = azureBlobClient.retrieveFile(filePath);
-        String deletedFileName = filePath.replace(documentMsConfig.getContractPath(), documentMsConfig.getDeletePath());
+        String deletedFileName = filePath.replace(basePath, documentMsConfig.getDeletePath());
 
         try {
             azureBlobClient.uploadFilePath(deletedFileName, Files.readAllBytes(temporaryFile.toPath()));
@@ -613,12 +513,12 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
     private File validateAndExtractSignedFile(File contract, String contractSignedPath) {
         if (contractSignedPath.endsWith(".pdf")) {
-            isPdfValid(contract);
+            DocumentFileUtils.isPdfValid(contract);
             return contract;
         } else {
             isP7mValid(contract);
             File extractedFile = signatureService.extractFile(contract);
-            isPdfValid(extractedFile);
+            DocumentFileUtils.isPdfValid(extractedFile);
             return extractedFile;
         }
     }
