@@ -657,7 +657,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
             if (temporaryFile != null && temporaryFile.exists()) {
                 boolean isDeleted = temporaryFile.delete();
                 if (!isDeleted) {
-                    log.warn("Unable to delete local temporary file: {}", temporaryFile.getAbsolutePath());
+                    log.warn("Unable to delete local temporary file: {}", sanitize(temporaryFile.getAbsolutePath()));
                 }
             }
         }
