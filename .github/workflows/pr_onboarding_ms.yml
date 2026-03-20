@@ -17,6 +17,7 @@ on:
       - 'apps/onboarding-ms/**'
       - '.github/workflows/pr_onboarding_ms.yml'
       - '.github/workflows/call_onboarding_code_review.yml'
+      - '.github/workflows/call_openapi_quarkus.yml'
 
 jobs:
   code_review:
@@ -31,6 +32,15 @@ jobs:
       target_branch: ${{ github.base_ref }}
       sonar_key: 'pagopa_selfcare-onboarding'
       module: 'onboarding-ms'
+
+  swagger_check:
+    needs: [code_review]
+    uses: ./.github/workflows/call_openapi_quarkus.yml
+    name: Onboarding ms Swagger Check
+    secrets: inherit
+    with:
+      module: 'onboarding-ms'
+      path_openapi_docs: 'apps/onboarding-ms/src/main/docs/openapi.json'
 
   build_docker:
     name: 'Build Docker image'

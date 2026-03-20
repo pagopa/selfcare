@@ -1,12 +1,14 @@
-name: Swagger Detect Conflict and Update Onboarding MS
+name: OpenAPI Quarkus
+
 on:
-  pull_request:
-    branches:
-      - main
-      - releases/*
-    types: [ opened, synchronize, reopened ]
-    paths:
-      - "apps/onboarding-ms/**"
+  workflow_call:
+    inputs:
+      module:
+        type: string
+        required: true
+      path_openapi_docs:
+        type: string
+        required: true
 
 permissions:
   contents: write
@@ -20,6 +22,6 @@ jobs:
       - id: swagger-detect
         uses: pagopa/selfcare-commons/github-actions-template/swagger-detect-conflict-quarkus@main
         with:
-          path_openapi_docs: src/main/docs/openapi.json
-          module: onboarding-ms
+          path_openapi_docs: ${{ inputs.path_openapi_docs }}
+          module: ${{ inputs.module }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
