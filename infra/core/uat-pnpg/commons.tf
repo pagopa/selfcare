@@ -225,74 +225,75 @@ module "cosmos_db" {
 # ###############################################################################
 # # Monitoring
 # ###############################################################################
-# data "azurerm_resource_group" "monitor_rg" {
-#   name = "${local.prefix}-${local.env_short}-monitor-rg"
-# }
+data "azurerm_resource_group" "monitor_rg" {
+  name = "${local.prefix}-${local.env_short}-monitor-rg"
+}
 
-# data "azurerm_log_analytics_workspace" "log_analytics" {
-#   name                = "${local.prefix}-${local.env_short}-law"
-#   resource_group_name = data.azurerm_resource_group.monitor_rg.name
-# }
+data "azurerm_log_analytics_workspace" "log_analytics" {
+  name                = "${local.prefix}-${local.env_short}-law"
+  resource_group_name = data.azurerm_resource_group.monitor_rg.name
+}
 
 # ###############################################################################
 # # CDN Front Door
 # ###############################################################################
-# module "cdn" {
-#   source = "../_modules/cdn"
+module "cdn" {
+  source = "../_modules/cdn"
 
-#   project         = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}"
-#   prefix          = local.prefix
-#   env_short       = local.env_short
-#   location        = local.location
-#   location_short  = local.location_short
-#   tags            = local.tags
-#   domain          = local.app_domain
-#   app_name        = "checkout"
-#   instance_number = "01"
-#   prefix_api      = "api-pnpg"
-#   host_name       = "pnpg.${local.dns_zone_prefix}.${local.external_domain}"
-#   create_snet     = false
+  project         = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}"
+  prefix          = local.prefix
+  env_short       = local.env_short
+  location        = local.location
+  location_short  = local.location_short
+  tags            = local.tags
+  domain          = local.app_domain
+  app_name        = "checkout"
+  instance_number = "01"
+  prefix_api      = "api-pnpg"
+  host_name       = "pnpg.${local.dns_zone_prefix}.${local.external_domain}"
+  create_snet     = false
 
-#   dns_zone_prefix      = local.dns_zone_prefix
-#   external_domain      = local.external_domain
-#   robots_indexed_paths = local.robots_indexed_paths
-#   storage_use_case     = "development" //uat and prod should use "default"
+  dns_zone_prefix      = local.dns_zone_prefix
+  external_domain      = local.external_domain
+  robots_indexed_paths = local.robots_indexed_paths
+  storage_use_case     = "default" //uat and prod should use "default"
 
-#   log_analytics_workspace_id    = data.azurerm_log_analytics_workspace.log_analytics.id
-#   key_vault_id                  = module.key_vault.key_vault_id
-#   key_vault_name                = module.key_vault.key_vault_name
-#   key_vault_resource_group_name = module.key_vault.key_vault_resource_group_name
-#   # cdn_certificate_name        = certificate managed
-#   vnet_name       = module.network.vnet_core.name
-#   rg_vnet_name    = module.network.vnet_core.resource_group_name
-#   cidr_subnet_cdn = local.cidr_subnet_cdn
-# }
+  log_analytics_workspace_enabled = true
+  log_analytics_workspace_id      = data.azurerm_log_analytics_workspace.log_analytics.id
+  key_vault_id                    = module.key_vault.key_vault_id
+  key_vault_name                  = module.key_vault.key_vault_name
+  key_vault_resource_group_name   = module.key_vault.key_vault_resource_group_name
+  # cdn_certificate_name          = certificate managed
+  vnet_name       = module.network.vnet_core.name
+  rg_vnet_name    = module.network.vnet_core.resource_group_name
+  cidr_subnet_cdn = local.cidr_subnet_cdn
+}
 
 # ###############################################################################
 # # TMP OLD Storage Account
 # ###############################################################################
 
-# data "azurerm_storage_account" "old_cdn_storage_account" {
-#   name                = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutsa"
-#   resource_group_name = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-checkout-fe-rg"
-# }
+data "azurerm_storage_account" "old_cdn_storage_account" {
+  name                = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutsa"
+  resource_group_name = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-checkout-fe-rg"
+}
 
 
-# resource "null_resource" "cdn_storage_copy" {
-#   for_each = toset(["$web", "selc-${local.env_short}-product"])
+resource "null_resource" "cdn_storage_copy" {
+  for_each = toset(["$web", "selc-${local.env_short}-product"])
 
-#   provisioner "local-exec" {
-#     command = <<EOT
-#         az storage blob copy start-batch \
-#         --account-name "${module.cdn.storage_name}" \
-#         --account-key "${module.cdn.storage_primary_access_key}" \
-#         --destination-container '${each.value}' \
-#         --source-account-name "${data.azurerm_storage_account.old_cdn_storage_account.name}" \
-#         --source-account-key "${data.azurerm_storage_account.old_cdn_storage_account.primary_access_key}" \
-#         --source-container '${each.value}'
-#     EOT
-#   }
-# }
+  provisioner "local-exec" {
+    command = <<EOT
+        az storage blob copy start-batch \
+        --account-name "${module.cdn.storage_name}" \
+        --account-key "${module.cdn.storage_primary_access_key}" \
+        --destination-container '${each.value}' \
+        --source-account-name "${data.azurerm_storage_account.old_cdn_storage_account.name}" \
+        --source-account-key "${data.azurerm_storage_account.old_cdn_storage_account.primary_access_key}" \
+        --source-container '${each.value}'
+    EOT
+  }
+}
 
 # ###############################################################################
 # # Container app environment
