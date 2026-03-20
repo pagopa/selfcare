@@ -302,7 +302,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                     final String path = String.format("%s%s/%s",
                             documentMsConfig.getAggregatesPath(), request.getOnboardingId(), request.getProductId());
                     try {
-                        azureBlobClient.uploadFile(path, filename, Files.readAllBytes(request.getCsv().toPath()));
+                        azureBlobClient.uploadFile(path, filename, Files.readAllBytes(csvFile.toPath()));
                     } catch (IOException e) {
                         log.error("Error reading from file {} ", sanitize(path), e);
                     }
