@@ -300,7 +300,7 @@ resource "null_resource" "cdn_storage_copy" {
 # ###############################################################################
 
 resource "azurerm_resource_group" "selc_container_app_rg" {
-  name     = "${local.project}-container-app-rg"
+  name     = "${local.project}-container-app-001-rg" //prod  "${local.project}-container-app-rg" 
   location = local.location
 
   tags = local.tags
@@ -326,22 +326,22 @@ module "networking" {
   tags = local.tags
 }
 
-# module "container_app_environments" {
-#   source = "../_modules/container_app_environments"
+module "container_app_environments" {
+  source = "../_modules/container_app_environments"
 
-#   project             = "${local.prefix}-${local.env_short}"
-#   location            = local.location
-#   resource_group_name = azurerm_resource_group.selc_container_app_rg.name
+  project             = "${local.prefix}-${local.env_short}"
+  location            = local.location
+  resource_group_name = azurerm_resource_group.selc_container_app_rg.name
 
-#   infrastructure_resource_group_name = "ME_selc-d-pnpg-cae-cp_selc-d-container-app-rg_westeurope"
+  # infrastructure_resource_group_name = "ME_selc-d-pnpg-cae-cp_selc-d-container-app-rg_westeurope"
 
-#   enable_log = false
-#   subnet_id  = module.networking.subnet.id
-#   cae_name   = "${local.project}-pnpg-cae-cp"
+  enable_log = true
+  subnet_id  = module.networking.subnet.id
+  cae_name   = "${local.project}-pnpg-cae-001" //prod  ""${local.project}-pnpg-cae-cp"
 
-#   # workload_profiles = []
+  workload_profiles = []
 
-#   zone_redundant = false
+  zone_redundant = false
 
-#   tags = local.tags
-# }
+  tags = local.tags
+}
