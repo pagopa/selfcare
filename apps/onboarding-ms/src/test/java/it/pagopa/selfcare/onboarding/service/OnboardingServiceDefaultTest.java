@@ -1197,6 +1197,8 @@ class OnboardingServiceDefaultTest {
         institutionBaseRequest.setTaxCode("taxCode");
         request.setInstitution(institutionBaseRequest);
         request.setUserRequester(userRequester);
+        request.setAdditionalInformations(generateAdditionalInformations());
+
         mockPersistOnboarding(asserter);
 
         asserter.execute(() -> {
@@ -1848,6 +1850,9 @@ class OnboardingServiceDefaultTest {
         userRequesterDto.setSurname("surname");
         userRequesterDto.setEmail("test@test.com");
 
+        request.setAdditionalInformations(generateAdditionalInformations());
+
+
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
         mockVerifyAllowedProductList(request.getProductId(), asserter, true);
@@ -2010,6 +2015,8 @@ class OnboardingServiceDefaultTest {
         userRequesterDto.setSurname("surname");
         userRequesterDto.setEmail("test@test.com");
 
+        onboardingDefaultRequest.setAdditionalInformations(generateAdditionalInformations());
+
         mockPersistOnboarding(asserter);
 
         mockSimpleProductValidAssert(onboardingDefaultRequest.getProductId(), false, asserter, false, true);
@@ -2024,6 +2031,20 @@ class OnboardingServiceDefaultTest {
         });
 
         asserter.assertFailedWith(() -> onboardingService.onboarding(onboardingDefaultRequest, users, null, userRequesterDto), WebApplicationException.class);
+    }
+
+    private AdditionalInformations generateAdditionalInformations() {
+        AdditionalInformations additionalInformations = new AdditionalInformations();
+        additionalInformations.setBelongRegulatedMarket(true);
+        additionalInformations.setRegulatedMarketNote("Note sul mercato regolamentato");
+        additionalInformations.setIpa(false);
+        additionalInformations.setIpaCode("IPA12345");
+        additionalInformations.setEstablishedByRegulatoryProvision(true);
+        additionalInformations.setEstablishedByRegulatoryProvisionNote("Nota sulla disposizione normativa");
+        additionalInformations.setAgentOfPublicService(false);
+        additionalInformations.setAgentOfPublicServiceNote("Nota sull'agente di servizio pubblico");
+        additionalInformations.setOtherNote("Altre note");
+        return additionalInformations;
     }
 
     void mockVerifyOnboardingNotFound() {

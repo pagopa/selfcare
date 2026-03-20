@@ -10,6 +10,7 @@ locals {
 
   pnpg_suffix = local.is_pnpg == true ? "-${local.location_short}-${local.domain}" : ""
 
+  onboarding_image_tag  = var.onboarding_image_tag
   mongo_db = {
     mongodb_rg_name               = "${local.prefix}-${local.env_short}${local.pnpg_suffix}-cosmosdb-mongodb-rg",
     cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}${local.pnpg_suffix}-cosmosdb-mongodb-account"
@@ -40,6 +41,27 @@ locals {
     ]
     cpu    = 0.5
     memory = "1Gi"
+  }
+
+  microservice_container_app = {
+    min_replicas = 1
+    max_replicas = 5
+    scale_rules = [
+      {
+        custom = {
+          metadata = {
+            "desiredReplicas" = "3"
+            "start"           = "0 8 * * MON-FRI"
+            "end"             = "0 19 * * MON-FRI"
+            "timezone"        = "Europe/Rome"
+          }
+          type = "cron"
+        }
+        name = "cron-scale-rule"
+      }
+    ]
+    cpu    = 1.25
+    memory = "2.5Gi"
   }
 
   quarkus_health_probes = [

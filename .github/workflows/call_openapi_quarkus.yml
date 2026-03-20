@@ -1,0 +1,27 @@
+name: Call - OpenAPI Quarkus
+
+on:
+  workflow_call:
+    inputs:
+      module:
+        type: string
+        required: true
+      path_openapi_docs:
+        type: string
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  swagger_conflict_update:
+    runs-on: ubuntu-24.04
+    permissions: write-all
+    name: Swagger Detect Rule and Conflict
+    steps:
+      - id: swagger-detect
+        uses: pagopa/selfcare-commons/github-actions-template/swagger-detect-conflict-quarkus@main
+        with:
+          path_openapi_docs: ${{ inputs.path_openapi_docs }}
+          module: ${{ inputs.module }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
