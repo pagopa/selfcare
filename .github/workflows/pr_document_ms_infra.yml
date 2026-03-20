@@ -2,7 +2,8 @@ name: Code Review - Document MS Infra
 
 permissions:
   contents: read
-  pull-requests: read
+  id-token: write
+  pull-requests: write
 
 on:
   workflow_dispatch:
