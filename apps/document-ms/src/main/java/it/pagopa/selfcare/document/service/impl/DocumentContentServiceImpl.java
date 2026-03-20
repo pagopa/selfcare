@@ -304,7 +304,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                     try {
                         azureBlobClient.uploadFile(path, filename, Files.readAllBytes(request.getCsv().toPath()));
                     } catch (IOException e) {
-                        log.error("Error reading from file {} ", path, e);
+                        log.error("Error reading from file {} ", sanitize(path), e);
                     }
                 })
                 .onFailure()
