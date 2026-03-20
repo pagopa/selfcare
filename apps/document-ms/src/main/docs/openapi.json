@@ -519,6 +519,24 @@
         "type" : "string",
         "enum" : [ "INSTITUTION", "LEGALS", "USER", "ATTACHMENT" ]
       },
+      "UploadAggregateCsvRequest" : {
+        "type" : "object",
+        "required" : [ "onboardingId", "productId", "csv" ],
+        "properties" : {
+          "onboardingId" : {
+            "type" : "string",
+            "pattern" : "\\S"
+          },
+          "productId" : {
+            "type" : "string",
+            "pattern" : "\\S"
+          },
+          "csv" : {
+            "type" : "string",
+            "format" : "binary"
+          }
+        }
+      },
       "UploadVisuraRequest" : {
         "type" : "object",
         "required" : [ "onboardingId", "filename", "fileContent" ],
@@ -577,6 +595,32 @@
     }
   },
   "paths" : {
+    "/v1/document-content/aggregates-csv" : {
+      "post" : {
+        "summary" : "Upload aggregates CSV to Azure Blob Storage",
+        "description" : "Receives the aggregates CSV data and stores it in Azure Blob Storage. The request must contain productId, filename and filePath",
+        "operationId" : "uploadAggregatesCsv",
+        "tags" : [ "Document Content Controller" ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UploadAggregateCsvRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          }
+        }
+      }
+    },
     "/v1/document-content/attachment" : {
       "post" : {
         "summary" : "Create attachment PDF",
@@ -609,17 +653,8 @@
           },
           "500" : {
             "description" : "Internal server error during PDF generation"
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
           }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
+        }
       }
     },
     "/v1/document-content/contract" : {
@@ -649,17 +684,8 @@
             "content" : {
               "application/json" : { }
             }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
           }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
+        }
       },
       "post" : {
         "summary" : "Create contract PDF",
@@ -692,17 +718,8 @@
           },
           "500" : {
             "description" : "Internal server error during PDF generation"
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
           }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
+        }
       }
     },
     "/v1/document-content/upload-attachment" : {
@@ -742,17 +759,8 @@
             "content" : {
               "application/json" : { }
             }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
           }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
+        }
       }
     },
     "/v1/document-content/visura" : {
@@ -763,7 +771,7 @@
         "tags" : [ "Document Content Controller" ],
         "requestBody" : {
           "content" : {
-            "application/json" : {
+            "multipart/form-data" : {
               "schema" : {
                 "$ref" : "#/components/schemas/UploadVisuraRequest"
               }
@@ -777,20 +785,8 @@
             "content" : {
               "application/json" : { }
             }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          },
-          "400" : {
-            "description" : "Bad Request"
           }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
+        }
       }
     },
     "/v1/document-content/{id}/contract-signed" : {
@@ -818,17 +814,8 @@
                 }
               }
             }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
           }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
+        }
       }
     },
     "/v1/document-content/{onboardingId}/attachment" : {
@@ -863,17 +850,8 @@
                 }
               }
             }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
           }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
+        }
       }
     },
     "/v1/document-content/{onboardingId}/contract" : {
@@ -901,17 +879,8 @@
                 }
               }
             }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
           }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
+        }
       }
     },
     "/v1/document-content/{onboardingId}/template-attachment" : {
@@ -967,17 +936,8 @@
                 }
               }
             }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
           }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
+        }
       }
     },
     "/v1/documents" : {

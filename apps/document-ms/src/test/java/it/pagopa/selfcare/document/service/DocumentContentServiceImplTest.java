@@ -697,10 +697,11 @@ public class DocumentContentServiceImplTest {
     @Test
     void saveVisuraForMerchant_shouldUploadVisuraSuccessfully() {
         byte[] content = new byte[]{1, 2, 3};
+        File tempFile = createTempFileWithContent(content);
         UploadVisuraRequest request = UploadVisuraRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .filename("VISURA_test.xml")
-                .fileContent(content)
+                .fileContent(tempFile)
                 .build();
 
         var awaiter = documentContentService.saveVisuraForMerchant(request).await();
@@ -712,10 +713,11 @@ public class DocumentContentServiceImplTest {
     @Test
     void saveVisuraForMerchant_shouldThrowInternalException_whenUploadFails() {
         byte[] content = new byte[]{4, 5, 6};
+        File tempFile = createTempFileWithContent(content);
         UploadVisuraRequest request = UploadVisuraRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .filename("VISURA_test.xml")
-                .fileContent(content)
+                .fileContent(tempFile)
                 .build();
 
         doThrow(new RuntimeException("upload error"))
@@ -725,6 +727,51 @@ public class DocumentContentServiceImplTest {
         var awaiter = documentContentService.saveVisuraForMerchant(request).await();
 
         assertThrows(InternalException.class, awaiter::indefinitely);
+    }
+
+    // ---- uploadAggregatesCsv ----
+
+    @Test
+    void uploadAggregatesCsv_shouldStoreFileOnAzure() throws IOException {
+        File csvFile = Files.createTempFile("aggregates", ".csv").toFile();
+        csvFile.deleteOnExit();
+        Files.write(csvFile.toPath(), "header1,header2".getBytes());
+
+        UploadAggregateCsvRequest request = new UploadAggregateCsvRequest();
+        request.setOnboardingId(ONBOARDING_ID);
+        request.setProductId(PRODUCT_ID);
+        request.setCsv(csvFile);
+
+        when(documentMsConfig.getAggregatesPath()).thenReturn("aggregates/");
+
+        var awaiter = documentContentService.uploadAggregatesCsv(request).await();
+
+        assertDoesNotThrow(awaiter::indefinitely);
+        verify(azureBlobClient)
+                .uploadFile(eq("aggregates/" + ONBOARDING_ID + "/" + PRODUCT_ID), eq("aggregates.csv"), any(byte[].class));
+    }
+
+    @Test
+    void uploadAggregatesCsv_shouldThrowInternalException_whenAzureUploadFails() throws IOException {
+        File csvFile = Files.createTempFile("aggregates", ".csv").toFile();
+        csvFile.deleteOnExit();
+        Files.write(csvFile.toPath(), "content".getBytes());
+
+        UploadAggregateCsvRequest request = new UploadAggregateCsvRequest();
+        request.setOnboardingId(ONBOARDING_ID);
+        request.setProductId(PRODUCT_ID);
+        request.setCsv(csvFile);
+
+        when(documentMsConfig.getAggregatesPath()).thenReturn("aggregates/");
+        doThrow(new RuntimeException("upload error"))
+                .when(azureBlobClient)
+                .uploadFile(anyString(), anyString(), any());
+
+        var awaiter = documentContentService.uploadAggregatesCsv(request).await();
+
+        assertThrows(InternalException.class, awaiter::indefinitely);
+        verify(azureBlobClient)
+                .uploadFile(eq("aggregates/" + ONBOARDING_ID + "/" + PRODUCT_ID), eq("aggregates.csv"), any(byte[].class));
     }
 
     // ---- helper ----
@@ -747,6 +794,17 @@ public class DocumentContentServiceImplTest {
             pdf.save(tempFile);
         }
         return tempFile;
+    }
+
+    private File createTempFileWithContent(byte[] content) {
+        try {
+            File tempFile = Files.createTempFile("visura-test", ".tmp").toFile();
+            tempFile.deleteOnExit();
+            Files.write(tempFile.toPath(), content);
+            return tempFile;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to create temp file for test", e);
+        }
     }
 
     // ============================================

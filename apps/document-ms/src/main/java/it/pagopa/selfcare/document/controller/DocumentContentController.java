@@ -5,6 +5,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.exception.UpdateNotAllowedException;
 import it.pagopa.selfcare.document.model.dto.request.AttachmentPdfRequest;
 import it.pagopa.selfcare.document.model.dto.request.ContractPdfRequest;
+import it.pagopa.selfcare.document.model.dto.request.UploadAggregateCsvRequest;
 import it.pagopa.selfcare.document.model.dto.request.UploadAttachmentForm;
 import it.pagopa.selfcare.document.model.dto.request.UploadVisuraRequest;
 import it.pagopa.selfcare.document.model.dto.response.CreatePdfResponse;
@@ -39,7 +40,7 @@ import static it.pagopa.selfcare.document.util.Utils.retrieveAttachmentFromFormD
  * This controller receives complete data from the calling service (e.g., onboarding-ms)
  * and generates the PDF documents without making external calls.
  */
-@Authenticated
+//@Authenticated
 @Path("/v1/document-content")
 @AllArgsConstructor
 @Slf4j
@@ -180,10 +181,6 @@ public class DocumentContentController {
     @Path("/upload-attachment")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Uni<Response> uploadAttachment(@Valid @BeanParam UploadAttachmentForm form, @Context ResteasyReactiveRequestContext ctx) {
-    log.info(
-        "Uploading attachment for onboardingId: {}, filename: {}",
-        sanitize(form.getRequest().getOnboardingId()),
-        sanitize(form.getFile().getName()));
         return documentContentService.uploadAttachment(form.getRequest(), retrieveAttachmentFromFormData(ctx.getFormData(), form.getFile()))
                 .replaceWith(Response.status(HttpStatus.SC_NO_CONTENT).build())
                 .onFailure(UpdateNotAllowedException.class)
@@ -196,10 +193,10 @@ public class DocumentContentController {
     )
     @POST
     @Path("/visura")
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Uni<Response> saveVisuraForMerchant(@Valid UploadVisuraRequest request) {
         log.info(
-                "Saving Visura for onboardingId: {}, filename: {}",
+                "Saving Visura for onboardingId= {}, filename= {}",
                 sanitize(request.getOnboardingId()),
                 sanitize(request.getFilename()));
         return documentContentService.saveVisuraForMerchant(request)
@@ -223,5 +220,20 @@ public class DocumentContentController {
         // Il controller si limita a mappare l'Uni<String> restituito dal service in un Uni<Response>
         return documentContentService.deleteContract(fileName, absolutePath)
                 .onItem().transform(deletedFileName -> Response.ok(deletedFileName).build());
+    }
+
+    @Operation(
+            summary = "Upload aggregates CSV to Azure Blob Storage",
+            description = "Receives the aggregates CSV data and stores it in Azure Blob Storage." +
+                    " The request must contain productId, filename and filePath"
+    )
+    @POST
+    @Path("/aggregates-csv")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Uni<Response> uploadAggregatesCsv (@Valid UploadAggregateCsvRequest request) {
+        return documentContentService.uploadAggregatesCsv(request)
+                .replaceWith(Response.status(HttpStatus.SC_NO_CONTENT).build())
+                .onFailure()
+                .recoverWithItem(err -> Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(err.getMessage()).build());
     }
 }

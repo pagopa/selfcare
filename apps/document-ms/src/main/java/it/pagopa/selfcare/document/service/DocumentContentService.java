@@ -5,8 +5,10 @@ import it.pagopa.selfcare.document.model.FormItem;
 import it.pagopa.selfcare.document.model.dto.request.AttachmentPdfRequest;
 import it.pagopa.selfcare.document.model.dto.request.ContractPdfRequest;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
+import it.pagopa.selfcare.document.model.dto.request.UploadAggregateCsvRequest;
 import it.pagopa.selfcare.document.model.dto.request.UploadVisuraRequest;
 import it.pagopa.selfcare.document.model.dto.response.CreatePdfResponse;
+import jakarta.validation.Valid;
 import org.jboss.resteasy.reactive.RestResponse;
 
 import java.io.File;
@@ -53,4 +55,6 @@ public interface DocumentContentService {
     Uni<Void> saveVisuraForMerchant(UploadVisuraRequest uploadVisuraRequest);
 
     Uni<String> deleteContract(String fileName, boolean absolutePath);
+
+    Uni<Void> uploadAggregatesCsv(UploadAggregateCsvRequest request);
 }

@@ -3,15 +3,26 @@ package it.pagopa.selfcare.document.util;
 import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.model.FormItem;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Deque;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.BinaryOperator;
 
 import it.pagopa.selfcare.document.model.entity.Document;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.reactive.server.core.multipart.FormData;
 import org.jboss.resteasy.reactive.server.multipart.FormValue;
 
+import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
+
+@Slf4j
 public class Utils {
 
     private static final String DEFAULT_ATTACHMENT_FORM_DATA_NAME = "file";
@@ -67,5 +78,29 @@ public class Utils {
         document.setContractTemplate(contractTemplate);
         document.setContractVersion(contractVersion);
         return document;
+    }
+
+    public static Path createSafeTempFile(String prefix, String suffix) throws IOException {
+        try {
+            return createTempFileWithPosix(prefix, suffix);
+        } catch (UnsupportedOperationException e) {
+            // Fallback per Windows/Non-POSIX
+            File f = Files.createTempFile(prefix, suffix).toFile();
+            boolean readable = f.setReadable(true, true);
+            boolean writable = f.setWritable(true, true);
+            boolean executable = f.setExecutable(false); // Importante: NO esecuzione
+            if (!readable || !writable || !executable) {
+                log.warn("Could not set restricted permissions on temporary file: {}", sanitize(f.getAbsolutePath()));
+            }
+            return f.toPath();
+        }
+    }
+
+    private static Path createTempFileWithPosix(String prefix, String suffix) throws IOException {
+        FileAttribute<Set<PosixFilePermission>> attr =
+                PosixFilePermissions.asFileAttribute(
+                        PosixFilePermissions.fromString("rw-------")
+                );
+        return Files.createTempFile(prefix, suffix, attr);
     }
 }

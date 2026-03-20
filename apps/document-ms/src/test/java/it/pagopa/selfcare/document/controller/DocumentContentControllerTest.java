@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
@@ -261,19 +262,58 @@ public class DocumentContentControllerTest {
     }
 
     @Test
-    void saveVisuraForMerchant_shouldReturnNoContent_whenUploadSuccessful() {
+    void uploadAggregatesCsv_shouldReturnNoContent_whenUploadSuccessful() throws IOException {
+        File csvFile = Files.createTempFile("aggregates", ".csv").toFile();
+        csvFile.deleteOnExit();
+
+        Mockito.when(documentContentService.uploadAggregatesCsv(any(UploadAggregateCsvRequest.class)))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        given()
+                .multiPart("onboardingId", ONBOARDING_ID)
+                .multiPart("productId", PRODUCT_ID)
+                .multiPart("file", csvFile, "text/csv")
+                .when()
+                .post("/v1/document-content/aggregates-csv")
+                .then()
+                .statusCode(204);
+
+        Mockito.verify(documentContentService).uploadAggregatesCsv(any(UploadAggregateCsvRequest.class));
+    }
+
+    @Test
+    void uploadAggregatesCsv_shouldReturnInternalServerError_whenServiceFails() throws IOException {
+        File csvFile = Files.createTempFile("aggregates", ".csv").toFile();
+        csvFile.deleteOnExit();
+
+        Mockito.when(documentContentService.uploadAggregatesCsv(any(UploadAggregateCsvRequest.class)))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("Storage error")));
+
+        given()
+                .multiPart("onboardingId", ONBOARDING_ID)
+                .multiPart("productId", PRODUCT_ID)
+                .multiPart("file", csvFile, "text/csv")
+                .when()
+                .post("/v1/document-content/aggregates-csv")
+                .then()
+                .statusCode(500);
+    }
+
+    @Test
+    void saveVisuraForMerchant_shouldReturnNoContent_whenUploadSuccessful() throws IOException {
         UploadVisuraRequest request = UploadVisuraRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .filename("VISURA_test.xml")
-                .fileContent(new byte[]{1, 2, 3})
+                .fileContent(Files.createTempFile("contract", ".pdf").toFile())
                 .build();
 
         Mockito.when(documentContentService.saveVisuraForMerchant(any(UploadVisuraRequest.class)))
                 .thenReturn(Uni.createFrom().voidItem());
 
         given()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
+                .multiPart("onboardingId", request.getOnboardingId())
+                .multiPart("filename", request.getFilename())
+                .multiPart("file", request.getFileContent(), "application/pdf")
                 .when()
                 .post("/v1/document-content/visura")
                 .then()
@@ -281,19 +321,20 @@ public class DocumentContentControllerTest {
     }
 
     @Test
-    void saveVisuraForMerchant_shouldReturnInternalServerError_whenServiceFails() {
+    void saveVisuraForMerchant_shouldReturnInternalServerError_whenServiceFails() throws IOException {
         UploadVisuraRequest request = UploadVisuraRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .filename("VISURA_test.xml")
-                .fileContent(new byte[]{1, 2, 3})
+                .fileContent(Files.createTempFile("contract", ".pdf").toFile())
                 .build();
 
         Mockito.when(documentContentService.saveVisuraForMerchant(any(UploadVisuraRequest.class)))
                 .thenReturn(Uni.createFrom().failure(new RuntimeException("Generic error")));
 
         given()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
+                .multiPart("onboardingId", request.getOnboardingId())
+                .multiPart("filename", request.getFilename())
+                .multiPart("file", request.getFileContent(), "application/pdf")
                 .when()
                 .post("/v1/document-content/visura")
                 .then()

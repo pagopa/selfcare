@@ -44,9 +44,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import static it.pagopa.selfcare.document.util.ErrorMessage.ATTACHMENT_UPLOAD_ERROR;
-import static it.pagopa.selfcare.document.util.ErrorMessage.GENERIC_ERROR;
-import static it.pagopa.selfcare.document.util.ErrorMessage.ORIGINAL_DOCUMENT_NOT_FOUND;
+import static it.pagopa.selfcare.document.util.ErrorMessage.*;
 import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
 import static it.pagopa.selfcare.document.util.Utils.*;
 import static it.pagopa.selfcare.onboarding.common.ProductId.*;
@@ -246,9 +244,10 @@ public class DocumentContentServiceImpl implements DocumentContentService {
      */
     @Override
     public Uni<Void> uploadAttachment(DocumentBuilderRequest request, FormItem file) {
-        log.info("Uploading attachment for onboardingId={}, documentName={}",
+        log.info("Uploading attachment for onboardingId={}, productId={}, documentName={}",
                 sanitize(request.getOnboardingId()),
-                sanitize(request.getDocumentName()));
+                sanitize(request.getProductId()),
+                sanitize(file.getFileName()));
 
         return verifyAttachmentDoesNotExist(request)
                 // Shift execution to the worker pool to safely perform CPU-intensive security validations
@@ -289,6 +288,36 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                     }
                 })
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+    }
+
+    @Override
+    public Uni<Void> uploadAggregatesCsv(UploadAggregateCsvRequest request) {
+        log.info("Uploading aggregates CSV for onboardingId: {}, productId: {}",
+                sanitize(request.getOnboardingId()), sanitize(request.getProductId()));
+        final String filename = "aggregates.csv";
+
+        return Uni.createFrom().item(request::getCsv)
+                .emitOn(Infrastructure.getDefaultWorkerPool())
+                .invoke(csvFile -> {
+                    final String path = String.format("%s%s/%s",
+                            documentMsConfig.getAggregatesPath(), request.getOnboardingId(), request.getProductId());
+                    try {
+                        azureBlobClient.uploadFile(path, filename, Files.readAllBytes(request.getCsv().toPath()));
+                    } catch (IOException e) {
+                        log.error("Error reading from file {} ", path, e);
+                    }
+                })
+                .onFailure()
+                .transform(e -> {
+                    log.error(
+                            "Impossible to store csv aggregate for onboardingId: {}, filename: {}. Error: {}",
+                            sanitize(request.getOnboardingId()), sanitize(filename), e.getMessage(), e);
+                    return new InternalException(
+                            GENERIC_ERROR.getCode(),
+                            String.format("Error storing csv aggregate for onboardingId: %s", sanitize(request.getOnboardingId())));
+                })
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .replaceWithVoid();
     }
 
     // ==================== Private Reactive I/O isolation methods ====================
@@ -434,7 +463,13 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
         return Uni.createFrom().item(uploadVisuraRequest::getFileContent)
                 .emitOn(Infrastructure.getDefaultWorkerPool())
-                .invoke(bytes -> azureBlobClient.uploadFile(path, filename, bytes))
+                .invoke(file -> {
+                    try {
+                        azureBlobClient.uploadFile(path, filename, Files.readAllBytes(file.toPath()));
+                    } catch (IOException e) {
+                        log.error("Error reading from file {} ", path, e);
+                    }
+                })
                 .onFailure()
                 .transform(e -> {
                     log.error(
@@ -446,7 +481,6 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 })
                 .replaceWithVoid();
     }
-
     // ==================== Common utility methods ====================
 
     /**

@@ -36,9 +36,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -48,6 +45,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import static it.pagopa.selfcare.document.util.ErrorMessage.*;
+import static it.pagopa.selfcare.document.util.Utils.createSafeTempFile;
 
 @Slf4j
 @ApplicationScoped
@@ -473,7 +471,7 @@ public class SignatureServiceImpl implements SignatureService {
 
                 log.info("Signing input file {} using reason {}", sanitize(pdf.getName()), sanitize(signReason));
 
-                Path signedPdf = createSafeTempFile();
+                Path signedPdf = createSafeTempFile("signed", ".pdf");
                 padesSignService.padesSign(pdf, signedPdf.toFile(), buildSignatureInfo(signReason));
                 return signedPdf.toFile();
 
@@ -482,30 +480,6 @@ public class SignatureServiceImpl implements SignatureService {
             }
         })
         .runSubscriptionOn(Infrastructure.getDefaultExecutor());
-    }
-
-    public Path createSafeTempFile() throws IOException {
-        try {
-            return createTempFileWithPosix();
-        } catch (UnsupportedOperationException e) {
-            // Fallback per Windows/Non-POSIX
-            File f = Files.createTempFile("signed", ".pdf").toFile();
-            boolean readable = f.setReadable(true, true);
-            boolean writable = f.setWritable(true, true);
-            boolean executable = f.setExecutable(false); // Importante: NO esecuzione
-            if (!readable || !writable || !executable) {
-                log.warn("Could not set restricted permissions on temporary file: {}", sanitize(f.getAbsolutePath()));
-            }
-            return f.toPath();
-        }
-    }
-    
-    public Path createTempFileWithPosix() throws IOException {
-        FileAttribute<Set<PosixFilePermission>> attr =
-                PosixFilePermissions.asFileAttribute(
-                        PosixFilePermissions.fromString("rw-------")
-                );
-        return Files.createTempFile("signed", ".pdf", attr);
     }
 
     private SignatureInformation buildSignatureInfo(String signReason) {

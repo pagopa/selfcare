@@ -412,6 +412,22 @@ components:
       - LEGALS
       - USER
       - ATTACHMENT
+    UploadAggregateCsvRequest:
+      type: object
+      required:
+      - onboardingId
+      - productId
+      - csv
+      properties:
+        onboardingId:
+          type: string
+          pattern: \S
+        productId:
+          type: string
+          pattern: \S
+        csv:
+          type: string
+          format: binary
     UploadVisuraRequest:
       type: object
       required:
@@ -457,6 +473,25 @@ components:
       bearerFormat: JWT
       description: Authentication
 paths:
+  /v1/document-content/aggregates-csv:
+    post:
+      summary: Upload aggregates CSV to Azure Blob Storage
+      description: "Receives the aggregates CSV data and stores it in Azure Blob Storage.\
+        \ The request must contain productId, filename and filePath"
+      operationId: uploadAggregatesCsv
+      tags:
+      - Document Content Controller
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/UploadAggregateCsvRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
   /v1/document-content/attachment:
     post:
       summary: Create attachment PDF
@@ -482,12 +517,6 @@ paths:
           description: Invalid request data
         "500":
           description: Internal server error during PDF generation
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
   /v1/document-content/contract:
     delete:
       summary: Delete contract from Azure Blob Storage
@@ -512,12 +541,6 @@ paths:
           description: OK
           content:
             application/json: {}
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
     post:
       summary: Create contract PDF
       description: "Generates a contract PDF document from the provided data, signs\
@@ -542,12 +565,6 @@ paths:
           description: Invalid request data
         "500":
           description: Internal server error during PDF generation
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
   /v1/document-content/upload-attachment:
     post:
       summary: "Upload attachment by verifying and signing document, then save into\
@@ -579,12 +596,6 @@ paths:
           description: OK
           content:
             application/json: {}
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
   /v1/document-content/visura:
     post:
       summary: Store the Visura in Azure Blob Storage
@@ -595,7 +606,7 @@ paths:
       - Document Content Controller
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
               $ref: "#/components/schemas/UploadVisuraRequest"
         required: true
@@ -604,14 +615,6 @@ paths:
           description: OK
           content:
             application/json: {}
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-        "400":
-          description: Bad Request
-      security:
-      - SecurityScheme: []
   /v1/document-content/{id}/contract-signed:
     get:
       summary: Retrieve contract signed for a given onboarding
@@ -634,12 +637,6 @@ paths:
               schema:
                 type: string
                 format: binary
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
   /v1/document-content/{onboardingId}/attachment:
     get:
       summary: Retrieve attachment for a given onboarding and filename
@@ -667,12 +664,6 @@ paths:
               schema:
                 type: string
                 format: binary
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
   /v1/document-content/{onboardingId}/contract:
     get:
       summary: Retrieve contract not signed for a given onboarding
@@ -695,12 +686,6 @@ paths:
               schema:
                 type: string
                 format: binary
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
   /v1/document-content/{onboardingId}/template-attachment:
     get:
       summary: Retrieve template attachment for a given onboarding and filename and
@@ -744,12 +729,6 @@ paths:
               schema:
                 type: string
                 format: binary
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
   /v1/documents:
     post:
       summary: Save document (contract or attachment)

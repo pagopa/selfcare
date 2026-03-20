@@ -1086,34 +1086,6 @@ class SignatureServiceImplTest {
                 .isInstanceOf(RuntimeException.class);
     }
 
-    // ==================== createSafeTempFile / createTempFileWithPosix ====================
-
-    @Test
-    void createTempFileWithPosix_shouldCreateFileWithPdfExtension() throws IOException {
-        Assumptions.assumeTrue(
-                FileSystems.getDefault().supportedFileAttributeViews().contains("posix"),
-                "POSIX attributes are not supported on this platform"
-        );
-
-        Path tempFile = service.createTempFileWithPosix();
-
-        assertThat(tempFile).isNotNull();
-        assertThat(tempFile.toFile()).exists();
-        assertThat(tempFile.toString()).endsWith(".pdf");
-
-        Files.deleteIfExists(tempFile);
-    }
-
-    @Test
-    void createSafeTempFile_shouldReturnValidPath() throws IOException {
-        Path result = service.createSafeTempFile();
-
-        assertThat(result).isNotNull();
-        assertThat(result.toFile()).exists();
-
-        Files.deleteIfExists(result);
-    }
-
     // ==================== validateDocument ====================
 
     @Test
