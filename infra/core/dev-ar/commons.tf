@@ -161,14 +161,15 @@ module "cdn" {
   robots_indexed_paths = local.robots_indexed_paths
   storage_use_case     = "development"
 
-  log_analytics_workspace_id    = module.log_analytics.log_analytics_workspace_id
-  key_vault_id                  = module.key_vault.key_vault_id
-  key_vault_name                = module.key_vault.key_vault_name
-  key_vault_resource_group_name = module.key_vault.key_vault_resource_group_name
-  cdn_certificate_name          = replace("${local.dns_zone_prefix}.${local.external_domain}", ".", "-")
-  vnet_name                     = module.network.vnet_name
-  rg_vnet_name                  = module.network.rg_vnet_name
-  cidr_subnet_cdn               = local.cidr_subnet_cdn
+  log_analytics_workspace_enabled = true
+  log_analytics_workspace_id      = module.log_analytics.log_analytics_workspace_id
+  key_vault_id                    = module.key_vault.key_vault_id
+  key_vault_name                  = module.key_vault.key_vault_name
+  key_vault_resource_group_name   = module.key_vault.key_vault_resource_group_name
+  cdn_certificate_name            = replace("${local.dns_zone_prefix}.${local.external_domain}", ".", "-")
+  vnet_name                       = module.network.vnet_name
+  rg_vnet_name                    = module.network.rg_vnet_name
+  cidr_subnet_cdn                 = local.cidr_subnet_cdn
 }
 
 

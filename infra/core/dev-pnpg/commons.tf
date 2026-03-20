@@ -217,11 +217,12 @@ module "cdn" {
   robots_indexed_paths = local.robots_indexed_paths
   storage_use_case     = "development" //uat and prod should use "default"
 
-  log_analytics_workspace_id    = data.azurerm_log_analytics_workspace.log_analytics.id
-  key_vault_id                  = module.key_vault.key_vault_id
-  key_vault_name                = module.key_vault.key_vault_name
-  key_vault_resource_group_name = module.key_vault.key_vault_resource_group_name
-  # cdn_certificate_name        = certificate managed
+  log_analytics_workspace_enabled = true
+  log_analytics_workspace_id      = data.azurerm_log_analytics_workspace.log_analytics.id
+  key_vault_id                    = module.key_vault.key_vault_id
+  key_vault_name                  = module.key_vault.key_vault_name
+  key_vault_resource_group_name   = module.key_vault.key_vault_resource_group_name
+  # cdn_certificate_name          = certificate managed
   vnet_name       = module.network.vnet_core.name
   rg_vnet_name    = module.network.vnet_core.resource_group_name
   cidr_subnet_cdn = local.cidr_subnet_cdn
@@ -278,6 +279,7 @@ module "networking" {
 
   container_app_name_snet = "${local.project}-pnpg-cae-cp-snet"
 
+  private_endpoint_network_policies = "Enabled"
   # delegation = []
 
   tags = local.tags
@@ -296,7 +298,14 @@ module "container_app_environments" {
   subnet_id  = module.networking.subnet.id
   cae_name   = "${local.project}-pnpg-cae-cp"
 
-  # workload_profiles = []
+  workload_profiles = [
+    {
+      name                  = "Consumption"
+      workload_profile_type = "Consumption"
+      minimum_count         = 0
+      maximum_count         = 0
+    }
+  ]
 
   zone_redundant = false
 

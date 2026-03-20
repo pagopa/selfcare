@@ -50,6 +50,22 @@ module "identity_ci_ms" {
   ]
 }
 
+resource "azurerm_key_vault_access_policy" "key_vault_access_policy_selfcare_identity_ci" {
+  key_vault_id = data.azurerm_key_vault.key_vault.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = module.identity_ci.identity_principal_id
+
+  secret_permissions = [
+    "Get",
+    "List",
+  ]
+
+  certificate_permissions = [
+    "Get",
+    "List",
+  ]
+}
+
 resource "azurerm_key_vault_access_policy" "key_vault_access_policy_identity_ci" {
   key_vault_id = data.azurerm_key_vault.key_vault.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
