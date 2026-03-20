@@ -10,6 +10,8 @@ locals {
 
   project = "${local.prefix}-${local.env_short}"
 
+  onboarding_image_tag  = var.onboarding_image_tag
+
   mongo_db = {
     mongodb_rg_name               = "${local.prefix}-${local.env_short}-${local.pnpg_suffix}-cosmosdb-mongodb-rg",
     cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}-${local.pnpg_suffix}-cosmosdb-mongodb-account"

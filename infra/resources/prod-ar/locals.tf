@@ -8,6 +8,15 @@ locals {
 
   project = "${local.prefix}-${local.env_short}"
 
+  onboarding_image_tag    = var.onboarding_image_tag
+  auth_image_tag          = var.auth_image_tag
+  product_image_tag       = var.product_image_tag
+  product_cdc_image_tag   = var.product_cdc_image_tag
+  iam_image_tag           = var.iam_image_tag
+  document_image_tag      = var.document_image_tag
+  webhook_image_tag       = var.webhook_image_tag
+  namirial_sign_image_tag = var.namirial_sign_image_tag
+
   mongo_db = {
     mongodb_rg_name               = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-rg",
     cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-account"
@@ -38,6 +47,27 @@ locals {
     ]
     cpu    = 0.5
     memory = "1Gi"
+  }
+
+  microservice_container_app = {
+    min_replicas = 1
+    max_replicas = 5
+    scale_rules = [
+      {
+        custom = {
+          metadata = {
+            "desiredReplicas" = "3"
+            "start"           = "0 8 * * MON-FRI"
+            "end"             = "0 19 * * MON-FRI"
+            "timezone"        = "Europe/Rome"
+          }
+          type = "cron"
+        }
+        name = "cron-scale-rule"
+      }
+    ]
+    cpu    = 1.25
+    memory = "2.5Gi"
   }
 
   quarkus_health_probes = [

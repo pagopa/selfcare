@@ -169,7 +169,7 @@ module "container_app_onboarding_ms" {
   container_app_name             = "onboarding-ms"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-onboarding-ms"
-  image_tag                      = var.image_tag
+  image_tag                      = local.onboarding_image_tag
   app_settings                   = local.onboarding_ms_app_settings
   secrets_names                  = local.onboarding_ms_secrets_names
   key_vault_resource_group_name  = local.key_vault_resource_group_name
@@ -187,7 +187,7 @@ module "container_app_onboarding_cdc" {
   container_app_name             = "onboarding-cdc"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-onboarding-cdc"
-  image_tag                      = var.image_tag
+  image_tag                      = local.onboarding_image_tag
   app_settings                   = local.onboarding_cdc_app_settings
   secrets_names                  = local.onboarding_cdc_secrets_names
   key_vault_resource_group_name  = local.key_vault_resource_group_name
@@ -205,7 +205,49 @@ locals {
     service_plan_worker_count = 1
     nat_resource_group_name   = "selc-p-weu-pnpg-nat-rg"
     nat_gateway_name          = "selc-p-weu-pnpg-nat_gw"
-    app_settings              = {}
+    app_settings = {
+      "APPLICATIONINSIGHTS_CONNECTION_STRING" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/appinsights-connection-string/)"
+      "USER_REGISTRY_URL" = "https://api.pdv.pagopa.it/user-registry/v1"
+      "MONGODB_CONNECTION_URI" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/mongodb-connection-string/)"
+      "USER_REGISTRY_API_KEY" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/user-registry-api-key/)"
+      "BLOB_STORAGE_CONN_STRING_PRODUCT" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/blob-storage-product-connection-string/)"
+      "STORAGE_CONTAINER_PRODUCT" = "selc-p-product"
+      "BLOB_STORAGE_CONN_STRING_CONTRACT" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/blob-storage-contract-connection-string/)"
+      "STORAGE_CONTAINER_CONTRACT" = "$web"
+      "MAIL_DESTINATION_TEST" = "false"
+      "MAIL_DESTINATION_TEST_ADDRESS" = "pectest@pec.pagopa.it"
+      "MAIL_SENDER_ADDRESS" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/smtp-usr/)"
+      "MAIL_SERVER_USERNAME" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/smtp-usr/)"
+      "MAIL_SERVER_PASSWORD" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/smtp-psw/)"
+      "MAIL_SERVER_HOST" = "smtps.pec.aruba.it"
+      "MAIL_SERVER_PORT" = "465"
+      "MAIL_TEMPLATE_COMPLETE_PATH" = "resources/templates/email/onboarding_1.0.0.json"
+      "MS_USER_URL" = "https://selc-p-pnpg-user-ms-ca.calmmoss-0be48755.westeurope.azurecontainerapps.io"
+      "MS_CORE_URL" = "https://selc-p-pnpg-ms-core-ca.calmmoss-0be48755.westeurope.azurecontainerapps.io"
+      "JWT_BEARER_TOKEN" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-bearer-token-functions/)"
+      "MS_PARTY_REGISTRY_URL" = "https://selc-p-pnpg-party-reg-proxy-ca.calmmoss-0be48755.westeurope.azurecontainerapps.io"
+      "PAGOPA_LOGO_ENABLE" = "false"
+      "RETRY_MAX_ATTEMPTS" = "3"
+      "FIRST_RETRY_INTERVAL" = "5"
+      "BACKOFF_COEFFICIENT" = "1"
+      "EVENT_HUB_BASE_PATH" = "https://selc-p-eventhub-ns.servicebus.windows.net"
+      "STANDARD_SHARED_ACCESS_KEY_NAME" = "selfcare-wo"
+      "EVENTHUB_SC_CONTRACTS_SELFCARE_WO_KEY_LC" = "string"
+      "STANDARD_TOPIC_NAME" = "SC-Contracts"
+      "SAP_SHARED_ACCESS_KEY_NAME" = "external-interceptor-wo"
+      "EVENTHUB_SC_CONTRACTS_SAP_SELFCARE_WO_KEY_LC" = "string"
+      "SAP_TOPIC_NAME" = "SC-Contracts-SAP"
+      "FD_SHARED_ACCESS_KEY_NAME" = "external-interceptor-wo"
+      "EVENTHUB_SC_CONTRACTS_FD_SELFCARE_WO_KEY_LC" = "string"
+      "FD_TOPIC_NAME" = "Selfcare-FD"
+      "SAP_ALLOWED_INSTITUTION_TYPE" = "PA,GSP,SA,AS,SCP"
+      "SAP_ALLOWED_ORIGINS" = "IPA,SELC"
+      "MINUTES_THRESHOLD_FOR_UPDATE_NOTIFICATION" = "5"
+      "EMAIL_SERVICE_AVAILABLE" = "true"
+      "JWT_TOKEN_ISSUER" = "SPID"
+      "JWT_TOKEN_PRIVATE_KEY" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-private-key/)"
+      "JWT_TOKEN_KID" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-kid/)"
+    }
   }
 }
 

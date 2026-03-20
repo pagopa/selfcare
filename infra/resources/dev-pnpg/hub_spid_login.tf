@@ -230,7 +230,7 @@ locals {
   ]
 }
 
-module "container_app_auth_ms" {
+module "container_app_hub_spid_login" {
   source = "../_modules/container_app_microservice"
 
   env_short                      = local.env_short
