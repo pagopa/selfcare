@@ -14,7 +14,8 @@ on:
       - reopened
       - ready_for_review
     paths:
-      - 'infra/resources/**'
+      - 'infra/resources/**/onboarding.tf'
+      - 'infra/resources/_modules/container_app_microservice/**'
       - './.github/workflows/onboarding_pr_container_apps_infra.yml'
       - './.github/workflows/call_code_review_infra.yml'
 

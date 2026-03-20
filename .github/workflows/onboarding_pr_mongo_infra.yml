@@ -14,14 +14,16 @@ on:
       - reopened
       - ready_for_review
     paths:
-      - 'infra/resources/**'
+      - 'infra/resources/**/onboarding.tf'
+      - 'infra/resources/_modules/cosmosdb_collection/**'
+      - 'infra/resources/_modules/cosmosdb_database/**'
       - './.github/workflows/onboarding_pr_mongo_infra.yml'
       - './.github/workflows/call_code_review_infra.yml'
 
 jobs:
-  code_review_dev:
+  code_review_dev_ar:
     uses: ./.github/workflows/call_code_review_infra.yml
-    name: '[DEV] Mongo Infra Code Review'
+    name: '[DEV-AR] Mongo Infra Code Review'
     if: ${{ !startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
     with:
@@ -29,11 +31,12 @@ jobs:
       dir: infra/resources/dev-ar
       tf_environment: dev-ar
 
-  code_review_uat:
+  code_review_dev_pnpg:
     uses: ./.github/workflows/call_code_review_infra.yml
-    name: '[UAT] Mongo Infra Code Review'
+    name: '[DEV-PNPG] Mongo Infra Code Review'
+    if: ${{ !startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
     with:
-      environment: uat
-      dir: infra/resources/uat-ar
-      tf_environment: uat-ar
+      environment: dev
+      dir: infra/resources/dev-pnpg
+      tf_environment: dev-pnpg
