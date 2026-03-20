@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -1340,6 +1341,101 @@ public class DocumentContentServiceImplTest {
 
         // Se il documento non esiste, Azure non deve MAI essere chiamato
         verify(azureBlobClient, Mockito.never()).retrieveFile(anyString());
+    }
+
+    @Test
+    void deleteContract_shouldSucceedAfterRetries_andNotTriggerRollback() throws IOException {
+        // Arrange
+        String onboardingId = "test-onboarding-123";
+        Document doc = buildDocument();
+        doc.setOnboardingId(onboardingId);
+        doc.setContractSigned("contracts/test-onboarding-123/signed_contract.pdf");
+        doc.setContractFilename("contract.pdf");
+
+        when(documentService.getDocumentInstitutionByOnboardingId(onboardingId))
+                .thenReturn(Uni.createFrom().item(doc));
+        when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
+        when(documentMsConfig.getDeletePath()).thenReturn("/deleted/");
+
+        List<File> generatedFiles = new ArrayList<>();
+        when(azureBlobClient.retrieveFile(anyString())).thenAnswer(invocation -> {
+            File newTempFile = createTempPdf();
+            generatedFiles.add(newTempFile);
+            return newTempFile;
+        });
+
+        // 🌟 MAGIA DEL RETRY: Usiamo un contatore per fallire 2 volte e riuscire alla 3ª
+        AtomicInteger attemptCounter = new AtomicInteger(0);
+        when(documentService.updateDocumentContractFiles(any(Document.class)))
+                .thenReturn(Uni.createFrom().deferred(() -> {
+                    int attempt = attemptCounter.incrementAndGet();
+                    if (attempt <= 2) {
+                        return Uni.createFrom().failure(new RuntimeException("Temporary DB Error (Attempt " + attempt + ")"));
+                    }
+                    return Uni.createFrom().item(1L); // Terzo tentativo: SUCCESSO!
+                }));
+
+        // Act
+        String result = documentContentService.deleteContract(onboardingId)
+                .await().indefinitely();
+
+        // Assert
+        assertEquals("Contract deleted successfully", result);
+
+        // Il DB è stato interrogato (sottoscritto) 3 volte in totale
+        assertEquals(3, attemptCounter.get());
+
+        // Azure è stato chiamato solo 2 volte per file (nessun rollback è scattato!)
+        verify(azureBlobClient, Mockito.times(2)).retrieveFile(anyString());
+        verify(azureBlobClient, Mockito.times(2)).uploadFilePath(anyString(), any(byte[].class));
+        verify(azureBlobClient, Mockito.times(2)).removeFile(anyString());
+    }
+
+    @Test
+    void deleteContract_shouldTriggerAzureRollback_whenDbFailsConsistently() throws IOException {
+        // Arrange
+        String onboardingId = "test-onboarding-123";
+        Document doc = buildDocument();
+        doc.setOnboardingId(onboardingId);
+        doc.setContractSigned("contracts/test-onboarding-123/signed_contract.pdf");
+        doc.setContractFilename("contract.pdf");
+
+        when(documentService.getDocumentInstitutionByOnboardingId(onboardingId))
+                .thenReturn(Uni.createFrom().item(doc));
+        when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
+        when(documentMsConfig.getDeletePath()).thenReturn("/deleted/");
+
+        List<File> generatedFiles = new ArrayList<>();
+        when(azureBlobClient.retrieveFile(anyString())).thenAnswer(invocation -> {
+            File newTempFile = createTempPdf();
+            generatedFiles.add(newTempFile);
+            return newTempFile;
+        });
+
+        // 🚨 IL DB È GIÙ: Restituiamo un fallimento secco. Mutiny ci riproverà da solo 3 volte.
+        when(documentService.updateDocumentContractFiles(any(Document.class)))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("Fatal DB Error")));
+
+        // Act & Assert
+        var awaiter = documentContentService.deleteContract(onboardingId).await();
+
+        // Verifichiamo che l'errore finale arrivi al controller (il 500)
+        RuntimeException ex = assertThrows(RuntimeException.class, awaiter::indefinitely);
+        assertTrue(ex.getMessage().contains("Error deleting contract files from Azure")
+                || ex.getMessage().contains("Fatal DB Error"));
+
+        // 🔄 VERIFICA DEL ROLLBACK!
+        // Le operazioni su Azure devono essere esattamente il DOPPIO (4 invece di 2)
+        // perché abbiamo spostato 2 file, e poi li abbiamo rimessi a posto!
+        verify(azureBlobClient, Mockito.times(4)).retrieveFile(anyString());
+        verify(azureBlobClient, Mockito.times(4)).uploadFilePath(anyString(), any(byte[].class));
+        verify(azureBlobClient, Mockito.times(4)).removeFile(anyString());
+
+        // Controllo memoria: tutti e 4 i file temporanei creati devono essere stati cancellati dai blocchi finally
+        assertEquals(4, generatedFiles.size());
+        for (File f : generatedFiles) {
+            assertFalse(f.exists(), "Memory leak: un file del rollback non è stato eliminato!");
+        }
     }
 
     // ============================================

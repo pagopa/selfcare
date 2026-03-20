@@ -38,6 +38,7 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.Map;
@@ -204,7 +205,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
      * Rejects path traversal attempts and disallows path separators that could escape
      * the expected blob namespace.
      *
-     * @param fileName    user-provided file name or blob path
+     * @param fileName     user-provided file name or blob path
      * @param absolutePath if true, {@code fileName} is treated as a full blob path; otherwise it is
      *                     appended to the configured contractPath.
      * @return a validated logical path to be used with Azure Blob Storage
@@ -272,44 +273,6 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         log.info("START - deleteContract for onboardingId: {}", sanitize(onboardingId));
 
         return documentService.getDocumentInstitutionByOnboardingId(onboardingId)
-                // 1. VIGILE URBANO: Spostiamo il flusso sul Worker Pool per l'I/O bloccante
-                .emitOn(Infrastructure.getDefaultWorkerPool())
-
-                // 2. CHAIN: Usiamo chain perché alla fine dobbiamo restituire un altro Uni (quello del DB)
-                .chain(document -> {
-                    try {
-                        // Recupera i percorsi dei file contrattuali
-                        String signedContractPath = buildAndValidateContractFilePath(document.getContractSigned(), true);
-                        String contractFilePath = buildAndValidateContractFilePath(onboardingId + "/" + document.getContractFilename(), false);
-
-                        // Operazioni I/O Bloccanti (Sicure grazie all'emitOn)
-                        String deletedSignedContract = deleteFileFromAzure(signedContractPath);
-                        String deletedContractFile = deleteFileFromAzure(contractFilePath);
-
-                        // Aggiorna l'oggetto in memoria
-                        document.setContractSigned(deletedSignedContract);
-                        document.setContractFilename(deletedContractFile);
-
-                        // 3. RESTITUIAMO L'UNI DEL DB!
-                        // Ora Mutiny aspetterà che l'update finisca prima di procedere
-                        return documentService.updateDocumentContractFiles(document);
-
-                    } catch (Exception e) {
-                        log.error("Error during deleteContract for onboardingId {}: {}", sanitize(onboardingId), e.getMessage());
-                        // Nel blocco chain, se c'è un errore, dobbiamo restituire un Uni.failure
-                        return Uni.createFrom().failure(new RuntimeException("Error deleting contract files from Azure", e));
-                    }
-                })
-                // 4. MAPPATURA FINALE: Quando l'update su DB ha finito (restituendo un Long),
-                // noi ignoriamo il Long e restituiamo la stringa di successo
-                .replaceWith("Contract deleted successfully");
-    }
- /*
-    @Override
-    public Uni<String> deleteContract(String onboardingId) {
-        log.info("START - deleteContract for onboardingId: {}", sanitize(onboardingId));
-
-        return documentService.getDocumentInstitutionByOnboardingId(onboardingId)
                 .emitOn(Infrastructure.getDefaultWorkerPool())
                 .chain(document -> {
                     // 1. Salviamo i percorsi ORIGINALI prima di modificarli (ci serviranno per il rollback)
@@ -334,7 +297,9 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
                     // 4. Eseguiamo l'update su DB
                     return documentService.updateDocumentContractFiles(document)
-                            // 🚨 LA MAGIA DEL ROLLBACK: Se il DB fallisce, intercettiamo l'errore!
+                            // Se fallisce, riprova fino a 3 volte.
+                            .onFailure().retry().withBackOff(Duration.ofMillis(500), Duration.ofSeconds(2)).atMost(3)
+                            // Se falliscono TUTTI E 3 I TENTATIVI, intercettiamo l'errore definitivo!
                             .onFailure().call(dbError -> {
                                 log.error("DB update failed for onboardingId {}. Triggering Azure Rollback...", onboardingId);
                                 // Chiamiamo il metodo di compensazione asincrono
@@ -343,55 +308,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 })
                 .replaceWith("Contract deleted successfully");
     }
-*/
-// ==========================================
-// METODI DI UTILITÀ PER IL ROLLBACK
-// ==========================================
 
-    /**
-     * Metodo reattivo che orchestra il rollback.
-     */
-
-    /*
-    private Uni<Void> rollbackAzureFiles(String currentSignedPath, String originalSignedPath,
-                                         String currentContractPath, String originalContractPath) {
-        return Uni.createFrom().item(() -> {
-            try {
-                log.info("Rolling back files to original paths...");
-                // Spostiamo i file indietro dalla cartella "deleted" a quella "contracts"
-                restoreFileInAzure(currentSignedPath, originalSignedPath);
-                restoreFileInAzure(currentContractPath, originalContractPath);
-                log.info("Rollback completed successfully.");
-            } catch (Exception e) {
-                // Se fallisce anche il rollback, siamo nel "Worst Case Scenario".
-                // Registriamo un ALLARME CRITICO nei log, spesso intercettato da sistemi come Datadog/Kibana.
-                log.error("CRITICAL ERROR: Rollback failed! Azure is out of sync with MongoDB.", e);
-            }
-            return null;
-        }).runSubscriptionOn(Infrastructure.getDefaultWorkerPool()).replaceWithVoid();
-    }
-
-    /**
-     * Operazione bloccante che fa l'esatto inverso di deleteFileFromAzure
-     */
-
-    /*
-    private void restoreFileInAzure(String currentPath, String originalPath) throws IOException {
-        if (currentPath == null || originalPath == null) return;
-
-        File temporaryFile = azureBlobClient.retrieveFile(currentPath);
-        try {
-            azureBlobClient.uploadFilePath(originalPath, Files.readAllBytes(temporaryFile.toPath()));
-            azureBlobClient.removeFile(currentPath);
-        } finally {
-            if (temporaryFile != null && temporaryFile.exists()) {
-                if (!temporaryFile.delete()) {
-                    log.warn("Impossibile eliminare il file temporaneo locale durante il rollback: {}", temporaryFile.getAbsolutePath());
-                }
-            }
-        }
-    }
- */
     @Override
     public Uni<Void> uploadAggregatesCsv(UploadAggregateCsvRequest request) {
         log.info("Uploading aggregates CSV for onboardingId: {}, productId: {}",
@@ -798,5 +715,44 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     /**
      * Internal record to hold PDF context during the reactive processing chain.
      */
-    private record PdfContext(File pdfFile, String filename, String storagePath) {}
+    private record PdfContext(File pdfFile, String filename, String storagePath) {
+    }
+
+    // ==========================================
+// METODI DI UTILITÀ PER IL ROLLBACK
+// ==========================================
+
+    private Uni<Void> rollbackAzureFiles(String currentSignedPath, String originalSignedPath,
+                                         String currentContractPath, String originalContractPath) {
+        return Uni.createFrom().item(() -> {
+            try {
+                log.info("Rolling back files to original paths...");
+                // Spostiamo i file indietro dalla cartella "deleted" a quella "contracts"
+                restoreFileInAzure(currentSignedPath, originalSignedPath);
+                restoreFileInAzure(currentContractPath, originalContractPath);
+                log.info("Rollback completed successfully.");
+            } catch (Exception e) {
+                // Se fallisce anche il rollback, siamo nel "Worst Case Scenario".
+                // Registriamo un ALLARME CRITICO nei log, spesso intercettato da sistemi come Datadog/Kibana.
+                log.error("CRITICAL ERROR: Rollback failed! Azure is out of sync with MongoDB.", e);
+            }
+            return null;
+        }).runSubscriptionOn(Infrastructure.getDefaultWorkerPool()).replaceWithVoid();
+    }
+
+    private void restoreFileInAzure(String currentPath, String originalPath) throws IOException {
+        if (currentPath == null || originalPath == null) return;
+
+        File temporaryFile = azureBlobClient.retrieveFile(currentPath);
+        try {
+            azureBlobClient.uploadFilePath(originalPath, Files.readAllBytes(temporaryFile.toPath()));
+            azureBlobClient.removeFile(currentPath);
+        } finally {
+            if (temporaryFile != null && temporaryFile.exists()) {
+                if (!temporaryFile.delete()) {
+                    log.warn("Impossibile eliminare il file temporaneo locale durante il rollback: {}", temporaryFile.getAbsolutePath());
+                }
+            }
+        }
+    }
 }
