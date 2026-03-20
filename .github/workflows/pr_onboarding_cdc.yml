@@ -16,11 +16,11 @@ on:
     paths:
       - 'apps/onboarding-cdc/**'
       - '.github/workflows/pr_onboarding_cdc.yml'
-      - '.github/workflows/call_onboarding_code_review.yml'
+      - '.github/workflows/call_code_review.yml'
 
 jobs:
   code_review:
-    uses: ./.github/workflows/call_onboarding_code_review.yml
+    uses: ./.github/workflows/call_code_review.yml
     name: Onboarding cdc Code Review
     secrets: inherit
     with:

@@ -16,14 +16,14 @@ on:
     paths:
       - 'apps/onboarding-ms/**'
       - '.github/workflows/pr_onboarding_ms.yml'
-      - '.github/workflows/call_onboarding_code_review.yml'
+      - '.github/workflows/call_code_review.yml'
       - '.github/workflows/call_openapi_quarkus.yml'
 
 jobs:
   code_review:
     permissions:
       packages: read
-    uses: ./.github/workflows/call_onboarding_code_review.yml
+    uses: ./.github/workflows/call_code_review.yml
     name: Onboarding ms Code Review
     secrets: inherit
     with:

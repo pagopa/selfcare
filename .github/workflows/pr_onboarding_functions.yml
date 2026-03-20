@@ -16,14 +16,14 @@ on:
     paths:
       - 'apps/onboarding-functions/**'
       - '.github/workflows/pr_onboarding_functions.yml'
-      - '.github/workflows/call_onboarding_code_review.yml'
+      - '.github/workflows/call_code_review.yml'
 
 jobs:
 
   code_review:
     permissions:
       packages: read
-    uses: ./.github/workflows/call_onboarding_code_review.yml
+    uses: ./.github/workflows/call_code_review.yml
     name: Onboarding function Code Review
     secrets: inherit
     with:
