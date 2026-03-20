@@ -318,7 +318,8 @@ module "networking" {
   cidr_subnet_cae  = "10.1.156.0/23"
   cidr_subnet_main = "10.1.148.0/23"
 
-  container_app_name_snet = "${local.project}-pnpg-cae-001-snet"
+  container_app_name_snet           = "${local.project}-pnpg-cae-001-snet"
+  private_endpoint_network_policies = "Enabled"
 
   delegation = []
 

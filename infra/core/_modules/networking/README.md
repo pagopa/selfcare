@@ -39,6 +39,7 @@ No modules.
 | <a name="input_container_app_name_snet"></a> [container\_app\_name\_snet](#input\_container\_app\_name\_snet) | Name of container app subnet | `string` | n/a | yes |
 | <a name="input_core_vnet"></a> [core\_vnet](#input\_core\_vnet) | True if the module define the core vnet, true for AR | `bool` | `true` | no |
 | <a name="input_delegation"></a> [delegation](#input\_delegation) | Container app subnet delegation | <pre>list(object({<br/>    name                       = string<br/>    service_delegation_name    = string<br/>    service_delegation_actions = list(string)<br/>  }))</pre> | <pre>[<br/>  {<br/>    "name": "Microsoft.App/environments",<br/>    "service_delegation_actions": [<br/>      "Microsoft.Network/virtualNetworks/subnets/join/action"<br/>    ],<br/>    "service_delegation_name": "Microsoft.App/environments"<br/>  }<br/>]</pre> | no |
+| <a name="input_private_endpoint_network_policies"></a> [private\_endpoint\_network\_policies](#input\_private\_endpoint\_network\_policies) | Enable or Disable network policies for the private endpoint on the subnet. | `string` | `"Disabled"` | no |
 | <a name="input_project"></a> [project](#input\_project) | SelfCare prefix and short environment | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resource tags | `map(any)` | n/a | yes |
 

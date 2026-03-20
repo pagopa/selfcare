@@ -34,6 +34,12 @@ variable "container_app_name_snet" {
   description = "Name of container app subnet"
 }
 
+variable "private_endpoint_network_policies" {
+  type        = string
+  description = "Enable or Disable network policies for the private endpoint on the subnet."
+  default     = "Disabled"
+}
+
 # variable "pnpg_container_app_name_snet" {
 #   type        = string
 #   description = "Name of pnpg subnet"
