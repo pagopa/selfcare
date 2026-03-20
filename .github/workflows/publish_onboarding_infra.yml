@@ -1,4 +1,4 @@
-name: Infra Resources
+name: Publish - Onboarding Infra
 
 on:
   push:

@@ -1,4 +1,4 @@
-name: Code Review onboarding-ms
+name: Code Review - Onboarding MS
 
 on:
   workflow_dispatch:

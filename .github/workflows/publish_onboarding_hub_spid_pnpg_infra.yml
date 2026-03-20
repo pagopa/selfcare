@@ -1,4 +1,4 @@
-name: Release - hub-spid-login PNPG
+name: Publish - Hub Spid PNPG Infra
 
 on:
   workflow_dispatch:

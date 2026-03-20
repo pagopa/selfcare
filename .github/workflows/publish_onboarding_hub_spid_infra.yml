@@ -1,4 +1,4 @@
-name: Release - hub-spid-login
+name: Publish - Hub Spid Infra
 
 on:
   workflow_dispatch:

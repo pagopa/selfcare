@@ -1,4 +1,4 @@
-name: Code Review onboarding-functions
+name: Code Review - Onboarding Functions
 
 on:
   workflow_dispatch:

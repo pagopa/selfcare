@@ -1,4 +1,4 @@
-name: Code Review resources infra
+name: Code Review - Onboarding Infra
 
 on:
   workflow_dispatch:

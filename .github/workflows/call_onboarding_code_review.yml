@@ -1,3 +1,5 @@
+name: Call - Onboarding Code Review
+
 on:
   workflow_call:
     inputs:

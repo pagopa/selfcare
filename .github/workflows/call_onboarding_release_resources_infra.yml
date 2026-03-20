@@ -1,3 +1,5 @@
+name: Call - Onboarding Release Resources Infra
+
 on:
   workflow_call:
     inputs:

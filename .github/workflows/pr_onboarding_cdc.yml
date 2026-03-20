@@ -1,4 +1,4 @@
-name: Code Review onboarding-cdc
+name: Code Review - Onboarding CDC
 
 on:
   workflow_dispatch:

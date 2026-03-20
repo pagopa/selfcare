@@ -1,4 +1,4 @@
-name: OpenAPI Quarkus
+name: Call - OpenAPI Quarkus
 
 on:
   workflow_call:

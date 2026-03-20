@@ -1,4 +1,4 @@
-name: Deploy dashboard events infra
+name: Publish - Dashboard Events Infra
 
 on:
   push:
