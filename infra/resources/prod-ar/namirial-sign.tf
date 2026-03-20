@@ -102,7 +102,7 @@ resource "azapi_resource" "namirial_sign_container_app" {
     type = "SystemAssigned"
   }
 
-  body = jsonencode({
+  body = {
     properties = {
       configuration = {
         activeRevisionsMode = "Single"
@@ -190,7 +190,7 @@ resource "azapi_resource" "namirial_sign_container_app" {
       }
       workloadProfileName = "Consumption"
     }
-  })
+  }
 }
 
 resource "azurerm_key_vault_access_policy" "namirial_sign_keyvault_containerapp_access_policy" {
