@@ -239,54 +239,54 @@ locals {
     service_plan_worker_count = 1
     nat_resource_group_name   = "selc-u-nat-rg"
     nat_gateway_name          = "selc-u-nat_gw"
-    app_settings = [
-      { name = "APPLICATIONINSIGHTS_CONNECTION_STRING", value = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/appinsights-connection-string/)" },
-      { name = "USER_REGISTRY_URL", value = "https://api.uat.pdv.pagopa.it/user-registry/v1" },
-      { name = "MONGODB_CONNECTION_URI", value = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/mongodb-connection-string/)" },
-      { name = "USER_REGISTRY_API_KEY", value = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/user-registry-api-key/)" },
-      { name = "BLOB_STORAGE_CONN_STRING_PRODUCT", value = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/blob-storage-product-connection-string/)" },
-      { name = "STORAGE_CONTAINER_CONTRACT", value = "sc-u-documents-blob" },
-      { name = "STORAGE_CONTAINER_PRODUCT", value = "selc-u-product" },
-      { name = "BLOB_STORAGE_CONN_STRING_CONTRACT", value = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/documents-storage-connection-string/)" },
-      { name = "MAIL_DESTINATION_TEST_ADDRESS", value = "pectest@pec.pagopa.it" },
-      { name = "MAIL_TEMPLATE_REGISTRATION_REQUEST_PT_PATH", value = "contracts/template/mail/registration-request-pt/1.0.0.json" },
-      { name = "MAIL_SENDER_ADDRESS", value = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/smtp-usr/)" },
-      { name = "MAIL_SERVER_USERNAME", value = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/smtp-usr/)" },
-      { name = "MAIL_SERVER_PASSWORD", value = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/smtp-psw/)" },
-      { name = "MAIL_SERVER_HOST", value = "smtps.pec.aruba.it" },
-      { name = "MAIL_SERVER_PORT", value = "465" },
-      { name = "MAIL_SERVER_SSL", value = "true" },
-      { name = "MAIL_TEMPLATE_REGISTRATION_NOTIFICATION_ADMIN_PATH", value = "contracts/template/mail/registration-notification-admin/1.0.0.json" },
-      { name = "MAIL_TEMPLATE_NOTIFICATION_PATH", value = "contracts/template/mail/onboarding-notification/1.0.0.json" },
-      { name = "ADDRESS_EMAIL_NOTIFICATION_ADMIN", value = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/portal-admin-operator-email/)" },
-      { name = "MAIL_TEMPLATE_COMPLETE_PATH", value = "contracts/template/mail/onboarding-complete/1.0.0.json" },
-      { name = "MAIL_TEMPLATE_AGGREGATE_COMPLETE_PATH", value = "contracts/template/mail/onboarding-complete-aggregate/1.0.0.json" },
-      { name = "MAIL_TEMPLATE_FD_COMPLETE_NOTIFICATION_PATH", value = "contracts/template/mail/onboarding-complete-fd/1.0.0.json" },
-      { name = "MAIL_TEMPLATE_AUTOCOMPLETE_PATH", value = "contracts/template/mail/import-massivo-io/1.0.0.json" },
-      { name = "MAIL_TEMPLATE_DELEGATION_NOTIFICATION_PATH", value = "contracts/template/mail/delegation-notification/1.0.0.json" },
-      { name = "MAIL_TEMPLATE_REGISTRATION_PATH", value = "contracts/template/mail/onboarding-request/1.0.1.json" },
-      { name = "MAIL_TEMPLATE_REGISTRATION_AGGREGATOR_PATH", value = "contracts/template/mail/onboarding-request-aggregator/1.0.1.json" },
-      { name = "MAIL_TEMPLATE_REJECT_PATH", value = "contracts/template/mail/onboarding-refused/1.0.0.json" },
-      { name = "MAIL_TEMPLATE_PT_COMPLETE_PATH", value = "contracts/template/mail/registration-complete-pt/1.0.0.json" },
-      { name = "MAIL_TEMPLATE_REGISTRATION_USER_PATH", value = "contracts/template/mail/onboarding-request-admin/1.0.0.json" },
-      { name = "MAIL_TEMPLATE_USER_COMPLETE_NOTIFICATION_PATH", value = "contracts/template/mail/onboarding-complete-user/1.0.0.json" },
-      { name = "MAIL_TEMPLATE_REGISTRATION_USER_NEW_MANAGER_PATH", value = "contracts/template/mail/onboarding-request-manager/1.0.0.json" },
-      { name = "SELFCARE_ADMIN_NOTIFICATION_URL", value = "https://imprese.uat.notifichedigitali.it/dashboard/admin/onboarding/" },
-      { name = "SELFCARE_URL", value = "https://imprese.uat.notifichedigitali.it" },
-      { name = "MAIL_ONBOARDING_CONFIRMATION_LINK", value = "https://imprese.uat.notifichedigitali.it/onboarding/confirm?jwt=" },
-      { name = "MAIL_USER_CONFIRMATION_LINK", value = "https://imprese.uat.notifichedigitali.it/onboarding/confirm?add-user=true&jwt=" },
-      { name = "MAIL_ONBOARDING_REJECTION_LINK", value = "https://imprese.uat.notifichedigitali.it/onboarding/cancel?jwt=" },
-      { name = "MAIL_ONBOARDING_URL", value = "https://imprese.uat.notifichedigitali.it/onboarding/" },
-      { name = "MS_USER_URL", value = "https://selc-u-user-ms-ca.foggyforest-4b815f7f.westeurope.azurecontainerapps.io" },
-      { name = "MS_CORE_URL", value = "https://selc-u-ms-core-ca.foggyforest-4b815f7f.westeurope.azurecontainerapps.io" },
-      { name = "JWT_BEARER_TOKEN", value = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/jwt-bearer-token-functions/)" },
-      { name = "MS_PARTY_REGISTRY_URL", value = "https://selc-u-party-reg-proxy-ca.foggyforest-4b815f7f.westeurope.azurecontainerapps.io" },
-      { name = "USER_MS_SEND_MAIL", value = "false" },
-      { name = "FORCE_INSTITUTION_PERSIST", value = "true" },
-      { name = "JWT_TOKEN_ISSUER", value = "SPID" },
-      { name = "JWT_TOKEN_PRIVATE_KEY", value = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/jwt-private-key/)" },
-      { name = "JWT_TOKEN_KID", value = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/jwt-kid/)" }
-    ]
+    app_settings = {
+      "APPLICATIONINSIGHTS_CONNECTION_STRING" = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/appinsights-connection-string/)"
+      "USER_REGISTRY_URL" = "https://api.uat.pdv.pagopa.it/user-registry/v1"
+      "MONGODB_CONNECTION_URI" = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/mongodb-connection-string/)"
+      "USER_REGISTRY_API_KEY" = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/user-registry-api-key/)"
+      "BLOB_STORAGE_CONN_STRING_PRODUCT" = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/blob-storage-product-connection-string/)"
+      "STORAGE_CONTAINER_CONTRACT" = "sc-u-documents-blob"
+      "STORAGE_CONTAINER_PRODUCT" = "selc-u-product"
+      "BLOB_STORAGE_CONN_STRING_CONTRACT" = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/documents-storage-connection-string/)"
+      "MAIL_DESTINATION_TEST_ADDRESS" = "pectest@pec.pagopa.it"
+      "MAIL_TEMPLATE_REGISTRATION_REQUEST_PT_PATH" = "contracts/template/mail/registration-request-pt/1.0.0.json"
+      "MAIL_SENDER_ADDRESS" = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/smtp-usr/)"
+      "MAIL_SERVER_USERNAME" = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/smtp-usr/)"
+      "MAIL_SERVER_PASSWORD" = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/smtp-psw/)"
+      "MAIL_SERVER_HOST" = "smtps.pec.aruba.it"
+      "MAIL_SERVER_PORT" = "465"
+      "MAIL_SERVER_SSL" = "true"
+      "MAIL_TEMPLATE_REGISTRATION_NOTIFICATION_ADMIN_PATH" = "contracts/template/mail/registration-notification-admin/1.0.0.json"
+      "MAIL_TEMPLATE_NOTIFICATION_PATH" = "contracts/template/mail/onboarding-notification/1.0.0.json"
+      "ADDRESS_EMAIL_NOTIFICATION_ADMIN" = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/portal-admin-operator-email/)"
+      "MAIL_TEMPLATE_COMPLETE_PATH" = "contracts/template/mail/onboarding-complete/1.0.0.json"
+      "MAIL_TEMPLATE_AGGREGATE_COMPLETE_PATH" = "contracts/template/mail/onboarding-complete-aggregate/1.0.0.json"
+      "MAIL_TEMPLATE_FD_COMPLETE_NOTIFICATION_PATH" = "contracts/template/mail/onboarding-complete-fd/1.0.0.json"
+      "MAIL_TEMPLATE_AUTOCOMPLETE_PATH" = "contracts/template/mail/import-massivo-io/1.0.0.json"
+      "MAIL_TEMPLATE_DELEGATION_NOTIFICATION_PATH" = "contracts/template/mail/delegation-notification/1.0.0.json"
+      "MAIL_TEMPLATE_REGISTRATION_PATH" = "contracts/template/mail/onboarding-request/1.0.1.json"
+      "MAIL_TEMPLATE_REGISTRATION_AGGREGATOR_PATH" = "contracts/template/mail/onboarding-request-aggregator/1.0.1.json"
+      "MAIL_TEMPLATE_REJECT_PATH" = "contracts/template/mail/onboarding-refused/1.0.0.json"
+      "MAIL_TEMPLATE_PT_COMPLETE_PATH" = "contracts/template/mail/registration-complete-pt/1.0.0.json"
+      "MAIL_TEMPLATE_REGISTRATION_USER_PATH" = "contracts/template/mail/onboarding-request-admin/1.0.0.json"
+      "MAIL_TEMPLATE_USER_COMPLETE_NOTIFICATION_PATH" = "contracts/template/mail/onboarding-complete-user/1.0.0.json"
+      "MAIL_TEMPLATE_REGISTRATION_USER_NEW_MANAGER_PATH" = "contracts/template/mail/onboarding-request-manager/1.0.0.json"
+      "SELFCARE_ADMIN_NOTIFICATION_URL" = "https://imprese.uat.notifichedigitali.it/dashboard/admin/onboarding/"
+      "SELFCARE_URL" = "https://imprese.uat.notifichedigitali.it"
+      "MAIL_ONBOARDING_CONFIRMATION_LINK" = "https://imprese.uat.notifichedigitali.it/onboarding/confirm?jwt="
+      "MAIL_USER_CONFIRMATION_LINK" = "https://imprese.uat.notifichedigitali.it/onboarding/confirm?add-user=true&jwt="
+      "MAIL_ONBOARDING_REJECTION_LINK" = "https://imprese.uat.notifichedigitali.it/onboarding/cancel?jwt="
+      "MAIL_ONBOARDING_URL" = "https://imprese.uat.notifichedigitali.it/onboarding/"
+      "MS_USER_URL" = "https://selc-u-user-ms-ca.foggyforest-4b815f7f.westeurope.azurecontainerapps.io"
+      "MS_CORE_URL" = "https://selc-u-ms-core-ca.foggyforest-4b815f7f.westeurope.azurecontainerapps.io"
+      "JWT_BEARER_TOKEN" = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/jwt-bearer-token-functions/)"
+      "MS_PARTY_REGISTRY_URL" = "https://selc-u-party-reg-proxy-ca.foggyforest-4b815f7f.westeurope.azurecontainerapps.io"
+      "USER_MS_SEND_MAIL" = "false"
+      "FORCE_INSTITUTION_PERSIST" = "true"
+      "JWT_TOKEN_ISSUER" = "SPID"
+      "JWT_TOKEN_PRIVATE_KEY" = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/jwt-private-key/)"
+      "JWT_TOKEN_KID" = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/jwt-kid/)"
+    }
   }
 }
 

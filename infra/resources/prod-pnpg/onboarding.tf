@@ -205,49 +205,49 @@ locals {
     service_plan_worker_count = 1
     nat_resource_group_name   = "selc-p-weu-pnpg-nat-rg"
     nat_gateway_name          = "selc-p-weu-pnpg-nat_gw"
-    app_settings = [
-      { name = "APPLICATIONINSIGHTS_CONNECTION_STRING", value = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/appinsights-connection-string/)" },
-      { name = "USER_REGISTRY_URL", value = "https://api.pdv.pagopa.it/user-registry/v1" },
-      { name = "MONGODB_CONNECTION_URI", value = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/mongodb-connection-string/)" },
-      { name = "USER_REGISTRY_API_KEY", value = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/user-registry-api-key/)" },
-      { name = "BLOB_STORAGE_CONN_STRING_PRODUCT", value = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/blob-storage-product-connection-string/)" },
-      { name = "STORAGE_CONTAINER_PRODUCT", value = "selc-p-product" },
-      { name = "BLOB_STORAGE_CONN_STRING_CONTRACT", value = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/blob-storage-contract-connection-string/)" },
-      { name = "STORAGE_CONTAINER_CONTRACT", value = "$web" },
-      { name = "MAIL_DESTINATION_TEST", value = "false" },
-      { name = "MAIL_DESTINATION_TEST_ADDRESS", value = "pectest@pec.pagopa.it" },
-      { name = "MAIL_SENDER_ADDRESS", value = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/smtp-usr/)" },
-      { name = "MAIL_SERVER_USERNAME", value = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/smtp-usr/)" },
-      { name = "MAIL_SERVER_PASSWORD", value = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/smtp-psw/)" },
-      { name = "MAIL_SERVER_HOST", value = "smtps.pec.aruba.it" },
-      { name = "MAIL_SERVER_PORT", value = "465" },
-      { name = "MAIL_TEMPLATE_COMPLETE_PATH", value = "resources/templates/email/onboarding_1.0.0.json" },
-      { name = "MS_USER_URL", value = "https://selc-p-pnpg-user-ms-ca.calmmoss-0be48755.westeurope.azurecontainerapps.io" },
-      { name = "MS_CORE_URL", value = "https://selc-p-pnpg-ms-core-ca.calmmoss-0be48755.westeurope.azurecontainerapps.io" },
-      { name = "JWT_BEARER_TOKEN", value = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-bearer-token-functions/)" },
-      { name = "MS_PARTY_REGISTRY_URL", value = "https://selc-p-pnpg-party-reg-proxy-ca.calmmoss-0be48755.westeurope.azurecontainerapps.io" },
-      { name = "PAGOPA_LOGO_ENABLE", value = "false" },
-      { name = "RETRY_MAX_ATTEMPTS", value = "3" },
-      { name = "FIRST_RETRY_INTERVAL", value = "5" },
-      { name = "BACKOFF_COEFFICIENT", value = "1" },
-      { name = "EVENT_HUB_BASE_PATH", value = "https://selc-p-eventhub-ns.servicebus.windows.net" },
-      { name = "STANDARD_SHARED_ACCESS_KEY_NAME", value = "selfcare-wo" },
-      { name = "EVENTHUB_SC_CONTRACTS_SELFCARE_WO_KEY_LC", value = "string" },
-      { name = "STANDARD_TOPIC_NAME", value = "SC-Contracts" },
-      { name = "SAP_SHARED_ACCESS_KEY_NAME", value = "external-interceptor-wo" },
-      { name = "EVENTHUB_SC_CONTRACTS_SAP_SELFCARE_WO_KEY_LC", value = "string" },
-      { name = "SAP_TOPIC_NAME", value = "SC-Contracts-SAP" },
-      { name = "FD_SHARED_ACCESS_KEY_NAME", value = "external-interceptor-wo" },
-      { name = "EVENTHUB_SC_CONTRACTS_FD_SELFCARE_WO_KEY_LC", value = "string" },
-      { name = "FD_TOPIC_NAME", value = "Selfcare-FD" },
-      { name = "SAP_ALLOWED_INSTITUTION_TYPE", value = "PA,GSP,SA,AS,SCP" },
-      { name = "SAP_ALLOWED_ORIGINS", value = "IPA,SELC" },
-      { name = "MINUTES_THRESHOLD_FOR_UPDATE_NOTIFICATION", value = "5" },
-      { name = "EMAIL_SERVICE_AVAILABLE", value = "true" },
-      { name = "JWT_TOKEN_ISSUER", value = "SPID" },
-      { name = "JWT_TOKEN_PRIVATE_KEY", value = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-private-key/)" },
-      { name = "JWT_TOKEN_KID", value = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-kid/)" }
-    ]
+    app_settings = {
+      "APPLICATIONINSIGHTS_CONNECTION_STRING" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/appinsights-connection-string/)"
+      "USER_REGISTRY_URL" = "https://api.pdv.pagopa.it/user-registry/v1"
+      "MONGODB_CONNECTION_URI" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/mongodb-connection-string/)"
+      "USER_REGISTRY_API_KEY" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/user-registry-api-key/)"
+      "BLOB_STORAGE_CONN_STRING_PRODUCT" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/blob-storage-product-connection-string/)"
+      "STORAGE_CONTAINER_PRODUCT" = "selc-p-product"
+      "BLOB_STORAGE_CONN_STRING_CONTRACT" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/blob-storage-contract-connection-string/)"
+      "STORAGE_CONTAINER_CONTRACT" = "$web"
+      "MAIL_DESTINATION_TEST" = "false"
+      "MAIL_DESTINATION_TEST_ADDRESS" = "pectest@pec.pagopa.it"
+      "MAIL_SENDER_ADDRESS" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/smtp-usr/)"
+      "MAIL_SERVER_USERNAME" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/smtp-usr/)"
+      "MAIL_SERVER_PASSWORD" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/smtp-psw/)"
+      "MAIL_SERVER_HOST" = "smtps.pec.aruba.it"
+      "MAIL_SERVER_PORT" = "465"
+      "MAIL_TEMPLATE_COMPLETE_PATH" = "resources/templates/email/onboarding_1.0.0.json"
+      "MS_USER_URL" = "https://selc-p-pnpg-user-ms-ca.calmmoss-0be48755.westeurope.azurecontainerapps.io"
+      "MS_CORE_URL" = "https://selc-p-pnpg-ms-core-ca.calmmoss-0be48755.westeurope.azurecontainerapps.io"
+      "JWT_BEARER_TOKEN" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-bearer-token-functions/)"
+      "MS_PARTY_REGISTRY_URL" = "https://selc-p-pnpg-party-reg-proxy-ca.calmmoss-0be48755.westeurope.azurecontainerapps.io"
+      "PAGOPA_LOGO_ENABLE" = "false"
+      "RETRY_MAX_ATTEMPTS" = "3"
+      "FIRST_RETRY_INTERVAL" = "5"
+      "BACKOFF_COEFFICIENT" = "1"
+      "EVENT_HUB_BASE_PATH" = "https://selc-p-eventhub-ns.servicebus.windows.net"
+      "STANDARD_SHARED_ACCESS_KEY_NAME" = "selfcare-wo"
+      "EVENTHUB_SC_CONTRACTS_SELFCARE_WO_KEY_LC" = "string"
+      "STANDARD_TOPIC_NAME" = "SC-Contracts"
+      "SAP_SHARED_ACCESS_KEY_NAME" = "external-interceptor-wo"
+      "EVENTHUB_SC_CONTRACTS_SAP_SELFCARE_WO_KEY_LC" = "string"
+      "SAP_TOPIC_NAME" = "SC-Contracts-SAP"
+      "FD_SHARED_ACCESS_KEY_NAME" = "external-interceptor-wo"
+      "EVENTHUB_SC_CONTRACTS_FD_SELFCARE_WO_KEY_LC" = "string"
+      "FD_TOPIC_NAME" = "Selfcare-FD"
+      "SAP_ALLOWED_INSTITUTION_TYPE" = "PA,GSP,SA,AS,SCP"
+      "SAP_ALLOWED_ORIGINS" = "IPA,SELC"
+      "MINUTES_THRESHOLD_FOR_UPDATE_NOTIFICATION" = "5"
+      "EMAIL_SERVICE_AVAILABLE" = "true"
+      "JWT_TOKEN_ISSUER" = "SPID"
+      "JWT_TOKEN_PRIVATE_KEY" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-private-key/)"
+      "JWT_TOKEN_KID" = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-kid/)"
+    }
   }
 }
 
