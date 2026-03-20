@@ -1,4 +1,4 @@
-name: Code Review - Auth infra
+name: Code Review - Auth Infra
 
 on:
   workflow_dispatch:
