@@ -2,34 +2,34 @@
 # Storage
 ###############################################################################
 
-data "azurerm_resource_group" "namirial_sign_contracts_storage_rg" {
+data "azurerm_resource_group" "namirial_sws_storage_rg" {
   name = "${local.project}-contracts-storage-rg"
 }
 
-data "azurerm_container_app_environment" "namirial_sign_container_app_environment" {
+data "azurerm_container_app_environment" "namirial_sws_container_app_environment" {
   name                = local.container_app_environment_name
   resource_group_name = local.ca_resource_group_name
 }
 
-data "azurerm_private_dns_zone" "namirial_sign_private_azurecontainerapps_io" {
+data "azurerm_private_dns_zone" "namirial_sws_private_azurecontainerapps_io" {
   name                = "azurecontainerapps.io"
   resource_group_name = local.resource_group_name_vnet
 }
 
-data "azurerm_key_vault_secret" "namirial_sign_hub_docker_user" {
+data "azurerm_key_vault_secret" "namirial_sws_hub_docker_user" {
   name         = "hub-docker-user"
   key_vault_id = data.azurerm_key_vault.key_vault.id
 }
 
-data "azurerm_key_vault_secret" "namirial_sign_hub_docker_pwd" {
+data "azurerm_key_vault_secret" "namirial_sws_hub_docker_pwd" {
   name         = "hub-docker-pwd"
   key_vault_id = data.azurerm_key_vault.key_vault.id
 }
 
-resource "azurerm_storage_account" "namirial_sign_storage_account" {
+resource "azurerm_storage_account" "namirial_sws_storage_account" {
   name                            = replace(format("%s-namirial-sws-st", local.project), "-", "")
-  resource_group_name             = data.azurerm_resource_group.namirial_sign_contracts_storage_rg.name
-  location                        = data.azurerm_resource_group.namirial_sign_contracts_storage_rg.location
+  resource_group_name             = data.azurerm_resource_group.namirial_sws_storage_rg.name
+  location                        = data.azurerm_resource_group.namirial_sws_storage_rg.location
   min_tls_version                 = "TLS1_2"
   account_tier                    = "Standard"
   account_replication_type        = "LRS"
@@ -38,9 +38,9 @@ resource "azurerm_storage_account" "namirial_sign_storage_account" {
   tags = local.tags
 }
 
-resource "azurerm_storage_share" "namirial_sign_storage_share" {
+resource "azurerm_storage_share" "namirial_sws_storage_share" {
   name                 = "${local.project}-namirial-sws-share"
-  storage_account_name = azurerm_storage_account.namirial_sign_storage_account.name
+  storage_account_name = azurerm_storage_account.namirial_sws_storage_account.name
   quota                = 1
 }
 
@@ -94,8 +94,8 @@ resource "azurerm_container_app_environment_storage" "namirial_sign_storage_env"
 # resource "azapi_resource" "namirial_sign_container_app" {
 #   type      = "Microsoft.App/containerApps@2023-05-01"
 #   name      = "${local.project}-namirial-sws-ca"
-#   location  = data.azurerm_resource_group.namirial_sign_contracts_storage_rg.location
-#   parent_id = data.azurerm_resource_group.namirial_sign_contracts_storage_rg.id
+#   location  = data.azurerm_resource_group.namirial_sws_storage_rg.location
+#   parent_id = data.azurerm_resource_group.namirial_sws_storage_rg.id
 
 #   tags = local.tags
 
@@ -196,13 +196,13 @@ resource "azurerm_container_app_environment_storage" "namirial_sign_storage_env"
 
 resource "azurerm_container_app" "namirial_sign_container_app" {
   name                         = "${local.project}-namirial-sws-ca"
-  resource_group_name          = data.azurerm_resource_group.namirial_sign_contracts_storage_rg.name
+  resource_group_name          = data.azurerm_resource_group.namirial_sws_storage_rg.name
   container_app_environment_id = data.azurerm_container_app_environment.namirial_sign_container_app_environment.id
   revision_mode                = "Single"
   workload_profile_name        = "Consumption"
 
   # In azurerm_container_app a volte è richiesta anche la location esplicita
-  # location = data.azurerm_resource_group.namirial_sign_contracts_storage_rg.location
+  # location = data.azurerm_resource_group.namirial_sws_storage_rg.location
 
   tags = local.tags
 
