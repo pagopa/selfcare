@@ -65,28 +65,144 @@ locals {
   ]
 }
 
-resource "azapi_resource" "namirial_sign_storage_env" {
-  type      = "Microsoft.App/managedEnvironments/storages@2023-05-01"
-  name      = "${local.project}-namirial-sws-se"
-  parent_id = data.azurerm_container_app_environment.namirial_sign_container_app_environment.id
+# resource "azapi_resource" "namirial_sign_storage_env" {
+#   type      = "Microsoft.App/managedEnvironments/storages@2023-05-01"
+#   name      = "${local.project}-namirial-sws-se"
+#   parent_id = data.azurerm_container_app_environment.namirial_sign_container_app_environment.id
 
-  body = jsonencode({
-    properties = {
-      azureFile = {
-        accountName = azurerm_storage_account.namirial_sign_storage_account.name
-        shareName   = azurerm_storage_share.namirial_sign_storage_share.name
-        accessMode  = "ReadWrite"
-        accountKey  = azurerm_storage_account.namirial_sign_storage_account.primary_access_key
-      }
-    }
-  })
+#   body = jsonencode({
+#     properties = {
+#       azureFile = {
+#         accountName = azurerm_storage_account.namirial_sign_storage_account.name
+#         shareName   = azurerm_storage_share.namirial_sign_storage_share.name
+#         accessMode  = "ReadWrite"
+#         accountKey  = azurerm_storage_account.namirial_sign_storage_account.primary_access_key
+#       }
+#     }
+#   })
+# }
+
+resource "azurerm_container_app_environment_storage" "namirial_sign_storage_env" {
+  name                         = "${local.project}-namirial-sws-se"
+  container_app_environment_id = data.azurerm_container_app_environment.namirial_sign_container_app_environment.id
+  account_name                 = azurerm_storage_account.namirial_sign_storage_account.name
+  share_name                   = azurerm_storage_share.namirial_sign_storage_share.name
+  access_key                   = azurerm_storage_account.namirial_sign_storage_account.primary_access_key
+  access_mode                  = "ReadWrite"
 }
 
-resource "azapi_resource" "namirial_sign_container_app" {
-  type      = "Microsoft.App/containerApps@2023-05-01"
-  name      = "${local.project}-namirial-sws-ca"
-  location  = data.azurerm_resource_group.namirial_sign_contracts_storage_rg.location
-  parent_id = data.azurerm_resource_group.namirial_sign_contracts_storage_rg.id
+# resource "azapi_resource" "namirial_sign_container_app" {
+#   type      = "Microsoft.App/containerApps@2023-05-01"
+#   name      = "${local.project}-namirial-sws-ca"
+#   location  = data.azurerm_resource_group.namirial_sign_contracts_storage_rg.location
+#   parent_id = data.azurerm_resource_group.namirial_sign_contracts_storage_rg.id
+
+#   tags = local.tags
+
+#   identity {
+#     type = "SystemAssigned"
+#   }
+
+#   body = {
+#     properties = {
+#       configuration = {
+#         activeRevisionsMode = "Single"
+#         ingress = {
+#           allowInsecure = false
+#           external      = true
+#           targetPort    = 8080
+#           traffic = [
+#             {
+#               latestRevision = true
+#               label          = "latest"
+#               weight         = 100
+#             }
+#           ]
+#         }
+#         registries = [
+#           {
+#             server            = "index.docker.io"
+#             username          = data.azurerm_key_vault_secret.namirial_sign_hub_docker_user.value
+#             passwordSecretRef = "docker-password"
+#           }
+#         ]
+#         secrets = [
+#           {
+#             name  = "docker-password"
+#             value = data.azurerm_key_vault_secret.namirial_sign_hub_docker_pwd.value
+#           }
+#         ]
+#       }
+#       environmentId = data.azurerm_container_app_environment.namirial_sign_container_app_environment.id
+#       template = {
+#         containers = [
+#           {
+#             name  = "namirial-sws"
+#             image = "index.docker.io/namirial/sws:${local.namirial_sign_image_tag}"
+#             env   = local.app_settings_namirial_sign
+#             resources = {
+#               cpu    = local.namirial_sign_container_app.cpu
+#               memory = local.namirial_sign_container_app.memory
+#             }
+#             volumeMounts = [
+#               {
+#                 mountPath  = "/opt/sws/custom"
+#                 volumeName = "sws-storage"
+#               }
+#             ]
+#             probes = [
+#               {
+#                 httpGet = {
+#                   path   = "/SignEngineWeb/rest/ready"
+#                   port   = 8080
+#                   scheme = "HTTP"
+#                 }
+#                 timeoutSeconds      = 4
+#                 type                = "Liveness"
+#                 failureThreshold    = 3
+#                 initialDelaySeconds = 60
+#               },
+#               {
+#                 httpGet = {
+#                   path   = "/SignEngineWeb/rest/ready"
+#                   port   = 8080
+#                   scheme = "HTTP"
+#                 }
+#                 timeoutSeconds      = 4
+#                 type                = "Readiness"
+#                 failureThreshold    = 30
+#                 initialDelaySeconds = 30
+#               }
+#             ]
+#           }
+#         ]
+#         scale = {
+#           minReplicas = local.namirial_sign_container_app.min_replicas
+#           maxReplicas = local.namirial_sign_container_app.max_replicas
+#           rules       = local.namirial_sign_container_app.scale_rules
+#         }
+#         volumes = [
+#           {
+#             name        = "sws-storage"
+#             storageType = "AzureFile"
+#             storageName = azapi_resource.namirial_sign_storage_env.name
+#           }
+#         ]
+#       }
+#       workloadProfileName = "Consumption"
+#     }
+#   }
+# }
+
+resource "azurerm_container_app" "namirial_sign_container_app" {
+  name                         = "${local.project}-namirial-sws-ca"
+  resource_group_name          = data.azurerm_resource_group.namirial_sign_contracts_storage_rg.name
+  container_app_environment_id = data.azurerm_container_app_environment.namirial_sign_container_app_environment.id
+  revision_mode                = "Single"
+  workload_profile_name        = "Consumption"
+
+  # In azurerm_container_app a volte è richiesta anche la location esplicita
+  # location = data.azurerm_resource_group.namirial_sign_contracts_storage_rg.location
 
   tags = local.tags
 
@@ -94,93 +210,81 @@ resource "azapi_resource" "namirial_sign_container_app" {
     type = "SystemAssigned"
   }
 
-  body = {
-    properties = {
-      configuration = {
-        activeRevisionsMode = "Single"
-        ingress = {
-          allowInsecure = false
-          external      = true
-          targetPort    = 8080
-          traffic = [
-            {
-              latestRevision = true
-              label          = "latest"
-              weight         = 100
-            }
-          ]
+  ingress {
+    allow_insecure_connections = false
+    external_enabled           = true
+    target_port                = 8080
+    transport                  = "auto"
+
+    traffic_weight {
+      latest_revision = true
+      percentage      = 100
+    }
+  }
+
+  registry {
+    server               = "index.docker.io"
+    username             = data.azurerm_key_vault_secret.namirial_sign_hub_docker_user.value
+    password_secret_name = "docker-password"
+  }
+
+  secret {
+    name  = "docker-password"
+    value = data.azurerm_key_vault_secret.namirial_sign_hub_docker_pwd.value
+  }
+
+  template {
+    min_replicas = local.namirial_sign_container_app.min_replicas
+    max_replicas = local.namirial_sign_container_app.max_replicas
+
+    # ATTENZIONE ALLE SCALE RULES: azurerm usa blocchi specifici come `custom_scale_rule` o `http_scale_rule`.
+    # Se local.namirial_sign_container_app.scale_rules era formattato per azapi, andrà probabilmente adattato con un dynamic block.
+
+    container {
+      name   = "namirial-sws"
+      image  = "index.docker.io/namirial/sws:${local.namirial_sign_image_tag}"
+      cpu    = local.namirial_sign_container_app.cpu
+      memory = local.namirial_sign_container_app.memory
+
+      # Gestione delle variabili d'ambiente tramite dynamic block
+      dynamic "env" {
+        for_each = local.app_settings_namirial_sign
+        content {
+          name        = env.value.name
+          value       = lookup(env.value, "value", null)
+          secret_name = lookup(env.value, "secret_name", null)
         }
-        registries = [
-          {
-            server            = "index.docker.io"
-            username          = data.azurerm_key_vault_secret.namirial_sign_hub_docker_user.value
-            passwordSecretRef = "docker-password"
-          }
-        ]
-        secrets = [
-          {
-            name  = "docker-password"
-            value = data.azurerm_key_vault_secret.namirial_sign_hub_docker_pwd.value
-          }
-        ]
       }
-      environmentId = data.azurerm_container_app_environment.namirial_sign_container_app_environment.id
-      template = {
-        containers = [
-          {
-            name  = "namirial-sws"
-            image = "index.docker.io/namirial/sws:${local.namirial_sign_image_tag}"
-            env   = local.app_settings_namirial_sign
-            resources = {
-              cpu    = local.namirial_sign_container_app.cpu
-              memory = local.namirial_sign_container_app.memory
-            }
-            volumeMounts = [
-              {
-                mountPath  = "/opt/sws/custom"
-                volumeName = "sws-storage"
-              }
-            ]
-            probes = [
-              {
-                httpGet = {
-                  path   = "/SignEngineWeb/rest/ready"
-                  port   = 8080
-                  scheme = "HTTP"
-                }
-                timeoutSeconds      = 4
-                type                = "Liveness"
-                failureThreshold    = 3
-                initialDelaySeconds = 60
-              },
-              {
-                httpGet = {
-                  path   = "/SignEngineWeb/rest/ready"
-                  port   = 8080
-                  scheme = "HTTP"
-                }
-                timeoutSeconds      = 4
-                type                = "Readiness"
-                failureThreshold    = 30
-                initialDelaySeconds = 30
-              }
-            ]
-          }
-        ]
-        scale = {
-          minReplicas = local.namirial_sign_container_app.min_replicas
-          maxReplicas = local.namirial_sign_container_app.max_replicas
-          rules       = local.namirial_sign_container_app.scale_rules
-        }
-        volumes = [
-          {
-            name        = "sws-storage"
-            storageType = "AzureFile"
-            storageName = azapi_resource.namirial_sign_storage_env.name
-          }
-        ]
+
+      volume_mounts {
+        name = "sws-storage"
+        path = "/opt/sws/custom"
       }
-      workloadProfileName = "Consumption"
+
+      liveness_probe {
+        path                    = "/SignEngineWeb/rest/ready"
+        port                    = 8080
+        transport               = "HTTP"
+        timeout                 = 4
+        failure_count_threshold = 3
+        initial_delay           = 60
+      }
+
+      readiness_probe {
+        path                    = "/SignEngineWeb/rest/ready"
+        port                    = 8080
+        transport               = "HTTP"
+        timeout                 = 4
+        failure_count_threshold = 30
+        initial_delay           = 30
+      }
+    }
+
+    volume {
+      name         = "sws-storage"
+      storage_type = "AzureFile"
+      # Assicurati di usare il nome della risorsa storage convertita in precedenza!
+      storage_name = azurerm_container_app_environment_storage.namirial_sign_storage_env.name
     }
   }
 }
