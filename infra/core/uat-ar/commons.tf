@@ -1,6 +1,6 @@
-###############################################################################
-# network
-###############################################################################
+# ###############################################################################
+# # network
+# ###############################################################################
 module "network" {
   source = "../_modules/network"
 
@@ -21,9 +21,9 @@ module "network" {
   aks_platform_env                  = local.aks_platform_env
 }
 
-###############################################################################
-# key_vault
-###############################################################################
+# ###############################################################################
+# # key_vault
+# ###############################################################################
 module "key_vault" {
   source = "../_modules/key_vault"
 
@@ -37,9 +37,9 @@ module "key_vault" {
 }
 
 
-# ###############################################################################
-# # azure_key_vault_items
-# ###############################################################################
+# # ###############################################################################
+# # # azure_key_vault_items
+# # ###############################################################################
 module "azure_key_vault_items" {
   source = "../_modules/data/azure_key_vault_items"
 
@@ -50,9 +50,9 @@ module "azure_key_vault_items" {
 }
 
 
-# ###############################################################################
-# # dns_private
-# ###############################################################################
+# # ###############################################################################
+# # # dns_private
+# # ###############################################################################
 module "dns_private" {
   source = "../_modules/dns_private"
 
@@ -73,9 +73,9 @@ module "dns_private" {
   vnet_aks_platform_name = module.network.vnet_aks_platform_name
 }
 
-# ###############################################################################
-# # dns_public
-# ###############################################################################
+# # ###############################################################################
+# # # dns_public
+# # ###############################################################################
 module "dns_public" {
   source = "../_modules/dns_public"
 
@@ -92,9 +92,9 @@ module "dns_public" {
   appgateway_public_ip_address = module.network.appgateway_public_ip_address
 }
 
-# ###############################################################################
-# # nat
-# ###############################################################################
+# # ###############################################################################
+# # # nat
+# # ###############################################################################
 module "nat" {
   source = "../_modules/nat"
 
@@ -104,9 +104,9 @@ module "nat" {
   tags      = local.tags
 }
 
-# ###############################################################################
-# # log_analytics (LAW + AppInsights - separate to break CDN/monitor cycle)
-# ###############################################################################
+# # ###############################################################################
+# # # log_analytics (LAW + AppInsights - separate to break CDN/monitor cycle)
+# # ###############################################################################
 module "log_analytics" {
   source = "../_modules/log_analytics"
 
@@ -121,9 +121,9 @@ module "log_analytics" {
   law_daily_quota_gb    = local.law_daily_quota_gb
 }
 
-# ###############################################################################
-# # cdn (Front Door)
-# ###############################################################################
+# # ###############################################################################
+# # # cdn (Front Door)
+# # ###############################################################################
 
 module "cdn" {
   source = "../_modules/cdn"
@@ -158,34 +158,34 @@ module "cdn" {
 }
 
 
-# ###############################################################################
-# # TMP OLD Storage Account
-# ###############################################################################
+# # ###############################################################################
+# # # TMP OLD Storage Account
+# # ###############################################################################
 
 data "azurerm_storage_account" "old_cdn_storage_account" {
   name                = "${local.prefix}${local.env_short}checkoutsa"
   resource_group_name = "${local.prefix}-${local.env_short}-checkout-fe-rg"
 }
 
-resource "null_resource" "cdn_storage_copy" {
-  for_each = toset(["$web", "selc-${local.env_short}-product", "selc-openapi"])
+# resource "null_resource" "cdn_storage_copy" {
+#   for_each = toset(["$web", "selc-${local.env_short}-product", "selc-openapi"])
 
-  provisioner "local-exec" {
-    command = <<EOT
-        az storage blob copy start-batch \
-        --account-name "${module.cdn.storage_name}" \
-        --account-key "${module.cdn.storage_primary_access_key}" \
-        --destination-container '${each.value}' \
-        --source-account-name "${data.azurerm_storage_account.old_cdn_storage_account.name}" \
-        --source-account-key "${data.azurerm_storage_account.old_cdn_storage_account.primary_access_key}" \
-        --source-container '${each.value}'
-    EOT
-  }
-}
+#   provisioner "local-exec" {
+#     command = <<EOT
+#         az storage blob copy start-batch \
+#         --account-name "${module.cdn.storage_name}" \
+#         --account-key "${module.cdn.storage_primary_access_key}" \
+#         --destination-container '${each.value}' \
+#         --source-account-name "${data.azurerm_storage_account.old_cdn_storage_account.name}" \
+#         --source-account-key "${data.azurerm_storage_account.old_cdn_storage_account.primary_access_key}" \
+#         --source-container '${each.value}'
+#     EOT
+#   }
+# }
 
-# ###############################################################################
-# # monitor (action groups, web tests, alerts)
-# ###############################################################################
+# # ###############################################################################
+# # # monitor (action groups, web tests, alerts)
+# # ###############################################################################
 module "monitor" {
   source = "../_modules/monitor"
 
@@ -215,9 +215,9 @@ module "monitor" {
   selfcare_status_uat_slack = try(module.key_vault.secrets_selfcare_status_uat["alert-selfcare-status-uat-slack"].value, "")
 }
 
-# ###############################################################################
-# # events
-# ###############################################################################
+# # ###############################################################################
+# # # events
+# # ###############################################################################
 module "events" {
   source = "../_modules/events"
 
@@ -250,9 +250,9 @@ module "events" {
   eventhub_alerts_enabled           = local.eventhub_alerts_enabled
 }
 
-# ###############################################################################
-# # appgateway
-# ###############################################################################
+# # ###############################################################################
+# # # appgateway
+# # ###############################################################################
 module "appgateway" {
   source = "../_modules/appgateway"
 
@@ -286,9 +286,9 @@ module "appgateway" {
   action_group_email_id = module.monitor.action_group_email_id
 }
 
-# ###############################################################################
-# # storage
-# ###############################################################################
+# # ###############################################################################
+# # # storage
+# # ###############################################################################
 module "storage" {
   source = "../_modules/storage"
 
@@ -302,9 +302,9 @@ module "storage" {
   adgroup_admin_object_id      = module.key_vault.adgroup_admin_object_id
 }
 
-# ###############################################################################
-# # vpn
-# ###############################################################################
+# # ###############################################################################
+# # # vpn
+# # ###############################################################################
 
 module "vpn" {
   source = "../_modules/vpn"
@@ -344,9 +344,9 @@ module "vpn" {
 
 
 
-# ###############################################################################
-# # redis
-# ###############################################################################
+# # ###############################################################################
+# # # redis
+# # ###############################################################################
 module "redis" {
   source = "../_modules/redis"
 
@@ -371,9 +371,9 @@ module "redis" {
   privatelink_redis_cache_windows_net_ids = [module.dns_private.privatelink_redis_cache_windows_net_id]
 }
 
-###############################################################################
-# cosmos db
-###############################################################################
+# ###############################################################################
+# # cosmos db
+# ###############################################################################
 
 module "cosmos_db" {
   source = "../_modules/cosmos_db"
@@ -405,9 +405,9 @@ module "cosmos_db" {
 }
 
 
-# ###############################################################################
-# # default_roleassignment_rg
-# ###############################################################################
+# # ###############################################################################
+# # # default_roleassignment_rg
+# # ###############################################################################
 
 module "default_roleassignment" {
   source = "../_modules/roles"
@@ -417,9 +417,9 @@ module "default_roleassignment" {
 }
 
 
-# ###############################################################################
-# # resources
-# ###############################################################################
+# # ###############################################################################
+# # # resources
+# # ###############################################################################
 
 module "resources" {
   source = "../_modules/resources"
@@ -441,9 +441,9 @@ module "resources" {
 }
 
 
-# ###############################################################################
-# # assets
-# ###############################################################################
+# # ###############################################################################
+# # # assets
+# # ###############################################################################
 
 module "assets" {
   source = "../_modules/assets"
@@ -458,9 +458,9 @@ module "assets" {
 }
 
 
-# ###############################################################################
-# # one trust
-# ###############################################################################
+# # ###############################################################################
+# # # one trust
+# # ###############################################################################
 
 module "one_trust" {
   source = "../_modules/one_trust"
@@ -472,154 +472,154 @@ module "one_trust" {
   checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
 }
 
-# ###############################################################################
-# # Contract storage
-# ###############################################################################
-module "contracts_storage" {
-  source = "../_modules/storage_account_template"
+# # ###############################################################################
+# # # Contract storage
+# # ###############################################################################
+# module "contracts_storage" {
+#   source = "../_modules/storage_account_template"
 
-  project              = "${local.prefix}-${local.env_short}"
-  location             = local.location
-  tags                 = local.tags
-  name                 = "contracts"
-  storage_account_name = "${local.prefix}-${local.env_short}-contracts-storage"
+#   project              = "${local.prefix}-${local.env_short}"
+#   location             = local.location
+#   tags                 = local.tags
+#   name                 = "contracts"
+#   storage_account_name = "${local.prefix}-${local.env_short}-contracts-storage"
 
-  account_replication_type      = "LRS"
-  enable_versioning             = local.contracts_enable_versioning
-  advanced_threat_protection    = local.contracts_advanced_threat_protection
-  delete_retention_days         = local.contracts_delete_retention_days
-  public_network_access_enabled = false
-
-  key_vault_id = module.key_vault.key_vault_id
-  rg_vnet_name = module.network.rg_vnet_name
-  vnet_name    = module.network.vnet_name
-
-  cidr_subnet                       = local.cidr_subnet_contract_storage
-  private_endpoint_network_policies = local.private_endpoint_network_policies
-  private_dns_zone_ids              = [module.dns_private.privatelink_blob_core_windows_net_id]
-}
-
-# ###############################################################################
-# # Logs storage
-# ###############################################################################
-
-module "logs_storage" {
-  source = "../_modules/storage_account_template"
-
-  project              = "${local.prefix}-${local.env_short}"
-  location             = local.location
-  tags                 = local.tags
-  name                 = "logs"
-  storage_account_name = "${local.prefix}-${local.env_short}-st-logs"
-
-  account_replication_type      = "LRS"
-  enable_versioning             = false
-  advanced_threat_protection    = false
-  delete_retention_days         = 1
-  public_network_access_enabled = true
-
-  key_vault_id = module.key_vault.key_vault_id
-  rg_vnet_name = module.network.rg_vnet_name
-  vnet_name    = module.network.vnet_name
-
-  cidr_subnet                       = local.cidr_subnet_logs_storage
-  private_endpoint_network_policies = local.private_endpoint_network_policies
-  private_dns_zone_ids              = [module.dns_private.privatelink_blob_core_windows_net_id]
-
-  enable_management_lock           = true
-  enable_spid_logs_encryption_keys = true
-}
-
-# ###############################################################################
-# # Spid
-# ###############################################################################
-
-# module "spid_logs_encryption_keys" {
-#   source = "../_modules/spid_logs_encryption_keys"
+#   account_replication_type      = "LRS"
+#   enable_versioning             = local.contracts_enable_versioning
+#   advanced_threat_protection    = local.contracts_advanced_threat_protection
+#   delete_retention_days         = local.contracts_delete_retention_days
+#   public_network_access_enabled = false
 
 #   key_vault_id = module.key_vault.key_vault_id
-#   tags         = local.tags
+#   rg_vnet_name = module.network.rg_vnet_name
+#   vnet_name    = module.network.vnet_name
+
+#   cidr_subnet                       = local.cidr_subnet_contract_storage
+#   private_endpoint_network_policies = local.private_endpoint_network_policies
+#   private_dns_zone_ids              = [module.dns_private.privatelink_blob_core_windows_net_id]
 # }
 
-# ###############################################################################
-# # Azure DevOps Agent
-# ###############################################################################
-module "azure_devops_agent" {
-  source = "../_modules/azure_devops_agent"
+# # ###############################################################################
+# # # Logs storage
+# # ###############################################################################
 
-  project  = local.project
-  location = local.location
-  tags     = local.tags
+# module "logs_storage" {
+#   source = "../_modules/storage_account_template"
 
-  enable_azdoa                 = true
-  enable_iac_pipeline          = true
-  enable_app_projects_pipeline = true
+#   project              = "${local.prefix}-${local.env_short}"
+#   location             = local.location
+#   tags                 = local.tags
+#   name                 = "logs"
+#   storage_account_name = "${local.prefix}-${local.env_short}-st-logs"
 
-  cidr_subnet_azdoa = local.cidr_subnet_azdoa
-  rg_vnet_name      = module.network.rg_vnet_name
-  vnet_name         = module.network.vnet_name
-  subscription_id   = module.key_vault.subscription_id
-  env_short         = local.env_short
-  key_vault_id      = module.key_vault.key_vault_id
-  tenant_id         = module.key_vault.tenant_id
+#   account_replication_type      = "LRS"
+#   enable_versioning             = false
+#   advanced_threat_protection    = false
+#   delete_retention_days         = 1
+#   public_network_access_enabled = true
 
-  private_endpoint_network_policies = local.private_endpoint_network_policies
-}
+#   key_vault_id = module.key_vault.key_vault_id
+#   rg_vnet_name = module.network.rg_vnet_name
+#   vnet_name    = module.network.vnet_name
 
-# ###############################################################################
-# # Container app environment
-# ###############################################################################
+#   cidr_subnet                       = local.cidr_subnet_logs_storage
+#   private_endpoint_network_policies = local.private_endpoint_network_policies
+#   private_dns_zone_ids              = [module.dns_private.privatelink_blob_core_windows_net_id]
 
-resource "azurerm_resource_group" "selc_cae_rg" {
-  name     = "${local.project}-container-app-002-rg"
-  location = local.location
+#   enable_management_lock           = true
+#   enable_spid_logs_encryption_keys = true
+# }
 
-  tags = local.tags
-}
+# # ###############################################################################
+# # # Spid
+# # ###############################################################################
 
-module "networking" {
-  source = "../_modules/networking"
+# # module "spid_logs_encryption_keys" {
+# #   source = "../_modules/spid_logs_encryption_keys"
 
-  project = "${local.prefix}-${local.env_short}"
+# #   key_vault_id = module.key_vault.key_vault_id
+# #   tags         = local.tags
+# # }
 
-  # inferred from vnet-common with cidr 10.1.0.0/16
-  # https://github.com/pagopa/selfcare-infra/blob/9de7d03852904c1e743684a9edd40ae9df0645a8/src/core/01_network_0.tf#L9-L10
-  cidr_subnet_cae = "10.1.148.0/23"
-  # cidr_subnet_pnpg_cae = "10.1.156.0/23" //pnpg
+# # ###############################################################################
+# # # Azure DevOps Agent
+# # ###############################################################################
+# module "azure_devops_agent" {
+#   source = "../_modules/azure_devops_agent"
 
-  container_app_name_snet = "${local.project}-cae-002-snet"
-  # pnpg_container_app_name_snet = "${local.project}-pnpg-cae-cp-snet" //pnpg
+#   project  = local.project
+#   location = local.location
+#   tags     = local.tags
 
-  # pnpg_delegation = []
+#   enable_azdoa                 = true
+#   enable_iac_pipeline          = true
+#   enable_app_projects_pipeline = true
 
-  tags = local.tags
-}
+#   cidr_subnet_azdoa = local.cidr_subnet_azdoa
+#   rg_vnet_name      = module.network.rg_vnet_name
+#   vnet_name         = module.network.vnet_name
+#   subscription_id   = module.key_vault.subscription_id
+#   env_short         = local.env_short
+#   key_vault_id      = module.key_vault.key_vault_id
+#   tenant_id         = module.key_vault.tenant_id
 
-module "container_app_environments" {
-  source = "../_modules/container_app_environments"
+#   private_endpoint_network_policies = local.private_endpoint_network_policies
+# }
 
-  project             = "${local.prefix}-${local.env_short}"
-  location            = local.location
-  resource_group_name = azurerm_resource_group.selc_cae_rg.name
-  # pnpg_resource_group_name = azurerm_resource_group.selc_container_app_rg.name
+# # ###############################################################################
+# # # Container app environment
+# # ###############################################################################
 
-  subnet_id = module.networking.subnet.id
-  # pnpg_subnet_id = module.networking.subnet_pnpg.id
+# resource "azurerm_resource_group" "selc_cae_rg" {
+#   name     = "${local.project}-container-app-002-rg"
+#   location = local.location
 
-  cae_name = "${local.project}-cae-002"
-  # pnpg_cae_name = "${local.project}-pnpg-cae-cp"
-  infrastructure_resource_group_name = "ME_selc-u-cae-002_selc-u-container-app-002-rg_westeurope"
-  workload_profiles = [
-    {
-      name                  = "Consumption"
-      workload_profile_type = "Consumption"
-      minimum_count         = 0
-      maximum_count         = 0
-    }
-  ]
+#   tags = local.tags
+# }
 
-  zone_redundant = false
+# module "networking" {
+#   source = "../_modules/networking"
 
-  tags = local.tags
-}
+#   project = "${local.prefix}-${local.env_short}"
+
+#   # inferred from vnet-common with cidr 10.1.0.0/16
+#   # https://github.com/pagopa/selfcare-infra/blob/9de7d03852904c1e743684a9edd40ae9df0645a8/src/core/01_network_0.tf#L9-L10
+#   cidr_subnet_cae = "10.1.148.0/23"
+#   # cidr_subnet_pnpg_cae = "10.1.156.0/23" //pnpg
+
+#   container_app_name_snet = "${local.project}-cae-002-snet"
+#   # pnpg_container_app_name_snet = "${local.project}-pnpg-cae-cp-snet" //pnpg
+
+#   # pnpg_delegation = []
+
+#   tags = local.tags
+# }
+
+# module "container_app_environments" {
+#   source = "../_modules/container_app_environments"
+
+#   project             = "${local.prefix}-${local.env_short}"
+#   location            = local.location
+#   resource_group_name = azurerm_resource_group.selc_cae_rg.name
+#   # pnpg_resource_group_name = azurerm_resource_group.selc_container_app_rg.name
+
+#   subnet_id = module.networking.subnet.id
+#   # pnpg_subnet_id = module.networking.subnet_pnpg.id
+
+#   cae_name = "${local.project}-cae-002"
+#   # pnpg_cae_name = "${local.project}-pnpg-cae-cp"
+#   infrastructure_resource_group_name = "ME_selc-u-cae-002_selc-u-container-app-002-rg_westeurope"
+#   workload_profiles = [
+#     {
+#       name                  = "Consumption"
+#       workload_profile_type = "Consumption"
+#       minimum_count         = 0
+#       maximum_count         = 0
+#     }
+#   ]
+
+#   zone_redundant = false
+
+#   tags = local.tags
+# }
 
