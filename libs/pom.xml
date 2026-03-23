@@ -22,6 +22,8 @@
         <module>selfcare-sdk-security</module>
         <module>selfcare-sdk-pom</module>
         <module>selfcare-onboarding-sdk-pom</module>
+        <module>user-sdk-event</module>
+        <module>user-sdk-model</module>
     </modules>
 
 

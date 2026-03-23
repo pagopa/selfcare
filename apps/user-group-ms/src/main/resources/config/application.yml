@@ -1,0 +1,31 @@
+server:
+  port: ${MS_USER_GROUP_SERVER_PORT:8080}
+
+spring:
+  application:
+    name: "@project.parent.artifactId@"
+    version: "@project.version@"
+  profiles:
+    include:
+      # TO enable specific-language documentations
+      - swaggerEN
+  zipkin:
+    enabled: false
+  sleuth:
+    baggage:
+      remote-fields: X-Client-Ip
+      correlation-fields: X-Client-Ip
+
+info:
+  build:
+    artifact: "@project.parent.artifactId@"
+    name: "@project.parent.artifactId@"
+    description: "@project.description@"
+    version: "@project.version@"
+
+
+logging:
+  level:
+    it.pagopa.selfcare: ${MS_USER_GROUP_LOG_LEVEL:DEBUG}
+  pattern:
+    additional-info: ",%X{X-Client-Ip:-}]"

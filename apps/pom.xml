@@ -118,6 +118,50 @@
                 <module>onboarding-cdc</module>
             </modules>
         </profile>
+        <profile>
+            <id>user-ms</id>
+            <activation>
+                <file>
+                    <exists>user-ms/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>user-ms</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>user-cdc</id>
+            <activation>
+                <file>
+                    <exists>user-cdc/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>user-cdc</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>user-group-ms</id>
+            <activation>
+                <file>
+                    <exists>user-group-ms/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>user-group-ms</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>user-group-cdc</id>
+            <activation>
+                <file>
+                    <exists>user-group-cdc/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>user-group-cdc</module>
+            </modules>
+        </profile>
     </profiles>
 
 </project>
