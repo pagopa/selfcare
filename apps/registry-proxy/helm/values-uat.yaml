@@ -1,0 +1,49 @@
+replicaCount: 0
+
+image:
+  repository: selcuacr.azurecr.io/selfcaremspartyregistryproxy
+  tag: 0.0.1-SNAPSHOT
+
+ingress:
+  annotations:
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://uat.selfcare.pagopa.it,http://localhost:3000"
+  tls:
+    - hosts:
+        - selc.internal.uat.selfcare.pagopa.it
+      secretName: selc-internal-uat-selfcare-pagopa-it
+  hosts:
+    - host: selc.internal.uat.selfcare.pagopa.it
+      paths:
+        - path: /party-registry-proxy/v1/(.*)
+          pathType: ImplementationSpecific
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 1500m
+    memory: 3Gi
+
+autoscaling:
+  enabled: false
+  minReplicas: 0
+  maxReplicas: 0
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+pdb:
+  enabled: true
+
+configEnvSpecific:
+  JAVA_TOOL_OPTIONS: "-javaagent:/applicationinsights-agent.jar"
+  APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL: "OFF"
+  MS_PARTY_REGISTRY_PROXY_LOG_LEVEL: "DEBUG"
+  MOCK_OPEN_DATA_ENABLED: "true"
+  MOCK_OPEN_DATA_URL: "https://selcucheckoutsa.z6.web.core.windows.net/resources"
+  MOCK_OPEN_DATA_INSTITUTION_ENDPOINT: "/institutions-open-data-mock.csv"
+  MOCK_OPEN_DATA_CATEGORY_ENDPOINT: "/categories-open-data-mock.csv"
+  MOCK_OPEN_DATA_AOO_ENDPOINT: "/aoo-open-data-mock.csv"
+  MOCK_OPEN_DATA_UO_ENDPOINT: "/uo-open-data-mock.csv"
+  MOCK_OPEN_DATA_UO_SFE_ENDPOINT: "/uo-sfe-open-data-mock.csv"
+
