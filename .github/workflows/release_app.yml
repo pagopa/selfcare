@@ -30,6 +30,7 @@ on:
           - webhook
           - onboarding-ms
           - onboarding-cdc
+          - registry-proxy
         required: true
         default: auth
 
