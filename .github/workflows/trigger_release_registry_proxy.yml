@@ -1,0 +1,70 @@
+name: Registry Proxy - Trigger Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options:
+          - dev
+          - uat
+          - prod
+        required: true
+      branch:
+        type: string
+        description: Branch name
+        required: true
+
+jobs:
+  release:
+    name: "Trigger Release Workflows"
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: write
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      version: ${{ env.VERSION }}
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Extract Version
+        run: |
+          echo "VERSION=$(echo "${{ inputs.branch }}" | sed 's/.*_//;s/^v//')" >> $GITHUB_ENV
+
+      - name: Trigger Resources Infra Release (AR)
+        run: |
+          gh workflow run publish_registry_proxy_infra.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=ar
+
+      - name: Trigger Resources Infra Release (PNPG)
+        run: |
+          gh workflow run publish_registry_proxy_infra.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg
+
+      - name: Trigger Registry Proxy ms Release
+        run: |
+          gh workflow run release_app.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=selc -f app=registry_proxy
+
+      - name: Trigger PNPG Registry Proxy Release
+        run: |
+          gh workflow run release_app.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=registry_proxy
+
+
+  update_prod_variable:
+    name: "Update PROD Version Variable"
+    needs: release
+    if: ${{ inputs.env == 'prod' }}
+    uses: ./.github/workflows/call_update_gh_variable.yml
+    with:
+      domain: registry_proxy
+      env: prod
+      version: ${{ needs.release.outputs.version }}
+    secrets: inherit
