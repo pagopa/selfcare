@@ -4,6 +4,7 @@ locals {
   env_short      = "d"
   location       = "westeurope"
   location_short = "weu"
+  domain         = "ar"
 
   dns_zone_prefix     = "dev.selfcare"
   api_dns_zone_prefix = "api.dev.selfcare"
@@ -36,6 +37,8 @@ locals {
   private_dns_name_domain = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
   private_dns_name_ms = {
     private_dns_name_auth_ms = "selc-d-auth-ms-ca.${local.private_dns_name_domain}"
+    private_dns_name_registry_proxy_ms = "selc-d-party-reg-proxy-ca.${local.private_dns_name_domain}"
+    
   }
 
   function_name = "${local.project}-onboarding-fn"
@@ -119,4 +122,6 @@ locals {
     data.azurerm_key_vault_secret.selc_documents_storage_connection_string.value,
     ""
   )
+
+  image_tag_latest = "latest"
 }
