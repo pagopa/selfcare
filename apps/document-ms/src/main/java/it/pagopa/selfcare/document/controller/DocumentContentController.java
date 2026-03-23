@@ -22,11 +22,13 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestResponse;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
 
-
 import java.io.File;
+import java.util.List;
 
 import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
 import static it.pagopa.selfcare.document.util.Utils.retrieveAttachmentFromFormData;
@@ -230,5 +232,27 @@ public class DocumentContentController {
                 .replaceWith(Response.status(HttpStatus.SC_NO_CONTENT).build())
                 .onFailure()
                 .recoverWithItem(err -> Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(err.getMessage()).build());
+    }
+
+    @Operation(
+            summary = "Upload signed contract",
+            description = "Uploads a signed contract for the specified onboarding ID and updates the document metadata."
+    )
+    @POST
+    @Path("/{onboardingId}/upload-signed-contract")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Uni<Response> uploadSignedContract(
+            @PathParam("onboardingId") String onboardingId,
+            @RestForm("productId") String productId,
+            @RestForm("productTitle") String productTitle,
+            @RestForm("institutionType") String documentType,
+            @RestForm("contractPath") String contractPath,
+            @RestForm("fiscalCodes") List<String> fiscalCodes,
+            @RestForm("skipSignatureVerification") @DefaultValue("false") boolean skipSignatureVerification,
+            @RestForm("file") FileUpload fileUpload) {
+
+        return documentContentService.uploadSignedContract(
+                        onboardingId, productId, productTitle, documentType, contractPath, fiscalCodes, skipSignatureVerification, fileUpload)
+                .replaceWith(() -> Response.noContent().build());
     }
 }

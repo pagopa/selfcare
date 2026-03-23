@@ -7,12 +7,11 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
+import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
-import it.pagopa.selfcare.document.model.dto.response.DocumentBuilderResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
-import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.document.service.DocumentContentService;
 import it.pagopa.selfcare.document.service.DocumentService;
@@ -28,8 +27,10 @@ import java.util.List;
 import java.util.Objects;
 
 import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
-import static it.pagopa.selfcare.document.util.Utils.*;
-import static it.pagopa.selfcare.onboarding.common.TokenType.*;
+import static it.pagopa.selfcare.document.util.Utils.CONTRACT_FILENAME_FUNC;
+import static it.pagopa.selfcare.document.util.Utils.createBaseDocument;
+import static it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT;
+import static it.pagopa.selfcare.onboarding.common.TokenType.INSTITUTION;
 
 @Slf4j
 @ApplicationScoped
@@ -118,7 +119,7 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public Uni<DocumentBuilderResponse> saveDocument(DocumentBuilderRequest request) {
+    public Uni<Document> saveDocument(DocumentBuilderRequest request) {
         log.info("Saving document for onboarding: {}, documentType: {}",
                 sanitize(request.getOnboardingId()), sanitize(String.valueOf(request.getDocumentType())));
 
@@ -129,29 +130,23 @@ public class DocumentServiceImpl implements DocumentService {
         return handleContractDocument(request);
     }
 
-    private Uni<DocumentBuilderResponse> handleContractDocument(DocumentBuilderRequest request) {
+    public Uni<Document> handleContractDocument(DocumentBuilderRequest request) {
         String onboardingId = request.getOnboardingId();
 
         return documentRepository.findByOnboardingId(onboardingId)
-                .onItem().transformToUni(existingDoc -> {
-                    if (Objects.nonNull(existingDoc)) {
-                        return Uni.createFrom().item(DocumentBuilderResponse.builder()
-                                .documentId(existingDoc.getId())
-                                .alreadyExists(true)
-                                .build());
-                    }
-
-                    return documentContentService.retrieveContract(onboardingId, false)
-                            .onItem().transform(restResponse -> {
-                                File contract = restResponse.getEntity();
-                                DSSDocument dssDocument = new FileDocument(contract);
-                                return dssDocument.getDigest(DigestAlgorithm.SHA256).getBase64Value();
-                            })
-                            .onItem().transformToUni(digest -> persistDocument(request, digest));
-                });
+                // Se la find restituisce null, attiviamo il blocco di creazione
+                .onItem().ifNull().switchTo(() ->
+                        documentContentService.retrieveContract(onboardingId, false)
+                                .onItem().transform(restResponse -> {
+                                    File contract = restResponse.getEntity();
+                                    DSSDocument dssDocument = new FileDocument(contract);
+                                    return dssDocument.getDigest(DigestAlgorithm.SHA256).getBase64Value();
+                                })
+                                .onItem().transformToUni(digest -> persistDocument(request, digest))
+                );
     }
 
-    private Uni<DocumentBuilderResponse> handleAttachmentDocument(DocumentBuilderRequest request) {
+    private Uni<Document> handleAttachmentDocument(DocumentBuilderRequest request) {
         String onboardingId = request.getOnboardingId();
 
         return documentContentService.retrieveAttachment(onboardingId, request.getDocumentName())
@@ -163,15 +158,14 @@ public class DocumentServiceImpl implements DocumentService {
                 .onItem().transformToUni(digest -> persistDocument(request, digest));
     }
 
-    private Uni<DocumentBuilderResponse> persistDocument(DocumentBuilderRequest request, String digest) {
+    private Uni<Document> persistDocument(DocumentBuilderRequest request, String digest) {
         Document document = buildDocument(request, digest);
 
         return documentRepository.persist(document)
-                .onItem().transform(persisted -> DocumentBuilderResponse.builder()
-                        .documentId(persisted.getId())
-                        .checksum(digest)
-                        .alreadyExists(false)
-                        .build());
+                .replaceWith(document)
+                .onItem().invoke(() ->
+                        log.info("Document persisted for onboardingId: {}, documentType: {}",
+                                sanitize(request.getOnboardingId()), sanitize(String.valueOf(request.getDocumentType()))));
     }
 
     @Override

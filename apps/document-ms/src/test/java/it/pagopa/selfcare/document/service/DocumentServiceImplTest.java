@@ -8,12 +8,11 @@ import io.quarkus.test.mongodb.MongoTestResource;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
+import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
-import it.pagopa.selfcare.document.model.dto.response.DocumentBuilderResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
-import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.onboarding.common.TokenType;
 import jakarta.inject.Inject;
@@ -303,11 +302,9 @@ class DocumentServiceImplTest {
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().item(existingDoc));
 
-        DocumentBuilderResponse response = documentService.saveDocument(request).await().indefinitely();
+        Document response = documentService.saveDocument(request).await().indefinitely();
 
         assertNotNull(response);
-        assertTrue(response.isAlreadyExists());
-        assertEquals(DOCUMENT_ID, response.getDocumentId());
     }
 
     @Test
@@ -337,11 +334,9 @@ class DocumentServiceImplTest {
         when(documentRepository.persist(any(Document.class)))
                 .thenReturn(Uni.createFrom().item(newDoc));
 
-        DocumentBuilderResponse response = documentService.saveDocument(request).await().indefinitely();
+        Document response = documentService.saveDocument(request).await().indefinitely();
 
         assertNotNull(response);
-        assertFalse(response.isAlreadyExists());
-        assertEquals("new-doc-id", response.getDocumentId());
     }
 
     @Test
@@ -372,11 +367,9 @@ class DocumentServiceImplTest {
         when(documentRepository.persist(any(Document.class)))
                 .thenReturn(Uni.createFrom().item(newDoc));
 
-        DocumentBuilderResponse response = documentService.saveDocument(request).await().indefinitely();
+        Document response = documentService.saveDocument(request).await().indefinitely();
 
         assertNotNull(response);
-        assertFalse(response.isAlreadyExists());
-        assertEquals("new-attach-doc-id", response.getDocumentId());
     }
 
     // ---- persistDocumentForImport ----
@@ -494,11 +487,9 @@ class DocumentServiceImplTest {
         when(documentRepository.persist(any(Document.class)))
                 .thenReturn(Uni.createFrom().item(newDoc));
 
-        DocumentBuilderResponse response = documentService.saveDocument(request).await().indefinitely();
+        Document response = documentService.saveDocument(request).await().indefinitely();
 
         assertNotNull(response);
-        assertFalse(response.isAlreadyExists());
-        assertEquals("new-user-doc-id", response.getDocumentId());
     }
 
     // ---- saveDocument attachment not found ----

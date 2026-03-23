@@ -1,30 +1,28 @@
 package it.pagopa.selfcare.document.controller;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.any;
-
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.document.mapper.DocumentMapper;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
-import it.pagopa.selfcare.document.model.dto.response.DocumentBuilderResponse;
 import it.pagopa.selfcare.document.model.dto.response.DocumentResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
-import it.pagopa.selfcare.document.mapper.DocumentMapper;
 import it.pagopa.selfcare.document.service.DocumentService;
 import jakarta.ws.rs.core.MediaType;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
 
 @QuarkusTest
 @TestSecurity(authorizationEnabled = false)
@@ -264,9 +262,7 @@ class DocumentControllerTest {
             .documentType(it.pagopa.selfcare.onboarding.common.TokenType.INSTITUTION)
             .build();
 
-    DocumentBuilderResponse response = new DocumentBuilderResponse();
-    response.setDocumentId(DOCUMENT_ID);
-    response.setAlreadyExists(false);
+    Document response = new Document();
 
     Mockito.when(documentService.saveDocument(any(DocumentBuilderRequest.class)))
         .thenReturn(Uni.createFrom().item(response));
@@ -277,9 +273,7 @@ class DocumentControllerTest {
         .when()
         .post("/v1/documents")
         .then()
-        .statusCode(201)
-        .body("documentId", equalTo(DOCUMENT_ID))
-        .body("alreadyExists", equalTo(false));
+        .statusCode(201);
   }
 
   @Test
@@ -290,9 +284,7 @@ class DocumentControllerTest {
             .documentType(it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT)
             .build();
 
-    DocumentBuilderResponse response = new DocumentBuilderResponse();
-    response.setDocumentId(DOCUMENT_ID);
-    response.setAlreadyExists(true);
+    Document response = new Document();
 
     Mockito.when(documentService.saveDocument(any(DocumentBuilderRequest.class)))
         .thenReturn(Uni.createFrom().item(response));
@@ -303,8 +295,7 @@ class DocumentControllerTest {
         .when()
         .post("/v1/documents")
         .then()
-        .statusCode(201)
-        .body("alreadyExists", equalTo(true));
+        .statusCode(201);
   }
 
   @Test

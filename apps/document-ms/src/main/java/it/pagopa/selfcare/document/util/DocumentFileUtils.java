@@ -98,4 +98,47 @@ public final class DocumentFileUtils {
             return fullPath;
         }
     }
+
+    /**
+     * Estrae l'estensione gestendo file con estensioni multiple (es. "file.pdf.p7m" -> "pdf.p7m")
+     * Logica migrata da Onboarding MS per retrocompatibilità.
+     */
+    public static String getFileExtension(String name) {
+        if (name == null || name.isBlank() || !name.contains(".")) {
+            return "";
+        }
+
+        String[] parts = name.split("\\.");
+        String ext = "";
+
+        if (parts.length == 2) {
+            return parts[1];
+        }
+
+        if (parts.length > 2) {
+            // Join all parts except the first one
+            ext = String.join(".", java.util.Arrays.copyOfRange(parts, 1, parts.length));
+        }
+
+        return ext;
+    }
+
+    /**
+     * Sostituisce l'estensione partendo dall'ultimo punto.
+     * Logica migrata da Onboarding MS per retrocompatibilità.
+     */
+    public static String replaceFileExtension(String originalFilename, String newExtension) {
+        if (originalFilename == null) {
+            return newExtension;
+        }
+
+        int lastIndexOf = originalFilename.lastIndexOf(".");
+        if (lastIndexOf == -1) {
+            // Nota: manteniamo il comportamento originale dell'Onboarding MS
+            // che non metteva il punto se il file non aveva già un'estensione.
+            return originalFilename + newExtension;
+        } else {
+            return originalFilename.substring(0, lastIndexOf) + "." + newExtension;
+        }
+    }
 }

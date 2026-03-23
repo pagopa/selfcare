@@ -4,6 +4,7 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.exception.UpdateNotAllowedException;
 import it.pagopa.selfcare.document.model.FormItem;
 import it.pagopa.selfcare.document.model.dto.request.*;
@@ -12,6 +13,7 @@ import it.pagopa.selfcare.document.service.DocumentContentService;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import jakarta.ws.rs.core.MediaType;
 import org.jboss.resteasy.reactive.RestResponse;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -42,6 +44,7 @@ public class DocumentContentControllerTest {
     private static final String PDF_FORMAT_FILENAME = "contract-%s.pdf";
     private static final String STORAGE_PATH = "contracts/signed/contract-123.pdf";
     private static final String FILENAME = "contract-123.pdf";
+    private static final String BASE_PATH = "/v1/document-content/";
 
     @InjectMock
     DocumentContentService documentContentService;
@@ -56,7 +59,7 @@ public class DocumentContentControllerTest {
 
         given()
                 .when()
-                .get("/v1/document-content/" + DOCUMENT_ID + "/contract-signed")
+                .get(BASE_PATH + DOCUMENT_ID + "/contract-signed")
                 .then()
                 .statusCode(200);
     }
@@ -68,7 +71,7 @@ public class DocumentContentControllerTest {
 
         given()
                 .when()
-                .get("/v1/document-content/" + DOCUMENT_ID + "/contract-signed")
+                .get(BASE_PATH + DOCUMENT_ID + "/contract-signed")
                 .then()
                 .statusCode(500);
     }
@@ -89,7 +92,7 @@ public class DocumentContentControllerTest {
                 .queryParam("name", ATTACHMENT_NAME)
                 .queryParam("institutionDescription", INSTITUTION_DESCRIPTION)
                 .queryParam("productId", PRODUCT_ID)
-                .get("/v1/document-content/" + ONBOARDING_ID + "/template-attachment")
+                .get(BASE_PATH + ONBOARDING_ID + "/template-attachment")
                 .then()
                 .statusCode(200);
     }
@@ -107,7 +110,7 @@ public class DocumentContentControllerTest {
                 .queryParam("name", ATTACHMENT_NAME)
                 .queryParam("institutionDescription", INSTITUTION_DESCRIPTION)
                 .queryParam("productId", PRODUCT_ID)
-                .get("/v1/document-content/" + ONBOARDING_ID + "/template-attachment")
+                .get(BASE_PATH + ONBOARDING_ID + "/template-attachment")
                 .then()
                 .statusCode(500);
     }
@@ -123,7 +126,7 @@ public class DocumentContentControllerTest {
         given()
                 .when()
                 .queryParam("name", ATTACHMENT_NAME)
-                .get("/v1/document-content/" + ONBOARDING_ID + "/attachment")
+                .get(BASE_PATH + ONBOARDING_ID + "/attachment")
                 .then()
                 .statusCode(200);
     }
@@ -136,7 +139,7 @@ public class DocumentContentControllerTest {
         given()
                 .when()
                 .queryParam("name", ATTACHMENT_NAME)
-                .get("/v1/document-content/" + ONBOARDING_ID + "/attachment")
+                .get(BASE_PATH + ONBOARDING_ID + "/attachment")
                 .then()
                 .statusCode(500);
     }
@@ -145,7 +148,7 @@ public class DocumentContentControllerTest {
     void getAttachment_shouldReturnBadRequest_whenAttachmentNameMissing() {
         given()
                 .when()
-                .get("/v1/document-content/" + ONBOARDING_ID + "/attachment")
+                .get(BASE_PATH + ONBOARDING_ID + "/attachment")
                 .then()
                 .statusCode(400);
     }
@@ -164,7 +167,7 @@ public class DocumentContentControllerTest {
                 .multiPart("file", tempFile, "application/pdf")
                 .multiPart("request", invalidRequest, "application/json")
                 .when()
-                .post("/v1/document-content/upload-attachment")
+                .post(BASE_PATH + "upload-attachment")
                 .then()
                 .statusCode(400);
     }
@@ -174,7 +177,7 @@ public class DocumentContentControllerTest {
         given()
                 .when()
                 .queryParam("name", ATTACHMENT_NAME)
-                .get("/v1/document-content/" + ONBOARDING_ID + "/template-attachment")
+                .get(BASE_PATH + ONBOARDING_ID + "/template-attachment")
                 .then()
                 .statusCode(400);
     }
@@ -184,7 +187,7 @@ public class DocumentContentControllerTest {
         given()
                 .when()
                 .queryParam("templatePath", TEMPLATE_PATH)
-                .get("/v1/document-content/" + ONBOARDING_ID + "/template-attachment")
+                .get(BASE_PATH + ONBOARDING_ID + "/template-attachment")
                 .then()
                 .statusCode(400);
     }
@@ -208,7 +211,7 @@ public class DocumentContentControllerTest {
                 .multiPart("file", tempFile, "application/pdf")
                 .multiPart("request", request, "application/json")
                 .when()
-                .post("/v1/document-content/upload-attachment")
+                .post(BASE_PATH + "upload-attachment")
                 .then()
                 .statusCode(204);
     }
@@ -232,7 +235,7 @@ public class DocumentContentControllerTest {
                 .multiPart("file", tempFile, "application/pdf")
                 .multiPart("request", request, "application/json")
                 .when()
-                .post("/v1/document-content/upload-attachment")
+                .post(BASE_PATH + "upload-attachment")
                 .then()
                 .statusCode(409);
     }
@@ -256,7 +259,7 @@ public class DocumentContentControllerTest {
                 .multiPart("file", tempFile, "application/pdf")
                 .multiPart("request", request, "application/json")
                 .when()
-                .post("/v1/document-content/upload-attachment")
+                .post(BASE_PATH + "upload-attachment")
                 .then()
                 .statusCode(500);
     }
@@ -274,7 +277,7 @@ public class DocumentContentControllerTest {
                 .multiPart("productId", PRODUCT_ID)
                 .multiPart("file", csvFile, "text/csv")
                 .when()
-                .post("/v1/document-content/aggregates-csv")
+                .post(BASE_PATH + "aggregates-csv")
                 .then()
                 .statusCode(204);
 
@@ -294,7 +297,7 @@ public class DocumentContentControllerTest {
                 .multiPart("productId", PRODUCT_ID)
                 .multiPart("file", csvFile, "text/csv")
                 .when()
-                .post("/v1/document-content/aggregates-csv")
+                .post(BASE_PATH + "aggregates-csv")
                 .then()
                 .statusCode(500);
     }
@@ -315,7 +318,7 @@ public class DocumentContentControllerTest {
                 .multiPart("filename", request.getFilename())
                 .multiPart("file", request.getFileContent(), "application/pdf")
                 .when()
-                .post("/v1/document-content/visura")
+                .post(BASE_PATH + "visura")
                 .then()
                 .statusCode(204);
     }
@@ -336,7 +339,7 @@ public class DocumentContentControllerTest {
                 .multiPart("filename", request.getFilename())
                 .multiPart("file", request.getFileContent(), "application/pdf")
                 .when()
-                .post("/v1/document-content/visura")
+                .post(BASE_PATH + "visura")
                 .then()
                 .statusCode(500);
     }
@@ -351,7 +354,7 @@ public class DocumentContentControllerTest {
 
         given()
                 .when()
-                .get("/v1/document-content/" + ONBOARDING_ID + "/contract")
+                .get(BASE_PATH + ONBOARDING_ID + "/contract")
                 .then()
                 .statusCode(200);
     }
@@ -363,7 +366,7 @@ public class DocumentContentControllerTest {
 
         given()
                 .when()
-                .get("/v1/document-content/" + ONBOARDING_ID + "/contract")
+                .get(BASE_PATH + ONBOARDING_ID + "/contract")
                 .then()
                 .statusCode(500);
     }
@@ -387,7 +390,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/contract")
+                .post(BASE_PATH + "contract")
                 .then()
                 .statusCode(200)
                 .body("storagePath", equalTo(STORAGE_PATH))
@@ -415,7 +418,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/contract")
+                .post(BASE_PATH + "contract")
                 .then()
                 .statusCode(200)
                 .body("storagePath", notNullValue());
@@ -440,7 +443,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/contract")
+                .post(BASE_PATH + "contract")
                 .then()
                 .statusCode(200);
     }
@@ -462,7 +465,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/contract")
+                .post(BASE_PATH + "contract")
                 .then()
                 .statusCode(200);
     }
@@ -480,7 +483,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/contract")
+                .post(BASE_PATH + "contract")
                 .then()
                 .statusCode(400);
 
@@ -496,7 +499,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/contract")
+                .post(BASE_PATH + "contract")
                 .then()
                 .statusCode(400);
 
@@ -512,7 +515,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/contract")
+                .post(BASE_PATH + "contract")
                 .then()
                 .statusCode(400);
     }
@@ -526,7 +529,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/contract")
+                .post(BASE_PATH + "contract")
                 .then()
                 .statusCode(400);
     }
@@ -540,7 +543,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/contract")
+                .post(BASE_PATH + "contract")
                 .then()
                 .statusCode(400);
     }
@@ -554,7 +557,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/contract")
+                .post(BASE_PATH + "contract")
                 .then()
                 .statusCode(400);
     }
@@ -568,7 +571,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/contract")
+                .post(BASE_PATH + "contract")
                 .then()
                 .statusCode(400);
     }
@@ -582,7 +585,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/contract")
+                .post(BASE_PATH + "contract")
                 .then()
                 .statusCode(400);
     }
@@ -596,7 +599,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/contract")
+                .post(BASE_PATH + "contract")
                 .then()
                 .statusCode(400);
     }
@@ -610,7 +613,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/contract")
+                .post(BASE_PATH + "contract")
                 .then()
                 .statusCode(400);
     }
@@ -630,7 +633,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/contract")
+                .post(BASE_PATH + "contract")
                 .then()
                 .statusCode(500);
     }
@@ -654,7 +657,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/attachment")
+                .post(BASE_PATH + "attachment")
                 .then()
                 .statusCode(200)
                 .body("storagePath", equalTo(STORAGE_PATH))
@@ -682,7 +685,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/attachment")
+                .post(BASE_PATH + "attachment")
                 .then()
                 .statusCode(200);
     }
@@ -700,7 +703,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/attachment")
+                .post(BASE_PATH + "attachment")
                 .then()
                 .statusCode(400);
 
@@ -716,7 +719,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/attachment")
+                .post(BASE_PATH + "attachment")
                 .then()
                 .statusCode(400);
     }
@@ -730,7 +733,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/attachment")
+                .post(BASE_PATH + "attachment")
                 .then()
                 .statusCode(400);
     }
@@ -744,7 +747,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/attachment")
+                .post(BASE_PATH + "attachment")
                 .then()
                 .statusCode(400);
     }
@@ -758,7 +761,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/attachment")
+                .post(BASE_PATH + "attachment")
                 .then()
                 .statusCode(400);
     }
@@ -772,7 +775,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/attachment")
+                .post(BASE_PATH + "attachment")
                 .then()
                 .statusCode(400);
     }
@@ -786,7 +789,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/attachment")
+                .post(BASE_PATH + "attachment")
                 .then()
                 .statusCode(400);
     }
@@ -800,7 +803,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/attachment")
+                .post(BASE_PATH + "attachment")
                 .then()
                 .statusCode(400);
     }
@@ -814,7 +817,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/attachment")
+                .post(BASE_PATH + "attachment")
                 .then()
                 .statusCode(400);
     }
@@ -828,7 +831,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/attachment")
+                .post(BASE_PATH + "attachment")
                 .then()
                 .statusCode(400);
     }
@@ -842,7 +845,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/attachment")
+                .post(BASE_PATH + "attachment")
                 .then()
                 .statusCode(400);
     }
@@ -862,7 +865,7 @@ public class DocumentContentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .when()
-                .post("/v1/document-content/attachment")
+                .post(BASE_PATH + "attachment")
                 .then()
                 .statusCode(500);
     }
@@ -878,7 +881,7 @@ public class DocumentContentControllerTest {
         given()
                 .queryParam("document", onboardingId) // <-- CAMBIATO DA "onboardingId" A "document"
                 .when()
-                .delete("/v1/document-content/contract")
+                .delete(BASE_PATH + "contract")
                 .then()
                 .statusCode(200)
                 .body(equalTo(expectedMessage));
@@ -890,7 +893,7 @@ public class DocumentContentControllerTest {
         // Non passiamo il parametro "document" per far scattare il @NotBlank e ottenere un 400
         given()
                 .when()
-                .delete("/v1/document-content/contract")
+                .delete(BASE_PATH + "contract")
                 .then()
                 .statusCode(400);
     }
@@ -908,7 +911,91 @@ public class DocumentContentControllerTest {
         given()
                 .queryParam("document", onboardingId) // <-- Usiamo "document" per allinearci al controller!
                 .when()
-                .delete("/v1/document-content/contract")
+                .delete(BASE_PATH + "contract")
+                .then()
+                .statusCode(500);
+    }
+
+    @Test
+    void uploadSignedContract_Success() {
+        // GIVEN: Il service risponde con successo
+        String onboardingId = "onb-123";
+
+        Mockito.when(documentContentService.uploadSignedContract(
+                eq(onboardingId),
+                eq("prod-1"),
+                eq("Product Title"),
+                eq("INSTITUTION"),
+                eq("/path/to/template"),
+                anyList(),
+                eq(false),
+                any(FileUpload.class)
+        )).thenReturn(Uni.createFrom().item("success-path")); // O .voidItem() se il service restituisce Uni<Void>
+
+        File dummyFile = new File("src/test/resources/pdf/dummy.pdf");
+
+        // WHEN & THEN: Facciamo la chiamata multipart e ci aspettiamo 204 No Content
+        given()
+                .pathParam("onboardingId", onboardingId)
+                .multiPart("productId", "prod-1")
+                .multiPart("productTitle", "Product Title")
+                .multiPart("institutionType", "INSTITUTION")
+                .multiPart("contractPath", "/path/to/template")
+                .multiPart("fiscalCodes", "FC1") // Puoi aggiungere più multiPart con lo stesso nome per le liste
+                .multiPart("fiscalCodes", "FC2")
+                .multiPart("skipSignatureVerification", "false")
+                .multiPart("file", dummyFile)
+                .when()
+                .post(BASE_PATH + "{onboardingId}/upload-signed-contract")
+                .then()
+                .statusCode(204); // Assert: Il .replaceWith(() -> Response.noContent().build()) ha funzionato
+    }
+
+    @Test
+    void uploadSignedContract_SignatureVerificationFails() {
+        // GIVEN: Il service lancia l'eccezione corretta di dominio
+        String onboardingId = "onb-123";
+
+        // SOSTITUISCI QUI: Usa InvalidRequestException invece di IllegalArgumentException
+        Mockito.when(documentContentService.uploadSignedContract(
+                any(), any(), any(), any(), any(), any(), anyBoolean(), any()
+        )).thenReturn(Uni.createFrom().failure(new InvalidRequestException("Invalid signature", "CODE-400")));
+
+        File dummyFile = new File("src/test/resources/pdf/dummy.pdf");
+
+        // WHEN & THEN: Ora ci aspettiamo un 400 Bad Request
+        given()
+                .pathParam("onboardingId", onboardingId)
+                .multiPart("productId", "prod-1")
+                .multiPart("productTitle", "Product Title")
+                .multiPart("institutionType", "INSTITUTION") // Modificato nome param per allinearsi al controller
+                .multiPart("contractPath", "/path/to/template")
+                .multiPart("file", dummyFile)
+                .when()
+                .post(BASE_PATH + "{onboardingId}/upload-signed-contract")
+                .then()
+                .statusCode(400);
+    }
+
+    @Test
+    void uploadSignedContract_InternalServerError_AzureDown() {
+        // GIVEN: Il service lancia un'eccezione di sistema (es. RuntimeException per Azure)
+        String onboardingId = "onb-123";
+
+        Mockito.when(documentContentService.uploadSignedContract(
+                any(), any(), any(), any(), any(), any(), anyBoolean(), any()
+        )).thenReturn(Uni.createFrom().failure(new RuntimeException("Azure is down")));
+
+        File dummyFile = new File("src/test/resources/pdf/dummy.pdf");
+
+        // WHEN & THEN: Ci aspettiamo un 500 Internal Server Error
+        given()
+                .pathParam("onboardingId", onboardingId)
+                .multiPart("productId", "prod-1")
+                .multiPart("institutionType", "INSTITUTION")
+                .multiPart("file", dummyFile)
+                .when()
+                .post(BASE_PATH + "{onboardingId}/upload-signed-contract")
                 .then()
                 .statusCode(500);
     }

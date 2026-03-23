@@ -4,7 +4,6 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
-import it.pagopa.selfcare.document.model.dto.response.DocumentBuilderResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
 
 import java.util.List;
@@ -43,8 +42,10 @@ public interface DocumentService {
      * @param request the document save request
      * @return the save response containing documentId, checksum and alreadyExists flag
      */
-    Uni<DocumentBuilderResponse> saveDocument(DocumentBuilderRequest request);
+    Uni<Document> saveDocument(DocumentBuilderRequest request);
 
     Uni<Document> persistDocumentForImport(OnboardingDocumentRequest request);
+
+    Uni<Document> handleContractDocument(DocumentBuilderRequest request);
 
 }

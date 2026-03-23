@@ -22,6 +22,7 @@ import it.pagopa.selfcare.document.service.SignatureService;
 import it.pagopa.selfcare.document.util.DocumentFileUtils;
 import it.pagopa.selfcare.document.util.PdfBuilder;
 import it.pagopa.selfcare.document.util.PdfMapperData;
+import it.pagopa.selfcare.onboarding.common.TokenType;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.HttpHeaders;
@@ -29,14 +30,17 @@ import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.RestResponse;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import static it.pagopa.selfcare.document.util.ErrorMessage.ATTACHMENT_UPLOAD_ERROR;
 import static it.pagopa.selfcare.document.util.ErrorMessage.GENERIC_ERROR;
@@ -234,7 +238,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                     return documentService.updateDocumentContractFiles(document)
                             .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)                            .onFailure().call(dbError -> {
                                 log.error("DB update failed for onboardingId {}. Triggering Azure Rollback...", onboardingId);
-                                return rollbackAzureFiles(deletedSignedContract, originalSignedPath, deletedContractFile, originalContractPath);
+                                return rollbackDeletedAzureFiles(deletedSignedContract, originalSignedPath, deletedContractFile, originalContractPath);
                             });
                 })
                 .replaceWith("Contract deleted successfully");
@@ -297,6 +301,33 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                             String.format("Error storing visura document for onboardingId: %s", sanitize(uploadVisuraRequest.getOnboardingId())));
                 })
                 .replaceWithVoid();
+    }
+
+    @Override
+    public Uni<String> uploadSignedContract(String onboardingId, String productId, String productTitle, String documentType,
+                                            String templatePath, List<String> fiscalCodes,
+                                            boolean skipSignatureVerification, FileUpload fileUpload) {
+
+        log.info("START - Uploading and verifying signed contract for onboardingId={}, productId={}",
+                sanitize(onboardingId), sanitize(productId));
+
+        File physicalFile = fileUpload.uploadedFile().toFile();
+        String originalFileName = fileUpload.fileName();
+
+        DocumentBuilderRequest builderRequest = DocumentBuilderRequest.builder()
+                .onboardingId(onboardingId)
+                .productId(productId)
+                .documentType(TokenType.valueOf(documentType))
+                .templatePath(templatePath)
+                .documentName(originalFileName)
+                .build();
+
+        return documentService.handleContractDocument(builderRequest)
+                .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)
+
+                .call(document -> signatureService.verifyContractSignature(onboardingId, physicalFile, fiscalCodes, skipSignatureVerification))
+
+                .chain(document -> uploadToAzureAndUpdateDb(document, physicalFile, originalFileName));
     }
 
     // ==================== Private Reactive I/O isolation methods ====================
@@ -556,8 +587,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     // METODI DI UTILITÀ PER IL ROLLBACK
     // ==========================================
 
-    private Uni<Void> rollbackAzureFiles(String currentSignedPath, String originalSignedPath,
-                                         String currentContractPath, String originalContractPath) {
+    private Uni<Void> rollbackDeletedAzureFiles(String currentSignedPath, String originalSignedPath,
+                                                String currentContractPath, String originalContractPath) {
         return Uni.createFrom().item(() -> {
             try {
                 log.info("Rolling back files to original paths...");
@@ -566,6 +597,60 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 log.info("Rollback completed successfully.");
             } catch (Exception e) {
                 log.error("CRITICAL ERROR: Rollback failed! Azure is out of sync with MongoDB.", e);
+            }
+            return null;
+        }).runSubscriptionOn(Infrastructure.getDefaultWorkerPool()).replaceWithVoid();
+    }
+
+    /**
+     * Helper per gestire l'upload fisico su Azure, l'aggiornamento su Mongo e l'eventuale Rollback.
+     */
+    private Uni<String> uploadToAzureAndUpdateDb(Document document, File physicalFile, String originalFileName) {
+        String onboardingId = document.getOnboardingId();
+
+        DocumentFileUtils.validateUploadedFile(physicalFile);
+
+        String extension = DocumentFileUtils.getFileExtension(originalFileName);
+        String baseName = Optional.ofNullable(document.getContractFilename()).orElse(onboardingId);
+        String signedName = "signed_" + DocumentFileUtils.replaceFileExtension(baseName, extension);
+        String azurePath = documentMsConfig.getContractPath() + onboardingId;
+
+        return Uni.createFrom().item(() -> {
+                    try {
+                        return azureBlobClient.uploadFile(azurePath, signedName, Files.readAllBytes(physicalFile.toPath()));
+                    } catch (IOException e) {
+                        throw new RuntimeException("Error uploading signed contract to Azure", e);
+                    }
+                })
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)
+
+                .chain(uploadedPath -> {
+                    document.setContractSigned(uploadedPath);
+                    document.setContractFilename(originalFileName);
+
+                    return documentService.updateDocumentContractFiles(document)
+                            .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)
+                            .onFailure().call(dbError -> {
+                                log.error("DB update failed for onboardingId {}. Rolling back Azure upload: {}",
+                                        sanitize(onboardingId), uploadedPath);
+                                return rollbackAzureUpload(uploadedPath);
+                            })
+                            .replaceWith(uploadedPath);
+                });
+    }
+
+    /**
+     * Transazione di compensazione (Saga Pattern) per l'UPLOAD:
+     * elimina il file orfano da Azure se il DB va in errore.
+     */
+    private Uni<Void> rollbackAzureUpload(String uploadedPath) {
+        return Uni.createFrom().item(() -> {
+            try {
+                azureBlobClient.removeFile(uploadedPath);
+                log.info("Rollback completed successfully: deleted orphan file {}", uploadedPath);
+            } catch (Exception e) {
+                log.error("CRITICAL ERROR: Rollback failed! Orphan file left in Azure at path: {}", uploadedPath, e);
             }
             return null;
         }).runSubscriptionOn(Infrastructure.getDefaultWorkerPool()).replaceWithVoid();

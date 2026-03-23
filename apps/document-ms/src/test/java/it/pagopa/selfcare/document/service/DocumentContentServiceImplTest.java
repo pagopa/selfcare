@@ -9,8 +9,8 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
 import it.pagopa.selfcare.document.config.DocumentMsConfig;
-import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.exception.InternalException;
+import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.exception.UpdateNotAllowedException;
 import it.pagopa.selfcare.document.model.FormItem;
@@ -23,12 +23,13 @@ import it.pagopa.selfcare.document.util.DocumentFileUtils;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.common.TokenType;
+import jakarta.inject.Inject;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.bson.types.ObjectId;
 import org.jboss.resteasy.reactive.RestResponse;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.Test;
-import jakarta.inject.Inject;
 import org.mockito.Mockito;
 
 import java.io.File;
@@ -39,13 +40,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @QuarkusTest
 @QuarkusTestResource(value = MongoTestResource.class, restrictToAnnotatedClass = true)
@@ -1437,6 +1433,153 @@ public class DocumentContentServiceImplTest {
         for (File f : generatedFiles) {
             assertFalse(f.exists(), "Memory leak: un file del rollback non è stato eliminato!");
         }
+    }
+
+    // ============================================
+    // uploadSignedContract
+    // ============================================
+
+    @Test
+    void uploadSignedContract_shouldCompleteSuccessfully() throws IOException {
+        // Arrange
+        String productId = "prod-1";
+        String documentType = "INSTITUTION";
+        String templatePath = "/path/to/template.pdf";
+        List<String> fiscalCodes = List.of("FC123");
+        boolean skipVerification = false;
+
+        File tempFile = createTempPdf(); // Usa il tuo helper esistente
+
+        // Mock FileUpload behavior
+        org.jboss.resteasy.reactive.multipart.FileUpload mockFileUpload = Mockito.mock(org.jboss.resteasy.reactive.multipart.FileUpload.class);
+        when(mockFileUpload.uploadedFile()).thenReturn(tempFile.toPath());
+        when(mockFileUpload.fileName()).thenReturn("signed_contract.pdf");
+
+        Document mockDocument = buildDocument(); // Usa il tuo helper esistente
+        mockDocument.setContractFilename("original_contract.pdf");
+
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+                .thenReturn(Uni.createFrom().item(mockDocument));
+        when(signatureService.verifyContractSignature(eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), eq(skipVerification)))
+                .thenReturn(Uni.createFrom().voidItem());
+        when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
+        when(azureBlobClient.uploadFile(anyString(), anyString(), any(byte[].class)))
+                .thenReturn("/contracts/" + ONBOARDING_ID + "/signed_original_contract.pdf");
+        when(documentService.updateDocumentContractFiles(any(Document.class)))
+                .thenReturn(Uni.createFrom().item(1L));
+
+        // Act
+        var awaiter = documentContentService.uploadSignedContract(
+                ONBOARDING_ID, productId, "Product Title", documentType, templatePath, fiscalCodes, skipVerification, mockFileUpload
+        ).await();
+
+        // Assert
+        assertDoesNotThrow(awaiter::indefinitely);
+        verify(azureBlobClient).uploadFile(eq("/contracts/" + ONBOARDING_ID), anyString(), any(byte[].class));
+        verify(documentService).updateDocumentContractFiles(any(Document.class));
+    }
+
+    @Test
+    void uploadSignedContract_shouldThrowException_whenSignatureVerificationFails() throws IOException {
+        // Arrange
+        org.jboss.resteasy.reactive.multipart.FileUpload mockFileUpload = Mockito.mock(org.jboss.resteasy.reactive.multipart.FileUpload.class);
+        File tempFile = createTempPdf();
+        when(mockFileUpload.uploadedFile()).thenReturn(tempFile.toPath());
+        when(mockFileUpload.fileName()).thenReturn("signed_contract.pdf");
+
+        Document mockDocument = buildDocument();
+
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+                .thenReturn(Uni.createFrom().item(mockDocument));
+
+        // Simuliamo il fallimento della firma
+        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean()))
+                .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Invalid Signature", "400")));
+
+        // Act
+        var awaiter = documentContentService.uploadSignedContract(
+                ONBOARDING_ID, "prod-1", "Product Title", "INSTITUTION", "/path", List.of(), false, mockFileUpload
+        ).await();
+
+        // Assert
+        InvalidRequestException ex = assertThrows(InvalidRequestException.class, awaiter::indefinitely);
+        assertEquals("Invalid Signature", ex.getMessage());
+
+        // Azure e DB non devono essere mai chiamati
+        verify(azureBlobClient, Mockito.never()).uploadFile(anyString(), anyString(), any(byte[].class));
+        verify(documentService, Mockito.never()).updateDocumentContractFiles(any());
+    }
+
+    @Test
+    void uploadSignedContract_shouldThrowException_whenAzureUploadFails() throws IOException {
+        // Arrange
+        FileUpload mockFileUpload = Mockito.mock(FileUpload.class);
+        File tempFile = createTempPdf();
+        when(mockFileUpload.uploadedFile()).thenReturn(tempFile.toPath());
+        when(mockFileUpload.fileName()).thenReturn("signed_contract.pdf");
+
+        Document mockDocument = buildDocument();
+
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+                .thenReturn(Uni.createFrom().item(mockDocument));
+        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean()))
+                .thenReturn(Uni.createFrom().voidItem());
+        when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
+
+        // Simuliamo il fallimento di Azure usando l'eccezione custom di Selfcare!
+        doThrow(new SelfcareAzureStorageException("Azure timeout", "500"))
+                .when(azureBlobClient).uploadFile(anyString(), anyString(), any(byte[].class));
+
+        // Act
+        var awaiter = documentContentService.uploadSignedContract(
+                ONBOARDING_ID, "prod-1", "Product Title", "INSTITUTION", "/path", List.of(), false, mockFileUpload
+        ).await();
+
+        // Assert
+        SelfcareAzureStorageException ex = assertThrows(SelfcareAzureStorageException.class, awaiter::indefinitely);
+        // Ora cerchiamo il messaggio corretto lanciato dalla nostra eccezione
+        assertTrue(ex.getMessage().contains("Azure timeout"));
+
+        // Il DB non deve essere toccato
+        verify(documentService, Mockito.never()).updateDocumentContractFiles(any());
+    }
+
+    @Test
+    void uploadSignedContract_shouldTriggerRollback_whenDbUpdateFails() throws IOException {
+        // Arrange
+        String uploadedPath = "/contracts/" + ONBOARDING_ID + "/signed_file.pdf";
+        org.jboss.resteasy.reactive.multipart.FileUpload mockFileUpload = Mockito.mock(org.jboss.resteasy.reactive.multipart.FileUpload.class);
+        File tempFile = createTempPdf();
+        when(mockFileUpload.uploadedFile()).thenReturn(tempFile.toPath());
+        when(mockFileUpload.fileName()).thenReturn("signed_contract.pdf");
+
+        Document mockDocument = buildDocument();
+
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+                .thenReturn(Uni.createFrom().item(mockDocument));
+        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean()))
+                .thenReturn(Uni.createFrom().voidItem());
+        when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
+
+        // Azure ha successo
+        when(azureBlobClient.uploadFile(anyString(), anyString(), any(byte[].class)))
+                .thenReturn(uploadedPath);
+
+        // Il DB fallisce!
+        when(documentService.updateDocumentContractFiles(any(Document.class)))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("Mongo DB is down")));
+
+        // Act
+        var awaiter = documentContentService.uploadSignedContract(
+                ONBOARDING_ID, "prod-1", "Product Title", "INSTITUTION", "/path", List.of(), false, mockFileUpload
+        ).await();
+
+        // Assert
+        RuntimeException ex = assertThrows(RuntimeException.class, awaiter::indefinitely);
+        assertEquals("Mongo DB is down", ex.getMessage());
+
+        // VERIFICA SAGA: Azure deve essere stato chiamato per rimuovere il file appena caricato!
+        verify(azureBlobClient).removeFile(uploadedPath);
     }
 
     // ============================================

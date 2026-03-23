@@ -12,6 +12,920 @@
   }, {
     "name" : "internal-v1"
   } ],
+  "paths" : {
+    "/v1/document-content/aggregates-csv" : {
+      "post" : {
+        "summary" : "Upload aggregates CSV to Azure Blob Storage",
+        "description" : "Receives the aggregates CSV data and stores it in Azure Blob Storage. The request must contain productId, filename and filePath",
+        "operationId" : "uploadAggregatesCsv",
+        "tags" : [ "Document Content Controller" ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UploadAggregateCsvRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/document-content/attachment" : {
+      "post" : {
+        "summary" : "Create attachment PDF",
+        "description" : "Generates an attachment PDF document from the provided data and stores it in Azure Blob Storage.",
+        "operationId" : "createAttachmentPdf",
+        "tags" : [ "Document Content Controller" ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AttachmentPdfRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Attachment PDF created successfully",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreatePdfResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request data"
+          },
+          "500" : {
+            "description" : "Internal server error during PDF generation"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/document-content/contract" : {
+      "delete" : {
+        "summary" : "Delete contract from Azure Blob Storage",
+        "description" : "Deletes the contract file associated with the specified onboarding ID from Azure Blob Storage.",
+        "operationId" : "deleteContract",
+        "tags" : [ "Document Content Controller" ],
+        "parameters" : [ {
+          "name" : "document",
+          "in" : "query",
+          "schema" : {
+            "type" : "string",
+            "pattern" : "\\S"
+          },
+          "required" : true
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      },
+      "post" : {
+        "summary" : "Create contract PDF",
+        "description" : "Generates a contract PDF document from the provided data, signs it with PagoPA signature, and stores it in Azure Blob Storage.",
+        "operationId" : "createContractPdf",
+        "tags" : [ "Document Content Controller" ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ContractPdfRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Contract PDF created successfully",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreatePdfResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request data"
+          },
+          "500" : {
+            "description" : "Internal server error during PDF generation"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/document-content/upload-attachment" : {
+      "post" : {
+        "summary" : "Upload attachment by verifying and signing document, then save into storage.",
+        "description" : "Perform upload  of the file passed in input verifying digest e put company signature",
+        "operationId" : "uploadAttachment",
+        "tags" : [ "Document Content Controller" ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "required" : [ "file" ],
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  },
+                  "request" : {
+                    "$ref" : "#/components/schemas/DocumentBuilderRequest"
+                  }
+                }
+              },
+              "encoding" : {
+                "request" : {
+                  "contentType" : "application/json"
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/document-content/visura" : {
+      "post" : {
+        "summary" : "Store the Visura in Azure Blob Storage",
+        "description" : "Receives the Visura data (filename and content) and stores it in Azure Blob Storage.",
+        "operationId" : "saveVisuraForMerchant",
+        "tags" : [ "Document Content Controller" ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UploadVisuraRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/document-content/{id}/contract-signed" : {
+      "get" : {
+        "summary" : "Retrieve contract signed for a given onboarding",
+        "description" : "Downloads the contract file associated with the specified onboarding ID.",
+        "operationId" : "getContractSigned",
+        "tags" : [ "Document Content Controller" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/octet-stream" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/document-content/{onboardingId}/attachment" : {
+      "get" : {
+        "summary" : "Retrieve attachment for a given onboarding and filename",
+        "description" : "Downloads the attachment file associated with the specified onboarding ID and filename.",
+        "operationId" : "getAttachment",
+        "tags" : [ "Document Content Controller" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "name",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          },
+          "required" : true
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/octet-stream" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/document-content/{onboardingId}/contract" : {
+      "get" : {
+        "summary" : "Retrieve contract not signed for a given onboarding",
+        "description" : "Downloads the unsigned contract file associated with the specified onboarding ID.",
+        "operationId" : "getContract",
+        "tags" : [ "Document Content Controller" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/octet-stream" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/document-content/{onboardingId}/template-attachment" : {
+      "get" : {
+        "summary" : "Retrieve template attachment for a given onboarding and filename and template path",
+        "description" : "Downloads the template attachment file associated with the specified onboarding ID and filename and template path.",
+        "operationId" : "getTemplateAttachment",
+        "tags" : [ "Document Content Controller" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "institutionDescription",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          },
+          "required" : true
+        }, {
+          "name" : "name",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          },
+          "required" : true
+        }, {
+          "name" : "productId",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          },
+          "required" : true
+        }, {
+          "name" : "templatePath",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          },
+          "required" : true
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/octet-stream" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/document-content/{onboardingId}/upload-signed-contract" : {
+      "post" : {
+        "summary" : "Upload signed contract",
+        "description" : "Uploads a signed contract for the specified onboarding ID and updates the document metadata.",
+        "operationId" : "uploadSignedContract",
+        "tags" : [ "Document Content Controller" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "productId" : {
+                    "type" : "string"
+                  },
+                  "productTitle" : {
+                    "type" : "string"
+                  },
+                  "institutionType" : {
+                    "type" : "string"
+                  },
+                  "contractPath" : {
+                    "type" : "string"
+                  },
+                  "fiscalCodes" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "skipSignatureVerification" : {
+                    "type" : "boolean",
+                    "default" : false
+                  },
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents" : {
+      "post" : {
+        "summary" : "Save document (contract or attachment)",
+        "description" : "Persists a document associated with an onboarding. For INSTITUTION/USER token types, saves a contract. For ATTACHMENT token type, saves an attachment.",
+        "operationId" : "saveDocument",
+        "tags" : [ "Document Controller" ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DocumentBuilderRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/contract-files" : {
+      "put" : {
+        "summary" : "Update document contract files",
+        "description" : "Updates the contractSigned and contractFilename paths for a document after contract deletion/move operations.",
+        "operationId" : "updateDocumentContractFiles",
+        "tags" : [ "Document Controller" ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/Document"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/contract-report" : {
+      "get" : {
+        "summary" : "Check if contract signed is a CADES file",
+        "description" : "Check if contract signed is a CADES file even if is not .p7m",
+        "operationId" : "reportContractSigned",
+        "tags" : [ "internal-v1" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          },
+          "required" : true
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ContractSignedReport"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/import" : {
+      "post" : {
+        "summary" : "Persist document for import",
+        "description" : "Persists a document during the import process, associating it with the relevant onboarding and product.",
+        "operationId" : "persistDocumentForImport",
+        "tags" : [ "Document Controller" ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OnboardingDocumentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/onboarding/{onboardingId}" : {
+      "get" : {
+        "summary" : "Retrieves the documents for a given onboarding",
+        "description" : "Fetches a list of documents associated with the specified onboarding ID.",
+        "operationId" : "getDocumentByOnboardingId",
+        "tags" : [ "Document Controller" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/DocumentResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/{id}" : {
+      "get" : {
+        "summary" : "Retrieves the document for a given document ID",
+        "description" : "Fetches a document associated with the specified document ID.",
+        "operationId" : "getDocumentById",
+        "tags" : [ "Document Controller" ],
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DocumentResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/{onboardingId}/attachment-list" : {
+      "get" : {
+        "summary" : "Retrieve attachment names for a given onboarding",
+        "description" : "Returns the list of attachment names associated with the specified onboarding ID.",
+        "operationId" : "getAttachments",
+        "tags" : [ "Document Controller" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/{onboardingId}/attachment/status" : {
+      "head" : {
+        "summary" : "Verify attachment availability",
+        "description" : "Verifies the availability of the specified attachment in the storage system. A successful check returns HTTP 204 (No Content), while a missing attachment results in HTTP 404 (Not Found).",
+        "operationId" : "headAttachment",
+        "tags" : [ "Document Controller" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "name",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          },
+          "required" : true
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/{onboardingId}/contract-signed" : {
+      "put" : {
+        "summary" : "Update contract signed path for a given onboarding",
+        "description" : "Update contract signed path for a given onboarding",
+        "operationId" : "updateContractSigned",
+        "tags" : [ "internal-v1" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "contractSigned",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          },
+          "required" : true
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/{onboardingId}/updated-at" : {
+      "put" : {
+        "summary" : "Update document updatedAt field",
+        "description" : "Sets the updatedAt timestamp of the document associated with the given onboarding ID to the current date and time.",
+        "operationId" : "updateDocumentUpdatedAt",
+        "tags" : [ "Document Controller" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/signature/verify" : {
+      "post" : {
+        "summary" : "Verify the signature of a contract",
+        "operationId" : "verifyContractSignature",
+        "tags" : [ "Signature Controller" ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SignatureRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    }
+  },
   "components" : {
     "schemas" : {
       "AttachmentPdfRequest" : {
@@ -591,849 +1505,6 @@
         "scheme" : "bearer",
         "bearerFormat" : "JWT",
         "description" : "Authentication"
-      }
-    }
-  },
-  "paths" : {
-    "/v1/document-content/aggregates-csv" : {
-      "post" : {
-        "summary" : "Upload aggregates CSV to Azure Blob Storage",
-        "description" : "Receives the aggregates CSV data and stores it in Azure Blob Storage. The request must contain productId, filename and filePath",
-        "operationId" : "uploadAggregatesCsv",
-        "tags" : [ "Document Content Controller" ],
-        "requestBody" : {
-          "content" : {
-            "multipart/form-data" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/UploadAggregateCsvRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : { }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/document-content/attachment" : {
-      "post" : {
-        "summary" : "Create attachment PDF",
-        "description" : "Generates an attachment PDF document from the provided data and stores it in Azure Blob Storage.",
-        "operationId" : "createAttachmentPdf",
-        "tags" : [ "Document Content Controller" ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/AttachmentPdfRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Attachment PDF created successfully",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CreatePdfResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Invalid request data"
-          },
-          "500" : {
-            "description" : "Internal server error during PDF generation"
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/document-content/contract" : {
-      "delete" : {
-        "summary" : "Delete contract from Azure Blob Storage",
-        "description" : "Deletes the contract file associated with the specified onboarding ID from Azure Blob Storage.",
-        "operationId" : "deleteContract",
-        "tags" : [ "Document Content Controller" ],
-        "parameters" : [ {
-          "name" : "document",
-          "in" : "query",
-          "schema" : {
-            "type" : "string",
-            "pattern" : "\\S"
-          },
-          "required" : true
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : { }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      },
-      "post" : {
-        "summary" : "Create contract PDF",
-        "description" : "Generates a contract PDF document from the provided data, signs it with PagoPA signature, and stores it in Azure Blob Storage.",
-        "operationId" : "createContractPdf",
-        "tags" : [ "Document Content Controller" ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/ContractPdfRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Contract PDF created successfully",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CreatePdfResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Invalid request data"
-          },
-          "500" : {
-            "description" : "Internal server error during PDF generation"
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/document-content/upload-attachment" : {
-      "post" : {
-        "summary" : "Upload attachment by verifying and signing document, then save into storage.",
-        "description" : "Perform upload  of the file passed in input verifying digest e put company signature",
-        "operationId" : "uploadAttachment",
-        "tags" : [ "Document Content Controller" ],
-        "requestBody" : {
-          "content" : {
-            "multipart/form-data" : {
-              "schema" : {
-                "type" : "object",
-                "required" : [ "file" ],
-                "properties" : {
-                  "file" : {
-                    "type" : "string",
-                    "format" : "binary"
-                  },
-                  "request" : {
-                    "$ref" : "#/components/schemas/DocumentBuilderRequest"
-                  }
-                }
-              },
-              "encoding" : {
-                "request" : {
-                  "contentType" : "application/json"
-                }
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : { }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/document-content/visura" : {
-      "post" : {
-        "summary" : "Store the Visura in Azure Blob Storage",
-        "description" : "Receives the Visura data (filename and content) and stores it in Azure Blob Storage.",
-        "operationId" : "saveVisuraForMerchant",
-        "tags" : [ "Document Content Controller" ],
-        "requestBody" : {
-          "content" : {
-            "multipart/form-data" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/UploadVisuraRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : { }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/document-content/{id}/contract-signed" : {
-      "get" : {
-        "summary" : "Retrieve contract signed for a given onboarding",
-        "description" : "Downloads the contract file associated with the specified onboarding ID.",
-        "operationId" : "getContractSigned",
-        "tags" : [ "Document Content Controller" ],
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/octet-stream" : {
-                "schema" : {
-                  "type" : "string",
-                  "format" : "binary"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/document-content/{onboardingId}/attachment" : {
-      "get" : {
-        "summary" : "Retrieve attachment for a given onboarding and filename",
-        "description" : "Downloads the attachment file associated with the specified onboarding ID and filename.",
-        "operationId" : "getAttachment",
-        "tags" : [ "Document Content Controller" ],
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "name",
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
-          },
-          "required" : true
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/octet-stream" : {
-                "schema" : {
-                  "type" : "string",
-                  "format" : "binary"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/document-content/{onboardingId}/contract" : {
-      "get" : {
-        "summary" : "Retrieve contract not signed for a given onboarding",
-        "description" : "Downloads the unsigned contract file associated with the specified onboarding ID.",
-        "operationId" : "getContract",
-        "tags" : [ "Document Content Controller" ],
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/octet-stream" : {
-                "schema" : {
-                  "type" : "string",
-                  "format" : "binary"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/document-content/{onboardingId}/template-attachment" : {
-      "get" : {
-        "summary" : "Retrieve template attachment for a given onboarding and filename and template path",
-        "description" : "Downloads the template attachment file associated with the specified onboarding ID and filename and template path.",
-        "operationId" : "getTemplateAttachment",
-        "tags" : [ "Document Content Controller" ],
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "institutionDescription",
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
-          },
-          "required" : true
-        }, {
-          "name" : "name",
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
-          },
-          "required" : true
-        }, {
-          "name" : "productId",
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
-          },
-          "required" : true
-        }, {
-          "name" : "templatePath",
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
-          },
-          "required" : true
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/octet-stream" : {
-                "schema" : {
-                  "type" : "string",
-                  "format" : "binary"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/documents" : {
-      "post" : {
-        "summary" : "Save document (contract or attachment)",
-        "description" : "Persists a document associated with an onboarding. For INSTITUTION/USER token types, saves a contract. For ATTACHMENT token type, saves an attachment.",
-        "operationId" : "saveDocument",
-        "tags" : [ "Document Controller" ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/DocumentBuilderRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : { }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          },
-          "400" : {
-            "description" : "Bad Request"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/documents/contract-files" : {
-      "put" : {
-        "summary" : "Update document contract files",
-        "description" : "Updates the contractSigned and contractFilename paths for a document after contract deletion/move operations.",
-        "operationId" : "updateDocumentContractFiles",
-        "tags" : [ "Document Controller" ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/Document"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : { }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          },
-          "400" : {
-            "description" : "Bad Request"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/documents/contract-report" : {
-      "get" : {
-        "summary" : "Check if contract signed is a CADES file",
-        "description" : "Check if contract signed is a CADES file even if is not .p7m",
-        "operationId" : "reportContractSigned",
-        "tags" : [ "internal-v1" ],
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
-          },
-          "required" : true
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ContractSignedReport"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/documents/import" : {
-      "post" : {
-        "summary" : "Persist document for import",
-        "description" : "Persists a document during the import process, associating it with the relevant onboarding and product.",
-        "operationId" : "persistDocumentForImport",
-        "tags" : [ "Document Controller" ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/OnboardingDocumentRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : { }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          },
-          "400" : {
-            "description" : "Bad Request"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/documents/onboarding/{onboardingId}" : {
-      "get" : {
-        "summary" : "Retrieves the documents for a given onboarding",
-        "description" : "Fetches a list of documents associated with the specified onboarding ID.",
-        "operationId" : "getDocumentByOnboardingId",
-        "tags" : [ "Document Controller" ],
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/DocumentResponse"
-                  }
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/documents/{id}" : {
-      "get" : {
-        "summary" : "Retrieves the document for a given document ID",
-        "description" : "Fetches a document associated with the specified document ID.",
-        "operationId" : "getDocumentById",
-        "tags" : [ "Document Controller" ],
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DocumentResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/documents/{onboardingId}/attachment-list" : {
-      "get" : {
-        "summary" : "Retrieve attachment names for a given onboarding",
-        "description" : "Returns the list of attachment names associated with the specified onboarding ID.",
-        "operationId" : "getAttachments",
-        "tags" : [ "Document Controller" ],
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/documents/{onboardingId}/attachment/status" : {
-      "head" : {
-        "summary" : "Verify attachment availability",
-        "description" : "Verifies the availability of the specified attachment in the storage system. A successful check returns HTTP 204 (No Content), while a missing attachment results in HTTP 404 (Not Found).",
-        "operationId" : "headAttachment",
-        "tags" : [ "Document Controller" ],
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "name",
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
-          },
-          "required" : true
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : { }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/documents/{onboardingId}/contract-signed" : {
-      "put" : {
-        "summary" : "Update contract signed path for a given onboarding",
-        "description" : "Update contract signed path for a given onboarding",
-        "operationId" : "updateContractSigned",
-        "tags" : [ "internal-v1" ],
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "contractSigned",
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
-          },
-          "required" : true
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : { }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/documents/{onboardingId}/updated-at" : {
-      "put" : {
-        "summary" : "Update document updatedAt field",
-        "description" : "Sets the updatedAt timestamp of the document associated with the given onboarding ID to the current date and time.",
-        "operationId" : "updateDocumentUpdatedAt",
-        "tags" : [ "Document Controller" ],
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : { }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/signature/verify" : {
-      "post" : {
-        "summary" : "Verify the signature of a contract",
-        "operationId" : "verifyContractSignature",
-        "tags" : [ "Signature Controller" ],
-        "requestBody" : {
-          "content" : {
-            "multipart/form-data" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/SignatureRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Created"
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
       }
     }
   },
