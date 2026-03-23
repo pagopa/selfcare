@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/mock/aoos"
+  },
+  "response": {
+    "status": "200",
+    "body": "mock aoos csv content",
+    "headers": {
+      "Content-Type": "plain/text"
+    }
+  }
+}

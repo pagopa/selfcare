@@ -1,0 +1,118 @@
+# Default values for selfcare-ms-party-registry-proxy.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+namespace: pnpg
+
+replicaCount: 1
+
+image:
+  repository: selcdcommonacr.azurecr.io/selfcaremspartyregistryproxy
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "ms-party-registry-proxy"
+
+volumes:
+  - name: categories-index-volume
+    emptyDir: {}
+  - name: institutions-index-volume
+    emptyDir: {}
+  - name: aoos-index-volume
+    emptyDir: { }
+  - name: uos-index-volume
+    emptyDir: { }
+
+volumeMounts:
+  - name: categories-index-volume
+    mountPath: /opt/docker/index/categories
+  - name: institutions-index-volume
+    mountPath: /opt/docker/index/institutions
+  - name: aoos-index-volume
+    mountPath: /opt/docker/index/aoos
+  - name: uos-index-volume
+    mountPath: /opt/docker/index/uos
+
+containers:
+  portNumber: 8080
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  className: ""
+  annotations:
+   kubernetes.io/ingress.class: "nginx"
+   nginx.ingress.kubernetes.io/rewrite-target: "/$1"
+   nginx.ingress.kubernetes.io/ssl-redirect: "false"
+   nginx.ingress.kubernetes.io/use-regex: "true"
+   nginx.ingress.kubernetes.io/enable-cors: "true"
+   nginx.ingress.kubernetes.io/cors-allow-headers: "*"
+   nginx.ingress.kubernetes.io/cors-allow-origin: "https://selfcare.pagopa.it"
+
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+config:
+  APPLICATIONINSIGHTS_ROLE_NAME: "ms-party-registry-proxy"
+  IPA_OPEN_DATA_URL: "https://indicepa.gov.it/ipa-dati/datastore/dump"
+  IPA_OPEN_DATA_INSTITUTION_ENDPOINT: "/d09adf99-dc10-4349-8c53-27b1e5aa97b6"
+  IPA_OPEN_DATA_CATEGORY_ENDPOINT: "/84ebb2e7-0e61-427b-a1dd-ab8bb2a84f07"
+  IPA_OPEN_DATA_AOOS_ENDPOINT: "/cdaded04-f84e-4193-a720-47d6d5f422aa"
+  IPA_OPEN_DATA_UOS_ENDPOINT:  "/b0aa1f6c-f135-4c8a-b416-396fed4e1a5d"
+  LUCENE_INDEX_INSTITUTIONS_FOLDER: "index/institutions"
+  LUCENE_INDEX_CATEGORIES_FOLDER: "index/categories"
+  LUCENE_INDEX_AOOS_FOLDER: "index/aoos"
+  LUCENE_INDEX_UOS_FOLDER: "index/uos"
+  LUCENE_INDEX_ANAC_FOLDER: "index/anac"
+  LUCENE_INDEX_IVASS_FOLDER: "index/ivass"
+  BLOB_ANAC_FILENAME: "anac-data.csv"
+  BLOB_IVASS_FILENAME: "ivass-data.csv"
+  IVASS_REGISTRY_TYPES: "ElencoI,ElencoII,SezioneI,SezioneII"
+  IVASS_WORK_TYPES: "VITA,PICCOLO CUMULO,MISTA"

@@ -1,0 +1,98 @@
+server:
+  port: ${MS_PARTY_REGISTRY_PROXY_SERVER_PORT:8080}
+  shutdown: graceful
+
+spring:
+  application:
+    name: "@project.parent.artifactId@"
+    version: "@project.version@"
+  profiles:
+    include:
+      # TO enable specific-language documentations
+      - swaggerEN
+      - AzureStorage
+  zipkin:
+    enabled: false
+  sleuth:
+    baggage:
+      remote-fields: X-Client-Ip
+      correlation-fields: X-Client-Ip
+
+pdnd:
+  skipLocalizzazioneNodes: ${PDND_SKIP_LOCALIZZAZIONE_NODES:false}
+
+file:
+  connector:
+    type: ${ANAC_FTP_MODE:azure}
+
+ivass:
+  file:
+    connector:
+      type: "rest"
+
+info:
+  build:
+    artifact: "@project.parent.artifactId@"
+    name: "@project.parent.artifactId@"
+    description: "@project.description@"
+    version: "@project.version@"
+
+app:
+  data:
+    encryption:
+      key: ${ONBOARDING_DATA_ENCRIPTION_KEY:0123456789ABCDEF0123456789ABCDEF}
+      iv: ${ONBOARDING_DATA_ENCRIPTION_IV:bXy0jvL2z6TtXQ==}
+  dapr:
+    http-endpoint: http://localhost:3500
+    grpc-endpoint: http://localhost:50001
+    appinsights:
+      binding:
+        name: ${DAPR_APPINSIGHTS_BINDING_NAME:appinsights-binding}
+
+appinsights:
+  connection:
+    string: ${APPINSIGHTS_CONNECTION_STRING:InstrumentationKey=00000000-0000-0000-0000-000000000000"}
+
+springdoc:
+  paths-to-exclude:
+    - /dapr/**
+    - /actors/**
+
+logging:
+  level:
+    it.pagopa.selfcare.party.registry_proxy: ${MS_PARTY_REGISTRY_PROXY_LOG_LEVEL:DEBUG}
+
+  pattern:
+    additional-info: ",%X{X-Client-Ip:-}]"
+  appinsights:
+    enabled: ${LOGGING_APPINSIGHTS_ENABLED:true}
+    batch:
+      size: ${LOGGING_APPINSIGHTS_BATCH_SIZE:50}
+    flush:
+      interval: ${LOGGING_APPINSIGHTS_FLUSH_INTERVAL:10000}
+
+resilience4j:
+  retry:
+    retry-aspect-order: 2
+    instances:
+      retryServiceUnavailable:
+        max-attempts: 3
+        wait-duration: 5s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - it.pagopa.selfcare.party.registry_proxy.connector.exception.ServiceUnavailableException
+  circuitbreaker:
+    circuit-breaker-aspect-order: 1
+    instances:
+      geotaxCircuitbreaker:
+        wait-duration-in-open-state: 1m
+        permitted-number-of-calls-in-half-open-state: 3
+        sliding-window-type: count-based
+        sliding-window-size: 3
+        minimum-number-of-calls: 3
+        slow-call-duration-threshold: 10s
+        slow-call-rate-threshold: 60
+        failure-rate-threshold: 60
+        ignore-exceptions:
+          - it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException

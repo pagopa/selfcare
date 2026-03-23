@@ -1,0 +1,44 @@
+name: Create Release branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      version-bump:
+        required: false
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+        default: patch
+        description: 'Major, Minor, or Patch version bump'
+
+jobs:
+  create_branch:
+    name: 'Create Release Branch'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: write
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+
+      - name: Create Release Branch
+        id: create_branch
+        uses: pagopa/selfcare-commons/github-actions-template/create-release@main
+        with:
+          version_bump: ${{ inputs.version-bump }}
+          github_path_token: ${{ secrets.GH_PAT_VARIABLES }}
+
+      - name: Trigger release ms UAT Release
+        run: |
+          gh workflow run release_ms.yml \
+            --ref ${{ steps.create_branch.outputs.new_branch_name }}
+
+      - name: Trigger PNPG release ms UAT Release
+        run: |
+          gh workflow run release_ms_pnpg.yml \
+            --ref ${{ steps.create_branch.outputs.new_branch_name }}
+        

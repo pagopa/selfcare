@@ -1,0 +1,66 @@
+HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+.DS_Store
+
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+**/.tfsec/*
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+**/.dapr/*
+.dev.run/**
+/index/**
+**/app/_*
+**/app/write.lock
+**/app/segments_*
+/.run.prod/SelfCarePartyRegistryProxyApplicationPROD.run.xml
+
+#parent folder
+write.lock
+segments_1
+_0.cfe
+_0.cfs
+_0.si
+_1b.cfs
+_1b.si
+_1c.cfe
+_1c.cfs
+_1c.si
+_1.cfe
+_1.cfs
+_1.si
