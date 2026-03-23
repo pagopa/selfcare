@@ -475,60 +475,60 @@ module "one_trust" {
 # # ###############################################################################
 # # # Contract storage
 # # ###############################################################################
-# module "contracts_storage" {
-#   source = "../_modules/storage_account_template"
+module "contracts_storage" {
+  source = "../_modules/storage_account_template"
 
-#   project              = "${local.prefix}-${local.env_short}"
-#   location             = local.location
-#   tags                 = local.tags
-#   name                 = "contracts"
-#   storage_account_name = "${local.prefix}-${local.env_short}-contracts-storage"
+  project              = "${local.prefix}-${local.env_short}"
+  location             = local.location
+  tags                 = local.tags
+  name                 = "contracts"
+  storage_account_name = "${local.prefix}-${local.env_short}-contracts-storage"
 
-#   account_replication_type      = "LRS"
-#   enable_versioning             = local.contracts_enable_versioning
-#   advanced_threat_protection    = local.contracts_advanced_threat_protection
-#   delete_retention_days         = local.contracts_delete_retention_days
-#   public_network_access_enabled = false
+  account_replication_type      = "LRS"
+  enable_versioning             = local.contracts_enable_versioning
+  advanced_threat_protection    = local.contracts_advanced_threat_protection
+  delete_retention_days         = local.contracts_delete_retention_days
+  public_network_access_enabled = false
 
-#   key_vault_id = module.key_vault.key_vault_id
-#   rg_vnet_name = module.network.rg_vnet_name
-#   vnet_name    = module.network.vnet_name
+  key_vault_id = module.key_vault.key_vault_id
+  rg_vnet_name = module.network.rg_vnet_name
+  vnet_name    = module.network.vnet_name
 
-#   cidr_subnet                       = local.cidr_subnet_contract_storage
-#   private_endpoint_network_policies = local.private_endpoint_network_policies
-#   private_dns_zone_ids              = [module.dns_private.privatelink_blob_core_windows_net_id]
-# }
+  cidr_subnet                       = local.cidr_subnet_contract_storage
+  private_endpoint_network_policies = local.private_endpoint_network_policies
+  private_dns_zone_ids              = [module.dns_private.privatelink_blob_core_windows_net_id]
+}
 
 # # ###############################################################################
 # # # Logs storage
 # # ###############################################################################
 
-# module "logs_storage" {
-#   source = "../_modules/storage_account_template"
+module "logs_storage" {
+  source = "../_modules/storage_account_template"
 
-#   project              = "${local.prefix}-${local.env_short}"
-#   location             = local.location
-#   tags                 = local.tags
-#   name                 = "logs"
-#   storage_account_name = "${local.prefix}-${local.env_short}-st-logs"
+  project              = "${local.prefix}-${local.env_short}"
+  location             = local.location
+  tags                 = local.tags
+  name                 = "logs"
+  storage_account_name = "${local.prefix}-${local.env_short}-st-logs"
 
-#   account_replication_type      = "LRS"
-#   enable_versioning             = false
-#   advanced_threat_protection    = false
-#   delete_retention_days         = 1
-#   public_network_access_enabled = true
+  account_replication_type      = "LRS"
+  enable_versioning             = false
+  advanced_threat_protection    = false
+  delete_retention_days         = 1
+  public_network_access_enabled = true
 
-#   key_vault_id = module.key_vault.key_vault_id
-#   rg_vnet_name = module.network.rg_vnet_name
-#   vnet_name    = module.network.vnet_name
+  key_vault_id = module.key_vault.key_vault_id
+  rg_vnet_name = module.network.rg_vnet_name
+  vnet_name    = module.network.vnet_name
 
-#   cidr_subnet                       = local.cidr_subnet_logs_storage
-#   private_endpoint_network_policies = local.private_endpoint_network_policies
-#   private_dns_zone_ids              = [module.dns_private.privatelink_blob_core_windows_net_id]
+  cidr_subnet                       = local.cidr_subnet_logs_storage
+  private_endpoint_network_policies = local.private_endpoint_network_policies
+  private_dns_zone_ids              = [module.dns_private.privatelink_blob_core_windows_net_id]
 
-#   enable_management_lock           = true
-#   enable_spid_logs_encryption_keys = true
-# }
+  enable_management_lock           = true
+  enable_spid_logs_encryption_keys = true
+}
 
 # # ###############################################################################
 # # # Spid
@@ -544,82 +544,82 @@ module "one_trust" {
 # # ###############################################################################
 # # # Azure DevOps Agent
 # # ###############################################################################
-# module "azure_devops_agent" {
-#   source = "../_modules/azure_devops_agent"
+module "azure_devops_agent" {
+  source = "../_modules/azure_devops_agent"
 
-#   project  = local.project
-#   location = local.location
-#   tags     = local.tags
+  project  = local.project
+  location = local.location
+  tags     = local.tags
 
-#   enable_azdoa                 = true
-#   enable_iac_pipeline          = true
-#   enable_app_projects_pipeline = true
+  enable_azdoa                 = true
+  enable_iac_pipeline          = true
+  enable_app_projects_pipeline = true
 
-#   cidr_subnet_azdoa = local.cidr_subnet_azdoa
-#   rg_vnet_name      = module.network.rg_vnet_name
-#   vnet_name         = module.network.vnet_name
-#   subscription_id   = module.key_vault.subscription_id
-#   env_short         = local.env_short
-#   key_vault_id      = module.key_vault.key_vault_id
-#   tenant_id         = module.key_vault.tenant_id
+  cidr_subnet_azdoa = local.cidr_subnet_azdoa
+  rg_vnet_name      = module.network.rg_vnet_name
+  vnet_name         = module.network.vnet_name
+  subscription_id   = module.key_vault.subscription_id
+  env_short         = local.env_short
+  key_vault_id      = module.key_vault.key_vault_id
+  tenant_id         = module.key_vault.tenant_id
 
-#   private_endpoint_network_policies = local.private_endpoint_network_policies
-# }
+  private_endpoint_network_policies = local.private_endpoint_network_policies
+}
 
 # # ###############################################################################
 # # # Container app environment
 # # ###############################################################################
 
-# resource "azurerm_resource_group" "selc_cae_rg" {
-#   name     = "${local.project}-container-app-002-rg"
-#   location = local.location
+resource "azurerm_resource_group" "selc_cae_rg" {
+  name     = "${local.project}-container-app-002-rg"
+  location = local.location
 
-#   tags = local.tags
-# }
+  tags = local.tags
+}
 
-# module "networking" {
-#   source = "../_modules/networking"
+module "networking" {
+  source = "../_modules/networking"
 
-#   project = "${local.prefix}-${local.env_short}"
+  project = "${local.prefix}-${local.env_short}"
 
-#   # inferred from vnet-common with cidr 10.1.0.0/16
-#   # https://github.com/pagopa/selfcare-infra/blob/9de7d03852904c1e743684a9edd40ae9df0645a8/src/core/01_network_0.tf#L9-L10
-#   cidr_subnet_cae = "10.1.148.0/23"
-#   # cidr_subnet_pnpg_cae = "10.1.156.0/23" //pnpg
+  # inferred from vnet-common with cidr 10.1.0.0/16
+  # https://github.com/pagopa/selfcare-infra/blob/9de7d03852904c1e743684a9edd40ae9df0645a8/src/core/01_network_0.tf#L9-L10
+  cidr_subnet_cae = "10.1.148.0/23"
+  # cidr_subnet_pnpg_cae = "10.1.156.0/23" //pnpg
 
-#   container_app_name_snet = "${local.project}-cae-002-snet"
-#   # pnpg_container_app_name_snet = "${local.project}-pnpg-cae-cp-snet" //pnpg
+  container_app_name_snet = "${local.project}-cae-002-snet"
+  # pnpg_container_app_name_snet = "${local.project}-pnpg-cae-cp-snet" //pnpg
 
-#   # pnpg_delegation = []
+  # pnpg_delegation = []
 
-#   tags = local.tags
-# }
+  tags = local.tags
+}
 
-# module "container_app_environments" {
-#   source = "../_modules/container_app_environments"
+module "container_app_environments" {
+  source = "../_modules/container_app_environments"
 
-#   project             = "${local.prefix}-${local.env_short}"
-#   location            = local.location
-#   resource_group_name = azurerm_resource_group.selc_cae_rg.name
-#   # pnpg_resource_group_name = azurerm_resource_group.selc_container_app_rg.name
+  project             = "${local.prefix}-${local.env_short}"
+  location            = local.location
+  resource_group_name = azurerm_resource_group.selc_cae_rg.name
+  # pnpg_resource_group_name = azurerm_resource_group.selc_container_app_rg.name
 
-#   subnet_id = module.networking.subnet.id
-#   # pnpg_subnet_id = module.networking.subnet_pnpg.id
+  subnet_id = module.networking.subnet.id
+  # pnpg_subnet_id = module.networking.subnet_pnpg.id
 
-#   cae_name = "${local.project}-cae-002"
-#   # pnpg_cae_name = "${local.project}-pnpg-cae-cp"
-#   infrastructure_resource_group_name = "ME_selc-u-cae-002_selc-u-container-app-002-rg_westeurope"
-#   workload_profiles = [
-#     {
-#       name                  = "Consumption"
-#       workload_profile_type = "Consumption"
-#       minimum_count         = 0
-#       maximum_count         = 0
-#     }
-#   ]
+  cae_name = "${local.project}-cae-002"
+  # pnpg_cae_name = "${local.project}-pnpg-cae-cp"
+  infrastructure_resource_group_name = "ME_selc-u-cae-002_selc-u-container-app-002-rg_westeurope"
+  workload_profiles = [
+    {
+      name                  = "Consumption"
+      workload_profile_type = "Consumption"
+      minimum_count         = 0
+      maximum_count         = 0
+    }
+  ]
 
-#   zone_redundant = false
+  zone_redundant = false
 
-#   tags = local.tags
-# }
+  tags = local.tags
+}
 
