@@ -36,9 +36,9 @@ locals {
 
   private_dns_name_domain = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
   private_dns_name_ms = {
-    private_dns_name_auth_ms = "selc-d-auth-ms-ca.${local.private_dns_name_domain}"
+    private_dns_name_auth_ms           = "selc-d-auth-ms-ca.${local.private_dns_name_domain}"
     private_dns_name_registry_proxy_ms = "selc-d-party-reg-proxy-ca.${local.private_dns_name_domain}"
-    
+
   }
 
   function_name = "${local.project}-onboarding-fn"

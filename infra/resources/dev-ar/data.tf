@@ -17,7 +17,7 @@ data "azurerm_subscription" "current" {}
 
 data "azurerm_client_config" "current" {}
 
-data "azurerm_container_app_environment" "cae" {  
+data "azurerm_container_app_environment" "cae" {
   name                = local.container_app_environment_name
   resource_group_name = local.ca_resource_group_name
 }
@@ -33,6 +33,6 @@ data "azurerm_storage_account" "existing_logs_storage" {
 }
 
 data "azurerm_key_vault_secret" "logs_storage_access_key" {
-  name        = "logs-storage-access-key"
+  name         = "logs-storage-access-key"
   key_vault_id = data.azurerm_key_vault.key_vault.id
 }
