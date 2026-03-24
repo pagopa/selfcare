@@ -36,7 +36,7 @@ locals {
     },
     {
       name  = "AZURE_CLIENT_ID"
-      value = data.azurerm_user_assigned_identity.cae_identity.client_id
+      value = module.container_app_registry_proxy_ms.cae_identity_id
     }
   ]
 
@@ -193,43 +193,17 @@ registry_proxy_secrets_names = {
 
   app_settings = concat(local.registry_proxy_app_settings, local.dapr_settings)
 
-  cae_id               = try(data.azurerm_container_app_environment.cae[0].id, null)
-  container_app_id     = try(data.azurerm_container_app.ca[0].id, null)
-  storage_account_id   = try(data.azurerm_storage_account.existing_logs_storage[0].id, null)
-  storage_account_name = try(data.azurerm_storage_account.existing_logs_storage[0].name, null)
-  key_vault_id         = try(data.azurerm_key_vault.key_vault[0].id, null)
-  logs_storage_key     = try(data.azurerm_key_vault_secret.logs_storage_access_key[0].value, null)
+  cae_id               = try(data.azurerm_container_app_environment.cae.id, null)
+  container_app_id     = try(data.azurerm_container_app.ca.id, null)
+  storage_account_id   = try(data.azurerm_storage_account.existing_logs_storage.id, null)
+  storage_account_name = try(data.azurerm_storage_account.existing_logs_storage.name, null)
+  key_vault_id         = try(data.azurerm_key_vault.key_vault.id, null)
+  logs_storage_key     = try(data.azurerm_key_vault_secret.logs_storage_access_key.value, null)
 }
-
-data "azurerm_container_app_environment" "cae" {  
-  name                = local.container_app_environment_name
-  resource_group_name = local.ca_resource_group_name
-}
-
-data "azurerm_container_app" "ca" {
-  name                = local.ca_name
-  resource_group_name = local.ca_resource_group_name
-}
-
-data "azurerm_storage_account" "existing_logs_storage" {
-  name                = local.storage_logs
-  resource_group_name = local.existing_logs_rg
-}
-
-data "azurerm_key_vault" "key_vault" {
-  name                = local.key_vault_name
-  resource_group_name = local.key_vault_resource_group_name
-}
-
-data "azurerm_key_vault_secret" "logs_storage_access_key" {
-  name        = "logs-storage-access-key"
-  key_vault_id = try(data.azurerm_key_vault.key_vault[0].id, null)
-}
-
 
 resource "azurerm_storage_container" "visura" {
   name                  = "visura"
-  storage_account_id    = try(data.azurerm_storage_account.existing_logs_storage[0].id, null)
+  storage_account_id    = try(data.azurerm_storage_account.existing_logs_storage.id, null)
   container_access_type = "private"
 }
 
@@ -252,10 +226,10 @@ resource "azurerm_container_app_environment_dapr_component" "blob_state" {
 
   metadata {
     name  = "azureClientId"
-    value = data.azurerm_user_assigned_identity.cae_identity.client_id
+    value = module.container_app_registry_proxy_ms.cae_identity_id
   }
 
-  scopes = [data.azurerm_container_app.ca[0].dapr[0].app_id]
+  scopes = [data.azurerm_container_app.ca.dapr[0].app_id]
 
   lifecycle {
     prevent_destroy = false
@@ -267,9 +241,9 @@ resource "azurerm_container_app_environment_dapr_component" "blob_state" {
 
 # FIXME: is still mandatory?
 resource "azurerm_role_assignment" "blob_state_access" {
-  scope                = try(data.azurerm_storage_account.existing_logs_storage[0].id, null)
+  scope                = try(data.azurerm_storage_account.existing_logs_storage.id, null)
   role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = try(data.azurerm_user_assigned_identity.cae_identity.principal_id, null)
+  principal_id         = try(module.container_app_registry_proxy_ms.cae_identity_id, null)
 }
 
 ###############################################################################
@@ -282,7 +256,7 @@ module "container_app_registry_proxy_ms" {
   env_short                      = local.env_short
   resource_group_name            = local.ca_resource_group_name
   container_app                  = local.container_app
-  container_app_name             = "party-reg-proxy"
+  container_app_name             = local.ca_name //"party-reg-proxy"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-ms-party-registry-proxy"
   image_tag                      = local.image_tag_latest
@@ -299,4 +273,61 @@ module "container_app_registry_proxy_ms" {
   probes = local.quarkus_health_probes
 
   tags = local.tags
+}
+
+###############################################################################
+# AI Search
+###############################################################################
+
+module "ai_search" {
+  source      = "../_modules/ai_search"
+  app_name    = "${local.prefix}-srch"
+  prefix      = local.prefix
+  env_short   = local.env_short
+  project     = "${local.prefix}-${local.env_short}-${local.location_short}-${local.domain}"
+  location    = local.location
+  domain      = "ar"
+  sku         = "basic"
+  tags        = local.tags
+  cidr_subnet = ["10.1.145.0/29"]
+
+  key_vault_name                = "selc-${local.env_short}-kv"
+  key_vault_resource_group_name = "selc-${local.env_short}-sec-rg"
+  public_network_access_enabled = false
+  srch_private_endpoint_enabled = true
+}
+
+module "dapr" {
+  source = "../_modules/dapr"
+
+  project   = "${local.prefix}-${local.env_short}-${local.location_short}-${local.domain}"
+  env_short = local.env_short
+
+  cae_name    = "selc-${local.env_short}-cae-002"
+  cae_rg_name = "selc-${local.env_short}-container-app-002-rg"
+  ca_name     = "selc-${local.env_short}-party-reg-proxy-ca"
+  ca_rg_name  = "selc-${local.env_short}-container-app-002-rg"
+
+  key_vault_name                   = "selc-${local.env_short}-kv"
+  key_vault_resource_group_name    = "selc-${local.env_short}-sec-rg"
+  key_vault_event_hub_consumer_key = "eventhub-sc-contracts-selc-proxy-key-lc"
+
+  queue_url            = "selc-${local.env_short}-eventhub-ns.servicebus.windows.net"
+  queue_port           = "9093"
+  queue_consumer_group = "party-proxy"
+  queue_topic          = "SC-Contracts"
+
+  #redis
+  redis_enable                   = true
+  redis_private_endpoint_enabled = true
+  redis_capacity                 = 0
+  redis_version                  = 6
+  redis_family                   = "C"
+  redis_sku_name                 = "Basic"
+
+  search_service_name = module.ai_search.search_service_name
+  search_service_key  = module.ai_search.search_service_admin_key
+
+  tags = local.tags
+
 }
