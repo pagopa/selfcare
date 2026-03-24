@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.document.util;
 
 import it.pagopa.selfcare.document.exception.InvalidRequestException;
+import it.pagopa.selfcare.document.model.entity.Document;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
@@ -11,9 +12,11 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 
 import static it.pagopa.selfcare.document.util.ErrorMessage.ORIGINAL_DOCUMENT_NOT_FOUND;
+import static it.pagopa.selfcare.document.util.Utils.CONTRACT_FILENAME_FUNC;
 
 /**
  * Utility class for document and file validations.
@@ -138,5 +141,33 @@ public final class DocumentFileUtils {
         } else {
             return baseName.substring(0, lastIndexOf) + "." + newExtension;
         }
+    }
+
+    public static String buildContractStoragePath(String onboardingId, String contractPath) {
+        return String.format("%s%s", contractPath, onboardingId);
+    }
+
+    public static String buildAttachmentStoragePath(String onboardingId, String contractPath) {
+        return String.format("%s%s/attachments", contractPath, onboardingId);
+    }
+
+    public static String getContractNotSigned(String onboardingId, String contractPath, String contractFilename ) {
+        return String.format("%s%s/%s", contractPath, onboardingId,
+                contractFilename);
+    }
+
+    public static String buildAttachmentPath(Document document, String contractPath) {
+        return Objects.nonNull(document.getContractSigned()) ? document.getContractSigned() : getAttachmentByOnboarding(document.getOnboardingId(), contractPath, document.getContractFilename());
+    }
+
+    public static String getAttachmentByOnboarding(String onboardingId, String contractPath, String filename) {
+        return String.format("%s%s%s%s", contractPath, onboardingId, "/attachments", "/" + filename);
+    }
+
+    public static String buildFilename(String format, String productName, String attachmentName) {
+        if (Objects.nonNull(attachmentName)) {
+            return CONTRACT_FILENAME_FUNC.apply(String.format("%s_%s.pdf", format, attachmentName), productName);
+        }
+        return CONTRACT_FILENAME_FUNC.apply(format, productName);
     }
 }

@@ -20,8 +20,6 @@ import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.document.service.PdfGenerationService;
 import it.pagopa.selfcare.document.service.SignatureService;
 import it.pagopa.selfcare.document.util.DocumentFileUtils;
-import it.pagopa.selfcare.document.util.PdfBuilder;
-import it.pagopa.selfcare.document.util.PdfMapperData;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.HttpHeaders;
@@ -36,7 +34,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -135,11 +132,6 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 );
     }
 
-    private String getContractNotSigned(String onboardingId, Document document) {
-        return String.format("%s%s/%s", documentMsConfig.getContractPath(), onboardingId,
-                document.getContractFilename());
-    }
-
     @Override
     public Uni<RestResponse<File>> retrieveTemplateAttachment(String onboardingId, String templatePath,
                                                               String attachmentName, String institutionDescription,
@@ -162,7 +154,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Attachment with id %s not found", onboardingId)))
                 .onItem().transformToUni(document ->
                         Uni.createFrom()
-                                .item(() -> azureBlobClient.getFileAsPdf(buildAttachmentPath(document)))
+                                .item(() -> azureBlobClient.getFileAsPdf(DocumentFileUtils.buildAttachmentPath(document, documentMsConfig.getContractPath())))
                                 .runSubscriptionOn(Infrastructure.getDefaultExecutor())
                                 .onItem().transform(contract -> RestResponse.ResponseBuilder
                                         .ok(contract, MediaType.APPLICATION_OCTET_STREAM)
@@ -172,14 +164,6 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                                         )
                                         .build())
                 );
-    }
-
-    private String buildAttachmentPath(Document document) {
-        return Objects.nonNull(document.getContractSigned()) ? document.getContractSigned() : getAttachmentByOnboarding(document.getOnboardingId(), document.getContractFilename());
-    }
-
-    private String getAttachmentByOnboarding(String onboardingId, String filename) {
-        return String.format("%s%s%s%s", documentMsConfig.getContractPath(), onboardingId, "/attachments", "/" + filename);
     }
 
     @Override
@@ -326,7 +310,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         return Uni.createFrom().item(() -> {
                     String filePath = isSigned
                             ? document.getContractSigned()
-                            : getContractNotSigned(onboardingId, document);
+                            : DocumentFileUtils.getContractNotSigned(onboardingId, documentMsConfig.getContractPath(), document.getContractFilename());
 
                     return azureBlobClient.getFileAsPdf(filePath);
                 })
@@ -407,7 +391,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
             filename = String.format("%s.p7m", filename);
         }
         document.setContractFilename(filename);
-        document.setContractSigned(getAttachmentByOnboarding(request.getOnboardingId(), filename));
+        document.setContractSigned(DocumentFileUtils.getAttachmentByOnboarding(request.getOnboardingId(), documentMsConfig.getContractPath(), filename));
 
         return documentRepository.persist(document).replaceWith(document);
     }
@@ -426,27 +410,6 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
     // ==================== Common utility methods ====================
 
-    private File loadOrGeneratePdf(String templatePath, PdfGenerator generator) throws IOException {
-        return isPdfFile(templatePath)
-                ? azureBlobClient.getFileAsPdf(templatePath)
-                : generator.generate();
-    }
-
-    private String buildFilename(String format, String productName, String attachmentName) {
-        if (Objects.nonNull(attachmentName)) {
-            return CONTRACT_FILENAME_FUNC.apply(String.format("%s_%s.pdf", format, attachmentName), productName);
-        }
-        return CONTRACT_FILENAME_FUNC.apply(format, productName);
-    }
-
-    private String buildContractStoragePath(String onboardingId) {
-        return String.format("%s%s", documentMsConfig.getContractPath(), onboardingId);
-    }
-
-    private String buildAttachmentStoragePath(String onboardingId) {
-        return String.format("%s%s/attachments", documentMsConfig.getContractPath(), onboardingId);
-    }
-
     private Uni<CreatePdfResponse> uploadAndBuildResponse(PdfContext ctx, String documentType) {
         return Uni.createFrom().item(() -> {
             try {
@@ -462,10 +425,6 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         }).runSubscriptionOn(Infrastructure.getDefaultExecutor());
     }
 
-    private boolean isPdfFile(String path) {
-        return path != null && path.endsWith(".pdf");
-    }
-
     // ==================== Contract-specific methods ====================
 
 
@@ -478,8 +437,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                         azureBlobClient.getFileAsText(request.getContractTemplatePath()),
                         request);
 
-                String filename = buildFilename(PDF_FORMAT_FILENAME, request.getProductName(), null);
-                String storagePath = buildContractStoragePath(request.getOnboardingId());
+                String filename = DocumentFileUtils.buildFilename(PDF_FORMAT_FILENAME, request.getProductName(), null);
+                String storagePath = DocumentFileUtils.buildContractStoragePath(request.getOnboardingId(), documentMsConfig.getContractPath());
                 return new PdfContext(pdfFile, filename, storagePath);
             } catch (IOException e) {
                 throw new InternalException(String.format("Cannot create contract PDF, message: %s", e.getMessage()), "0031");
@@ -490,7 +449,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     private Uni<PdfContext> buildAttachmentContextAsync(AttachmentPdfRequest request) {
         return Uni.createFrom().item(() -> {
             try {
-                String filename = buildFilename("%s", request.getProductName(), request.getAttachmentName());
+                String filename = DocumentFileUtils.buildFilename("%s", request.getProductName(), request.getAttachmentName());
                 File pdfFile = DocumentFileUtils.isPdfFile(request.getAttachmentTemplatePath())
                         ? azureBlobClient.getFileAsPdf(request.getAttachmentTemplatePath())
                         : pdfGenerationService.generateAttachmentPdf(
@@ -498,7 +457,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                         request,
                         filename);
 
-                String storagePath = buildAttachmentStoragePath(request.getOnboardingId());
+                String storagePath = DocumentFileUtils.buildAttachmentStoragePath(request.getOnboardingId(), documentMsConfig.getContractPath());
                 return new PdfContext(pdfFile, filename, storagePath);
             } catch (IOException e) {
                 throw new InternalException(String.format("Cannot create attachment PDF, message: %s", e.getMessage()), "0033");
@@ -554,20 +513,6 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         return RestResponse.ResponseBuilder.ok(file, MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION, HTTP_HEADER_VALUE_ATTACHMENT_FILENAME + filename)
                 .build();
-    }
-
-    private File createPdfFileAttachment(AttachmentPdfRequest request) throws IOException {
-        String attachmentTemplateText = azureBlobClient.getFileAsText(request.getAttachmentTemplatePath());
-        Map<String, Object> data = PdfMapperData.setUpAttachmentData(request);
-
-        log.debug("Building PDF attachment template context: dataMap keys={}, size={}", data.keySet(), data.size());
-        String filename = buildFilename("%s", request.getProductName(), request.getAttachmentName());
-        return PdfBuilder.generateDocument(filename, attachmentTemplateText, data);
-    }
-
-    @FunctionalInterface
-    private interface PdfGenerator {
-        File generate() throws IOException;
     }
 
     private record PdfContext(File pdfFile, String filename, String storagePath) {
@@ -656,7 +601,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         } finally {
             if (temporaryFile != null && temporaryFile.exists()) {
                 if (!temporaryFile.delete()) {
-                    log.warn("Impossibile eliminare il file temporaneo locale durante il rollback: {}", temporaryFile.getAbsolutePath());
+                    log.warn("Unable to delete temporary local file during rollback: {}", sanitize(temporaryFile.getAbsolutePath()));
                 }
             }
         }

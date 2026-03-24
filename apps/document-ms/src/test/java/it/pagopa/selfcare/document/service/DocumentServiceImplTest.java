@@ -8,6 +8,7 @@ import io.quarkus.test.mongodb.MongoTestResource;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
+import it.pagopa.selfcare.document.config.DocumentMsConfig;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
@@ -44,6 +45,8 @@ class DocumentServiceImplTest {
     @InjectMock
     AzureBlobClient azureBlobClient;
 
+    @InjectMock
+    DocumentMsConfig documentMsConfig;
 
     @InjectMock
     DocumentRepository documentRepository;
@@ -492,21 +495,41 @@ class DocumentServiceImplTest {
     // ---- saveDocument attachment not found ----
 
     @Test
-    void saveDocument_shouldThrowResourceNotFound_whenAttachmentNotFound() {
+    void saveDocument_shouldCreateAttachment_whenAttachmentNotFoundInDb() throws Exception {
+        // Arrange
         DocumentBuilderRequest request = DocumentBuilderRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
                 .documentType(TokenType.ATTACHMENT)
                 .attachmentName("missingAttachment")
-                .templatePath("/templates/template.pdf")
+                .templatePath("templates/template.pdf")
                 .templateVersion("1.0")
+                .productTitle("Product IO")
                 .build();
 
         when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "missingAttachment"))
                 .thenReturn(Uni.createFrom().nullItem());
 
-        var awaiter = documentService.saveDocument(request).await();
-        assertThrows(ResourceNotFoundException.class, awaiter::indefinitely);
+        when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
+
+        File tempPdf = createTempPdf();
+        when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(tempPdf);
+
+        Document mockPersistedDoc = new Document();
+        mockPersistedDoc.setOnboardingId(ONBOARDING_ID);
+        mockPersistedDoc.setChecksum("calculated-digest-mock");
+
+        when(documentRepository.persist(any(Document.class)))
+                .thenReturn(Uni.createFrom().item(mockPersistedDoc));
+
+        // Act
+        Document result = documentService.saveDocument(request).await().indefinitely();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(ONBOARDING_ID, result.getOnboardingId());
+        verify(azureBlobClient).getFileAsPdf(anyString());
+        verify(documentRepository).persist(any(Document.class));
     }
 
     // ---- reportContractSigned edge cases ----

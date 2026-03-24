@@ -7,21 +7,21 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
+import it.pagopa.selfcare.document.config.DocumentMsConfig;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
-import it.pagopa.selfcare.document.service.DocumentContentService;
 import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.document.service.SignatureService;
+import it.pagopa.selfcare.document.util.DocumentFileUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 
-import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -38,18 +38,17 @@ import static it.pagopa.selfcare.onboarding.common.TokenType.INSTITUTION;
 public class DocumentServiceImpl implements DocumentService {
 
     private final DocumentRepository documentRepository;
+    private final DocumentMsConfig documentMsConfig;
     private final AzureBlobClient azureBlobClient;
-    private final DocumentContentService documentContentService;
 
     @Inject
     SignatureService signatureService;
 
-    public DocumentServiceImpl(DocumentRepository documentRepository,
-                               AzureBlobClient azureBlobClient,
-                               DocumentContentService documentContentService) {
+    public DocumentServiceImpl(DocumentRepository documentRepository, DocumentMsConfig documentMsConfig,
+                               AzureBlobClient azureBlobClient) {
         this.documentRepository = documentRepository;
+        this.documentMsConfig = documentMsConfig;
         this.azureBlobClient = azureBlobClient;
-        this.documentContentService = documentContentService;
     }
 
     @Override
@@ -135,28 +134,31 @@ public class DocumentServiceImpl implements DocumentService {
         String onboardingId = request.getOnboardingId();
 
         return documentRepository.findByOnboardingId(onboardingId)
-                // Se la find restituisce null, attiviamo il blocco di creazione
-                .onItem().ifNull().switchTo(() ->
-                        documentContentService.retrieveContract(onboardingId, false)
-                                .onItem().transform(restResponse -> {
-                                    File contract = restResponse.getEntity();
-                                    DSSDocument dssDocument = new FileDocument(contract);
-                                    return dssDocument.getDigest(DigestAlgorithm.SHA256).getBase64Value();
-                                })
-                                .onItem().transformToUni(digest -> persistDocument(request, digest))
-                );
+                .onItem().ifNull().switchTo(() -> {
+                    Document document = new Document();
+                    setContractFileName(request, document);
+                    String contractNotSignedPath = DocumentFileUtils.getContractNotSigned(
+                            onboardingId, documentMsConfig.getContractPath(), document.getContractFilename());
+
+                    return calculateDigestFromAzureFile(contractNotSignedPath, onboardingId, "Contract")
+                            .chain(digest -> persistDocument(request, digest));
+                });
     }
 
     private Uni<Document> handleAttachmentDocument(DocumentBuilderRequest request) {
         String onboardingId = request.getOnboardingId();
 
-        return documentContentService.retrieveAttachment(onboardingId, request.getAttachmentName())
-                .onItem().transform(restResponse -> {
-                    File attachment = restResponse.getEntity();
-                    DSSDocument dssDocument = new FileDocument(attachment);
-                    return dssDocument.getDigest(DigestAlgorithm.SHA256).getBase64Value();
-                })
-                .onItem().transformToUni(digest -> persistDocument(request, digest));
+        return documentRepository.findAttachment(onboardingId, ATTACHMENT.name(), request.getAttachmentName())
+                .onItem().ifNull().switchTo(() -> {
+                    Document document = new Document();
+                    document.setOnboardingId(onboardingId);
+                    setContractFileName(request, document);
+                    String attachmentPath = DocumentFileUtils.buildAttachmentPath(
+                            document, documentMsConfig.getContractPath());
+
+                    return calculateDigestFromAzureFile(attachmentPath, onboardingId, "Attachment")
+                            .chain(digest -> persistDocument(request, digest));
+                });
     }
 
     private Uni<Document> persistDocument(DocumentBuilderRequest request, String digest) {
@@ -237,5 +239,20 @@ public class DocumentServiceImpl implements DocumentService {
             log.info("Attachment not found in storage onboardingId={}, attachmentName={}", sanitize(onboardingId), sanitize(attachmentName));
             return false;
         }
+    }
+
+    private Uni<String> calculateDigestFromAzureFile(String azureFilePath, String onboardingId, String logDocType) {
+        log.info("{} not found in DB for onboarding {}. Calculating digest from original template: {}",
+                logDocType, sanitize(onboardingId), sanitize(azureFilePath));
+
+        return Uni.createFrom().item(() -> azureBlobClient.getFileAsPdf(azureFilePath))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .onItem().transform(file -> {
+                    DSSDocument dssDocument = new FileDocument(file);
+                    String digest = dssDocument.getDigest(DigestAlgorithm.SHA256).getBase64Value();
+                    log.info("{} digest calculated successfully for onboarding {}: {}",
+                            logDocType, sanitize(onboardingId), digest);
+                    return digest;
+                });
     }
 }
