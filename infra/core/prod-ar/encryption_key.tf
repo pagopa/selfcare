@@ -1,0 +1,64 @@
+resource "random_password" "encryption_key" {
+  length  = 32
+  special = false
+
+  keepers = {
+    version = 1
+  }
+}
+
+resource "random_password" "encryption_iv" {
+  length  = 12
+  special = false
+
+  keepers = {
+    version = 1
+  }
+}
+
+resource "azurerm_key_vault_secret" "onboarding_encryption_iv_secret" {
+  name         = "onboarding-data-encryption-iv"
+  value        = random_password.encryption_iv.result
+  content_type = "text/plain"
+
+  key_vault_id = module.key_vault.key_vault_id
+
+  lifecycle {
+    ignore_changes = all
+  }
+}
+
+resource "azurerm_key_vault_secret" "onboarding_encryption_key_secret" {
+  name         = "onboarding-data-encryption-key"
+  value        = random_password.encryption_key.result
+  content_type = "text/plain"
+
+  key_vault_id = module.key_vault.key_vault_id
+
+  lifecycle {
+    ignore_changes = all
+  }
+}
+
+resource "azurerm_key_vault_secret" "selfcare_encryption_iv_secret" {
+  name         = "selfcare-data-encryption-iv"
+  value        = random_password.encryption_iv.result
+  content_type = "text/plain"
+
+  key_vault_id = module.key_vault.key_vault_id
+
+  lifecycle {
+    ignore_changes = all
+  }
+}
+
+resource "azurerm_key_vault_secret" "selfcare_encryption_key_secret" {
+  name         = "selfcare-data-encryption-key"
+  value        = random_password.encryption_key.result
+  content_type = "text/plain"
+
+  key_vault_id = module.key_vault.key_vault_id
+  lifecycle {
+    ignore_changes = all
+  }
+}

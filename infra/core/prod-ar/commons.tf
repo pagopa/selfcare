@@ -142,7 +142,7 @@ module "cdn" {
   dns_zone_prefix      = local.dns_zone_prefix
   external_domain      = local.external_domain
   robots_indexed_paths = local.robots_indexed_paths
-  storage_use_case     = "development"
+  storage_use_case     = "default"
 
   log_analytics_workspace_enabled = true
   log_analytics_workspace_id      = module.log_analytics.log_analytics_workspace_id
@@ -167,21 +167,21 @@ data "azurerm_storage_account" "old_cdn_storage_account" {
   resource_group_name = "${local.prefix}-${local.env_short}-checkout-fe-rg"
 }
 
-# resource "null_resource" "cdn_storage_copy" {
-#   for_each = toset(["$web", "selc-${local.env_short}-product", "selc-openapi"])
+resource "null_resource" "cdn_storage_copy" {
+  for_each = toset(["$web", "selc-${local.env_short}-product", "selc-openapi"])
 
-#   provisioner "local-exec" {
-#     command = <<EOT
-#         az storage blob copy start-batch \
-#         --account-name "${module.cdn.storage_name}" \
-#         --account-key "${module.cdn.storage_primary_access_key}" \
-#         --destination-container '${each.value}' \
-#         --source-account-name "${data.azurerm_storage_account.old_cdn_storage_account.name}" \
-#         --source-account-key "${data.azurerm_storage_account.old_cdn_storage_account.primary_access_key}" \
-#         --source-container '${each.value}'
-#     EOT
-#   }
-# }
+  provisioner "local-exec" {
+    command = <<EOT
+        az storage blob copy start-batch \
+        --account-name "${module.cdn.storage_name}" \
+        --account-key "${module.cdn.storage_primary_access_key}" \
+        --destination-container '${each.value}' \
+        --source-account-name "${data.azurerm_storage_account.old_cdn_storage_account.name}" \
+        --source-account-key "${data.azurerm_storage_account.old_cdn_storage_account.primary_access_key}" \
+        --source-container '${each.value}'
+    EOT
+  }
+}
 
 # # ###############################################################################
 # # # monitor (action groups, web tests, alerts)
@@ -207,12 +207,8 @@ module "monitor" {
   dns_a_api_fqdn      = module.dns_public.dns_a_api_fqdn
   dns_a_api_pnpg_fqdn = module.dns_public.dns_a_api_pnpg_fqdn
   #fixme: these should be outputs from the cdn module, but that would create a cycle since the cdn module needs the monitor for log analytics workspace
-  cdn_fqdn = "dev.selfcare.pagopa.it"
+  cdn_fqdn = "selfcare.pagopa.it"
   # module.cdn.fqdn
-
-  # Selfcare status secrets (from key_vault secrets query)
-  selfcare_status_uat_email = try(module.key_vault.secrets_selfcare_status_uat["alert-selfcare-status-uat-email"].value, "")
-  selfcare_status_uat_slack = try(module.key_vault.secrets_selfcare_status_uat["alert-selfcare-status-uat-slack"].value, "")
 }
 
 # # ###############################################################################
@@ -284,6 +280,13 @@ module "appgateway" {
   action_group_error_id = module.monitor.action_group_error_id
   action_group_slack_id = module.monitor.action_group_slack_id
   action_group_email_id = module.monitor.action_group_email_id
+
+  app_gateway_max_capacity = 5
+  app_gateway_min_capacity = 1
+
+  app_gateway_waf_enabled = true
+  app_gateway_sku_name    = "WAF_v2"
+  app_gateway_sku_tier    = "WAF_v2"
 }
 
 # # ###############################################################################
@@ -336,10 +339,8 @@ module "vpn" {
   subscription_name = module.key_vault.subscription_name
   tenant_id         = module.key_vault.tenant_id
 
-
-
-  sec_workspace_id = local.env_short == "p" ? module.key_vault.secrets_sec_workspace_id : null
-  sec_storage_id   = local.env_short == "p" ? module.key_vault.secrets_sec_storage_id : null
+  sec_workspace_id = module.azure_key_vault_items.sec_workspace_id
+  sec_storage_id   = module.azure_key_vault_items.sec_storage_id
 }
 
 
@@ -360,7 +361,7 @@ module "redis" {
   cidr_subnet_redis                 = local.cidr_subnet_redis
   tags                              = local.tags
   redis_private_endpoint_enabled    = local.redis_private_endpoint_enabled
-  private_endpoint_network_policies = "Disabled"
+  private_endpoint_network_policies = "Enabled"
   key_vault_id                      = module.key_vault.key_vault_id
 
   redis_sku_name = local.redis_sku_name
@@ -402,6 +403,20 @@ module "cosmos_db" {
   cosmosdb_mongodb_main_geo_location_zone_redundant = local.cosmosdb_mongodb_main_geo_location_zone_redundant
   cosmosdb_private_endpoint_mongo_name              = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-account"
   cosmosdb_private_service_connection_mongo_name    = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-account-private-endpoint-mongo"
+
+  cosmosdb_mongodb_consistency_policy = {
+    consistency_level       = "Session"
+    max_interval_in_seconds = 5
+    max_staleness_prefix    = 100
+  }
+
+  cosmosdb_mongodb_additional_geo_locations = [
+    {
+      location          = local.location_pair
+      failover_priority = 1
+      zone_redundant    = false
+    }
+  ]
 }
 
 
@@ -409,68 +424,63 @@ module "cosmos_db" {
 # # # default_roleassignment_rg
 # # ###############################################################################
 
-module "default_roleassignment" {
-  source = "../_modules/roles"
+# module "default_roleassignment" {
+#   source = "../_modules/roles"
 
-  location = local.location
-  tags     = local.tags
-}
+#   location = local.location
+#   tags     = local.tags
+# }
 
 
 # # ###############################################################################
 # # # resources
 # # ###############################################################################
 
-module "resources" {
-  source = "../_modules/resources"
+# module "resources" {
+#   source = "../_modules/resources"
 
-  env        = local.env
-  env_short  = local.env_short
-  app_domain = local.app_domain
+#   env        = local.env
+#   env_short  = local.env_short
+#   app_domain = local.app_domain
 
-  # CDN
-  # Contract Storage — TODO: expose these from the appropriate module
-  # selc_contracts_storage_name               = "" # module.<contracts_storage>.name
-  # selc_contracts_storage_primary_access_key = "" # module.<contracts_storage>.primary_access_key
-  # selc_contracts_container_name             = "" # <contracts_container>.name
-
-  checkout_cdn_name                       = module.cdn.storage_name
-  checkout_endpoint_name                  = module.cdn.name
-  checkout_cdn_storage_primary_access_key = module.cdn.storage_primary_access_key
-  checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
-}
+#   # CDN
+#   checkout_cdn_name                       = module.cdn.storage_name
+#   checkout_endpoint_name                  = module.cdn.name
+#   checkout_cdn_storage_primary_access_key = module.cdn.storage_primary_access_key
+#   checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
+# }
 
 
 # # ###############################################################################
 # # # assets
 # # ###############################################################################
 
-module "assets" {
-  source = "../_modules/assets"
+# module "assets" {
+#   source = "../_modules/assets"
 
-  env        = local.env
-  app_domain = local.app_domain
-  # CDN
-  checkout_cdn_name                       = module.cdn.storage_name
-  checkout_endpoint_name                  = module.cdn.name
-  checkout_cdn_storage_primary_access_key = module.cdn.storage_primary_access_key
-  checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
-}
+#   env        = local.env
+#   app_domain = local.app_domain
+#   # CDN
+#   checkout_cdn_name                       = module.cdn.storage_name
+#   checkout_endpoint_name                  = module.cdn.name
+#   checkout_cdn_storage_primary_access_key = module.cdn.storage_primary_access_key
+#   checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
+# }
 
 
 # # ###############################################################################
 # # # one trust
 # # ###############################################################################
 
-module "one_trust" {
-  source = "../_modules/one_trust"
+# module "one_trust" {
+#   source = "../_modules/one_trust"
 
-  env                                     = local.env
-  checkout_cdn_name                       = module.cdn.storage_name
-  checkout_endpoint_name                  = module.cdn.name
-  checkout_cdn_storage_primary_access_key = module.cdn.storage_primary_access_key
-  checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
-}
+#   env                                     = local.env
+#   checkout_cdn_name                       = module.cdn.storage_name
+#   checkout_endpoint_name                  = module.cdn.name
+#   checkout_cdn_storage_primary_access_key = module.cdn.storage_primary_access_key
+#   checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
+# }
 
 # # ###############################################################################
 # # # Contract storage
@@ -484,7 +494,7 @@ module "contracts_storage" {
   name                 = "contracts"
   storage_account_name = "${local.prefix}-${local.env_short}-contracts-storage"
 
-  account_replication_type      = "LRS"
+  account_replication_type      = "RAGZRS"
   enable_versioning             = local.contracts_enable_versioning
   advanced_threat_protection    = local.contracts_advanced_threat_protection
   delete_retention_days         = local.contracts_delete_retention_days
@@ -512,11 +522,11 @@ module "logs_storage" {
   name                 = "logs"
   storage_account_name = "${local.prefix}-${local.env_short}-st-logs"
 
-  account_replication_type      = "LRS"
+  account_replication_type      = "RAGZRS"
   enable_versioning             = false
   advanced_threat_protection    = false
-  delete_retention_days         = 1
-  public_network_access_enabled = true
+  delete_retention_days         = 14
+  public_network_access_enabled = false
 
   key_vault_id = module.key_vault.key_vault_id
   rg_vnet_name = module.network.rg_vnet_name
@@ -534,6 +544,7 @@ module "logs_storage" {
 # # # Spid
 # # ###############################################################################
 
+# # Do Not import 
 # # module "spid_logs_encryption_keys" {
 # #   source = "../_modules/spid_logs_encryption_keys"
 
@@ -582,15 +593,13 @@ module "networking" {
 
   project = "${local.prefix}-${local.env_short}"
 
-  # inferred from vnet-common with cidr 10.1.0.0/16
-  # https://github.com/pagopa/selfcare-infra/blob/9de7d03852904c1e743684a9edd40ae9df0645a8/src/core/01_network_0.tf#L9-L10
+  # # inferred from vnet-common with cidr 10.1.0.0/16
+  # # https://github.com/pagopa/selfcare-infra/blob/9de7d03852904c1e743684a9edd40ae9df0645a8/src/core/01_network_0.tf#L9-L10
   cidr_subnet_cae = "10.1.148.0/23"
-  # cidr_subnet_pnpg_cae = "10.1.156.0/23" //pnpg
 
   container_app_name_snet = "${local.project}-cae-002-snet"
-  # pnpg_container_app_name_snet = "${local.project}-pnpg-cae-cp-snet" //pnpg
 
-  # pnpg_delegation = []
+  private_endpoint_network_policies = "Enabled"
 
   tags = local.tags
 }
@@ -601,14 +610,14 @@ module "container_app_environments" {
   project             = "${local.prefix}-${local.env_short}"
   location            = local.location
   resource_group_name = azurerm_resource_group.selc_cae_rg.name
-  # pnpg_resource_group_name = azurerm_resource_group.selc_container_app_rg.name
+  # # pnpg_resource_group_name = azurerm_resource_group.selc_container_app_rg.name
 
   subnet_id = module.networking.subnet.id
-  # pnpg_subnet_id = module.networking.subnet_pnpg.id
+  # # pnpg_subnet_id = module.networking.subnet_pnpg.id
 
   cae_name = "${local.project}-cae-002"
-  # pnpg_cae_name = "${local.project}-pnpg-cae-cp"
-  infrastructure_resource_group_name = "ME_selc-u-cae-002_selc-u-container-app-002-rg_westeurope"
+  # # pnpg_cae_name = "${local.project}-pnpg-cae-cp"
+  infrastructure_resource_group_name = "ME_selc-p-cae-002_selc-p-container-app-002-rg_westeurope"
   workload_profiles = [
     {
       name                  = "Consumption"
@@ -618,7 +627,7 @@ module "container_app_environments" {
     }
   ]
 
-  zone_redundant = false
+  zone_redundant = true
 
   tags = local.tags
 }
