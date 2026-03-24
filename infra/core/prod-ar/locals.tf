@@ -140,7 +140,7 @@ locals {
   law_daily_quota_gb    = 2
 
   # CosmosDb MongoDb
-  cosmosdb_mongodb_extra_capabilities = ["EnableServerless", "EnableMongoRoleBasedAccessControl"]
+  cosmosdb_mongodb_extra_capabilities = [] //"EnableServerless", "EnableMongoRoleBasedAccessControl"
   cosmosdb_mongodb_enable_autoscaling = true
   # cosmosdb_mongodb_max_throughput TODO define before launch
   cosmosdb_mongodb_enable_free_tier                 = true
@@ -596,7 +596,7 @@ locals {
 
   private_endpoint_network_policies = "Enabled"
 
-  contracts_enable_versioning          = false
+  contracts_enable_versioning          = true
   contracts_advanced_threat_protection = false
-  contracts_delete_retention_days      = 10
+  contracts_delete_retention_days      = 14
 }

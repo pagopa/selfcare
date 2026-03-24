@@ -156,28 +156,6 @@ resource "azurerm_role_assignment" "storage_blob_contributor_externals" {
 # }
 
 # ###############################################################################
-# # Spid Test Environment
-# ###############################################################################
-
-module "spid_test_env" {
-  source = "../_modules/spid_testenv"
-
-  enable_spid_test = true
-
-  name                        = "${local.prefix}-${local.env_short}-${local.app_domain}-spid-testenv"
-  location                    = local.location
-  key_vault_id                = module.key_vault.key_vault_id
-  hub_spid_login_metadata_url = "https://api-pnpg.${local.dns_zone_prefix}.${local.external_domain}/spid/v1/metadata"
-
-  spid_testenv_local_config_dir = "${path.module}/spid_testenv_conf"
-
-
-  tags = local.tags
-}
-
-
-
-# ###############################################################################
 # # cosmos db
 # ###############################################################################
 
