@@ -61,7 +61,9 @@ module "key_vault" {
   env_short = local.env_short
   location  = local.location
   tags      = local.tags
+  sku_name  = "premium"
 
+  soft_delete_retention_days                       = 90
   azdo_sp_tls_cert_enabled                         = local.azdo_sp_tls_cert_enabled
   azuread_service_principal_azure_cdn_frontdoor_id = "f3b3f72f-4770-47a5-8c1e-aa298003be12"
 }
@@ -234,7 +236,7 @@ module "cdn" {
   dns_zone_prefix      = local.dns_zone_prefix
   external_domain      = local.external_domain
   robots_indexed_paths = local.robots_indexed_paths
-  storage_use_case     = "default" //uat and prod should use "default"
+  storage_use_case     = "default"
 
   log_analytics_workspace_enabled = true
   log_analytics_workspace_id      = data.azurerm_log_analytics_workspace.log_analytics.id
@@ -278,7 +280,7 @@ resource "null_resource" "cdn_storage_copy" {
 # ###############################################################################
 
 resource "azurerm_resource_group" "selc_container_app_rg" {
-  name     = "${local.project}-container-app-001-rg" //prod  "${local.project}-container-app-rg" 
+  name     = "${local.project}-container-app-rg"
   location = local.location
 
   tags = local.tags
@@ -296,7 +298,7 @@ module "networking" {
   cidr_subnet_cae  = "10.1.156.0/23"
   cidr_subnet_main = "10.1.148.0/23"
 
-  container_app_name_snet           = "${local.project}-pnpg-cae-001-snet"
+  container_app_name_snet           = "${local.project}-pnpg-cae-cp-snet"
   private_endpoint_network_policies = "Enabled"
 
   delegation = []
@@ -315,11 +317,11 @@ module "container_app_environments" {
 
   enable_log = true
   subnet_id  = module.networking.subnet.id
-  cae_name   = "${local.project}-pnpg-cae-001" //prod  ""${local.project}-pnpg-cae-cp"
+  cae_name   = "${local.project}-pnpg-cae-cp"
 
   workload_profiles = []
 
-  zone_redundant = false
+  zone_redundant = true
 
   tags = local.tags
 }

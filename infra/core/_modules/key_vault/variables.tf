@@ -32,3 +32,14 @@ variable "azuread_service_principal_azure_cdn_frontdoor_id" {
   type    = string
   default = "f3b3f72f-4770-47a5-8c1e-aa298003be12"
 }
+
+variable "sku_name" {
+  type    = string
+  default = "standard"
+}
+
+variable "soft_delete_retention_days" {
+  type        = number
+  default     = 15
+  description = "(Optional) The number of days that items should be retained for once soft-deleted. This value can be between 7 and 90 (the default) days."
+}

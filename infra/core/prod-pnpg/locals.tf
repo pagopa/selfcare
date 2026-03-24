@@ -83,7 +83,7 @@ locals {
   app_gateway_api_pnpg_certificate_name = "api-pnpg-selfcare-pagopa-it"
 
   # redis
-  redis_sku_name                 = "Basic"
+  redis_sku_name                 = "Standard"
   redis_family                   = "C"
   redis_capacity                 = 0
   redis_private_endpoint_enabled = true
@@ -146,7 +146,7 @@ locals {
     max_interval_in_seconds = null
     max_staleness_prefix    = null
   }
-  cosmosdb_mongodb_extra_capabilities               = []
+  cosmosdb_mongodb_extra_capabilities               = ["DisableRateLimitingResponses"]
   cosmosdb_mongodb_main_geo_location_zone_redundant = true
   cosmosdb_mongodb_additional_geo_locations = [{
     location          = "northeurope"
@@ -173,7 +173,7 @@ locals {
   vpn_sku     = "VpnGw1"
   vpn_pip_sku = "Standard"
 
-  private_endpoint_network_policies = "Enabled"
+  private_endpoint_network_policies = "Disabled"
 
   contracts_enable_versioning          = false
   contracts_advanced_threat_protection = false
