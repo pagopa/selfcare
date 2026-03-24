@@ -2,6 +2,12 @@ package it.pagopa.selfcare.document.util;
 
 import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.model.FormItem;
+import it.pagopa.selfcare.document.model.entity.Document;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.resteasy.reactive.server.core.multipart.FormData;
+import org.jboss.resteasy.reactive.server.multipart.FormValue;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,12 +19,6 @@ import java.util.Deque;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BinaryOperator;
-
-import it.pagopa.selfcare.document.model.entity.Document;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.resteasy.reactive.server.core.multipart.FormData;
-import org.jboss.resteasy.reactive.server.multipart.FormValue;
 
 import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
 

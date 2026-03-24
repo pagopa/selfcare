@@ -22,13 +22,13 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.jboss.resteasy.reactive.PartType;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
 
 import java.io.File;
-import java.util.List;
 
 import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
 import static it.pagopa.selfcare.document.util.Utils.retrieveAttachmentFromFormData;
@@ -243,16 +243,12 @@ public class DocumentContentController {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Uni<Response> uploadSignedContract(
             @PathParam("onboardingId") String onboardingId,
-            @RestForm("productId") String productId,
-            @RestForm("productTitle") String productTitle,
-            @RestForm("institutionType") String documentType,
-            @RestForm("contractPath") String contractPath,
-            @RestForm("fiscalCodes") List<String> fiscalCodes,
+            @RestForm("request") @PartType(MediaType.APPLICATION_JSON) DocumentBuilderRequest request,
             @RestForm("skipSignatureVerification") @DefaultValue("false") boolean skipSignatureVerification,
             @RestForm("file") FileUpload fileUpload) {
 
         return documentContentService.uploadSignedContract(
-                        onboardingId, productId, productTitle, documentType, contractPath, fiscalCodes, skipSignatureVerification, fileUpload)
+                        onboardingId, request, skipSignatureVerification, fileUpload)
                 .replaceWith(() -> Response.noContent().build());
     }
 }

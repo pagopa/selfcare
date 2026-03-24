@@ -71,7 +71,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .delegates(List.of(delegate1))
@@ -137,7 +137,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .build();
@@ -182,7 +182,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .build();
@@ -217,7 +217,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .build();
@@ -250,7 +250,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .build();
@@ -283,7 +283,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .delegates(List.of())
@@ -319,7 +319,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .build();
@@ -500,7 +500,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .billing(billing)
@@ -550,7 +550,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .build();
@@ -585,7 +585,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .build();
@@ -675,7 +675,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .delegates(List.of(delegate))
@@ -715,7 +715,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .isAggregator(false)
@@ -763,7 +763,7 @@ class PdfMapperDataTest {
                 .productId("prod-io")
                 .productName("IO")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .billing(billing)
@@ -808,7 +808,7 @@ class PdfMapperDataTest {
                 .productId("prod-io")
                 .productName("IO")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .build();
@@ -846,7 +846,7 @@ class PdfMapperDataTest {
                 .productId("prod-io")
                 .productName("IO")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .pricingPlan(PricingPlan.FA.name())
@@ -884,7 +884,7 @@ class PdfMapperDataTest {
                 .productId("prod-io")
                 .productName("IO")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .pricingPlan("BASE")
@@ -922,7 +922,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .pricingPlan(null)
@@ -963,7 +963,7 @@ class PdfMapperDataTest {
                 .productId("prod-io")
                 .productName("IO")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .pricingPlan(plan)
@@ -1000,7 +1000,7 @@ class PdfMapperDataTest {
                 .productId("prod-io")
                 .productName("IO")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .pricingPlan("C0")
@@ -1154,7 +1154,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .build();
@@ -1196,7 +1196,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .build();
@@ -1230,7 +1230,7 @@ class PdfMapperDataTest {
                 .productId("prod-io")
                 .productName("IO")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .isAggregator(true)
@@ -1266,7 +1266,7 @@ class PdfMapperDataTest {
                 .productId("prod-pn")
                 .productName("PN")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .isAggregator(true)
@@ -1302,7 +1302,7 @@ class PdfMapperDataTest {
                 .productId("prod-io")
                 .productName("IO")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .isAggregator(false)
@@ -1336,7 +1336,7 @@ class PdfMapperDataTest {
                 .productId("prod-io")
                 .productName("IO")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .isAggregator(true)
@@ -1380,7 +1380,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .delegates(List.of(delegate))
@@ -1428,7 +1428,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .delegates(List.of(delegate))
@@ -1480,7 +1480,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .delegates(List.of(delegate))
@@ -1527,7 +1527,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .delegates(List.of(delegate))
@@ -1575,7 +1575,7 @@ class PdfMapperDataTest {
                 .productId("prod-pagopa")
                 .productName("PagoPA")
                 .contractTemplatePath("/templates/contract.html")
-                .pdfFormatFilename("contract_%s.pdf")
+                
                 .institution(institution)
                 .manager(manager)
                 .delegates(List.of(delegate1, delegate2))

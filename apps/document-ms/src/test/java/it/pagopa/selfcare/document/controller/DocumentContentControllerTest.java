@@ -41,7 +41,6 @@ public class DocumentContentControllerTest {
     private static final String PRODUCT_NAME = "PagoPA";
     private static final String CONTRACT_TEMPLATE_PATH = "templates/contract.ftl";
     private static final String ATTACHMENT_TEMPLATE_PATH = "templates/attachment.ftl";
-    private static final String PDF_FORMAT_FILENAME = "contract-%s.pdf";
     private static final String STORAGE_PATH = "contracts/signed/contract-123.pdf";
     private static final String FILENAME = "contract-123.pdf";
     private static final String BASE_PATH = "/v1/document-content/";
@@ -201,7 +200,7 @@ public class DocumentContentControllerTest {
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-123")
                 .documentType(it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT)
-                .documentName(ATTACHMENT_NAME)
+                .attachmentName(ATTACHMENT_NAME)
                 .build();
 
         Mockito.when(documentContentService.uploadAttachment(any(DocumentBuilderRequest.class), any(FormItem.class)))
@@ -225,7 +224,7 @@ public class DocumentContentControllerTest {
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-123")
                 .documentType(it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT)
-                .documentName(ATTACHMENT_NAME)
+                .attachmentName(ATTACHMENT_NAME)
                 .build();
 
         Mockito.when(documentContentService.uploadAttachment(any(DocumentBuilderRequest.class), any(FormItem.class)))
@@ -249,7 +248,7 @@ public class DocumentContentControllerTest {
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-123")
                 .documentType(it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT)
-                .documentName(ATTACHMENT_NAME)
+                .attachmentName(ATTACHMENT_NAME)
                 .build();
 
         Mockito.when(documentContentService.uploadAttachment(any(DocumentBuilderRequest.class), any(FormItem.class)))
@@ -551,7 +550,7 @@ public class DocumentContentControllerTest {
     @Test
     void createContractPdf_shouldReturn400_whenPdfFormatFilenameIsNull() {
         ContractPdfRequest request = buildValidContractRequest();
-        request.setPdfFormatFilename(null);
+        request.setOnboardingId(null);
 
         given()
                 .contentType(MediaType.APPLICATION_JSON)
@@ -923,11 +922,7 @@ public class DocumentContentControllerTest {
 
         Mockito.when(documentContentService.uploadSignedContract(
                 eq(onboardingId),
-                eq("prod-1"),
-                eq("Product Title"),
-                eq("INSTITUTION"),
-                eq("/path/to/template"),
-                anyList(),
+                eq(new DocumentBuilderRequest()),
                 eq(false),
                 any(FileUpload.class)
         )).thenReturn(Uni.createFrom().item("success-path")); // O .voidItem() se il service restituisce Uni<Void>
@@ -958,7 +953,7 @@ public class DocumentContentControllerTest {
 
         // SOSTITUISCI QUI: Usa InvalidRequestException invece di IllegalArgumentException
         Mockito.when(documentContentService.uploadSignedContract(
-                any(), any(), any(), any(), any(), any(), anyBoolean(), any()
+                any(), any(), anyBoolean(), any()
         )).thenReturn(Uni.createFrom().failure(new InvalidRequestException("Invalid signature", "CODE-400")));
 
         File dummyFile = new File("src/test/resources/pdf/dummy.pdf");
@@ -983,7 +978,7 @@ public class DocumentContentControllerTest {
         String onboardingId = "onb-123";
 
         Mockito.when(documentContentService.uploadSignedContract(
-                any(), any(), any(), any(), any(), any(), anyBoolean(), any()
+                any(), any(), anyBoolean(), any()
         )).thenReturn(Uni.createFrom().failure(new RuntimeException("Azure is down")));
 
         File dummyFile = new File("src/test/resources/pdf/dummy.pdf");
@@ -1010,7 +1005,6 @@ public class DocumentContentControllerTest {
                 .contractTemplatePath(CONTRACT_TEMPLATE_PATH)
                 .productId(PRODUCT_ID)
                 .productName(PRODUCT_NAME)
-                .pdfFormatFilename(PDF_FORMAT_FILENAME)
                 .institution(buildValidInstitutionPdfData())
                 .manager(buildValidUserPdfData("manager-1", "MNGTAX001"))
                 .build();

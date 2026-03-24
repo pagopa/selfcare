@@ -111,11 +111,11 @@ class DocumentServiceImplTest {
     void getAttachments_shouldReturnAttachmentNames() {
         Document doc1 = buildDocument();
         doc1.setType(TokenType.ATTACHMENT);
-        doc1.setName("attachment-1");
+        doc1.setAttachmentName("attachment-1");
 
         Document doc2 = buildDocument();
         doc2.setType(TokenType.ATTACHMENT);
-        doc2.setName("attachment-2");
+        doc2.setAttachmentName("attachment-2");
 
         when(documentRepository.findAttachments(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().item(List.of(doc1, doc2)));
@@ -295,7 +295,6 @@ class DocumentServiceImplTest {
                 .documentType(TokenType.INSTITUTION)
                 .templatePath("/templates/template.pdf")
                 .templateVersion("1.0")
-                .pdfFormatFilename("contract_%s.pdf")
                 .productTitle("Product IO")
                 .build();
 
@@ -317,7 +316,6 @@ class DocumentServiceImplTest {
                 .documentType(TokenType.INSTITUTION)
                 .templatePath("/templates/template.pdf")
                 .templateVersion("1.0")
-                .pdfFormatFilename("contract_%s.pdf")
                 .productTitle("Product IO")
                 .build();
 
@@ -347,7 +345,7 @@ class DocumentServiceImplTest {
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
                 .documentType(TokenType.ATTACHMENT)
-                .documentName("myAttachment")
+                .attachmentName("myAttachment")
                 .templatePath("/templates/template.pdf")
                 .templateVersion("1.0")
                 .productTitle("Product IO")
@@ -355,7 +353,7 @@ class DocumentServiceImplTest {
 
         Document attachDoc = buildDocument();
         attachDoc.setType(TokenType.ATTACHMENT);
-        attachDoc.setName("myAttachment");
+        attachDoc.setAttachmentName("myAttachment");
         attachDoc.setContractSigned("/path/to/attachment.pdf");
 
         Document newDoc = buildDocument();
@@ -471,7 +469,6 @@ class DocumentServiceImplTest {
                 .documentType(TokenType.USER)
                 .templatePath("/templates/template.pdf")
                 .templateVersion("1.0")
-                .pdfFormatFilename("user_contract_%s.pdf")
                 .productTitle("Product IO")
                 .build();
 
@@ -500,7 +497,7 @@ class DocumentServiceImplTest {
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
                 .documentType(TokenType.ATTACHMENT)
-                .documentName("missingAttachment")
+                .attachmentName("missingAttachment")
                 .templatePath("/templates/template.pdf")
                 .templateVersion("1.0")
                 .build();

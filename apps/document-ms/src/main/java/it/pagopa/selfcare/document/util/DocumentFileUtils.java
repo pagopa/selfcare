@@ -127,18 +127,16 @@ public final class DocumentFileUtils {
      * Sostituisce l'estensione partendo dall'ultimo punto.
      * Logica migrata da Onboarding MS per retrocompatibilità.
      */
-    public static String replaceFileExtension(String originalFilename, String newExtension) {
-        if (originalFilename == null) {
+    public static String replaceFileExtension(String baseName, String newExtension) {
+        if (baseName == null) {
             return newExtension;
         }
 
-        int lastIndexOf = originalFilename.lastIndexOf(".");
+        int lastIndexOf = baseName.lastIndexOf(".");
         if (lastIndexOf == -1) {
-            // Nota: manteniamo il comportamento originale dell'Onboarding MS
-            // che non metteva il punto se il file non aveva già un'estensione.
-            return originalFilename + newExtension;
+            return baseName + newExtension;
         } else {
-            return originalFilename.substring(0, lastIndexOf) + "." + newExtension;
+            return baseName.substring(0, lastIndexOf) + "." + newExtension;
         }
     }
 }

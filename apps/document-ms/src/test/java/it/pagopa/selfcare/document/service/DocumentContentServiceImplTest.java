@@ -55,7 +55,6 @@ public class DocumentContentServiceImplTest {
     private static final String CONTRACT_TEMPLATE_PDF_PATH = "templates/contract.pdf";
     private static final String ATTACHMENT_TEMPLATE_PATH = "templates/attachment.ftl";
     private static final String PRODUCT_NAME = "PagoPA";
-    private static final String PDF_FORMAT_FILENAME = "contract_%s.pdf";
     private static final String ATTACHMENT_NAME = "allegato-1";
 
     @InjectMock DocumentRepository documentRepository;
@@ -126,7 +125,7 @@ public class DocumentContentServiceImplTest {
     void retrieveAttachment_shouldUseContractSignedPath_whenContractSignedIsNotNull() {
         Document doc = buildDocument();
         doc.setType(TokenType.ATTACHMENT);
-        doc.setName("myAttachment");
+        doc.setAttachmentName("myAttachment");
         doc.setContractSigned("/path/to/signed/attachment.pdf");
         File mockFile = Mockito.mock(File.class);
 
@@ -146,7 +145,7 @@ public class DocumentContentServiceImplTest {
     void retrieveAttachment_shouldBuildPath_whenContractSignedIsNull() {
         Document doc = buildDocument();
         doc.setType(TokenType.ATTACHMENT);
-        doc.setName("myAttachment");
+        doc.setAttachmentName("myAttachment");
         doc.setContractSigned(null);
         doc.setContractFilename("attachment.pdf");
         File mockFile = Mockito.mock(File.class);
@@ -168,7 +167,7 @@ public class DocumentContentServiceImplTest {
     void retrieveAttachment_shouldReturnOkResponse() {
         Document doc = buildDocument();
         doc.setType(TokenType.ATTACHMENT);
-        doc.setName("myAttachment");
+        doc.setAttachmentName("myAttachment");
         doc.setContractSigned("/path/to/attachment.pdf");
         File mockFile = Mockito.mock(File.class);
 
@@ -473,14 +472,14 @@ public class DocumentContentServiceImplTest {
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
                 .documentType(TokenType.ATTACHMENT)
-                .documentName("myAttachment")
+                .attachmentName("myAttachment")
                 .templatePath("/templates/template.pdf")
                 .templateVersion("1.0")
                 .build();
 
         Document persistedDoc = buildDocument();
         persistedDoc.setType(TokenType.ATTACHMENT);
-        persistedDoc.setName("myAttachment");
+        persistedDoc.setAttachmentName("myAttachment");
         persistedDoc.setContractFilename("signed_template.pdf");
         persistedDoc.setContractSigned("/parties/docs/" + ONBOARDING_ID + "/attachments/signed_template.pdf");
 
@@ -515,7 +514,7 @@ public class DocumentContentServiceImplTest {
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
                 .documentType(TokenType.ATTACHMENT)
-                .documentName("myAttachment")
+                .attachmentName("myAttachment")
                 .templatePath("/templates/template.pdf")
                 .templateVersion("1.0")
                 .build();
@@ -542,14 +541,14 @@ public class DocumentContentServiceImplTest {
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
                 .documentType(TokenType.ATTACHMENT)
-                .documentName("myAttachment")
+                .attachmentName("myAttachment")
                 .templatePath("/templates/template.pdf")
                 .templateVersion("1.0")
                 .build();
 
         Document persistedDoc = buildDocument();
         persistedDoc.setType(TokenType.ATTACHMENT);
-        persistedDoc.setName("myAttachment");
+        persistedDoc.setAttachmentName("myAttachment");
         persistedDoc.setContractFilename("signed_template.pdf.p7m");
         persistedDoc.setContractSigned("/parties/docs/" + ONBOARDING_ID + "/attachments/signed_template.pdf.p7m");
 
@@ -585,14 +584,14 @@ public class DocumentContentServiceImplTest {
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
                 .documentType(TokenType.ATTACHMENT)
-                .documentName("myAttachment")
+                .attachmentName("myAttachment")
                 .templatePath("/templates/template.pdf")
                 .templateVersion("1.0")
                 .build();
 
         Document persistedDoc = buildDocument();
         persistedDoc.setType(TokenType.ATTACHMENT);
-        persistedDoc.setName("myAttachment");
+        persistedDoc.setAttachmentName("myAttachment");
 
         when(documentService.existsAttachment(ONBOARDING_ID, "myAttachment"))
                 .thenReturn(Uni.createFrom().item(false));
@@ -657,14 +656,14 @@ public class DocumentContentServiceImplTest {
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
                 .documentType(TokenType.ATTACHMENT)
-                .documentName("myAttachment")
+                .attachmentName("myAttachment")
                 .templatePath("/templates/template.pdf")
                 .templateVersion("1.0")
                 .build();
 
         Document persistedDoc = buildDocument();
         persistedDoc.setType(TokenType.ATTACHMENT);
-        persistedDoc.setName("myAttachment");
+        persistedDoc.setAttachmentName("myAttachment");
         persistedDoc.setContractFilename("signed_template.pdf");
         persistedDoc.setContractSigned("/parties/docs/" + ONBOARDING_ID + "/attachments/signed_template.pdf");
 
@@ -1470,7 +1469,7 @@ public class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, productId, "Product Title", documentType, templatePath, fiscalCodes, skipVerification, mockFileUpload
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFileUpload
         ).await();
 
         // Assert
@@ -1498,7 +1497,7 @@ public class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, "prod-1", "Product Title", "INSTITUTION", "/path", List.of(), false, mockFileUpload
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFileUpload
         ).await();
 
         // Assert
@@ -1532,7 +1531,7 @@ public class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, "prod-1", "Product Title", "INSTITUTION", "/path", List.of(), false, mockFileUpload
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFileUpload
         ).await();
 
         // Assert
@@ -1571,7 +1570,7 @@ public class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, "prod-1", "Product Title", "INSTITUTION", "/path", List.of(), false, mockFileUpload
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFileUpload
         ).await();
 
         // Assert
@@ -1592,7 +1591,6 @@ public class DocumentContentServiceImplTest {
                 .contractTemplatePath(CONTRACT_TEMPLATE_PATH)
                 .productId(PRODUCT_ID)
                 .productName(PRODUCT_NAME)
-                .pdfFormatFilename(PDF_FORMAT_FILENAME)
                 .institution(buildValidInstitutionPdfData())
                 .manager(buildValidUserPdfData("manager-1", "MNGTAX001"))
                 .build();

@@ -32,9 +32,6 @@ public class ContractPdfRequest {
     @NotBlank
     private String productName;
 
-    @NotBlank
-    private String pdfFormatFilename;
-
     private String pricingPlan;
 
     private Boolean isAggregator;

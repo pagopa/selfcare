@@ -29,9 +29,12 @@ import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.document.service.SignatureService;
 import it.pagopa.selfcare.onboarding.crypto.PadesSignService;
 import it.pagopa.selfcare.onboarding.crypto.entity.SignatureInformation;
-import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -40,11 +43,9 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import static it.pagopa.selfcare.document.util.ErrorMessage.*;
+import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
 import static it.pagopa.selfcare.document.util.Utils.createSafeTempFile;
 
 @Slf4j

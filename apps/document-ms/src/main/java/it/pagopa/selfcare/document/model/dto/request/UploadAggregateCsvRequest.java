@@ -1,13 +1,13 @@
 package it.pagopa.selfcare.document.model.dto.request;
 
-import java.io.File;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.core.MediaType;
 import lombok.Data;
 import org.jboss.resteasy.reactive.PartType;
 import org.jboss.resteasy.reactive.RestForm;
+
+import java.io.File;
 
 @Data
 public class UploadAggregateCsvRequest {

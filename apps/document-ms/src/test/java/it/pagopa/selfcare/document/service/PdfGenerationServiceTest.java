@@ -109,7 +109,6 @@ class PdfGenerationServiceTest {
         request.setOnboardingId("onboarding-123");
         request.setProductId("prod-test");
         request.setProductName("Product Test");
-        request.setPdfFormatFilename("%s_test.pdf");
 
         // Institution
         InstitutionPdfData institution = new InstitutionPdfData();

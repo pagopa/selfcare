@@ -3,10 +3,11 @@ package it.pagopa.selfcare.document.model.entity;
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
 import it.pagopa.selfcare.onboarding.common.TokenType;
-import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.bson.codecs.pojo.annotations.BsonId;
+
+import java.time.LocalDateTime;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -18,7 +19,7 @@ public class Document extends ReactivePanacheMongoEntityBase {
     private TokenType type;
     private String onboardingId;
     private String productId;
-    private String name;
+    private String attachmentName;
     private String checksum;
     private String contractVersion;
     private String contractTemplate;

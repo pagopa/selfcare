@@ -1,8 +1,9 @@
 package it.pagopa.selfcare.document.model;
 
-import java.io.File;
 import lombok.Builder;
 import lombok.Getter;
+
+import java.io.File;
 
 @Builder
 @Getter

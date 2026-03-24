@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+import static it.pagopa.selfcare.document.config.DocumentMsConfig.PDF_FORMAT_FILENAME;
 import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
 import static it.pagopa.selfcare.document.util.Utils.CONTRACT_FILENAME_FUNC;
 import static it.pagopa.selfcare.document.util.Utils.createBaseDocument;
@@ -76,7 +77,7 @@ public class DocumentServiceImpl implements DocumentService {
     public Uni<List<String>> getAttachments(String onboardingId) {
         return documentRepository.findAttachments(onboardingId)
                 .onItem().transform(attachments -> attachments.stream()
-                        .map(Document::getName)
+                        .map(Document::getAttachmentName)
                         .toList());
     }
 
@@ -149,7 +150,7 @@ public class DocumentServiceImpl implements DocumentService {
     private Uni<Document> handleAttachmentDocument(DocumentBuilderRequest request) {
         String onboardingId = request.getOnboardingId();
 
-        return documentContentService.retrieveAttachment(onboardingId, request.getDocumentName())
+        return documentContentService.retrieveAttachment(onboardingId, request.getAttachmentName())
                 .onItem().transform(restResponse -> {
                     File attachment = restResponse.getEntity();
                     DSSDocument dssDocument = new FileDocument(attachment);
@@ -200,7 +201,7 @@ public class DocumentServiceImpl implements DocumentService {
         );
         document.setChecksum(digest);
         document.setType(request.getDocumentType());
-        document.setName(request.getDocumentName());
+        document.setAttachmentName(request.getAttachmentName());
         document.setCreatedAt(LocalDateTime.now());
         document.setUpdatedAt(LocalDateTime.now());
         setContractFileName(request, document);
@@ -210,15 +211,15 @@ public class DocumentServiceImpl implements DocumentService {
 
     private static void setContractFileName(DocumentBuilderRequest request, Document document) {
         String filenamePattern = ATTACHMENT.equals(request.getDocumentType())
-                ? "%s_" + request.getDocumentName() + ".pdf"
-                : request.getPdfFormatFilename();
+                ? "%s_" + request.getAttachmentName() + ".pdf"
+                : PDF_FORMAT_FILENAME;
 
         document.setContractFilename(CONTRACT_FILENAME_FUNC.apply(filenamePattern, request.getProductTitle()));
     }
 
     private Uni<Boolean> checkAttachmentExists(Document document, String onboardingId, String attachmentName) {
         if (Objects.isNull(document)) {
-            log.info("Document not found onboardingId={}, documentName={}", sanitize(onboardingId), sanitize(attachmentName));
+            log.info("Document not found onboardingId={}, attachmentName={}", sanitize(onboardingId), sanitize(attachmentName));
             return Uni.createFrom().item(false);
         }
 
@@ -230,10 +231,10 @@ public class DocumentServiceImpl implements DocumentService {
     private boolean verifyAttachmentInStorage(Document document, String onboardingId, String attachmentName) {
         try {
             azureBlobClient.getProperties(document.getContractSigned());
-            log.info("Attachment found in storage onboardingId={}, documentName={}", sanitize(onboardingId), sanitize(attachmentName));
+            log.info("Attachment found in storage onboardingId={}, attachmentName={}", sanitize(onboardingId), sanitize(attachmentName));
             return true;
         } catch (SelfcareAzureStorageException e) {
-            log.info("Attachment not found in storage onboardingId={}, documentName={}", sanitize(onboardingId), sanitize(attachmentName));
+            log.info("Attachment not found in storage onboardingId={}, attachmentName={}", sanitize(onboardingId), sanitize(attachmentName));
             return false;
         }
     }

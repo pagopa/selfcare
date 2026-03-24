@@ -22,7 +22,6 @@ import it.pagopa.selfcare.document.service.SignatureService;
 import it.pagopa.selfcare.document.util.DocumentFileUtils;
 import it.pagopa.selfcare.document.util.PdfBuilder;
 import it.pagopa.selfcare.document.util.PdfMapperData;
-import it.pagopa.selfcare.onboarding.common.TokenType;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.HttpHeaders;
@@ -37,11 +36,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static it.pagopa.selfcare.document.config.DocumentMsConfig.PDF_FORMAT_FILENAME;
 import static it.pagopa.selfcare.document.util.ErrorMessage.ATTACHMENT_UPLOAD_ERROR;
 import static it.pagopa.selfcare.document.util.ErrorMessage.GENERIC_ERROR;
 import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
@@ -185,7 +184,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
     @Override
     public Uni<Void> uploadAttachment(DocumentBuilderRequest request, FormItem file) {
-        log.info("Uploading attachment for onboardingId={}, productId={}, documentName={}",
+        log.info("Uploading attachment for onboardingId={}, productId={}, attachmentName={}",
                 sanitize(request.getOnboardingId()),
                 sanitize(request.getProductId()),
                 sanitize(file.getFileName()));
@@ -202,7 +201,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 // 2. Upload asincrono su Azure
                 .call(document -> uploadToAzureReactive(document, file)
                         .onFailure().call(azureError -> {
-                            log.error("Upload to Azure failed for attachment {}. Rolling back DB record...", sanitize(request.getDocumentName()));
+                            log.error("Upload to Azure failed for attachment {}. Rolling back DB record...", sanitize(request.getAttachmentName()));
                             return documentRepository.delete(document)
                                     .onFailure().invoke(e -> log.error("CRITICAL: Rollback failed for DB document {}", document.getId(), e));
                         })
@@ -304,28 +303,19 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     }
 
     @Override
-    public Uni<String> uploadSignedContract(String onboardingId, String productId, String productTitle, String documentType,
-                                            String templatePath, List<String> fiscalCodes,
+    public Uni<String> uploadSignedContract(String onboardingId, DocumentBuilderRequest request,
                                             boolean skipSignatureVerification, FileUpload fileUpload) {
 
         log.info("START - Uploading and verifying signed contract for onboardingId={}, productId={}",
-                sanitize(onboardingId), sanitize(productId));
+                sanitize(onboardingId), sanitize(request.getProductId()));
 
         File physicalFile = fileUpload.uploadedFile().toFile();
         String originalFileName = fileUpload.fileName();
 
-        DocumentBuilderRequest builderRequest = DocumentBuilderRequest.builder()
-                .onboardingId(onboardingId)
-                .productId(productId)
-                .documentType(TokenType.valueOf(documentType))
-                .templatePath(templatePath)
-                .documentName(originalFileName)
-                .build();
-
-        return documentService.handleContractDocument(builderRequest)
+        return documentService.handleContractDocument(request)
                 .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)
 
-                .call(document -> signatureService.verifyContractSignature(onboardingId, physicalFile, fiscalCodes, skipSignatureVerification))
+                .call(document -> signatureService.verifyContractSignature(onboardingId, physicalFile, request.getFiscalCodes(), skipSignatureVerification))
 
                 .chain(document -> uploadToAzureAndUpdateDb(document, physicalFile, originalFileName));
     }
@@ -344,7 +334,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     }
 
     private Uni<Void> verifyAttachmentDoesNotExist(DocumentBuilderRequest request) {
-        return documentService.existsAttachment(request.getOnboardingId(), request.getDocumentName())
+        return documentService.existsAttachment(request.getOnboardingId(), request.getAttachmentName())
                 .onItem().transformToUni(exists -> {
                     if (Boolean.TRUE.equals(exists)) {
                         return Uni.createFrom().failure(
@@ -407,7 +397,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
         document.setChecksum(digest);
         document.setType(ATTACHMENT);
-        document.setName(request.getDocumentName());
+        document.setAttachmentName(request.getAttachmentName());
         document.setCreatedAt(LocalDateTime.now());
         document.setUpdatedAt(LocalDateTime.now());
 
@@ -488,7 +478,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                         azureBlobClient.getFileAsText(request.getContractTemplatePath()),
                         request);
 
-                String filename = buildFilename(request.getPdfFormatFilename(), request.getProductName(), null);
+                String filename = buildFilename(PDF_FORMAT_FILENAME, request.getProductName(), null);
                 String storagePath = buildContractStoragePath(request.getOnboardingId());
                 return new PdfContext(pdfFile, filename, storagePath);
             } catch (IOException e) {
@@ -627,7 +617,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
                 .chain(uploadedPath -> {
                     document.setContractSigned(uploadedPath);
-                    document.setContractFilename(originalFileName);
+                    document.setContractFilename(baseName);
 
                     return documentService.updateDocumentContractFiles(document)
                             .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)

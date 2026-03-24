@@ -8,7 +8,6 @@ import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import java.io.File;
-import java.util.List;
 
 /**
  * Service for creating PDF documents (contracts and attachments).
@@ -55,5 +54,5 @@ public interface DocumentContentService {
 
     Uni<Void> uploadAggregatesCsv(UploadAggregateCsvRequest request);
 
-    Uni<String> uploadSignedContract(String onboardingId, String productId, String productTitle, String documentType, String contractPath, List<String> fiscalCodes, boolean skipSignatureVerification, FileUpload fileUpload);
+    Uni<String> uploadSignedContract(String onboardingId, DocumentBuilderRequest request, boolean skipSignatureVerification, FileUpload fileUpload);
 }

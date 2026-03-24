@@ -11,7 +11,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
-import static it.pagopa.selfcare.onboarding.common.ProductId.*;
+import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_IO;
+import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_PN;
 
 /**
  * Utility class for mapping data into PDF template placeholders.
