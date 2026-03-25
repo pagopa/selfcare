@@ -246,3 +246,31 @@ resource "null_resource" "upload_metadata" {
 #           EOT
 #   }
 # }
+
+
+resource "null_resource" "upload_product_institution_types" {
+  # triggers = {
+  #   file_sha1 = filesha1("${path.module}/../../${var.env}-${var.app_domain}/assets/product_institution_types.json")
+  # }
+
+  provisioner "local-exec" {
+    command = <<EOT
+            az storage blob upload \
+                --container '$web' \
+                --account-name ${replace(replace(var.checkout_cdn_name, "-cdn-endpoint", "-sa"), "-", "")} \
+                --account-key ${var.checkout_cdn_storage_primary_access_key} \
+                --file "${path.module}/../../${var.env}-${var.app_domain}/assets/product_institution_types.json" \
+                --overwrite true \
+                --name 'assets/product_institution_types.json' &&
+
+              az afd endpoint purge \
+                --content-paths "/spid/metadata.xml" \
+                --resource-group ${var.checkout_fe_rg_name} \
+                --endpoint-name ${replace(var.checkout_endpoint_name, "-afd", "-fde")}  \
+                --profile-name ${var.checkout_endpoint_name}  \
+                --no-wait
+          EOT
+  }
+}
+
+
