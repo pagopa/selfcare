@@ -265,13 +265,13 @@ locals {
       "io-infra-rg" = [
         "Storage Blob Data Contributor"
       ],
-      "selc-u-aks-rg" = [
+      "selc-p-aks-rg" = [
         "Azure Kubernetes Service Cluster Admin Role"
       ],
-      "selc-u-documents-storage-rg" = [
+      "selc-p-documents-storage-rg" = [
         "Storage Blob Data Contributor"
       ],
-      "selc-u-logs-storage-rg" = [
+      "selc-p-logs-storage-rg" = [
         "Storage Blob Data Contributor"
       ]
     }
@@ -282,13 +282,13 @@ locals {
       "Contributor"
     ]
     resource_groups = {
-      "selc-u-aks-rg" = [
+      "selc-p-aks-rg" = [
         "Azure Kubernetes Service Cluster Admin Role"
       ],
-      "selc-u-cosmosdb-mongodb-rg" : [
+      "selc-p-cosmosdb-mongodb-rg" : [
         "PagoPA Resource Lock Contributor"
       ],
-      "selc-u-documents-storage-rg" = [
+      "selc-p-documents-storage-rg" = [
         "Storage Blob Data Contributor"
       ],
       "io-infra-rg" = [
@@ -307,7 +307,7 @@ locals {
       terraform-state-rg = [
         "Storage Blob Data Contributor"
       ],
-      "selc-u-contracts-storage-rg" = [
+      "selc-p-contracts-storage-rg" = [
         "Storage Blob Data Contributor"
       ],
       io-infra-rg = [
