@@ -18,6 +18,8 @@ on:
           - product
           - product-cdc
           - webhook
+          - registry-proxy
+          - registry-proxy-pnpg
         required: true
 
 env:

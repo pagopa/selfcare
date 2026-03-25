@@ -13,6 +13,7 @@ on:
           - product
           - product-cdc
           - webhook
+          - registry-proxy
           - document-ms
         required: true
       version-bump:

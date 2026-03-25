@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/aoos",
+    "queryParameters": {
+      "bom": {
+        "equalTo": "True"
+      }
+    }
+  },
+  "response": {
+    "status": "200",
+    "body": "aoos csv content",
+    "headers": {
+      "Content-Type": "plain/text"
+    }
+  }
+}

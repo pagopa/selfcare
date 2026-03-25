@@ -1,6 +1,11 @@
 on:
   workflow_call:
     inputs:
+      app:
+        type: string
+        description: 'Microservice name'
+        required: false
+        default: 'app'
       dir:
         type: string
         required: true
@@ -43,7 +48,7 @@ env:
 jobs:
 
   build_push_docker:
-    name: 'Build and Push Docker'
+    name: ${{ inputs.app }} - Build and Push Docker
     runs-on: ubuntu-24.04
     environment: ${{ inputs.environment }}-cd
     permissions:
@@ -89,14 +94,14 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
-          cache-to: type=gha,mode=min
+          cache-to: type=gha,mode=max
           build-args: |
             REPO_SELFCARE=selfcare
             REPO_USERNAME=${{ github.actor }}
             REPO_PASSWORD=${{ secrets.GITHUB_TOKEN }}
 
   tf_plan:
-    name: 'Terraform Plan'
+    name: ${{ inputs.app }} - Terraform Plan
     runs-on: ubuntu-24.04
     environment: ${{ inputs.environment }}-ci
     permissions:
@@ -127,15 +132,24 @@ jobs:
         with:
           terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version}}
 
-      - name: Terraform Plan
-        uses: pagopa/terraform-preapply-azure-action@54ded8cda3437c3f6a9f46baf69cb321ce82f5cd
-        with:
-          client_id: ${{ secrets.ARM_CLIENT_ID }}
-          tenant_id: ${{ vars.ARM_TENANT_ID }}
-          subscription_id: ${{ vars.ARM_SUBSCRIPTION_ID }}
-          dir: ${{ inputs.dir }}
-          azure_environment: ${{ inputs.tf_environment }}
+      - name: Terraform Init
+        shell: bash
+        working-directory: ${{ inputs.dir }}
+        run: terraform init -input=false
         env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+
+      - name: Terraform Plan
+        shell: bash
+        working-directory: ${{ inputs.dir }}
+        run: |
+          terraform plan -lock-timeout=3000s -input=false -out=tfplan-${{ inputs.tf_environment }}-${{ github.sha }}
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
           TF_VAR_image_tag: ${{ steps.setsha.outputs.short_sha }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -150,7 +164,7 @@ jobs:
           retention-days: 1
 
   release:
-    name: 'Release'
+    name: ${{ inputs.app }} - Release
     runs-on: ubuntu-24.04
     needs: [ build_push_docker, tf_plan ]
     environment: ${{ inputs.environment }}-cd
@@ -200,7 +214,7 @@ jobs:
         shell: bash
         working-directory: ${{ inputs.dir }}
         run: |
-          bash ./terraform.sh init ${{ inputs.tf_environment }}
+          terraform init -input=false
 
       - name: Terraform Apply
         shell: bash
@@ -211,7 +225,7 @@ jobs:
           TF_VAR_image_tag: ${{ needs.tf_plan.outputs.image_tag }}
 
   upload_openapi:
-    name: 'Upload OpenAPI'
+    name: ${{ inputs.app }} - Upload OpenAPI
     runs-on: ubuntu-24.04
     needs: [ release ]
     if: ${{ inputs.upload_openapi_enabled }}
@@ -246,4 +260,3 @@ jobs:
         with:
           inlineScript: |
             az storage blob upload --auth-mode key -f  ${{ inputs.path_openapi_docs }} --account-name selc${{ steps.extract_env_short.outputs.env_short }}checkoutsa  -c selc-openapi -n ${{ inputs.docker_image_name }}/openapi.json --overwrite
-

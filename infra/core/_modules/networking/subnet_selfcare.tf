@@ -5,6 +5,8 @@ resource "azurerm_subnet" "container_app_snet" {
 
   address_prefixes = [var.cidr_subnet_cae]
 
+
+  private_endpoint_network_policies = var.private_endpoint_network_policies
   dynamic "delegation" {
     for_each = var.delegation
     content {

@@ -1,4 +1,4 @@
-name: Code Review - iam
+name: Code Review - IAM
 
 on:
   workflow_dispatch:

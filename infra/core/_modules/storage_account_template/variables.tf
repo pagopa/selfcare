@@ -73,6 +73,12 @@ variable "private_endpoint_network_policies" {
   default = "Enabled"
 }
 
+variable "private_endpoint_id" {
+  type        = string
+  description = "Private endpoing subnetId"
+  default     = null
+}
+
 variable "private_dns_zone_ids" {
   type    = list(string)
   default = []

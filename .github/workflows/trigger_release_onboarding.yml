@@ -37,25 +37,15 @@ jobs:
         run: |
           echo "VERSION=$(echo "${{ inputs.branch }}" | sed 's/.*_//;s/^v//')" >> $GITHUB_ENV
 
-      - name: Trigger Functions Infra Release
+      - name: Trigger Resources Infra Release (AR)
         run: |
-          gh workflow run onboarding_release_functions_infra.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }}
+          gh workflow run publish_onboarding_infra.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=ar
 
-      - name: Trigger Mongo Infra Release
+      - name: Trigger Resources Infra Release (PNPG)
         run: |
-          gh workflow run onboarding_release_mongo_infra.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }}
-
-      - name: Trigger PNPG Functions Infra Release
-        run: |
-          gh workflow run onboarding_release_functions_pnpg_infra.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }}
-
-      - name: Trigger PNPG Mongo Infra Release
-        run: |
-          gh workflow run onboarding_release_mongo_pnpg_infra.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }}
+          gh workflow run publish_onboarding_infra.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg
 
       - name: Trigger Functions Release
         run: |

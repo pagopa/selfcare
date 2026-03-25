@@ -170,14 +170,15 @@ module "cosmos_db" {
   cosmosdb_mongodb_offer_type                    = local.cosmosdb_mongodb_offer_type
   cosmosdb_mongodb_public_network_access_enabled = local.cosmosdb_mongodb_public_network_access_enabled
 
-  cosmosdb_mongodb_additional_geo_locations = local.cosmosdb_mongodb_additional_geo_locations
-  cosmosdb_mongodb_throughput               = local.cosmosdb_mongodb_throughput
-  cosmosdb_mongodb_max_throughput           = local.cosmosdb_mongodb_max_throughput
-  cosmosdb_mongodb_enable_autoscaling       = local.cosmosdb_mongodb_enable_autoscaling
-  cosmosdb_mongodb_private_endpoint_enabled = local.cosmosdb_mongodb_private_endpoint_enabled
-  cosmosdb_mongodb_consistency_policy       = local.cosmosdb_mongodb_consistency_policy
-
-  cosmosdb_mongodb_enable_free_tier = false
+  cosmosdb_mongodb_additional_geo_locations      = local.cosmosdb_mongodb_additional_geo_locations
+  cosmosdb_mongodb_throughput                    = local.cosmosdb_mongodb_throughput
+  cosmosdb_mongodb_max_throughput                = local.cosmosdb_mongodb_max_throughput
+  cosmosdb_mongodb_enable_autoscaling            = local.cosmosdb_mongodb_enable_autoscaling
+  cosmosdb_mongodb_private_endpoint_enabled      = local.cosmosdb_mongodb_private_endpoint_enabled
+  cosmosdb_mongodb_consistency_policy            = local.cosmosdb_mongodb_consistency_policy
+  cosmosdb_private_endpoint_mongo_name           = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-cosmosdb-mongodb-account"
+  cosmosdb_private_service_connection_mongo_name = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-cosmosdb-mongodb-account-private-endpoint-mongo"
+  cosmosdb_mongodb_enable_free_tier              = false
 }
 
 ###############################################################################
@@ -216,11 +217,12 @@ module "cdn" {
   robots_indexed_paths = local.robots_indexed_paths
   storage_use_case     = "development" //uat and prod should use "default"
 
-  log_analytics_workspace_id    = data.azurerm_log_analytics_workspace.log_analytics.id
-  key_vault_id                  = module.key_vault.key_vault_id
-  key_vault_name                = module.key_vault.key_vault_name
-  key_vault_resource_group_name = module.key_vault.key_vault_resource_group_name
-  # cdn_certificate_name        = certificate managed
+  log_analytics_workspace_enabled = true
+  log_analytics_workspace_id      = data.azurerm_log_analytics_workspace.log_analytics.id
+  key_vault_id                    = module.key_vault.key_vault_id
+  key_vault_name                  = module.key_vault.key_vault_name
+  key_vault_resource_group_name   = module.key_vault.key_vault_resource_group_name
+  # cdn_certificate_name          = certificate managed
   vnet_name       = module.network.vnet_core.name
   rg_vnet_name    = module.network.vnet_core.resource_group_name
   cidr_subnet_cdn = local.cidr_subnet_cdn
@@ -277,6 +279,7 @@ module "networking" {
 
   container_app_name_snet = "${local.project}-pnpg-cae-cp-snet"
 
+  private_endpoint_network_policies = "Enabled"
   # delegation = []
 
   tags = local.tags
@@ -295,7 +298,14 @@ module "container_app_environments" {
   subnet_id  = module.networking.subnet.id
   cae_name   = "${local.project}-pnpg-cae-cp"
 
-  # workload_profiles = []
+  workload_profiles = [
+    {
+      name                  = "Consumption"
+      workload_profile_type = "Consumption"
+      minimum_count         = 0
+      maximum_count         = 0
+    }
+  ]
 
   zone_redundant = false
 

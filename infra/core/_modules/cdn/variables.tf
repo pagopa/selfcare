@@ -75,6 +75,12 @@ variable "log_analytics_workspace_id" {
   description = "Log Analytics Workspace ID from monitor module"
 }
 
+variable "log_analytics_workspace_enabled" {
+  type        = bool
+  description = "Flag to enable or disable Log Analytics Workspace integration"
+}
+
+
 variable "key_vault_id" {
   type        = string
   description = "Key Vault ID"

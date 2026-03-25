@@ -1,0 +1,43 @@
+FROM maven:3-eclipse-temurin-17@sha256:a7f223cd4a6d90d2f6d4eaebd0cfc7c0311c6edab45be3badc4a7482b8b82afd AS builder
+
+COPY . .
+
+RUN echo "<settings>\n" \
+         "<servers>\n" \
+         "<server>\n" \
+         "<id>\${repositoryId}</id>\n" \
+         "<username>\${repoLogin}</username>\n" \
+         "<password>\${repoPwd}</password>\n" \
+         "</server>\n" \
+         "<server>\n" \
+         "<id>\${selfcareRepositoryId}</id>\n" \
+         "<username>\${repoLogin}</username>\n" \
+         "<password>\${repoPwd}</password>\n" \
+         "</server>\n" \
+         "</servers>\n" \
+         "</settings>\n" > settings.xml
+
+ARG REPO_ONBOARDING
+ARG REPO_USERNAME
+ARG REPO_PASSWORD
+
+RUN mvn --global-settings settings.xml -DrepositoryId=${REPO_ONBOARDING} -DselfcareRepositoryId="selfcare-onboarding" -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} --also-make clean package -DskipTests=true
+
+FROM openjdk:17-jdk@sha256:528707081fdb9562eb819128a9f85ae7fe000e2fbaeaf9f87662e7b3f38cb7d8 AS runtime
+
+ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
+
+WORKDIR /app
+
+COPY --from=builder ./target/*.jar ./app.jar
+
+ADD https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.2.11/applicationinsights-agent-3.2.11.jar ./applicationinsights-agent.jar
+RUN chmod 755 ./applicationinsights-agent.jar
+
+RUN chown -R 1001:1001 /app
+RUN chmod 755 /app
+USER 1001
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

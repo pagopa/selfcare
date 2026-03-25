@@ -1,4 +1,4 @@
-name: Code Review - auth
+name: Code Review - Auth
 
 on:
   workflow_dispatch:

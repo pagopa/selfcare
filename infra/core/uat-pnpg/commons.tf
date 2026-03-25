@@ -32,8 +32,27 @@ module "network" {
 
 
 ###############################################################################
-# key_vault
+# User groups
 ###############################################################################
+
+
+data "azuread_group" "adgroup_admin" {
+  display_name = "${local.prefix}-${local.env_short}-adgroup-admin"
+}
+
+data "azuread_group" "adgroup_developers" {
+  display_name = "${local.prefix}-${local.env_short}-adgroup-developers"
+}
+
+data "azuread_group" "adgroup_externals" {
+  display_name = "${local.prefix}-${local.env_short}-adgroup-externals"
+}
+
+
+
+# ###############################################################################
+# # key_vault
+# ###############################################################################
 module "key_vault" {
   source = "../_modules/key_vault"
 
@@ -48,9 +67,9 @@ module "key_vault" {
 }
 
 
-###############################################################################
-# redis
-###############################################################################
+# ###############################################################################
+# # redis
+# ###############################################################################
 module "redis" {
   source = "../_modules/redis"
 
@@ -67,15 +86,17 @@ module "redis" {
   private_endpoint_network_policies = "Disabled"
   key_vault_id                      = module.key_vault.key_vault_id
 
+  privatelink_redis_cache_windows_net_ids = [module.network.privatelink_redis_cache_windows_net_vnet.id]
+
   redis_sku_name = local.redis_sku_name
   redis_family   = local.redis_family
   redis_capacity = local.redis_capacity
   redis_version  = local.redis_version
 }
 
-###############################################################################
-# Logs storage
-###############################################################################
+# ###############################################################################
+# # Logs storage
+# ###############################################################################
 
 module "logs_storage" {
   source = "../_modules/storage_account_template"
@@ -99,25 +120,44 @@ module "logs_storage" {
   cidr_subnet                       = local.cidr_subnet_pnpg_logs_storage
   private_endpoint_network_policies = local.private_endpoint_network_policies
   private_dns_zone_ids              = [module.network.privatelink_blob_core_windows_net.id]
+  private_endpoint_id               = module.network.private_endpoint_subnet.id
 
   enable_management_lock           = true
   enable_spid_logs_encryption_keys = true
 }
 
-###############################################################################
-# Spid
-###############################################################################
-
-module "spid_logs_encryption_keys" {
-  source = "../_modules/spid_logs_encryption_keys"
-
-  key_vault_id = module.key_vault.key_vault_id
-  tags         = local.tags
+resource "azurerm_role_assignment" "storage_blob_contributor_developers" {
+  scope                = module.logs_storage.storage_account_id
+  role_definition_name = "Storage Blob Data Reader"
+  principal_id         = data.azuread_group.adgroup_developers.object_id
 }
 
-###############################################################################
-# Spid Test Environment
-###############################################################################
+resource "azurerm_role_assignment" "storage_blob_contributor_admin" {
+  scope                = module.logs_storage.storage_account_id
+  role_definition_name = "Storage Blob Data Reader"
+  principal_id         = data.azuread_group.adgroup_admin.object_id
+}
+
+resource "azurerm_role_assignment" "storage_blob_contributor_externals" {
+  scope                = module.logs_storage.storage_account_id
+  role_definition_name = "Storage Blob Data Reader"
+  principal_id         = data.azuread_group.adgroup_externals.object_id
+}
+
+# ###############################################################################
+# # Spid
+# ###############################################################################
+
+# module "spid_logs_encryption_keys" {
+#   source = "../_modules/spid_logs_encryption_keys"
+
+#   key_vault_id = module.key_vault.key_vault_id
+#   tags         = local.tags
+# }
+
+# ###############################################################################
+# # Spid Test Environment
+# ###############################################################################
 
 module "spid_test_env" {
   source = "../_modules/spid_testenv"
@@ -137,9 +177,9 @@ module "spid_test_env" {
 
 
 
-###############################################################################
-# cosmos db
-###############################################################################
+# ###############################################################################
+# # cosmos db
+# ###############################################################################
 
 module "cosmos_db" {
   source = "../_modules/cosmos_db"
@@ -170,19 +210,21 @@ module "cosmos_db" {
   cosmosdb_mongodb_offer_type                    = local.cosmosdb_mongodb_offer_type
   cosmosdb_mongodb_public_network_access_enabled = local.cosmosdb_mongodb_public_network_access_enabled
 
-  cosmosdb_mongodb_additional_geo_locations = local.cosmosdb_mongodb_additional_geo_locations
-  cosmosdb_mongodb_throughput               = local.cosmosdb_mongodb_throughput
-  cosmosdb_mongodb_max_throughput           = local.cosmosdb_mongodb_max_throughput
-  cosmosdb_mongodb_enable_autoscaling       = local.cosmosdb_mongodb_enable_autoscaling
-  cosmosdb_mongodb_private_endpoint_enabled = local.cosmosdb_mongodb_private_endpoint_enabled
-  cosmosdb_mongodb_consistency_policy       = local.cosmosdb_mongodb_consistency_policy
+  cosmosdb_mongodb_additional_geo_locations      = local.cosmosdb_mongodb_additional_geo_locations
+  cosmosdb_mongodb_throughput                    = local.cosmosdb_mongodb_throughput
+  cosmosdb_mongodb_max_throughput                = local.cosmosdb_mongodb_max_throughput
+  cosmosdb_mongodb_enable_autoscaling            = local.cosmosdb_mongodb_enable_autoscaling
+  cosmosdb_mongodb_private_endpoint_enabled      = local.cosmosdb_mongodb_private_endpoint_enabled
+  cosmosdb_private_endpoint_mongo_name           = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-cosmosdb-mongodb-account-private-endpoint"
+  cosmosdb_private_service_connection_mongo_name = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-cosmosdb-mongodb-account-private-endpoint"
+  cosmosdb_mongodb_consistency_policy            = local.cosmosdb_mongodb_consistency_policy
 
   cosmosdb_mongodb_enable_free_tier = false
 }
 
-###############################################################################
-# Monitoring
-###############################################################################
+# ###############################################################################
+# # Monitoring
+# ###############################################################################
 data "azurerm_resource_group" "monitor_rg" {
   name = "${local.prefix}-${local.env_short}-monitor-rg"
 }
@@ -192,9 +234,9 @@ data "azurerm_log_analytics_workspace" "log_analytics" {
   resource_group_name = data.azurerm_resource_group.monitor_rg.name
 }
 
-###############################################################################
-# CDN Front Door
-###############################################################################
+# ###############################################################################
+# # CDN Front Door
+# ###############################################################################
 module "cdn" {
   source = "../_modules/cdn"
 
@@ -214,21 +256,22 @@ module "cdn" {
   dns_zone_prefix      = local.dns_zone_prefix
   external_domain      = local.external_domain
   robots_indexed_paths = local.robots_indexed_paths
-  storage_use_case     = "development" //uat and prod should use "default"
+  storage_use_case     = "default" //uat and prod should use "default"
 
-  log_analytics_workspace_id    = data.azurerm_log_analytics_workspace.log_analytics.id
-  key_vault_id                  = module.key_vault.key_vault_id
-  key_vault_name                = module.key_vault.key_vault_name
-  key_vault_resource_group_name = module.key_vault.key_vault_resource_group_name
-  # cdn_certificate_name        = certificate managed
+  log_analytics_workspace_enabled = true
+  log_analytics_workspace_id      = data.azurerm_log_analytics_workspace.log_analytics.id
+  key_vault_id                    = module.key_vault.key_vault_id
+  key_vault_name                  = module.key_vault.key_vault_name
+  key_vault_resource_group_name   = module.key_vault.key_vault_resource_group_name
+  # cdn_certificate_name          = certificate managed
   vnet_name       = module.network.vnet_core.name
   rg_vnet_name    = module.network.vnet_core.resource_group_name
   cidr_subnet_cdn = local.cidr_subnet_cdn
 }
 
-###############################################################################
-# TMP OLD Storage Account
-###############################################################################
+# ###############################################################################
+# # TMP OLD Storage Account
+# ###############################################################################
 
 data "azurerm_storage_account" "old_cdn_storage_account" {
   name                = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutsa"
@@ -252,12 +295,12 @@ resource "null_resource" "cdn_storage_copy" {
   }
 }
 
-###############################################################################
-# Container app environment
-###############################################################################
+# ###############################################################################
+# # Container app environment
+# ###############################################################################
 
 resource "azurerm_resource_group" "selc_container_app_rg" {
-  name     = "${local.project}-container-app-rg"
+  name     = "${local.project}-container-app-001-rg" //prod  "${local.project}-container-app-rg" 
   location = local.location
 
   tags = local.tags
@@ -275,9 +318,10 @@ module "networking" {
   cidr_subnet_cae  = "10.1.156.0/23"
   cidr_subnet_main = "10.1.148.0/23"
 
-  container_app_name_snet = "${local.project}-pnpg-cae-cp-snet"
+  container_app_name_snet           = "${local.project}-pnpg-cae-001-snet"
+  private_endpoint_network_policies = "Enabled"
 
-  # delegation = []
+  delegation = []
 
   tags = local.tags
 }
@@ -289,13 +333,13 @@ module "container_app_environments" {
   location            = local.location
   resource_group_name = azurerm_resource_group.selc_container_app_rg.name
 
-  infrastructure_resource_group_name = "ME_selc-d-pnpg-cae-cp_selc-d-container-app-rg_westeurope"
+  # infrastructure_resource_group_name = "ME_selc-d-pnpg-cae-cp_selc-d-container-app-rg_westeurope"
 
-  enable_log = false
+  enable_log = true
   subnet_id  = module.networking.subnet.id
-  cae_name   = "${local.project}-pnpg-cae-cp"
+  cae_name   = "${local.project}-pnpg-cae-001" //prod  ""${local.project}-pnpg-cae-cp"
 
-  # workload_profiles = []
+  workload_profiles = []
 
   zone_redundant = false
 

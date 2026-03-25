@@ -38,9 +38,9 @@ jobs:
       environment_short: d
       agent: self-hosted
       storage_account_name: "weu${{ inputs.domain }}checkoutst01"
-      profile_name: "weu-${ inputs.domain }}-checkout-afd-01"
+      profile_name: "weu-${{ inputs.domain }}-checkout-afd-01"
       endpoint_name: "weu-${{ inputs.domain }}-checkout-fde-01"
-      resource_group_name: "${{ (inputs.domain == 'ar') ? 'checkout-fe-rg' : 'weu-pnpg-selc-d-checkout-fe-rg' }}"
+      resource_group_name: "${{ inputs.domain == 'ar' && 'checkout-fe-rg' || 'weu-pnpg-checkout-fe-rg' }}"
       domain: ${{ inputs.domain }}
 
   release_uat:
@@ -53,9 +53,9 @@ jobs:
       environment_short: u
       agent: self-hosted
       storage_account_name: "weu${{ inputs.domain }}checkoutst01"
-      profile_name: "weu-${ inputs.domain }}-checkout-afd-01"
+      profile_name: "weu-${{ inputs.domain }}-checkout-afd-01"
       endpoint_name: "weu-${{ inputs.domain }}-checkout-fde-01"
-      resource_group_name: "${{ (inputs.domain == 'ar') ? 'checkout-fe-rg' : 'weu-pnpg-selc-d-checkout-fe-rg' }}"
+      resource_group_name: "${{ inputs.domain == 'ar' && 'checkout-fe-rg' || 'weu-pnpg-checkout-fe-rg' }}"
       domain: ${{ inputs.domain }}
 
   release_prod:
@@ -68,7 +68,7 @@ jobs:
       environment_short: p
       agent: self-hosted
       storage_account_name: "weu${{ inputs.domain }}checkoutst01"
-      profile_name: "weu-${ inputs.domain }}-checkout-afd-01"
+      profile_name: "weu-${{ inputs.domain }}-checkout-afd-01"
       endpoint_name: "weu-${{ inputs.domain }}-checkout-fde-01"
-      resource_group_name: "${{ (inputs.domain == 'ar') ? 'checkout-fe-rg' : 'weu-pnpg-selc-d-checkout-fe-rg' }}"
+      resource_group_name: "${{ inputs.domain == 'ar' && 'checkout-fe-rg' || 'weu-pnpg-checkout-fe-rg' }}"
       domain: ${{ inputs.domain }}

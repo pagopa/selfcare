@@ -1,6 +1,6 @@
-###############################################################################
-# network
-###############################################################################
+# ###############################################################################
+# # network
+# ###############################################################################
 module "network" {
   source = "../_modules/network"
 
@@ -21,9 +21,9 @@ module "network" {
   aks_platform_env                  = local.aks_platform_env
 }
 
-###############################################################################
-# key_vault
-###############################################################################
+# ###############################################################################
+# # key_vault
+# ###############################################################################
 module "key_vault" {
   source = "../_modules/key_vault"
 
@@ -37,9 +37,9 @@ module "key_vault" {
 }
 
 
-###############################################################################
-# azure_key_vault_items
-###############################################################################
+# # ###############################################################################
+# # # azure_key_vault_items
+# # ###############################################################################
 module "azure_key_vault_items" {
   source = "../_modules/data/azure_key_vault_items"
 
@@ -50,9 +50,9 @@ module "azure_key_vault_items" {
 }
 
 
-###############################################################################
-# dns_private
-###############################################################################
+# # ###############################################################################
+# # # dns_private
+# # ###############################################################################
 module "dns_private" {
   source = "../_modules/dns_private"
 
@@ -73,9 +73,9 @@ module "dns_private" {
   vnet_aks_platform_name = module.network.vnet_aks_platform_name
 }
 
-###############################################################################
-# dns_public
-###############################################################################
+# # ###############################################################################
+# # # dns_public
+# # ###############################################################################
 module "dns_public" {
   source = "../_modules/dns_public"
 
@@ -92,9 +92,9 @@ module "dns_public" {
   appgateway_public_ip_address = module.network.appgateway_public_ip_address
 }
 
-###############################################################################
-# nat
-###############################################################################
+# # ###############################################################################
+# # # nat
+# # ###############################################################################
 module "nat" {
   source = "../_modules/nat"
 
@@ -104,9 +104,9 @@ module "nat" {
   tags      = local.tags
 }
 
-###############################################################################
-# log_analytics (LAW + AppInsights - separate to break CDN/monitor cycle)
-###############################################################################
+# # ###############################################################################
+# # # log_analytics (LAW + AppInsights - separate to break CDN/monitor cycle)
+# # ###############################################################################
 module "log_analytics" {
   source = "../_modules/log_analytics"
 
@@ -121,26 +121,9 @@ module "log_analytics" {
   law_daily_quota_gb    = local.law_daily_quota_gb
 }
 
-###############################################################################
-# cdn (Front Door — migrated from CDN Classic)
-###############################################################################
-# module "cdn_fd" {
-#   source = "../_modules/cdn_fd"
-
-#   prefix    = local.prefix
-#   env_short = local.env_short
-#   location  = local.location
-#   tags      = local.tags
-
-#   dns_zone_prefix      = local.dns_zone_prefix
-#   external_domain      = local.external_domain
-#   robots_indexed_paths = local.robots_indexed_paths
-
-#   log_analytics_workspace_id = module.log_analytics.log_analytics_workspace_id
-#   key_vault_id               = module.key_vault.key_vault_id
-#   tenant_id                  = module.key_vault.tenant_id
-#   rg_vnet_name               = module.network.rg_vnet_name
-# }
+# # ###############################################################################
+# # # cdn (Front Door)
+# # ###############################################################################
 
 module "cdn" {
   source = "../_modules/cdn"
@@ -161,45 +144,48 @@ module "cdn" {
   robots_indexed_paths = local.robots_indexed_paths
   storage_use_case     = "development"
 
-  log_analytics_workspace_id    = module.log_analytics.log_analytics_workspace_id
-  key_vault_id                  = module.key_vault.key_vault_id
-  key_vault_name                = module.key_vault.key_vault_name
-  key_vault_resource_group_name = module.key_vault.key_vault_resource_group_name
-  cdn_certificate_name          = replace("${local.dns_zone_prefix}.${local.external_domain}", ".", "-")
-  vnet_name                     = module.network.vnet_name
-  rg_vnet_name                  = module.network.rg_vnet_name
-  cidr_subnet_cdn               = local.cidr_subnet_cdn
+  log_analytics_workspace_enabled = true
+  log_analytics_workspace_id      = module.log_analytics.log_analytics_workspace_id
+  key_vault_id                    = module.key_vault.key_vault_id
+  key_vault_name                  = module.key_vault.key_vault_name
+  key_vault_resource_group_name   = module.key_vault.key_vault_resource_group_name
+  cdn_certificate_name            = replace("${local.dns_zone_prefix}.${local.external_domain}", ".", "-")
+  vnet_name                       = module.network.vnet_name
+  rg_vnet_name                    = module.network.rg_vnet_name
+  cidr_subnet_cdn                 = local.cidr_subnet_cdn
+
+  depends_on = [module.log_analytics]
 }
 
 
-###############################################################################
-# TMP OLD Storage Account
-###############################################################################
+# # ###############################################################################
+# # # TMP OLD Storage Account
+# # ###############################################################################
 
 data "azurerm_storage_account" "old_cdn_storage_account" {
   name                = "${local.prefix}${local.env_short}checkoutsa"
   resource_group_name = "${local.prefix}-${local.env_short}-checkout-fe-rg"
 }
 
-resource "null_resource" "cdn_storage_copy" {
-  for_each = toset(["$web", "selc-${local.env_short}-product", "selc-openapi"])
+# resource "null_resource" "cdn_storage_copy" {
+#   for_each = toset(["$web", "selc-${local.env_short}-product", "selc-openapi"])
 
-  provisioner "local-exec" {
-    command = <<EOT
-        az storage blob copy start-batch \
-        --account-name "${module.cdn.storage_name}" \
-        --account-key "${module.cdn.storage_primary_access_key}" \
-        --destination-container '${each.value}' \
-        --source-account-name "${data.azurerm_storage_account.old_cdn_storage_account.name}" \
-        --source-account-key "${data.azurerm_storage_account.old_cdn_storage_account.primary_access_key}" \
-        --source-container '${each.value}'
-    EOT
-  }
-}
+#   provisioner "local-exec" {
+#     command = <<EOT
+#         az storage blob copy start-batch \
+#         --account-name "${module.cdn.storage_name}" \
+#         --account-key "${module.cdn.storage_primary_access_key}" \
+#         --destination-container '${each.value}' \
+#         --source-account-name "${data.azurerm_storage_account.old_cdn_storage_account.name}" \
+#         --source-account-key "${data.azurerm_storage_account.old_cdn_storage_account.primary_access_key}" \
+#         --source-container '${each.value}'
+#     EOT
+#   }
+# }
 
-###############################################################################
-# monitor (action groups, web tests, alerts)
-###############################################################################
+# # ###############################################################################
+# # # monitor (action groups, web tests, alerts)
+# # ###############################################################################
 module "monitor" {
   source = "../_modules/monitor"
 
@@ -225,13 +211,13 @@ module "monitor" {
   # module.cdn.fqdn
 
   # Selfcare status secrets (from key_vault secrets query)
-  selfcare_status_dev_email = try(module.key_vault.secrets_selfcare_status_dev["alert-selfcare-status-dev-email"].value, "")
-  selfcare_status_dev_slack = try(module.key_vault.secrets_selfcare_status_dev["alert-selfcare-status-dev-slack"].value, "")
+  selfcare_status_uat_email = try(module.key_vault.secrets_selfcare_status_uat["alert-selfcare-status-uat-email"].value, "")
+  selfcare_status_uat_slack = try(module.key_vault.secrets_selfcare_status_uat["alert-selfcare-status-uat-slack"].value, "")
 }
 
-###############################################################################
-# events
-###############################################################################
+# # ###############################################################################
+# # # events
+# # ###############################################################################
 module "events" {
   source = "../_modules/events"
 
@@ -264,9 +250,9 @@ module "events" {
   eventhub_alerts_enabled           = local.eventhub_alerts_enabled
 }
 
-###############################################################################
-# appgateway
-###############################################################################
+# # ###############################################################################
+# # # appgateway
+# # ###############################################################################
 module "appgateway" {
   source = "../_modules/appgateway"
 
@@ -300,9 +286,9 @@ module "appgateway" {
   action_group_email_id = module.monitor.action_group_email_id
 }
 
-###############################################################################
-# storage
-###############################################################################
+# # ###############################################################################
+# # # storage
+# # ###############################################################################
 module "storage" {
   source = "../_modules/storage"
 
@@ -316,9 +302,9 @@ module "storage" {
   adgroup_admin_object_id      = module.key_vault.adgroup_admin_object_id
 }
 
-###############################################################################
-# vpn
-###############################################################################
+# # ###############################################################################
+# # # vpn
+# # ###############################################################################
 
 module "vpn" {
   source = "../_modules/vpn"
@@ -358,9 +344,9 @@ module "vpn" {
 
 
 
-###############################################################################
-# redis
-###############################################################################
+# # ###############################################################################
+# # # redis
+# # ###############################################################################
 module "redis" {
   source = "../_modules/redis"
 
@@ -385,9 +371,9 @@ module "redis" {
   privatelink_redis_cache_windows_net_ids = [module.dns_private.privatelink_redis_cache_windows_net_id]
 }
 
-###############################################################################
-# cosmos db
-###############################################################################
+# ###############################################################################
+# # cosmos db
+# ###############################################################################
 
 module "cosmos_db" {
   source = "../_modules/cosmos_db"
@@ -414,12 +400,14 @@ module "cosmos_db" {
   # CosmosDB MongoDB
   cosmosdb_mongodb_extra_capabilities               = local.cosmosdb_mongodb_extra_capabilities
   cosmosdb_mongodb_main_geo_location_zone_redundant = local.cosmosdb_mongodb_main_geo_location_zone_redundant
+  cosmosdb_private_endpoint_mongo_name              = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-account"
+  cosmosdb_private_service_connection_mongo_name    = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-account-private-endpoint-mongo"
 }
 
 
-###############################################################################
-# default_roleassignment_rg
-###############################################################################
+# # ###############################################################################
+# # # default_roleassignment_rg
+# # ###############################################################################
 
 module "default_roleassignment" {
   source = "../_modules/roles"
@@ -429,9 +417,9 @@ module "default_roleassignment" {
 }
 
 
-###############################################################################
-# resources
-###############################################################################
+# # ###############################################################################
+# # # resources
+# # ###############################################################################
 
 module "resources" {
   source = "../_modules/resources"
@@ -453,9 +441,9 @@ module "resources" {
 }
 
 
-###############################################################################
-# assets
-###############################################################################
+# # ###############################################################################
+# # # assets
+# # ###############################################################################
 
 module "assets" {
   source = "../_modules/assets"
@@ -470,9 +458,9 @@ module "assets" {
 }
 
 
-###############################################################################
-# one trust
-###############################################################################
+# # ###############################################################################
+# # # one trust
+# # ###############################################################################
 
 module "one_trust" {
   source = "../_modules/one_trust"
@@ -484,9 +472,9 @@ module "one_trust" {
   checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
 }
 
-###############################################################################
-# Contract storage
-###############################################################################
+# # ###############################################################################
+# # # Contract storage
+# # ###############################################################################
 module "contracts_storage" {
   source = "../_modules/storage_account_template"
 
@@ -511,9 +499,9 @@ module "contracts_storage" {
   private_dns_zone_ids              = [module.dns_private.privatelink_blob_core_windows_net_id]
 }
 
-###############################################################################
-# Logs storage
-###############################################################################
+# # ###############################################################################
+# # # Logs storage
+# # ###############################################################################
 
 module "logs_storage" {
   source = "../_modules/storage_account_template"
@@ -542,20 +530,20 @@ module "logs_storage" {
   enable_spid_logs_encryption_keys = true
 }
 
-###############################################################################
-# Spid
-###############################################################################
+# # ###############################################################################
+# # # Spid
+# # ###############################################################################
 
-module "spid_logs_encryption_keys" {
-  source = "../_modules/spid_logs_encryption_keys"
+# # module "spid_logs_encryption_keys" {
+# #   source = "../_modules/spid_logs_encryption_keys"
 
-  key_vault_id = module.key_vault.key_vault_id
-  tags         = local.tags
-}
+# #   key_vault_id = module.key_vault.key_vault_id
+# #   tags         = local.tags
+# # }
 
-###############################################################################
-# Azure DevOps Agent
-###############################################################################
+# # ###############################################################################
+# # # Azure DevOps Agent
+# # ###############################################################################
 module "azure_devops_agent" {
   source = "../_modules/azure_devops_agent"
 
@@ -578,9 +566,9 @@ module "azure_devops_agent" {
   private_endpoint_network_policies = local.private_endpoint_network_policies
 }
 
-###############################################################################
-# Container app environment
-###############################################################################
+# # ###############################################################################
+# # # Container app environment
+# # ###############################################################################
 
 resource "azurerm_resource_group" "selc_cae_rg" {
   name     = "${local.project}-container-app-002-rg"
@@ -620,7 +608,7 @@ module "container_app_environments" {
 
   cae_name = "${local.project}-cae-002"
   # pnpg_cae_name = "${local.project}-pnpg-cae-cp"
-  infrastructure_resource_group_name = "ME_selc-d-cae-002_selc-d-container-app-002-rg_westeurope"
+  infrastructure_resource_group_name = "ME_selc-u-cae-002_selc-u-container-app-002-rg_westeurope"
   workload_profiles = [
     {
       name                  = "Consumption"
@@ -635,85 +623,3 @@ module "container_app_environments" {
   tags = local.tags
 }
 
-###############################################################################
-# Storage documents
-###############################################################################
-
-resource "azurerm_resource_group" "documents_sa_rg" {
-  name = "${local.project}-documents-storage-rg"
-  //name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "resource_group" }))
-  location = local.location
-}
-
-
-module "storage_documents" {
-  source = "../_modules/storage_accounts"
-
-  prefix          = local.prefix_short
-  env_short       = local.env_short
-  location        = local.location
-  domain          = "ar"
-  app_name        = "documents"
-  instance_number = "01"
-
-  resource_group_name  = azurerm_resource_group.documents_sa_rg.name
-  virtual_network_name = module.network.rg_vnet_name
-
-  tags                         = local.tags
-  cidr_subnet_contract_storage = local.cidr_subnet_document_storage
-
-  project = local.prefix
-
-  private_dns_zone_resource_group_name = module.network.rg_vnet_name
-
-  blob_features = {
-    immutability_policy = {
-      enabled                       = false
-      allow_protected_append_writes = false
-      period_since_creation_in_days = 1
-    }
-    restore_policy_days   = 0 # Cannot enable both immutability_policy and restore_policy
-    delete_retention_days = 0
-    versioning            = false
-    last_access_time      = true
-    change_feed = {
-      enabled           = false
-      retention_in_days = 0
-    }
-  }
-
-  base_blob_tier_to_cool_after_days_since_modification_greater_than = 1
-  base_blob_tier_to_cold_after_days_since_creation_greater_than     = 1
-  base_delete_after_days_since_creation_greater_than                = 1
-
-  # snapshot_change_tier_to_archive_after_days_since_creation    = 30
-  snapshot_change_tier_to_cool_after_days_since_creation = 1
-  snapshot_delete_after_days_since_creation_greater_than = 1
-
-  # version_change_tier_to_archive_after_days_since_creation    = 30
-  version_change_tier_to_cool_after_days_since_creation = 1
-  version_delete_after_days_since_creation              = 1
-
-  key_vault_resource_group_name = module.key_vault.key_vault_resource_group_name
-  key_vault_name                = module.key_vault.key_vault_name
-}
-
-resource "azurerm_user_assigned_identity" "documents_identity" {
-  name                = "${local.project}-documents-identity"
-  resource_group_name = azurerm_resource_group.documents_sa_rg.name
-  location            = local.location
-}
-
-data "azurerm_key_vault_secret" "selc_documents_storage_connection_string" {
-  name         = "documents-storage-connection-string"
-  key_vault_id = module.key_vault.key_vault_id
-  depends_on   = [module.storage_documents]
-}
-
-module "upload_file_logo" {
-  source = "../_modules/upload_file"
-
-  file_path                 = "${path.module}/../resources/logo.png"
-  container                 = module.storage_documents.storage_container_name
-  primary_connection_string = module.storage_documents.storage_account.primary_connection_string
-}

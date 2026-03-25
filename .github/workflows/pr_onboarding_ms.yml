@@ -1,0 +1,77 @@
+name: Code Review - Onboarding MS
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    branches:
+      - main
+      - releases/**
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - 'apps/onboarding-ms/**'
+      - '.github/workflows/pr_onboarding_ms.yml'
+      - '.github/workflows/call_code_review.yml'
+      - '.github/workflows/call_openapi_quarkus.yml'
+
+jobs:
+  code_review:
+    permissions:
+      packages: read
+    uses: ./.github/workflows/call_code_review.yml
+    name: Onboarding ms Code Review
+    secrets: inherit
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+      source_branch: ${{ github.head_ref }}
+      target_branch: ${{ github.base_ref }}
+      sonar_key: 'pagopa_selfcare-onboarding'
+      module: 'onboarding-ms'
+
+  swagger_check:
+    needs: [code_review]
+    uses: ./.github/workflows/call_openapi_quarkus.yml
+    name: Onboarding ms Swagger Check
+    secrets: inherit
+    with:
+      module: 'onboarding-ms'
+      path_openapi_docs: 'apps/onboarding-ms/src/main/docs/openapi.json'
+
+  build_docker:
+    name: 'Build Docker image'
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+
+    steps:
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
+        name: Checkout
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
+
+      - name: Build Image
+        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56 #v5.1.0
+        with:
+          context: .
+          file: apps/onboarding-ms/Dockerfile
+          push: false
+          secrets: |
+            "GH_TOKEN=${{ secrets.GH_PAT_VARIABLES }}"
+          cache-from: type=gha
+          cache-to: type=gha,mode=min
+          build-args: |
+            REPO_SELFCARE=selfcare
+            REPO_USERNAME=${{ github.actor }}
+            REPO_PASSWORD=${{ secrets.GITHUB_TOKEN }}

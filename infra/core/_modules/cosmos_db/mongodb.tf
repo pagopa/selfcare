@@ -43,8 +43,8 @@ module "cosmosdb_account_mongodb" {
   public_network_access_enabled = var.env_short == "p" ? false : var.cosmosdb_mongodb_public_network_access_enabled
 
   private_endpoint_enabled              = var.cosmosdb_mongodb_private_endpoint_enabled
-  private_endpoint_mongo_name           = "${var.project}-cosmosdb-mongodb-account"
-  private_service_connection_mongo_name = "${var.project}-cosmosdb-mongodb-account-private-endpoint-mongo"
+  private_endpoint_mongo_name           = var.cosmosdb_private_endpoint_mongo_name
+  private_service_connection_mongo_name = var.cosmosdb_private_service_connection_mongo_name
   subnet_id                             = module.cosmosdb_mongodb_snet.id
   private_dns_zone_mongo_ids = var.cosmosdb_mongodb_private_endpoint_enabled ? [
     var.privatelink_mongo_cosmos_azure_com_id

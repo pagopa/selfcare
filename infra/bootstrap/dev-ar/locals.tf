@@ -357,6 +357,7 @@ locals {
     "selfcare-pnpg-dashboard-frontend"        = "dev"
   }
   github_federations_ms = {
+    "selfcare"                         = "dev"
     "selfcare-dashboard-backend"       = "dev"
     "selfcare-external-api-backend"    = "dev"
     "selfcare-infra"                   = "dev"
