@@ -25,6 +25,7 @@ import org.bson.types.ObjectId;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 import static it.pagopa.selfcare.document.config.DocumentMsConfig.PDF_FORMAT_FILENAME;
 import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
@@ -195,18 +196,31 @@ public class DocumentServiceImpl implements DocumentService {
     private Document buildDocument(DocumentBuilderRequest request, String digest) {
         log.debug("Creating Document for onboarding {} ...", sanitize(request.getOnboardingId()));
 
-        Document document = createBaseDocument(
-                request.getOnboardingId(),
-                request.getProductId(),
-                request.getTemplatePath(),
-                request.getTemplateVersion()
-        );
-        document.setChecksum(digest);
+        Document document = new Document();
+        // 1. Chiave Surrogata universale
+        document.setId(UUID.randomUUID().toString());
+
+        // 2. Dati di base
         document.setType(request.getDocumentType());
+        document.setProductId(request.getProductId());
+        document.setContractTemplate(request.getTemplatePath());
+        document.setContractVersion(request.getTemplateVersion());
+        document.setChecksum(digest);
         document.setAttachmentName(request.getAttachmentName());
         document.setCreatedAt(LocalDateTime.now());
         document.setUpdatedAt(LocalDateTime.now());
         setContractFileName(request, document);
+
+        switch (request.getDocumentType()) {
+            case INSTITUTION, ATTACHMENT -> {
+                document.setOnboardingId(request.getOnboardingId());
+                document.setRootOnboardingId(request.getOnboardingId());
+            }
+            case USER -> {
+                document.setOnboardingId(request.getOnboardingId());
+                document.setRootOnboardingId(request.getRootOnboardingId());
+            }
+        }
 
         return document;
     }

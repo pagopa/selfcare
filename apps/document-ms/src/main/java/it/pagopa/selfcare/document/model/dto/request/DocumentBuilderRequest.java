@@ -27,6 +27,8 @@ public class DocumentBuilderRequest {
 
     private String attachmentName;
 
+    private String rootOnboardingId;
+
     /**
      * Template path (contract or attachment template).
      * Built by the calling MS.

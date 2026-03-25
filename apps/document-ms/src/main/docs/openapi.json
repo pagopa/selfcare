@@ -149,13 +149,17 @@
         "type" : "object",
         "properties" : {
           "id" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Chiave surrogata (Surrogate Key) generata come UUID randomico. Sostituisce l'onboardingId come Primary Key per prevenire anomalie."
           },
           "type" : {
+            "description" : "Discriminante polimorfica che indica la natura del documento (INSTITUTION, USER, ATTACHMENT).",
+            "type" : "string",
             "$ref" : "#/components/schemas/TokenType"
           },
           "onboardingId" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "ID del processo di onboarding specifico. Per il tipo ATTACHMENT, non avendo un flusso dedicato, coincide con il rootOnboardingId."
           },
           "productId" : {
             "type" : "string"
@@ -177,6 +181,10 @@
           },
           "contractFilename" : {
             "type" : "string"
+          },
+          "rootOnboardingId" : {
+            "type" : "string",
+            "description" : "Identificativo della radice del Fascicolo Documentale. Corrisponde all'onboardingId dell'INSTITUTION."
           },
           "createdAt" : {
             "$ref" : "#/components/schemas/LocalDateTime"
@@ -208,6 +216,9 @@
             "$ref" : "#/components/schemas/TokenType"
           },
           "attachmentName" : {
+            "type" : "string"
+          },
+          "rootOnboardingId" : {
             "type" : "string"
           },
           "templatePath" : {
