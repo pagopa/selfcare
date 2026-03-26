@@ -1,0 +1,8 @@
+{
+  "name": "setName",
+  "surname": "setSurname",
+  "taxCode": "setTaxCode",
+  "role": "MANAGER",
+  "email": "n.surname@email.com",
+  "productRole": "setProductRole"
+}

@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "HEAD",
+    "urlPath": "/pdnd-interop-uservice-party-process/0.0.1/onboarding/institution/externalIdNotFound/products/productId"
+  },
+  "response": {
+    "status": "404",
+    "jsonBody": {
+      "status": "Error",
+      "message": "Resource not found"
+    }
+  }
+}

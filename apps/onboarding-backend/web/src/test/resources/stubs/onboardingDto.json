@@ -1,0 +1,30 @@
+{
+  "billingData": {
+    "businessName": "string",
+    "digitalAddress": "string",
+    "publicServices": false,
+    "recipientCode": "string",
+    "registeredOffice": "string",
+    "taxCode": "string",
+    "vatNumber": "string",
+    "zipCode": "string"
+  },
+  "institutionType": "GSP",
+  "origin": "string",
+  "pricingPlan": "string",
+  "users": [
+    {
+      "email": "email@example.com",
+      "name": "string",
+      "role": "DELEGATE",
+      "surname": "string",
+      "taxCode": "string"
+    }
+  ],
+  "geographicTaxonomies": [
+    {
+      "code": "string",
+      "desc": "string"
+    }
+  ]
+}

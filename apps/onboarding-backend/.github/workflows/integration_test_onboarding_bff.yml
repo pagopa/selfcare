@@ -1,0 +1,59 @@
+name: "Integration Tests (onboarding-bff)"
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+    branches:
+      - main
+      - releases/*
+    paths:
+      - "app/**"
+  workflow_dispatch:
+
+jobs:
+  integration_tests_ms:
+    name: 'Integration Tests (onboarding-bff)'
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@0ab4596768b603586c0de567f2430c30f5b0d2b0 # v3
+        with:
+            java-version: "17"
+            distribution: "temurin"
+            cache: maven
+
+            # Selfcare-onboarding
+      - uses: s4u/maven-settings-action@7802f6aec16c9098b4798ad1f1d8ac75198194bd # v3.0.0
+        with:
+            servers: '[{"id": "selfcare-onboarding", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}, {"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
+
+      # Selfcare-onboarding-backend
+     # - uses: s4u/maven-settings-action@7802f6aec16c9098b4798ad1f1d8ac75198194bd # v3.0.0
+      #  with:
+       #   servers: '[{"id": "selfcare-onboarding", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}, {"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}, {"id": "selfcare-onboarding-backend", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
+      - name: Build and install all modules
+        run: mvn install -DskipTests
+
+      - name: Run Integration Tests
+        id: int_tests
+        working-directory: app
+        run: mvn test -Dtest=it.pagopa.selfcare.onboarding.CucumberSuite -Dsurefire.failIfNoSpecifiedTests=false
+        shell: bash
+        env:
+          APP_SERVER_PORT: 8082
+
+      - name: Upload Test Results
+        if: always() && (steps.int_tests.conclusion == 'success' || steps.int_tests.conclusion == 'failure')
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-report
+          path: app/target/cucumber-report/cucumber.html

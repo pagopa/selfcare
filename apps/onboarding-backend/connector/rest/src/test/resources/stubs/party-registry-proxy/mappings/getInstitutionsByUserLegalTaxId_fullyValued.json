@@ -1,0 +1,31 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/external/ur/v1/info-camere/institutions",
+    "bodyPatterns": [
+      {
+        "matchesJsonPath": "*"
+      }
+    ]
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+      "legalTaxId": "setLegalTaxId",
+      "requestDateTime": "2023-03-13T10:50:03",
+      "businesses": [
+        {
+          "businessName": "businessName1",
+          "businessTaxId": "businessTaxId1"
+        },
+        {
+          "businessName": "businessName2",
+          "businessTaxId": "businessTaxId2"
+        }
+      ]
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
