@@ -31,8 +31,8 @@
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>onboarding-sdk-crypto</artifactId>
-            <version>0.12.0</version>
+            <artifactId>selfcare-onboarding-sdk-crypto</artifactId>
+            <version>0.15.4</version>
         </dependency>
         <dependency>
             <groupId>io.kubernetes</groupId>
