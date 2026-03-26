@@ -57,6 +57,9 @@ jobs:
     name: "Update UAT Version Variable"
     needs: release
     if: ${{ inputs.env == 'uat' }}
+    permissions:
+      contents: read
+      actions: write
     uses: ./.github/workflows/call_update_gh_variable.yml
     with:
       domain: onboarding-backend
@@ -68,6 +71,9 @@ jobs:
     name: "Update PROD Version Variable"
     needs: release
     if: ${{ inputs.env == 'prod' }}
+    permissions:
+      contents: read
+      actions: write
     uses: ./.github/workflows/call_update_gh_variable.yml
     with:
       domain: onboarding-backend
