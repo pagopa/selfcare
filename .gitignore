@@ -24,6 +24,7 @@ target/
 *.iml
 **/*.iml
 *.ipr
+.claude
 
 ### NetBeans ###
 /nbproject/private/

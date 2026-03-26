@@ -118,6 +118,28 @@
                 <module>onboarding-cdc</module>
             </modules>
         </profile>
+        <profile>
+            <id>onboarding-backend</id>
+            <activation>
+                <file>
+                    <exists>onboarding-backend/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>onboarding-backend</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>registry-proxy</id>
+            <activation>
+                <file>
+                    <exists>registry-proxy/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>registry-proxy</module>
+            </modules>
+        </profile>
     </profiles>
 
 </project>

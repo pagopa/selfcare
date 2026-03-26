@@ -1,40 +1,10 @@
-resource "github_repository_environment" "github_repository_environment_cd" {
-  environment = "${local.env}-cd"
-  repository  = local.github.repository
+module "github_environment_cd" {
+  source = "../_modules/github_repository_environment"
 
-  dynamic "reviewers" {
-    for_each = (local.github_repository_environment_cd.reviewers_teams == null ? [] : [1])
-    content {
-      teams = matchkeys(
-        data.github_organization_teams.all.teams[*].id,
-        data.github_organization_teams.all.teams[*].slug,
-        local.github_repository_environment_cd.reviewers_teams
-      )
-    }
-  }
-
-  dynamic "deployment_branch_policy" {
-    for_each = local.github.cd_branch_policy_enabled == true ? [1] : []
-
-    content {
-      protected_branches     = local.github_repository_environment_cd.protected_branches
-      custom_branch_policies = local.github_repository_environment_cd.custom_branch_policies
-    }
-  }
-}
-
-resource "github_repository_environment_deployment_policy" "cd_deployment_policy" {
-  count = local.github_repository_environment_cd.branch_pattern == null ? 0 : 1
-
-  repository     = local.github.repository
-  environment    = github_repository_environment.github_repository_environment_cd.environment
-  branch_pattern = local.github_repository_environment_cd.branch_pattern != null ? local.github_repository_environment_cd.branch_pattern : "releases/*"
-}
-
-resource "github_actions_environment_secret" "env_cd_secrets" {
-  for_each        = local.env_cd_secrets
-  repository      = local.github.repository
-  environment     = github_repository_environment.github_repository_environment_cd.environment
-  secret_name     = each.key
-  plaintext_value = each.value
+  env                    = local.env
+  env_suffix             = "cd"
+  repository             = local.github.repository
+  branch_policy_enabled  = local.github.cd_branch_policy_enabled
+  repository_environment = local.github_repository_environment_cd
+  env_secrets            = local.env_cd_secrets
 }

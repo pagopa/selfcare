@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>selc-onboarding</artifactId>
+        <groupId>it.pagopa.selfcare</groupId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>selc-onboarding-connector-api</artifactId>
+
+    <properties>
+        <commons-sdk-version>${parent-commons-sdk-version}</commons-sdk-version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>onboarding-sdk-product</artifactId>
+            <version>${commons-sdk-version}</version>
+        </dependency>
+    </dependencies>
+
+    <repositories>
+        <repository>
+            <id>selfcare-onboarding</id>
+            <name>Selfcare Onboarding SDK</name>
+            <url>https://maven.pkg.github.com/pagopa/selfcare-onboarding</url>
+        </repository>
+    </repositories>
+
+</project>

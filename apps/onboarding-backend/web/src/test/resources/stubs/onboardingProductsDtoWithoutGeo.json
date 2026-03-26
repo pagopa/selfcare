@@ -1,0 +1,28 @@
+{
+  "billingData": {
+    "businessName": "string",
+    "digitalAddress": "string",
+    "publicServices": false,
+    "recipientCode": "string",
+    "registeredOffice": "string",
+    "taxCode": "string",
+    "vatNumber": "string",
+    "zipCode": "string"
+  },
+  "institutionType": "PA",
+  "origin": "string",
+  "pricingPlan": "string",
+  "taxCode": "string",
+  "subunitCode": "string",
+  "subunitType": "AOO",
+  "productId": "prod-io",
+  "users": [
+    {
+      "email": "email@example.com",
+      "name": "string",
+      "role": "DELEGATE",
+      "surname": "string",
+      "taxCode": "string"
+    }
+  ]
+}

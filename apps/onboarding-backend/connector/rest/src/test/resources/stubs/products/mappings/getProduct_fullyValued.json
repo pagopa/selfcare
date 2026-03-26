@@ -1,0 +1,62 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/products/(\\w*)"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+      "contractTemplatePath": "string",
+      "contractTemplateUpdatedAt": "2021-12-13T10:52:06.892Z",
+      "contractTemplateVersion": "string",
+      "createdAt": "2021-12-13T10:52:06.892Z",
+      "description": "string",
+      "id": "string",
+      "logo": "string",
+      "roleManagementURL": "string",
+      "roleMappings": {
+        "MANAGER": {
+          "multiroleAllowed": false,
+          "roles": [
+            {
+              "code": "string",
+              "description": "string",
+              "label": "string"
+            }
+          ]
+        },
+        "DELEGATE": {
+          "multiroleAllowed": false,
+          "roles": [
+            {
+              "code": "string1",
+              "description": "string",
+              "label": "string"
+            }
+          ]
+        },
+        "OPERATOR": {
+          "multiroleAllowed": false,
+          "roles": [
+            {
+              "code": "string2",
+              "description": "string",
+              "label": "string"
+            },
+            {
+              "code": "string3",
+              "description": "string",
+              "label": "string"
+            }
+          ]
+        }
+      },
+      "title": "string",
+      "urlBO": "string",
+      "urlPublic": "string"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

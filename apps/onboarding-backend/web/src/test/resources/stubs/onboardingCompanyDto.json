@@ -1,0 +1,20 @@
+{
+  "billingData": {
+    "digitalAddress": "string",
+    "taxCode": "string",
+    "certified": true,
+    "businessName": "string"
+  },
+  "users": [
+    {
+      "email": "email@example.com",
+      "name": "string",
+      "role": "DELEGATE",
+      "surname": "string",
+      "taxCode": "string"
+    }
+  ],
+  "taxCode": "string",
+  "institutionType": "PG",
+  "productId": "string"
+}

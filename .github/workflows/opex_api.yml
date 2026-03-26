@@ -20,6 +20,8 @@ on:
           - webhook
           - registry-proxy
           - registry-proxy-pnpg
+          - api-selfcare-onboarding
+          - api-selfcare-onboarding-pnpg
         required: true
 
 env:

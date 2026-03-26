@@ -22,7 +22,12 @@
         <selc-commons.version>2.9.1</selc-commons.version>
         <lucene.version>8.11.2</lucene.version>
         <sonar.host.url>https://sonarcloud.io/</sonar.host.url>
-        <commons-sdk-version>0.14.0</commons-sdk-version>
+        <commons-sdk-version>0.15.4</commons-sdk-version>
+        <maven.compiler.release>17</maven.compiler.release>
+        <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
+        <lombok.version>1.18.36</lombok.version>
+        <mapstruct.version>1.5.5.Final</mapstruct.version>
+        <lombok.mapstruct.binding.version>0.2.0</lombok.mapstruct.binding.version>
     </properties>
 
     <dependencyManagement>
@@ -153,13 +158,33 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct-processor</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok-mapstruct-binding</artifactId>
+                <version>${lombok.mapstruct.binding.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>onboarding-sdk-common</artifactId>
+            <artifactId>selfcare-onboarding-sdk-common</artifactId>
             <version>${commons-sdk-version}</version>
         </dependency>
         <dependency>
@@ -174,7 +199,7 @@
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>onboarding-sdk-crypto</artifactId>
+            <artifactId>selfcare-onboarding-sdk-crypto</artifactId>
             <version>${commons-sdk-version}</version>
             <exclusions>
                 <exclusion>
@@ -183,7 +208,33 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
+                <configuration>
+                    <release>${maven.compiler.release}</release>
+                    <annotationProcessorPaths combine.children="override">
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
     <modules>
         <module>core</module>

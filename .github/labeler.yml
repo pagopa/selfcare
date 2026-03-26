@@ -39,6 +39,14 @@ webhook:
   - changed-files:
       - any-glob-to-any-file: ["apps/webhook/**", "infra/resources/*/webhook.tf"]
 
+registry-proxy:
+  - changed-files:
+      - any-glob-to-any-file: ["apps/registry-proxy/**", "infra/resources/*/registry-proxy*.tf"]
+
+onboarding-backend:
+  - changed-files:
+      - any-glob-to-any-file: ["apps/onboarding-backend/**", "infra/resources/*/onboarding_backend*.tf"]
+
 hub-spid-login:
   - changed-files:
       - any-glob-to-any-file: ["infra/apps/hub_spid_login/**", "infra/resources/*/hub_spid_login.tf"]

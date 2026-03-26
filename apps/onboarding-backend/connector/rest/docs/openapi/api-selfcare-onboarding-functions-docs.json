@@ -1,0 +1,55 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "FDRestClient API",
+    "description": "API for checking organization details",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "Organization",
+      "description": "API for organization operations"
+    }
+  ],
+  "paths": {
+    "/api/CheckOrganization": {
+      "head": {
+        "tags": [
+          "Organization"
+        ],
+        "summary": "Check Organization",
+        "operationId": "checkOrganization",
+        "parameters": [
+          {
+            "name": "fiscalCode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vatNumber",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+            }
+          }
+        }
+      }
+    }
+  }
+}
