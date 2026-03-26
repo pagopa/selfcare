@@ -118,6 +118,17 @@
                 <module>onboarding-cdc</module>
             </modules>
         </profile>
+        <profile>
+            <id>onboarding-backend</id>
+            <activation>
+                <file>
+                    <exists>onboarding-backend/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>onboarding-backend</module>
+            </modules>
+        </profile>
     </profiles>
 
 </project>
