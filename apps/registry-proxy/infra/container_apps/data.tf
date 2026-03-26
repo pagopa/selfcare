@@ -23,8 +23,8 @@ data "azurerm_key_vault" "key_vault" {
 }
 
 data "azurerm_key_vault_secret" "logs_storage_access_key" {
-  count       = var.is_pnpg ? 0 : 1
-  name        = "logs-storage-access-key"
+  count        = var.is_pnpg ? 0 : 1
+  name         = "logs-storage-access-key"
   key_vault_id = try(data.azurerm_key_vault.key_vault[0].id, null)
 }
 
