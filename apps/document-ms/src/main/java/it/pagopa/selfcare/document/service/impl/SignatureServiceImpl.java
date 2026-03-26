@@ -29,29 +29,28 @@ import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.document.service.SignatureService;
 import it.pagopa.selfcare.onboarding.crypto.PadesSignService;
 import it.pagopa.selfcare.onboarding.crypto.entity.SignatureInformation;
-import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 import static it.pagopa.selfcare.document.util.ErrorMessage.*;
+import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
+import static it.pagopa.selfcare.document.util.Utils.createSafeTempFile;
 
 @Slf4j
 @ApplicationScoped
-public class SignatureServiceImp implements SignatureService {
+public class SignatureServiceImpl implements SignatureService {
 
     @Inject
     DocumentService documentService;
@@ -59,7 +58,6 @@ public class SignatureServiceImp implements SignatureService {
     @ConfigProperty(name = "document-ms.signature.verify-enabled")
     Boolean isVerifyEnabled;
 
-  public static final String HTTP_HEADER_VALUE_ATTACHMENT_FILENAME = "attachment;filename=";
   private static final Integer CF_MATCHER_GROUP = 2;
   private static final String PAGOPA_SIGNATURE_DISABLED = "disabled";
   private static final Pattern signatureRegex = Pattern.compile("(TINIT-)(.*)");
@@ -69,9 +67,9 @@ public class SignatureServiceImp implements SignatureService {
   private final TrustedListsCertificateSource trustedListsCertificateSource;
   private final PadesSignService padesSignService;
 
-  public SignatureServiceImp(TrustedListsCertificateSource trustedListsCertificateSource,
-                             PagoPaSignatureConfig pagoPaSignatureConfig,
-                             PadesSignService padesSignService) {
+  public SignatureServiceImpl(TrustedListsCertificateSource trustedListsCertificateSource,
+                              PagoPaSignatureConfig pagoPaSignatureConfig,
+                              PadesSignService padesSignService) {
     this.trustedListsCertificateSource = trustedListsCertificateSource;
     this.pagoPaSignatureConfig = pagoPaSignatureConfig;
     this.padesSignService = padesSignService;
@@ -474,7 +472,7 @@ public class SignatureServiceImp implements SignatureService {
 
                 log.info("Signing input file {} using reason {}", sanitize(pdf.getName()), sanitize(signReason));
 
-                Path signedPdf = createSafeTempFile();
+                Path signedPdf = createSafeTempFile("signed", ".pdf");
                 padesSignService.padesSign(pdf, signedPdf.toFile(), buildSignatureInfo(signReason));
                 return signedPdf.toFile();
 
@@ -483,30 +481,6 @@ public class SignatureServiceImp implements SignatureService {
             }
         })
         .runSubscriptionOn(Infrastructure.getDefaultExecutor());
-    }
-
-    public Path createSafeTempFile() throws IOException {
-        try {
-            return createTempFileWithPosix();
-        } catch (UnsupportedOperationException e) {
-            // Fallback per Windows/Non-POSIX
-            File f = Files.createTempFile("signed", ".pdf").toFile();
-            boolean readable = f.setReadable(true, true);
-            boolean writable = f.setWritable(true, true);
-            boolean executable = f.setExecutable(false); // Importante: NO esecuzione
-            if (!readable || !writable || !executable) {
-                log.warn("Could not set restricted permissions on temporary file: {}", sanitize(f.getAbsolutePath()));
-            }
-            return f.toPath();
-        }
-    }
-    
-    public Path createTempFileWithPosix() throws IOException {
-        FileAttribute<Set<PosixFilePermission>> attr =
-                PosixFilePermissions.asFileAttribute(
-                        PosixFilePermissions.fromString("rw-------")
-                );
-        return Files.createTempFile("signed", ".pdf", attr);
     }
 
     private SignatureInformation buildSignatureInfo(String signReason) {

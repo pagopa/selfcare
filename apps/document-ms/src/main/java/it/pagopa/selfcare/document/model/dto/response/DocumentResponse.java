@@ -2,8 +2,9 @@ package it.pagopa.selfcare.document.model.dto.response;
 
 
 import it.pagopa.selfcare.onboarding.common.TokenType;
-import java.time.LocalDateTime;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 @Data
 public class DocumentResponse {

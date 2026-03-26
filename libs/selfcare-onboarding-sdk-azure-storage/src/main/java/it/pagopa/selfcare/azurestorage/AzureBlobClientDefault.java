@@ -26,6 +26,18 @@ import org.slf4j.LoggerFactory;
 
 public class AzureBlobClientDefault implements AzureBlobClient {
 
+  /**
+   * Basic sanitization for log messages to prevent log injection.
+   * Removes carriage return and newline characters from the provided value.
+   */
+  private static String sanitizeForLog(String value) {
+    if (value == null) {
+      return "null";
+    }
+    // Replace CR and LF with spaces to keep logs on a single line
+    return value.replace('\r', ' ').replace('\n', ' ');
+  }
+
   private static final Logger log = LoggerFactory.getLogger(AzureBlobClientDefault.class);
 
   private final BlobServiceClient blobClient;
@@ -66,25 +78,27 @@ public class AzureBlobClientDefault implements AzureBlobClient {
 
   @Override
   public String getFileAsText(String filePath) {
-    log.info("START - getTemplateFile for template: {}", filePath);
+    log.info("START - getTemplateFile for template: {}", sanitizeForLog(filePath));
     try {
 
       final BlobContainerClient blobContainer = blobClient.getBlobContainerClient(containerName);
       final BlobClient blob = blobContainer.getBlobClient(filePath);
 
       BinaryData content = blob.downloadContent();
-      log.info("END - getTemplateFile - Downloaded {}", filePath);
+      log.info("END - getTemplateFile - Downloaded {}", sanitizeForLog(filePath));
       return content.toString();
     } catch (BlobStorageException e) {
-      log.error(String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), filePath), e);
-      throw new SelfcareAzureStorageException(String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), filePath),
+      String safePath = sanitizeForLog(filePath);
+      log.error(String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), safePath), e);
+      throw new SelfcareAzureStorageException(
+        String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), safePath),
         SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getCode());
     }
   }
 
   @Override
   public File getFileAsPdf(String contractTemplate) {
-    log.info("START - getFileAsPdf for template: {}", contractTemplate);
+    log.info("START - getFileAsPdf for template: {}", sanitizeForLog(contractTemplate));
 
     final BlobContainerClient blobContainer;
     final BlobClient blob;
@@ -97,8 +111,10 @@ public class AzureBlobClientDefault implements AzureBlobClient {
       downloadedFile = File.createTempFile(fileName, ".pdf");
       blob.downloadToFile(downloadedFile.getAbsolutePath(), true);
     } catch (BlobStorageException | IOException e) {
-      log.error(String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), contractTemplate), e);
-      throw new SelfcareAzureStorageException(String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), contractTemplate),
+      String safeTemplate = sanitizeForLog(contractTemplate);
+      log.error(String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), safeTemplate), e);
+      throw new SelfcareAzureStorageException(
+        String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), safeTemplate),
         SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getCode());
     }
 
@@ -108,7 +124,7 @@ public class AzureBlobClientDefault implements AzureBlobClient {
 
   @Override
   public File retrieveFile(String filePath) {
-    log.info("START - retrieveFile: {}", filePath);
+    log.info("START - retrieveFile: {}", sanitizeForLog(filePath));
 
     final BlobContainerClient blobContainer;
     final BlobClient blob;
@@ -130,8 +146,10 @@ public class AzureBlobClientDefault implements AzureBlobClient {
       downloadedFile = File.createTempFile(blobFileName, extension);
       blob.downloadToFile(downloadedFile.getAbsolutePath(), true);
     } catch (BlobStorageException | IOException e) {
-      log.error(String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), filePath), e);
-      throw new SelfcareAzureStorageException(String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), filePath),
+      String safePath = sanitizeForLog(filePath);
+      log.error(String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), safePath), e);
+      throw new SelfcareAzureStorageException(
+        String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), safePath),
         SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getCode());
     }
 
@@ -141,18 +159,20 @@ public class AzureBlobClientDefault implements AzureBlobClient {
 
   @Override
   public String uploadFile(String path, String filename, byte[] data) {
-    log.debug("START - uploadFile for path: {}, filename: {}", path, filename);
+    log.debug("START - uploadFile for path: {}, filename: {}", sanitizeForLog(path), sanitizeForLog(filename));
     String filepath = Paths.get(path, filename).toString();
-    log.debug("uploadContract fileName = {}", filepath);
+    log.debug("uploadContract fileName = {}", sanitizeForLog(filepath));
     try {
       final BlobContainerClient blobContainer = blobClient.getBlobContainerClient(containerName);
       final BlobClient blob = blobContainer.getBlobClient(filepath);
       blob.upload(BinaryData.fromBytes(data), true);
-      log.info("Uploaded {}", filepath);
+      log.info("Uploaded {}", sanitizeForLog(filepath));
       return filepath;
     } catch (BlobStorageException e) {
-      log.error(String.format(SelfcareAzureStorageError.ERROR_DURING_UPLOAD_FILE.getMessage(), filepath), e);
-      throw new SelfcareAzureStorageException(String.format(SelfcareAzureStorageError.ERROR_DURING_UPLOAD_FILE.getMessage(), filepath),
+      String safeFilepath = sanitizeForLog(filepath);
+      log.error(String.format(SelfcareAzureStorageError.ERROR_DURING_UPLOAD_FILE.getMessage(), safeFilepath), e);
+      throw new SelfcareAzureStorageException(
+        String.format(SelfcareAzureStorageError.ERROR_DURING_UPLOAD_FILE.getMessage(), safeFilepath),
         SelfcareAzureStorageError.ERROR_DURING_UPLOAD_FILE.getCode());
     }
   }

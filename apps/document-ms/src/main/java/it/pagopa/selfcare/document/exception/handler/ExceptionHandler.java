@@ -114,4 +114,17 @@ public class ExceptionHandler {
             exception.getMessage(), null, HttpStatus.SC_CONFLICT, exception.getCode(), null);
     return Response.status(Response.Status.CONFLICT).entity(problem).build();
   }
+
+  @ServerExceptionMapper
+  public Response toResponse(PdfBuilderException exception) {
+    LOGGER.error(PREFIX_LOGGER, "PDF generation failed", exception.getMessage());
+    Problem problem =
+        new Problem(
+            exception.getMessage(),
+            null,
+            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+            exception.getCode(),
+            null);
+    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(problem).build();
+  }
 }

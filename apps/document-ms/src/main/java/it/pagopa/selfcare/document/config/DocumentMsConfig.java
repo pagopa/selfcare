@@ -23,6 +23,8 @@ public class DocumentMsConfig {
     public static final String SIGNATURE_SOURCE_ARUBA = "aruba";
     public static final String SIGNATURE_SOURCE_NAMIRIAL = "namirial";
     public static final String SIGNATURE_SOURCE_DISABLED = "disabled";
+    public static final String PDF_FORMAT_FILENAME = "%s_accordo_adesione.pdf";
+
 
     @ConfigProperty(name = "document-ms.blob-storage.container-product")
     String containerProduct;
@@ -39,8 +41,11 @@ public class DocumentMsConfig {
     @ConfigProperty(name = "document-ms.blob-storage.path-aggregates")
     String aggregatesPath;
 
+    @ConfigProperty(name = "document-ms.blob-storage.path-deleted")
+    String deletePath;
+
     void onStart(@Observes StartupEvent ev) {
-        log.info(String.format("Database %s is starting...", Document.mongoDatabase().getName()));
+        log.info("Database {} is starting...", Document.mongoDatabase().getName());
     }
 
     @ApplicationScoped

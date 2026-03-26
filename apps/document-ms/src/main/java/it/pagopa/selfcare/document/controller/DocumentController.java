@@ -3,40 +3,33 @@ package it.pagopa.selfcare.document.controller;
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.document.mapper.DocumentMapper;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
-import it.pagopa.selfcare.document.model.dto.request.UploadAttachmentForm;
-import it.pagopa.selfcare.document.model.dto.response.DocumentResponse;
-import it.pagopa.selfcare.document.mapper.DocumentMapper;
-import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
+import it.pagopa.selfcare.document.model.dto.response.DocumentResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
-import it.pagopa.selfcare.document.exception.ConflictException;
+import it.pagopa.selfcare.document.service.DocumentService;
 import jakarta.inject.Inject;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
-import java.io.File;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import org.jboss.resteasy.reactive.RestResponse;
 
 import java.util.List;
-import org.apache.http.HttpStatus;
-import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
 
 import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
-import static it.pagopa.selfcare.document.util.Utils.retrieveAttachmentFromFormData;
 
 @Authenticated
 @Path("/v1/documents")
 @AllArgsConstructor
 @Slf4j
+@Tag(name = "Document Controller", description = "Endpoints for managing documents (contracts and attachments) associated with onboardings")
 public class DocumentController {
 
   @Inject
@@ -62,6 +55,7 @@ public class DocumentController {
     @GET
     @Path("/onboarding/{onboardingId}")
     public Uni<List<DocumentResponse>> getDocumentByOnboardingId(@PathParam(value = "onboardingId") String onboardingId) {
+        log.info("Getting documents for onboardingId: {}", sanitize(onboardingId));
         return documentService.getDocumentsByOnboardingId(onboardingId)
                 .map(documents -> documents.stream()
                         .map(documentMapper::toResponse)
@@ -75,35 +69,9 @@ public class DocumentController {
     @GET
     @Path("/{id}")
     public Uni<DocumentResponse> getDocumentById(@PathParam(value = "id") String id) {
+        log.info("Getting document for documentId: {}", sanitize(id));
         return documentService.getDocumentById(id)
                 .map(documentMapper::toResponse);
-    }
-
-    @Operation(
-            summary = "Retrieve contract not signed for a given onboarding",
-            description = "Downloads the unsigned contract file associated with the specified onboarding ID."
-    )
-    @GET
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Path("/{onboardingId}/contract")
-    public Uni<RestResponse<File>> getContract(@PathParam(value = "onboardingId") String onboardingId) {
-        return documentService.retrieveContract(onboardingId, Boolean.FALSE);
-    }
-
-    @Operation(
-            summary = "Retrieve template attachment for a given onboarding and filename and template path",
-            description = "Downloads the template attachment file associated with the specified onboarding ID and filename and template path."
-    )
-    @GET
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Path("/{onboardingId}/template-attachment")
-    public Uni<RestResponse<File>> getTemplateAttachment(
-            @PathParam(value = "onboardingId") String onboardingId,
-            @NotNull @QueryParam("templatePath") String templatePath,
-            @NotNull @QueryParam("name") String name,
-            @NotNull @QueryParam("institutionDescription") String institutionDescription,
-            @NotNull @QueryParam("productId") String productId) {
-        return documentService.retrieveTemplateAttachment(onboardingId, templatePath, name, institutionDescription, productId);
     }
 
     @Operation(
@@ -116,6 +84,7 @@ public class DocumentController {
   @Path("/{onboardingId}/contract-signed")
   public Uni<Response> updateContractSigned(@NotNull @PathParam(value = "onboardingId") String onboardingId,
                                             @NotNull @QueryParam(value = "contractSigned") String contractSigned) {
+        log.info("Updating contract signed for onboardingId: {}, contractSigned: {}", sanitize(onboardingId), sanitize(contractSigned));
         return documentService.updateContractSigned(onboardingId, contractSigned)
                 .map(updatedCount -> {
                     if (updatedCount > 0) {
@@ -127,30 +96,6 @@ public class DocumentController {
                     }
                 });
     }
-
-    @Operation(
-            summary = "Retrieve contract signed for a given onboarding",
-            description = "Downloads the contract file associated with the specified onboarding ID."
-    )
-    @GET
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Path("/{id}/contract-signed")
-    public Uni<RestResponse<File>> getContractSigned(@PathParam(value = "id") String id) {
-        return documentService.retrieveSignedFile(id);
-    }
-
-  @Operation(
-          summary = "Retrieve attachment for a given onboarding and filename",
-          description = "Downloads the attachment file associated with the specified onboarding ID and filename."
-  )
-  @GET
-  @Produces(MediaType.APPLICATION_OCTET_STREAM)
-  @Path("/{onboardingId}/attachment")
-  public Uni<RestResponse<File>> getAttachment(@PathParam(value = "onboardingId") String onboardingId,
-                                               @NotNull @QueryParam(value = "name") String attachmentName) {
-    return documentService.retrieveAttachment(onboardingId, attachmentName);
-
-  }
 
   @Operation(
           summary = "Retrieve attachment names for a given onboarding",
@@ -173,21 +118,8 @@ public class DocumentController {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/contract-report")
   public Uni<ContractSignedReport> reportContractSigned(@NotNull @QueryParam(value = "onboardingId") String onboardingId) {
-    return documentService.reportContractSigned(onboardingId);
-  }
-
-  @Operation(
-          summary = "Upload attachment by verifying and signing document, then save into storage.",
-          description = "Perform upload  of the file passed in input verifying digest e put company signature"
-  )
-  @POST
-  @Path("/attachment")
-  @Consumes(MediaType.MULTIPART_FORM_DATA)
-  public Uni<Response> uploadAttachment(@Valid @BeanParam UploadAttachmentForm form, @Context ResteasyReactiveRequestContext ctx) {
-      return documentService.uploadAttachment(form.getRequest(), retrieveAttachmentFromFormData(ctx.getFormData(), form.getFile()))
-            .replaceWith(Response.status(HttpStatus.SC_NO_CONTENT).build())
-            .onFailure(ConflictException.class)
-            .recoverWithItem(err -> Response.status(HttpStatus.SC_CONFLICT).entity(err.getMessage()).build());
+        log.info("Checking if contract signed is a CADES file for onboardingId: {}", sanitize(onboardingId));
+        return documentService.reportContractSigned(onboardingId);
   }
 
   @Operation(

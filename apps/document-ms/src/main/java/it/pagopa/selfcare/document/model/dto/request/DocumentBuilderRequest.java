@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -23,7 +25,9 @@ public class DocumentBuilderRequest {
     @NotNull
     private TokenType documentType;
 
-    private String documentName;
+    private String attachmentName;
+
+    private String rootOnboardingId;
 
     /**
      * Template path (contract or attachment template).
@@ -33,7 +37,7 @@ public class DocumentBuilderRequest {
 
     private String templateVersion;
 
-    private String pdfFormatFilename;
+    private List<String> fiscalCodes;
 
     /**
      * Product title - used for INSTITUTION and USER token types.
