@@ -31,6 +31,7 @@ on:
           - onboarding-ms
           - onboarding-cdc
           - registry-proxy
+          - onboarding-backend
         required: true
         default: auth
 
@@ -43,7 +44,7 @@ jobs:
       env: ${{ inputs.env }}
       target: ${{ inputs.target }}
       app: ${{ inputs.app }}
-      APP_PATH: apps/${{ inputs.app }}
+      APP_PATH: ${{ inputs.app == 'onboarding-backend' && 'apps/onboarding-backend/app' || format('apps/{0}', inputs.app) }}
       INFRA_PATH: infra/apps/${{ inputs.app }}
       APPS_POM: apps/pom.xml
       POM: pom.xml

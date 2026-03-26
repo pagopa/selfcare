@@ -1,0 +1,17 @@
+[
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/info-camere/institutions",
+      "body": {
+        "filter": {
+          "legalTaxId": "PRVTNT80A41H401T"
+        }
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"legalTaxId\":\"6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b\",\"businesses\":[{\"businessTaxId\":\"08875230016\"}]}}}"
+    }
+  }
+]

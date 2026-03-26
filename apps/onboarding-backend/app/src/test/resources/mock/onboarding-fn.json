@@ -1,0 +1,150 @@
+[
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/api/StartOnboardingOrchestration",
+      "queryStringParameters": {
+        "onboardingId": [
+          "89ad7142-24bb-48ad-8504-9c9231137i103"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 202,
+      "body": "{\n \"fake-response\": \"fake-response\"\n    }",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/api/StartOnboardingOrchestration",
+      "queryStringParameters": {
+        "onboardingId": [
+          "89ad7142-24bb-48ad-8504-9c9231137i105"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 202,
+      "body": "{\n \"fake-response\": \"fake-response\"\n    }",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/api/StartOnboardingOrchestration",
+      "queryStringParameters": {
+        "onboardingId": [
+          "89ad7142-24bb-48ad-8504-9c9231137i1023"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 202,
+      "body": "{\n \"fake-response\": \"fake-response\"\n    }",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/api/StartOnboardingOrchestration",
+      "queryStringParameters": {
+        "onboardingId": [
+          "89ad7142-24bb-48ad-8504-9c9231137i123"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 202,
+      "body": "{\n \"fake-response\": \"fake-response\"\n    }",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/api/StartOnboardingOrchestration",
+      "queryStringParameters": {
+        "onboardingId": [
+          "89ad7142-24bb-48ad-8504-9c9231137i10222"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 202,
+      "body": "{\n \"fake-response\": \"fake-response\"\n    }",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/api/StartOnboardingOrchestration",
+      "queryStringParameters": {
+        "?timeout": [
+          {
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "?onboardingId": [
+          {
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 202,
+      "body": "{\n \"fake-response\": \"fake-response\"\n    }",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/api/StartOnboardingOrchestration",
+      "queryStringParameters": {
+        "?timeout": [
+          {
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "?onboardingId": [
+          {
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 202,
+      "body": "{\n \"fake-response\": \"fake-response\"\n    }",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  }
+]

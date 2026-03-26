@@ -1,5 +1,7 @@
 name: Registry Proxy - Trigger Release
-
+permissions:
+  contents: read
+  actions: read
 on:
   workflow_dispatch:
     inputs:
@@ -58,13 +60,30 @@ jobs:
             --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=registry_proxy
 
 
+update_uat_variable:
+    name: "Update UAT Version Variable"
+    needs: release
+    if: ${{ inputs.env == 'uat' }}
+    permissions:
+      contents: read
+      actions: write
+    uses: ./.github/workflows/call_update_gh_variable.yml
+    with:
+      domain: registry-proxy
+      env: uat
+      version: ${{ needs.release.outputs.version }}
+    secrets: inherit
+
   update_prod_variable:
     name: "Update PROD Version Variable"
     needs: release
     if: ${{ inputs.env == 'prod' }}
+    permissions:
+      contents: read
+      actions: write
     uses: ./.github/workflows/call_update_gh_variable.yml
     with:
-      domain: registry_proxy
+      domain: registry-proxy
       env: prod
       version: ${{ needs.release.outputs.version }}
     secrets: inherit
