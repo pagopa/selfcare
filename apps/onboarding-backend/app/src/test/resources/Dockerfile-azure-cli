@@ -1,0 +1,9 @@
+FROM alpine/git@sha256:640423d9fc3945812fbe2aa147ca9d37ae2e0adc0cc1fa0bc9941dcfac2a34c4 AS git-stage
+WORKDIR /repo
+RUN git clone https://github.com/pagopa/selfcare-infra.git
+
+FROM mcr.microsoft.com/azure-cli@sha256:5ecf42d8362e25717b35c994aa714ed399be7b4e6f6c2df2ba3591b717598f76
+COPY --from=git-stage /repo/selfcare-infra/src/core/resources /workspace/resources/resources
+COPY --from=git-stage /repo/selfcare-infra/src/core/contracts_template/contracts/template /workspace/contracts-blob
+
+CMD ["/bin/sh", "-c", "/init_azurite.sh"]

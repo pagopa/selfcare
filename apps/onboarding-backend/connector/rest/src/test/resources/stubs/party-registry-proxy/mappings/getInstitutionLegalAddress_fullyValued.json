@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/external/ur/v1/national-registries/legal-address?taxId=extInstituionId"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+      "address": "address",
+      "zipCode": "00000"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

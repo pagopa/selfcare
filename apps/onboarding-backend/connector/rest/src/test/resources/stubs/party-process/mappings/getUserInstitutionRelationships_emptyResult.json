@@ -1,0 +1,30 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/pdnd-interop-uservice-party-process/0.0.1/external/institutions/institutionId3/relationships",
+    "queryParameters": {
+      "products": {
+        "matches": "^\\w*(,\\w+)*$"
+      },
+      "productRoles": {
+        "matches": "^\\w*(,\\w+)*$"
+      },
+      "states": {
+        "matches": "^(?:ACTIVE|PENDING|SUSPENDED|DELETED|REJECTED){0,1}(?:,(?:ACTIVE|PENDING|SUSPENDED|DELETED|REJECTED))*$"
+      },
+      "roles": {
+        "matches": "^(?:MANAGER|DELEGATE|SUB_DELEGATE|OPERATOR){0,1}(?:,(?:MANAGER|DELEGATE|SUB_DELEGATE|OPERATOR))*$"
+      },
+      "personId": {
+        "matches": "^\\w*(,\\w+)*$"
+      }
+    }
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": [],
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

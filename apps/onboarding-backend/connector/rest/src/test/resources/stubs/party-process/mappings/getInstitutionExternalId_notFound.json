@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/pdnd-interop-uservice-party-process/0.0.1/external/institutions/externalIdNotFound"
+  },
+  "response": {
+    "status": "404",
+    "jsonBody": {
+      "status": "Error",
+      "message": "Resource not found"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

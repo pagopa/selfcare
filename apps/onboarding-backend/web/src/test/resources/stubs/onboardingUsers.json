@@ -1,0 +1,14 @@
+{
+  "productId": "string",
+  "users": [
+    {
+      "taxCode": "string",
+      "name": "string",
+      "surname": "string",
+      "email": "string@email.it",
+      "role": "MANAGER"
+    }
+  ],
+  "origin": "string",
+  "originId": "string"
+}

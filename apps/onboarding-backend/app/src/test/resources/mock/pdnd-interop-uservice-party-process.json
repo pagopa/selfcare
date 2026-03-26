@@ -1,0 +1,90 @@
+[
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/pdnd-interop-uservice-party-process/institutions",
+      "queryStringParameters": {
+        "taxCode": [
+          "11223345661"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": "{\n  \"institutions\": [\n    {\n      \"id\": \"inst-001\",\n      \"externalId\": \"ext-001\",\n      \"originId\": \"user-abc\",\n      \"description\": \"Università di Roma\",\n      \"digitalAddress\": \"info@uniroma.it\",\n      \"address\": \"Via Roma 1\",\n      \"zipCode\": \"00100\",\n      \"taxCode\": \"12345678901\",\n      \"origin\": \"internal\",\n      \"city\": \"Roma\",\n      \"county\": \"RM\",\n      \"country\": \"IT\",\n      \"subunitCode\": \"SU01\",\n      \"subunitType\": \"DEPARTMENT\",\n      \"aooParentCode\": \"AOO123\",\n      \"institutionType\": \"PA\",\n      \"attributes\": [],\n      \"paymentServiceProvider\": null,\n      \"dataProtectionOfficer\": null,\n      \"gpuData\": null,\n      \"geographicTaxonomies\": [],\n      \"onboarding\": [\n        {\n          \"productId\": \"prod-io\",\n          \"status\": \"ACTIVE\",\n          \"onboardingDate\": \"2023-09-01\",\n          \"origin\": \"internal\",\n          \"originId\": \"user-abc\",\n          \"subunitCode\": \"SU01\"\n        }\n      ],\n      \"rea\": \"RM123456\",\n      \"shareCapital\": \"1000000\",\n      \"businessRegisterPlace\": \"Roma\",\n      \"supportEmail\": \"support@uniroma.it\",\n      \"supportPhone\": \"+390612345678\",\n      \"imported\": true\n    }\n  ]\n}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/pdnd-interop-uservice-party-process/institutions",
+      "queryStringParameters": {
+        "taxCode": [
+          "35843432474"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": "{\n  \"institutions\": [\n    {\n      \"id\": \"ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv\",\n      \"externalId\": \"ext-001\",\n      \"originId\": \"user-abc\",\n      \"description\": \"Università di Roma\",\n      \"digitalAddress\": \"info@uniroma.it\",\n      \"address\": \"Via Roma 1\",\n      \"zipCode\": \"00100\",\n      \"taxCode\": \"12345678901\",\n      \"origin\": \"internal\",\n      \"city\": \"Roma\",\n      \"county\": \"RM\",\n      \"country\": \"IT\",\n      \"subunitCode\": \"SU01\",\n      \"subunitType\": \"DEPARTMENT\",\n      \"aooParentCode\": \"AOO123\",\n      \"institutionType\": \"PA\",\n      \"attributes\": [],\n      \"paymentServiceProvider\": null,\n      \"dataProtectionOfficer\": null,\n      \"gpuData\": null,\n      \"geographicTaxonomies\": [],\n      \"onboarding\": [\n        {\n          \"productId\": \"prod-io\",\n          \"status\": \"ACTIVE\",\n          \"onboardingDate\": \"2023-09-01\",\n          \"origin\": \"internal\",\n          \"originId\": \"user-abc\",\n          \"subunitCode\": \"SU01\"\n        }\n      ],\n      \"rea\": \"RM123456\",\n      \"shareCapital\": \"1000000\",\n      \"businessRegisterPlace\": \"Roma\",\n      \"supportEmail\": \"support@uniroma.it\",\n      \"supportPhone\": \"+390612345678\",\n      \"imported\": true\n    }\n  ]\n}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/pdnd-interop-uservice-party-process/onboarding/institution"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": "{}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/pdnd-interop-uservice-party-process/institutions/test1323/onboardings"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": "{\n  \"onboardings\": [\n    {\n      \"productId\": \"prod-io\",\n      \"tokenId\": \"token-xyz-123\",\n      \"status\": \"COMPLETED\",\n      \"pricingPlan\": \"test\",\n      \"billing\": {\n        \"vatNumber\": \"12345678901\",\n        \"recipientCode\": \"ABCDEF1\",\n        \"publicServices\": true\n      },\n      \"createdAt\": \"2024-01-15T10:00:00Z\",\n      \"updatedAt\": \"2024-06-01T12:30:00Z\"\n    }\n  ]\n}",
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/pdnd-interop-uservice-party-process/external/institutions/test1235"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": "{\n  \"id\": \"test-1234\",\n  \"externalId\": \"test-1234\",\n  \"originId\": \"origin-456\",\n  \"vatNumber\": \"IT12345678901\",\n  \"description\": \"Comune di Esempio\",\n  \"parentDescription\": \"Regione di Esempio\",\n  \"digitalAddress\": \"comune@pec.esempio.it\",\n  \"address\": \"Via Roma 1\",\n  \"zipCode\": \"00100\",\n  \"taxCode\": \"TAXCDE12A34B567C\",\n  \"origin\": \"IPA\",\n  \"city\": \"Roma\",\n  \"county\": \"RM\",\n  \"country\": \"IT\",\n  \"subunitCode\": \"SU123\",\n  \"subunitType\": \"Dipartimento\",\n  \"aooParentCode\": \"AOO987654\",\n  \"onboarding\": [\n    {\n      \"productId\": \"prod-io\",\n      \"status\": \"COMPLETED\",\n      \"tokenId\": \"token-xyz-123\",\n      \"pricingPlan\": \"test\",\n      \"billing\": {\n        \"vatNumber\": \"12345678901\",\n        \"recipientCode\": \"ABCDEF1\",\n        \"publicServices\": true\n      },\n      \"createdAt\": \"2024-01-15T10:00:00Z\",\n      \"updatedAt\": \"2024-06-01T12:30:00Z\"\n    }\n  ],\n  \"institutionType\": \"PA\",\n  \"attributes\": [\n    {\n      \"code\": \"attr1\",\n      \"description\": \"Responsabile Servizio\",\n      \"origin\": \"INTERNAL\"\n    }\n  ],\n  \"paymentServiceProvider\": {\n    \"abiCode\": \"03069\",\n    \"businessRegisterNumber\": \"BR123456\",\n    \"legalRegisterName\": \"Istituto di Pagamento Esempio\",\n    \"vatNumberGroup\": false\n  },\n  \"dataProtectionOfficer\": {\n    \"address\": \"Via della Privacy 10\",\n    \"email\": \"dpo@esempio.it\",\n    \"pec\": \"dpo@pec.esempio.it\"\n  },\n  \"gpuData\": {\n    \"gpus\": [\n      {\n        \"gpuCode\": \"GPU1234\",\n        \"gpuDescription\": \"GPU Territoriale\"\n      }\n    ]\n  },\n  \"geographicTaxonomies\": [\n    {\n      \"code\": \"RM\",\n      \"description\": \"Roma\",\n      \"enabled\": true\n    }\n  ],\n  \"companyInformations\": {\n    \"rea\": \"RM-123456\",\n    \"shareCapital\": \"100000.00\",\n    \"businessName\": \"Comune di Esempio\",\n    \"registrationInRegister\": true\n  },\n  \"assistanceContacts\": {\n    \"supportEmail\": \"supporto@esempio.it\",\n    \"supportPhone\": \"+390612345678\"\n  },\n  \"users\": [\n    {\n      \"id\": \"user-1\",\n      \"name\": \"Mario Rossi\",\n      \"email\": \"mario.rossi@esempio.it\",\n      \"role\": \"Admin\"\n    }\n  ],\n  \"iban\": \"IT60X0306909606100000001234\",\n  \"recipientCode\": \"1234567\"\n}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/pdnd-interop-uservice-party-process/onboarding/institution/test-io/products/prod-io"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": "{}"
+    }
+  }
+]

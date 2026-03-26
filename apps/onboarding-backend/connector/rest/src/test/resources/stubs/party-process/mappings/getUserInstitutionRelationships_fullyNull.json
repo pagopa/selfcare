@@ -1,0 +1,15 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/pdnd-interop-uservice-party-process/0.0.1/external/institutions/institutionId2/relationships"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": [
+      {}
+    ],
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

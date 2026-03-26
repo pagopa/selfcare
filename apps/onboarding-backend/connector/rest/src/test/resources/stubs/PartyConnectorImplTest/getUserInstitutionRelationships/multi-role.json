@@ -1,0 +1,50 @@
+[
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "from": "id",
+    "name": "user1",
+    "surname": "string",
+    "email": "string",
+    "role": "DELEGATE",
+    "product": {
+      "id": "prod-io",
+      "role": "api",
+      "createdAt": "2022-02-07T14:20:31.373Z"
+    },
+    "state": "ACTIVE",
+    "createdAt": "2022-02-07T14:20:31.373Z",
+    "updatedAt": "2022-02-07T14:20:31.373Z"
+  },
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "from": "id",
+    "name": "user1",
+    "surname": "string",
+    "email": "string",
+    "role": "OPERATOR",
+    "product": {
+      "id": "prod-io",
+      "role": "security",
+      "createdAt": "2022-02-07T14:20:31.373Z"
+    },
+    "state": "ACTIVE",
+    "createdAt": "2022-02-07T14:20:31.373Z",
+    "updatedAt": "2022-02-07T14:20:31.373Z"
+  },
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "from": "id",
+    "name": "user1",
+    "surname": "string",
+    "email": "string",
+    "role": "OPERATOR",
+    "product": {
+      "id": "prod-pn",
+      "role": "security",
+      "createdAt": "2022-02-07T14:20:31.373Z"
+    },
+    "state": "ACTIVE",
+    "createdAt": "2022-02-07T14:20:31.373Z",
+    "updatedAt": "2022-02-07T14:20:31.373Z"
+  }
+]
