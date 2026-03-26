@@ -267,9 +267,6 @@ module "container_app_registry_proxy_ms" {
   key_vault_resource_group_name = local.key_vault_resource_group_name
   key_vault_name                = local.key_vault_name
 
-  # user_assigned_identity_id           = data.azurerm_user_assigned_identity.cae_identity.id
-  # user_assigned_identity_principal_id = data.azurerm_user_assigned_identity.cae_identity.principal_id
-
   probes = local.quarkus_health_probes
 
   tags = local.tags
@@ -286,7 +283,6 @@ module "ai_search" {
   env_short   = local.env_short
   project     = "${local.prefix}-${local.env_short}-${local.location_short}-${local.domain}"
   location    = local.location
-  domain      = "ar"
   sku         = "basic"
   tags        = local.tags
   cidr_subnet = ["10.1.145.0/29"]
@@ -295,6 +291,12 @@ module "ai_search" {
   key_vault_resource_group_name = "selc-${local.env_short}-sec-rg"
   public_network_access_enabled = false
   srch_private_endpoint_enabled = true
+}
+
+module "ai_search_institution" {
+  source            = "../_modules/ai_search_institution"
+  domain            = local.domain
+  search_service_id = module.ai_search.search_service_id
 }
 
 module "dapr" {
