@@ -78,34 +78,16 @@ module "container_app_onboarding_backend" {
 # APIM
 ###############################################################################
 
-resource "azurerm_api_management_api_version_set" "apim_api_bff_onboarding" {
-  name                = "selc-${local.env_short}-api-bff-onboarding"
-  resource_group_name = local.apim_rg
-  api_management_name = local.apim_name
-  display_name        = "BFF Onboarding API"
-  versioning_scheme   = "Segment"
-}
-
 module "apim_api_bff_onboarding" {
   source              = "../_modules/apim_api"
-  name                = "selc-${local.env_short}-api-bff-onboarding"
-  api_management_name = local.apim_name
-  resource_group_name = local.apim_rg
-  version_set_id      = azurerm_api_management_api_version_set.apim_api_bff_onboarding.id
-
-  description  = "BFF Onboarding API"
-  display_name = "BFF Onboarding API"
-  path         = "onboarding"
-  protocols    = ["https"]
-
-  service_url = format("https://%s", local.private_dns_name_onboarding_backend)
-
-  content_format = "openapi+json"
-  content_value = templatefile("../../apps/onboarding-backend/app/src/main/resources/swagger/api-docs.json", {
-    openapi_title = "selc-onboarding"
-    url           = format("%s.%s", local.api_dns_zone_prefix, local.dns_zone_prefix)
-    basePath      = "onboarding"
-  })
-
-  subscription_required = false
+  apim_name           = local.apim_name
+  apim_rg             = local.apim_rg
+  api_name            = "selc-${local.env_short}-api-bff-onboarding"
+  display_name        = "BFF Onboarding API"
+  base_path           = "onboarding"
+  private_dns_name    = local.private_dns_name_onboarding_backend
+  dns_zone_prefix     = local.dns_zone_prefix
+  api_dns_zone_prefix = local.api_dns_zone_prefix
+  external_domain     = "pagopa.it"
+  openapi_path        = "../../apps/onboarding-backend/app/src/main/resources/swagger/api-docs.json"
 }

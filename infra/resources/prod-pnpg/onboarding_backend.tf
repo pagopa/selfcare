@@ -81,34 +81,16 @@ module "container_app_onboarding_backend_pnpg" {
 # APIM
 ###############################################################################
 
-resource "azurerm_api_management_api_version_set" "apim_api_bff_onboarding_pnpg" {
-  name                = "selc-${local.env_short}-pnpg-api-bff-onboarding"
-  resource_group_name = local.apim_rg_onboarding_backend
-  api_management_name = local.apim_name_onboarding_backend
-  display_name        = "BFF PNPG Onboarding API"
-  versioning_scheme   = "Segment"
-}
-
 module "apim_api_bff_onboarding_pnpg" {
   source              = "../_modules/apim_api"
-  name                = "selc-${local.env_short}-pnpg-api-bff-onboarding"
-  api_management_name = local.apim_name_onboarding_backend
-  resource_group_name = local.apim_rg_onboarding_backend
-  version_set_id      = azurerm_api_management_api_version_set.apim_api_bff_onboarding_pnpg.id
-
-  description  = "BFF PNPG Onboarding API"
-  display_name = "BFF PNPG Onboarding API"
-  path         = "imprese/onboarding"
-  protocols    = ["https"]
-
-  service_url = format("https://%s", local.private_dns_name_onboarding_backend)
-
-  content_format = "openapi+json"
-  content_value = templatefile("../../apps/onboarding-backend/app/src/main/resources/swagger/api-docs.json", {
-    openapi_title = "selc-pnpg-onboarding"
-    url           = format("%s.%s", local.api_dns_zone_prefix_onboarding_backend, local.dns_zone_prefix_onboarding_backend)
-    basePath      = "imprese/onboarding"
-  })
-
-  subscription_required = false
+  apim_name           = local.apim_name_onboarding_backend
+  apim_rg             = local.apim_rg_onboarding_backend
+  api_name            = "selc-${local.env_short}-pnpg-api-bff-onboarding"
+  display_name        = "BFF PNPG Onboarding API"
+  base_path           = "imprese/onboarding"
+  private_dns_name    = local.private_dns_name_onboarding_backend
+  dns_zone_prefix     = local.dns_zone_prefix_onboarding_backend
+  api_dns_zone_prefix = local.api_dns_zone_prefix_onboarding_backend
+  external_domain     = "pagopa.it"
+  openapi_path        = "../../apps/onboarding-backend/app/src/main/resources/swagger/api-docs.json"
 }
