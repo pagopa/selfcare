@@ -6,6 +6,9 @@ locals {
   location_short = "weu"
   domain         = "pnpg"
 
+  dns_zone_prefix     = "pnpg.dev.selfcare"
+  api_dns_zone_prefix = "api-pnpg.dev.selfcare"
+  
   pnpg_suffix = "${local.location_short}-${local.domain}"
 
   project = "${local.prefix}-${local.env_short}"
@@ -92,4 +95,6 @@ locals {
   key_vault_name                = "${local.prefix}-${local.env_short}-${local.domain}-kv"
 
   resource_group_name_vnet = "${local.project}-vnet-rg"
+
+  image_tag_latest = "latest"
 }

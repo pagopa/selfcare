@@ -4,8 +4,11 @@ locals {
   env_short      = "p"
   location       = "westeurope"
   location_short = "weu"
+  domain         = "ar"
   # suffix_increment = "-002"
 
+  dns_zone_prefix     = "dev.selfcare"
+  api_dns_zone_prefix = "api.dev.selfcare"
   project = "${local.prefix}-${local.env_short}"
 
   onboarding_image_tag    = var.onboarding_image_tag
@@ -128,4 +131,6 @@ locals {
     data.azurerm_key_vault_secret.selc_documents_storage_connection_string.value,
     ""
   )
+
+  image_tag_latest = "latest"
 }
