@@ -1,18 +1,25 @@
 package it.pagopa.selfcare.onboarding.service.util;
 
+import static it.pagopa.selfcare.onboarding.constants.CustomError.*;
+
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.onboarding.common.DocumentType;
 import it.pagopa.selfcare.onboarding.constants.CustomError;
+import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.product.entity.ContractTemplate;
+import it.pagopa.selfcare.product.entity.Product;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
+import java.io.File;
+import java.util.List;
+import java.util.Objects;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
+import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
 import org.openapi.quarkus.party_registry_proxy_json.api.UoApi;
 import org.openapi.quarkus.party_registry_proxy_json.model.UOResource;
-
-import java.util.Objects;
-
-import static it.pagopa.selfcare.onboarding.constants.CustomError.*;
 
 @ApplicationScoped
 public class OnboardingUtils {
@@ -40,6 +47,28 @@ public class OnboardingUtils {
             return Uni.createFrom().item(DENIED_NO_BILLING);
         }
         return Uni.createFrom().nullItem();
+    }
+
+    public Uni<DocumentContentControllerApi.UploadSignedContractMultipartForm> buildUploadSignedContractRequest(
+            Onboarding onboarding,
+            boolean skipSignatureVerification,
+            File file, Product product, DocumentType documentType, List<String> fiscalCodes) {
+        DocumentContentControllerApi.UploadSignedContractMultipartForm request = new DocumentContentControllerApi.UploadSignedContractMultipartForm();
+        request.skipSignatureVerification = skipSignatureVerification;
+        request._file = file;
+
+        String institutionType = onboarding.getInstitution().getInstitutionType().name();
+        ContractTemplate contractTemplate = product.getInstitutionContractTemplate(institutionType);
+        request.request = DocumentBuilderRequest.builder()
+                .onboardingId(onboarding.getId())
+                .productId(product.getId())
+                .documentType(org.openapi.quarkus.document_json.model.DocumentType.fromString(documentType.name()))
+                .templateVersion(contractTemplate.getContractTemplateVersion())
+                .templatePath(contractTemplate.getContractTemplatePath())
+                .fiscalCodes(fiscalCodes)
+                .productTitle(product.getTitle())
+                .build();
+        return Uni.createFrom().item(request);
     }
 
 }

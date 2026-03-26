@@ -26,7 +26,6 @@ import io.quarkus.test.vertx.UniAsserter;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
-import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.onboarding.common.*;
 import it.pagopa.selfcare.onboarding.constants.CustomError;
 import it.pagopa.selfcare.onboarding.controller.request.*;
@@ -38,7 +37,6 @@ import it.pagopa.selfcare.onboarding.exception.ResourceConflictException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapperImpl;
-import it.pagopa.selfcare.onboarding.mapper.TokenMapper;
 import it.pagopa.selfcare.onboarding.model.FormItem;
 import it.pagopa.selfcare.onboarding.model.OnboardingGetFilters;
 import it.pagopa.selfcare.onboarding.service.impl.OnboardingServiceDefault;
@@ -65,6 +63,8 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.openapi.quarkus.core_json.api.OnboardingApi;
 import org.openapi.quarkus.core_json.model.InstitutionsResponse;
+import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
+import org.openapi.quarkus.document_json.api.DocumentControllerApi;
 import org.openapi.quarkus.onboarding_functions_json.model.OrchestrationResponse;
 import org.openapi.quarkus.party_registry_proxy_json.api.*;
 import org.openapi.quarkus.party_registry_proxy_json.model.*;
@@ -85,6 +85,14 @@ class OnboardingServiceDefaultTest {
 
     @InjectMock
     @RestClient
+    DocumentContentControllerApi documentContentControllerApi;
+
+    @InjectMock
+    @RestClient
+    DocumentControllerApi documentControllerApi;
+
+    @InjectMock
+    @RestClient
     InsuranceCompaniesApi insuranceCompaniesApi;
 
     @InjectMock
@@ -96,7 +104,7 @@ class OnboardingServiceDefaultTest {
 
     @InjectMock
     @RestClient
-    org.openapi.quarkus.party_registry_proxy_json.api.InstitutionApi institutionRegistryProxyApi;
+    InstitutionApi institutionRegistryProxyApi;
 
     @InjectMock
     @RestClient
@@ -119,15 +127,6 @@ class OnboardingServiceDefaultTest {
     NationalRegistriesApi nationalRegistriesApi;
 
     @InjectMock
-    AzureBlobClient azureBlobClient;
-
-    @InjectMock
-    SignatureService signatureService;
-
-    @InjectMock
-    TokenService tokenService;
-
-    @InjectMock
     @RestClient
     OnboardingApi onboardingApi;
 
@@ -144,11 +143,11 @@ class OnboardingServiceDefaultTest {
     @RestClient
     GeographicTaxonomiesApi geographicTaxonomiesApi;
 
+    @InjectMock
+    OnboardingUtils onboardingUtils;
+
     @Spy
     OnboardingMapper onboardingMapper = new OnboardingMapperImpl();
-
-    @InjectMock
-    TokenMapper tokenMapper;
 
     static final UserRequest manager = UserRequest.builder()
             .name("name")
@@ -361,7 +360,7 @@ class OnboardingServiceDefaultTest {
         OnboardingResponse onboardingResponse = new OnboardingResponse();
         onboardingResponse.setWorkflowType(INCREMENT_REGISTRATION_AGGREGATOR.toString());
         onboardingResponse.setProductId("productId");
-        it.pagopa.selfcare.onboarding.controller.response.InstitutionResponse institution = new it.pagopa.selfcare.onboarding.controller.response.InstitutionResponse();
+        InstitutionResponse institution = new InstitutionResponse();
         institution.setInstitutionType("PA");
         institution.setOriginId("originId");
         institution.setTaxCode("taxCode");
@@ -2088,15 +2087,9 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
 
-        mockFindToken(asserter);
-
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
         mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
-
-        final String filepath = "upload-file-path";
-        when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(filepath);
-        mockUpdateToken(asserter, filepath);
 
         asserter.assertThat(() -> onboardingService.completeWithoutSignatureVerification(onboarding.getId(), TEST_FORM_ITEM),
                 Assertions::assertNotNull);
@@ -2112,8 +2105,6 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
 
-        mockFindToken(asserter);
-
         //Mock find managerUserfiscal code
         String actualUseUid = onboarding.getUsers().get(0).getId();
         UserResource actualUserResource = new UserResource();
@@ -2121,18 +2112,9 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> when(userRegistryApi.findByIdUsingGET(USERS_FIELD_TAXCODE, actualUseUid))
                 .thenReturn(Uni.createFrom().item(actualUserResource)));
 
-        //Mock contract signature
-        asserter.execute(() -> doNothing()
-                .when(signatureService)
-                .verifySignature(any(), any(), any()));
-
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
         mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
-
-        final String filepath = "upload-file-path";
-        when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(filepath);
-        mockUpdateToken(asserter, filepath);
 
         asserter.assertThat(() -> onboardingService.complete(onboarding.getId(), TEST_FORM_ITEM),
                 Assertions::assertNotNull);
@@ -2160,15 +2142,18 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
 
-        mockFindToken(asserter);
-
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
         mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
-        final String filepath = "upload-file-path";
-        when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(filepath);
-        mockUpdateToken(asserter, filepath);
+        when(onboardingUtils.buildUploadSignedContractRequest(
+                any(Onboarding.class),
+                anyBoolean(),
+                any(File.class),
+                any(Product.class),
+                any(DocumentType.class),
+                anyList()))
+                .thenReturn(Uni.createFrom().item(new DocumentContentControllerApi.UploadSignedContractMultipartForm()));
 
         asserter.assertThat(() -> onboardingService.completeWithoutSignatureVerification(onboarding.getId(), TEST_FORM_ITEM),
                 Assertions::assertNotNull);
@@ -2183,7 +2168,6 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
 
-        mockFindToken(asserter);
 
         //Mock find managerUserfiscal code
         String actualUseUid = onboarding.getUsers().get(0).getId();
@@ -2192,20 +2176,12 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> when(userRegistryApi.findByIdUsingGET(USERS_FIELD_TAXCODE, actualUseUid))
                 .thenReturn(Uni.createFrom().item(actualUserResource)));
 
-        //Mock contract signature fail
-        asserter.execute(() -> doNothing()
-                .when(signatureService)
-                .verifySignature(any(), any(), any()));
 
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
         mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
-        final String filepath = "upload-file-path";
-        when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(filepath);
-        mockUpdateToken(asserter, filepath);
-
-        asserter.assertThat(() -> onboardingService.complete(onboarding.getId(), TEST_FORM_ITEM),
+        asserter.assertThat(() -> onboardingService.completeWithoutSignatureVerification(onboarding.getId(), TEST_FORM_ITEM),
                 Assertions::assertNotNull);
     }
 
@@ -2218,8 +2194,6 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
 
-        mockFindToken(asserter);
-
         //Mock find managerUserfiscal code
         String actualUseUid = onboarding.getUsers().get(0).getId();
         UserResource actualUserResource = new UserResource();
@@ -2227,18 +2201,9 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> when(userRegistryApi.findByIdUsingGET(USERS_FIELD_TAXCODE, actualUseUid))
                 .thenReturn(Uni.createFrom().item(actualUserResource)));
 
-        //Mock contract signature fail
-        asserter.execute(() -> doNothing()
-                .when(signatureService)
-                .verifySignature(any(), any(), any()));
-
         mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
         mockSimpleProductValidAssert(onboarding.getProductId(), true, asserter, false, true);
         mockVerifyOnboardingNotFound();
-
-        final String filepath = "upload-file-path";
-        when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(filepath);
-        mockUpdateToken(asserter, filepath);
 
         asserter.assertThat(() -> onboardingService.completeOnboardingUsers(onboarding.getId(), TEST_FORM_ITEM),
                 Assertions::assertNotNull);
@@ -2253,7 +2218,6 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
 
-        mockFindToken(asserter);
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
         mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
@@ -2269,7 +2233,6 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
 
-        mockFindToken(asserter);
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
 
         asserter.execute(() ->
@@ -2287,7 +2250,6 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
 
-        mockFindToken(asserter);
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
         mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
@@ -2423,26 +2385,6 @@ class OnboardingServiceDefaultTest {
         when(query.page(anyInt(), anyInt())).thenReturn(queryPage);
         when(queryPage.list()).thenReturn(Uni.createFrom().item(List.of(onboarding)));
         when(query.count()).thenReturn(Uni.createFrom().item(1L));
-    }
-
-    private void mockFindToken(UniAsserter asserter) {
-        Token token = new Token();
-        token.setChecksum("actual-checksum");
-        asserter.execute(() -> PanacheMock.mock(Token.class));
-        asserter.execute(() -> when(tokenService.retrieveToken(any(Onboarding.class), any(FormItem.class), any()))
-                .thenReturn(Uni.createFrom().item(token)));
-        asserter.execute(() -> when(tokenService.retrieveToken(anyString())).thenReturn(Uni.createFrom().item(token)));
-    }
-
-    private void mockUpdateToken(UniAsserter asserter, String filepath) {
-
-        //Mock token update
-        asserter.execute(() -> PanacheMock.mock(Token.class));
-        ReactivePanacheUpdate panacheUpdate = mock(ReactivePanacheUpdate.class);
-        asserter.execute(() -> when(panacheUpdate.where("contractSigned", filepath))
-                .thenReturn(Uni.createFrom().item(1L)));
-        asserter.execute(() -> when(Token.update(anyString(), any(Object[].class)))
-                .thenReturn(panacheUpdate));
     }
 
     private Onboarding createDummyOnboarding() {
@@ -2616,9 +2558,6 @@ class OnboardingServiceDefaultTest {
         when(userRegistryApi.findByIdUsingGET(anyString(), anyString()))
                 .thenReturn(Uni.createFrom().item(managerResource));
 
-        when(tokenService.getAttachments(any()))
-                .thenReturn(Uni.createFrom().item(List.of("filename")));
-
         UniAssertSubscriber<OnboardingGet> subscriber = onboardingService
                 .onboardingGetWithUserInfo(onboarding.getId())
                 .subscribe()
@@ -2732,7 +2671,6 @@ class OnboardingServiceDefaultTest {
         contractImported.setContractType("type");
 
         mockPersistOnboarding(asserter);
-        mockPersistToken(asserter);
 
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
@@ -2793,7 +2731,6 @@ class OnboardingServiceDefaultTest {
         contractImported.setContractType("type");
 
         mockPersistOnboarding(asserter);
-        mockPersistToken(asserter);
 
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
@@ -2828,7 +2765,6 @@ class OnboardingServiceDefaultTest {
         request.setBilling(billing);
 
         mockPersistOnboarding(asserter);
-        mockPersistToken(asserter);
 
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
@@ -2871,8 +2807,6 @@ class OnboardingServiceDefaultTest {
         request.setInstitution(institutionBaseRequest);
 
         mockPersistOnboarding(asserter);
-        mockPersistToken(asserter);
-
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
@@ -2914,7 +2848,6 @@ class OnboardingServiceDefaultTest {
         request.setInstitution(institutionBaseRequest);
 
         mockPersistOnboarding(asserter);
-        mockPersistToken(asserter);
 
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
@@ -2956,7 +2889,6 @@ class OnboardingServiceDefaultTest {
         request.setUsers(users);
         request.setInstitutionType(InstitutionType.PA);
         mockPersistOnboarding(asserter);
-        mockPersistToken(asserter);
 
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
@@ -3052,7 +2984,6 @@ class OnboardingServiceDefaultTest {
         request.setUsers(users);
         request.setInstitutionType(InstitutionType.PSP);
         mockPersistOnboarding(asserter);
-        mockPersistToken(asserter);
 
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
@@ -3107,12 +3038,10 @@ class OnboardingServiceDefaultTest {
         String originId = "originId";
         CustomError customError = CustomError.DENIED_NO_ASSOCIATION;
         UOResource uoResource = Mockito.mock(UOResource.class);
-        OnboardingUtils onboardingUtils = Mockito.mock(OnboardingUtils.class);
-        // Mock the response from uoApi.findByUnicodeUsingGET1
-        when(uoApi.findByUnicodeUsingGET1(eq(recipientCode), any()))
+
+        when(onboardingUtils.getUoFromRecipientCode(recipientCode))
                 .thenReturn(Uni.createFrom().item(uoResource));
 
-        // Mock the response from onboardingUtils.validationRecipientCode
         when(onboardingUtils.getValidationRecipientCodeError(originId, uoResource))
                 .thenReturn(Uni.createFrom().item(customError));
 
@@ -3130,7 +3059,7 @@ class OnboardingServiceDefaultTest {
         final String recipientCode = "recipientCode";
         final String originId = "originId";
         RuntimeException exception = new RuntimeException("Generic error");
-        when(uoApi.findByUnicodeUsingGET1(eq(recipientCode), any()))
+        when(onboardingUtils.getUoFromRecipientCode(recipientCode))
                 .thenReturn(Uni.createFrom().failure(exception));
         UniAssertSubscriber<CustomError> subscriber = onboardingService
                 .checkRecipientCode(recipientCode, originId)
@@ -3144,8 +3073,8 @@ class OnboardingServiceDefaultTest {
     void checkRecipientCodeWithResourceNotFound() {
         final String recipientCode = "recipientCode";
         final String originId = "originId";
-        ClientWebApplicationException exception = new ClientWebApplicationException(HttpStatus.SC_NOT_FOUND);
-        when(uoApi.findByUnicodeUsingGET1(eq(recipientCode), any()))
+        ResourceNotFoundException exception = new ResourceNotFoundException("");
+        when(onboardingUtils.getUoFromRecipientCode(recipientCode))
                 .thenReturn(Uni.createFrom().failure(exception));
         UniAssertSubscriber<CustomError> subscriber = onboardingService
                 .checkRecipientCode(recipientCode, originId)
@@ -3168,19 +3097,12 @@ class OnboardingServiceDefaultTest {
             asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
                     .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
 
-            mockFindToken(asserter);
-
             //Mock find managerUserfiscal code
             String actualUseUid = onboarding.getUsers().get(0).getId();
             UserResource actualUserResource = new UserResource();
             actualUserResource.setFiscalCode("ACTUAL-FISCAL-CODE");
             asserter.execute(() -> when(userRegistryApi.findByIdUsingGET(USERS_FIELD_TAXCODE, actualUseUid))
                     .thenReturn(Uni.createFrom().item(actualUserResource)));
-
-            //Mock contract signature fail
-            asserter.execute(() -> doThrow(InvalidRequestException.class)
-                    .when(signatureService)
-                    .verifySignature(any(), any(), any()));
 
             asserter.assertFailedWith(() -> onboardingService.complete(onboarding.getId(), TEST_FORM_ITEM),
                     InvalidRequestException.class);
@@ -3195,19 +3117,12 @@ class OnboardingServiceDefaultTest {
             asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
                     .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
 
-            mockFindToken(asserter);
-
             //Mock find managerUserfiscal code
             String actualUseUid = onboarding.getUsers().get(0).getId();
             UserResource actualUserResource = new UserResource();
             actualUserResource.setFiscalCode("ACTUAL-FISCAL-CODE");
             asserter.execute(() -> when(userRegistryApi.findByIdUsingGET(USERS_FIELD_TAXCODE, actualUseUid))
                     .thenReturn(Uni.createFrom().item(actualUserResource)));
-
-            //Mock contract signature fail
-            asserter.execute(() -> doThrow(InvalidRequestException.class)
-                    .when(signatureService)
-                    .verifySignature(any(), any(), any()));
 
             asserter.assertFailedWith(() -> onboardingService.completeOnboardingUsers(onboarding.getId(), TEST_FORM_ITEM),
                     InvalidRequestException.class);
@@ -3221,8 +3136,8 @@ class OnboardingServiceDefaultTest {
             asserter.execute(() -> PanacheMock.mock(Onboarding.class));
             asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
                     .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
-
-            mockFindToken(asserter);
+            asserter.execute(() -> when(documentContentControllerApi.uploadSignedContract(any(), any()))
+                    .thenReturn(Uni.createFrom().item(Response.noContent().build())));
 
             //Mock find managerUserfiscal code
             String actualUseUid = onboarding.getUsers().get(0).getId();
@@ -3231,18 +3146,9 @@ class OnboardingServiceDefaultTest {
             asserter.execute(() -> when(userRegistryApi.findByIdUsingGET(USERS_FIELD_TAXCODE, actualUseUid))
                     .thenReturn(Uni.createFrom().item(actualUserResource)));
 
-            //Mock contract signature fail
-            asserter.execute(() -> doNothing()
-                    .when(signatureService)
-                    .verifySignature(any(), any(), any()));
-
             mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
             mockSimpleProductValidAssert(onboarding.getProductId(), true, asserter, false, true);
             mockVerifyOnboardingNotFound();
-
-            final String filepath = "upload-file-path";
-            when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(filepath);
-            mockUpdateToken(asserter, filepath);
 
             asserter.assertThat(() -> onboardingService.completeOnboardingUsers(onboarding.getId(), TEST_FORM_ITEM),
                     Assertions::assertNotNull);
@@ -3255,8 +3161,8 @@ class OnboardingServiceDefaultTest {
             asserter.execute(() -> PanacheMock.mock(Onboarding.class));
             asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
                     .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
-
-            mockFindToken(asserter);
+            asserter.execute(() -> when(documentContentControllerApi.uploadSignedContract(any(), any()))
+                    .thenReturn(Uni.createFrom().item(Response.noContent().build())));
 
             //Mock find managerUserfiscal code
             String actualUseUid = onboarding.getUsers().get(0).getId();
@@ -3265,18 +3171,9 @@ class OnboardingServiceDefaultTest {
             asserter.execute(() -> when(userRegistryApi.findByIdUsingGET(USERS_FIELD_TAXCODE, actualUseUid))
                     .thenReturn(Uni.createFrom().item(actualUserResource)));
 
-            //Mock contract signature fail
-            asserter.execute(() -> doNothing()
-                    .when(signatureService)
-                    .verifySignature(any(), any(), any()));
-
             mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
             mockVerifyOnboardingNotFound();
             mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
-
-            final String filepath = "upload-file-path";
-            when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(filepath);
-            mockUpdateToken(asserter, filepath);
 
             asserter.assertThat(() -> onboardingService.complete(onboarding.getId(), TEST_FORM_ITEM),
                     Assertions::assertNotNull);
@@ -3290,16 +3187,6 @@ class OnboardingServiceDefaultTest {
                     Onboarding onboarding = (Onboarding) arg.getArguments()[0];
                     onboarding.setId(UUID.randomUUID().toString());
                     onboarding.setInstitution(((Onboarding) arg.getArguments()[0]).getInstitution());
-                    return Uni.createFrom().nullItem();
-                }));
-    }
-
-    void mockPersistToken(UniAsserter asserter) {
-        asserter.execute(() -> PanacheMock.mock(Token.class));
-        asserter.execute(() -> when(Token.persist(any(Token.class), any()))
-                .thenAnswer(arg -> {
-                    Token token = (Token) arg.getArguments()[0];
-                    token.setId(UUID.randomUUID().toString());
                     return Uni.createFrom().nullItem();
                 }));
     }
@@ -3598,7 +3485,6 @@ class OnboardingServiceDefaultTest {
         contractImported.setContractType("type");
 
         mockPersistOnboarding(asserter);
-        mockPersistToken(asserter);
 
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
@@ -4206,7 +4092,6 @@ class OnboardingServiceDefaultTest {
         contractImported.setContractType("type");
 
         mockPersistOnboarding(asserter);
-        mockPersistToken(asserter);
 
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
@@ -4278,7 +4163,6 @@ class OnboardingServiceDefaultTest {
         contractImported.setContractType("type");
 
         mockPersistOnboarding(asserter);
-        mockPersistToken(asserter);
 
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
@@ -4354,7 +4238,6 @@ class OnboardingServiceDefaultTest {
         contractImported.setContractType("type");
 
         mockPersistOnboarding(asserter);
-        mockPersistToken(asserter);
 
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
@@ -4442,7 +4325,6 @@ class OnboardingServiceDefaultTest {
         contractImported.setContractType("type");
 
         mockPersistOnboarding(asserter);
-        mockPersistToken(asserter);
 
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
@@ -4556,7 +4438,6 @@ class OnboardingServiceDefaultTest {
         contractImported.setContractType("type");
 
         mockPersistOnboarding(asserter);
-        mockPersistToken(asserter);
 
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
@@ -4643,7 +4524,6 @@ class OnboardingServiceDefaultTest {
         contractImported.setContractType("type");
 
         mockPersistOnboarding(asserter);
-        mockPersistToken(asserter);
 
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
@@ -4693,7 +4573,6 @@ class OnboardingServiceDefaultTest {
         Onboarding onboarding = createDummyOnboarding();
         onboarding.setStatus(OnboardingStatus.COMPLETED);
         String onboardingId = onboarding.getId();
-        final String filepath = "upload-file-path";
 
         // Mock di Onboarding - DEVE RIMANERE ATTIVO PER TUTTA LA DURATA
         PanacheMock.mock(Onboarding.class);
@@ -4701,10 +4580,6 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding)));
         when(Onboarding.findById(any()))
                 .thenReturn(Uni.createFrom().item(onboarding));
-
-        mockFindToken(asserter);
-        when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(filepath);
-        mockUpdateToken(asserter, onboardingId);
         mockUpdateOnboarding(onboardingId, 1L);
 
         asserter.assertThat(() -> onboardingService.uploadContractSigned(onboardingId, TEST_FORM_ITEM),
@@ -4723,7 +4598,6 @@ class OnboardingServiceDefaultTest {
         onboarding.setStatus(OnboardingStatus.COMPLETED);
         onboarding.getInstitution().setInstitutionType(PA);
         String onboardingId = onboarding.getId();
-        final String filepath = "upload-file-path";
 
         PanacheMock.mock(Onboarding.class);
         when(Onboarding.findByIdOptional(any()))
@@ -4731,40 +4605,14 @@ class OnboardingServiceDefaultTest {
         when(Onboarding.findById(any()))
                 .thenReturn(Uni.createFrom().item(onboarding));
 
-        when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(filepath);
-
-        PanacheMock.mock(Token.class);
-        when(Token.list(eq("onboardingId"), eq(onboardingId)))
-                .thenReturn(Uni.createFrom().item(Collections.emptyList()));
-
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
 
-        Token mockToken = mock(Token.class);
-
-        when(tokenService.retrieveToken(eq(onboarding), any(FormItem.class), any(Product.class)))
-                .thenReturn(Uni.createFrom().item(mockToken));
-
-        when(mockToken.persist()).thenReturn(Uni.createFrom().item(mockToken));
-
-        doNothing().when(mockToken).setContractSigned(anyString());
-        doNothing().when(mockToken).setContractFilename(anyString());
-        doNothing().when(mockToken).setChecksum(anyString());
-
-        when(tokenService.getAndVerifyDigest(any(), any(ContractTemplate.class), anyBoolean()))
-                .thenReturn("digest_mock");
-        when(tokenService.getContractPathByOnboarding(any(), any()))
-                .thenReturn("path/to/contract");
-
-        mockUpdateToken(asserter, onboardingId);
         mockUpdateOnboarding(onboardingId, 1L);
 
         asserter.assertThat(() -> onboardingService.uploadContractSigned(onboardingId, TEST_FORM_ITEM),
                 result -> {
                     Assertions.assertNotNull(result);
                     Assertions.assertEquals(onboarding.getId(), result.getId());
-
-                    // Usa la stessa sintassi sicura anche nel verify
-                    verify(tokenService).retrieveToken(eq(onboarding), any(FormItem.class), any(Product.class));
                 });
     }
 
@@ -4808,11 +4656,6 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> when(Onboarding.findByIdOptional(onboardingId))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
 
-        mockFindToken(asserter);
-
-        when(azureBlobClient.uploadFile(any(), any(), any()))
-                .thenThrow(new RuntimeException("Azure upload failed"));
-
         asserter.assertFailedWith(() -> onboardingService.uploadContractSigned(onboardingId, TEST_FORM_ITEM),
                 RuntimeException.class);
     }
@@ -4823,17 +4666,10 @@ class OnboardingServiceDefaultTest {
         Onboarding onboarding = createDummyOnboarding();
         onboarding.setStatus(OnboardingStatus.COMPLETED);
         String onboardingId = onboarding.getId();
-        final String filepath = "upload-file-path";
 
         asserter.execute(() -> PanacheMock.mock(Onboarding.class));
         asserter.execute(() -> when(Onboarding.findByIdOptional(onboardingId))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
-
-        mockFindToken(asserter);
-
-        when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(filepath);
-
-        mockUpdateToken(asserter, filepath);
 
         // Mock update onboarding to fail
         asserter.execute(() -> {
@@ -4882,7 +4718,7 @@ class OnboardingServiceDefaultTest {
             when(userRegistryApi.findByIdUsingGET(any(), any()))
                     .thenReturn(Uni.createFrom().item(managerResourceWk));
         });
-        
+
         mockVerifyOnboardingNotFound();
         mockVerifyAllowedProductList(onboardingRequest.getProductId(), asserter, true);
         InsuranceCompanyResource insuranceCompanyResource = new InsuranceCompanyResource();
