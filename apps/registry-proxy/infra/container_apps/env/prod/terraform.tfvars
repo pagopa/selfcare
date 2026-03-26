@@ -1,16 +1,16 @@
-env_short                       = "p"
-private_dns_name                = "selc-p-party-reg-proxy-ca.lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
-dns_zone_prefix                 = "selfcare"
-api_dns_zone_prefix             = "api.selfcare"
-suffix_increment                = "-002"
-cae_name                        = "cae-002"
-cae_rg_name                     = "selc-p-container-app-002-rg"
-key_vault_name                  = "selc-p-kv"
-key_vault_resource_group_name   = "selc-p-sec-rg"
-existing_logs_rg                = "selc-p-logs-storage-rg"
-ca_name                         = "selc-p-party-reg-proxy-ca"
-ca_rg_name                      = "selc-p-container-app-002-rg"
-storage_logs                    = "selcpstlogs"
+env_short                     = "p"
+private_dns_name              = "selc-p-party-reg-proxy-ca.lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
+dns_zone_prefix               = "selfcare"
+api_dns_zone_prefix           = "api.selfcare"
+suffix_increment              = "-002"
+cae_name                      = "cae-002"
+cae_rg_name                   = "selc-p-container-app-002-rg"
+key_vault_name                = "selc-p-kv"
+key_vault_resource_group_name = "selc-p-sec-rg"
+existing_logs_rg              = "selc-p-logs-storage-rg"
+ca_name                       = "selc-p-party-reg-proxy-ca"
+ca_rg_name                    = "selc-p-container-app-002-rg"
+storage_logs                  = "selcpstlogs"
 
 tags = {
   CreatedBy   = "Terraform"
@@ -163,7 +163,7 @@ app_settings = [
     value = "6380"
   },
   {
-    name = "PDND_SKIP_LOCALIZZAZIONE_NODES"
+    name  = "PDND_SKIP_LOCALIZZAZIONE_NODES"
     value = "false"
   }
 ]

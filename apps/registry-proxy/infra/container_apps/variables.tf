@@ -101,13 +101,13 @@ variable "ca_rg_name" {
 variable "key_vault_resource_group_name" {
   type        = string
   description = "Name of Key Vault resource group"
-  default = "kv-rg"
+  default     = "kv-rg"
 }
 
 variable "key_vault_name" {
   type        = string
   description = "Name of Key Vault"
-  default = "kv"
+  default     = "kv"
 }
 
 variable "existing_logs_rg" {

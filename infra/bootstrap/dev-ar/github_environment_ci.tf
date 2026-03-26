@@ -1,77 +1,16 @@
-resource "github_repository_environment" "github_repository_environment_ci" {
-  environment = "${local.env}-ci"
-  repository  = local.github.repository
+module "github_environment_ci" {
+  source = "../_modules/github_repository_environment"
 
-  dynamic "reviewers" {
-    for_each = (local.github_repository_environment_ci.reviewers_teams == null ? [] : [1])
-    content {
-      teams = matchkeys(
-        data.github_organization_teams.all.teams[*].id,
-        data.github_organization_teams.all.teams[*].slug,
-        local.github_repository_environment_ci.reviewers_teams
-      )
-    }
+  env                    = local.env
+  env_suffix             = "ci"
+  repository             = local.github.repository
+  branch_policy_enabled  = local.github.ci_branch_policy_enabled
+  repository_environment = local.github_repository_environment_ci
+  env_secrets            = local.env_ci_secrets
+  key_vault_id           = data.azurerm_key_vault.key_vault.id
+  kv_secrets = {
+    "STORAGE_CHECKOUT_ACCOUNT_KEY"        = "web-storage-access-key"
+    "STORAGE_CONTRACTS_ACCOUNT_KEY"       = "contracts-storage-access-key"
+    "STORAGE_CONNECTION_STRING_DOCUMENTS" = "documents-storage-connection-string"
   }
-
-  dynamic "deployment_branch_policy" {
-    for_each = local.github.ci_branch_policy_enabled == true ? [1] : []
-
-    content {
-      protected_branches     = local.github_repository_environment_ci.protected_branches
-      custom_branch_policies = local.github_repository_environment_ci.custom_branch_policies
-    }
-  }
-}
-
-resource "github_repository_environment_deployment_policy" "ci_deployment_policy" {
-  count = local.github_repository_environment_ci.branch_pattern == null ? 0 : 1
-
-  repository     = local.github.repository
-  environment    = github_repository_environment.github_repository_environment_ci.environment
-  branch_pattern = local.github_repository_environment_ci.branch_pattern != null ? local.github_repository_environment_ci.branch_pattern : "releases/*"
-}
-
-resource "github_actions_environment_secret" "env_ci_secrets" {
-  for_each        = local.env_ci_secrets
-  repository      = local.github.repository
-  environment     = github_repository_environment.github_repository_environment_ci.environment
-  secret_name     = each.key
-  plaintext_value = each.value
-}
-
-
-data "azurerm_key_vault_secret" "storage_checkout_account_key" {
-  name         = "web-storage-access-key"
-  key_vault_id = data.azurerm_key_vault.key_vault.id
-}
-
-resource "github_actions_environment_secret" "storage_checkout_account_key" {
-  repository      = local.github.repository
-  environment     = github_repository_environment.github_repository_environment_ci.environment
-  secret_name     = "STORAGE_CHECKOUT_ACCOUNT_KEY"
-  plaintext_value = data.azurerm_key_vault_secret.storage_checkout_account_key.value
-}
-
-data "azurerm_key_vault_secret" "storage_contracts_account_key" {
-  name         = "contracts-storage-access-key"
-  key_vault_id = data.azurerm_key_vault.key_vault.id
-}
-
-resource "github_actions_environment_secret" "storage_contracts_account_key" {
-  repository      = local.github.repository
-  environment     = github_repository_environment.github_repository_environment_ci.environment
-  secret_name     = "STORAGE_CONTRACTS_ACCOUNT_KEY"
-  plaintext_value = data.azurerm_key_vault_secret.storage_contracts_account_key.value
-}
-
-data "azurerm_key_vault_secret" "storage_contracts_account_connection-string" {
-  name         = "documents-storage-connection-string"
-  key_vault_id = data.azurerm_key_vault.key_vault.id
-}
-
-resource "github_actions_environment_secret" "storage_account_key_documents" {
-  repository      = local.github.repository
-  environment     = github_repository_environment.github_repository_environment_ci.environment
-  secret_name     = "STORAGE_CONNECTION_STRING_DOCUMENTS"
-  plaintext_value = data.azurerm_key_vault_secret.storage_contracts_account_connection-string.value
 }
