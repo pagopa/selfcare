@@ -1,4 +1,4 @@
-name: Onboarding Backend - Trigger Release
+name: Registry Proxy - Trigger Release
 
 on:
   workflow_dispatch:
@@ -18,7 +18,7 @@ on:
 
 jobs:
   release:
-    name: "Trigger Release Workflows"
+    name: "Trigger Release Workflow"
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -37,21 +37,13 @@ jobs:
         run: |
           echo "VERSION=$(echo "${{ inputs.branch }}" | sed 's/.*_//;s/^v//')" >> $GITHUB_ENV
 
-      - name: Trigger Onboarding Backend Release (SEL)
+      - name: Trigger Registry Proxy Release
         run: |
           gh workflow run release_app.yml \
             --ref ${{ inputs.branch }} \
             -f env=${{ inputs.env }} \
             -f target=selc \
-            -f app=onboarding-backend
-
-      - name: Trigger Onboarding Backend Release (PNPG)
-        run: |
-          gh workflow run release_app.yml \
-            --ref ${{ inputs.branch }} \
-            -f env=${{ inputs.env }} \
-            -f target=pnpg \
-            -f app=onboarding-backend
+            -f app=registry-proxy
 
   update_uat_variable:
     name: "Update UAT Version Variable"
@@ -59,7 +51,7 @@ jobs:
     if: ${{ inputs.env == 'uat' }}
     uses: ./.github/workflows/call_update_gh_variable.yml
     with:
-      domain: onboarding-backend
+      domain: registry-proxy
       env: uat
       version: ${{ needs.release.outputs.version }}
     secrets: inherit
@@ -70,7 +62,7 @@ jobs:
     if: ${{ inputs.env == 'prod' }}
     uses: ./.github/workflows/call_update_gh_variable.yml
     with:
-      domain: onboarding-backend
+      domain: registry-proxy
       env: prod
       version: ${{ needs.release.outputs.version }}
     secrets: inherit
