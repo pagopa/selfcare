@@ -11,6 +11,7 @@ import com.azure.storage.blob.models.BlobStorageException;
 import com.azure.storage.blob.models.ListBlobsOptions;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageError;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
+import org.owasp.encoder.Encode;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -25,18 +26,6 @@ import org.slf4j.LoggerFactory;
 
 
 public class AzureBlobClientDefault implements AzureBlobClient {
-
-  /**
-   * Basic sanitization for log messages to prevent log injection.
-   * Removes carriage return and newline characters from the provided value.
-   */
-  private static String sanitizeForLog(String value) {
-    if (value == null) {
-      return "null";
-    }
-    // Replace CR and LF with spaces to keep logs on a single line
-    return value.replace('\r', ' ').replace('\n', ' ');
-  }
 
   private static final Logger log = LoggerFactory.getLogger(AzureBlobClientDefault.class);
 
@@ -78,17 +67,17 @@ public class AzureBlobClientDefault implements AzureBlobClient {
 
   @Override
   public String getFileAsText(String filePath) {
-    log.info("START - getTemplateFile for template: {}", sanitizeForLog(filePath));
+    log.info("START - getTemplateFile for template: {}", Encode.forJava(String.valueOf(filePath)));
     try {
 
       final BlobContainerClient blobContainer = blobClient.getBlobContainerClient(containerName);
       final BlobClient blob = blobContainer.getBlobClient(filePath);
 
       BinaryData content = blob.downloadContent();
-      log.info("END - getTemplateFile - Downloaded {}", sanitizeForLog(filePath));
+      log.info("END - getTemplateFile - Downloaded {}", Encode.forJava(String.valueOf(filePath)));
       return content.toString();
     } catch (BlobStorageException e) {
-      String safePath = sanitizeForLog(filePath);
+      String safePath = Encode.forJava(String.valueOf(filePath));
       log.error(String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), safePath), e);
       throw new SelfcareAzureStorageException(
         String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), safePath),
@@ -98,7 +87,7 @@ public class AzureBlobClientDefault implements AzureBlobClient {
 
   @Override
   public File getFileAsPdf(String contractTemplate) {
-    log.info("START - getFileAsPdf for template: {}", sanitizeForLog(contractTemplate));
+    log.info("START - getFileAsPdf for template: {}", Encode.forJava(String.valueOf(contractTemplate)));
 
     final BlobContainerClient blobContainer;
     final BlobClient blob;
@@ -111,7 +100,7 @@ public class AzureBlobClientDefault implements AzureBlobClient {
       downloadedFile = File.createTempFile(fileName, ".pdf");
       blob.downloadToFile(downloadedFile.getAbsolutePath(), true);
     } catch (BlobStorageException | IOException e) {
-      String safeTemplate = sanitizeForLog(contractTemplate);
+      String safeTemplate = Encode.forJava(String.valueOf(contractTemplate));
       log.error(String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), safeTemplate), e);
       throw new SelfcareAzureStorageException(
         String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), safeTemplate),
@@ -124,7 +113,7 @@ public class AzureBlobClientDefault implements AzureBlobClient {
 
   @Override
   public File retrieveFile(String filePath) {
-    log.info("START - retrieveFile: {}", sanitizeForLog(filePath));
+    log.info("START - retrieveFile: {}", Encode.forJava(String.valueOf(filePath)));
 
     final BlobContainerClient blobContainer;
     final BlobClient blob;
@@ -146,7 +135,7 @@ public class AzureBlobClientDefault implements AzureBlobClient {
       downloadedFile = File.createTempFile(blobFileName, extension);
       blob.downloadToFile(downloadedFile.getAbsolutePath(), true);
     } catch (BlobStorageException | IOException e) {
-      String safePath = sanitizeForLog(filePath);
+      String safePath = Encode.forJava(String.valueOf(filePath));
       log.error(String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), safePath), e);
       throw new SelfcareAzureStorageException(
         String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), safePath),
@@ -159,17 +148,19 @@ public class AzureBlobClientDefault implements AzureBlobClient {
 
   @Override
   public String uploadFile(String path, String filename, byte[] data) {
-    log.debug("START - uploadFile for path: {}, filename: {}", sanitizeForLog(path), sanitizeForLog(filename));
+    log.debug("START - uploadFile for path: {}, filename: {}",
+      Encode.forJava(String.valueOf(path)),
+      Encode.forJava(String.valueOf(filename)));
     String filepath = Paths.get(path, filename).toString();
-    log.debug("uploadContract fileName = {}", sanitizeForLog(filepath));
+    log.debug("uploadContract fileName = {}", Encode.forJava(String.valueOf(filepath)));
     try {
       final BlobContainerClient blobContainer = blobClient.getBlobContainerClient(containerName);
       final BlobClient blob = blobContainer.getBlobClient(filepath);
       blob.upload(BinaryData.fromBytes(data), true);
-      log.info("Uploaded {}", sanitizeForLog(filepath));
+      log.info("Uploaded {}", Encode.forJava(String.valueOf(filepath)));
       return filepath;
     } catch (BlobStorageException e) {
-      String safeFilepath = sanitizeForLog(filepath);
+      String safeFilepath = Encode.forJava(String.valueOf(filepath));
       log.error(String.format(SelfcareAzureStorageError.ERROR_DURING_UPLOAD_FILE.getMessage(), safeFilepath), e);
       throw new SelfcareAzureStorageException(
         String.format(SelfcareAzureStorageError.ERROR_DURING_UPLOAD_FILE.getMessage(), safeFilepath),
