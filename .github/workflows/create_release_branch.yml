@@ -8,6 +8,7 @@ on:
         description: "Domain to release"
         options:
           - onboarding
+          - onboarding-backend
           - auth
           - iam
           - product
