@@ -1,4 +1,4 @@
-name: Code Review ms-party-registry-proxy
+name: Code Review - Registry Proxy
 on:
   workflow_dispatch:
 
