@@ -7,7 +7,7 @@ import lombok.Data;
 import org.jboss.resteasy.reactive.PartType;
 import org.jboss.resteasy.reactive.RestForm;
 
-import java.io.File;
+import java.io.InputStream;
 
 @Data
 public class UploadAggregateCsvRequest {
@@ -24,6 +24,6 @@ public class UploadAggregateCsvRequest {
     @RestForm("file")
     @PartType(MediaType.APPLICATION_OCTET_STREAM)
     @NotNull
-    private File csv;
+    private InputStream csv;
 
 }

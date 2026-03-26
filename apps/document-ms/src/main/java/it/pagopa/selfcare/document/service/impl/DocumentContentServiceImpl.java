@@ -27,11 +27,13 @@ import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.RestResponse;
-import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -239,7 +241,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                     final String path = String.format("%s%s/%s",
                             documentMsConfig.getAggregatesPath(), request.getOnboardingId(), request.getProductId());
                     try {
-                        azureBlobClient.uploadFile(path, filename, Files.readAllBytes(csvFile.toPath()));
+                        azureBlobClient.uploadFile(path, filename, csvFile.readAllBytes());
                     } catch (IOException e) {
                         log.error("Error reading from file {} ", sanitize(path), e);
                         // Rilanciamo l'errore per far scattare il Retry
@@ -267,7 +269,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 .emitOn(Infrastructure.getDefaultWorkerPool())
                 .invoke(file -> {
                     try {
-                        azureBlobClient.uploadFile(path, filename, Files.readAllBytes(file.toPath()));
+                        azureBlobClient.uploadFile(path, filename, file.readAllBytes());
                     } catch (IOException e) {
                         log.error("Error reading from file {} ", sanitize(path), e);
                         // Rilanciamo l'errore per far scattare il Retry
@@ -286,27 +288,51 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 .replaceWithVoid();
     }
 
-    @Override
-    public Uni<String> uploadSignedContract(String onboardingId, DocumentBuilderRequest request,
-                                            boolean skipSignatureVerification, FileUpload fileUpload) {
+  @Override
+  public Uni<String> uploadSignedContract(String onboardingId, DocumentBuilderRequest request, boolean skipSignatureVerification,
+      InputStream fileUpload, String fileName) {
 
-        log.info("START - Uploading and verifying signed contract for onboardingId={}, productId={}",
-                sanitize(onboardingId), sanitize(request.getProductId()));
+    log.info(
+        "START - Uploading and verifying signed contract for onboardingId={}, productId={}", sanitize(onboardingId), sanitize(request.getProductId()));
 
-        File physicalFile = fileUpload.uploadedFile().toFile();
-        String originalFileName = fileUpload.fileName();
+    return Uni.createFrom()
+        .item(
+            () -> {
+              try (fileUpload) {
+                Path tempPath = Files.createTempFile("signed-", "-" + fileName);
+                Files.copy(fileUpload, tempPath, StandardCopyOption.REPLACE_EXISTING);
+                return tempPath.toFile();
+              } catch (IOException e) {
+                throw new RuntimeException("Error during signed file creation", e);
+              }
+            })
+        .runSubscriptionOn(
+            Infrastructure.getDefaultWorkerPool())
+        .chain(
+            physicalFile ->
+                documentService
+                    .handleContractDocument(request)
+                    .onFailure()
+                    .retry()
+                    .withBackOff(
+                        Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff))
+                    .atMost(retryMaxAttempts)
+                    .call(
+                        document ->
+                            signatureService.verifyContractSignature(
+                                onboardingId,
+                                physicalFile,
+                                request.getFiscalCodes(),
+                                skipSignatureVerification))
+                    .chain(document -> uploadToAzureAndUpdateDb(document, physicalFile, fileName))
+                    .onTermination()
+                    .invoke(physicalFile::delete));
+  }
 
-        return documentService.handleContractDocument(request)
-                .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)
+  // ==================== Private Reactive I/O isolation methods ====================
 
-                .call(document -> signatureService.verifyContractSignature(onboardingId, physicalFile, request.getFiscalCodes(), skipSignatureVerification))
-
-                .chain(document -> uploadToAzureAndUpdateDb(document, physicalFile, originalFileName));
-    }
-
-    // ==================== Private Reactive I/O isolation methods ====================
-
-    private Uni<File> fetchPdfFromAzureAsync(Document document, String onboardingId, boolean isSigned) {
+  private Uni<File> fetchPdfFromAzureAsync(
+      Document document, String onboardingId, boolean isSigned) {
         return Uni.createFrom().item(() -> {
                     String filePath = isSigned
                             ? document.getContractSigned()

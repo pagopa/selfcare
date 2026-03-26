@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import org.jboss.resteasy.reactive.PartType;
 import org.jboss.resteasy.reactive.RestForm;
 
-import java.io.File;
+import java.io.InputStream;
 
 /**
  * Request DTO for saving visura for merchant.
@@ -33,5 +33,5 @@ public class UploadVisuraRequest {
     @RestForm("file")
     @PartType(MediaType.APPLICATION_OCTET_STREAM)
     @NotNull
-    private File fileContent;
+    private InputStream fileContent;
 }

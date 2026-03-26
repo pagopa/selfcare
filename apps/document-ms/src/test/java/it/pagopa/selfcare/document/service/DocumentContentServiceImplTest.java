@@ -28,12 +28,13 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.bson.types.ObjectId;
 import org.jboss.resteasy.reactive.RestResponse;
-import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +46,7 @@ import static org.mockito.Mockito.*;
 
 @QuarkusTest
 @QuarkusTestResource(value = MongoTestResource.class, restrictToAnnotatedClass = true)
-public class DocumentContentServiceImplTest {
+class DocumentContentServiceImplTest {
 
     private static final String ONBOARDING_ID = "onboardingId";
     private static final String DOCUMENT_ID = new ObjectId().toHexString();
@@ -689,13 +690,13 @@ public class DocumentContentServiceImplTest {
     // ---- saveVisuraForMerchant ----
 
     @Test
-    void saveVisuraForMerchant_shouldUploadVisuraSuccessfully() {
+    void saveVisuraForMerchant_shouldUploadVisuraSuccessfully() throws IOException {
         byte[] content = new byte[]{1, 2, 3};
         File tempFile = createTempFileWithContent(content);
         UploadVisuraRequest request = UploadVisuraRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .filename("VISURA_test.xml")
-                .fileContent(tempFile)
+                .fileContent(Files.newInputStream(tempFile.toPath()))
                 .build();
 
         var awaiter = documentContentService.saveVisuraForMerchant(request).await();
@@ -705,13 +706,13 @@ public class DocumentContentServiceImplTest {
     }
 
     @Test
-    void saveVisuraForMerchant_shouldThrowInternalException_whenUploadFails() {
+    void saveVisuraForMerchant_shouldThrowInternalException_whenUploadFails() throws IOException {
         byte[] content = new byte[]{4, 5, 6};
         File tempFile = createTempFileWithContent(content);
         UploadVisuraRequest request = UploadVisuraRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .filename("VISURA_test.xml")
-                .fileContent(tempFile)
+                .fileContent(Files.newInputStream(tempFile.toPath()))
                 .build();
 
         doThrow(new RuntimeException("upload error"))
@@ -734,7 +735,7 @@ public class DocumentContentServiceImplTest {
         UploadAggregateCsvRequest request = new UploadAggregateCsvRequest();
         request.setOnboardingId(ONBOARDING_ID);
         request.setProductId(PRODUCT_ID);
-        request.setCsv(csvFile);
+        request.setCsv(Files.newInputStream(csvFile.toPath()));
 
         when(documentMsConfig.getAggregatesPath()).thenReturn("aggregates/");
 
@@ -754,7 +755,7 @@ public class DocumentContentServiceImplTest {
         UploadAggregateCsvRequest request = new UploadAggregateCsvRequest();
         request.setOnboardingId(ONBOARDING_ID);
         request.setProductId(PRODUCT_ID);
-        request.setCsv(csvFile);
+        request.setCsv(Files.newInputStream(csvFile.toPath()));
 
         when(documentMsConfig.getAggregatesPath()).thenReturn("aggregates/");
         doThrow(new RuntimeException("upload error"))
@@ -1114,7 +1115,7 @@ public class DocumentContentServiceImplTest {
     }
 
     @Test
-    void createContractPdf_shouldThrowInternalException_whenSignatureFails() throws IOException {
+    void createContractPdf_shouldThrowInternalException_whenSignatureFails() {
         ContractPdfRequest request = buildValidContractRequest();
 
         when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");
@@ -1145,7 +1146,7 @@ public class DocumentContentServiceImplTest {
     // ============================================
 
     @Test
-    void createAttachmentPdf_shouldReturnSuccess_whenValidRequestWithHtmlTemplate() throws IOException {
+    void createAttachmentPdf_shouldReturnSuccess_whenValidRequestWithHtmlTemplate() {
         AttachmentPdfRequest request = buildValidAttachmentRequest();
 
         when(azureBlobClient.getFileAsText(ATTACHMENT_TEMPLATE_PATH)).thenReturn("<html><body>Attachment</body></html>");
@@ -1178,7 +1179,7 @@ public class DocumentContentServiceImplTest {
     }
 
     @Test
-    void createAttachmentPdf_shouldReturnSuccess_withGpuData() throws IOException {
+    void createAttachmentPdf_shouldReturnSuccess_withGpuData() {
         AttachmentPdfRequest request = buildValidAttachmentRequest();
         request.getInstitution().setGpuData(GpuDataPdfData.builder()
                 .businessRegisterNumber("BR123")
@@ -1195,7 +1196,7 @@ public class DocumentContentServiceImplTest {
     }
 
     @Test
-    void createAttachmentPdf_shouldReturnSuccess_withProductNameContainingSpaces() throws IOException {
+    void createAttachmentPdf_shouldReturnSuccess_withProductNameContainingSpaces() {
         AttachmentPdfRequest request = buildValidAttachmentRequest();
         request.setProductName("Product With Spaces");
 
@@ -1224,7 +1225,7 @@ public class DocumentContentServiceImplTest {
     }
 
     @Test
-    void createAttachmentPdf_shouldThrowException_whenUploadFails() throws IOException {
+    void createAttachmentPdf_shouldThrowException_whenUploadFails() {
         AttachmentPdfRequest request = buildValidAttachmentRequest();
 
         when(azureBlobClient.getFileAsText(ATTACHMENT_TEMPLATE_PATH)).thenReturn("<html><body>Attachment</body></html>");
@@ -1240,7 +1241,7 @@ public class DocumentContentServiceImplTest {
     // ============================================
 
     @Test
-    void deleteContract_shouldDeleteFilesAndReturnSuccessMessage() throws IOException {
+    void deleteContract_shouldDeleteFilesAndReturnSuccessMessage() {
         // Arrange
         String onboardingId = "test-onboarding-123";
         Document doc = buildDocument();
@@ -1340,7 +1341,7 @@ public class DocumentContentServiceImplTest {
     }
 
     @Test
-    void deleteContract_shouldSucceedAfterRetries_andNotTriggerRollback() throws IOException {
+    void deleteContract_shouldSucceedAfterRetries_andNotTriggerRollback() {
         // Arrange
         String onboardingId = "test-onboarding-123";
         Document doc = buildDocument();
@@ -1388,7 +1389,7 @@ public class DocumentContentServiceImplTest {
     }
 
     @Test
-    void deleteContract_shouldTriggerAzureRollback_whenDbFailsConsistently() throws IOException {
+    void deleteContract_shouldTriggerAzureRollback_whenDbFailsConsistently() {
         // Arrange
         String onboardingId = "test-onboarding-123";
         Document doc = buildDocument();
@@ -1439,20 +1440,13 @@ public class DocumentContentServiceImplTest {
     // ============================================
 
     @Test
-    void uploadSignedContract_shouldCompleteSuccessfully() throws IOException {
+    void uploadSignedContract_shouldCompleteSuccessfully() {
         // Arrange
-        String productId = "prod-1";
-        String documentType = "INSTITUTION";
-        String templatePath = "/path/to/template.pdf";
+        String fileName = "filename";
         List<String> fiscalCodes = List.of("FC123");
         boolean skipVerification = false;
 
-        File tempFile = createTempPdf(); // Usa il tuo helper esistente
-
-        // Mock FileUpload behavior
-        org.jboss.resteasy.reactive.multipart.FileUpload mockFileUpload = Mockito.mock(org.jboss.resteasy.reactive.multipart.FileUpload.class);
-        when(mockFileUpload.uploadedFile()).thenReturn(tempFile.toPath());
-        when(mockFileUpload.fileName()).thenReturn("signed_contract.pdf");
+        InputStream dummyFile = new ByteArrayInputStream("dummy content".getBytes());
 
         Document mockDocument = buildDocument(); // Usa il tuo helper esistente
         mockDocument.setContractFilename("original_contract.pdf");
@@ -1469,7 +1463,7 @@ public class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFileUpload
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, dummyFile, fileName
         ).await();
 
         // Assert
@@ -1479,12 +1473,10 @@ public class DocumentContentServiceImplTest {
     }
 
     @Test
-    void uploadSignedContract_shouldThrowException_whenSignatureVerificationFails() throws IOException {
+    void uploadSignedContract_shouldThrowException_whenSignatureVerificationFails() {
         // Arrange
-        org.jboss.resteasy.reactive.multipart.FileUpload mockFileUpload = Mockito.mock(org.jboss.resteasy.reactive.multipart.FileUpload.class);
-        File tempFile = createTempPdf();
-        when(mockFileUpload.uploadedFile()).thenReturn(tempFile.toPath());
-        when(mockFileUpload.fileName()).thenReturn("signed_contract.pdf");
+        InputStream mockFile = new ByteArrayInputStream("dummy content".getBytes());
+        String fileName = "filename";
 
         Document mockDocument = buildDocument();
 
@@ -1497,7 +1489,7 @@ public class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFileUpload
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName
         ).await();
 
         // Assert
@@ -1510,12 +1502,10 @@ public class DocumentContentServiceImplTest {
     }
 
     @Test
-    void uploadSignedContract_shouldThrowException_whenAzureUploadFails() throws IOException {
+    void uploadSignedContract_shouldThrowException_whenAzureUploadFails() {
         // Arrange
-        FileUpload mockFileUpload = Mockito.mock(FileUpload.class);
-        File tempFile = createTempPdf();
-        when(mockFileUpload.uploadedFile()).thenReturn(tempFile.toPath());
-        when(mockFileUpload.fileName()).thenReturn("signed_contract.pdf");
+        InputStream mockFile = new ByteArrayInputStream("dummy content".getBytes());
+        String fileName = "filename";
 
         Document mockDocument = buildDocument();
 
@@ -1531,7 +1521,7 @@ public class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFileUpload
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName
         ).await();
 
         // Assert
@@ -1544,14 +1534,11 @@ public class DocumentContentServiceImplTest {
     }
 
     @Test
-    void uploadSignedContract_shouldTriggerRollback_whenDbUpdateFails() throws IOException {
+    void uploadSignedContract_shouldTriggerRollback_whenDbUpdateFails() {
         // Arrange
         String uploadedPath = "/contracts/" + ONBOARDING_ID + "/signed_file.pdf";
-        org.jboss.resteasy.reactive.multipart.FileUpload mockFileUpload = Mockito.mock(org.jboss.resteasy.reactive.multipart.FileUpload.class);
-        File tempFile = createTempPdf();
-        when(mockFileUpload.uploadedFile()).thenReturn(tempFile.toPath());
-        when(mockFileUpload.fileName()).thenReturn("signed_contract.pdf");
-
+        String fileName = "filename";
+        InputStream mockFile = new ByteArrayInputStream("dummy content".getBytes());
         Document mockDocument = buildDocument();
 
         when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
@@ -1570,7 +1557,7 @@ public class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFileUpload
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName
         ).await();
 
         // Assert

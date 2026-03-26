@@ -824,6 +824,8 @@ paths:
                 file:
                   type: string
                   format: binary
+                fileName:
+                  type: string
             encoding:
               request:
                 contentType: application/json

@@ -13,12 +13,12 @@ import it.pagopa.selfcare.document.service.DocumentContentService;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import jakarta.ws.rs.core.MediaType;
 import org.jboss.resteasy.reactive.RestResponse;
-import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
@@ -30,7 +30,7 @@ import static org.mockito.Mockito.*;
 
 @QuarkusTest
 @TestSecurity(authorizationEnabled = false)
-public class DocumentContentControllerTest {
+class DocumentContentControllerTest {
 
     private static final String DOCUMENT_ID = "doc-456";
     private static final String ONBOARDING_ID = "onboarding-123";
@@ -303,10 +303,12 @@ public class DocumentContentControllerTest {
 
     @Test
     void saveVisuraForMerchant_shouldReturnNoContent_whenUploadSuccessful() throws IOException {
+        File tempFile = Files.createTempFile("visura", ".pdf").toFile();
+        tempFile.deleteOnExit();
+
         UploadVisuraRequest request = UploadVisuraRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .filename("VISURA_test.xml")
-                .fileContent(Files.createTempFile("contract", ".pdf").toFile())
                 .build();
 
         Mockito.when(documentContentService.saveVisuraForMerchant(any(UploadVisuraRequest.class)))
@@ -315,7 +317,7 @@ public class DocumentContentControllerTest {
         given()
                 .multiPart("onboardingId", request.getOnboardingId())
                 .multiPart("filename", request.getFilename())
-                .multiPart("file", request.getFileContent(), "application/pdf")
+                .multiPart("file", tempFile, MediaType.APPLICATION_OCTET_STREAM)
                 .when()
                 .post(BASE_PATH + "visura")
                 .then()
@@ -324,10 +326,12 @@ public class DocumentContentControllerTest {
 
     @Test
     void saveVisuraForMerchant_shouldReturnInternalServerError_whenServiceFails() throws IOException {
+        File tempFile = Files.createTempFile("visura", ".pdf").toFile();
+        tempFile.deleteOnExit();
+
         UploadVisuraRequest request = UploadVisuraRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .filename("VISURA_test.xml")
-                .fileContent(Files.createTempFile("contract", ".pdf").toFile())
                 .build();
 
         Mockito.when(documentContentService.saveVisuraForMerchant(any(UploadVisuraRequest.class)))
@@ -336,7 +340,7 @@ public class DocumentContentControllerTest {
         given()
                 .multiPart("onboardingId", request.getOnboardingId())
                 .multiPart("filename", request.getFilename())
-                .multiPart("file", request.getFileContent(), "application/pdf")
+                .multiPart("file", tempFile, MediaType.APPLICATION_OCTET_STREAM)
                 .when()
                 .post(BASE_PATH + "visura")
                 .then()
@@ -874,7 +878,7 @@ public class DocumentContentControllerTest {
         String onboardingId = "test-onboarding-123";
         String expectedMessage = "Contract deleted successfully";
 
-        Mockito.when(documentContentService.deleteContract(eq(onboardingId)))
+        Mockito.when(documentContentService.deleteContract(onboardingId))
                 .thenReturn(Uni.createFrom().item(expectedMessage));
 
         given()
@@ -903,7 +907,7 @@ public class DocumentContentControllerTest {
         String onboardingId = "test-onboarding-123";
 
         // Simuliamo il fallimento del service (es. eccezione di I/O o DB)
-        Mockito.when(documentContentService.deleteContract(eq(onboardingId)))
+        Mockito.when(documentContentService.deleteContract(onboardingId))
                 .thenReturn(Uni.createFrom().failure(new RuntimeException("Error deleting contract files from Azure")));
 
         // Act & Assert
@@ -924,7 +928,8 @@ public class DocumentContentControllerTest {
                 eq(onboardingId),
                 eq(new DocumentBuilderRequest()),
                 eq(false),
-                any(FileUpload.class)
+                any(InputStream.class),
+                anyString()
         )).thenReturn(Uni.createFrom().item("success-path")); // O .voidItem() se il service restituisce Uni<Void>
 
         File dummyFile = new File("src/test/resources/pdf/dummy.pdf");
@@ -940,6 +945,7 @@ public class DocumentContentControllerTest {
                 .multiPart("fiscalCodes", "FC2")
                 .multiPart("skipSignatureVerification", "false")
                 .multiPart("file", dummyFile)
+                .multiPart("fileName", "filename")
                 .when()
                 .post(BASE_PATH + "{onboardingId}/upload-signed-contract")
                 .then()
@@ -953,7 +959,7 @@ public class DocumentContentControllerTest {
 
         // SOSTITUISCI QUI: Usa InvalidRequestException invece di IllegalArgumentException
         Mockito.when(documentContentService.uploadSignedContract(
-                any(), any(), anyBoolean(), any()
+                any(), any(), anyBoolean(), any(), anyString()
         )).thenReturn(Uni.createFrom().failure(new InvalidRequestException("Invalid signature", "CODE-400")));
 
         File dummyFile = new File("src/test/resources/pdf/dummy.pdf");
@@ -966,6 +972,7 @@ public class DocumentContentControllerTest {
                 .multiPart("institutionType", "INSTITUTION") // Modificato nome param per allinearsi al controller
                 .multiPart("contractPath", "/path/to/template")
                 .multiPart("file", dummyFile)
+                .multiPart("fileName", "filename")
                 .when()
                 .post(BASE_PATH + "{onboardingId}/upload-signed-contract")
                 .then()
@@ -978,7 +985,7 @@ public class DocumentContentControllerTest {
         String onboardingId = "onb-123";
 
         Mockito.when(documentContentService.uploadSignedContract(
-                any(), any(), anyBoolean(), any()
+                eq(onboardingId), any(), anyBoolean(), any(), anyString()
         )).thenReturn(Uni.createFrom().failure(new RuntimeException("Azure is down")));
 
         File dummyFile = new File("src/test/resources/pdf/dummy.pdf");
@@ -989,6 +996,7 @@ public class DocumentContentControllerTest {
                 .multiPart("productId", "prod-1")
                 .multiPart("institutionType", "INSTITUTION")
                 .multiPart("file", dummyFile)
+                .multiPart("fileName",  "filename")
                 .when()
                 .post(BASE_PATH + "{onboardingId}/upload-signed-contract")
                 .then()

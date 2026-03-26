@@ -25,10 +25,10 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.PartType;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestResponse;
-import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
 
 import java.io.File;
+import java.io.InputStream;
 
 import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
 import static it.pagopa.selfcare.document.util.Utils.retrieveAttachmentFromFormData;
@@ -245,10 +245,10 @@ public class DocumentContentController {
             @PathParam("onboardingId") String onboardingId,
             @RestForm("request") @PartType(MediaType.APPLICATION_JSON) DocumentBuilderRequest request,
             @RestForm("skipSignatureVerification") @DefaultValue("false") boolean skipSignatureVerification,
-            @RestForm("file") FileUpload fileUpload) {
-
+            @RestForm("file") InputStream file,
+            @RestForm("fileName") String fileName) {
         return documentContentService.uploadSignedContract(
-                        onboardingId, request, skipSignatureVerification, fileUpload)
+                        onboardingId, request, skipSignatureVerification, file, fileName)
                 .replaceWith(() -> Response.noContent().build());
     }
 }

@@ -5,9 +5,9 @@ import it.pagopa.selfcare.document.model.FormItem;
 import it.pagopa.selfcare.document.model.dto.request.*;
 import it.pagopa.selfcare.document.model.dto.response.CreatePdfResponse;
 import org.jboss.resteasy.reactive.RestResponse;
-import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import java.io.File;
+import java.io.InputStream;
 
 /**
  * Service for creating PDF documents (contracts and attachments).
@@ -54,5 +54,5 @@ public interface DocumentContentService {
 
     Uni<Void> uploadAggregatesCsv(UploadAggregateCsvRequest request);
 
-    Uni<String> uploadSignedContract(String onboardingId, DocumentBuilderRequest request, boolean skipSignatureVerification, FileUpload fileUpload);
+    Uni<String> uploadSignedContract(String onboardingId, DocumentBuilderRequest request, boolean skipSignatureVerification, InputStream file, String fileName);
 }
