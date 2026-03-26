@@ -155,7 +155,7 @@
           "type" : {
             "description" : "Discriminante polimorfica che indica la natura del documento (INSTITUTION, USER, ATTACHMENT).",
             "type" : "string",
-            "$ref" : "#/components/schemas/TokenType"
+            "$ref" : "#/components/schemas/DocumentType"
           },
           "onboardingId" : {
             "type" : "string",
@@ -213,7 +213,7 @@
             "pattern" : "\\S"
           },
           "documentType" : {
-            "$ref" : "#/components/schemas/TokenType"
+            "$ref" : "#/components/schemas/DocumentType"
           },
           "attachmentName" : {
             "type" : "string"
@@ -248,7 +248,7 @@
             "type" : "string"
           },
           "type" : {
-            "$ref" : "#/components/schemas/TokenType"
+            "$ref" : "#/components/schemas/DocumentType"
           },
           "productId" : {
             "type" : "string"
@@ -278,6 +278,10 @@
             "$ref" : "#/components/schemas/LocalDateTime"
           }
         }
+      },
+      "DocumentType" : {
+        "type" : "string",
+        "enum" : [ "INSTITUTION", "LEGALS", "USER", "ATTACHMENT" ]
       },
       "GeographicTaxonomyPdfData" : {
         "type" : "object",
@@ -524,10 +528,6 @@
             "type" : "boolean"
           }
         }
-      },
-      "TokenType" : {
-        "type" : "string",
-        "enum" : [ "INSTITUTION", "LEGALS", "USER", "ATTACHMENT" ]
       },
       "UploadAggregateCsvRequest" : {
         "type" : "object",
