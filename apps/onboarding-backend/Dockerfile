@@ -1,6 +1,35 @@
-FROM maven@sha256:f9bde890aa2cea7e6c1d6480bead88ed07f5bf29ab0a76289553e5c9895d682b
-ADD https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.2.11/applicationinsights-agent-3.2.11.jar /applicationinsights-agent.jar
-VOLUME /tmp
-COPY target/*.jar app.jar
-ENTRYPOINT ["java","-jar","app.jar"]
+FROM maven:3-eclipse-temurin-17@sha256:7033f6a6b2db51e37e6f2a7a6f02795aa2a33df8a978252010408d76060e87b8 AS builder
 
+COPY . .
+
+RUN echo "<settings>\n" \
+         "<servers>\n" \
+         "<server>\n" \
+         "<id>\${repositoryId}</id>\n" \
+         "<username>\${repoLogin}</username>\n" \
+         "<password>\${repoPwd}</password>\n" \
+         "</server>\n" \
+         "</servers>\n" \
+         "</settings>\n" > settings.xml
+
+ARG REPO_SELFCARE
+ARG REPO_USERNAME
+ARG REPO_PASSWORD
+
+RUN mvn --global-settings settings.xml -DrepositoryId=${REPO_SELFCARE} -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} clean package -DskipTests=true
+
+FROM openjdk:17-jdk@sha256:528707081fdb9562eb819128a9f85ae7fe000e2fbaeaf9f87662e7b3f38cb7d8 AS runtime
+
+ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
+
+WORKDIR /app
+
+COPY --from=builder ./target/*.jar ./app.jar
+
+ADD https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.2.11/applicationinsights-agent-3.2.11.jar ./applicationinsights-agent.jar
+RUN chmod 755 ./applicationinsights-agent.jar
+
+EXPOSE 8080
+USER 1001
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
