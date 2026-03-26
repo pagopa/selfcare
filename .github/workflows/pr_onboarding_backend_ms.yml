@@ -1,4 +1,8 @@
-name: Code Review onboarding-backend
+name: Code Review - Onboarding Backend
+
+permissions:
+  contents: read
+  pull-requests: read
 
 on:
   workflow_dispatch:
@@ -10,6 +14,7 @@ on:
     paths:
       - 'apps/onboarding-backend/**'
       - '.github/workflows/pr_onboarding_backend_ms.yml'
+      - '.github/workflows/call_code_review.yml'
     types:
       - opened
       - edited
@@ -31,20 +36,12 @@ jobs:
       sonar_key: "pagopa_selfcare-onboarding-backend"
       module: "onboarding-backend"
 
-  docker_build:
-    uses: ./.github/workflows/call_code_review_docker.yml
-    name: "Docker"
-    secrets: inherit
-    with:
-      dockerfile_context: ./apps/onboarding-backend
-      dockerfile_path: ./apps/onboarding-backend/Dockerfile
-
   integration_tests:
     name: 'Integration Tests (onboarding-bff)'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-    needs: [code_review, docker_build]
+    needs: [code_review]
     steps:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
