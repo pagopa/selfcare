@@ -139,6 +139,7 @@
             <modules>
                 <module>registry-proxy</module>
             </modules>
-        </profiles>
+        </profile>
+    </profiles>
 
-    </project>
+</project>
