@@ -129,6 +129,16 @@
                 <module>onboarding-backend</module>
             </modules>
         </profile>
-    </profiles>
+        <profile>
+            <id>registry-proxy</id>
+            <activation>
+                <file>
+                    <exists>registry-proxy/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>registry-proxy</module>
+            </modules>
+        </profiles>
 
-</project>
+    </project>
