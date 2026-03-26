@@ -18,7 +18,7 @@ public class OnboardingWorkflowAggregator extends OnboardingWorkflow {
   }
 
   @Override
-  public DocumentType getDocumentType() {
+  public DocumentType getTokenType() {
     return DocumentType.INSTITUTION;
   }
 

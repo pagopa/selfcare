@@ -33,7 +33,7 @@ public abstract class OnboardingWorkflow {
 
   public abstract String getPdfFormatFilename();
 
-  public abstract DocumentType getDocumentType();
+  public abstract DocumentType getTokenType();
 
   public abstract String getConfirmTokenUrl(MailTemplatePlaceholdersConfig config);
 
