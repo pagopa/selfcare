@@ -35,7 +35,7 @@ public interface DocumentService {
     Uni<Long> updateDocumentContractFiles(Document document);
 
     /**
-     * Saves a document (contract or attachment) based on the TokenType in the request.
+     * Saves a document (contract or attachment) based on the DocumentType in the request.
      * For INSTITUTION/USER types, saves a contract document.
      * For ATTACHMENT type, saves an attachment document.
      *

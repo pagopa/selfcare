@@ -10,6 +10,7 @@ import it.pagopa.selfcare.document.model.FormItem;
 import it.pagopa.selfcare.document.model.dto.request.*;
 import it.pagopa.selfcare.document.model.dto.response.CreatePdfResponse;
 import it.pagopa.selfcare.document.service.DocumentContentService;
+import it.pagopa.selfcare.onboarding.common.DocumentType;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import jakarta.ws.rs.core.MediaType;
 import org.jboss.resteasy.reactive.RestResponse;
@@ -159,7 +160,7 @@ class DocumentContentControllerTest {
 
         DocumentBuilderRequest invalidRequest = DocumentBuilderRequest.builder()
                 .productId("prod-123")
-                .documentType(it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT)
+                .documentType(DocumentType.ATTACHMENT)
                 .build();
 
         given()
@@ -199,7 +200,7 @@ class DocumentContentControllerTest {
         DocumentBuilderRequest request = DocumentBuilderRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-123")
-                .documentType(it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT)
+                .documentType(DocumentType.ATTACHMENT)
                 .attachmentName(ATTACHMENT_NAME)
                 .build();
 
@@ -223,7 +224,7 @@ class DocumentContentControllerTest {
         DocumentBuilderRequest request = DocumentBuilderRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-123")
-                .documentType(it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT)
+                .documentType(DocumentType.ATTACHMENT)
                 .attachmentName(ATTACHMENT_NAME)
                 .build();
 
@@ -247,7 +248,7 @@ class DocumentContentControllerTest {
         DocumentBuilderRequest request = DocumentBuilderRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-123")
-                .documentType(it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT)
+                .documentType(DocumentType.ATTACHMENT)
                 .attachmentName(ATTACHMENT_NAME)
                 .build();
 

@@ -22,7 +22,7 @@
         <selc-commons.version>2.9.1</selc-commons.version>
         <lucene.version>8.11.2</lucene.version>
         <sonar.host.url>https://sonarcloud.io/</sonar.host.url>
-        <commons-sdk-version>0.14.0</commons-sdk-version>
+        <commons-sdk-version>0.15.5</commons-sdk-version>
     </properties>
 
     <dependencyManagement>

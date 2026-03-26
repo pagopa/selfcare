@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.document.model.dto.request;
 
-import it.pagopa.selfcare.onboarding.common.TokenType;
+import it.pagopa.selfcare.onboarding.common.DocumentType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -23,7 +23,7 @@ public class DocumentBuilderRequest {
     private String productId;
 
     @NotNull
-    private TokenType documentType;
+    private DocumentType documentType;
 
     private String attachmentName;
 
@@ -48,6 +48,6 @@ public class DocumentBuilderRequest {
      * Checks if this is an attachment request.
      */
     public boolean isAttachment() {
-        return TokenType.ATTACHMENT.equals(documentType);
+        return DocumentType.ATTACHMENT.equals(documentType);
     }
 }

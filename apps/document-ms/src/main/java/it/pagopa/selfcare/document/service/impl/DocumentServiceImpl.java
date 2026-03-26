@@ -31,8 +31,8 @@ import static it.pagopa.selfcare.document.config.DocumentMsConfig.PDF_FORMAT_FIL
 import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
 import static it.pagopa.selfcare.document.util.Utils.CONTRACT_FILENAME_FUNC;
 import static it.pagopa.selfcare.document.util.Utils.createBaseDocument;
-import static it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT;
-import static it.pagopa.selfcare.onboarding.common.TokenType.INSTITUTION;
+import static it.pagopa.selfcare.onboarding.common.DocumentType.ATTACHMENT;
+import static it.pagopa.selfcare.onboarding.common.DocumentType.INSTITUTION;
 
 @Slf4j
 @ApplicationScoped

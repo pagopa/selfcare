@@ -24,7 +24,7 @@
     <properties>
         <selc-commons.version>2.9.0</selc-commons.version>
         <sonar.host.url>https://sonarcloud.io/</sonar.host.url>
-        <parent-commons-sdk-version>0.15.3</parent-commons-sdk-version>
+        <parent-commons-sdk-version>0.15.5</parent-commons-sdk-version>
     </properties>
 
     <dependencyManagement>

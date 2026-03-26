@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.onboarding.controller.response;
 
 
-import it.pagopa.selfcare.onboarding.common.TokenType;
+import it.pagopa.selfcare.onboarding.common.DocumentType;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 public class TokenResponse {
 
     private String id;
-    private TokenType type;
+    private DocumentType type;
     private String productId;
     private String checksum;
     private String contractVersion;

@@ -9,7 +9,7 @@ import org.bson.types.ObjectId;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static it.pagopa.selfcare.onboarding.common.TokenType.*;
+import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
 
 @ApplicationScoped
 public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Document, ObjectId> {

@@ -15,7 +15,7 @@ import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
-import it.pagopa.selfcare.onboarding.common.TokenType;
+import it.pagopa.selfcare.onboarding.common.DocumentType;
 import jakarta.inject.Inject;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -113,11 +113,11 @@ class DocumentServiceImplTest {
     @Test
     void getAttachments_shouldReturnAttachmentNames() {
         Document doc1 = buildDocument();
-        doc1.setType(TokenType.ATTACHMENT);
+        doc1.setType(DocumentType.ATTACHMENT);
         doc1.setAttachmentName("attachment-1");
 
         Document doc2 = buildDocument();
-        doc2.setType(TokenType.ATTACHMENT);
+        doc2.setType(DocumentType.ATTACHMENT);
         doc2.setAttachmentName("attachment-2");
 
         when(documentRepository.findAttachments(ONBOARDING_ID))
@@ -216,7 +216,7 @@ class DocumentServiceImplTest {
         Document doc = buildDocument();
         doc.setContractSigned("/path/to/attachment.pdf");
 
-        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "myAttachment"))
+        when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "myAttachment"))
                 .thenReturn(Uni.createFrom().item(doc));
         when(azureBlobClient.getProperties(doc.getContractSigned()))
                 .thenReturn(Mockito.mock(BlobProperties.class));
@@ -232,7 +232,7 @@ class DocumentServiceImplTest {
         Document doc = buildDocument();
         doc.setContractSigned("/path/to/attachment.pdf");
 
-        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "myAttachment"))
+        when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "myAttachment"))
                 .thenReturn(Uni.createFrom().item(doc));
         Mockito.doThrow(new SelfcareAzureStorageException("Not found", "404"))
                 .when(azureBlobClient).getProperties(anyString());
@@ -245,7 +245,7 @@ class DocumentServiceImplTest {
 
     @Test
     void existsAttachment_shouldReturnFalse_whenDocumentIsNull() {
-        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "myAttachment"))
+        when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "myAttachment"))
                 .thenReturn(Uni.createFrom().nullItem());
 
         Boolean result = documentService.existsAttachment(ONBOARDING_ID, "myAttachment")
@@ -295,7 +295,7 @@ class DocumentServiceImplTest {
         DocumentBuilderRequest request = DocumentBuilderRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
-                .documentType(TokenType.INSTITUTION)
+                .documentType(DocumentType.INSTITUTION)
                 .templatePath("/templates/template.pdf")
                 .templateVersion("1.0")
                 .productTitle("Product IO")
@@ -316,7 +316,7 @@ class DocumentServiceImplTest {
         DocumentBuilderRequest request = DocumentBuilderRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
-                .documentType(TokenType.INSTITUTION)
+                .documentType(DocumentType.INSTITUTION)
                 .templatePath("/templates/template.pdf")
                 .templateVersion("1.0")
                 .productTitle("Product IO")
@@ -347,7 +347,7 @@ class DocumentServiceImplTest {
         DocumentBuilderRequest request = DocumentBuilderRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
-                .documentType(TokenType.ATTACHMENT)
+                .documentType(DocumentType.ATTACHMENT)
                 .attachmentName("myAttachment")
                 .templatePath("/templates/template.pdf")
                 .templateVersion("1.0")
@@ -355,14 +355,14 @@ class DocumentServiceImplTest {
                 .build();
 
         Document attachDoc = buildDocument();
-        attachDoc.setType(TokenType.ATTACHMENT);
+        attachDoc.setType(DocumentType.ATTACHMENT);
         attachDoc.setAttachmentName("myAttachment");
         attachDoc.setContractSigned("/path/to/attachment.pdf");
 
         Document newDoc = buildDocument();
         newDoc.setId("new-attach-doc-id");
 
-        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "myAttachment"))
+        when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "myAttachment"))
                 .thenReturn(Uni.createFrom().item(attachDoc));
         when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(tempPdf);
         when(documentRepository.persist(any(Document.class)))
@@ -393,7 +393,7 @@ class DocumentServiceImplTest {
         persistedDoc.setContractFilename("contract.pdf");
         persistedDoc.setCreatedAt(now);
         persistedDoc.setUpdatedAt(now);
-        persistedDoc.setType(TokenType.INSTITUTION);
+        persistedDoc.setType(DocumentType.INSTITUTION);
 
         when(documentRepository.persist(any(Document.class)))
                 .thenReturn(Uni.createFrom().item(persistedDoc));
@@ -404,7 +404,7 @@ class DocumentServiceImplTest {
         assertEquals(ONBOARDING_ID, result.getOnboardingId());
         assertEquals("/path/to/contract.pdf", result.getContractSigned());
         assertEquals("contract.pdf", result.getContractFilename());
-        assertEquals(TokenType.INSTITUTION, result.getType());
+        assertEquals(DocumentType.INSTITUTION, result.getType());
         verify(documentRepository).persist(any(Document.class));
     }
 
@@ -433,7 +433,7 @@ class DocumentServiceImplTest {
         assertEquals("signed_contract.pdf", result.getContractFilename());
         assertEquals(contractDate, result.getCreatedAt());
         assertEquals(contractDate, result.getUpdatedAt());
-        assertEquals(TokenType.INSTITUTION, result.getType());
+        assertEquals(DocumentType.INSTITUTION, result.getType());
         assertEquals("/templates/v2/template.pdf", result.getContractTemplate());
         assertEquals("2.0", result.getContractVersion());
     }
@@ -446,7 +446,7 @@ class DocumentServiceImplTest {
         doc.setOnboardingId(ONBOARDING_ID);
         doc.setProductId("prod-io");
         doc.setContractFilename("contract.pdf");
-        doc.setType(TokenType.INSTITUTION);
+        doc.setType(DocumentType.INSTITUTION);
         return doc;
     }
 
@@ -469,7 +469,7 @@ class DocumentServiceImplTest {
         DocumentBuilderRequest request = DocumentBuilderRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
-                .documentType(TokenType.USER)
+                .documentType(DocumentType.USER)
                 .templatePath("/templates/template.pdf")
                 .templateVersion("1.0")
                 .productTitle("Product IO")
@@ -478,7 +478,7 @@ class DocumentServiceImplTest {
         Document docForContract = buildDocument();
         Document newDoc = buildDocument();
         newDoc.setId("new-user-doc-id");
-        newDoc.setType(TokenType.USER);
+        newDoc.setType(DocumentType.USER);
 
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().nullItem())
@@ -500,14 +500,14 @@ class DocumentServiceImplTest {
         DocumentBuilderRequest request = DocumentBuilderRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
-                .documentType(TokenType.ATTACHMENT)
+                .documentType(DocumentType.ATTACHMENT)
                 .attachmentName("missingAttachment")
                 .templatePath("templates/template.pdf")
                 .templateVersion("1.0")
                 .productTitle("Product IO")
                 .build();
 
-        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "missingAttachment"))
+        when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "missingAttachment"))
                 .thenReturn(Uni.createFrom().nullItem());
 
         when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
@@ -560,7 +560,7 @@ class DocumentServiceImplTest {
         Document doc = buildDocument();
         doc.setContractSigned("/path/to/attachment.pdf");
 
-        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "myAttachment"))
+        when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "myAttachment"))
                 .thenReturn(Uni.createFrom().item(doc));
         doThrow(new SelfcareAzureStorageException("Storage error", "500"))
                 .when(azureBlobClient).getProperties(anyString());
