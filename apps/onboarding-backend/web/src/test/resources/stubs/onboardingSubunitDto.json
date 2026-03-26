@@ -1,0 +1,34 @@
+{
+  "billingData": {
+    "businessName": "string",
+    "digitalAddress": "string",
+    "publicServices": false,
+    "recipientCode": "string",
+    "registeredOffice": "string",
+    "taxCode": "string",
+    "vatNumber": "string",
+    "zipCode": "string"
+  },
+  "institutionType": "PA",
+  "origin": "string",
+  "pricingPlan": "string",
+  "productId": "string",
+  "taxCode": "string",
+  "subunitCode": "string",
+  "subunitType": "AOO",
+  "users": [
+    {
+      "email": "email@example.com",
+      "name": "string",
+      "role": "DELEGATE",
+      "surname": "string",
+      "taxCode": "string"
+    }
+  ],
+  "geographicTaxonomies": [
+    {
+      "code": "string",
+      "desc": "string"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/external/ur/v1/national-registries/verify-legal?taxId=taxCode&vatNumber=instituionId"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+      "verificationResult": true
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

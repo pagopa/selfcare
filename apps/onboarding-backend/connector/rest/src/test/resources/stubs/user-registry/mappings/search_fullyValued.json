@@ -1,0 +1,57 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/pdnd-interop-uservice-user-registry/0.0.1/users/search",
+    "queryParameters": {
+      "fl": {
+        "matches": "^(?:name|familyName|email|fiscalCode|workContacts){0,1}(?:,(?:name|familyName|email|fiscalCode|workContacts))*$"
+      }
+    }
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+      "birthDate": {
+        "certification": "NONE",
+        "value": "2022-04-22"
+      },
+      "email": {
+        "certification": "NONE",
+        "value": "string"
+      },
+      "familyName": {
+        "certification": "NONE",
+        "value": "string"
+      },
+      "fiscalCode": "externalId1",
+      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "name": {
+        "certification": "NONE",
+        "value": "string"
+      },
+      "workContacts": {
+        "additionalProp1": {
+          "email": {
+            "certification": "NONE",
+            "value": "string"
+          }
+        },
+        "additionalProp2": {
+          "email": {
+            "certification": "NONE",
+            "value": "string"
+          }
+        },
+        "additionalProp3": {
+          "email": {
+            "certification": "NONE",
+            "value": "string"
+          }
+        }
+      }
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

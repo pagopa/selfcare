@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/pdnd-interop-uservice-party-process/0.0.1/onboarding/institution",
+    "bodyPatterns": [
+      {
+        "matchesJsonPath": "$[?(@.institutionExternalId == 'institutionId1')]"
+      }
+    ]
+  },
+  "response": {
+    "status": "201",
+    "jsonBody": {
+      "token": "string",
+      "document": "string"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
