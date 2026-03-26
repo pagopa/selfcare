@@ -19,7 +19,7 @@ on:
 
 jobs:
   code_review:
-    uses: pagopa/selfcare-commons/.github/workflows/call_code_review_spring.yml@main
+    uses: ./.github/workflows/call_code_review.yml
     name: "Code Review"
     secrets: inherit
     if: github.base_ref == 'main' && github.event_name == 'pull_request'
@@ -28,7 +28,12 @@ jobs:
       source_branch: ${{ github.head_ref }}
       target_branch: ${{ github.base_ref }}
       sonar_key: "pagopa_selfcare-ms-party-registry-proxy"
+      module: "registry-proxy"
 
   docker_build:
-    uses: pagopa/selfcare-commons/.github/workflows/call_code_review_docker.yml@main
+    uses: ./.github/workflows/call_code_review_docker.yml
     name: "Docker"
+    secrets: inherit
+    with:
+      dockerfile_context: ./apps/registry-proxy
+      dockerfile_path: ./apps/registry-proxy/Dockerfile

@@ -20,20 +20,24 @@ on:
 jobs:
 
   code_review:
-    uses: pagopa/selfcare-commons/.github/workflows/call_code_review_spring.yml@main
-    name: 'Code Review'
+    uses: ./.github/workflows/call_code_review.yml
+    name: "Code Review"
     secrets: inherit
     if: github.event_name == 'pull_request'
     with:
       pr_number: ${{ github.event.pull_request.number }}
       source_branch: ${{ github.head_ref }}
       target_branch: ${{ github.base_ref }}
-      sonar_key: 'pagopa_selfcare-onboarding-backend'
+      sonar_key: "pagopa_selfcare-onboarding-backend"
+      module: "onboarding-backend"
 
   docker_build:
-    uses: pagopa/selfcare-commons/.github/workflows/call_code_review_docker.yml@main
-    name: 'Docker'
+    uses: ./.github/workflows/call_code_review_docker.yml
+    name: "Docker"
     secrets: inherit
+    with:
+      dockerfile_context: ./apps/onboarding-backend
+      dockerfile_path: ./apps/onboarding-backend/Dockerfile
 
   integration_tests:
     name: 'Integration Tests (onboarding-bff)'
