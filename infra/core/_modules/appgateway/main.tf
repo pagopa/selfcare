@@ -13,17 +13,17 @@ locals {
   ]
 
   backends = {
-    aks = {
-      protocol                    = "Https"
-      host                        = "selc.internal.${var.dns_zone_prefix}.${var.external_domain}"
-      port                        = 443
-      ip_addresses                = null
-      probe                       = "/health"
-      probe_name                  = "probe-aks"
-      request_timeout             = 60
-      fqdns                       = ["selc.internal.${var.dns_zone_prefix}.${var.external_domain}"]
-      pick_host_name_from_backend = false
-    }
+    # aks = {
+    #   protocol                    = "Https"
+    #   host                        = "selc.internal.${var.dns_zone_prefix}.${var.external_domain}"
+    #   port                        = 443
+    #   ip_addresses                = null
+    #   probe                       = "/health"
+    #   probe_name                  = "probe-aks"
+    #   request_timeout             = 60
+    #   fqdns                       = ["selc.internal.${var.dns_zone_prefix}.${var.external_domain}"]
+    #   pick_host_name_from_backend = false
+    # }
     apim = {
       protocol                    = "Https"
       host                        = "api.${var.dns_zone_prefix}.${var.external_domain}"
@@ -35,17 +35,17 @@ locals {
       fqdns                       = null
       pick_host_name_from_backend = false
     }
-    platform-aks = {
-      protocol                    = "Https"
-      host                        = "${var.aks_platform_env}.pnpg.internal.${var.dns_zone_prefix}.${var.external_domain}"
-      port                        = 443
-      ip_addresses                = null
-      probe                       = "/pnpg/status"
-      probe_name                  = "probe-platform-aks"
-      request_timeout             = 60
-      fqdns                       = ["${var.aks_platform_env}.pnpg.internal.${var.dns_zone_prefix}.${var.external_domain}"]
-      pick_host_name_from_backend = false
-    }
+    # platform-aks = {
+    #   protocol                    = "Https"
+    #   host                        = "${var.aks_platform_env}.pnpg.internal.${var.dns_zone_prefix}.${var.external_domain}"
+    #   port                        = 443
+    #   ip_addresses                = null
+    #   probe                       = "/pnpg/status"
+    #   probe_name                  = "probe-platform-aks"
+    #   request_timeout             = 60
+    #   fqdns                       = ["${var.aks_platform_env}.pnpg.internal.${var.dns_zone_prefix}.${var.external_domain}"]
+    #   pick_host_name_from_backend = false
+    # }
     auth-selc = {
       protocol                    = "Https"
       host                        = "selc-${var.env_short}-auth-ms-ca.${var.auth_ms_private_dns_suffix}"
@@ -148,7 +148,7 @@ data "azurerm_key_vault_certificate" "api_pnpg_selfcare_certificate" {
 # Subnet
 #
 module "appgateway_snet" {
-  source               = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v8.5.3"
+  source               = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v9.6.1"
   name                 = "${local.project}-appgateway-snet"
   address_prefixes     = var.cidr_subnet_appgateway
   resource_group_name  = var.rg_vnet_name
@@ -162,7 +162,7 @@ module "appgateway_snet" {
 # Application Gateway
 #
 module "app_gw" {
-  source = "github.com/pagopa/terraform-azurerm-v4.git//app_gateway?ref=v8.5.3"
+  source = "github.com/pagopa/terraform-azurerm-v4.git//app_gateway?ref=v9.6.1"
 
   resource_group_name = var.rg_vnet_name
   location            = var.rg_vnet_location
@@ -205,7 +205,7 @@ module "app_gw" {
 
   url_path_map = {
     api = {
-      default_backend               = "aks"
+      default_backend               = "apim"
       default_rewrite_rule_set_name = "rewrite-rule-set-api"
       path_rule = {
         external_api = {
@@ -226,7 +226,7 @@ module "app_gw" {
       }
     }
     api-pnpg = {
-      default_backend               = "platform-aks"
+      default_backend               = "apim"
       default_rewrite_rule_set_name = "rewrite-rule-set-api"
       path_rule = {
         bff_pnpg_api = {

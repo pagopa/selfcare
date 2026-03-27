@@ -210,7 +210,7 @@ resource "azurerm_monitor_action_group" "slack" {
 module "web_test_api" {
   for_each = var.env_short == "p" ? local.test_urls_map : local.test_urls_map_internal
 
-  source = "github.com/pagopa/terraform-azurerm-v4.git//application_insights_web_test_preview?ref=v9.2.4"
+  source = "github.com/pagopa/terraform-azurerm-v4.git//application_insights_web_test_preview?ref=v9.6.1"
 
   subscription_id                   = var.subscription_id
   name                              = "${each.key}-test"

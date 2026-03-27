@@ -11,7 +11,7 @@ resource "azurerm_resource_group" "rg_vnet" {
 }
 
 module "vnet" {
-  source               = "github.com/pagopa/terraform-azurerm-v4.git//virtual_network?ref=v8.5.3"
+  source               = "github.com/pagopa/terraform-azurerm-v4.git//virtual_network?ref=v9.6.1"
   name                 = "${local.project}-vnet"
   location             = azurerm_resource_group.rg_vnet.location
   resource_group_name  = azurerm_resource_group.rg_vnet.name
@@ -21,7 +21,7 @@ module "vnet" {
 }
 
 module "private_endpoints_subnet" {
-  source                            = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v8.5.3"
+  source                            = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v9.6.1"
   name                              = "${local.project}-private-endpoints-snet"
   address_prefixes                  = var.cidr_subnet_private_endpoints
   resource_group_name               = azurerm_resource_group.rg_vnet.name
@@ -41,7 +41,7 @@ resource "azurerm_resource_group" "rg_pair_vnet" {
 }
 
 module "vnet_pair" {
-  source              = "github.com/pagopa/terraform-azurerm-v4.git//virtual_network?ref=v8.5.3"
+  source              = "github.com/pagopa/terraform-azurerm-v4.git//virtual_network?ref=v9.6.1"
   name                = "${local.project_pair}-vnet"
   location            = azurerm_resource_group.rg_pair_vnet.location
   resource_group_name = azurerm_resource_group.rg_pair_vnet.name
@@ -57,7 +57,7 @@ resource "azurerm_resource_group" "rg_vnet_aks" {
 }
 
 module "vnet_aks_platform" {
-  source               = "github.com/pagopa/terraform-azurerm-v4.git//virtual_network?ref=v8.5.3"
+  source               = "github.com/pagopa/terraform-azurerm-v4.git//virtual_network?ref=v9.6.1"
   name                 = "${local.project}-${var.location_short}-aks-${var.aks_platform_env}-vnet"
   location             = var.location
   resource_group_name  = azurerm_resource_group.rg_vnet_aks.name
@@ -90,7 +90,7 @@ resource "azurerm_public_ip" "appgateway_public_ip" {
 
 # Peerings
 module "vnet_peering_core_2_aks" {
-  source = "github.com/pagopa/terraform-azurerm-v4.git//virtual_network_peering?ref=v8.5.3"
+  source = "github.com/pagopa/terraform-azurerm-v4.git//virtual_network_peering?ref=v9.6.1"
 
   source_resource_group_name       = azurerm_resource_group.rg_vnet.name
   source_virtual_network_name      = module.vnet.name
@@ -104,7 +104,7 @@ module "vnet_peering_core_2_aks" {
 }
 
 module "vnet_peering_pair_vs_core" {
-  source = "github.com/pagopa/terraform-azurerm-v4.git//virtual_network_peering?ref=v8.5.3"
+  source = "github.com/pagopa/terraform-azurerm-v4.git//virtual_network_peering?ref=v9.6.1"
 
   source_resource_group_name       = azurerm_resource_group.rg_pair_vnet.name
   source_virtual_network_name      = module.vnet_pair.name
@@ -122,7 +122,7 @@ module "vnet_peering_pair_vs_core" {
 }
 
 module "vnet_peering_pair_vs_aks" {
-  source = "github.com/pagopa/terraform-azurerm-v4.git//virtual_network_peering?ref=v8.5.3"
+  source = "github.com/pagopa/terraform-azurerm-v4.git//virtual_network_peering?ref=v9.6.1"
 
   source_resource_group_name       = azurerm_resource_group.rg_pair_vnet.name
   source_virtual_network_name      = module.vnet_pair.name
