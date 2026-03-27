@@ -8,8 +8,6 @@ locals {
 
   project = "${local.prefix}-${local.env_short}"
 
-  product_cdc_image_tag = var.image_tag
-
   container_app_environment_name = "${local.prefix}-${local.env_short}-cae-002"
   ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-002-rg"
 

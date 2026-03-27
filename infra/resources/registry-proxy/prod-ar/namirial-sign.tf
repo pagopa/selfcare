@@ -129,7 +129,7 @@ resource "azapi_resource" "namirial_sign_container_app" {
         containers = [
           {
             name  = "namirial-sws"
-            image = "index.docker.io/namirial/sws:${local.namirial_sign_image_tag}"
+            image = "index.docker.io/namirial/sws:${var.image_tag}"
             env   = local.app_settings_namirial_sign
             resources = {
               cpu    = local.namirial_sign_container_app.cpu

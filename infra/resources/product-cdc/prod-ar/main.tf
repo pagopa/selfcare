@@ -11,7 +11,7 @@ module "container_app_product_cdc" {
   container_app_name             = "${local.project}-product-cdc"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-product-cdc"
-  image_tag                      = local.product_cdc_image_tag
+  image_tag                      = var.image_tag
   app_settings                   = local.app_settings_product_cdc
   secrets_names                  = local.secrets_names_product_cdc
 

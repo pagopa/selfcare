@@ -57,7 +57,7 @@ module "container_app_product_ms" {
   container_app_name             = "${local.project}-product-ms"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-product-ms"
-  image_tag                      = local.product_image_tag
+  image_tag                      = var.image_tag
   app_settings                   = local.app_settings_product_ms
   secrets_names                  = local.secrets_names_product_ms
 

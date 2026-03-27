@@ -11,14 +11,6 @@ locals {
 
   project = "${local.prefix}-${local.env_short}"
 
-  onboarding_image_tag    = var.onboarding_image_tag
-  auth_image_tag          = var.auth_image_tag
-  product_image_tag       = var.product_image_tag
-  iam_image_tag           = var.iam_image_tag
-  document_image_tag      = var.document_image_tag
-  webhook_image_tag       = var.webhook_image_tag
-  namirial_sign_image_tag = var.namirial_sign_image_tag
-
   mongo_db = {
     mongodb_rg_name               = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-rg",
     cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-account"
