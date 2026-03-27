@@ -26,6 +26,7 @@ on:
 jobs:
   code_review:
     permissions:
+      contents: read
       packages: read
     uses: ./.github/workflows/call_code_review.yml
     name: "Onboarding BFF - Code Review"
