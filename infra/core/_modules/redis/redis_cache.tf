@@ -1,6 +1,6 @@
 ## Database subnet
 module "redis_snet" {
-  source                            = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v6.6.0"
+  source                            = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v9.6.1"
   name                              = "${var.project}-redis-snet"
   address_prefixes                  = var.cidr_subnet_redis
   resource_group_name               = var.rg_vnet_name
@@ -13,7 +13,7 @@ module "redis_snet" {
 }
 
 module "redis" {
-  source                        = "github.com/pagopa/terraform-azurerm-v4.git//redis_cache?ref=v6.6.0"
+  source                        = "github.com/pagopa/terraform-azurerm-v4.git//redis_cache?ref=v9.6.1"
   name                          = "${var.project}-redis"
   resource_group_name           = var.rg_redis
   location                      = var.location

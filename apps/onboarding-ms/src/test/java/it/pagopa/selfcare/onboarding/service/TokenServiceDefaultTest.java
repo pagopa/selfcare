@@ -19,7 +19,7 @@ import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.onboarding.common.TokenType;
+import it.pagopa.selfcare.onboarding.common.DocumentType;
 import it.pagopa.selfcare.onboarding.controller.request.OnboardingImportContract;
 import it.pagopa.selfcare.onboarding.controller.response.ContractSignedReport;
 import it.pagopa.selfcare.onboarding.crypto.PadesSignService;
@@ -50,7 +50,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.*;
 
-import static it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT;
+import static it.pagopa.selfcare.onboarding.common.DocumentType.ATTACHMENT;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -98,7 +98,7 @@ class TokenServiceDefaultTest {
     void retrieveContractNotSigned() {
         Token token = new Token();
         token.setContractFilename("fileName");
-        token.setType(TokenType.INSTITUTION);
+        token.setType(DocumentType.INSTITUTION);
         ReactivePanacheQuery queryPage = mock(ReactivePanacheQuery.class);
 
         PanacheMock.mock(Token.class);
@@ -122,7 +122,7 @@ class TokenServiceDefaultTest {
         // given
         Token token = new Token();
         token.setContractSigned("parties/docs/test-path/NomeDocumentoProva.pdf");
-        token.setType(TokenType.INSTITUTION);
+        token.setType(DocumentType.INSTITUTION);
         ReactivePanacheQuery queryPage = mock(ReactivePanacheQuery.class);
 
         PanacheMock.mock(Token.class);
@@ -148,7 +148,7 @@ class TokenServiceDefaultTest {
         // given
         Token token = new Token();
         token.setContractSigned("parties/docs/test-path/NomeDocumentoProva.p7m");
-        token.setType(TokenType.INSTITUTION);
+        token.setType(DocumentType.INSTITUTION);
         ReactivePanacheQuery queryPage = mock(ReactivePanacheQuery.class);
 
         PanacheMock.mock(Token.class);
@@ -178,7 +178,7 @@ class TokenServiceDefaultTest {
         // given
         Token token = new Token();
         token.setContractSigned("parties/docs/test-path/NomeDocumentoProva.pdf");
-        token.setType(TokenType.INSTITUTION);
+        token.setType(DocumentType.INSTITUTION);
         ReactivePanacheQuery queryPage = mock(ReactivePanacheQuery.class);
 
         PanacheMock.mock(Token.class);
@@ -208,7 +208,7 @@ class TokenServiceDefaultTest {
         // given
         Token token = new Token();
         token.setContractSigned("parties/docs/test-path/NomeDocumentoProva.p7m");
-        token.setType(TokenType.INSTITUTION);
+        token.setType(DocumentType.INSTITUTION);
 
         PanacheMock.mock(Token.class);
         when(Token.findById(onboardingId)).thenReturn(Uni.createFrom().item(token));
@@ -646,7 +646,7 @@ class TokenServiceDefaultTest {
     void reportContractSignedTest_OK() {
         Token token = new Token();
         token.setContractFilename("fileName");
-        token.setType(TokenType.INSTITUTION);
+        token.setType(DocumentType.INSTITUTION);
 
         PanacheMock.mock(Token.class);
         when(Token.findById(onboardingId)).thenReturn(Uni.createFrom().item(token));

@@ -4,34 +4,17 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
-import it.pagopa.selfcare.document.model.dto.response.DocumentBuilderResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
-import java.io.File;
-import java.util.List;
 
-import it.pagopa.selfcare.document.model.FormItem;
-import org.jboss.resteasy.reactive.RestResponse;
+import java.util.List;
 
 public interface DocumentService {
 
     Uni<List<Document>> getDocumentsByOnboardingId(String onboardingId);
 
+    Uni<Document> getDocumentInstitutionByOnboardingId(String onboardingId);
+
     Uni<Document> getDocumentById(String id);
-
-    Uni<RestResponse<File>> retrieveContract(String onboardingId, boolean isSigned);
-
-    Uni<RestResponse<File>> retrieveSignedFile(String id);
-
-  Uni<RestResponse<File>> retrieveTemplateAttachment(
-      String onboardingId,
-      String templatePath,
-      String attachmentName,
-      String institutionDescription,
-      String productId);
-
-    Uni<RestResponse<File>> retrieveAttachment(String onboardingId, String attachmentName);
-
-    Uni<Void> uploadAttachment(DocumentBuilderRequest request, FormItem file);
 
     Uni<Long> updateContractSigned(String onboardingId, String documentSignedPath);
 
@@ -52,15 +35,17 @@ public interface DocumentService {
     Uni<Long> updateDocumentContractFiles(Document document);
 
     /**
-     * Saves a document (contract or attachment) based on the TokenType in the request.
+     * Saves a document (contract or attachment) based on the DocumentType in the request.
      * For INSTITUTION/USER types, saves a contract document.
      * For ATTACHMENT type, saves an attachment document.
      *
      * @param request the document save request
      * @return the save response containing documentId, checksum and alreadyExists flag
      */
-    Uni<DocumentBuilderResponse> saveDocument(DocumentBuilderRequest request);
+    Uni<Document> saveDocument(DocumentBuilderRequest request);
 
     Uni<Document> persistDocumentForImport(OnboardingDocumentRequest request);
+
+    Uni<Document> handleContractDocument(DocumentBuilderRequest request);
 
 }

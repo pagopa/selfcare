@@ -1,12 +1,14 @@
 package it.pagopa.selfcare.document.model.dto.request;
 
-import it.pagopa.selfcare.onboarding.common.TokenType;
+import it.pagopa.selfcare.onboarding.common.DocumentType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -21,9 +23,11 @@ public class DocumentBuilderRequest {
     private String productId;
 
     @NotNull
-    private TokenType documentType;
+    private DocumentType documentType;
 
-    private String documentName;
+    private String attachmentName;
+
+    private String rootOnboardingId;
 
     /**
      * Template path (contract or attachment template).
@@ -33,7 +37,7 @@ public class DocumentBuilderRequest {
 
     private String templateVersion;
 
-    private String pdfFormatFilename;
+    private List<String> fiscalCodes;
 
     /**
      * Product title - used for INSTITUTION and USER token types.
@@ -44,6 +48,6 @@ public class DocumentBuilderRequest {
      * Checks if this is an attachment request.
      */
     public boolean isAttachment() {
-        return TokenType.ATTACHMENT.equals(documentType);
+        return DocumentType.ATTACHMENT.equals(documentType);
     }
 }

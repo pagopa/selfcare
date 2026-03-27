@@ -1,0 +1,74 @@
+name: Publish - Identity Infra
+
+on:
+  push:
+    branches:
+      - main
+      - releases/*
+    paths:
+      - 'infra/resources/**'
+
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options:
+          - dev
+          - uat
+          - prod
+      target:
+        type: choice
+        description: Target type
+        options:
+          - ar
+        default: ar
+
+jobs:
+  prepare:
+    name: Prepare Image Tag
+    runs-on: ubuntu-24.04
+    outputs:
+      image_tag: ${{ steps.setsha.outputs.short_sha }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Set Short Git Commit SHA
+        id: setsha
+        run: |
+          calculatedSha=$(git rev-parse --short ${{ github.sha }})
+          echo "short_sha=sha-$calculatedSha" >> $GITHUB_OUTPUT
+
+  release_dev_ar:
+    uses: ./.github/workflows/call_release_infra.yml
+    name: '[Dev] Identity Infra Release (AR)'
+    needs: [prepare]
+    if: ${{ ((startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev') && inputs.target != 'pnpg' }}
+    secrets: inherit
+    with:
+      environment: dev
+      dir: infra/bootstrap/dev-ar
+      env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
+
+  release_uat_ar:
+    uses: ./.github/workflows/call_release_infra.yml
+    name: '[UAT] Identity Infra Release (AR)'
+    needs: [prepare]
+    if: ${{ ((startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat') && inputs.target != 'pnpg' }}
+    secrets: inherit
+    with:
+      environment: uat
+      dir: infra/bootstrap/uat-ar
+      env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
+
+  release_prod_ar:
+    uses: ./.github/workflows/call_release_infra.yml
+    name: '[Prod] Identity Infra Release (AR)'
+    needs: [prepare]
+    if: ${{ inputs.env == 'prod' && inputs.target != 'pnpg' }}
+    secrets: inherit
+    with:
+      environment: prod
+      dir: infra/bootstrap/prod-ar
+      env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
+
+  

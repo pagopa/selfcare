@@ -1,16 +1,17 @@
-package it.pagopa.selfcare.product.integrationTest;
+package it.pagopa.selfcare.document.integrationTest;
 
 import io.quarkiverse.cucumber.CucumberOptions;
 import io.quarkiverse.cucumber.CucumberQuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.RestAssured;
-import java.io.File;
-import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
+
+import java.io.File;
+import java.time.Duration;
 
 @Slf4j
 @CucumberOptions(

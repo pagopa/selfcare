@@ -32,7 +32,7 @@
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>onboarding-sdk-common</artifactId>
+            <artifactId>selfcare-onboarding-sdk-common</artifactId>
             <version>${commons-sdk-version}</version>
         </dependency>
         <dependency>

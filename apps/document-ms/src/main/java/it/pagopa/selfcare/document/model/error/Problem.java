@@ -1,7 +1,8 @@
 package it.pagopa.selfcare.document.model.error;
 
-import java.util.List;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 public class Problem {

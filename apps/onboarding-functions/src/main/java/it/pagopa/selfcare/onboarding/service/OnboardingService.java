@@ -7,7 +7,7 @@ import eu.europa.esig.dss.model.FileDocument;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.onboarding.common.TokenType;
+import it.pagopa.selfcare.onboarding.common.DocumentType;
 import it.pagopa.selfcare.onboarding.config.AzureStorageConfig;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePathConfig;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
@@ -210,7 +210,7 @@ public class OnboardingService {
     token.setContractFilename(
       CONTRACT_FILENAME_FUNC.apply(
         onboardingWorkflow.getPdfFormatFilename(), product.getTitle()));
-    token.setType(onboardingWorkflow.getTokenType());
+    token.setType(onboardingWorkflow.getDocumentType());
 
     tokenRepository.persist(token);
   }
@@ -230,7 +230,7 @@ public class OnboardingService {
     token.setContractFilename(
       CONTRACT_FILENAME_FUNC.apply(
         "%s_" + attachmentTemplate.getName() + ".pdf", product.getTitle()));
-    token.setType(TokenType.ATTACHMENT);
+    token.setType(DocumentType.ATTACHMENT);
 
     tokenRepository.persist(token);
   }

@@ -6,7 +6,7 @@
     <packaging>pom</packaging>
     <name>selfcare-onboarding-sdk-pom</name>
     <description>Selfcare Onboarding SDK POM Aggregator</description>
-    <version>0.15.4</version>
+    <version>0.15.5</version>
 
     <modules>
         <module>../selfcare-onboarding-sdk-common</module>

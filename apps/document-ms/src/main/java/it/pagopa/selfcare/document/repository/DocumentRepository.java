@@ -9,7 +9,7 @@ import org.bson.types.ObjectId;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static it.pagopa.selfcare.onboarding.common.TokenType.*;
+import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
 
 @ApplicationScoped
 public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Document, ObjectId> {
@@ -35,6 +35,11 @@ public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Do
 
     public Uni<Document> findByOnboardingId(String onboardingId) {
         return find(ONBOARDING_AND_TYPES_FILTER, onboardingId, CONTRACT_TYPES)
+                .firstResult();
+    }
+
+    public Uni<Document> findDocumentInstitutionByOnboardingId(String onboardingId) {
+        return find(ONBOARDING_AND_TYPES_FILTER, onboardingId, List.of(INSTITUTION.name()))
                 .firstResult();
     }
 
