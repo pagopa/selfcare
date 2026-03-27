@@ -1,4 +1,4 @@
-name: Code Review - Onboarding Backend
+name: Code Review - Onboarding BFF
 
 permissions:
   contents: read
@@ -12,8 +12,8 @@ on:
       - main
       - releases/**
     paths:
-      - 'apps/onboarding-backend/**'
-      - '.github/workflows/pr_onboarding_backend_ms.yml'
+      - 'apps/onboarding-bff/**'
+      - '.github/workflows/pr_onboarding_bff.yml'
       - '.github/workflows/call_code_review.yml'
     types:
       - opened
@@ -33,8 +33,8 @@ jobs:
       pr_number: ${{ github.event.pull_request.number }}
       source_branch: ${{ github.head_ref }}
       target_branch: ${{ github.base_ref }}
-      sonar_key: "pagopa_selfcare-onboarding-backend"
-      module: "onboarding-backend"
+      sonar_key: "pagopa_selfcare-onboarding-bff"
+      module: "onboarding-bff"
 
   integration_tests:
     name: 'Integration Tests (onboarding-bff)'
@@ -61,12 +61,12 @@ jobs:
           servers: '[{"id": "selfcare-onboarding", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}, {"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
 
       - name: Build and install modules
-        working-directory: apps/onboarding-backend
+        working-directory: apps/onboarding-bff
         run: mvn install -DskipTests
 
       - name: Run Integration Tests
         id: int_tests
-        working-directory: apps/onboarding-backend/app
+        working-directory: apps/onboarding-bff/app
         run: mvn test -Dtest=it.pagopa.selfcare.onboarding.CucumberSuite -Dsurefire.failIfNoSpecifiedTests=false
         shell: bash
         env:
@@ -77,4 +77,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cucumber-report
-          path: apps/onboarding-backend/app/target/cucumber-report/cucumber.html
+          path: apps/onboarding-bff/app/target/cucumber-report/cucumber.html

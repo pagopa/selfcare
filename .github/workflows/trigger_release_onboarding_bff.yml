@@ -1,4 +1,4 @@
-name: Onboarding Backend - Trigger Release
+name: Onboarding BFF - Trigger Release
 
 on:
   workflow_dispatch:
@@ -37,21 +37,21 @@ jobs:
         run: |
           echo "VERSION=$(echo "${{ inputs.branch }}" | sed 's/.*_//;s/^v//')" >> $GITHUB_ENV
 
-      - name: Trigger Onboarding Backend Release (AR)
+      - name: Trigger Onboarding BFF Release (AR)
         run: |
           gh workflow run release_app.yml \
             --ref ${{ inputs.branch }} \
             -f env=${{ inputs.env }} \
             -f target=selc \
-            -f app=onboarding-backend
+            -f app=onboarding-bff
 
-      - name: Trigger Onboarding Backend Release (PNPG)
+      - name: Trigger Onboarding BFF Release (PNPG)
         run: |
           gh workflow run release_app.yml \
             --ref ${{ inputs.branch }} \
             -f env=${{ inputs.env }} \
             -f target=pnpg \
-            -f app=onboarding-backend
+            -f app=onboarding-bff
 
   update_uat_variable:
     name: "Update UAT Version Variable"
@@ -62,7 +62,7 @@ jobs:
       actions: write
     uses: ./.github/workflows/call_update_gh_variable.yml
     with:
-      domain: onboarding-backend
+      domain: onboarding-bff
       env: uat
       version: ${{ needs.release.outputs.version }}
     secrets: inherit
@@ -76,7 +76,7 @@ jobs:
       actions: write
     uses: ./.github/workflows/call_update_gh_variable.yml
     with:
-      domain: onboarding-backend
+      domain: onboarding-bff
       env: prod
       version: ${{ needs.release.outputs.version }}
     secrets: inherit
