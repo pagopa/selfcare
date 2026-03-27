@@ -47,7 +47,7 @@ jobs:
       tf_dir: ${{ inputs.target == 'selc' && format('infra/resources/{0}/dev-ar', inputs.app) || format('infra/resources/{0}/dev-pnpg', inputs.app) }}
       dockerfile_path: ./${{ inputs.APP_PATH }}/Dockerfile
       docker_image_name: ${{ inputs.app == 'onboarding-bff' && format('pagopa/selfcare-{0}', inputs.app) || endsWith(inputs.app, '-cdc') && format('pagopa/selfcare-{0}', inputs.app) || endsWith(inputs.app, '-ms')  && format('pagopa/selfcare-{0}', inputs.app) || format('pagopa/selfcare-{0}-ms', inputs.app) }}
-      path_openapi_docs: ./${{ inputs.APP_PATH }}/src/main/docs/openapi.json
+      path_openapi_docs: ${{ endsWith(inputs.app, '-bff') && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH) || format('./{0}/src/main/docs/openapi.json', inputs.APP_PATH) }}
       upload_openapi_enabled: ${{ inputs.target == 'selc' && !endsWith(inputs.app, '-cdc') }}
 
   release_uat:
@@ -62,7 +62,7 @@ jobs:
       tf_dir: ${{ inputs.target == 'selc' && format('infra/resources/{0}/uat-ar', inputs.app) || format('infra/resources/{0}/uat-pnpg', inputs.app) }}
       dockerfile_path: ./${{ inputs.APP_PATH }}/Dockerfile
       docker_image_name: ${{ inputs.app == 'onboarding-bff' && format('pagopa/selfcare-{0}', inputs.app) || endsWith(inputs.app, '-cdc') && format('pagopa/selfcare-{0}', inputs.app) || endsWith(inputs.app, '-ms')  && format('pagopa/selfcare-{0}', inputs.app) || format('pagopa/selfcare-{0}-ms', inputs.app) }}
-      path_openapi_docs: ./${{ inputs.APP_PATH }}/src/main/docs/openapi.json
+      path_openapi_docs: ${{ endsWith(inputs.app, '-bff') && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH) || format('./{0}/src/main/docs/openapi.json', inputs.APP_PATH) }}
       upload_openapi_enabled: ${{ inputs.target == 'selc' && !endsWith(inputs.app, '-cdc') }}
 
   release_prod:
@@ -77,5 +77,5 @@ jobs:
       tf_dir: ${{ inputs.target == 'selc' && format('infra/resources/{0}/prod-ar', inputs.app) || format('infra/resources/{0}/prod-pnpg', inputs.app) }}
       dockerfile_path: ./${{ inputs.APP_PATH }}/Dockerfile
       docker_image_name: ${{ inputs.app == 'onboarding-bff' && format('pagopa/selfcare-{0}', inputs.app) || endsWith(inputs.app, '-cdc') && format('pagopa/selfcare-{0}', inputs.app) || endsWith(inputs.app, '-ms')  && format('pagopa/selfcare-{0}', inputs.app) || format('pagopa/selfcare-{0}-ms', inputs.app) }}
-      path_openapi_docs: ./${{ inputs.APP_PATH }}/src/main/docs/openapi.json
+      path_openapi_docs: ${{ endsWith(inputs.app, '-bff') && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH) || format('./{0}/src/main/docs/openapi.json', inputs.APP_PATH) }}
       upload_openapi_enabled: ${{ inputs.target == 'selc' && !endsWith(inputs.app, '-cdc') }}

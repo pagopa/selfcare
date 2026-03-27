@@ -8,7 +8,7 @@
         <artifactId>root</artifactId>
         <version>0.0.1</version>
     </parent>
-    
+
     <artifactId>test-coverage</artifactId>
     <packaging>pom</packaging>
     <name>test-coverage</name>
