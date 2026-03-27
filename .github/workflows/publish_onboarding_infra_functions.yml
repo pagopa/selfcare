@@ -1,5 +1,9 @@
 name: Publish - Onboarding Functions Infra
 
+permissions:
+  contents: read
+  id-token: write
+
 on:
   push:
     branches:

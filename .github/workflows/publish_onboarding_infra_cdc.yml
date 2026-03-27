@@ -1,5 +1,9 @@
 name: Publish - Onboarding CDC Infra
 
+permissions:
+  contents: read
+  id-token: write
+
 on:
   push:
     branches:
