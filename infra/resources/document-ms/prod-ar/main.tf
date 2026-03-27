@@ -43,7 +43,7 @@ module "container_app_document_ms" {
   container_app_name             = "${local.project}-document-ms"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-document-ms"
-  image_tag                      = var.document_image_tag
+  image_tag                      = var.image_tag
   app_settings                   = local.app_settings_document_ms
   secrets_names                  = local.secrets_names_document_ms
 
