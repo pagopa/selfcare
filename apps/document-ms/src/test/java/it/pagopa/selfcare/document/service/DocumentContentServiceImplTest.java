@@ -22,7 +22,7 @@ import it.pagopa.selfcare.document.service.impl.DocumentContentServiceImpl;
 import it.pagopa.selfcare.document.util.DocumentFileUtils;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.onboarding.common.TokenType;
+import it.pagopa.selfcare.onboarding.common.DocumentType;
 import jakarta.inject.Inject;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -125,12 +125,12 @@ class DocumentContentServiceImplTest {
     @Test
     void retrieveAttachment_shouldUseContractSignedPath_whenContractSignedIsNotNull() {
         Document doc = buildDocument();
-        doc.setType(TokenType.ATTACHMENT);
+        doc.setType(DocumentType.ATTACHMENT);
         doc.setAttachmentName("myAttachment");
         doc.setContractSigned("/path/to/signed/attachment.pdf");
         File mockFile = Mockito.mock(File.class);
 
-        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "myAttachment"))
+        when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "myAttachment"))
                 .thenReturn(Uni.createFrom().item(doc));
         when(azureBlobClient.getFileAsPdf("/path/to/signed/attachment.pdf")).thenReturn(mockFile);
 
@@ -145,13 +145,13 @@ class DocumentContentServiceImplTest {
     @Test
     void retrieveAttachment_shouldBuildPath_whenContractSignedIsNull() {
         Document doc = buildDocument();
-        doc.setType(TokenType.ATTACHMENT);
+        doc.setType(DocumentType.ATTACHMENT);
         doc.setAttachmentName("myAttachment");
         doc.setContractSigned(null);
         doc.setContractFilename("attachment.pdf");
         File mockFile = Mockito.mock(File.class);
 
-        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "myAttachment"))
+        when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "myAttachment"))
                 .thenReturn(Uni.createFrom().item(doc));
         when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(mockFile);
 
@@ -167,12 +167,12 @@ class DocumentContentServiceImplTest {
     @Test
     void retrieveAttachment_shouldReturnOkResponse() {
         Document doc = buildDocument();
-        doc.setType(TokenType.ATTACHMENT);
+        doc.setType(DocumentType.ATTACHMENT);
         doc.setAttachmentName("myAttachment");
         doc.setContractSigned("/path/to/attachment.pdf");
         File mockFile = Mockito.mock(File.class);
 
-        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "myAttachment"))
+        when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "myAttachment"))
                 .thenReturn(Uni.createFrom().item(doc));
         when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(mockFile);
 
@@ -185,7 +185,7 @@ class DocumentContentServiceImplTest {
 
     @Test
     void retrieveAttachment_shouldThrowResourceNotFoundWhenDocumentIsNull() {
-        when(documentRepository.findAttachment(ONBOARDING_ID, TokenType.ATTACHMENT.name(), "missingAttachment"))
+        when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "missingAttachment"))
                 .thenReturn(Uni.createFrom().nullItem());
 
         Uni<RestResponse<File>> uni = documentContentService.retrieveAttachment(ONBOARDING_ID, "missingAttachment");
@@ -472,14 +472,14 @@ class DocumentContentServiceImplTest {
         DocumentBuilderRequest request = DocumentBuilderRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
-                .documentType(TokenType.ATTACHMENT)
+                .documentType(DocumentType.ATTACHMENT)
                 .attachmentName("myAttachment")
                 .templatePath("/templates/template.pdf")
                 .templateVersion("1.0")
                 .build();
 
         Document persistedDoc = buildDocument();
-        persistedDoc.setType(TokenType.ATTACHMENT);
+        persistedDoc.setType(DocumentType.ATTACHMENT);
         persistedDoc.setAttachmentName("myAttachment");
         persistedDoc.setContractFilename("signed_template.pdf");
         persistedDoc.setContractSigned("/parties/docs/" + ONBOARDING_ID + "/attachments/signed_template.pdf");
@@ -514,7 +514,7 @@ class DocumentContentServiceImplTest {
         DocumentBuilderRequest request = DocumentBuilderRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
-                .documentType(TokenType.ATTACHMENT)
+                .documentType(DocumentType.ATTACHMENT)
                 .attachmentName("myAttachment")
                 .templatePath("/templates/template.pdf")
                 .templateVersion("1.0")
@@ -541,14 +541,14 @@ class DocumentContentServiceImplTest {
         DocumentBuilderRequest request = DocumentBuilderRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
-                .documentType(TokenType.ATTACHMENT)
+                .documentType(DocumentType.ATTACHMENT)
                 .attachmentName("myAttachment")
                 .templatePath("/templates/template.pdf")
                 .templateVersion("1.0")
                 .build();
 
         Document persistedDoc = buildDocument();
-        persistedDoc.setType(TokenType.ATTACHMENT);
+        persistedDoc.setType(DocumentType.ATTACHMENT);
         persistedDoc.setAttachmentName("myAttachment");
         persistedDoc.setContractFilename("signed_template.pdf.p7m");
         persistedDoc.setContractSigned("/parties/docs/" + ONBOARDING_ID + "/attachments/signed_template.pdf.p7m");
@@ -584,14 +584,14 @@ class DocumentContentServiceImplTest {
         DocumentBuilderRequest request = DocumentBuilderRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
-                .documentType(TokenType.ATTACHMENT)
+                .documentType(DocumentType.ATTACHMENT)
                 .attachmentName("myAttachment")
                 .templatePath("/templates/template.pdf")
                 .templateVersion("1.0")
                 .build();
 
         Document persistedDoc = buildDocument();
-        persistedDoc.setType(TokenType.ATTACHMENT);
+        persistedDoc.setType(DocumentType.ATTACHMENT);
         persistedDoc.setAttachmentName("myAttachment");
 
         when(documentService.existsAttachment(ONBOARDING_ID, "myAttachment"))
@@ -656,14 +656,14 @@ class DocumentContentServiceImplTest {
         DocumentBuilderRequest request = DocumentBuilderRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
-                .documentType(TokenType.ATTACHMENT)
+                .documentType(DocumentType.ATTACHMENT)
                 .attachmentName("myAttachment")
                 .templatePath("/templates/template.pdf")
                 .templateVersion("1.0")
                 .build();
 
         Document persistedDoc = buildDocument();
-        persistedDoc.setType(TokenType.ATTACHMENT);
+        persistedDoc.setType(DocumentType.ATTACHMENT);
         persistedDoc.setAttachmentName("myAttachment");
         persistedDoc.setContractFilename("signed_template.pdf");
         persistedDoc.setContractSigned("/parties/docs/" + ONBOARDING_ID + "/attachments/signed_template.pdf");
@@ -777,7 +777,7 @@ class DocumentContentServiceImplTest {
         doc.setOnboardingId(ONBOARDING_ID);
         doc.setProductId("prod-io");
         doc.setContractFilename("contract.pdf");
-        doc.setType(TokenType.INSTITUTION);
+        doc.setType(DocumentType.INSTITUTION);
         return doc;
     }
 

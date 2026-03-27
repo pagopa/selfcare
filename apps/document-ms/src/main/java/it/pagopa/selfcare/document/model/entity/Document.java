@@ -2,7 +2,7 @@ package it.pagopa.selfcare.document.model.entity;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
-import it.pagopa.selfcare.onboarding.common.TokenType;
+import it.pagopa.selfcare.onboarding.common.DocumentType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.bson.codecs.pojo.annotations.BsonId;
@@ -19,7 +19,7 @@ public class Document extends ReactivePanacheMongoEntityBase {
     @Schema(description = "Chiave surrogata (Surrogate Key) generata come UUID randomico. Sostituisce l'onboardingId come Primary Key per prevenire anomalie.")
     private String id;
     @Schema(description = "Discriminante polimorfica che indica la natura del documento (INSTITUTION, USER, ATTACHMENT).")
-    private TokenType type;
+    private DocumentType type;
     @Schema(description = "ID del processo di onboarding specifico. Per il tipo ATTACHMENT, non avendo un flusso dedicato, coincide con il rootOnboardingId.")
     private String onboardingId;
     private String productId;

@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.onboarding.entity;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
-import it.pagopa.selfcare.onboarding.common.TokenType;
+import it.pagopa.selfcare.onboarding.common.DocumentType;
 import org.bson.codecs.pojo.annotations.BsonId;
 
 import java.time.LocalDateTime;
@@ -12,7 +12,7 @@ public class Token {
 
     @BsonId
     private String id;
-    private TokenType type;
+    private DocumentType type;
     private String onboardingId;
     private String productId;
     private String name;
@@ -35,11 +35,11 @@ public class Token {
         this.id = id;
     }
 
-    public TokenType getType() {
+    public DocumentType getType() {
         return type;
     }
 
-    public void setType(TokenType type) {
+    public void setType(DocumentType type) {
         this.type = type;
     }
 

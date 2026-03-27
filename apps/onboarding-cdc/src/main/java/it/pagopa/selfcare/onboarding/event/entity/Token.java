@@ -2,7 +2,7 @@ package it.pagopa.selfcare.onboarding.event.entity;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
-import it.pagopa.selfcare.onboarding.common.TokenType;
+import it.pagopa.selfcare.onboarding.common.DocumentType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.bson.codecs.pojo.annotations.BsonId;
@@ -16,7 +16,7 @@ public class Token extends ReactivePanacheMongoEntityBase {
 
     @BsonId
     private String id;
-    private TokenType type;
+    private DocumentType type;
     private String onboardingId;
     private String productId;
     private String checksum;

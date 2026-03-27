@@ -51,7 +51,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import static it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT;
+import static it.pagopa.selfcare.onboarding.common.DocumentType.ATTACHMENT;
 import static it.pagopa.selfcare.onboarding.constants.CustomError.TOKEN_NOT_FOUND_OR_ALREADY_DELETED;
 import static it.pagopa.selfcare.onboarding.util.ErrorMessage.*;
 

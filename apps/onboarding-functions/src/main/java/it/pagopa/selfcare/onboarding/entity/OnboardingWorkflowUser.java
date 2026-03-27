@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.onboarding.entity;
 
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.onboarding.common.TokenType;
+import it.pagopa.selfcare.onboarding.common.DocumentType;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePathConfig;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
 import it.pagopa.selfcare.onboarding.utils.InstitutionUtils;
@@ -52,8 +52,8 @@ public class OnboardingWorkflowUser extends OnboardingWorkflow {
   }
 
   @Override
-  public TokenType getTokenType() {
-    return TokenType.USER;
+  public DocumentType getDocumentType() {
+    return DocumentType.USER;
   }
 
   @Override

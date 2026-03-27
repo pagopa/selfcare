@@ -124,7 +124,7 @@ components:
           description: "Discriminante polimorfica che indica la natura del documento\
             \ (INSTITUTION, USER, ATTACHMENT)."
           type: string
-          $ref: "#/components/schemas/TokenType"
+          $ref: "#/components/schemas/DocumentType"
         onboardingId:
           type: string
           description: "ID del processo di onboarding specifico. Per il tipo ATTACHMENT,\
@@ -169,7 +169,7 @@ components:
           type: string
           pattern: \S
         documentType:
-          $ref: "#/components/schemas/TokenType"
+          $ref: "#/components/schemas/DocumentType"
         attachmentName:
           type: string
         rootOnboardingId:
@@ -192,7 +192,7 @@ components:
         id:
           type: string
         type:
-          $ref: "#/components/schemas/TokenType"
+          $ref: "#/components/schemas/DocumentType"
         productId:
           type: string
         checksum:
@@ -211,6 +211,13 @@ components:
           $ref: "#/components/schemas/LocalDateTime"
         deletedAt:
           $ref: "#/components/schemas/LocalDateTime"
+    DocumentType:
+      type: string
+      enum:
+      - INSTITUTION
+      - LEGALS
+      - USER
+      - ATTACHMENT
     GeographicTaxonomyPdfData:
       type: object
       properties:
@@ -416,13 +423,6 @@ components:
             type: string
         skipSignatureVerification:
           type: boolean
-    TokenType:
-      type: string
-      enum:
-      - INSTITUTION
-      - LEGALS
-      - USER
-      - ATTACHMENT
     UploadAggregateCsvRequest:
       type: object
       required:

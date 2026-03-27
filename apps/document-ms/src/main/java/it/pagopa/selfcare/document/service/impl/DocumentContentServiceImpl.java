@@ -44,7 +44,7 @@ import static it.pagopa.selfcare.document.util.ErrorMessage.ATTACHMENT_UPLOAD_ER
 import static it.pagopa.selfcare.document.util.ErrorMessage.GENERIC_ERROR;
 import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
 import static it.pagopa.selfcare.document.util.Utils.*;
-import static it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT;
+import static it.pagopa.selfcare.onboarding.common.DocumentType.ATTACHMENT;
 
 /**
  * Implementation of DocumentContentService for creating, retrieving, and managing PDF documents.

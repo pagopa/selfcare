@@ -11,6 +11,7 @@ import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
 import it.pagopa.selfcare.document.model.dto.response.DocumentResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.service.DocumentService;
+import it.pagopa.selfcare.onboarding.common.DocumentType;
 import jakarta.ws.rs.core.MediaType;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -259,7 +260,7 @@ class DocumentControllerTest {
     DocumentBuilderRequest request = DocumentBuilderRequest.builder()
             .onboardingId(ONBOARDING_ID)
             .productId("prod-123")
-            .documentType(it.pagopa.selfcare.onboarding.common.TokenType.INSTITUTION)
+            .documentType(DocumentType.INSTITUTION)
             .build();
 
     Document response = new Document();
@@ -281,7 +282,7 @@ class DocumentControllerTest {
     DocumentBuilderRequest request = DocumentBuilderRequest.builder()
             .onboardingId(ONBOARDING_ID)
             .productId("prod-123")
-            .documentType(it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT)
+            .documentType(DocumentType.ATTACHMENT)
             .build();
 
     Document response = new Document();
@@ -433,7 +434,7 @@ class DocumentControllerTest {
   void saveDocument_shouldReturnBadRequest_whenRequestIsInvalid() {
     DocumentBuilderRequest invalidRequest = DocumentBuilderRequest.builder()
             .productId("prod-123")
-            .documentType(it.pagopa.selfcare.onboarding.common.TokenType.INSTITUTION)
+            .documentType(DocumentType.INSTITUTION)
             .build();
 
     given()
@@ -450,7 +451,7 @@ class DocumentControllerTest {
     DocumentBuilderRequest request = DocumentBuilderRequest.builder()
             .onboardingId(ONBOARDING_ID)
             .productId("prod-123")
-            .documentType(it.pagopa.selfcare.onboarding.common.TokenType.INSTITUTION)
+            .documentType(DocumentType.INSTITUTION)
             .build();
 
     Mockito.when(documentService.saveDocument(any(DocumentBuilderRequest.class)))
@@ -531,7 +532,7 @@ class DocumentControllerTest {
   void saveDocument_shouldReturnBadRequest_whenProductIdIsNull() {
     DocumentBuilderRequest invalidRequest = DocumentBuilderRequest.builder()
             .onboardingId(ONBOARDING_ID)
-            .documentType(it.pagopa.selfcare.onboarding.common.TokenType.INSTITUTION)
+            .documentType(DocumentType.INSTITUTION)
             .build();
 
     given()

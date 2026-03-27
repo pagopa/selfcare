@@ -57,14 +57,14 @@ To use this library in your projects, you can add the dependency to your pom.xml
 <dependency>
     <groupId>it.pagopa.selfcare</groupId>
     <artifactId>selfcare-onboarding-sdk-crypto</artifactId>
-    <version>0.15.4</version>
+    <version>0.15.5</version>
 </dependency>
 ```
 If you are using Gradle, you can add the dependency to your build.gradle file:
 
 ```shell script
 dependencies {
-    implementation 'it.pagopa.selfcare:selfcare-onboarding-sdk-crypto:0.15.4'
+    implementation 'it.pagopa.selfcare:selfcare-onboarding-sdk-crypto:0.15.5'
 }
 ```
 
