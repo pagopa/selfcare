@@ -14,7 +14,6 @@ locals {
   onboarding_image_tag    = var.onboarding_image_tag
   auth_image_tag          = var.auth_image_tag
   product_image_tag       = var.product_image_tag
-  product_cdc_image_tag   = var.product_cdc_image_tag
   iam_image_tag           = var.iam_image_tag
   document_image_tag      = var.document_image_tag
   webhook_image_tag       = var.webhook_image_tag

@@ -32,7 +32,7 @@ env:
   APP_PATH: 'apps/${{ inputs.app }}'
   APPS_POM: "apps/pom.xml"
   POM: "pom.xml"
-  TF_RESOURCE_PATH: ${{ inputs.app == 'product-cdc' && 'product' || inputs.app == 'onboarding-backend' && 'onboarding-bff' || inputs.app }}
+  TF_RESOURCE_PATH: ${{ inputs.app }}
 
 jobs:
 

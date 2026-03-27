@@ -6,52 +6,14 @@ locals {
   location_short = "weu"
   domain         = "ar"
 
-  dns_zone_prefix     = "dev.selfcare"
-  api_dns_zone_prefix = "api.dev.selfcare"
-
   project = "${local.prefix}-${local.env_short}"
 
-  onboarding_image_tag    = var.onboarding_image_tag
-  auth_image_tag          = var.auth_image_tag
-  product_image_tag       = var.product_image_tag
-  iam_image_tag           = var.iam_image_tag
-  document_image_tag      = var.document_image_tag
-  webhook_image_tag       = var.webhook_image_tag
-  namirial_sign_image_tag = var.namirial_sign_image_tag
-
-  mongo_db = {
-    mongodb_rg_name               = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-rg",
-    cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-account"
-    mongodb_name                  = "selcOnboarding"
-  }
+  product_cdc_image_tag = var.image_tag
 
   container_app_environment_name = "${local.prefix}-${local.env_short}-cae-002"
   ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-002-rg"
 
-  function_name = "${local.storage_prefix}-onboarding-fn"
-
-  container_app = {
-    min_replicas = 1
-    max_replicas = 2
-    scale_rules = [
-      {
-        custom = {
-          metadata = {
-            "desiredReplicas" = "1"
-            "start"           = "0 8 * * MON-FRI"
-            "end"             = "0 19 * * MON-FRI"
-            "timezone"        = "Europe/Rome"
-          }
-          type = "cron"
-        }
-        name = "cron-scale-rule"
-      }
-    ]
-    cpu    = 0.5
-    memory = "1Gi"
-  }
-
-  microservice_container_app = {
+  product_cdc_container_app = {
     min_replicas = 1
     max_replicas = 1
     scale_rules = [
@@ -70,6 +32,41 @@ locals {
     ]
     cpu    = 0.5
     memory = "1Gi"
+  }
+
+  app_settings_product_cdc = [
+    {
+      name  = "JAVA_TOOL_OPTIONS"
+      value = "-javaagent:applicationinsights-agent.jar"
+    },
+    {
+      name  = "APPLICATIONINSIGHTS_ROLE_NAME"
+      value = "product-cdc"
+    },
+    {
+      name  = "MONGODB_DATABASE_NAME"
+      value = "selcProduct"
+    },
+    {
+      name  = "MONGODB_COLLECTION_NAME"
+      value = "products"
+    },
+    {
+      name  = "PRODUCT-CDC-MONGODB-WATCH-ENABLED"
+      value = "false"
+    },
+    {
+      name  = "STORAGE_CONTAINER_PRODUCT"
+      value = "selc-u-product"
+    }
+  ]
+
+  secrets_names_product_cdc = {
+    "BLOB_STORAGE_CONN_STRING_PRODUCT"      = "blob-storage-product-connection-string"
+    "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
+    "JWT_PUBLIC_KEY"                        = "jwt-public-key"
   }
 
   quarkus_health_probes = [
@@ -116,13 +113,8 @@ locals {
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
   }
 
-  cidr_subnet_document_storage = ["10.1.136.0/24"]
-
   key_vault_resource_group_name = "${local.prefix}-${local.env_short}-sec-rg"
   key_vault_name                = "${local.prefix}-${local.env_short}-kv"
 
-  naming_config            = "documents"
   resource_group_name_vnet = "${local.project}-vnet-rg"
-
-  image_tag_latest = "latest"
 }

@@ -28,12 +28,12 @@ onboarding-ms:
 
 product:
   - changed-files:
-      - any-glob-to-any-file: ["apps/product/**", "infra/resources/*/product.tf"]
+      - any-glob-to-any-file: ["apps/product/**", "infra/resources/product/**"]
 
 product-cdc:
   - changed-files:
       - any-glob-to-any-file:
-          ["apps/product-cdc/**", "infra/resources/*/product.tf"]
+          ["apps/product-cdc/**", "infra/resources/product-cdc/**"]
 
 webhook:
   - changed-files:
