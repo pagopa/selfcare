@@ -28,7 +28,7 @@ locals {
 
   private_dns_name_domain = "blackhill-644148c0.westeurope.azurecontainerapps.io"
   private_dns_name_ms = {
-    private_dns_name_ms = "selc-${local.env_short}-iam-ms-ca.${local.private_dns_name_domain}"
+    private_dns_name_ms = "selc-${local.env_short}-${local.domain}-iam-ms-ca.${local.private_dns_name_domain}"
   }
 
   container_app = {
