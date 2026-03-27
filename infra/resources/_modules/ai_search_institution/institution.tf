@@ -1,32 +1,32 @@
 resource "azapi_resource" "search_index" {
-  type                    = "Microsoft.Search/searchServices/indexes@2025-05-01"
-  name                    = "institution-index-${var.domain}"
-  parent_id               = var.search_service_id
+  type                      = "Microsoft.Search/searchServices/indexes@2025-05-01"
+  name                      = "institution-index-${var.domain}"
+  parent_id                 = var.search_service_id
   schema_validation_enabled = false
 
   body = {
     properties = {
       analyzers = [
         {
-          name            = "autocomplete_analyzer"
-          "@odata.type"   = "#Microsoft.Azure.Search.CustomAnalyzer"
-          tokenizer       = "autocomplete_tokenizer"
-          tokenFilters    = ["lowercase", "asciifolding"]
+          name          = "autocomplete_analyzer"
+          "@odata.type" = "#Microsoft.Azure.Search.CustomAnalyzer"
+          tokenizer     = "autocomplete_tokenizer"
+          tokenFilters  = ["lowercase", "asciifolding"]
         },
         {
-          name            = "autocomplete_search_analyzer"
-          "@odata.type"   = "#Microsoft.Azure.Search.CustomAnalyzer"
-          tokenizer       = "lowercase"
-          tokenFilters    = ["lowercase", "asciifolding"]
+          name          = "autocomplete_search_analyzer"
+          "@odata.type" = "#Microsoft.Azure.Search.CustomAnalyzer"
+          tokenizer     = "lowercase"
+          tokenFilters  = ["lowercase", "asciifolding"]
         }
       ]
       tokenizers = [
         {
-          name        = "autocomplete_tokenizer"
+          name          = "autocomplete_tokenizer"
           "@odata.type" = "#Microsoft.Azure.Search.EdgeNGramTokenizer"
-          minGram     = 3
-          maxGram     = 10
-          tokenChars  = ["letter", "digit"]
+          minGram       = 3
+          maxGram       = 10
+          tokenChars    = ["letter", "digit"]
         }
       ]
       fields = [

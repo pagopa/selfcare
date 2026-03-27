@@ -32,7 +32,7 @@ module "apim_api" {
   subscription_required = false
 
   api_operation_policies = var.api_operation_policies
-  
+
   xml_content = <<XML
 <policies>
     <inbound>

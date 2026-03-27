@@ -9,7 +9,7 @@ locals {
 
   dns_zone_prefix     = "dev.selfcare"
   api_dns_zone_prefix = "api.dev.selfcare"
-  project = "${local.prefix}-${local.env_short}"
+  project             = "${local.prefix}-${local.env_short}"
 
   onboarding_image_tag    = var.onboarding_image_tag
   auth_image_tag          = var.auth_image_tag

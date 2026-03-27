@@ -5,7 +5,7 @@ locals {
   location       = "westeurope"
   location_short = "weu"
   # suffix_increment = "-002"
-  domain         = "ar"
+  domain = "ar"
 
   dns_zone_prefix     = "dev.selfcare"
   api_dns_zone_prefix = "api.dev.selfcare"

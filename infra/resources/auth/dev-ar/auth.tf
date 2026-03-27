@@ -13,7 +13,7 @@ module "apim_api_auth" {
   dns_zone_prefix     = local.dns_zone_prefix
   api_dns_zone_prefix = local.api_dns_zone_prefix
   openapi_path        = "../../../../apps/auth/src/main/docs/openapi.json"
-  
+
   api_operation_policies = [{
     operation_id = "loginSaml"
     xml_content  = <<XML
@@ -82,7 +82,7 @@ module "collection_auth_otp_flows" {
     { keys = ["createdAt"], unique = false }
   ]
 
-  depends_on = [ module.cosmosdb_auth ]
+  depends_on = [module.cosmosdb_auth]
 }
 
 ###############################################################################

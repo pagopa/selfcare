@@ -9,7 +9,7 @@ locals {
   dns_zone_prefix     = "dev.selfcare"
   api_dns_zone_prefix = "api.dev.selfcare"
   external_domain     = "pagopa.it"
-  
+
   apim_name = "selc-${local.env_short}-apim-v2"
   apim_rg   = "selc-${local.env_short}-api-v2-rg"
 
@@ -28,7 +28,7 @@ locals {
 
   function_name = "${local.storage_prefix}-onboarding-fn"
 
-  
+
   container_app = {
     min_replicas = 1
     max_replicas = 5

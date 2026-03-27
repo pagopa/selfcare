@@ -8,7 +8,7 @@ locals {
 
   dns_zone_prefix     = "pnpg.dev.selfcare"
   api_dns_zone_prefix = "api-pnpg.dev.selfcare"
-  
+
   pnpg_suffix = "${local.location_short}-${local.domain}"
 
   project = "${local.prefix}-${local.env_short}"
