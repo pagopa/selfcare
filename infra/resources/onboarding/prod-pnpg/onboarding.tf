@@ -166,7 +166,7 @@ module "container_app_onboarding_ms" {
   env_short                      = local.env_short
   resource_group_name            = local.ca_resource_group_name
   container_app                  = local.container_app
-  container_app_name             = "onboarding-ms"
+  container_app_name             = "selc-${local.env_short}-pnpg-onboarding-ms"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-onboarding-ms"
   image_tag                      = local.onboarding_image_tag
@@ -184,7 +184,7 @@ module "container_app_onboarding_cdc" {
   env_short                      = local.env_short
   resource_group_name            = local.ca_resource_group_name
   container_app                  = local.onboarding_cdc_container_app
-  container_app_name             = "onboarding-cdc"
+  container_app_name             = "selc-${local.env_short}-pnpg-onboarding-cdc"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-onboarding-cdc"
   image_tag                      = local.onboarding_image_tag

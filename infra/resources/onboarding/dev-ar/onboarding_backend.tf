@@ -53,7 +53,7 @@ locals {
     "USER-ALLOWED-LIST"                      = "user-allowed-list"
   }
 
-  private_dns_name_onboarding_backend = "selc-d-onboardingbackend-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+  private_dns_name_onboarding_backend = "selc-d-onboarding-backend-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
 
   apim_name = "selc-${local.env_short}-apim-v2"
   apim_rg   = "selc-${local.env_short}-api-v2-rg"

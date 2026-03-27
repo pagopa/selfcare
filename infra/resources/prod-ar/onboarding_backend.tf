@@ -53,7 +53,7 @@ locals {
     "USER-ALLOWED-LIST"                      = "user-allowed-list"
   }
 
-  private_dns_name_onboarding_backend = "selc-p-onboardingbackend-ca.lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
+  private_dns_name_onboarding_backend = "selc-p-onboarding-backend-ca.lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
 }
 
 module "container_app_onboarding_backend" {
@@ -62,7 +62,7 @@ module "container_app_onboarding_backend" {
   env_short                      = local.env_short
   resource_group_name            = local.ca_resource_group_name
   container_app                  = local.container_app_onboarding_backend
-  container_app_name             = "onboardingbackend"
+  container_app_name             = "selc-${local.env_short}-onboarding-backend"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-onboarding-backend"
   image_tag                      = local.onboarding_image_tag

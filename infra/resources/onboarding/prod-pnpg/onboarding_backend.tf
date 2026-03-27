@@ -52,7 +52,7 @@ locals {
     "ONBOARDING-FUNCTIONS-API-KEY"           = "fn-onboarding-primary-key"
   }
 
-  private_dns_name_onboarding_backend    = "selc-p-pnpg-onboardingbackend-ca.calmmoss-0be48755.westeurope.azurecontainerapps.io"
+  private_dns_name_onboarding_backend    = "selc-p-pnpg-onboarding-backend-ca.calmmoss-0be48755.westeurope.azurecontainerapps.io"
   apim_name_onboarding_backend           = "selc-${local.env_short}-pnpg-apim-v2"
   apim_rg_onboarding_backend             = "selc-${local.env_short}-pnpg-api-v2-rg"
   dns_zone_prefix_onboarding_backend     = "imprese.notifichedigitali"
@@ -65,7 +65,7 @@ module "container_app_onboarding_backend_pnpg" {
   env_short                      = local.env_short
   resource_group_name            = local.ca_resource_group_name
   container_app                  = local.container_app_onboarding_backend
-  container_app_name             = "onboardingbackend"
+  container_app_name             = "selc-${local.env_short}-pnpg-onboarding-backend"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-onboarding-backend"
   image_tag                      = local.onboarding_image_tag
