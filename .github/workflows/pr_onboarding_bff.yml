@@ -33,7 +33,7 @@ jobs:
       pr_number: ${{ github.event.pull_request.number }}
       source_branch: ${{ github.head_ref }}
       target_branch: ${{ github.base_ref }}
-      sonar_key: "pagopa_selfcare-onboarding-bff"
+      sonar_key: "pagopa_selfcare-onboarding-backend"
       module: "onboarding-bff"
 
   integration_tests:
