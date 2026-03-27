@@ -2,12 +2,12 @@ FROM maven:3-eclipse-temurin-17@sha256:6ca4f2d4c7a8affa4a7cdec526dd2aa5d433ddd63
 
 WORKDIR /src
 
-COPY --link ./apps/onboarding-backend/pom.xml ./apps/onboarding-backend/pom.xml
-COPY --link ./apps/onboarding-backend/connector-api ./apps/onboarding-backend/connector-api
-COPY --link ./apps/onboarding-backend/connector ./apps/onboarding-backend/connector
-COPY --link ./apps/onboarding-backend/core ./apps/onboarding-backend/core
-COPY --link ./apps/onboarding-backend/web ./apps/onboarding-backend/web
-COPY --link ./apps/onboarding-backend/app ./apps/onboarding-backend/app
+COPY --link ./apps/onboarding-bff/pom.xml ./apps/onboarding-bff/pom.xml
+COPY --link ./apps/onboarding-bff/connector-api ./apps/onboarding-bff/connector-api
+COPY --link ./apps/onboarding-bff/connector ./apps/onboarding-bff/connector
+COPY --link ./apps/onboarding-bff/core ./apps/onboarding-bff/core
+COPY --link ./apps/onboarding-bff/web ./apps/onboarding-bff/web
+COPY --link ./apps/onboarding-bff/app ./apps/onboarding-bff/app
 
 RUN echo "<settings>\n" \
     "<servers>\n" \
@@ -23,7 +23,7 @@ ARG REPO_SELFCARE
 ARG REPO_USERNAME
 ARG REPO_PASSWORD
 
-RUN mvn --global-settings settings.xml -f apps/onboarding-backend/pom.xml -pl app -am \
+RUN mvn --global-settings settings.xml -f apps/onboarding-bff/pom.xml -pl app -am \
     -DrepositoryId=${REPO_SELFCARE} -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} \
     clean package -DskipTests
 
@@ -33,7 +33,7 @@ ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
 
 WORKDIR /app
 
-COPY --from=builder /src/apps/onboarding-backend/target/*.jar ./app.jar
+COPY --from=builder /src/apps/onboarding-bff/target/*.jar ./app.jar
 
 ADD https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.2.11/applicationinsights-agent-3.2.11.jar ./applicationinsights-agent.jar
 RUN chmod 755 ./applicationinsights-agent.jar

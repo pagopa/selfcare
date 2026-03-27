@@ -12,11 +12,11 @@ import org.springframework.context.annotation.PropertySource;
 @Configuration
 @PropertySource("classpath:config/products-sdk.properties")
 public class ProductServiceConfig {
-    @Value("${onboarding-backend.blob-storage.container-product}")
+    @Value("${onboarding-bff.blob-storage.container-product}")
     private String containerProduct;
-    @Value("${onboarding-backend.blob-storage.filepath-product}")
+    @Value("${onboarding-bff.blob-storage.filepath-product}")
     private String filepathProduct;
-    @Value("${onboarding-backend.blob-storage.connection-string-product}")
+    @Value("${onboarding-bff.blob-storage.connection-string-product}")
     private String connectionStringProduct;
 
     @Bean
