@@ -1,4 +1,70 @@
 ###############################################################################
+# APIM
+###############################################################################
+
+module "apim_api" {
+  source              = "../../_modules/apim_api"
+  apim_name           = local.apim_name
+  apim_rg             = local.apim_rg
+  api_name            = "selc-${local.env_short}-api-iam"
+  display_name        = "IAM API"
+  base_path           = "iam"
+  private_dns_name    = local.private_dns_name_ms.private_dns_name_ms
+  dns_zone_prefix     = local.dns_zone_prefix
+  api_dns_zone_prefix = local.api_dns_zone_prefix
+  openapi_path        = "../../../../apps/iam/src/main/docs/openapi.json"
+
+  api_operation_policies = []
+}
+
+###############################################################################
+# CosmosDB
+###############################################################################
+
+module "cosmosdb" {
+  source = "../../_modules/cosmosdb_database"
+
+  database_name               = local.mongo_db.database_name
+  resource_group_name         = local.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
+}
+
+module "collection_iam_user" {
+  source = "../../_modules/cosmosdb_collection"
+
+  name                        = "userClaims"
+  resource_group_name         = local.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
+  database_name               = module.cosmosdb.database_name
+
+  lock_enable = true
+
+  indexes = [
+    { keys = ["_id"], unique = true },
+    { keys = ["email"], unique = true }
+  ]
+
+  depends_on = [module.cosmosdb]
+}
+
+module "collection_iam_roles" {
+  source = "../../_modules/cosmosdb_collection"
+
+  name                        = "roles"
+  resource_group_name         = local.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
+  database_name               = module.cosmosdb.database_name
+
+  lock_enable = true
+
+  indexes = [
+    { keys = ["_id"], unique = true }
+  ]
+
+  depends_on = [module.cosmosdb]
+}
+
+###############################################################################
 # Container App
 ###############################################################################
 
@@ -52,7 +118,7 @@ module "container_app_iam_ms" {
   container_app_name             = "${local.project}-iam-ms"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-iam-ms"
-  image_tag                      = local.iam_image_tag
+  image_tag                      = local.image_tag_latest
   app_settings                   = local.app_settings_iam_ms
   secrets_names                  = local.secrets_names_iam_ms
 

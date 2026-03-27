@@ -6,53 +6,30 @@ locals {
   location_short = "weu"
   domain         = "ar"
 
-  dns_zone_prefix     = "dev.selfcare"
-  api_dns_zone_prefix = "api.dev.selfcare"
+  dns_zone_prefix     = "selfcare"
+  api_dns_zone_prefix = "api.selfcare"
+  external_domain     = "pagopa.it"
+  
+  apim_name = "selc-${local.env_short}-apim-v2"
+  apim_rg   = "selc-${local.env_short}-api-v2-rg"
 
   project = "${local.prefix}-${local.env_short}"
-
-  onboarding_image_tag    = var.onboarding_image_tag
-  auth_image_tag          = var.auth_image_tag
-  product_image_tag       = var.product_image_tag
-  product_cdc_image_tag   = var.product_cdc_image_tag
-  iam_image_tag           = var.iam_image_tag
-  document_image_tag      = var.document_image_tag
-  webhook_image_tag       = var.webhook_image_tag
-  namirial_sign_image_tag = var.namirial_sign_image_tag
 
   mongo_db = {
     mongodb_rg_name               = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-rg",
     cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-account"
-    mongodb_name                  = "selcOnboarding"
+    database_name                 = "selcIam"
   }
 
   container_app_environment_name = "${local.prefix}-${local.env_short}-cae-002"
   ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-002-rg"
 
-  function_name = "${local.storage_prefix}-onboarding-fn"
-
-  container_app = {
-    min_replicas = 1
-    max_replicas = 5
-    scale_rules = [
-      {
-        custom = {
-          metadata = {
-            "desiredReplicas" = "3"
-            "start"           = "0 8 * * MON-FRI"
-            "end"             = "0 19 * * MON-FRI"
-            "timezone"        = "Europe/Rome"
-          }
-          type = "cron"
-        }
-        name = "cron-scale-rule"
-      }
-    ]
-    cpu    = 0.5
-    memory = "1Gi"
+  private_dns_name_domain = "lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
+  private_dns_name_ms = {
+    private_dns_name_ms = "selc-${local.env_short}-iam-ms-ca.${local.private_dns_name_domain}"
   }
 
-  microservice_container_app = {
+  container_app = {
     min_replicas = 1
     max_replicas = 5
     scale_rules = [
@@ -111,9 +88,9 @@ locals {
 
   tags = {
     CreatedBy   = "Terraform"
-    Environment = "PROD"
-    Owner       = "SelfCare"
-    Source      = "https://github.com/pagopa/selfcare-onboarding"
+    Environment = "Prod"
+    Owner       = "Selfcare"
+    Source      = "https://github.com/pagopa/selfcare"
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
   }
 
@@ -127,3 +104,5 @@ locals {
 
   image_tag_latest = "latest"
 }
+
+//pnpg https://selc-p-pnpg-user-cdc-ca.calmmoss-0be48755.westeurope.azurecontainerapps.io

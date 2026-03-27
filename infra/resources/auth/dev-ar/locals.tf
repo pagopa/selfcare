@@ -15,8 +15,6 @@ locals {
 
   project = "${local.prefix}-${local.env_short}"
 
-
-
   mongo_db = {
     mongodb_rg_name               = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-rg",
     cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-account"

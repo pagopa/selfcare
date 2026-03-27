@@ -8,34 +8,26 @@ locals {
 
   dns_zone_prefix     = "dev.selfcare"
   api_dns_zone_prefix = "api.dev.selfcare"
+  external_domain     = "pagopa.it"
 
   apim_name = "selc-${local.env_short}-apim-v2"
   apim_rg   = "selc-${local.env_short}-api-v2-rg"
 
   project = "${local.prefix}-${local.env_short}"
 
-  onboarding_image_tag    = var.onboarding_image_tag
-  auth_image_tag          = var.auth_image_tag
-  product_image_tag       = var.product_image_tag
-  product_cdc_image_tag   = var.product_cdc_image_tag
-  iam_image_tag           = var.iam_image_tag
-  document_image_tag      = var.document_image_tag
-  webhook_image_tag       = var.webhook_image_tag
-  namirial_sign_image_tag = var.namirial_sign_image_tag
-
   mongo_db = {
     mongodb_rg_name               = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-rg",
     cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-account"
-    database_onboarding_name      = "selcOnboarding"
-    database_auth_name            = "selcAuth"
+    database_name                 = "selcIam"
   }
 
   container_app_environment_name = "${local.prefix}-${local.env_short}-cae-002"
   ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-002-rg"
 
   private_dns_name_domain = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
-
-  function_name = "${local.project}-onboarding-fn"
+  private_dns_name_ms = {
+    private_dns_name_ms = "selc-${local.env_short}-iam-ms-ca.${local.private_dns_name_domain}"
+  }
 
   container_app = {
     min_replicas = 0

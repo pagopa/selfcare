@@ -48,11 +48,11 @@ module "container_app_iam_ms" {
 
   env_short                      = local.env_short
   resource_group_name            = local.ca_resource_group_name
-  container_app                  = local.microservice_container_app
+  container_app                  = local.container_app
   container_app_name             = "${local.project}-iam-ms"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-iam-ms"
-  image_tag                      = local.iam_image_tag
+  image_tag                      = local.image_tag_latest
   app_settings                   = local.app_settings_iam_ms
   secrets_names                  = local.secrets_names_iam_ms
 
