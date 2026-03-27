@@ -32,7 +32,6 @@ jobs:
       target: selc
       app: product-cdc
       APP_PATH: apps/product-cdc
-      INFRA_PATH: infra/apps/product-cdc
       APPS_POM: apps/pom.xml
       POM: pom.xml
     secrets: inherit

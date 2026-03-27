@@ -32,7 +32,6 @@ jobs:
       target: selc
       app: auth
       APP_PATH: apps/auth
-      INFRA_PATH: infra/apps/auth
       APPS_POM: apps/pom.xml
       POM: pom.xml
     secrets: inherit

@@ -32,7 +32,6 @@ jobs:
       target: selc
       app: webhook
       APP_PATH: apps/webhook
-      INFRA_PATH: infra/apps/webhook
       APPS_POM: apps/pom.xml
       POM: pom.xml
     secrets: inherit

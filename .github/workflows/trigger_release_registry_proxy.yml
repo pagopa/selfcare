@@ -52,15 +52,15 @@ jobs:
       - name: Trigger Registry Proxy ms Release
         run: |
           gh workflow run release_app.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=selc -f app=registry_proxy
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=selc -f app=registry-proxy
 
       - name: Trigger PNPG Registry Proxy Release
         run: |
           gh workflow run release_app.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=registry_proxy
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=registry-proxy
 
 
-update_uat_variable:
+  update_uat_variable:
     name: "Update UAT Version Variable"
     needs: release
     if: ${{ inputs.env == 'uat' }}

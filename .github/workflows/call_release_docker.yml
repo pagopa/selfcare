@@ -6,7 +6,7 @@ on:
         description: 'Microservice name'
         required: false
         default: 'app'
-      dir:
+      tf_dir:
         type: string
         required: true
       environment:
@@ -134,7 +134,7 @@ jobs:
 
       - name: Terraform Init
         shell: bash
-        working-directory: ${{ inputs.dir }}
+        working-directory: ${{ inputs.tf_dir }}
         run: terraform init -input=false
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
@@ -143,7 +143,7 @@ jobs:
 
       - name: Terraform Plan
         shell: bash
-        working-directory: ${{ inputs.dir }}
+        working-directory: ${{ inputs.tf_dir }}
         run: |
           terraform plan -lock-timeout=3000s -input=false -out=tfplan-${{ inputs.tf_environment }}-${{ github.sha }}
         env:
@@ -159,7 +159,7 @@ jobs:
           ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
         with:
           plan-file: tfplan-${{ inputs.tf_environment }}-${{ github.sha }}
-          working-directory: ${{ inputs.dir }}
+          working-directory: ${{ inputs.tf_dir }}
           artifact-name: terraform-plan
           retention-days: 1
 
@@ -193,17 +193,17 @@ jobs:
           ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
         with:
           plan-file: tfplan-${{ inputs.tf_environment }}-${{ github.sha }}
-          working-directory: ${{ inputs.dir }}
+          working-directory: ${{ inputs.tf_dir }}
           artifact-name: terraform-plan
 
       - name: Retrieve Terraform Modules from Cache
         id: cache-terraform-modules
         uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
         with:
-          path: ${{ inputs.dir }}/.terraform
-          key: terraform-${{ inputs.dir }}-${{ github.sha }}
+          path: ${{ inputs.tf_dir }}/.terraform
+          key: terraform-${{ inputs.tf_dir }}-${{ github.sha }}
           restore-keys: |
-            terraform-${{ inputs.dir }}
+            terraform-${{ inputs.tf_dir }}
 
       - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # v3.0.0
         name: Setup Terraform
@@ -212,13 +212,13 @@ jobs:
 
       - name: Terraform Init
         shell: bash
-        working-directory: ${{ inputs.dir }}
+        working-directory: ${{ inputs.tf_dir }}
         run: |
           terraform init -input=false
 
       - name: Terraform Apply
         shell: bash
-        working-directory: ${{ inputs.dir }}
+        working-directory: ${{ inputs.tf_dir }}
         run: |
           terraform apply -lock-timeout=3000s -auto-approve -input=false tfplan-${{ inputs.tf_environment }}-${{ github.sha }}
         env:

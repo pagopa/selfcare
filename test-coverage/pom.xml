@@ -157,6 +157,25 @@
             </dependencies>
         </profile>
         <profile>
+            <id>onboarding-bff</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>onboarding-bff</artifactId>
+                    <version>1.0.0-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
             <id>iam</id>
             <activation>
                 <activeByDefault>false</activeByDefault>

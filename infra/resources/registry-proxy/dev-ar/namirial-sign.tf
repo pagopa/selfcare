@@ -116,7 +116,7 @@ resource "azurerm_container_app" "namirial_sws_container_app" {
 
     container {
       name   = "namirial-sws"
-      image  = "index.docker.io/namirial/sws:${local.namirial_sign_image_tag}"
+      image  = "index.docker.io/namirial/sws:${var.image_tag}"
       cpu    = local.namirial_sws_container_app.cpu
       memory = local.namirial_sws_container_app.memory
 
