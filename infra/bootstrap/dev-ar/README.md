@@ -23,6 +23,7 @@
 |------|--------|---------|
 | <a name="module_github_environment_cd"></a> [github\_environment\_cd](#module\_github\_environment\_cd) | ../_modules/github_repository_environment | n/a |
 | <a name="module_github_environment_ci"></a> [github\_environment\_ci](#module\_github\_environment\_ci) | ../_modules/github_repository_environment | n/a |
+| <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | ../_modules/github_runner | n/a |
 | <a name="module_github_secrets"></a> [github\_secrets](#module\_github\_secrets) | ../_modules/repository_secrets | n/a |
 | <a name="module_identity_cd"></a> [identity\_cd](#module\_identity\_cd) | ../_modules/github_managed_identity_cd | n/a |
 | <a name="module_identity_ci"></a> [identity\_ci](#module\_identity\_ci) | ../_modules/github_managed_identity_ci | n/a |

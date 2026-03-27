@@ -2,9 +2,9 @@ package it.pagopa.selfcare.document.service;
 
 import eu.europa.esig.dss.diagnostic.CertificateWrapper;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
+import eu.europa.esig.dss.enumerations.CertificateSourceType;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.Indication;
-import eu.europa.esig.dss.enumerations.CertificateSourceType;
 import eu.europa.esig.dss.enumerations.SignatureForm;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.Digest;
@@ -23,11 +23,10 @@ import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.model.FormItem;
 import it.pagopa.selfcare.document.model.entity.Document;
-import it.pagopa.selfcare.document.service.impl.SignatureServiceImp;
+import it.pagopa.selfcare.document.service.impl.SignatureServiceImpl;
 import it.pagopa.selfcare.onboarding.crypto.PadesSignService;
 import it.pagopa.selfcare.onboarding.crypto.entity.SignatureInformation;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -36,11 +35,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.ByteArrayInputStream;
 import java.lang.reflect.Field;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -49,25 +47,15 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @QuarkusTest
-class SignatureServiceImpTest {
+class SignatureServiceImplTest {
 
     private TrustedListsCertificateSource trustedListsCertificateSource;
     private PagoPaSignatureConfig pagoPaSignatureConfig;
@@ -76,7 +64,7 @@ class SignatureServiceImpTest {
     @InjectMock
     DocumentService documentService;
 
-    private SignatureServiceImp service;
+    private SignatureServiceImpl service;
 
     @TempDir
     Path tempDir;
@@ -89,7 +77,7 @@ class SignatureServiceImpTest {
         pagoPaSignatureConfig = Mockito.mock(PagoPaSignatureConfig.class);
         padesSignService = Mockito.mock(PadesSignService.class);
 
-        service = new SignatureServiceImp(trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService);
+        service = new SignatureServiceImpl(trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService);
         setField(service, "isVerifyEnabled", Boolean.TRUE);
         setField(service, "documentService", documentService);
     }
@@ -901,7 +889,7 @@ class SignatureServiceImpTest {
                     .thenReturn(mockValidator);
 
             // Create spy to control extractPdfFromSignedContainer and computeDigestOfSignedRevision
-            SignatureServiceImp spyService = spy(new SignatureServiceImp(
+            SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
                     trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
             setField(spyService, "isVerifyEnabled", Boolean.TRUE);
             setField(spyService, "documentService", documentService);
@@ -935,7 +923,7 @@ class SignatureServiceImpTest {
             validatorMock.when(() -> SignedDocumentValidator.fromDocument(any(DSSDocument.class)))
                     .thenReturn(mockValidator);
 
-            SignatureServiceImp spyService = spy(new SignatureServiceImp(
+            SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
                     trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
             setField(spyService, "isVerifyEnabled", Boolean.TRUE);
             setField(spyService, "documentService", documentService);
@@ -968,7 +956,7 @@ class SignatureServiceImpTest {
             validatorMock.when(() -> SignedDocumentValidator.fromDocument(any(DSSDocument.class)))
                     .thenReturn(mockValidator);
 
-            SignatureServiceImp spyService = spy(new SignatureServiceImp(
+            SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
                     trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
             setField(spyService, "isVerifyEnabled", Boolean.TRUE);
             setField(spyService, "documentService", documentService);
@@ -993,7 +981,6 @@ class SignatureServiceImpTest {
 
         String templateDigest = "signedDocDigest";
 
-        DSSDocument mockUploadedDoc = mock(DSSDocument.class);
         DSSDocument mockExtractedPdf = mock(DSSDocument.class);
 
         AdvancedSignature mockSig = createMockSignature("sig1", new Date(), SignatureForm.PAdES);
@@ -1009,7 +996,7 @@ class SignatureServiceImpTest {
             validatorMock.when(() -> SignedDocumentValidator.fromDocument(any(DSSDocument.class)))
                     .thenReturn(mockValidator);
 
-            SignatureServiceImp spyService = spy(new SignatureServiceImp(
+            SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
                     trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
             setField(spyService, "isVerifyEnabled", Boolean.TRUE);
             setField(spyService, "documentService", documentService);
@@ -1087,34 +1074,6 @@ class SignatureServiceImpTest {
                 .isInstanceOf(RuntimeException.class);
     }
 
-    // ==================== createSafeTempFile / createTempFileWithPosix ====================
-
-    @Test
-    void createTempFileWithPosix_shouldCreateFileWithPdfExtension() throws IOException {
-        Assumptions.assumeTrue(
-                FileSystems.getDefault().supportedFileAttributeViews().contains("posix"),
-                "POSIX attributes are not supported on this platform"
-        );
-
-        Path tempFile = service.createTempFileWithPosix();
-
-        assertThat(tempFile).isNotNull();
-        assertThat(tempFile.toFile()).exists();
-        assertThat(tempFile.toString()).endsWith(".pdf");
-
-        Files.deleteIfExists(tempFile);
-    }
-
-    @Test
-    void createSafeTempFile_shouldReturnValidPath() throws IOException {
-        Path result = service.createSafeTempFile();
-
-        assertThat(result).isNotNull();
-        assertThat(result.toFile()).exists();
-
-        Files.deleteIfExists(result);
-    }
-
     // ==================== validateDocument ====================
 
     @Test
@@ -1156,8 +1115,24 @@ class SignatureServiceImpTest {
     }
 
     @Test
+    void verifySignatureFile_shouldThrowWhenFileIsNull() {
+        assertThatThrownBy(() -> service.verifySignature((File) null))
+                .isInstanceOf(InvalidRequestException.class);
+    }
+
+    @Test
+    void verifySignatureFile_shouldThrowWhenFileOutsideTempDir() throws IOException {
+        Path outsideDir = Files.createDirectories(Path.of("target", "verify-signature-outside"));
+        File outsideFile = outsideDir.resolve("outside.pdf").toFile();
+        Files.writeString(outsideFile.toPath(), "content-outside");
+
+        assertThatThrownBy(() -> service.verifySignature(outsideFile))
+                .isInstanceOf(InvalidRequestException.class);
+    }
+
+    @Test
     void verifySignatureFile_shouldReturnTrueWhenFullValidationChainPasses() throws IOException {
-        SignatureServiceImp spyService = spy(new SignatureServiceImp(
+        SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
                 trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
         setField(spyService, "isVerifyEnabled", Boolean.TRUE);
         setField(spyService, "documentService", documentService);
@@ -1219,7 +1194,7 @@ class SignatureServiceImpTest {
     @Test
     void verifySignatureFileChecksumTaxCode_shouldExecuteFullValidationChain() throws IOException {
         // Arrange: create spy to mock createDocumentValidator
-        SignatureServiceImp spyService = spy(new SignatureServiceImp(
+        SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
                 trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
         setField(spyService, "isVerifyEnabled", Boolean.TRUE);
         setField(spyService, "documentService", documentService);
@@ -1268,7 +1243,7 @@ class SignatureServiceImpTest {
     @Test
     void verifySignatureFileChecksumTaxCode_shouldThrowWhenSignatureFormInvalid() throws IOException {
         // Arrange: create spy to mock createDocumentValidator
-        SignatureServiceImp spyService = spy(new SignatureServiceImp(
+        SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
                 trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
         setField(spyService, "isVerifyEnabled", Boolean.TRUE);
         setField(spyService, "documentService", documentService);
@@ -1302,7 +1277,7 @@ class SignatureServiceImpTest {
     @Test
     void verifySignatureFileChecksumTaxCode_shouldThrowWhenDigestMismatch() throws IOException {
         // Arrange: create spy
-        SignatureServiceImp spyService = spy(new SignatureServiceImp(
+        SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
                 trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
         setField(spyService, "isVerifyEnabled", Boolean.TRUE);
         setField(spyService, "documentService", documentService);
@@ -1342,7 +1317,7 @@ class SignatureServiceImpTest {
     @Test
     void verifySignatureFileChecksumTaxCode_shouldThrowWhenTaxCodeMismatch() throws IOException {
         // Arrange: create spy
-        SignatureServiceImp spyService = spy(new SignatureServiceImp(
+        SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
                 trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
         setField(spyService, "isVerifyEnabled", Boolean.TRUE);
         setField(spyService, "documentService", documentService);
@@ -1393,7 +1368,7 @@ class SignatureServiceImpTest {
     void extractOriginalDocument_shouldThrowWhenFileNotSigned() throws IOException {
         File invalidFile = createTempFile("not a signed document");
 
-        assertThatThrownBy(() -> SignatureServiceImp.extractOriginalDocument(invalidFile))
+        assertThatThrownBy(() -> SignatureServiceImpl.extractOriginalDocument(invalidFile))
                 .isInstanceOf(InvalidRequestException.class);
     }
 
@@ -1407,7 +1382,7 @@ class SignatureServiceImpTest {
             validatorStatic.when(() -> SignedDocumentValidator.fromDocument(any(DSSDocument.class)))
                     .thenReturn(validator);
 
-            assertThatThrownBy(() -> SignatureServiceImp.extractOriginalDocument(contract))
+            assertThatThrownBy(() -> SignatureServiceImpl.extractOriginalDocument(contract))
                     .isInstanceOf(InvalidRequestException.class);
 
             verify(validator).setCertificateVerifier(any());
@@ -1429,7 +1404,7 @@ class SignatureServiceImpTest {
             validatorStatic.when(() -> SignedDocumentValidator.fromDocument(any(DSSDocument.class)))
                     .thenReturn(validator);
 
-            assertThatThrownBy(() -> SignatureServiceImp.extractOriginalDocument(contract))
+            assertThatThrownBy(() -> SignatureServiceImpl.extractOriginalDocument(contract))
                     .isInstanceOf(InvalidRequestException.class);
 
             verify(validator).setCertificateVerifier(any());
@@ -1453,7 +1428,7 @@ class SignatureServiceImpTest {
             validatorStatic.when(() -> SignedDocumentValidator.fromDocument(any(DSSDocument.class)))
                     .thenReturn(validator);
 
-            DSSDocument result = SignatureServiceImp.extractOriginalDocument(contract);
+            DSSDocument result = SignatureServiceImpl.extractOriginalDocument(contract);
 
             assertThat(result).isSameAs(expectedOriginal);
             verify(validator).setCertificateVerifier(any());
@@ -1466,7 +1441,7 @@ class SignatureServiceImpTest {
     void extractOriginalDocument_shouldThrowWhenFileDoesNotExist() {
         File nonExistentFile = tempDir.resolve("nonexistent.p7m").toFile();
 
-        assertThatThrownBy(() -> SignatureServiceImp.extractOriginalDocument(nonExistentFile))
+        assertThatThrownBy(() -> SignatureServiceImpl.extractOriginalDocument(nonExistentFile))
                 .isInstanceOf(InvalidRequestException.class);
     }
 
@@ -1495,10 +1470,10 @@ class SignatureServiceImpTest {
         byte[] pdfBytes = "pdf-content".getBytes();
         when(originalContract.openStream()).thenReturn(new ByteArrayInputStream(pdfBytes));
 
-        try (MockedStatic<SignatureServiceImp> signatureServiceImpMockedStatic =
-                     Mockito.mockStatic(SignatureServiceImp.class, Mockito.CALLS_REAL_METHODS)) {
+        try (MockedStatic<SignatureServiceImpl> signatureServiceImpMockedStatic =
+                     Mockito.mockStatic(SignatureServiceImpl.class, Mockito.CALLS_REAL_METHODS)) {
             signatureServiceImpMockedStatic
-                    .when(() -> SignatureServiceImp.extractOriginalDocument(contract))
+                    .when(() -> SignatureServiceImpl.extractOriginalDocument(contract))
                     .thenReturn(originalContract);
 
             File result = service.extractFile(contract);
@@ -1515,10 +1490,10 @@ class SignatureServiceImpTest {
     void extractFile_shouldThrowResourceNotFoundWhenOriginalContractNull() throws IOException {
         File contract = createTempFile("signed-content");
 
-        try (MockedStatic<SignatureServiceImp> signatureServiceImpMockedStatic =
-                     Mockito.mockStatic(SignatureServiceImp.class, Mockito.CALLS_REAL_METHODS)) {
+        try (MockedStatic<SignatureServiceImpl> signatureServiceImpMockedStatic =
+                     Mockito.mockStatic(SignatureServiceImpl.class, Mockito.CALLS_REAL_METHODS)) {
             signatureServiceImpMockedStatic
-                    .when(() -> SignatureServiceImp.extractOriginalDocument(contract))
+                    .when(() -> SignatureServiceImpl.extractOriginalDocument(contract))
                     .thenReturn(null);
 
             assertThatThrownBy(() -> service.extractFile(contract))
@@ -1532,10 +1507,10 @@ class SignatureServiceImpTest {
         DSSDocument originalContract = mock(DSSDocument.class);
         when(originalContract.openStream()).thenThrow(new RuntimeException("stream-failure"));
 
-        try (MockedStatic<SignatureServiceImp> signatureServiceImpMockedStatic =
-                     Mockito.mockStatic(SignatureServiceImp.class, Mockito.CALLS_REAL_METHODS)) {
+        try (MockedStatic<SignatureServiceImpl> signatureServiceImpMockedStatic =
+                     Mockito.mockStatic(SignatureServiceImpl.class, Mockito.CALLS_REAL_METHODS)) {
             signatureServiceImpMockedStatic
-                    .when(() -> SignatureServiceImp.extractOriginalDocument(contract))
+                    .when(() -> SignatureServiceImpl.extractOriginalDocument(contract))
                     .thenReturn(originalContract);
 
             assertThatThrownBy(() -> service.extractFile(contract))

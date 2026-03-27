@@ -3,7 +3,7 @@ package it.pagopa.selfcare.onboarding.entity;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import it.pagopa.selfcare.onboarding.common.TokenType;
+import it.pagopa.selfcare.onboarding.common.DocumentType;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePathConfig;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
 import it.pagopa.selfcare.product.entity.Product;
@@ -33,7 +33,7 @@ public abstract class OnboardingWorkflow {
 
   public abstract String getPdfFormatFilename();
 
-  public abstract TokenType getTokenType();
+  public abstract DocumentType getDocumentType();
 
   public abstract String getConfirmTokenUrl(MailTemplatePlaceholdersConfig config);
 

@@ -1,24 +1,22 @@
 package it.pagopa.selfcare.document.controller;
 
-import static io.restassured.RestAssured.given;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.service.SignatureService;
 import jakarta.ws.rs.core.MediaType;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+
+import static io.restassured.RestAssured.given;
+import static org.mockito.ArgumentMatchers.*;
 
 @QuarkusTest
 @TestSecurity(authorizationEnabled = false)

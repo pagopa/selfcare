@@ -4,7 +4,7 @@ import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_FD;
 import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_FD_GARANTITO;
 
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.onboarding.common.TokenType;
+import it.pagopa.selfcare.onboarding.common.DocumentType;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePathConfig;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
 import it.pagopa.selfcare.onboarding.utils.InstitutionUtils;
@@ -39,8 +39,8 @@ public class OnboardingWorkflowInstitution extends OnboardingWorkflow {
   }
 
   @Override
-  public TokenType getTokenType() {
-    return TokenType.INSTITUTION;
+  public DocumentType getDocumentType() {
+    return DocumentType.INSTITUTION;
   }
 
   @Override

@@ -1,5 +1,5 @@
 module "container_app_environment_runner" {
-  source = "github.com/pagopa/terraform-azurerm-v4.git//container_app_environment?ref=v8.2.0"
+  source = "github.com/pagopa/terraform-azurerm-v4.git//container_app_environment?ref=v9.6.1"
 
   resource_group_name = azurerm_resource_group.rg_github_runner.name
   location            = azurerm_resource_group.rg_github_runner.location

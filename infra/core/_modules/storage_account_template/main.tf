@@ -10,7 +10,7 @@ resource "azurerm_resource_group" "this" {
 
 # tfsec:ignore:azure-storage-default-action-deny
 module "storage_account" {
-  source = "github.com/pagopa/terraform-azurerm-v4.git//storage_account?ref=v6.6.0"
+  source = "github.com/pagopa/terraform-azurerm-v4.git//storage_account?ref=v9.6.1"
 
   name                            = replace(var.storage_account_name, "-", "")
   account_kind                    = "StorageV2"
@@ -70,7 +70,7 @@ resource "azurerm_storage_container" "this" {
 }
 
 module "subnet" {
-  source                            = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v6.6.0"
+  source                            = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v9.6.1"
   name                              = "${var.project}-${var.name}-storage-snet"
   address_prefixes                  = var.cidr_subnet
   resource_group_name               = var.rg_vnet_name

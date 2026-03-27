@@ -1,33 +1,29 @@
 package it.pagopa.selfcare.document.controller;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.any;
-
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.document.mapper.DocumentMapper;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
-import it.pagopa.selfcare.document.model.dto.response.DocumentBuilderResponse;
 import it.pagopa.selfcare.document.model.dto.response.DocumentResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
-import it.pagopa.selfcare.document.exception.ConflictException;
-import it.pagopa.selfcare.document.mapper.DocumentMapper;
-import it.pagopa.selfcare.document.model.FormItem;
 import it.pagopa.selfcare.document.service.DocumentService;
+import it.pagopa.selfcare.onboarding.common.DocumentType;
 import jakarta.ws.rs.core.MediaType;
-import java.io.File;
-import java.nio.file.Files;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.jboss.resteasy.reactive.RestResponse;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
 
 @QuarkusTest
 @TestSecurity(authorizationEnabled = false)
@@ -36,10 +32,7 @@ class DocumentControllerTest {
   private static final String ONBOARDING_ID = "onboarding-123";
   private static final String DOCUMENT_ID = "doc-456";
   private static final String ATTACHMENT_NAME = "attachment.pdf";
-  private static final String TEMPLATE_PATH = "templates/contract.ftl";
   private static final String CONTRACT_SIGNED_PATH = "contracts/signed/contract-signed.pdf";
-  private static final String INSTITUTION_DESCRIPTION = "Test Institution";
-  private static final String PRODUCT_ID = "Product-123";
 
   @InjectMock DocumentService documentService;
   @InjectMock DocumentMapper documentMapper;
@@ -125,62 +118,6 @@ class DocumentControllerTest {
   }
 
   @Test
-  void getContract_shouldReturnFile_whenContractExists() throws Exception {
-    File tempFile = Files.createTempFile("contract", ".pdf").toFile();
-    tempFile.deleteOnExit();
-
-    Mockito.when(documentService.retrieveContract(ONBOARDING_ID, Boolean.FALSE))
-        .thenReturn(Uni.createFrom().item(RestResponse.ok(tempFile)));
-
-    given()
-        .when()
-        .get("/v1/documents/" + ONBOARDING_ID + "/contract")
-        .then()
-        .statusCode(200);
-  }
-
-  @Test
-  void getTemplateAttachment_shouldReturnFile_whenTemplateExists() throws Exception {
-    File tempFile = Files.createTempFile("template", ".pdf").toFile();
-    tempFile.deleteOnExit();
-
-    Mockito.when(
-            documentService.retrieveTemplateAttachment(
-                ONBOARDING_ID, TEMPLATE_PATH, ATTACHMENT_NAME, INSTITUTION_DESCRIPTION, PRODUCT_ID))
-        .thenReturn(Uni.createFrom().item(RestResponse.ok(tempFile)));
-
-    given()
-        .when()
-        .queryParam("templatePath", TEMPLATE_PATH)
-        .queryParam("name", ATTACHMENT_NAME)
-        .queryParam("institutionDescription", INSTITUTION_DESCRIPTION)
-        .queryParam("productId", PRODUCT_ID)
-        .get("/v1/documents/" + ONBOARDING_ID + "/template-attachment")
-        .then()
-        .statusCode(200);
-  }
-
-  @Test
-  void getTemplateAttachment_shouldReturnBadRequest_whenMissingTemplatePath() {
-    given()
-        .when()
-        .queryParam("name", ATTACHMENT_NAME)
-        .get("/v1/documents/" + ONBOARDING_ID + "/template-attachment")
-        .then()
-        .statusCode(400);
-  }
-
-  @Test
-  void getTemplateAttachment_shouldReturnBadRequest_whenMissingName() {
-    given()
-        .when()
-        .queryParam("templatePath", TEMPLATE_PATH)
-        .get("/v1/documents/" + ONBOARDING_ID + "/template-attachment")
-        .then()
-        .statusCode(400);
-  }
-
-  @Test
   void updateContractSigned_shouldReturnNoContent_whenUpdateSuccessful() {
     Mockito.when(documentService.updateContractSigned(ONBOARDING_ID, CONTRACT_SIGNED_PATH))
         .thenReturn(Uni.createFrom().item(1L));
@@ -218,45 +155,7 @@ class DocumentControllerTest {
         .statusCode(400);
   }
 
-  @Test
-  void getContractSigned_shouldReturnFile_whenSignedContractExists() throws Exception {
-    File tempFile = Files.createTempFile("signed", ".pdf").toFile();
-    tempFile.deleteOnExit();
 
-    Mockito.when(documentService.retrieveSignedFile(DOCUMENT_ID))
-        .thenReturn(Uni.createFrom().item(RestResponse.ok(tempFile)));
-
-    given()
-        .when()
-        .get("/v1/documents/" + DOCUMENT_ID + "/contract-signed")
-        .then()
-        .statusCode(200);
-  }
-
-  @Test
-  void getAttachment_shouldReturnFile_whenAttachmentExists() throws Exception {
-    File tempFile = Files.createTempFile("attachment", ".pdf").toFile();
-    tempFile.deleteOnExit();
-
-    Mockito.when(documentService.retrieveAttachment(ONBOARDING_ID, ATTACHMENT_NAME))
-        .thenReturn(Uni.createFrom().item(RestResponse.ok(tempFile)));
-
-    given()
-        .when()
-        .queryParam("name", ATTACHMENT_NAME)
-        .get("/v1/documents/" + ONBOARDING_ID + "/attachment")
-        .then()
-        .statusCode(200);
-  }
-
-  @Test
-  void getAttachment_shouldReturnBadRequest_whenAttachmentNameMissing() {
-    given()
-        .when()
-        .get("/v1/documents/" + ONBOARDING_ID + "/attachment")
-        .then()
-        .statusCode(400);
-  }
 
   @Test
   void reportContractSigned_shouldReturnReport_whenReportAvailable() {
@@ -282,73 +181,6 @@ class DocumentControllerTest {
         .contentType(MediaType.APPLICATION_JSON)
         .when()
         .get("/v1/documents/contract-report")
-        .then()
-        .statusCode(400);
-  }
-
-  @Test
-  void uploadAttachment_shouldReturnNoContent_whenUploadSuccessful() throws Exception {
-    File tempFile = Files.createTempFile("upload", ".pdf").toFile();
-    tempFile.deleteOnExit();
-
-    DocumentBuilderRequest request = DocumentBuilderRequest.builder()
-            .onboardingId(ONBOARDING_ID)
-            .productId("prod-123")
-            .documentType(it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT)
-            .documentName(ATTACHMENT_NAME)
-            .build();
-
-    Mockito.when(documentService.uploadAttachment(any(DocumentBuilderRequest.class), any(FormItem.class)))
-        .thenReturn(Uni.createFrom().voidItem());
-
-    given()
-        .multiPart("file", tempFile, "application/pdf")
-        .multiPart("request", request, "application/json")
-        .when()
-        .post("/v1/documents/attachment")
-        .then()
-        .statusCode(204);
-  }
-
-  @Test
-  void uploadAttachment_shouldReturnConflict_whenAttachmentAlreadyExists() throws Exception {
-    File tempFile = Files.createTempFile("upload", ".pdf").toFile();
-    tempFile.deleteOnExit();
-
-    DocumentBuilderRequest request = DocumentBuilderRequest.builder()
-            .onboardingId(ONBOARDING_ID)
-            .productId("prod-123")
-            .documentType(it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT)
-            .documentName(ATTACHMENT_NAME)
-            .build();
-
-    Mockito.when(documentService.uploadAttachment(any(DocumentBuilderRequest.class), any(FormItem.class)))
-        .thenReturn(Uni.createFrom().failure(new ConflictException("Attachment already exists")));
-
-    given()
-        .multiPart("file", tempFile, "application/pdf")
-        .multiPart("request", request, "application/json")
-        .when()
-        .post("/v1/documents/attachment")
-        .then()
-        .statusCode(409);
-  }
-
-  @Test
-  void uploadAttachment_shouldReturnBadRequest_whenRequestIsInvalid() throws Exception {
-    File tempFile = Files.createTempFile("upload", ".pdf").toFile();
-    tempFile.deleteOnExit();
-
-    DocumentBuilderRequest invalidRequest = DocumentBuilderRequest.builder()
-            .productId("prod-123")
-            .documentType(it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT)
-            .build();
-
-    given()
-        .multiPart("file", tempFile, "application/pdf")
-        .multiPart("request", invalidRequest, "application/json")
-        .when()
-        .post("/v1/documents/attachment")
         .then()
         .statusCode(400);
   }
@@ -428,12 +260,10 @@ class DocumentControllerTest {
     DocumentBuilderRequest request = DocumentBuilderRequest.builder()
             .onboardingId(ONBOARDING_ID)
             .productId("prod-123")
-            .documentType(it.pagopa.selfcare.onboarding.common.TokenType.INSTITUTION)
+            .documentType(DocumentType.INSTITUTION)
             .build();
 
-    DocumentBuilderResponse response = new DocumentBuilderResponse();
-    response.setDocumentId(DOCUMENT_ID);
-    response.setAlreadyExists(false);
+    Document response = new Document();
 
     Mockito.when(documentService.saveDocument(any(DocumentBuilderRequest.class)))
         .thenReturn(Uni.createFrom().item(response));
@@ -444,9 +274,7 @@ class DocumentControllerTest {
         .when()
         .post("/v1/documents")
         .then()
-        .statusCode(201)
-        .body("documentId", equalTo(DOCUMENT_ID))
-        .body("alreadyExists", equalTo(false));
+        .statusCode(201);
   }
 
   @Test
@@ -454,12 +282,10 @@ class DocumentControllerTest {
     DocumentBuilderRequest request = DocumentBuilderRequest.builder()
             .onboardingId(ONBOARDING_ID)
             .productId("prod-123")
-            .documentType(it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT)
+            .documentType(DocumentType.ATTACHMENT)
             .build();
 
-    DocumentBuilderResponse response = new DocumentBuilderResponse();
-    response.setDocumentId(DOCUMENT_ID);
-    response.setAlreadyExists(true);
+    Document response = new Document();
 
     Mockito.when(documentService.saveDocument(any(DocumentBuilderRequest.class)))
         .thenReturn(Uni.createFrom().item(response));
@@ -470,8 +296,7 @@ class DocumentControllerTest {
         .when()
         .post("/v1/documents")
         .then()
-        .statusCode(201)
-        .body("alreadyExists", equalTo(true));
+        .statusCode(201);
   }
 
   @Test
@@ -548,61 +373,6 @@ class DocumentControllerTest {
   }
 
   @Test
-  void getContract_shouldReturnInternalServerError_whenServiceFails() {
-    Mockito.when(documentService.retrieveContract(ONBOARDING_ID, Boolean.FALSE))
-        .thenReturn(Uni.createFrom().failure(new RuntimeException("Storage error")));
-
-    given()
-        .when()
-        .get("/v1/documents/" + ONBOARDING_ID + "/contract")
-        .then()
-        .statusCode(500);
-  }
-
-  @Test
-  void getContractSigned_shouldReturnInternalServerError_whenServiceFails() {
-    Mockito.when(documentService.retrieveSignedFile(DOCUMENT_ID))
-        .thenReturn(Uni.createFrom().failure(new RuntimeException("Storage error")));
-
-    given()
-        .when()
-        .get("/v1/documents/" + DOCUMENT_ID + "/contract-signed")
-        .then()
-        .statusCode(500);
-  }
-
-  @Test
-  void getAttachment_shouldReturnInternalServerError_whenServiceFails() {
-    Mockito.when(documentService.retrieveAttachment(ONBOARDING_ID, ATTACHMENT_NAME))
-        .thenReturn(Uni.createFrom().failure(new RuntimeException("Storage error")));
-
-    given()
-        .when()
-        .queryParam("name", ATTACHMENT_NAME)
-        .get("/v1/documents/" + ONBOARDING_ID + "/attachment")
-        .then()
-        .statusCode(500);
-  }
-
-  @Test
-  void getTemplateAttachment_shouldReturnInternalServerError_whenServiceFails() {
-    Mockito.when(
-            documentService.retrieveTemplateAttachment(
-                ONBOARDING_ID, TEMPLATE_PATH, ATTACHMENT_NAME, INSTITUTION_DESCRIPTION, PRODUCT_ID))
-        .thenReturn(Uni.createFrom().failure(new RuntimeException("Template processing error")));
-
-    given()
-        .when()
-        .queryParam("templatePath", TEMPLATE_PATH)
-        .queryParam("name", ATTACHMENT_NAME)
-        .queryParam("institutionDescription", INSTITUTION_DESCRIPTION)
-        .queryParam("productId", PRODUCT_ID)
-        .get("/v1/documents/" + ONBOARDING_ID + "/template-attachment")
-        .then()
-        .statusCode(500);
-  }
-
-  @Test
   void updateContractSigned_shouldReturnInternalServerError_whenServiceFails() {
     Mockito.when(documentService.updateContractSigned(ONBOARDING_ID, CONTRACT_SIGNED_PATH))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Database error")));
@@ -626,30 +396,6 @@ class DocumentControllerTest {
         .when()
         .queryParam("onboardingId", ONBOARDING_ID)
         .get("/v1/documents/contract-report")
-        .then()
-        .statusCode(500);
-  }
-
-  @Test
-  void uploadAttachment_shouldReturnInternalServerError_whenServiceFails() throws Exception {
-    File tempFile = Files.createTempFile("upload", ".pdf").toFile();
-    tempFile.deleteOnExit();
-
-    DocumentBuilderRequest request = DocumentBuilderRequest.builder()
-            .onboardingId(ONBOARDING_ID)
-            .productId("prod-123")
-            .documentType(it.pagopa.selfcare.onboarding.common.TokenType.ATTACHMENT)
-            .documentName(ATTACHMENT_NAME)
-            .build();
-
-    Mockito.when(documentService.uploadAttachment(any(DocumentBuilderRequest.class), any(FormItem.class)))
-        .thenReturn(Uni.createFrom().failure(new RuntimeException("Storage error")));
-
-    given()
-        .multiPart("file", tempFile, "application/pdf")
-        .multiPart("request", request, "application/json")
-        .when()
-        .post("/v1/documents/attachment")
         .then()
         .statusCode(500);
   }
@@ -688,7 +434,7 @@ class DocumentControllerTest {
   void saveDocument_shouldReturnBadRequest_whenRequestIsInvalid() {
     DocumentBuilderRequest invalidRequest = DocumentBuilderRequest.builder()
             .productId("prod-123")
-            .documentType(it.pagopa.selfcare.onboarding.common.TokenType.INSTITUTION)
+            .documentType(DocumentType.INSTITUTION)
             .build();
 
     given()
@@ -705,7 +451,7 @@ class DocumentControllerTest {
     DocumentBuilderRequest request = DocumentBuilderRequest.builder()
             .onboardingId(ONBOARDING_ID)
             .productId("prod-123")
-            .documentType(it.pagopa.selfcare.onboarding.common.TokenType.INSTITUTION)
+            .documentType(DocumentType.INSTITUTION)
             .build();
 
     Mockito.when(documentService.saveDocument(any(DocumentBuilderRequest.class)))
@@ -786,7 +532,7 @@ class DocumentControllerTest {
   void saveDocument_shouldReturnBadRequest_whenProductIdIsNull() {
     DocumentBuilderRequest invalidRequest = DocumentBuilderRequest.builder()
             .onboardingId(ONBOARDING_ID)
-            .documentType(it.pagopa.selfcare.onboarding.common.TokenType.INSTITUTION)
+            .documentType(DocumentType.INSTITUTION)
             .build();
 
     given()

@@ -7,16 +7,20 @@ import it.pagopa.selfcare.document.model.dto.request.SignatureRequest;
 import it.pagopa.selfcare.document.service.SignatureService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.MediaType;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @Authenticated
 @Path("/v1/signature")
 @AllArgsConstructor
 @Slf4j
+@Tag(name = "Signature Controller", description = "Endpoints for verifying contract signatures")
 public class SignatureController {
 
   @Inject

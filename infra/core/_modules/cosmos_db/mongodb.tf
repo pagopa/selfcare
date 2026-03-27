@@ -14,7 +14,7 @@ locals {
 
 # cosmosdb-Mongo subnet
 module "cosmosdb_mongodb_snet" {
-  source               = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v6.6.0"
+  source               = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v9.6.1"
   name                 = "${var.project}-cosmosb-mongodb-snet"
   resource_group_name  = var.rg_vnet_name
   virtual_network_name = var.vnet_name
@@ -25,7 +25,7 @@ module "cosmosdb_mongodb_snet" {
 }
 
 module "cosmosdb_account_mongodb" {
-  source = "github.com/pagopa/terraform-azurerm-v4.git//cosmosdb_account?ref=v6.6.0"
+  source = "github.com/pagopa/terraform-azurerm-v4.git//cosmosdb_account?ref=v9.6.1"
 
   name                = "${var.project}-cosmosdb-mongodb-account"
   location            = azurerm_resource_group.mongodb_rg.location
@@ -115,7 +115,7 @@ resource "azurerm_key_vault_secret" "cosmosdb_account_mongodb_connection_strings
 # }
 
 # module "selc_ms_core_collections" {
-#   source = "github.com/pagopa/terraform-azurerm-v4.git//cosmosdb_mongodb_collection?ref=v6.6.0"
+#   source = "github.com/pagopa/terraform-azurerm-v4.git//cosmosdb_mongodb_collection?ref=v9.6.1"
 
 #   for_each = {
 #     for index, coll in local.mongo.selcMsCore.collections :

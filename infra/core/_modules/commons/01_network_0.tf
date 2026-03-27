@@ -7,7 +7,7 @@ resource "azurerm_resource_group" "rg_vnet" {
 
 # vnet
 module "vnet" {
-  source               = "github.com/pagopa/terraform-azurerm-v4.git//virtual_network?ref=v8.5.3"
+  source               = "github.com/pagopa/terraform-azurerm-v4.git//virtual_network?ref=v9.6.1"
   name                 = "${local.project}-vnet"
   location             = azurerm_resource_group.rg_vnet.location
   resource_group_name  = azurerm_resource_group.rg_vnet.name
@@ -17,7 +17,7 @@ module "vnet" {
 }
 
 module "private_endpoints_subnet" {
-  source                            = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v8.5.3"
+  source                            = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v9.6.1"
   name                              = "${local.project}-private-endpoints-snet"
   address_prefixes                  = var.cidr_subnet_private_endpoints
   resource_group_name               = azurerm_resource_group.rg_vnet.name

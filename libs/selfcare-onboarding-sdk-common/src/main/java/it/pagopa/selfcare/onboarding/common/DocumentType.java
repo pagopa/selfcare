@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.onboarding.common;
 
-public enum TokenType {
+public enum DocumentType {
   INSTITUTION,
   LEGALS,
   USER,
