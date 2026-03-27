@@ -1,11 +1,9 @@
 package it.pagopa.selfcare.onboarding.mapper;
 
-import it.pagopa.selfcare.onboarding.entity.Billing;
-import it.pagopa.selfcare.onboarding.entity.Institution;
-import it.pagopa.selfcare.onboarding.entity.Onboarding;
-import it.pagopa.selfcare.onboarding.entity.Payment;
+import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.product.entity.Product;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.openapi.quarkus.document_json.model.BillingPdfData;
@@ -24,19 +22,19 @@ public interface ContractPdfRequestMapper {
   @Mapping(target = "pricingPlan", source = "onboarding.pricingPlan")
   @Mapping(target = "isAggregator", source = "onboarding.isAggregator")
   @Mapping(target = "institution", source = "onboarding.institution")
-  @Mapping(target = "manager", source = "manager")
-  @Mapping(target = "delegates", source = "delegates")
+  @Mapping(target = "manager", expression = "java(toUserPdfData(manager, onboarding))")
+  @Mapping(target = "delegates", expression = "java(toUserPdfDataList(delegates, onboarding))")
   @Mapping(target = "billing", source = "onboarding.billing")
   @Mapping(target = "payment", source = "onboarding.payment")
   @Mapping(target = "contractTemplatePath", source = "contractTemplatePath")
   @Mapping(target = "aggregatesCsvBaseUrl", source = "aggregatesCsvBaseUrl")
   ContractPdfRequest toRequest(
-      Onboarding onboarding,
-      UserResource manager,
-      List<UserResource> delegates,
-      Product product,
-      String contractTemplatePath,
-      String aggregatesCsvBaseUrl);
+          Onboarding onboarding,
+          UserResource manager,
+          List<UserResource> delegates,
+          Product product,
+          String contractTemplatePath,
+          String aggregatesCsvBaseUrl);
 
   InstitutionPdfData toInstitutionPdfData(Institution institution);
 
@@ -44,12 +42,47 @@ public interface ContractPdfRequestMapper {
 
   PaymentPdfData toPaymentPdfData(Payment payment);
 
-  @Mapping(target = "id", expression = "java(userResource.getId().toString())")
-  @Mapping(target = "name", source = "name.value")
-  @Mapping(target = "surname", source = "familyName.value")
-  @Mapping(target = "taxCode", source = "fiscalCode")
-  @Mapping(target = "email", source = "email.value")
-  UserPdfData toUserPdfData(UserResource userResource);
+  @Mapping(target = "id", expression = "java(userResource.getId() != null ? userResource.getId().toString() : null)")
+  @Mapping(target = "name", source = "userResource.name.value")
+  @Mapping(target = "surname", source = "userResource.familyName.value")
+  @Mapping(target = "taxCode", source = "userResource.fiscalCode")
+  @Mapping(target = "userMailUuid", expression = "java(extractUserMailUuid(userResource, onboarding))")
+  @Mapping(target = "email", expression = "java(extractWorkContactEmail(userResource, onboarding))")
+  UserPdfData toUserPdfData(UserResource userResource, Onboarding onboarding);
 
-  List<UserPdfData> toUserPdfData(List<UserResource> userResources);
+  default List<UserPdfData> toUserPdfDataList(List<UserResource> userResources, Onboarding onboarding) {
+    if (userResources == null) {
+      return null;
+    }
+    return userResources.stream()
+            .map(user -> toUserPdfData(user, onboarding))
+            .collect(Collectors.toList());
+  }
+
+  default String extractUserMailUuid(UserResource userResource, Onboarding onboarding) {
+    if (userResource == null || userResource.getId() == null || onboarding == null || onboarding.getUsers() == null) {
+      return null;
+    }
+
+    String userId = userResource.getId().toString();
+
+    return onboarding.getUsers().stream()
+            .filter(u -> u.getId().equals(userId))
+            .map(User::getUserMailUuid)
+            .filter(java.util.Objects::nonNull)
+            .findFirst()
+            .orElse(null);
+  }
+
+  default String extractWorkContactEmail(UserResource userResource, Onboarding onboarding) {
+    String mailUuid = extractUserMailUuid(userResource, onboarding);
+
+    if (mailUuid != null && userResource.getWorkContacts() != null) {
+      var workContact = userResource.getWorkContacts().get(mailUuid);
+      if (workContact != null && workContact.getEmail() != null) {
+        return workContact.getEmail().getValue();
+      }
+    }
+    return null;
+  }
 }

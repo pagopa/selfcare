@@ -140,6 +140,19 @@ class OnboardingServiceTest {
         resourceOfSurname.setCertification(CertifiableFieldResourceOfstring.CertificationEnum.NONE);
         resourceOfSurname.setValue("surname");
         userResource.setFamilyName(resourceOfSurname);
+
+        CertifiableFieldResourceOfstring workEmail = new CertifiableFieldResourceOfstring();
+        workEmail.setCertification(CertifiableFieldResourceOfstring.CertificationEnum.NONE);
+        workEmail.setValue("email.lavoro@test.it");
+
+        WorkContactResource workContactResource = new WorkContactResource();
+        workContactResource.setEmail(workEmail);
+
+        Map<String, WorkContactResource> workContacts = new java.util.HashMap<>();
+        workContacts.put("ID_MAIL#TEST-123", workContactResource);
+
+        userResource.setWorkContacts(workContacts);
+
         return userResource;
     }
 
@@ -185,6 +198,7 @@ class OnboardingServiceTest {
         User manager = new User();
         manager.setId(userResource.getId().toString());
         manager.setRole(PartyRole.MANAGER);
+        manager.setUserMailUuid("ID_MAIL#TEST-123");
         onboarding.setUsers(List.of(manager));
 
         Product product = createDummyProduct();
@@ -222,9 +236,12 @@ class OnboardingServiceTest {
         User manager = new User();
         manager.setId(userResource.getId().toString());
         manager.setRole(PartyRole.MANAGER);
+        manager.setUserMailUuid("ID_MAIL#TEST-123");
+
         User delegate = new User();
         delegate.setId(delegateResource.getId().toString());
         delegate.setRole(PartyRole.DELEGATE);
+        delegate.setUserMailUuid("ID_MAIL#TEST-123");
         onboarding.setUsers(List.of(manager, delegate));
 
         Product product = createDummyProduct();

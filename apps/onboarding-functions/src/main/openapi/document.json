@@ -15,28 +15,28 @@
   "components" : {
     "schemas" : {
       "AttachmentPdfRequest" : {
-        "type" : "object",
         "required" : [ "onboardingId", "attachmentTemplatePath", "productId", "productName", "attachmentName", "institution", "manager" ],
+        "type" : "object",
         "properties" : {
           "onboardingId" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "attachmentTemplatePath" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "productId" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "productName" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "attachmentName" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "institution" : {
             "$ref" : "#/components/schemas/InstitutionPdfData"
@@ -64,24 +64,24 @@
         }
       },
       "ContractPdfRequest" : {
-        "type" : "object",
         "required" : [ "onboardingId", "contractTemplatePath", "productId", "productName", "institution", "manager" ],
+        "type" : "object",
         "properties" : {
           "onboardingId" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "contractTemplatePath" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "productId" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "productName" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "pricingPlan" : {
             "type" : "string"
@@ -149,17 +149,19 @@
         "type" : "object",
         "properties" : {
           "id" : {
-            "type" : "string",
-            "description" : "Chiave surrogata (Surrogate Key) generata come UUID randomico. Sostituisce l'onboardingId come Primary Key per prevenire anomalie."
+            "description" : "Chiave surrogata (Surrogate Key) generata come UUID randomico. Sostituisce l'onboardingId come Primary Key per prevenire anomalie.",
+            "type" : "string"
           },
           "type" : {
             "description" : "Discriminante polimorfica che indica la natura del documento (INSTITUTION, USER, ATTACHMENT).",
             "type" : "string",
-            "$ref" : "#/components/schemas/DocumentType"
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/DocumentType"
+            } ]
           },
           "onboardingId" : {
-            "type" : "string",
-            "description" : "ID del processo di onboarding specifico. Per il tipo ATTACHMENT, non avendo un flusso dedicato, coincide con il rootOnboardingId."
+            "description" : "ID del processo di onboarding specifico. Per il tipo ATTACHMENT, non avendo un flusso dedicato, coincide con il rootOnboardingId.",
+            "type" : "string"
           },
           "productId" : {
             "type" : "string"
@@ -183,8 +185,8 @@
             "type" : "string"
           },
           "rootOnboardingId" : {
-            "type" : "string",
-            "description" : "Identificativo della radice del Fascicolo Documentale. Corrisponde all'onboardingId dell'INSTITUTION."
+            "description" : "Identificativo della radice del Fascicolo Documentale. Corrisponde all'onboardingId dell'INSTITUTION.",
+            "type" : "string"
           },
           "createdAt" : {
             "$ref" : "#/components/schemas/LocalDateTime"
@@ -201,16 +203,16 @@
         }
       },
       "DocumentBuilderRequest" : {
-        "type" : "object",
         "required" : [ "onboardingId", "productId", "documentType" ],
+        "type" : "object",
         "properties" : {
           "onboardingId" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "productId" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "documentType" : {
             "$ref" : "#/components/schemas/DocumentType"
@@ -279,6 +281,10 @@
           }
         }
       },
+      "DocumentType" : {
+        "enum" : [ "INSTITUTION", "LEGALS", "USER", "ATTACHMENT" ],
+        "type" : "string"
+      },
       "GeographicTaxonomyPdfData" : {
         "type" : "object",
         "properties" : {
@@ -323,8 +329,8 @@
         }
       },
       "InstitutionPaSubunitType" : {
-        "type" : "string",
-        "enum" : [ "AOO", "UO", "EC" ]
+        "enum" : [ "AOO", "UO", "EC" ],
+        "type" : "string"
       },
       "InstitutionPdfData" : {
         "type" : "object",
@@ -410,32 +416,32 @@
         }
       },
       "InstitutionType" : {
-        "type" : "string",
-        "enum" : [ "PA", "PG", "GSP", "SA", "PT", "SCP", "PSP", "AS", "REC", "CON", "PRV", "PRV_PF", "GPU", "SCEC" ]
+        "enum" : [ "PA", "PG", "GSP", "SA", "PT", "SCP", "PSP", "AS", "REC", "CON", "PRV", "PRV_PF", "GPU", "SCEC" ],
+        "type" : "string"
       },
       "LocalDateTime" : {
-        "type" : "string",
         "format" : "date-time",
+        "type" : "string",
         "example" : "2022-03-10T12:15:50"
       },
       "OnboardingDocumentRequest" : {
-        "type" : "object",
         "required" : [ "onboardingId", "productId", "contractFilePath" ],
+        "type" : "object",
         "properties" : {
           "onboardingId" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "productId" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "contractCreatedAt" : {
             "$ref" : "#/components/schemas/LocalDateTime"
           },
           "contractFilePath" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "contractFileName" : {
             "type" : "string"
@@ -449,12 +455,12 @@
         }
       },
       "Origin" : {
-        "type" : "string",
-        "enum" : [ "MOCK", "IPA", "SELC", "ANAC", "UNKNOWN", "ADE", "INFOCAMERE", "IVASS", "PDND_INFOCAMERE" ]
+        "enum" : [ "MOCK", "IPA", "SELC", "ANAC", "UNKNOWN", "ADE", "INFOCAMERE", "IVASS", "PDND_INFOCAMERE" ],
+        "type" : "string"
       },
       "PartyRole" : {
-        "type" : "string",
-        "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR", "ADMIN_EA" ]
+        "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR", "ADMIN_EA" ],
+        "type" : "string"
       },
       "PaymentPdfData" : {
         "type" : "object",
@@ -503,16 +509,16 @@
         }
       },
       "SignatureRequest" : {
-        "type" : "object",
         "required" : [ "onboardingId", "file", "fiscalCodes", "skipSignatureVerification" ],
+        "type" : "object",
         "properties" : {
           "onboardingId" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "file" : {
-            "type" : "string",
-            "format" : "binary"
+            "format" : "binary",
+            "type" : "string"
           },
           "fiscalCodes" : {
             "type" : "array",
@@ -525,53 +531,49 @@
           }
         }
       },
-      "DocumentType" : {
-        "type" : "string",
-        "enum" : [ "INSTITUTION", "LEGALS", "USER", "ATTACHMENT" ]
-      },
       "UploadAggregateCsvRequest" : {
-        "type" : "object",
         "required" : [ "onboardingId", "productId", "csv" ],
+        "type" : "object",
         "properties" : {
           "onboardingId" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "productId" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "csv" : {
-            "type" : "string",
-            "format" : "binary"
+            "format" : "binary",
+            "type" : "string"
           }
         }
       },
       "UploadVisuraRequest" : {
-        "type" : "object",
         "required" : [ "onboardingId", "filename", "fileContent" ],
+        "type" : "object",
         "properties" : {
           "onboardingId" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "filename" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "fileContent" : {
-            "type" : "string",
-            "format" : "binary"
+            "format" : "binary",
+            "type" : "string"
           }
         }
       },
       "UserPdfData" : {
-        "type" : "object",
         "required" : [ "id", "taxCode" ],
+        "type" : "object",
         "properties" : {
           "id" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "role" : {
             "$ref" : "#/components/schemas/PartyRole"
@@ -583,8 +585,8 @@
             "type" : "string"
           },
           "taxCode" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "email" : {
             "type" : "string"
@@ -695,8 +697,8 @@
           "name" : "document",
           "in" : "query",
           "schema" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "pattern" : "\\S",
+            "type" : "string"
           },
           "required" : true
         } ],
@@ -772,12 +774,12 @@
           "content" : {
             "multipart/form-data" : {
               "schema" : {
-                "type" : "object",
                 "required" : [ "file" ],
+                "type" : "object",
                 "properties" : {
                   "file" : {
-                    "type" : "string",
-                    "format" : "binary"
+                    "format" : "binary",
+                    "type" : "string"
                   },
                   "request" : {
                     "$ref" : "#/components/schemas/DocumentBuilderRequest"
@@ -867,8 +869,8 @@
             "content" : {
               "application/octet-stream" : {
                 "schema" : {
-                  "type" : "string",
-                  "format" : "binary"
+                  "format" : "binary",
+                  "type" : "string"
                 }
               }
             }
@@ -912,8 +914,8 @@
             "content" : {
               "application/octet-stream" : {
                 "schema" : {
-                  "type" : "string",
-                  "format" : "binary"
+                  "format" : "binary",
+                  "type" : "string"
                 }
               }
             }
@@ -950,8 +952,8 @@
             "content" : {
               "application/octet-stream" : {
                 "schema" : {
-                  "type" : "string",
-                  "format" : "binary"
+                  "format" : "binary",
+                  "type" : "string"
                 }
               }
             }
@@ -1016,8 +1018,8 @@
             "content" : {
               "application/octet-stream" : {
                 "schema" : {
-                  "type" : "string",
-                  "format" : "binary"
+                  "format" : "binary",
+                  "type" : "string"
                 }
               }
             }
@@ -1058,12 +1060,12 @@
                     "$ref" : "#/components/schemas/DocumentBuilderRequest"
                   },
                   "skipSignatureVerification" : {
-                    "type" : "boolean",
-                    "default" : false
+                    "default" : false,
+                    "type" : "boolean"
                   },
                   "file" : {
-                    "type" : "string",
-                    "format" : "binary"
+                    "format" : "binary",
+                    "type" : "string"
                   },
                   "fileName" : {
                     "type" : "string"
