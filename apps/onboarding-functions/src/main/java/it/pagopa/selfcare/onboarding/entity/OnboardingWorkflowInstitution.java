@@ -39,7 +39,7 @@ public class OnboardingWorkflowInstitution extends OnboardingWorkflow {
   }
 
   @Override
-  public DocumentType getTokenType() {
+  public DocumentType getDocumentType() {
     return DocumentType.INSTITUTION;
   }
 

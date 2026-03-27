@@ -52,7 +52,7 @@ public class OnboardingWorkflowUser extends OnboardingWorkflow {
   }
 
   @Override
-  public DocumentType getTokenType() {
+  public DocumentType getDocumentType() {
     return DocumentType.USER;
   }
 
