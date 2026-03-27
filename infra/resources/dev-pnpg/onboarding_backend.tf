@@ -52,10 +52,10 @@ locals {
     "ONBOARDING-FUNCTIONS-API-KEY"           = "fn-onboarding-primary-key"
   }
 
-  private_dns_name_onboarding_backend = "selc-d-pnpg-onboardingbackend-ca.blackhill-644148c0.westeurope.azurecontainerapps.io"
-  apim_name_onboarding_backend       = "selc-${local.env_short}-pnpg-apim-v2"
-  apim_rg_onboarding_backend         = "selc-${local.env_short}-pnpg-api-v2-rg"
-  dns_zone_prefix_onboarding_backend = "pnpg.dev.selfcare"
+  private_dns_name_onboarding_backend    = "selc-d-pnpg-onboardingbackend-ca.blackhill-644148c0.westeurope.azurecontainerapps.io"
+  apim_name_onboarding_backend           = "selc-${local.env_short}-pnpg-apim-v2"
+  apim_rg_onboarding_backend             = "selc-${local.env_short}-pnpg-api-v2-rg"
+  dns_zone_prefix_onboarding_backend     = "pnpg.dev.selfcare"
   api_dns_zone_prefix_onboarding_backend = "api-pnpg.dev.selfcare"
 }
 
