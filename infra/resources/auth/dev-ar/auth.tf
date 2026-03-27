@@ -13,6 +13,41 @@ module "apim_api_auth" {
   dns_zone_prefix     = local.dns_zone_prefix
   api_dns_zone_prefix = local.api_dns_zone_prefix
   openapi_path        = "../../../../apps/auth/src/main/docs/openapi.json"
+  
+  api_operation_policies = [{
+    operation_id = "loginSaml"
+    xml_content  = <<XML
+      <policies>
+          <inbound>
+              <cors allow-credentials="true">
+                  <allowed-origins>
+                      <origin>https://${local.dns_zone_prefix}.${local.external_domain}</origin>
+                      <origin>https://${local.api_dns_zone_prefix}.${local.external_domain}</origin>
+                      <origin>http://localhost:3000</origin>
+                      <origin>https://accounts.google.com</origin>
+                  </allowed-origins>
+                  <allowed-methods>
+                      <method>POST</method>
+                  </allowed-methods>
+                  <allowed-headers>
+                      <header>*</header>
+                  </allowed-headers>
+              </cors>
+              <base />
+          </inbound>
+          <backend>
+              <base />
+          </backend>
+          <outbound>
+              <base />
+          </outbound>
+          <on-error>
+              <base />
+          </on-error>
+      </policies>
+      XML
+    }
+  ]
 }
 
 ###############################################################################
@@ -33,7 +68,7 @@ module "collection_auth_otp_flows" {
   name                        = "otpFlows"
   resource_group_name         = local.mongo_db.mongodb_rg_name
   cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
-  database_name               = local.mongo_db.database_auth_name
+  database_name               = module.cosmosdb_auth.database_name
 
   lock_enable = true
 
@@ -46,6 +81,8 @@ module "collection_auth_otp_flows" {
     { keys = ["userId", "createdAt"], unique = false },
     { keys = ["createdAt"], unique = false }
   ]
+
+  depends_on = [ module.cosmosdb_auth ]
 }
 
 ###############################################################################

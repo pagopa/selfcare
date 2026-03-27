@@ -8,6 +8,7 @@ locals {
 
   dns_zone_prefix     = "uat.selfcare"
   api_dns_zone_prefix = "api.uat.selfcare"
+  external_domain     = "pagopa.it"
 
   project = "${local.prefix}-${local.env_short}"
 

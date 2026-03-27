@@ -155,3 +155,8 @@ variable "version_change_tier_to_cool_after_days_since_creation" {
 variable "version_delete_after_days_since_creation" {
   type = number
 }
+
+variable "nuova_variabile_di_test" {
+  type = number
+
+}
