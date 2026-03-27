@@ -7,6 +7,7 @@ import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_IO;
 import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_PAGOPA;
 import static it.pagopa.selfcare.onboarding.common.WorkflowType.USERS;
 import static it.pagopa.selfcare.onboarding.constants.CustomError.*;
+import static jakarta.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 import static it.pagopa.selfcare.onboarding.util.ErrorMessage.*;
 import static it.pagopa.selfcare.product.utils.ProductUtils.validRoles;
 
@@ -46,6 +47,7 @@ import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -689,8 +691,13 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .onItem()
                 .transformToUni(ignored -> persistOnboarding(onboarding, userRequests, product, aggregateRequests))
                 .onItem()
-                .call(onboardingPersisted -> documentControllerApi.persistDocumentForImport(
-                        onboardingDocumentMapper.toRequest(onboardingPersisted, product, contractImported)))
+                .call(onboardingPersisted ->
+                        ensureSuccessfulDocumentResponse(
+                                documentControllerApi.persistDocumentForImport(
+                                        onboardingDocumentMapper.toRequest(
+                                                onboardingPersisted, product, contractImported)),
+                                "persistDocumentForImport",
+                                onboardingPersisted.getId()))
                 .onItem()
                 .transformToUni(currentOnboarding -> persistAndStartOrchestrationOnboarding(
                         currentOnboarding,
@@ -1450,7 +1457,11 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .transformToUni(onboarding ->
                         updateOnboarding(onboardingId, onboarding)
                                 .onItem()
-                                .transformToUni(ignore -> documentControllerApi.updateDocumentUpdatedAt(onboardingId))
+                                .transformToUni(ignore ->
+                                        ensureSuccessfulDocumentResponse(
+                                                documentControllerApi.updateDocumentUpdatedAt(onboardingId),
+                                                "updateDocumentUpdatedAt",
+                                                onboardingId))
                                 .replaceWith(onboarding));
     }
 
@@ -1536,8 +1547,48 @@ public class OnboardingServiceDefault implements OnboardingService {
                         documentType,
                         fiscalCodes))
         .flatMap(
-            request -> documentContentControllerApi.uploadSignedContract(request, onboardingId))
-        .replaceWith(Uni.createFrom().voidItem());
+            request ->
+                ensureSuccessfulDocumentResponse(
+                    documentContentControllerApi.uploadSignedContract(request, onboardingId),
+                    "uploadSignedContract",
+                    onboardingId));
+    }
+
+    private Uni<Void> ensureSuccessfulDocumentResponse(
+            Uni<Response> responseUni, String operation, String onboardingId) {
+        return responseUni
+                .onItem()
+                .transformToUni(response -> {
+                    try {
+                        int status = Objects.nonNull(response)
+                                ? response.getStatus()
+                                : Response.Status.BAD_GATEWAY.getStatusCode();
+                        if (Objects.isNull(response)
+                                || Objects.isNull(response.getStatusInfo())
+                                || !SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
+                            log.warn(
+                                    "Document service call failed: operation={}, onboardingId={}, status={}",
+                                    operation,
+                                    onboardingId,
+                                    status);
+                            throw new WebApplicationException(
+                                    String.format(
+                                            "Document service call failed while trying to %s for onboarding %s. status=%s",
+                                            operation, onboardingId, status),
+                                    status);
+                        }
+                        log.debug(
+                                "Document service call succeeded: operation={}, onboardingId={}, status={}",
+                                operation,
+                                onboardingId,
+                                status);
+                        return Uni.createFrom().voidItem();
+                    } finally {
+                        if (Objects.nonNull(response)) {
+                            response.close();
+                        }
+                    }
+                });
     }
 
     private Uni<Onboarding> retrieveOnboarding(String onboardingId) {

@@ -6,6 +6,7 @@ import com.microsoft.azure.functions.ExecutionContext;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.dto.EntityFilter;
+import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
@@ -48,5 +49,16 @@ public class TokenFunctionsTest {
     function.deleteContract(params, executionContext);
     verify(documentContentControllerApi, times(1)).deleteContract("123");
 
+  }
+
+  @Test
+  void deleteContract_shouldThrowWhenDocumentServiceFails() throws JsonProcessingException {
+    EntityFilter entity = EntityFilter.builder().value("123").build();
+    String params = objectMapper.writeValueAsString(entity);
+    when(documentContentControllerApi.deleteContract("123")).thenReturn(Response.status(500).build());
+
+    org.junit.jupiter.api.Assertions.assertThrows(
+        GenericOnboardingException.class,
+        () -> function.deleteContract(params, executionContext));
   }
 }

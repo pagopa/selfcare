@@ -313,6 +313,7 @@ class OnboardingServiceTest {
         onboardingWorkflow.setOnboarding(onboarding);
         Product productExpected = createDummyProduct();
         when(productService.getProductIsValid(onboarding.getProductId())).thenReturn(productExpected);
+        when(documentControllerApi.saveDocument(any())).thenReturn(Response.ok().build());
 
         onboardingService.saveTokenWithContract(onboardingWorkflow);
 
@@ -346,6 +347,7 @@ class OnboardingServiceTest {
 
         Product productExpected = createDummyProduct();
         when(productService.getProductIsValid(onboarding.getProductId())).thenReturn(productExpected);
+        when(documentControllerApi.saveDocument(any())).thenReturn(Response.ok().build());
 
         onboardingService.saveTokenWithAttachment(onboardingAttachment);
 
@@ -360,6 +362,20 @@ class OnboardingServiceTest {
         assertEquals(attachmentTemplate.getName(), requestCaptor.getValue().getAttachmentName());
         assertEquals(attachmentTemplate.getTemplatePath(), requestCaptor.getValue().getTemplatePath());
         assertEquals(attachmentTemplate.getTemplateVersion(), requestCaptor.getValue().getTemplateVersion());
+    }
+
+    @Test
+    void saveTokenWithContract_shouldThrowWhenDocumentServiceFails() {
+        Onboarding onboarding = createOnboarding();
+        OnboardingWorkflow onboardingWorkflow = new OnboardingWorkflowInstitution();
+        onboardingWorkflow.setOnboarding(onboarding);
+        Product productExpected = createDummyProduct();
+        when(productService.getProductIsValid(onboarding.getProductId())).thenReturn(productExpected);
+        when(documentControllerApi.saveDocument(any())).thenReturn(Response.status(500).build());
+
+        assertThrows(
+                GenericOnboardingException.class,
+                () -> onboardingService.saveTokenWithContract(onboardingWorkflow));
     }
 
     @Test

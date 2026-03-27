@@ -2557,6 +2557,8 @@ class OnboardingServiceDefaultTest {
 
         when(userRegistryApi.findByIdUsingGET(anyString(), anyString()))
                 .thenReturn(Uni.createFrom().item(managerResource));
+        when(documentControllerApi.getAttachments(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(List.of("attachment-1")));
 
         UniAssertSubscriber<OnboardingGet> subscriber = onboardingService
                 .onboardingGetWithUserInfo(onboarding.getId())
@@ -2568,9 +2570,11 @@ class OnboardingServiceDefaultTest {
         Assertions.assertEquals(onboarding.getId(), actual.getId());
         Assertions.assertEquals(onboarding.getProductId(), actual.getProductId());
         Assertions.assertEquals(onboarding.getUsers().size(), actual.getUsers().size());
+        Assertions.assertEquals(List.of("attachment-1"), actual.getAttachments());
         UserResponse actualUser = actual.getUsers().get(0);
         Assertions.assertEquals(actualUser.getName(), managerResource.getName().getValue());
         Assertions.assertEquals(actualUser.getSurname(), managerResource.getFamilyName().getValue());
+        verify(documentControllerApi, times(1)).getAttachments(onboarding.getId());
     }
 
     @Test
@@ -2700,6 +2704,8 @@ class OnboardingServiceDefaultTest {
         geographicTaxonomyResource.setDesc("desc");
         asserter.execute(() -> when(geographicTaxonomiesApi.retrieveGeoTaxonomiesByCodeUsingGET(any()))
                 .thenReturn(Uni.createFrom().item(geographicTaxonomyResource)));
+        asserter.execute(() -> when(documentControllerApi.persistDocumentForImport(any()))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build())));
 
         asserter.assertThat(() -> onboardingService.onboardingImport(request, users, contractImported, null), Assertions::assertNotNull);
 
@@ -2707,6 +2713,7 @@ class OnboardingServiceDefaultTest {
             PanacheMock.verify(Onboarding.class).persist(any(Onboarding.class), any());
             PanacheMock.verify(Onboarding.class).persistOrUpdate(any(List.class));
             PanacheMock.verify(Onboarding.class).find(any(Document.class));
+            verify(documentControllerApi, times(1)).persistDocumentForImport(any());
             PanacheMock.verifyNoMoreInteractions(Onboarding.class);
         });
     }
@@ -2736,6 +2743,8 @@ class OnboardingServiceDefaultTest {
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
         mockVerifyAllowedProductList(request.getProductId(), asserter, true);
+        asserter.execute(() -> when(documentControllerApi.persistDocumentForImport(any()))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build())));
 
         asserter.assertThat(() -> onboardingService.onboardingImport(request, List.of(), contractImported, null), Assertions::assertNotNull);
 
@@ -2743,6 +2752,7 @@ class OnboardingServiceDefaultTest {
             PanacheMock.verify(Onboarding.class).persist(any(Onboarding.class), any());
             PanacheMock.verify(Onboarding.class).persistOrUpdate(any(List.class));
             PanacheMock.verify(Onboarding.class).find(any(Document.class));
+            verify(documentControllerApi, times(1)).persistDocumentForImport(any());
             PanacheMock.verifyNoMoreInteractions(Onboarding.class);
         });
     }
@@ -4581,6 +4591,15 @@ class OnboardingServiceDefaultTest {
         when(Onboarding.findById(any()))
                 .thenReturn(Uni.createFrom().item(onboarding));
         mockUpdateOnboarding(onboardingId, 1L);
+        mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
+        UserResource actualUserResource = new UserResource();
+        actualUserResource.setFiscalCode("ACTUAL-FISCAL-CODE");
+        asserter.execute(() -> when(userRegistryApi.findByIdUsingGET(USERS_FIELD_TAXCODE, "actual-user-id"))
+                .thenReturn(Uni.createFrom().item(actualUserResource)));
+        asserter.execute(() -> when(documentContentControllerApi.uploadSignedContract(any(), any()))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build())));
+        asserter.execute(() -> when(documentControllerApi.updateDocumentUpdatedAt(any()))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build())));
 
         asserter.assertThat(() -> onboardingService.uploadContractSigned(onboardingId, TEST_FORM_ITEM),
                 result -> {
@@ -4588,6 +4607,10 @@ class OnboardingServiceDefaultTest {
                     Assertions.assertEquals(onboarding.getId(), result.getId());
                     Assertions.assertNotNull(result.getUpdatedAt());
                 });
+        asserter.execute(() -> {
+            verify(documentContentControllerApi, times(1)).uploadSignedContract(any(), eq(onboardingId));
+            verify(documentControllerApi, times(1)).updateDocumentUpdatedAt(onboardingId);
+        });
     }
 
     @Test
@@ -4606,6 +4629,14 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(onboarding));
 
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
+        UserResource actualUserResource = new UserResource();
+        actualUserResource.setFiscalCode("ACTUAL-FISCAL-CODE");
+        asserter.execute(() -> when(userRegistryApi.findByIdUsingGET(USERS_FIELD_TAXCODE, "actual-user-id"))
+                .thenReturn(Uni.createFrom().item(actualUserResource)));
+        asserter.execute(() -> when(documentContentControllerApi.uploadSignedContract(any(), any()))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build())));
+        asserter.execute(() -> when(documentControllerApi.updateDocumentUpdatedAt(any()))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build())));
 
         mockUpdateOnboarding(onboardingId, 1L);
 
@@ -4614,6 +4645,31 @@ class OnboardingServiceDefaultTest {
                     Assertions.assertNotNull(result);
                     Assertions.assertEquals(onboarding.getId(), result.getId());
                 });
+    }
+
+    @Test
+    @RunOnVertxContext
+    void uploadContractSigned_whenDocumentServiceReturnsError_shouldFail(UniAsserter asserter) {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.COMPLETED);
+        String onboardingId = onboarding.getId();
+
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findByIdOptional(any()))
+                .thenReturn(Uni.createFrom().item(Optional.of(onboarding)));
+
+        mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
+        UserResource actualUserResource = new UserResource();
+        actualUserResource.setFiscalCode("ACTUAL-FISCAL-CODE");
+        asserter.execute(() -> when(userRegistryApi.findByIdUsingGET(USERS_FIELD_TAXCODE, "actual-user-id"))
+                .thenReturn(Uni.createFrom().item(actualUserResource)));
+        asserter.execute(() -> when(documentContentControllerApi.uploadSignedContract(any(), any()))
+                .thenReturn(Uni.createFrom().item(Response.status(500).build())));
+
+        asserter.assertFailedWith(
+                () -> onboardingService.uploadContractSigned(onboardingId, TEST_FORM_ITEM),
+                WebApplicationException.class);
+        asserter.execute(() -> verify(documentControllerApi, never()).updateDocumentUpdatedAt(any()));
     }
 
 

@@ -150,7 +150,10 @@ public class OnboardingService {
     Product product = productService.getProductIsValid(onboarding.getProductId());
     DocumentBuilderRequest request =
         documentBuilderRequestMapper.toRequest(onboarding, product, onboardingWorkflow);
-    documentControllerApi.saveDocument(request);
+    try (Response response = documentControllerApi.saveDocument(request)) {
+      ensureSuccessfulDocumentResponse(
+          response, "save contract document", onboarding.getId());
+    }
   }
 
   public void saveTokenWithAttachment(OnboardingAttachment onboardingAttachment) {
@@ -159,7 +162,10 @@ public class OnboardingService {
     AttachmentTemplate attachmentTemplate = onboardingAttachment.getAttachment();
     DocumentBuilderRequest request =
         documentBuilderRequestMapper.toRequest(onboarding, product, attachmentTemplate, DocumentType.ATTACHMENT);
-    documentControllerApi.saveDocument(request);
+    try (Response response = documentControllerApi.saveDocument(request)) {
+      ensureSuccessfulDocumentResponse(
+          response, "save attachment document", onboarding.getId());
+    }
   }
 
   public void sendMailRegistration(Onboarding onboarding) {
@@ -218,11 +224,34 @@ public class OnboardingService {
     request.onboardingId = onboarding.getId();
     request.filename = filename;
     try (Response response = documentContentControllerApi.saveVisuraForMerchant(request)) {
-      if (!SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
-        throw new GenericOnboardingException(
-            "Impossible to store visura document for institution with taxCode: " + taxCode);
-      }
+      ensureSuccessfulDocumentResponse(
+          response,
+          "store visura document for institution with taxCode: " + taxCode,
+          onboarding.getId());
     }
+  }
+
+  private void ensureSuccessfulDocumentResponse(
+      Response response, String operation, String onboardingId) {
+    int status = Objects.nonNull(response) ? response.getStatus() : -1;
+    if (Objects.isNull(response)
+        || Objects.isNull(response.getStatusInfo())
+        || !SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
+      log.warn(
+          "Document service call failed: operation={}, onboardingId={}, status={}",
+          operation,
+          onboardingId,
+          status);
+      throw new GenericOnboardingException(
+          String.format(
+              "Document service call failed while trying to %s for onboarding %s. status=%s",
+              operation, onboardingId, status));
+    }
+    log.debug(
+        "Document service call succeeded: operation={}, onboardingId={}, status={}",
+        operation,
+        onboardingId,
+        status);
   }
 
   public void sendMailRegistrationForContract(OnboardingWorkflow onboardingWorkflow) {
