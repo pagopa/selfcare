@@ -1,12 +1,14 @@
 # infra/resources — folder map
 
+Tabella delle migrazioni effettuate
+
 ```
 +----------------+--------+----------+--------+----------+---------+-----------+
 | category       | dev-ar | dev-pnpg | uat-ar | uat-pnpg | prod-ar | prod-pnpg |
 +----------------+--------+----------+--------+----------+---------+-----------+
 | auth           |   ✓    |          |        |          |         |           |
 | document-ms    |        |          |        |          |         |           |
-| iam            |        |          |        |          |         |           |
+| iam            |   ✓    |          |        |          |         |           |
 | onboarding     |        |          |        |          |         |           |
 | product        |        |          |        |          |         |           |
 | registry-proxy |        |          |        |          |         |           |
