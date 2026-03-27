@@ -8,7 +8,7 @@
         <artifactId>root</artifactId>
         <version>0.0.1</version>
     </parent>
-    
+
     <artifactId>test-coverage</artifactId>
     <packaging>pom</packaging>
     <name>test-coverage</name>
@@ -170,9 +170,8 @@
                 </dependency>
                 <dependency>
                     <groupId>it.pagopa.selfcare</groupId>
-                    <artifactId>onboarding-bff</artifactId>
+                    <artifactId>selc-onboarding-app</artifactId>
                     <version>1.0.0-SNAPSHOT</version>
-                    <type>pom</type>
                 </dependency>
             </dependencies>
         </profile>
