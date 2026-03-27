@@ -2081,6 +2081,10 @@
           }
         }
       },
+      "DocumentType" : {
+        "enum" : [ "INSTITUTION", "LEGALS", "USER", "ATTACHMENT" ],
+        "type" : "string"
+      },
       "GPUData" : {
         "type" : "object",
         "properties" : {
