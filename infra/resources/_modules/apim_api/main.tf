@@ -24,11 +24,14 @@ module "apim_api" {
   service_url = "https://${var.private_dns_name}"
 
   content_format = "openapi+json"
-  content_value = templatefile(var.openapi_path, {
-    url           = format("%s.%s", var.api_dns_zone_prefix, var.external_domain)
-    basePath      = var.base_path
-    openapi_title = var.display_name
-  })
+  content_value = replace(
+    templatefile(var.openapi_path, {
+      url      = format("%s.%s", var.api_dns_zone_prefix, var.external_domain)
+      basePath = var.base_path
+    }),
+    "/\"title\"\\s*:\\s*\"[^\"]*\"/",
+    "\"title\" : \"${var.display_name}\""
+  )
 
   subscription_required = false
 
