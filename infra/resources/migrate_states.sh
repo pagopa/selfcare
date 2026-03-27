@@ -173,7 +173,12 @@ SEL_ONBOARDING_PNPG='
 
 # ---- product (ar only) ------------------------------------------------------
 SEL_PRODUCT='
-  (.module // "" | test("^module\\.(container_app_product_ms|container_app_product_cdc)(\\.|\\[|$)"))
+  (.module // "" | test("^module\\.container_app_product_ms(\\.|\\[|$)"))
+'
+
+# ---- product-cdc (ar only) --------------------------------------------------
+SEL_PRODUCT_CDC='
+  (.module // "" | test("^module\\.container_app_product_cdc(\\.|\\[|$)"))
 '
 
 # ---- registry-proxy — ar side -----------------------------------------------
@@ -223,6 +228,7 @@ migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.document.dev-ar.tfstate"    
 migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.iam.dev-ar.tfstate"              "$SEL_IAM"
 migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.onboarding.dev-ar.tfstate"       "$SEL_ONBOARDING_AR"
 migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.product.dev-ar.tfstate"          "$SEL_PRODUCT"
+migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.product-cdc.dev-ar.tfstate"      "$SEL_PRODUCT_CDC"
 migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.registry-proxy.dev-ar.tfstate"   "$SEL_REGISTRY_PROXY_AR"
 migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.search.dev-ar.tfstate"           "$SEL_SEARCH"
 migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.webhook.dev-ar.tfstate"          "$SEL_WEBHOOK"
@@ -264,6 +270,7 @@ migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.iam.uat-ar.tfstate"         
 migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.onboarding.uat-ar.tfstate"       "$SEL_ONBOARDING_AR"
 migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.onboarding.uat-pnpg.tfstate"     "$SEL_ONBOARDING_PNPG"
 migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.product.uat-ar.tfstate"          "$SEL_PRODUCT"
+migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.product-cdc.uat-ar.tfstate"      "$SEL_PRODUCT_CDC"
 migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.registry-proxy.uat-ar.tfstate"   "$SEL_REGISTRY_PROXY_AR"
 migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.registry-proxy.uat-pnpg.tfstate" "$SEL_REGISTRY_PROXY_PNPG"
 migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.search.uat-ar.tfstate"           "$SEL_SEARCH"
@@ -286,6 +293,7 @@ migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.iam.prod-ar.tfstate"       
 migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.onboarding.prod-ar.tfstate"       "$SEL_ONBOARDING_AR"
 migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.onboarding.prod-pnpg.tfstate"     "$SEL_ONBOARDING_PNPG"
 migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.product.prod-ar.tfstate"          "$SEL_PRODUCT"
+migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.product-cdc.prod-ar.tfstate"      "$SEL_PRODUCT_CDC"
 migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.registry-proxy.prod-ar.tfstate"   "$SEL_REGISTRY_PROXY_AR"
 migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.registry-proxy.prod-pnpg.tfstate" "$SEL_REGISTRY_PROXY_PNPG"
 migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.search.prod-ar.tfstate"           "$SEL_SEARCH"

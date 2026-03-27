@@ -1,4 +1,4 @@
-name: Code Review - Product Infra
+name: Code Review - Product CDC Infra
 
 permissions:
   contents: read
@@ -19,43 +19,43 @@ on:
       - reopened
       - ready_for_review
     paths:
-      - "infra/resources/product/**"
-      - ".github/workflows/pr_product_infra.yml"
+      - "infra/resources/product-cdc/**"
+      - ".github/workflows/pr_product_cdc_infra.yml"
       - ".github/workflows/call_code_review_infra.yml"
 
 jobs:
   code_review_dev_ar:
     uses: ./.github/workflows/call_code_review_infra.yml
-    name: "[DEV-AR] Product Infra Code Review"
+    name: "[DEV-AR] Product CDC Infra Code Review"
     if: ${{ !startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
     with:
       environment: dev
-      dir: ./infra/resources/product/dev-ar
+      dir: ./infra/resources/product-cdc/dev-ar
       tf_environment: dev-ar
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
 
   code_review_uat_ar:
     uses: ./.github/workflows/call_code_review_infra.yml
-    name: "[UAT-AR] Product Infra Code Review"
+    name: "[UAT-AR] Product CDC Infra Code Review"
     if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
     with:
       environment: uat
-      dir: ./infra/resources/product/uat-ar
+      dir: ./infra/resources/product-cdc/uat-ar
       tf_environment: uat-ar
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
 
   code_review_prod_ar:
     uses: ./.github/workflows/call_code_review_infra.yml
-    name: "[PROD-AR] Product Infra Code Review"
+    name: "[PROD-AR] Product CDC Infra Code Review"
     if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
     with:
       environment: prod
-      dir: ./infra/resources/product/prod-ar
+      dir: ./infra/resources/product-cdc/prod-ar
       tf_environment: prod-ar
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
