@@ -6,7 +6,7 @@ module "apim_api" {
   source              = "../../_modules/apim_api"
   apim_name           = local.apim_name
   apim_rg             = local.apim_rg
-  api_name            = "selc-${local.env_short}-api-iam"
+  api_name            = "selc-${local.env_short}-api-iam-${local.domain}"
   display_name        = "IAM API PNPG"
   base_path           = "${local.apim_base_path}"
   private_dns_name    = local.private_dns_name_ms.private_dns_name_ms

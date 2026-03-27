@@ -23,8 +23,8 @@ locals {
     database_name                 = "selcIam"
   }
 
-  container_app_environment_name = "${local.prefix}-${local.env_short}-cae-002"
-  ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-002-rg"
+  container_app_environment_name = "${local.prefix}-${local.env_short}-${local.domain}-cae-cp"
+  ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-rg"
 
   private_dns_name_domain = "blackhill-644148c0.westeurope.azurecontainerapps.io"
   private_dns_name_ms = {
