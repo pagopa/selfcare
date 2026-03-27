@@ -1,0 +1,59 @@
+name: Code Review - Infra Identity
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    branches:
+      - main
+      - releases/*
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - 'infra/bootstrap/**'
+
+jobs:
+  code_review_dev_ar:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[DEV-AR] Identity Infra Code Review'
+    if: ${{ !startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: dev
+      dir: ./infra/bootstrap/dev-ar
+      tf_environment: dev-ar
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+
+  code_review_uat_ar:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[UAT-AR] Identity Infra Code Review'
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: uat
+      dir: ./infra/bootstrap/uat-ar
+      tf_environment: uat-ar
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+
+  code_review_prod_ar:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[PROD-AR] Identity Infra Code Review'
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: prod
+      dir: ./infra/bootstrap/prod-ar
+      tf_environment: prod-ar
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})

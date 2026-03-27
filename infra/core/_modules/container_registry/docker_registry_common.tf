@@ -6,7 +6,7 @@ resource "azurerm_resource_group" "docker_registry" {
 }
 
 module "acr_common" {
-  source                        = "github.com/pagopa/terraform-azurerm-v4.git//container_registry?ref=v6.6.0"
+  source                        = "github.com/pagopa/terraform-azurerm-v4.git//container_registry?ref=v9.6.1"
   name                          = replace("${var.project}-common-acr", "-", "")
   resource_group_name           = azurerm_resource_group.docker_registry.name
   location                      = azurerm_resource_group.docker_registry.location

@@ -25,7 +25,7 @@ resource "azurerm_resource_group" "event_rg" {
 }
 
 module "eventhub_snet" {
-  source                            = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v6.6.0"
+  source                            = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v9.6.1"
   name                              = "${local.project}-eventhub-snet"
   address_prefixes                  = var.cidr_subnet_eventhub
   resource_group_name               = var.rg_vnet_name
@@ -35,7 +35,7 @@ module "eventhub_snet" {
 }
 
 module "event_hub" {
-  source                   = "github.com/pagopa/terraform-azurerm-v4.git//eventhub?ref=v6.6.0"
+  source                   = "github.com/pagopa/terraform-azurerm-v4.git//eventhub?ref=v9.6.1"
   name                     = "${local.project}-eventhub-ns"
   location                 = var.location
   resource_group_name      = azurerm_resource_group.event_rg.name
@@ -44,11 +44,10 @@ module "event_hub" {
   capacity                 = var.eventhub_capacity
   maximum_throughput_units = var.eventhub_maximum_throughput_units
 
-  private_endpoint_subnet_id     = module.eventhub_snet.id
-  private_dns_zone_record_A_name = null
-  public_network_access_enabled  = true
-  private_endpoint_created       = true
-  eventhubs                      = var.eventhubs
+  private_endpoint_subnet_id    = module.eventhub_snet.id
+  public_network_access_enabled = true
+  private_endpoint_created      = true
+  eventhubs                     = var.eventhubs
 
   private_endpoint_resource_group_name = azurerm_resource_group.event_rg.name
 
@@ -62,7 +61,8 @@ module "event_hub" {
     }
   ]
 
-  private_dns_zones = local.private_dns_zones
+  private_dns_zones_ids = var.privatelink_servicebus_windows_net_ids
+
 
   alerts_enabled = var.eventhub_alerts_enabled
   metric_alerts  = var.eventhub_metric_alerts
