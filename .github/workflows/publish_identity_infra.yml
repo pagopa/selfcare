@@ -1,5 +1,9 @@
 name: Publish - Identity Infra
 
+permissions:
+  contents: read
+  id-token: write
+
 on:
   push:
     branches:
