@@ -37,7 +37,7 @@ jobs:
         run: |
           echo "VERSION=$(echo "${{ inputs.branch }}" | sed 's/.*_//;s/^v//')" >> $GITHUB_ENV
 
-      - name: Trigger Onboarding Backend Release (SEL)
+      - name: Trigger Onboarding Backend Release (AR)
         run: |
           gh workflow run release_app.yml \
             --ref ${{ inputs.branch }} \
