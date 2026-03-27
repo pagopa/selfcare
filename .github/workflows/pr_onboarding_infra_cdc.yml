@@ -1,4 +1,4 @@
-name: Code Review - Onboarding Infra
+name: Code Review - Onboarding CDC Infra
 
 permissions:
   contents: read
@@ -19,19 +19,19 @@ on:
       - reopened
       - ready_for_review
     paths:
-      - 'infra/resources/**/onboarding.tf'
-      - '.github/workflows/pr_onboarding_infra.yml'
+      - 'infra/resources/onboarding-cdc/**'
+      - '.github/workflows/pr_onboarding_infra_cdc.yml'
       - '.github/workflows/call_code_review_infra.yml'
 
 jobs:
   code_review_dev_ar:
     uses: ./.github/workflows/call_code_review_infra.yml
-    name: '[DEV-AR] Onboarding Infra Code Review'
+    name: '[DEV-AR] Onboarding CDC Infra Code Review'
     if: ${{ !startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
     with:
       environment: dev
-      dir: ./infra/resources/dev-ar
+      dir: ./infra/resources/onboarding-cdc/dev-ar
       tf_environment: dev-ar
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
@@ -43,7 +43,7 @@ jobs:
     secrets: inherit
     with:
       environment: dev
-      dir: ./infra/resources/dev-pnpg
+      dir: ./infra/resources/onboarding-cdc/dev-pnpg
       tf_environment: dev-pnpg
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
@@ -55,7 +55,7 @@ jobs:
     secrets: inherit
     with:
       environment: uat
-      dir: ./infra/resources/uat-ar
+      dir: ./infra/resources/onboarding-cdc/uat-ar
       tf_environment: uat-ar
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
@@ -67,7 +67,7 @@ jobs:
     secrets: inherit
     with:
       environment: uat
-      dir: ./infra/resources/uat-pnpg
+      dir: ./infra/resources/onboarding-cdc/uat-pnpg
       tf_environment: uat-pnpg
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
@@ -79,7 +79,7 @@ jobs:
     secrets: inherit
     with:
       environment: prod
-      dir: ./infra/resources/prod-ar
+      dir: ./infra/resources/onboarding-cdc/prod-ar
       tf_environment: prod-ar
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
@@ -91,7 +91,7 @@ jobs:
     secrets: inherit
     with:
       environment: prod
-      dir: ./infra/resources/prod-pnpg
+      dir: ./infra/resources/onboarding-cdc/prod-pnpg
       tf_environment: prod-pnpg
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})

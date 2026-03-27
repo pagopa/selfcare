@@ -1,4 +1,4 @@
-name: Publish - Onboarding Infra
+name: Publish - Onboarding Functions Infra
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
       - releases/*
     paths:
-      - 'infra/resources/**'
+      - 'infra/resources/onboarding-functions/**'
 
   workflow_dispatch:
     inputs:
@@ -47,7 +47,7 @@ jobs:
     secrets: inherit
     with:
       environment: dev
-      dir: infra/resources/dev-ar
+      dir: infra/resources/onboarding-functions/dev-ar
       env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
 
   release_uat_ar:
@@ -58,7 +58,7 @@ jobs:
     secrets: inherit
     with:
       environment: uat
-      dir: infra/resources/uat-ar
+      dir: infra/resources/onboarding-functions/uat-ar
       env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
 
   release_prod_ar:
@@ -69,7 +69,7 @@ jobs:
     secrets: inherit
     with:
       environment: prod
-      dir: infra/resources/prod-ar
+      dir: infra/resources/onboarding-functions/prod-ar
       env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
 
   release_dev_pnpg:
@@ -81,7 +81,7 @@ jobs:
     with:
       environment: dev
       tf_environment: dev-pnpg
-      dir: infra/resources/dev-pnpg
+      dir: infra/resources/onboarding-functions/dev-pnpg
       env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
 
   release_uat_pnpg:
@@ -93,7 +93,7 @@ jobs:
     with:
       environment: uat
       tf_environment: uat-pnpg
-      dir: infra/resources/uat-pnpg
+      dir: infra/resources/onboarding-functions/uat-pnpg
       env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
 
   release_prod_pnpg:
@@ -105,5 +105,5 @@ jobs:
     with:
       environment: prod
       tf_environment: prod-pnpg
-      dir: infra/resources/prod-pnpg
+      dir: infra/resources/onboarding-functions/prod-pnpg
       env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
