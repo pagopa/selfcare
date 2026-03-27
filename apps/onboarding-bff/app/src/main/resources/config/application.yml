@@ -4,7 +4,7 @@ server:
 
 spring:
   application:
-    name: "@project.parent.artifactId@"
+    name: "@project.artifactId@"
     version: "@project.version@"
   profiles:
     include:
@@ -22,8 +22,8 @@ management:
 
 info:
   build:
-    artifact: "@project.parent.artifactId@"
-    name: "@project.parent.artifactId@"
+    artifact: "@project.artifactId@"
+    name: "@project.artifactId@"
     description: "@project.description@"
     version: "@project.version@"
 

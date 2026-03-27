@@ -3,14 +3,14 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>onboarding-bff</artifactId>
+        <artifactId>onboarding-bff-parent</artifactId>
         <groupId>it.pagopa.selfcare</groupId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>selc-onboarding-app</artifactId>
+    <artifactId>onboarding-bff</artifactId>
 
     <properties>
         <commmon-cucumber-sdk.version>0.0.7</commmon-cucumber-sdk.version>
@@ -112,7 +112,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <skip>false</skip>
-                    <finalName>${project.parent.artifactId}-${project.parent.version}-FATJAR</finalName>
+                    <finalName>${project.artifactId}-${project.version}-FATJAR</finalName>
                     <outputDirectory>../target</outputDirectory>
                     <excludes>
                         <exclude>
