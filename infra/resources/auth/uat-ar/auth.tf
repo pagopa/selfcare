@@ -1,4 +1,54 @@
 ###############################################################################
+# Container App 
+###############################################################################
+
+module "apim_api_auth" {
+  source              = "../../_modules/apim_api"
+  apim_name           = local.apim_name
+  apim_rg             = local.apim_rg
+  api_name            = "selc-${local.env_short}-api-auth"
+  display_name        = "Auth API"
+  base_path           = "auth"
+  private_dns_name    = local.private_dns_name_ms.private_dns_name_auth_ms
+  dns_zone_prefix     = local.dns_zone_prefix
+  api_dns_zone_prefix = local.api_dns_zone_prefix
+  openapi_path        = "../../../../apps/auth/src/main/docs/openapi.json"
+}
+
+###############################################################################
+# CosmosDB
+###############################################################################
+
+module "cosmosdb_auth" {
+  source = "../../_modules/cosmosdb_database"
+
+  database_name               = local.mongo_db.database_auth_name
+  resource_group_name         = local.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
+}
+
+module "collection_auth_otp_flows" {
+  source = "../../_modules/cosmosdb_collection"
+
+  name                        = "otpFlows"
+  resource_group_name         = local.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
+  database_name               = local.mongo_db.database_auth_name
+
+  lock_enable = true
+
+  indexes = [
+    { keys = ["_id"], unique = true },
+    { keys = ["uuid"], unique = true },
+    { keys = ["userId"], unique = false },
+    { keys = ["expiresAt"], unique = false },
+    { keys = ["status"], unique = false },
+    { keys = ["userId", "createdAt"], unique = false },
+    { keys = ["createdAt"], unique = false }
+  ]
+}
+
+###############################################################################
 # Container App
 ###############################################################################
 
@@ -95,11 +145,11 @@ module "container_app_auth_ms" {
 
   env_short                      = local.env_short
   resource_group_name            = local.ca_resource_group_name
-  container_app                  = local.microservice_container_app
+  container_app                  = local.container_app
   container_app_name             = "${local.project}-auth-ms"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-auth-ms"
-  image_tag                      = local.auth_image_tag
+  image_tag                      = local.image_tag_latest
   app_settings                   = local.app_settings_auth_ms
   secrets_names                  = local.secrets_names_auth_ms
 

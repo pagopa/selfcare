@@ -8,22 +8,18 @@ locals {
 
   dns_zone_prefix     = "dev.selfcare"
   api_dns_zone_prefix = "api.dev.selfcare"
+  
+  apim_name = "selc-${local.env_short}-apim-v2"
+  apim_rg   = "selc-${local.env_short}-api-v2-rg"
 
   project = "${local.prefix}-${local.env_short}"
 
-  onboarding_image_tag    = var.onboarding_image_tag
-  auth_image_tag          = var.auth_image_tag
-  product_image_tag       = var.product_image_tag
-  product_cdc_image_tag   = var.product_cdc_image_tag
-  iam_image_tag           = var.iam_image_tag
-  document_image_tag      = var.document_image_tag
-  webhook_image_tag       = var.webhook_image_tag
-  namirial_sign_image_tag = var.namirial_sign_image_tag
 
   mongo_db = {
     mongodb_rg_name               = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-rg",
     cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-account"
     mongodb_name                  = "selcOnboarding"
+    database_auth_name            = "selcAuth"
   }
 
   container_app_environment_name = "${local.prefix}-${local.env_short}-cae-002"
@@ -31,28 +27,8 @@ locals {
 
   function_name = "${local.storage_prefix}-onboarding-fn"
 
+  
   container_app = {
-    min_replicas = 1
-    max_replicas = 5
-    scale_rules = [
-      {
-        custom = {
-          metadata = {
-            "desiredReplicas" = "3"
-            "start"           = "0 8 * * MON-FRI"
-            "end"             = "0 19 * * MON-FRI"
-            "timezone"        = "Europe/Rome"
-          }
-          type = "cron"
-        }
-        name = "cron-scale-rule"
-      }
-    ]
-    cpu    = 0.5
-    memory = "1Gi"
-  }
-
-  microservice_container_app = {
     min_replicas = 1
     max_replicas = 5
     scale_rules = [

@@ -49,18 +49,18 @@ module "collection_auth_otp_flows" {
 }
 
 ###############################################################################
-# Container App 
+# Container App
 ###############################################################################
 
 locals {
   app_settings_auth_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar",
+      value = "-javaagent:applicationinsights-agent.jar"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
-      value = "auth-ms",
+      value = "auth-ms"
     },
     {
       name  = "SHARED_ACCESS_KEY_NAME"
@@ -123,6 +123,7 @@ locals {
       value = 0
     }
   ]
+
   secrets_names_auth_ms = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
     "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
@@ -147,7 +148,7 @@ module "container_app_auth_ms" {
   container_app_name             = "${local.project}-auth-ms"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-auth-ms"
-  image_tag                      = local.auth_image_tag
+  image_tag                      = local.image_tag_latest
   app_settings                   = local.app_settings_auth_ms
   secrets_names                  = local.secrets_names_auth_ms
   workload_profile_name          = "Consumption"

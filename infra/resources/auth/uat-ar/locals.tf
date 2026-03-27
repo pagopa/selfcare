@@ -11,6 +11,9 @@ locals {
 
   project = "${local.prefix}-${local.env_short}"
 
+  apim_name = "selc-${local.env_short}-apim-v2"
+  apim_rg   = "selc-${local.env_short}-api-v2-rg"
+
   onboarding_image_tag    = var.onboarding_image_tag
   auth_image_tag          = var.auth_image_tag
   product_image_tag       = var.product_image_tag
@@ -32,27 +35,6 @@ locals {
   function_name = "${local.storage_prefix}-onboarding-fn"
 
   container_app = {
-    min_replicas = 1
-    max_replicas = 2
-    scale_rules = [
-      {
-        custom = {
-          metadata = {
-            "desiredReplicas" = "1"
-            "start"           = "0 8 * * MON-FRI"
-            "end"             = "0 19 * * MON-FRI"
-            "timezone"        = "Europe/Rome"
-          }
-          type = "cron"
-        }
-        name = "cron-scale-rule"
-      }
-    ]
-    cpu    = 0.5
-    memory = "1Gi"
-  }
-
-  microservice_container_app = {
     min_replicas = 1
     max_replicas = 1
     scale_rules = [
