@@ -172,6 +172,7 @@
                     <groupId>it.pagopa.selfcare</groupId>
                     <artifactId>onboarding-bff</artifactId>
                     <version>1.0.0-SNAPSHOT</version>
+                    <type>pom</type>
                 </dependency>
             </dependencies>
         </profile>
