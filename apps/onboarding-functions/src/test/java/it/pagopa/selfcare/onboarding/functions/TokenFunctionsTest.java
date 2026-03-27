@@ -6,10 +6,12 @@ import com.microsoft.azure.functions.ExecutionContext;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.dto.EntityFilter;
-import it.pagopa.selfcare.onboarding.entity.Token;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
+import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
 
 import java.util.logging.Logger;
 
@@ -23,6 +25,9 @@ public class TokenFunctionsTest {
 
   @InjectMock
   OnboardingService onboardingService;
+  @RestClient
+  @InjectMock
+  DocumentContentControllerApi documentContentControllerApi;
 
 
   @Inject
@@ -37,15 +42,11 @@ public class TokenFunctionsTest {
 
   @Test
   void deleteContract() throws JsonProcessingException {
-    Token tokenOriginal = new Token();
-    tokenOriginal.setContractSigned("parties/docs/123/file.pdf");
-    Token tokenDeleted = new Token();
-    tokenDeleted.setContractSigned("parties/deleted/123/file.pdf");
-
-
     EntityFilter entity = EntityFilter.builder().value("123").build();
     String params = objectMapper.writeValueAsString(entity);
+    when(documentContentControllerApi.deleteContract("123")).thenReturn(Response.ok().build());
     function.deleteContract(params, executionContext);
+    verify(documentContentControllerApi, times(1)).deleteContract("123");
 
   }
 }
