@@ -8,7 +8,7 @@ module "apim_api" {
   apim_rg             = local.apim_rg
   api_name            = "selc-${local.env_short}-api-iam-${local.domain}"
   display_name        = "IAM API PNPG"
-  base_path           = "${local.apim_base_path}"
+  base_path           = local.apim_base_path
   private_dns_name    = local.private_dns_name_ms.private_dns_name_ms
   dns_zone_prefix     = local.dns_zone_prefix
   api_dns_zone_prefix = local.api_dns_zone_prefix
@@ -115,7 +115,7 @@ module "container_app_iam_ms" {
   env_short                      = local.env_short
   resource_group_name            = local.ca_resource_group_name
   container_app                  = local.container_app
-  container_app_name             = "${local.project}-iam-ms"
+  container_app_name             = "${local.project}-${local.domain}-iam-ms"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-iam-ms"
   image_tag                      = local.image_tag_latest
