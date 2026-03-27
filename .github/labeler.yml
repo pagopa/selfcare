@@ -5,7 +5,7 @@ auth:
 document-ms:
   - changed-files:
       - any-glob-to-any-file:
-          ["apps/document-ms/**", "infra/resources/*/document.tf"]
+          ["apps/document-ms/**", "infra/resources/document-ms/**"]
 
 iam:
   - changed-files:
