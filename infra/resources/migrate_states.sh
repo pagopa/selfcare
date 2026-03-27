@@ -13,7 +13,7 @@ set -euo pipefail
 #   selc.infra.resources.prod.tfstate      (prod-ar + prod-pnpg — SHARED)
 #
 # New backend keys:
-#   selc.infra.resources.<category>.<env>.tfstate
+#   selc.infra.resources.<resource>.<env>.tfstate
 #
 # Storage backends:
 #   dev  → selcdstinfraterraform / azurermstate
@@ -137,8 +137,8 @@ SEL_AUTH='
   ))
 '
 
-# ---- document (ar only) -----------------------------------------------------
-SEL_DOCUMENT='
+# ---- document-ms (ar only) --------------------------------------------------
+SEL_DOCUMENT_MS='
   ((.module // "" | test("^module\\.(storage_documents|upload_file_logo)(\\.|\\[|$)"))
   or
   ((.module // "") == "" and (.name | test("^(documents_sa_rg|documents_identity)$"))))
@@ -149,26 +149,39 @@ SEL_IAM='
   (.module // "" | test("^module\\.container_app_iam_ms(\\.|\\[|$)"))
 '
 
-# ---- onboarding — ar side ---------------------------------------------------
-# Distinguisher: module.container_app_onboarding_backend (no _pnpg suffix)
-#                module.apim_api_bff_onboarding           (no _pnpg suffix)
-SEL_ONBOARDING_AR='
+# ---- onboarding-ms -----------------------------------------------------------
+SEL_ONBOARDING_MS='
   ((.module // "" | test(
-    "^module\\.(cosmosdb|collection_onboardings|collection_tokens|container_app_onboarding_ms|container_app_onboarding_cdc|container_app_onboarding_backend|apim_api_bff_onboarding)(\\.|\\[|$)"
+    "^module\\.(cosmosdb|collection_onboardings|collection_tokens|container_app_onboarding_ms)(\\.|\\[|$)"
   ))
   or
-  ((.module // "") == "" and (.name | test("(onboarding_fn|encryption_key|encryption_iv)"))))
+  ((.module // "") == "" and (.name | test("(encryption_key|encryption_iv)"))))
 '
 
-# ---- onboarding — pnpg side -------------------------------------------------
-# Distinguisher: module.container_app_onboarding_backend_pnpg
-#                module.apim_api_bff_onboarding_pnpg
-SEL_ONBOARDING_PNPG='
-  ((.module // "" | test(
-    "^module\\.(cosmosdb|collection_onboardings|collection_tokens|container_app_onboarding_ms|container_app_onboarding_cdc|container_app_onboarding_backend_pnpg|apim_api_bff_onboarding_pnpg)(\\.|\\[|$)"
+# ---- onboarding-cdc ----------------------------------------------------------
+SEL_ONBOARDING_CDC='
+  (.module // "" | test("^module\\.container_app_onboarding_cdc(\\.|\\[|$)"))
+'
+
+# ---- onboarding-functions ----------------------------------------------------
+SEL_ONBOARDING_FUNCTIONS='
+  ((.module // "") == "" and (.name | test("^onboarding_fn")))
+'
+
+# ---- onboarding-bff — ar side ------------------------------------------------
+# Includes both old module names ("..._backend") and new ("..._bff").
+SEL_ONBOARDING_BFF_AR='
+  (.module // "" | test(
+    "^module\\.(container_app_onboarding_backend|container_app_onboarding_bff|apim_api_bff_onboarding)(\\.|\\[|$)"
   ))
-  or
-  ((.module // "") == "" and (.name | test("(onboarding_fn|encryption_key|encryption_iv)"))))
+'
+
+# ---- onboarding-bff — pnpg side ---------------------------------------------
+# Includes both old module names ("..._backend_pnpg") and new ("..._bff_pnpg").
+SEL_ONBOARDING_BFF_PNPG='
+  (.module // "" | test(
+    "^module\\.(container_app_onboarding_backend_pnpg|container_app_onboarding_bff_pnpg|apim_api_bff_onboarding_pnpg)(\\.|\\[|$)"
+  ))
 '
 
 # ---- product (ar only) ------------------------------------------------------
@@ -224,9 +237,12 @@ log "=== Migrating DEV-AR state ==="
 OLD="selc.infra.resources.dev.tfstate"
 
 migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.auth.dev-ar.tfstate"             "$SEL_AUTH"
-migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.document.dev-ar.tfstate"         "$SEL_DOCUMENT"
+migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.document-ms.dev-ar.tfstate"      "$SEL_DOCUMENT_MS"
 migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.iam.dev-ar.tfstate"              "$SEL_IAM"
-migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.onboarding.dev-ar.tfstate"       "$SEL_ONBOARDING_AR"
+migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.onboarding-ms.dev-ar.tfstate"    "$SEL_ONBOARDING_MS"
+migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.onboarding-cdc.dev-ar.tfstate"   "$SEL_ONBOARDING_CDC"
+migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.onboarding-functions.dev-ar.tfstate" "$SEL_ONBOARDING_FUNCTIONS"
+migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.onboarding-bff.dev-ar.tfstate"   "$SEL_ONBOARDING_BFF_AR"
 migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.product.dev-ar.tfstate"          "$SEL_PRODUCT"
 migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.product-cdc.dev-ar.tfstate"      "$SEL_PRODUCT_CDC"
 migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.registry-proxy.dev-ar.tfstate"   "$SEL_REGISTRY_PROXY_AR"
@@ -240,7 +256,10 @@ sep
 log "=== Migrating DEV-PNPG state ==="
 OLD="selc.infra.resources.dev-pnpg.tfstate"
 
-migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.onboarding.dev-pnpg.tfstate"      "$SEL_ONBOARDING_PNPG"
+migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.onboarding-ms.dev-pnpg.tfstate"      "$SEL_ONBOARDING_MS"
+migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.onboarding-cdc.dev-pnpg.tfstate"     "$SEL_ONBOARDING_CDC"
+migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.onboarding-functions.dev-pnpg.tfstate" "$SEL_ONBOARDING_FUNCTIONS"
+migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.onboarding-bff.dev-pnpg.tfstate"      "$SEL_ONBOARDING_BFF_PNPG"
 migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.registry-proxy.dev-pnpg.tfstate"  "$SEL_REGISTRY_PROXY_PNPG"
 migrate "$DEV_STORAGE" "$OLD" "selc.infra.resources.spid-login.dev-pnpg.tfstate"      "$SEL_SPID_LOGIN"
 
@@ -265,10 +284,16 @@ warn "'terraform plan' after migration and resolve with 'terraform state rm'."
 OLD="selc.infra.resources.uat.tfstate"
 
 migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.auth.uat-ar.tfstate"             "$SEL_AUTH"
-migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.document.uat-ar.tfstate"         "$SEL_DOCUMENT"
+migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.document-ms.uat-ar.tfstate"      "$SEL_DOCUMENT_MS"
 migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.iam.uat-ar.tfstate"              "$SEL_IAM"
-migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.onboarding.uat-ar.tfstate"       "$SEL_ONBOARDING_AR"
-migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.onboarding.uat-pnpg.tfstate"     "$SEL_ONBOARDING_PNPG"
+migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.onboarding-ms.uat-ar.tfstate"    "$SEL_ONBOARDING_MS"
+migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.onboarding-ms.uat-pnpg.tfstate"  "$SEL_ONBOARDING_MS"
+migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.onboarding-cdc.uat-ar.tfstate"   "$SEL_ONBOARDING_CDC"
+migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.onboarding-cdc.uat-pnpg.tfstate" "$SEL_ONBOARDING_CDC"
+migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.onboarding-functions.uat-ar.tfstate" "$SEL_ONBOARDING_FUNCTIONS"
+migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.onboarding-functions.uat-pnpg.tfstate" "$SEL_ONBOARDING_FUNCTIONS"
+migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.onboarding-bff.uat-ar.tfstate"   "$SEL_ONBOARDING_BFF_AR"
+migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.onboarding-bff.uat-pnpg.tfstate" "$SEL_ONBOARDING_BFF_PNPG"
 migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.product.uat-ar.tfstate"          "$SEL_PRODUCT"
 migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.product-cdc.uat-ar.tfstate"      "$SEL_PRODUCT_CDC"
 migrate "$UAT_STORAGE" "$OLD" "selc.infra.resources.registry-proxy.uat-ar.tfstate"   "$SEL_REGISTRY_PROXY_AR"
@@ -288,10 +313,16 @@ warn "Same duplicate-resource caveat applies — review with 'terraform plan'."
 OLD="selc.infra.resources.prod.tfstate"
 
 migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.auth.prod-ar.tfstate"             "$SEL_AUTH"
-migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.document.prod-ar.tfstate"         "$SEL_DOCUMENT"
+migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.document-ms.prod-ar.tfstate"      "$SEL_DOCUMENT_MS"
 migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.iam.prod-ar.tfstate"              "$SEL_IAM"
-migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.onboarding.prod-ar.tfstate"       "$SEL_ONBOARDING_AR"
-migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.onboarding.prod-pnpg.tfstate"     "$SEL_ONBOARDING_PNPG"
+migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.onboarding-ms.prod-ar.tfstate"    "$SEL_ONBOARDING_MS"
+migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.onboarding-ms.prod-pnpg.tfstate"  "$SEL_ONBOARDING_MS"
+migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.onboarding-cdc.prod-ar.tfstate"   "$SEL_ONBOARDING_CDC"
+migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.onboarding-cdc.prod-pnpg.tfstate" "$SEL_ONBOARDING_CDC"
+migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.onboarding-functions.prod-ar.tfstate" "$SEL_ONBOARDING_FUNCTIONS"
+migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.onboarding-functions.prod-pnpg.tfstate" "$SEL_ONBOARDING_FUNCTIONS"
+migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.onboarding-bff.prod-ar.tfstate"   "$SEL_ONBOARDING_BFF_AR"
+migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.onboarding-bff.prod-pnpg.tfstate" "$SEL_ONBOARDING_BFF_PNPG"
 migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.product.prod-ar.tfstate"          "$SEL_PRODUCT"
 migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.product-cdc.prod-ar.tfstate"      "$SEL_PRODUCT_CDC"
 migrate "$PROD_STORAGE" "$OLD" "selc.infra.resources.registry-proxy.prod-ar.tfstate"   "$SEL_REGISTRY_PROXY_AR"
