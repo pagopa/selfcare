@@ -31,7 +31,7 @@ on:
           - onboarding-ms
           - onboarding-cdc
           - registry-proxy
-          - onboarding-backend
+          - onboarding-bff
           - document-ms
         required: true
         default: auth
