@@ -13,7 +13,7 @@ resource "azurerm_resource_group" "sec_rg" {
 }
 
 module "key_vault" {
-  source                     = "github.com/pagopa/terraform-azurerm-v4.git//key_vault?ref=v8.5.3"
+  source                     = "github.com/pagopa/terraform-azurerm-v4.git//key_vault?ref=v9.6.1"
   name                       = "${var.project}-kv"
   location                   = azurerm_resource_group.sec_rg.location
   resource_group_name        = azurerm_resource_group.sec_rg.name
@@ -128,7 +128,7 @@ resource "azurerm_key_vault_access_policy" "azdevops_iac_policy" {
 # Secrets query modules
 module "secrets_selfcare_status_dev" {
   count  = var.env_short == "d" ? 1 : 0
-  source = "github.com/pagopa/terraform-azurerm-v4.git//key_vault_secrets_query?ref=v8.5.3"
+  source = "github.com/pagopa/terraform-azurerm-v4.git//key_vault_secrets_query?ref=v9.6.1"
 
   resource_group = azurerm_resource_group.sec_rg.name
   key_vault_name = module.key_vault.name
@@ -141,7 +141,7 @@ module "secrets_selfcare_status_dev" {
 
 module "secrets_selfcare_status_uat" {
   count  = var.env_short == "u" ? 1 : 0
-  source = "github.com/pagopa/terraform-azurerm-v4.git//key_vault_secrets_query?ref=v8.5.3"
+  source = "github.com/pagopa/terraform-azurerm-v4.git//key_vault_secrets_query?ref=v9.6.1"
 
   resource_group = azurerm_resource_group.sec_rg.name
   key_vault_name = module.key_vault.name
