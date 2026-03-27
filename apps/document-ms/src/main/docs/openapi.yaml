@@ -1,5 +1,5 @@
 ---
-openapi: 3.1.0
+openapi: 3.0.3
 tags:
 - name: Document Content Controller
   description: Endpoints for creating PDF document content (contracts and attachments)
@@ -12,7 +12,6 @@ tags:
 components:
   schemas:
     AttachmentPdfRequest:
-      type: object
       required:
       - onboardingId
       - attachmentTemplatePath
@@ -21,22 +20,23 @@ components:
       - attachmentName
       - institution
       - manager
+      type: object
       properties:
         onboardingId:
-          type: string
           pattern: \S
+          type: string
         attachmentTemplatePath:
-          type: string
           pattern: \S
+          type: string
         productId:
-          type: string
           pattern: \S
+          type: string
         productName:
-          type: string
           pattern: \S
+          type: string
         attachmentName:
-          type: string
           pattern: \S
+          type: string
         institution:
           $ref: "#/components/schemas/InstitutionPdfData"
         manager:
@@ -53,7 +53,6 @@ components:
         taxCodeInvoicing:
           type: string
     ContractPdfRequest:
-      type: object
       required:
       - onboardingId
       - contractTemplatePath
@@ -61,19 +60,20 @@ components:
       - productName
       - institution
       - manager
+      type: object
       properties:
         onboardingId:
-          type: string
           pattern: \S
+          type: string
         contractTemplatePath:
-          type: string
           pattern: \S
+          type: string
         productId:
-          type: string
           pattern: \S
+          type: string
         productName:
-          type: string
           pattern: \S
+          type: string
         pricingPlan:
           type: string
         isAggregator:
@@ -117,18 +117,19 @@ components:
       type: object
       properties:
         id:
-          type: string
           description: Chiave surrogata (Surrogate Key) generata come UUID randomico.
             Sostituisce l'onboardingId come Primary Key per prevenire anomalie.
+          type: string
         type:
           description: "Discriminante polimorfica che indica la natura del documento\
             \ (INSTITUTION, USER, ATTACHMENT)."
           type: string
-          $ref: "#/components/schemas/DocumentType"
+          allOf:
+          - $ref: "#/components/schemas/DocumentType"
         onboardingId:
-          type: string
           description: "ID del processo di onboarding specifico. Per il tipo ATTACHMENT,\
             \ non avendo un flusso dedicato, coincide con il rootOnboardingId."
+          type: string
         productId:
           type: string
         attachmentName:
@@ -144,9 +145,9 @@ components:
         contractFilename:
           type: string
         rootOnboardingId:
-          type: string
           description: Identificativo della radice del Fascicolo Documentale. Corrisponde
             all'onboardingId dell'INSTITUTION.
+          type: string
         createdAt:
           $ref: "#/components/schemas/LocalDateTime"
         updatedAt:
@@ -156,18 +157,18 @@ components:
         activatedAt:
           $ref: "#/components/schemas/LocalDateTime"
     DocumentBuilderRequest:
-      type: object
       required:
       - onboardingId
       - productId
       - documentType
+      type: object
       properties:
         onboardingId:
-          type: string
           pattern: \S
+          type: string
         productId:
-          type: string
           pattern: \S
+          type: string
         documentType:
           $ref: "#/components/schemas/DocumentType"
         attachmentName:
@@ -212,12 +213,12 @@ components:
         deletedAt:
           $ref: "#/components/schemas/LocalDateTime"
     DocumentType:
-      type: string
       enum:
       - INSTITUTION
       - LEGALS
       - USER
       - ATTACHMENT
+      type: string
     GeographicTaxonomyPdfData:
       type: object
       properties:
@@ -247,11 +248,11 @@ components:
         institutionCourtMeasures:
           type: boolean
     InstitutionPaSubunitType:
-      type: string
       enum:
       - AOO
       - UO
       - EC
+      type: string
     InstitutionPdfData:
       type: object
       properties:
@@ -308,7 +309,6 @@ components:
         parentDescription:
           type: string
     InstitutionType:
-      type: string
       enum:
       - PA
       - PG
@@ -324,29 +324,29 @@ components:
       - PRV_PF
       - GPU
       - SCEC
-    LocalDateTime:
       type: string
+    LocalDateTime:
       format: date-time
-      examples:
-      - 2022-03-10T12:15:50
+      type: string
+      example: 2022-03-10T12:15:50
     OnboardingDocumentRequest:
-      type: object
       required:
       - onboardingId
       - productId
       - contractFilePath
+      type: object
       properties:
         onboardingId:
-          type: string
           pattern: \S
+          type: string
         productId:
-          type: string
           pattern: \S
+          type: string
         contractCreatedAt:
           $ref: "#/components/schemas/LocalDateTime"
         contractFilePath:
-          type: string
           pattern: \S
+          type: string
         contractFileName:
           type: string
         templatePath:
@@ -354,7 +354,6 @@ components:
         templateVersion:
           type: string
     Origin:
-      type: string
       enum:
       - MOCK
       - IPA
@@ -365,14 +364,15 @@ components:
       - INFOCAMERE
       - IVASS
       - PDND_INFOCAMERE
-    PartyRole:
       type: string
+    PartyRole:
       enum:
       - MANAGER
       - DELEGATE
       - SUB_DELEGATE
       - OPERATOR
       - ADMIN_EA
+      type: string
     PaymentPdfData:
       type: object
       properties:
@@ -404,19 +404,19 @@ components:
         longTermPayments:
           type: boolean
     SignatureRequest:
-      type: object
       required:
       - onboardingId
       - file
       - fiscalCodes
       - skipSignatureVerification
+      type: object
       properties:
         onboardingId:
-          type: string
           pattern: \S
-        file:
           type: string
+        file:
           format: binary
+          type: string
         fiscalCodes:
           type: array
           items:
@@ -424,46 +424,46 @@ components:
         skipSignatureVerification:
           type: boolean
     UploadAggregateCsvRequest:
-      type: object
       required:
       - onboardingId
       - productId
       - csv
+      type: object
       properties:
         onboardingId:
-          type: string
           pattern: \S
+          type: string
         productId:
-          type: string
           pattern: \S
-        csv:
           type: string
+        csv:
           format: binary
+          type: string
     UploadVisuraRequest:
-      type: object
       required:
       - onboardingId
       - filename
       - fileContent
+      type: object
       properties:
         onboardingId:
-          type: string
           pattern: \S
+          type: string
         filename:
-          type: string
           pattern: \S
-        fileContent:
           type: string
+        fileContent:
           format: binary
+          type: string
     UserPdfData:
-      type: object
       required:
       - id
       - taxCode
+      type: object
       properties:
         id:
-          type: string
           pattern: \S
+          type: string
         role:
           $ref: "#/components/schemas/PartyRole"
         name:
@@ -471,8 +471,8 @@ components:
         surname:
           type: string
         taxCode:
-          type: string
           pattern: \S
+          type: string
         email:
           type: string
         userMailUuid:
@@ -552,8 +552,8 @@ paths:
       - name: document
         in: query
         schema:
-          type: string
           pattern: \S
+          type: string
         required: true
       responses:
         "200":
@@ -609,13 +609,13 @@ paths:
         content:
           multipart/form-data:
             schema:
-              type: object
               required:
               - file
+              type: object
               properties:
                 file:
-                  type: string
                   format: binary
+                  type: string
                 request:
                   $ref: "#/components/schemas/DocumentBuilderRequest"
             encoding:
@@ -678,8 +678,8 @@ paths:
           content:
             application/octet-stream:
               schema:
-                type: string
                 format: binary
+                type: string
         "401":
           description: Not Authorized
         "403":
@@ -711,8 +711,8 @@ paths:
           content:
             application/octet-stream:
               schema:
-                type: string
                 format: binary
+                type: string
         "401":
           description: Not Authorized
         "403":
@@ -739,8 +739,8 @@ paths:
           content:
             application/octet-stream:
               schema:
-                type: string
                 format: binary
+                type: string
         "401":
           description: Not Authorized
         "403":
@@ -788,8 +788,8 @@ paths:
           content:
             application/octet-stream:
               schema:
-                type: string
                 format: binary
+                type: string
         "401":
           description: Not Authorized
         "403":
@@ -819,11 +819,11 @@ paths:
                 request:
                   $ref: "#/components/schemas/DocumentBuilderRequest"
                 skipSignatureVerification:
-                  type: boolean
                   default: false
+                  type: boolean
                 file:
-                  type: string
                   format: binary
+                  type: string
                 fileName:
                   type: string
             encoding:
