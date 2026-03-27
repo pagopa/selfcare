@@ -45,7 +45,7 @@ registry-proxy:
 
 onboarding-bff:
   - changed-files:
-      - any-glob-to-any-file: ["apps/onboarding-backend/**", "infra/resources/onboarding-bff/**"]
+      - any-glob-to-any-file: ["apps/onboarding-bff/**", "infra/resources/onboarding-bff/**"]
 
 hub-spid-login:
   - changed-files:
