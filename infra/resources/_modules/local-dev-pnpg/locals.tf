@@ -96,8 +96,8 @@ locals {
 
   cidr_subnet_document_storage = ["10.1.136.0/24"]
 
-  key_vault_resource_group_name = "${local.prefix}-${local.env_short}-sec-rg"
-  key_vault_name                = "${local.prefix}-${local.env_short}-kv"
+  key_vault_resource_group_name = "${local.prefix}-${local.env_short}-${local.domain}-sec-rg"
+  key_vault_name                = "${local.prefix}-${local.env_short}-${local.domain}-kv"
 
   resource_group_name_vnet = "${local.project}-vnet-rg"
 

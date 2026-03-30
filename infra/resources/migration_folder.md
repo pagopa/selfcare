@@ -7,10 +7,14 @@ Tabella delle migrazioni effettuate
 | category       | dev-ar | dev-pnpg | uat-ar | uat-pnpg | prod-ar | prod-pnpg |
 +----------------+--------+----------+--------+----------+---------+-----------+
 | auth           |   ✓    |          |        |          |         |           |
-| document-ms    |        |          |        |          |         |           |
+| document-ms    |   ✓    |          |        |          |         |           |
 | iam            |   ✓    |    ✓     |        |          |         |           |
-| onboarding     |        |          |        |          |         |           |
+| onboarding-bb  |   ✓    |          |        |          |         |           |
+| onboarding-cdc |        |          |        |          |         |           |
+| onboarding-fn  |        |          |        |          |         |           |
+| onboarding-ms  |        |          |        |          |         |           |
 | product        |        |          |        |          |         |           |
+| product-cdc    |        |          |        |          |         |           |
 | registry-proxy |        |          |        |          |         |           |
 | search         |        |          |        |          |         |           |
 | spid-login     |        |          |        |    ◌     |         |     ◌     |
