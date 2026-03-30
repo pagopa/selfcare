@@ -43,7 +43,7 @@ module "container_app_onboarding_bff" {
 
   env_short                      = module.local.config.env_short
   resource_group_name            = module.local.config.ca_resource_group_name
-  container_app                  = module.local.config.container_app_onboarding_bff
+  container_app                  = module.local.config.container_app
   container_app_name             = "selc-${module.local.config.env_short}-onboarding-bff"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-onboarding-bff"

@@ -17,7 +17,6 @@ output config {
     private_dns_name_domain = local.private_dns_name_domain
     container_app = local.container_app
     quarkus_health_probes = local.quarkus_health_probes
-    container_app_onboarding_bff = local.container_app
     tags = local.tags
     cidr_subnet_document_storage = local.cidr_subnet_document_storage
     key_vault_resource_group_name = local.key_vault_resource_group_name
