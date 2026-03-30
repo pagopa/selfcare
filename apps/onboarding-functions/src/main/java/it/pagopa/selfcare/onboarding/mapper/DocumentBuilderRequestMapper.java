@@ -17,7 +17,6 @@ public interface DocumentBuilderRequestMapper {
     @Mapping(
         target = "documentType",
         expression = "java(org.openapi.quarkus.document_json.model.DocumentType.fromValue(onboardingWorkflow.getDocumentType().name()))")
-    @Mapping(target = "attachmentName", expression = "java(onboardingWorkflow.getPdfFormatFilename())")
     @Mapping(target = "templatePath", expression = "java(onboardingWorkflow.getContractTemplatePath(product))")
     @Mapping(target = "templateVersion", expression = "java(onboardingWorkflow.getContractTemplateVersion(product))")
     @Mapping(target = "productTitle", source = "product.title")
