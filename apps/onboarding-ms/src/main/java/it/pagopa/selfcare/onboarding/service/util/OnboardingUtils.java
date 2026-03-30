@@ -7,12 +7,12 @@ import it.pagopa.selfcare.onboarding.common.DocumentType;
 import it.pagopa.selfcare.onboarding.constants.CustomError;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.onboarding.model.FormItem;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
-import java.io.File;
 import java.util.List;
 import java.util.Objects;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -52,10 +52,11 @@ public class OnboardingUtils {
     public Uni<DocumentContentControllerApi.UploadSignedContractMultipartForm> buildUploadSignedContractRequest(
             Onboarding onboarding,
             boolean skipSignatureVerification,
-            File file, Product product, DocumentType documentType, List<String> fiscalCodes) {
+            FormItem formItem, Product product, DocumentType documentType, List<String> fiscalCodes) {
         DocumentContentControllerApi.UploadSignedContractMultipartForm request = new DocumentContentControllerApi.UploadSignedContractMultipartForm();
         request.skipSignatureVerification = skipSignatureVerification;
-        request._file = file;
+        request._file = formItem.getFile();
+        request.fileName = formItem.getFileName();
 
         String institutionType = onboarding.getInstitution().getInstitutionType().name();
         ContractTemplate contractTemplate = product.getInstitutionContractTemplate(institutionType);

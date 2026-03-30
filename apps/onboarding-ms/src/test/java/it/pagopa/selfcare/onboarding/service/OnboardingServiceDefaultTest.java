@@ -2149,7 +2149,7 @@ class OnboardingServiceDefaultTest {
         when(onboardingUtils.buildUploadSignedContractRequest(
                 any(Onboarding.class),
                 anyBoolean(),
-                any(File.class),
+                any(FormItem.class),
                 any(Product.class),
                 any(DocumentType.class),
                 anyList()))

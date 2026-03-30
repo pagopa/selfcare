@@ -15,6 +15,7 @@ import it.pagopa.selfcare.onboarding.common.DocumentType;
 import it.pagopa.selfcare.onboarding.constants.CustomError;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.onboarding.model.FormItem;
 import it.pagopa.selfcare.onboarding.service.util.OnboardingUtils;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
@@ -123,17 +124,22 @@ class OnboardingUtilsTest {
         product.setInstitutionContractMappings(contractMappings);
 
 
-        File file = new File("");
+
+        File file = new File("file");
+        FormItem formItem = FormItem.builder()
+                .file(file)
+                .fileName("fileName")
+                .build();
 
         Uni<DocumentContentControllerApi.UploadSignedContractMultipartForm> result = onboardingUtils.buildUploadSignedContractRequest(
-                onboarding, false, file, product, DocumentType.INSTITUTION, Collections.emptyList());
+                onboarding, false, formItem, product, DocumentType.INSTITUTION, Collections.emptyList());
 
         UniAssertSubscriber<DocumentContentControllerApi.UploadSignedContractMultipartForm> subscriber = result.subscribe().withSubscriber(UniAssertSubscriber.create());
         DocumentContentControllerApi.UploadSignedContractMultipartForm form = subscriber.getItem();
 
         assertNotNull(form);
         assertFalse(form.skipSignatureVerification);
-        assertEquals(file, form._file);
+        assertEquals(formItem.getFile(), form._file);
         assertNotNull(form.request);
         assertEquals(onboarding.getId(), form.request.getOnboardingId());
     }

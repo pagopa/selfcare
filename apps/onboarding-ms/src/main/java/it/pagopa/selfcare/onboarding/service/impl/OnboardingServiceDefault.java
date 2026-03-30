@@ -1542,7 +1542,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                     onboardingUtils.buildUploadSignedContractRequest(
                         onboarding,
                         skipSignatureVerification,
-                        formItem.getFile(),
+                        formItem,
                         product,
                         documentType,
                         fiscalCodes))
