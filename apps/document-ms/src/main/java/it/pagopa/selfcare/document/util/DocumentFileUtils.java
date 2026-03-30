@@ -135,9 +135,13 @@ public final class DocumentFileUtils {
             return newExtension;
         }
 
+        if (newExtension == null || newExtension.isBlank()) {
+            return baseName;
+        }
+
         int lastIndexOf = baseName.lastIndexOf(".");
         if (lastIndexOf == -1) {
-            return baseName + newExtension;
+            return baseName + "." + newExtension;
         } else {
             return baseName.substring(0, lastIndexOf) + "." + newExtension;
         }
