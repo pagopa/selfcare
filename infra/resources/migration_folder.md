@@ -9,7 +9,7 @@ Tabella delle migrazioni effettuate
 | auth           |   ✓    |          |        |          |         |           |
 | document-ms    |   ✓    |          |        |          |         |           |
 | iam            |   ✓    |    ✓     |        |          |         |           |
-| onboarding-bb  |   ✓    |          |        |          |         |           |
+| onboarding-bff |   ✓    |    ✓     |        |          |         |           |
 | onboarding-cdc |        |          |        |          |         |           |
 | onboarding-fn  |        |          |        |          |         |           |
 | onboarding-ms  |        |          |        |          |         |           |
