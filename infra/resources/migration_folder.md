@@ -8,7 +8,7 @@ Tabella delle migrazioni effettuate
 +----------------+--------+----------+--------+----------+---------+-----------+
 | auth           |   ✓    |          |        |          |         |           |
 | document-ms    |        |          |        |          |         |           |
-| iam            |   ✓    |          |        |          |         |           |
+| iam            |   ✓    |    ✓     |        |          |         |           |
 | onboarding     |        |          |        |          |         |           |
 | product        |        |          |        |          |         |           |
 | registry-proxy |        |          |        |          |         |           |
