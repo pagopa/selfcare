@@ -735,7 +735,7 @@ module "ai_search" {
   location    = local.location
   sku         = "basic"
   tags        = local.tags
-  cidr_subnet = ["10.1.145.0/29"]
+  cidr_subnet = local.cidr_subnet_ai_search
 
   key_vault_name                = "selc-${local.env_short}-kv"
   key_vault_resource_group_name = "selc-${local.env_short}-sec-rg"

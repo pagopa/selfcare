@@ -637,3 +637,24 @@ module "container_app_environments" {
   tags = local.tags
 }
 
+###############################################################################
+# AI Search
+###############################################################################
+
+
+module "ai_search" {
+  source      = "../_modules/ai_search"
+  app_name    = "${local.prefix}-srch"
+  prefix      = local.prefix
+  env_short   = local.env_short
+  project     = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}"
+  location    = local.location
+  sku         = "basic"
+  tags        = local.tags
+  cidr_subnet = local.cidr_subnet_ai_search
+
+  key_vault_name                = "selc-${local.env_short}-kv"
+  key_vault_resource_group_name = "selc-${local.env_short}-sec-rg"
+  public_network_access_enabled = false
+  srch_private_endpoint_enabled = true
+}
