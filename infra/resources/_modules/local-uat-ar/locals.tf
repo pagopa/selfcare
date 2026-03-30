@@ -6,8 +6,8 @@ locals {
   location_short = "weu"
   domain         = "ar"
 
-  dns_zone_prefix     = "dev.selfcare"
-  api_dns_zone_prefix = "api.dev.selfcare"
+  dns_zone_prefix     = "uat.selfcare"
+  api_dns_zone_prefix = "api.uat.selfcare"
   external_domain     = "pagopa.it"
 
   apim_name = "selc-${local.env_short}-apim-v2"
@@ -24,10 +24,7 @@ locals {
   ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-002-rg"
 
   private_dns_name_domain = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
-  private_dns_name_ms = {
-    private_dns_name_ms = "selc-${local.env_short}-iam-ms-ca.${local.private_dns_name_domain}"
-  }
-
+  
   container_app = {
     min_replicas = 1
     max_replicas = 1
