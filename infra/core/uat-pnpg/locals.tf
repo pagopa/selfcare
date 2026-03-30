@@ -44,6 +44,7 @@ locals {
   cidr_subnet_load_tests            = ["10.1.142.0/24"]
   cidr_subnet_pnpg_redis            = ["10.1.143.0/29"]
   cidr_subnet_pnpg_logs_storage     = ["10.1.143.8/29"]
+  cidr_subnet_ai_search             = ["10.1.145.0/29"]
   cidr_subnet_eventhub_rds          = ["10.1.153.0/26"]
 
 
