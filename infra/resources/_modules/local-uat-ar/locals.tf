@@ -98,10 +98,7 @@ locals {
   key_vault_resource_group_name = "${local.prefix}-${local.env_short}-sec-rg"
   key_vault_name                = "${local.prefix}-${local.env_short}-kv"
 
-  naming_config            = "documents"
   resource_group_name_vnet = "${local.project}-vnet-rg"
 
   image_tag_latest = "latest"
 }
-
-//pnpg https://selc-u-pnpg-dashboard-backend-ca.

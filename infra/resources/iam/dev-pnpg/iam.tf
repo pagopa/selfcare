@@ -1,17 +1,24 @@
 ###############################################################################
+# GLOBAL VARIABLES
+###############################################################################
+module "local" {
+  source = "../../_modules/local-dev-pnpg"
+}
+
+###############################################################################
 # APIM
 ###############################################################################
 
 module "apim_api" {
   source              = "../../_modules/apim_api"
-  apim_name           = local.apim_name
-  apim_rg             = local.apim_rg
-  api_name            = "selc-${local.env_short}-api-iam-${local.domain}"
+  apim_name           = module.local.config.apim_name
+  apim_rg             = module.local.config.apim_rg
+  api_name            = "selc-${module.local.config.env_short}-api-iam-${module.local.config.domain}"
   display_name        = "IAM API PNPG"
-  base_path           = local.apim_base_path
-  private_dns_name    = local.private_dns_name_ms.private_dns_name_ms
-  dns_zone_prefix     = local.dns_zone_prefix
-  api_dns_zone_prefix = local.api_dns_zone_prefix
+  base_path           = "imprese/iam"
+  private_dns_name    = "selc-${module.local.config.env_short}-iam-ms-ca.${module.local.config.private_dns_name_domain}"
+  dns_zone_prefix     = module.local.config.dns_zone_prefix
+  api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
   openapi_path        = "../../../../apps/iam/src/main/docs/openapi.json"
 
   api_operation_policies = []
@@ -24,17 +31,17 @@ module "apim_api" {
 module "cosmosdb" {
   source = "../../_modules/cosmosdb_database"
 
-  database_name               = local.mongo_db.database_name
-  resource_group_name         = local.mongo_db.mongodb_rg_name
-  cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
+  database_name               = "selcIam"
+  resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
 }
 
 module "collection_iam_user" {
   source = "../../_modules/cosmosdb_collection"
 
   name                        = "userClaims"
-  resource_group_name         = local.mongo_db.mongodb_rg_name
-  cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
+  resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
   database_name               = module.cosmosdb.database_name
 
   lock_enable = true
@@ -51,8 +58,8 @@ module "collection_iam_roles" {
   source = "../../_modules/cosmosdb_collection"
 
   name                        = "roles"
-  resource_group_name         = local.mongo_db.mongodb_rg_name
-  cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
+  resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
   database_name               = module.cosmosdb.database_name
 
   lock_enable = true
@@ -112,20 +119,20 @@ locals {
 module "container_app_iam_ms" {
   source = "../../_modules/container_app_microservice"
 
-  env_short                      = local.env_short
-  resource_group_name            = local.ca_resource_group_name
-  container_app                  = local.container_app
-  container_app_name             = "${local.project}-${local.domain}-iam-ms"
-  container_app_environment_name = local.container_app_environment_name
+  env_short                      = module.local.config.env_short
+  resource_group_name            = module.local.config.ca_resource_group_name
+  container_app                  = module.local.config.container_app
+  container_app_name             = "${module.local.config.project}-${module.local.config.domain}-iam-ms"
+  container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-iam-ms"
-  image_tag                      = local.image_tag_latest
+  image_tag                      = module.local.config.image_tag_latest
   app_settings                   = local.app_settings_iam_ms
   secrets_names                  = local.secrets_names_iam_ms
 
-  key_vault_resource_group_name = local.key_vault_resource_group_name
-  key_vault_name                = local.key_vault_name
+  key_vault_resource_group_name = module.local.config.key_vault_resource_group_name
+  key_vault_name                = module.local.config.key_vault_name
 
-  probes = local.quarkus_health_probes
+  probes = module.local.config.quarkus_health_probes
 
-  tags = local.tags
+  tags = module.local.config.tags
 }

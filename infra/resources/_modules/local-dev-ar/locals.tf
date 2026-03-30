@@ -1,7 +1,7 @@
 locals {
   prefix         = "selc"
   storage_prefix = "sc"
-  env_short      = "u"
+  env_short      = "d"
   location       = "westeurope"
   location_short = "weu"
   domain         = "ar"
@@ -11,7 +11,7 @@ locals {
   external_domain     = "pagopa.it"
 
   apim_name = "selc-${local.env_short}-apim-v2"
-  apim_rg   = "selc-${local.env_short}-api-v2-rg"
+  apim_rg   = "selc-${local.env_short}-api-v2-rg"  
 
   project = "${local.prefix}-${local.env_short}"
 
@@ -24,12 +24,9 @@ locals {
   ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-002-rg"
 
   private_dns_name_domain = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
-  private_dns_name_ms = {
-    private_dns_name_ms = "selc-${local.env_short}-iam-ms-ca.${local.private_dns_name_domain}"
-  }
-
+  
   container_app = {
-    min_replicas = 1
+    min_replicas = 0
     max_replicas = 1
     scale_rules = [
       {
@@ -87,7 +84,7 @@ locals {
 
   tags = {
     CreatedBy   = "Terraform"
-    Environment = "Uat"
+    Environment = "Dev"
     Owner       = "Selfcare"
     Source      = "https://github.com/pagopa/selfcare"
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
@@ -98,10 +95,7 @@ locals {
   key_vault_resource_group_name = "${local.prefix}-${local.env_short}-sec-rg"
   key_vault_name                = "${local.prefix}-${local.env_short}-kv"
 
-  naming_config            = "documents"
   resource_group_name_vnet = "${local.project}-vnet-rg"
 
   image_tag_latest = "latest"
 }
-
-//pnpg https://selc-u-pnpg-dashboard-backend-ca.

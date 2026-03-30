@@ -1,35 +1,36 @@
 locals {
   prefix         = "selc"
   storage_prefix = "sc"
-  env_short      = "u"
+  env_short      = "d"
   location       = "westeurope"
   location_short = "weu"
-  domain         = "ar"
+  domain         = "pnpg"
 
-  dns_zone_prefix     = "dev.selfcare"
-  api_dns_zone_prefix = "api.dev.selfcare"
+  dns_zone_prefix     = "pnpg.dev.selfcare"
+  api_dns_zone_prefix = "api-pnpg.dev.selfcare"
   external_domain     = "pagopa.it"
 
-  apim_name = "selc-${local.env_short}-apim-v2"
-  apim_rg   = "selc-${local.env_short}-api-v2-rg"
-
-  project = "${local.prefix}-${local.env_short}"
+  apim_name      = "selc-${local.env_short}-apim-v2"
+  apim_rg        = "selc-${local.env_short}-api-v2-rg"
+  
+  pnpg_suffix = "${local.location_short}-${local.domain}"
+  project     = "${local.prefix}-${local.env_short}"
 
   mongo_db = {
-    mongodb_rg_name               = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-rg",
-    cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-account"
+    mongodb_rg_name               = "${local.prefix}-${local.env_short}-${local.pnpg_suffix}-cosmosdb-mongodb-rg",
+    cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}-${local.pnpg_suffix}-cosmosdb-mongodb-account"
   }
 
-  container_app_environment_name = "${local.prefix}-${local.env_short}-cae-002"
-  ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-002-rg"
+  container_app_environment_name = "${local.prefix}-${local.env_short}-${local.domain}-cae-cp"
+  ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-rg"
 
-  private_dns_name_domain = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+  private_dns_name_domain = "blackhill-644148c0.westeurope.azurecontainerapps.io"
   private_dns_name_ms = {
-    private_dns_name_ms = "selc-${local.env_short}-iam-ms-ca.${local.private_dns_name_domain}"
+    private_dns_name_ms = "selc-${local.env_short}-${local.domain}-iam-ms-ca.${local.private_dns_name_domain}"
   }
 
   container_app = {
-    min_replicas = 1
+    min_replicas = 0
     max_replicas = 1
     scale_rules = [
       {
@@ -87,7 +88,7 @@ locals {
 
   tags = {
     CreatedBy   = "Terraform"
-    Environment = "Uat"
+    Environment = "Dev"
     Owner       = "Selfcare"
     Source      = "https://github.com/pagopa/selfcare"
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
@@ -98,10 +99,7 @@ locals {
   key_vault_resource_group_name = "${local.prefix}-${local.env_short}-sec-rg"
   key_vault_name                = "${local.prefix}-${local.env_short}-kv"
 
-  naming_config            = "documents"
   resource_group_name_vnet = "${local.project}-vnet-rg"
 
   image_tag_latest = "latest"
 }
-
-//pnpg https://selc-u-pnpg-dashboard-backend-ca.
