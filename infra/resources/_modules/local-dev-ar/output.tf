@@ -26,3 +26,7 @@ output config {
     image_tag_latest = local.image_tag_latest
   }
 }
+
+output "key_vault_id" {
+  value = data.azurerm_key_vault.key_vault.id
+}

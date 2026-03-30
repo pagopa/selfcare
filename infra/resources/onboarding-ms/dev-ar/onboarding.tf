@@ -1,18 +1,25 @@
+###############################################################################
+# GLOBAL VARIABLES
+###############################################################################
+module "local" {
+  source = "../../_modules/local-dev-ar"
+}
+
 module "cosmosdb" {
   source = "../../_modules/cosmosdb_database"
 
-  database_name               = local.mongo_db.database_onboarding_name
-  resource_group_name         = local.mongo_db.mongodb_rg_name
-  cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
+  database_name               = "selcOnboarding"
+  resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
 }
 
 module "collection_onboardings" {
   source = "../../_modules/cosmosdb_collection"
 
   name                        = "onboardings"
-  resource_group_name         = local.mongo_db.mongodb_rg_name
-  cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
-  database_name               = local.mongo_db.database_onboarding_name
+  resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
+  database_name               = module.cosmosdb.database_name
 
   lock_enable = true
 
@@ -32,9 +39,9 @@ module "collection_tokens" {
   source = "../../_modules/cosmosdb_collection"
 
   name                        = "tokens"
-  resource_group_name         = local.mongo_db.mongodb_rg_name
-  cosmosdb_mongo_account_name = local.mongo_db.cosmosdb_account_mongodb_name
-  database_name               = local.mongo_db.database_onboarding_name
+  resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
+  database_name               = module.cosmosdb.database_name
 
   lock_enable = true
 
@@ -75,7 +82,7 @@ resource "azurerm_key_vault_secret" "encryption_iv_secret" {
   value        = random_password.encryption_iv.result
   content_type = "text/plain"
 
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = module.local.key_vault_id
 
   lifecycle {
     ignore_changes = all
@@ -87,7 +94,7 @@ resource "azurerm_key_vault_secret" "encryption_key_secret" {
   value        = random_password.encryption_key.result
   content_type = "text/plain"
 
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = module.local.key_vault_id
 
   lifecycle {
     ignore_changes = all
@@ -221,18 +228,18 @@ locals {
 module "container_app_onboarding_ms" {
   source = "../../_modules/container_app_microservice"
 
-  env_short                      = local.env_short
-  resource_group_name            = local.ca_resource_group_name
-  container_app                  = local.container_app
-  container_app_name             = "selc-${local.env_short}-onboarding-ms"
-  container_app_environment_name = local.container_app_environment_name
+  env_short                      = module.local.config.env_short
+  resource_group_name            = module.local.config.ca_resource_group_name
+  container_app                  = module.local.config.container_app
+  container_app_name             = "selc-${module.local.config.env_short}-onboarding-ms"
+  container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-onboarding-ms"
-  image_tag                      = var.image_tag
+  image_tag                      = module.local.config.image_tag_latest
   app_settings                   = local.app_settings_onboarding_ms
   secrets_names                  = local.secrets_names_onboarding_ms
-  key_vault_resource_group_name  = local.key_vault_resource_group_name
-  key_vault_name                 = local.key_vault_name
-  probes                         = local.quarkus_health_probes
-  tags                           = local.tags
+  key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
+  key_vault_name                 = module.local.config.key_vault_name
+  probes                         = module.local.config.quarkus_health_probes
+  tags                           = module.local.config.tags
 }
 
