@@ -35,7 +35,6 @@ locals {
     "JWT_TOKEN_PUBLIC_KEY"                   = "jwt-public-key"
     "BLOB_STORAGE_PRODUCT_CONNECTION_STRING" = "blob-storage-product-connection-string"
     "ONBOARDING-FUNCTIONS-API-KEY"           = "fn-onboarding-primary-key"
-    "USER-ALLOWED-LIST"                      = "user-allowed-list"
   }
 }
 module "container_app_onboarding_bff_pnpg" {
@@ -48,6 +47,7 @@ module "container_app_onboarding_bff_pnpg" {
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-onboarding-bff"
   image_tag                      = module.local.config.image_tag_latest
+  # image_tag                      = "sha-8f9614e"
   app_settings                   = local.app_settings_onboarding_bff
   secrets_names                  = local.secrets_names_onboarding_bff
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
