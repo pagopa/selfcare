@@ -51,3 +51,13 @@ variable "openapi_path" {
   type        = string
   description = "Path to the OpenAPI specification file."
 }
+
+variable "api_operation_policies" {
+  type = list(object({
+    operation_id = string
+    xml_content  = string
+    }
+  ))
+  default     = []
+  description = "List of api policy for given operation."
+}

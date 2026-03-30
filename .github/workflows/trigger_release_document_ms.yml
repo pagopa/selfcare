@@ -32,7 +32,6 @@ jobs:
       target: selc
       app: document-ms
       APP_PATH: apps/document-ms
-      INFRA_PATH: infra/apps/document-ms
       APPS_POM: apps/pom.xml
       POM: pom.xml
     secrets: inherit

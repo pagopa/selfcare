@@ -32,7 +32,6 @@ jobs:
       target: selc
       app: iam
       APP_PATH: apps/iam
-      INFRA_PATH: infra/apps/iam
       APPS_POM: apps/pom.xml
       POM: pom.xml
     secrets: inherit

@@ -32,6 +32,7 @@
     <security-sdk.version>0.2.3</security-sdk.version>
     <selfcare-onboarding-sdk.version>0.15.5</selfcare-onboarding-sdk.version>
     <mapstruct.lombok.version>0.2.0</mapstruct.lombok.version>
+    <openhtmltopdf.version>1.1.37</openhtmltopdf.version>
   </properties>
 
   <dependencyManagement>
@@ -152,25 +153,31 @@
     <dependency>
       <groupId>io.github.openhtmltopdf</groupId>
       <artifactId>openhtmltopdf-core</artifactId>
-      <version>1.1.37</version>
+      <version>${openhtmltopdf.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>io.github.openhtmltopdf</groupId>
       <artifactId>openhtmltopdf-pdfbox</artifactId>
-      <version>1.1.37</version>
+      <version>${openhtmltopdf.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>io.github.openhtmltopdf</groupId>
       <artifactId>openhtmltopdf-svg-support</artifactId>
-      <version>1.1.37</version>
+      <version>${openhtmltopdf.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.openhtmltopdf</groupId>
+      <groupId>io.github.openhtmltopdf</groupId>
       <artifactId>openhtmltopdf-slf4j</artifactId>
-      <version>1.0.10</version>
+      <version>${openhtmltopdf.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xercesImpl</artifactId>
+      <version>2.12.2</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>

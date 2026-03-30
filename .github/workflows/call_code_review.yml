@@ -17,6 +17,10 @@ on:
         type: string
         required: true
 
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   code_review:
     name: 'Build & Analysis'
