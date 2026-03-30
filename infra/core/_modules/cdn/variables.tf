@@ -137,3 +137,14 @@ variable "create_snet" {
   default     = true
   description = "Create a snet or read default cdn snet"
 }
+
+variable "origin_health_probe" {
+  type = object({
+    path         = optional(string, "/")
+    request_type = optional(string, "HEAD")
+  })
+
+  description = "Health probe configuration of the CDN origin group"
+
+  default = {}
+}
