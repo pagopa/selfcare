@@ -154,6 +154,11 @@ module "cdn" {
   rg_vnet_name                    = module.network.rg_vnet_name
   cidr_subnet_cdn                 = local.cidr_subnet_cdn
 
+  origin_health_probe = {
+    path         = "/health.json"
+    request_type = "HEAD"
+  }
+
   depends_on = [module.log_analytics]
 }
 
