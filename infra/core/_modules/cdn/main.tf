@@ -170,6 +170,7 @@ module "checkout_cdn" {
     log_analytics_workspace_id = var.log_analytics_workspace_id
   }
 
+  origin_health_probe               = var.origin_health_probe
   existing_cdn_frontdoor_profile_id = null
   tags                              = var.tags
 }
