@@ -271,11 +271,58 @@ module "container_app_registry_proxy_ms" {
   app_settings                   = module.local.config.registry_proxy_app_settings
   secrets_names                  = module.local.config.registry_proxy_secrets_names
   workload_profile_name          = "Consumption"
-
-  key_vault_resource_group_name = module.local.config.key_vault_resource_group_name
-  key_vault_name                = module.local.config.key_vault_name
+  key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
+  key_vault_name                 = module.local.config.key_vault_name
 
   probes = module.local.config.quarkus_health_probes
+  tags   = module.local.config.tags
+}
+
+###############################################################################
+# AI Search
+###############################################################################
+
+module "ai_search_institution" {
+  source            = "../../_modules/ai_search_institution"
+  domain            = module.local.config.domain
+  search_service_id = module.ai_search.search_service_id
+}
+
+###############################################################################
+# DAPR
+###############################################################################
+
+
+module "dapr" {
+  source = "../../_modules/dapr"
+
+  project   = "${module.local.config.prefix}-${module.local.config.env_short}-${module.local.config.location_short}-${module.local.config.domain}"
+  env_short = module.local.config.env_short
+
+  cae_name    = "selc-${module.local.config.env_short}-cae-002"
+  cae_rg_name = "selc-${module.local.config.env_short}-container-app-002-rg"
+  ca_name     = "selc-${module.local.config.env_short}-party-reg-proxy-ca"
+  ca_rg_name  = "selc-${module.local.config.env_short}-container-app-002-rg"
+
+  key_vault_name                   = "selc-${module.local.config.env_short}-kv"
+  key_vault_resource_group_name    = "selc-${module.local.config.env_short}-sec-rg"
+  key_vault_event_hub_consumer_key = "eventhub-sc-contracts-selc-proxy-key-lc"
+
+  queue_url            = "selc-${module.local.config.env_short}-eventhub-ns.servicebus.windows.net"
+  queue_port           = "9093"
+  queue_consumer_group = "party-proxy"
+  queue_topic          = "SC-Contracts"
+
+  #redis
+  redis_enable                   = true
+  redis_private_endpoint_enabled = true
+  redis_capacity                 = 0
+  redis_version                  = 6
+  redis_family                   = "C"
+  redis_sku_name                 = "Basic"
+
+  search_service_name = module.ai_search.search_service_name
+  search_service_key  = module.ai_search.search_service_admin_key
 
   tags = module.local.config.tags
 }
