@@ -119,7 +119,7 @@
 #     memory = "1Gi"
 #   }
 
-  
+
 
 #   private_dns_name_onboarding_bff    = "selc-d-pnpg-onboarding-bff-ca.blackhill-644148c0.westeurope.azurecontainerapps.io"
 #   apim_name_onboarding_bff           = "selc-${local.env_short}-pnpg-apim-v2"

@@ -7,8 +7,8 @@ resource "azurerm_resource_group" "fn_rg" {
 
 resource "azurerm_subnet" "fn_snet" {
   name                 = "${var.functions_name}-snet"
-  resource_group_name  = data.azurerm_virtual_network.vnet_selc.resource_group_name
-  virtual_network_name = data.azurerm_virtual_network.vnet_selc.name
+  resource_group_name  = var.vnet_resource_group_name
+  virtual_network_name = var.vnet_name
   address_prefixes     = var.subnet_cidr
 
   delegation {
@@ -92,8 +92,8 @@ resource "azurerm_linux_function_app" "fn" {
 }
 
 resource "azurerm_key_vault_access_policy" "fn_keyvault_access_policy" {
-  key_vault_id = data.azurerm_key_vault.key_vault.id
-  tenant_id    = data.azurerm_client_config.current.tenant_id
+  key_vault_id = var.key_vault_id
+  tenant_id    = var.tenant_id
   object_id    = azurerm_linux_function_app.fn.identity[0].principal_id
 
   secret_permissions = [
@@ -110,7 +110,7 @@ resource "azurerm_key_vault_secret" "fn_primary_key" {
   name         = "fn-onboarding-primary-key"
   value        = data.azurerm_function_app_host_keys.fn.default_function_key
   content_type = "text/plain"
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = var.key_vault_id
 }
 
 data "azurerm_resource_group" "fn_nat_rg" {

@@ -24,7 +24,7 @@ locals {
   ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-002-rg"
 
   private_dns_name_domain = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
-  
+
   container_app = {
     min_replicas = 1
     max_replicas = 1

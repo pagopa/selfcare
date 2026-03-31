@@ -104,6 +104,10 @@ module "onboarding_functions" {
   service_plan_worker_count = local.onboarding_functions.service_plan_worker_count
   nat_resource_group_name   = local.onboarding_functions.nat_resource_group_name
   nat_gateway_name          = local.onboarding_functions.nat_gateway_name
+  vnet_resource_group_name  = module.local.vnet_resource_group_name
+  vnet_name                 = module.local.vnet_selc_name
+  key_vault_id              = module.local.key_vault_id
+  tenant_id                 = module.local.tenant_id
   replication_type          = "LRS"
   app_settings              = local.onboarding_functions.app_settings
   location                  = module.local.config.location

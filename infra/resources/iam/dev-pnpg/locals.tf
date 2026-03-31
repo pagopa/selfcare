@@ -13,7 +13,7 @@ locals {
   apim_name      = "selc-${local.env_short}-apim-v2"
   apim_rg        = "selc-${local.env_short}-api-v2-rg"
   apim_base_path = "imprese/iam"
-  pnpg_suffix = "${local.location_short}-${local.domain}"
+  pnpg_suffix    = "${local.location_short}-${local.domain}"
 
   project = "${local.prefix}-${local.env_short}"
 
@@ -30,5 +30,5 @@ locals {
     private_dns_name_ms = "selc-${local.env_short}-${local.domain}-iam-ms-ca.${local.private_dns_name_domain}"
   }
 
-  naming_config            = "documents"
+  naming_config = "documents"
 }

@@ -31,15 +31,15 @@ variable "always_on" {
 }
 
 variable "service_plan_worker_count" {
-  type = number
+  type        = number
   description = "Worker count"
-  default = 1
+  default     = 1
 }
 
 variable "nat_resource_group_name" {
   type        = string
   description = "Name of NAT Resource Group"
-} 
+}
 
 variable "nat_gateway_name" {
   type        = string
@@ -55,4 +55,23 @@ variable "replication_type" {
 variable "app_settings" {
   type        = map(string)
   description = "Settings references to be set as app settings in the function app"
+}
+
+variable "vnet_resource_group_name" {
+  type        = string
+  description = "Name of the Virtual Network Resource Group"
+}
+
+variable "vnet_name" {
+  type        = string
+  description = "Name of the Virtual Network"
+}
+
+variable "key_vault_id" {
+  type = string
+}
+
+variable "tenant_id" {
+  description = "Azure tenant ID"
+  type        = string
 }
