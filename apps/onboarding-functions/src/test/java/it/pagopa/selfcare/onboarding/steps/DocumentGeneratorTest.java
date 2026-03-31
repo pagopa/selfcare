@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Disabled
 @Slf4j
-class TokenGeneratorTest {
+class DocumentGeneratorTest {
 
     @Test
     void generateToken(){

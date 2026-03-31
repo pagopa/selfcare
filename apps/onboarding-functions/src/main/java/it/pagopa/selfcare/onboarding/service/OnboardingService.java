@@ -83,7 +83,6 @@ public class OnboardingService {
 
   public OnboardingService(
           ProductService productService,
-          ContractService contractService,
           OnboardingRepository repository,
           MailTemplatePathConfig mailTemplatePathConfig,
           MailTemplatePlaceholdersConfig mailTemplatePlaceholdersConfig,

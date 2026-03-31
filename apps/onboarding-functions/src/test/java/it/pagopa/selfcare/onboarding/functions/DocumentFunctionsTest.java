@@ -19,13 +19,11 @@ import java.util.logging.Logger;
 import static org.mockito.Mockito.*;
 
 @QuarkusTest
-public class TokenFunctionsTest {
+public class DocumentFunctionsTest {
 
   @Inject
-  TokenFunctions function;
+  DocumentFunctions function;
 
-  @InjectMock
-  OnboardingService onboardingService;
   @RestClient
   @InjectMock
   DocumentContentControllerApi documentContentControllerApi;

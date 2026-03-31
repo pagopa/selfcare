@@ -9,15 +9,14 @@ import it.pagopa.selfcare.onboarding.entity.GeographicTaxonomy;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.PaymentServiceProvider;
-import it.pagopa.selfcare.onboarding.entity.Token;
 import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
-import it.pagopa.selfcare.onboarding.repository.TokenRepository;
 import jakarta.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
+import org.openapi.quarkus.document_json.model.DocumentResponse;
 
 @Slf4j
 @QuarkusTest
@@ -25,11 +24,10 @@ public class IntegrationOperationUtils {
 
   @Inject OnboardingRepository onboardingRepository;
 
-  @Inject TokenRepository tokenRepository;
-
   public <T> void persistIntoMongo(T input) {
-    if (input instanceof Token) {
-      tokenRepository.persist((Token) input);
+    if (input instanceof DocumentResponse) {
+        //TODO update with document ms
+      //tokenRepository.persist((DocumentResponse) input);
     } else {
       onboardingRepository.persist((Onboarding) input);
     }
@@ -39,9 +37,6 @@ public class IntegrationOperationUtils {
     return onboardingRepository.findById(id);
   }
 
-  public Token findIntoMongoToken(String id) {
-    return tokenRepository.findById(id);
-  }
 
   public void persistInstitution(MongoDatabase mongoDatabase, Institution institution) {
     MongoCollection<Document> collection = mongoDatabase.getCollection("Institution");

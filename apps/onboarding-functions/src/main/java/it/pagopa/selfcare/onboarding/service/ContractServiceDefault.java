@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.onboarding.service;
 
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
-import it.pagopa.selfcare.onboarding.config.AzureStorageConfig;
 import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -10,12 +9,16 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
@@ -34,7 +37,6 @@ import static it.pagopa.selfcare.onboarding.utils.GenericError.*;
 public class ContractServiceDefault implements ContractService {
 
   private final UserApi userRegistryApi;
-  private final AzureStorageConfig azureStorageConfig;
   private final AzureBlobClient azureBlobClient;
   private final String logoPath;
   private final boolean isLogoEnable;
@@ -49,12 +51,10 @@ public class ContractServiceDefault implements ContractService {
   private static final String DATE_PATTERN_YYYY_M_MDD_H_HMMSS = "yyyyMMddHHmmss";
 
   public ContractServiceDefault(
-            AzureStorageConfig azureStorageConfig,
             AzureBlobClient azureBlobClient,
             @ConfigProperty(name = "onboarding-functions.logo-path") String logoPath,
             @ConfigProperty(name = "onboarding-functions.logo-enable") Boolean isLogoEnable,
             @RestClient UserApi userRegistryApi) {
-        this.azureStorageConfig = azureStorageConfig;
         this.azureBlobClient = azureBlobClient;
         this.logoPath = logoPath;
         this.isLogoEnable = isLogoEnable;
@@ -183,27 +183,25 @@ public class ContractServiceDefault implements ContractService {
   }
 
   @Override
-  public void uploadAggregatesCsv(OnboardingWorkflow onboardingWorkflow) {
-
+  public DocumentContentControllerApi.UploadAggregatesCsvMultipartForm requestUploadAggregatesCsv(OnboardingWorkflow onboardingWorkflow) {
     try {
       Onboarding onboarding = onboardingWorkflow.getOnboarding();
       Path filePath = createSafeTempFile("tempfile", ".csv");
-      File csv =
-        generateAggregatesCsv(onboarding.getProductId(), onboarding.getAggregates(), filePath);
-      final String path =
-        String.format(
-          "%s%s/%s",
-          azureStorageConfig.aggregatesPath(), onboarding.getId(), onboarding.getProductId());
-      final String filename = "aggregates.csv";
-      azureBlobClient.uploadFile(path, filename, Files.readAllBytes(csv.toPath()));
+      InputStream csv = generateAggregatesCsv(onboarding.getProductId(), onboarding.getAggregates(), filePath);
+      DocumentContentControllerApi.UploadAggregatesCsvMultipartForm request =
+          new DocumentContentControllerApi.UploadAggregatesCsvMultipartForm();
+      request.onboardingId = onboardingWorkflow.getOnboarding().getId();
+      request.productId = onboardingWorkflow.getOnboarding().getProductId();
+      request.csv = csv;
+      return request;
     } catch (IOException e) {
       throw new GenericOnboardingException(
         String.format(LOAD_AGGREGATES_CSV_ERROR.getMessage(), e.getMessage()));
     }
   }
 
-  private File generateAggregatesCsv(
-    String productId, List<AggregateInstitution> institutions, Path filePath) {
+  private InputStream generateAggregatesCsv(
+    String productId, List<AggregateInstitution> institutions, Path filePath) throws FileNotFoundException {
     String[] headers;
     Function<AggregateInstitution, List<Object>> mapper;
     String legalSentence = null;
@@ -237,12 +235,12 @@ public class ContractServiceDefault implements ContractService {
     return createAggregatesCsv(institutions, filePath, headers, mapper, legalSentence);
   }
 
-  private File createAggregatesCsv(
+  private InputStream createAggregatesCsv(
     List<AggregateInstitution> institutions,
     Path filePath,
     String[] headers,
     Function<AggregateInstitution, List<Object>> mapper,
-    String legalSentence) {
+    String legalSentence) throws FileNotFoundException {
 
     File csvFile = filePath.toFile();
 
@@ -266,7 +264,7 @@ public class ContractServiceDefault implements ContractService {
       throw new GenericOnboardingException(
         String.format(CREATE_AGGREGATES_CSV_ERROR.getMessage(), e.getMessage()));
     }
-    return csvFile;
+    return new FileInputStream(csvFile);
   }
 
   Path createSafeTempFile(String prefix, String suffix) throws IOException {

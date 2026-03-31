@@ -7,11 +7,11 @@ import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.PaymentServiceProvider;
-import it.pagopa.selfcare.onboarding.entity.Token;
 import org.openapi.quarkus.core_json.model.DataProtectionOfficerResponse;
 import org.openapi.quarkus.core_json.model.InstitutionResponse;
 import org.openapi.quarkus.core_json.model.PaymentServiceProviderResponse;
 import org.openapi.quarkus.core_json.model.RootParentResponse;
+import org.openapi.quarkus.document_json.model.DocumentResponse;
 import org.openapi.quarkus.party_registry_proxy_json.api.GeographicTaxonomiesApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.InstitutionApi;
 import org.openapi.quarkus.party_registry_proxy_json.model.GeographicTaxonomyResource;
@@ -31,12 +31,12 @@ public class NotificationBuilderTestUtil {
   public static final String TOKEN_ID = "t1";
   public static final String PRODUCT_ID = "prod";
 
-  public static Token createToken() {
-    Token token = new Token();
-    token.setId(TOKEN_ID);
-    token.setProductId(PRODUCT_ID);
-    token.setContractSigned("contractSigned");
-    return token;
+  public static DocumentResponse createDocument() {
+    DocumentResponse document = new DocumentResponse();
+    document.setId(TOKEN_ID);
+    document.setProductId(PRODUCT_ID);
+    document.setContractSigned("contractSigned");
+    return document;
   }
 
   public static InstitutionResponse createInstitution() {

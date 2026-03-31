@@ -16,13 +16,13 @@ import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
 
 import static jakarta.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
-public class TokenFunctions {
+public class DocumentFunctions {
   private static final String FORMAT_LOGGER_INSTITUTION_STRING = "%s: %s";
   private final ObjectMapper objectMapper;
 
   @RestClient @Inject DocumentContentControllerApi documentContentControllerApi;
 
-  public TokenFunctions(ObjectMapper objectMapper) {
+  public DocumentFunctions(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
   }
 

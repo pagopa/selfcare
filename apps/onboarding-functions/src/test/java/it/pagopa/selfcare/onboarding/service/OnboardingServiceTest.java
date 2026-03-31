@@ -12,7 +12,6 @@ import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.mapper.UserMapper;
 import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
-import it.pagopa.selfcare.onboarding.repository.TokenRepository;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
@@ -29,6 +28,7 @@ import org.openapi.quarkus.document_json.api.DocumentControllerApi;
 import org.openapi.quarkus.document_json.model.AttachmentPdfRequest;
 import org.openapi.quarkus.document_json.model.ContractPdfRequest;
 import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
+import org.openapi.quarkus.document_json.model.DocumentResponse;
 import org.openapi.quarkus.party_registry_proxy_json.api.PdndVisuraInfoCamereControllerApi;
 import org.openapi.quarkus.user_json.api.InstitutionApi;
 import org.openapi.quarkus.user_json.model.SendMailDto;
@@ -55,8 +55,6 @@ class OnboardingServiceTest {
     final String productId = "productId";
     @InjectMock
     OnboardingRepository onboardingRepository;
-    @InjectMock
-    TokenRepository tokenRepository;
     @RestClient
     @InjectMock
     UserApi userRegistryApi;
@@ -71,8 +69,6 @@ class OnboardingServiceTest {
     PdndVisuraInfoCamereControllerApi pdndVisuraInfoCamereControllerApi;
     @InjectMock
     NotificationService notificationService;
-    @InjectMock
-    ContractService contractService;
     @InjectMock
     ProductService productService;
     @InjectMock
@@ -401,9 +397,9 @@ class OnboardingServiceTest {
         Onboarding onboarding = createOnboarding();
         Product product = createDummyProduct();
         UserResource userResource = createUserResource();
-        Token token = createDummyToken();
+        DocumentResponse document = createDummyToken();
 
-        when(tokenRepository.findByOnboardingId(onboarding.getId())).thenReturn(Optional.of(token));
+        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(List.of(document));
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
 
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
@@ -543,11 +539,11 @@ class OnboardingServiceTest {
         Onboarding onboarding = createOnboarding();
         Product product = createDummyProduct();
         UserResource userResource = createUserResource();
-        Token token = createDummyToken();
+        DocumentResponse document = createDummyToken();
 
         Integer expirationDate = 30;
 
-        when(tokenRepository.findByOnboardingId(onboarding.getId())).thenReturn(Optional.of(token));
+        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(List.of(document));
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
         when(productService.getProductExpirationDate(onboarding.getProductId())).thenReturn(expirationDate);
 
@@ -580,11 +576,11 @@ class OnboardingServiceTest {
 
         Onboarding onboarding = createOnboarding();
         Product product = createDummyProduct();
-        Token token = createDummyToken();
+        DocumentResponse document = createDummyToken();
 
         Integer expirationDate = 30;
 
-        when(tokenRepository.findByOnboardingId(onboarding.getId())).thenReturn(Optional.of(token));
+        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(List.of(document));
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
         when(productService.getProductExpirationDate(onboarding.getProductId())).thenReturn(expirationDate);
 
@@ -620,7 +616,7 @@ class OnboardingServiceTest {
     void sendMailRegistrationWithContract_throwExceptionWhenTokenIsNotPresent() {
         Onboarding onboarding = createOnboarding();
         OnboardingWorkflow onboardingWorkflow = getOnboardingWorkflowInstitution(onboarding);
-        when(tokenRepository.findByOnboardingId(onboarding.getId())).thenReturn(Optional.empty());
+        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(List.of());
         assertThrows(
                 GenericOnboardingException.class,
                 () -> onboardingService.sendMailRegistrationForContract(onboardingWorkflow));
@@ -776,7 +772,7 @@ class OnboardingServiceTest {
     @Test
     void sendMailRegistrationApprove_throwExceptionWhenTokenIsNotPresent() {
         Onboarding onboarding = createOnboarding();
-        when(tokenRepository.findByOnboardingId(onboarding.getId())).thenReturn(Optional.empty());
+        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(List.of());
         assertThrows(
                 GenericOnboardingException.class,
                 () -> onboardingService.sendMailRegistrationApprove(onboarding));
@@ -810,7 +806,7 @@ class OnboardingServiceTest {
     @Test
     void sendMailOnboardingApprove_throwExceptionWhenTokenIsNotPresent() {
         Onboarding onboarding = createOnboarding();
-        when(tokenRepository.findByOnboardingId(onboarding.getId())).thenReturn(Optional.empty());
+        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(List.of());
         assertThrows(
                 GenericOnboardingException.class,
                 () -> onboardingService.sendMailOnboardingApprove(onboarding));
@@ -889,10 +885,10 @@ class OnboardingServiceTest {
         return context;
     }
 
-    private Token createDummyToken() {
-        Token token = new Token();
-        token.setId(UUID.randomUUID().toString());
-        return token;
+    private DocumentResponse createDummyToken() {
+        DocumentResponse document = new DocumentResponse();
+        document.setId(UUID.randomUUID().toString());
+        return document;
     }
 
     @Test
@@ -901,9 +897,9 @@ class OnboardingServiceTest {
         Onboarding onboarding = createOnboarding();
         Product product = createDummyProduct();
         UserResource userResource = createUserResource();
-        Token token = createDummyToken();
+        DocumentResponse document = createDummyToken();
 
-        when(tokenRepository.findByOnboardingId(onboarding.getId())).thenReturn(Optional.of(token));
+        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(List.of(document));
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
 
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
