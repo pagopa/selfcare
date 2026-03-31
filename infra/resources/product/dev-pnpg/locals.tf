@@ -8,7 +8,6 @@
 
 #   dns_zone_prefix     = "dev.selfcare"
 #   api_dns_zone_prefix = "api.dev.selfcare"
-#   # suffix_increment = "-002"
 
 #   apim_name = "selc-${local.env_short}-apim-v2"
 #   apim_rg   = "selc-${local.env_short}-api-v2-rg"
@@ -26,11 +25,6 @@
 #   ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-002-rg"
 
 #   private_dns_name_domain = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
-#   private_dns_name_ms = {
-#     private_dns_name_auth_ms           = "selc-d-auth-ms-ca.${local.private_dns_name_domain}"
-#     private_dns_name_registry_proxy_ms = "selc-d-party-reg-proxy-ca.${local.private_dns_name_domain}"
-
-#   }
 
 #   function_name = "${local.project}-onboarding-fn"
 
@@ -106,8 +100,6 @@
 
 #   naming_config            = "documents"
 #   resource_group_name_vnet = "${local.project}-vnet-rg"
-
-#   cidr_subnet_contract_storage = ["10.1.136.0/24"]
 
 #   image_tag_latest = "latest"
 # }

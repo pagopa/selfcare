@@ -1,3 +1,13 @@
+###############################################################################
+# GLOBAL VARIABLES
+###############################################################################
+module "local" {
+  source = "../../_modules/local-dev-ar"
+}
+
+###############################################################################
+# ONBOARDING FUNCTIONS
+###############################################################################
 locals {
   onboarding_functions = {
     name                      = "selc-d-pnpg-onboarding-fn"
@@ -73,131 +83,147 @@ locals {
   }
 }
 
-resource "azurerm_resource_group" "onboarding_fn_rg" {
-  name     = "${local.onboarding_functions.name}-rg"
-  location = local.location
+module "onboarding_functions" {
+  source = "../../_modules/functions"
 
-  tags = local.tags
+  functions_name            = local.onboarding_functions.name
+  subnet_cidr               = local.onboarding_functions.subnet_cidr
+  always_on                 = local.onboarding_functions.always_on
+  service_plan_sku          = local.onboarding_functions.service_plan_sku
+  service_plan_worker_count = local.onboarding_functions.service_plan_worker_count
+  nat_resource_group_name   = local.onboarding_functions.nat_resource_group_name
+  nat_gateway_name          = local.onboarding_functions.nat_gateway_name
+  replication_type          = "LRS"
+  app_settings              = local.onboarding_functions.app_settings
+  location                  = module.local.config.location
+  tags                      = module.local.config.tags
 }
 
-resource "azurerm_subnet" "onboarding_fn_snet" {
-  name                 = "${local.onboarding_functions.name}-snet"
-  resource_group_name  = data.azurerm_virtual_network.vnet_selc.resource_group_name
-  virtual_network_name = data.azurerm_virtual_network.vnet_selc.name
-  address_prefixes     = local.onboarding_functions.subnet_cidr
+# resource "azurerm_resource_group" "onboarding_fn_rg" {
+#   name     = "${local.onboarding_functions.name}-rg"
+#   location = local.location
 
-  delegation {
-    name = "default"
+#   tags = local.tags
+# }
 
-    service_delegation {
-      name    = "Microsoft.Web/serverFarms"
-      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
-    }
-  }
-}
+# resource "azurerm_subnet" "onboarding_fn_snet" {
+#   name                 = "${local.onboarding_functions.name}-snet"
+#   resource_group_name  = data.azurerm_virtual_network.vnet_selc.resource_group_name
+#   virtual_network_name = data.azurerm_virtual_network.vnet_selc.name
+#   address_prefixes     = local.onboarding_functions.subnet_cidr
 
-resource "azurerm_service_plan" "onboarding_fn_plan" {
-  name                = "${local.onboarding_functions.name}-plan"
-  location            = azurerm_resource_group.onboarding_fn_rg.location
-  resource_group_name = azurerm_resource_group.onboarding_fn_rg.name
+#   delegation {
+#     name = "default"
 
-  os_type      = "Linux"
-  sku_name     = local.onboarding_functions.service_plan_sku
-  worker_count = local.onboarding_functions.service_plan_worker_count
+#     service_delegation {
+#       name    = "Microsoft.Web/serverFarms"
+#       actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+#     }
+#   }
+# }
 
-  tags = local.tags
-}
+# resource "azurerm_service_plan" "onboarding_fn_plan" {
+#   name                = "${local.onboarding_functions.name}-plan"
+#   location            = azurerm_resource_group.onboarding_fn_rg.location
+#   resource_group_name = azurerm_resource_group.onboarding_fn_rg.name
 
-resource "azurerm_storage_account" "onboarding_fn_storage" {
-  name                = replace("${local.onboarding_functions.name}-sa", "-", "")
-  location            = azurerm_resource_group.onboarding_fn_rg.location
-  resource_group_name = azurerm_resource_group.onboarding_fn_rg.name
+#   os_type      = "Linux"
+#   sku_name     = local.onboarding_functions.service_plan_sku
+#   worker_count = local.onboarding_functions.service_plan_worker_count
 
-  account_kind             = "StorageV2"
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-  access_tier              = "Hot"
+#   tags = local.tags
+# }
 
-  public_network_access_enabled = true
+# resource "azurerm_storage_account" "onboarding_fn_storage" {
+#   name                = replace("${local.onboarding_functions.name}-sa", "-", "")
+#   location            = azurerm_resource_group.onboarding_fn_rg.location
+#   resource_group_name = azurerm_resource_group.onboarding_fn_rg.name
 
-  tags = local.tags
+#   account_kind             = "StorageV2"
+#   account_tier             = "Standard"
+#   account_replication_type = "LRS"
+#   access_tier              = "Hot"
 
-  lifecycle {
-    ignore_changes = [
-      public_network_access_enabled,
-    ]
-  }
-}
+#   public_network_access_enabled = true
 
-resource "azurerm_linux_function_app" "onboarding_fn" {
-  name                = local.onboarding_functions.name
-  location            = azurerm_resource_group.onboarding_fn_rg.location
-  resource_group_name = azurerm_resource_group.onboarding_fn_rg.name
+#   tags = local.tags
 
-  service_plan_id            = azurerm_service_plan.onboarding_fn_plan.id
-  storage_account_name       = azurerm_storage_account.onboarding_fn_storage.name
-  storage_account_access_key = azurerm_storage_account.onboarding_fn_storage.primary_access_key
+#   lifecycle {
+#     ignore_changes = [
+#       public_network_access_enabled,
+#     ]
+#   }
+# }
 
-  functions_extension_version = "~4"
-  virtual_network_subnet_id   = azurerm_subnet.onboarding_fn_snet.id
-  https_only                  = true
+# resource "azurerm_linux_function_app" "onboarding_fn" {
+#   name                = local.onboarding_functions.name
+#   location            = azurerm_resource_group.onboarding_fn_rg.location
+#   resource_group_name = azurerm_resource_group.onboarding_fn_rg.name
 
-  identity {
-    type = "SystemAssigned"
-  }
+#   service_plan_id            = azurerm_service_plan.onboarding_fn_plan.id
+#   storage_account_name       = azurerm_storage_account.onboarding_fn_storage.name
+#   storage_account_access_key = azurerm_storage_account.onboarding_fn_storage.primary_access_key
 
-  site_config {
-    always_on              = local.onboarding_functions.always_on
-    vnet_route_all_enabled = true
+#   functions_extension_version = "~4"
+#   virtual_network_subnet_id   = azurerm_subnet.onboarding_fn_snet.id
+#   https_only                  = true
 
-    application_stack {
-      java_version = "17"
-    }
-  }
+#   identity {
+#     type = "SystemAssigned"
+#   }
 
-  app_settings = local.onboarding_functions.app_settings
+#   site_config {
+#     always_on              = local.onboarding_functions.always_on
+#     vnet_route_all_enabled = true
 
-  tags = local.tags
+#     application_stack {
+#       java_version = "17"
+#     }
+#   }
 
-  lifecycle {
-    ignore_changes = [
-      app_settings,
-    ]
-  }
-}
+#   app_settings = local.onboarding_functions.app_settings
 
-resource "azurerm_key_vault_access_policy" "onboarding_fn_keyvault_access_policy" {
-  key_vault_id = data.azurerm_key_vault.key_vault.id
-  tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = azurerm_linux_function_app.onboarding_fn.identity[0].principal_id
+#   tags = local.tags
 
-  secret_permissions = [
-    "Get",
-  ]
-}
+#   lifecycle {
+#     ignore_changes = [
+#       app_settings,
+#     ]
+#   }
+# }
 
-data "azurerm_function_app_host_keys" "onboarding_fn" {
-  name                = azurerm_linux_function_app.onboarding_fn.name
-  resource_group_name = azurerm_resource_group.onboarding_fn_rg.name
-}
+# resource "azurerm_key_vault_access_policy" "onboarding_fn_keyvault_access_policy" {
+#   key_vault_id = data.azurerm_key_vault.key_vault.id
+#   tenant_id    = data.azurerm_client_config.current.tenant_id
+#   object_id    = azurerm_linux_function_app.onboarding_fn.identity[0].principal_id
 
-resource "azurerm_key_vault_secret" "onboarding_fn_primary_key" {
-  name         = "fn-onboarding-primary-key"
-  value        = data.azurerm_function_app_host_keys.onboarding_fn.default_function_key
-  content_type = "text/plain"
-  key_vault_id = data.azurerm_key_vault.key_vault.id
-}
+#   secret_permissions = [
+#     "Get",
+#   ]
+# }
 
-data "azurerm_resource_group" "onboarding_fn_nat_rg" {
-  name = local.onboarding_functions.nat_resource_group_name
-}
+# data "azurerm_function_app_host_keys" "onboarding_fn" {
+#   name                = azurerm_linux_function_app.onboarding_fn.name
+#   resource_group_name = azurerm_resource_group.onboarding_fn_rg.name
+# }
 
-data "azurerm_nat_gateway" "onboarding_fn_nat_gateway" {
-  name                = local.onboarding_functions.nat_gateway_name
-  resource_group_name = data.azurerm_resource_group.onboarding_fn_nat_rg.name
-}
+# resource "azurerm_key_vault_secret" "onboarding_fn_primary_key" {
+#   name         = "fn-onboarding-primary-key"
+#   value        = data.azurerm_function_app_host_keys.onboarding_fn.default_function_key
+#   content_type = "text/plain"
+#   key_vault_id = data.azurerm_key_vault.key_vault.id
+# }
 
-resource "azurerm_subnet_nat_gateway_association" "onboarding_fn_subnet_nat_gateway" {
-  subnet_id      = azurerm_subnet.onboarding_fn_snet.id
-  nat_gateway_id = data.azurerm_nat_gateway.onboarding_fn_nat_gateway.id
-}
+# data "azurerm_resource_group" "onboarding_fn_nat_rg" {
+#   name = local.onboarding_functions.nat_resource_group_name
+# }
+
+# data "azurerm_nat_gateway" "onboarding_fn_nat_gateway" {
+#   name                = local.onboarding_functions.nat_gateway_name
+#   resource_group_name = data.azurerm_resource_group.onboarding_fn_nat_rg.name
+# }
+
+# resource "azurerm_subnet_nat_gateway_association" "onboarding_fn_subnet_nat_gateway" {
+#   subnet_id      = azurerm_subnet.onboarding_fn_snet.id
+#   nat_gateway_id = data.azurerm_nat_gateway.onboarding_fn_nat_gateway.id
+# }

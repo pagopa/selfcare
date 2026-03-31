@@ -13,7 +13,7 @@ Tabella delle migrazioni effettuate
 | onboarding-cdc |   ✓    |    ✓     |        |          |         |           |
 | onboarding-fn  |        |          |        |          |         |           |
 | onboarding-ms  |   ✓    |    ✓     |        |          |         |           |
-| product        |        |          |        |          |         |           |
+| product        |   ✓    |          |        |          |         |           |
 | product-cdc    |        |          |        |          |         |           |
 | registry-proxy |        |          |        |          |         |           |
 | search         |        |          |        |          |         |           |
