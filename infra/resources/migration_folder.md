@@ -9,14 +9,14 @@ Tabella delle migrazioni effettuate
 | auth           |   ✓    |          |        |          |         |           |
 | document-ms    |   ✓    |          |        |          |         |           |
 | iam            |   ✓    |    ✓     |        |          |         |           |
+| namirial-sign  |        |          |        |          |         |           |
 | onboarding-bff |   ✓    |    ✓     |        |          |         |           |
 | onboarding-cdc |   ✓    |    ✓     |        |          |         |           |
 | onboarding-fn  |   ✓    |    ✓     |        |          |         |           |
 | onboarding-ms  |   ✓    |    ✓     |        |          |         |           |
 | product        |   ✓    |          |        |          |         |           |
-| product-cdc    |        |          |        |          |         |           |
+| product-cdc    |   ✓    |          |        |          |         |           |
 | registry-proxy |        |          |        |          |         |           |
-| search         |        |          |        |          |         |           |
 | spid-login     |   x    |          |   x    |          |    x    |     ◌     |
 | webhook        |        |          |        |          |         |           |
 +----------------+--------+----------+--------+----------+---------+-----------+
