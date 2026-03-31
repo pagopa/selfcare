@@ -2086,6 +2086,8 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> PanacheMock.mock(Onboarding.class));
         asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
+        asserter.execute(() -> when(documentContentControllerApi.uploadSignedContract(any(), any()))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build())));
 
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
@@ -2111,6 +2113,8 @@ class OnboardingServiceDefaultTest {
         actualUserResource.setFiscalCode("ACTUAL-FISCAL-CODE");
         asserter.execute(() -> when(userRegistryApi.findByIdUsingGET(USERS_FIELD_TAXCODE, actualUseUid))
                 .thenReturn(Uni.createFrom().item(actualUserResource)));
+        asserter.execute(() -> when(documentContentControllerApi.uploadSignedContract(any(), any()))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build())));
 
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
@@ -2141,6 +2145,8 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> PanacheMock.mock(Onboarding.class));
         asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
+        asserter.execute(() -> when(documentContentControllerApi.uploadSignedContract(any(), any()))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build())));
 
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
@@ -2167,6 +2173,8 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> PanacheMock.mock(Onboarding.class));
         asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
+        asserter.execute(() -> when(documentContentControllerApi.uploadSignedContract(any(), any()))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build())));
 
 
         //Mock find managerUserfiscal code
@@ -2193,6 +2201,8 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> PanacheMock.mock(Onboarding.class));
         asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
+        asserter.execute(() -> when(documentContentControllerApi.uploadSignedContract(any(), any()))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build())));
 
         //Mock find managerUserfiscal code
         String actualUseUid = onboarding.getUsers().get(0).getId();
@@ -3503,6 +3513,8 @@ class OnboardingServiceDefaultTest {
 
         asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
+        asserter.execute(() -> when(documentControllerApi.persistDocumentForImport(any()))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build())));
 
         UOResource uoResource = new UOResource();
         uoResource.setCodiceIpa("codiceIPA");
@@ -4261,6 +4273,8 @@ class OnboardingServiceDefaultTest {
 
         asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
+        asserter.execute(() -> when(documentControllerApi.persistDocumentForImport(any()))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build())));
 
         UOResource uoResource = new UOResource();
         uoResource.setCodiceIpa("codiceIPA");
@@ -4665,6 +4679,14 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(actualUserResource)));
         asserter.execute(() -> when(documentContentControllerApi.uploadSignedContract(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.status(500).build())));
+        when(onboardingUtils.buildUploadSignedContractRequest(
+                any(Onboarding.class),
+                anyBoolean(),
+                any(FormItem.class),
+                any(Product.class),
+                any(DocumentType.class),
+                anyList()))
+                .thenReturn(Uni.createFrom().item(new DocumentContentControllerApi.UploadSignedContractMultipartForm()));
 
         asserter.assertFailedWith(
                 () -> onboardingService.uploadContractSigned(onboardingId, TEST_FORM_ITEM),
