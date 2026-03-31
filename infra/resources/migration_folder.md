@@ -11,7 +11,7 @@ Tabella delle migrazioni effettuate
 | iam            |   ✓    |    ✓     |        |          |         |           |
 | onboarding-bff |   ✓    |    ✓     |        |          |         |           |
 | onboarding-cdc |   ✓    |    ✓     |        |          |         |           |
-| onboarding-fn  |        |          |        |          |         |           |
+| onboarding-fn  |   ✓    |    ✓     |        |          |         |           |
 | onboarding-ms  |   ✓    |    ✓     |        |          |         |           |
 | product        |   ✓    |          |        |          |         |           |
 | product-cdc    |        |          |        |          |         |           |
