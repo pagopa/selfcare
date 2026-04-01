@@ -45,42 +45,6 @@
 #     memory = "1Gi"
 #   }
 
-#   quarkus_health_probes = [
-#     {
-#       httpGet = {
-#         path   = "q/health/live"
-#         port   = 8080
-#         scheme = "HTTP"
-#       }
-#       timeoutSeconds      = 5
-#       type                = "Liveness"
-#       failureThreshold    = 3
-#       initialDelaySeconds = 1
-#     },
-#     {
-#       httpGet = {
-#         path   = "q/health/ready"
-#         port   = 8080
-#         scheme = "HTTP"
-#       }
-#       timeoutSeconds      = 5
-#       type                = "Readiness"
-#       failureThreshold    = 30
-#       initialDelaySeconds = 3
-#     },
-#     {
-#       httpGet = {
-#         path   = "q/health/started"
-#         port   = 8080
-#         scheme = "HTTP"
-#       }
-#       timeoutSeconds      = 5
-#       failureThreshold    = 5
-#       type                = "Startup"
-#       initialDelaySeconds = 5
-#     }
-#   ]
-
 #   tags = {
 #     CreatedBy   = "Terraform"
 #     Environment = "Dev"
