@@ -11,7 +11,7 @@ module "container_app_onboarding_bff_pnpg" {
   container_app_name             = "selc-${local.env_short}-pnpg-onboarding-bff"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-onboarding-bff"
-  image_tag                      = local.image_tag_latest
+  image_tag                      = local.image_tag
   app_settings                   = local.app_settings_onboarding_bff
   secrets_names                  = local.secrets_names_onboarding_bff
   key_vault_resource_group_name  = local.key_vault_resource_group_name

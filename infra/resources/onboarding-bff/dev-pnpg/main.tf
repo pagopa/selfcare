@@ -9,6 +9,8 @@ module "local" {
 # Onboarding BFF
 ###############################################################################
 locals {
+  image_tag = module.local.config.image_tag_latest
+
   app_settings_onboarding_bff = [
     { name = "APPLICATIONINSIGHTS_ROLE_NAME", value = "b4f-onboarding" },
     { name = "JAVA_TOOL_OPTIONS", value = "-javaagent:applicationinsights-agent.jar" },
@@ -46,7 +48,7 @@ module "container_app_onboarding_bff_pnpg" {
   container_app_name             = "selc-${module.local.config.env_short}-pnpg-onboarding-bff"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-onboarding-bff"
-  image_tag                      = module.local.config.image_tag_latest
+  image_tag                      = local.image_tag
   # image_tag                      = "sha-8f9614e"
   app_settings                  = local.app_settings_onboarding_bff
   secrets_names                 = local.secrets_names_onboarding_bff

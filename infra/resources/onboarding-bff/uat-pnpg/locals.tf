@@ -76,8 +76,8 @@ locals {
 
   project                  = "${local.prefix}-${local.env_short}"
   resource_group_name_vnet = "${local.project}-vnet-rg"
+  image_tag                = var.image_tag
 
-  image_tag_latest = "latest"
 }
 
 locals {
