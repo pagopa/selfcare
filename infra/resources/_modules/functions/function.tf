@@ -74,7 +74,7 @@ resource "azurerm_linux_function_app" "fn" {
   site_config {
     always_on              = var.always_on
     vnet_route_all_enabled = true
-    http2_enabled         = true
+    http2_enabled          = true
 
     application_stack {
       java_version = "17"
@@ -82,7 +82,7 @@ resource "azurerm_linux_function_app" "fn" {
   }
 
   app_settings = var.app_settings
-  
+
   tags = var.tags
 
   lifecycle {

@@ -30,9 +30,9 @@ module "apim_api_registry_proxy" {
 # DAPR
 ###############################################################################
 locals {
-  ca_name          = "selc-${module.local.config.env_short}-party-reg-proxy-ca"
-  storage_logs     = "selc${module.local.config.env_short}stlogs"
-  storage_logs_rg  = "selc-${module.local.config.env_short}-logs-storage-rg"
+  ca_name         = "selc-${module.local.config.env_short}-party-reg-proxy-ca"
+  storage_logs    = "selc${module.local.config.env_short}stlogs"
+  storage_logs_rg = "selc-${module.local.config.env_short}-logs-storage-rg"
 
   dapr_settings = [{
     name  = "DAPR_HTTP_PORT"

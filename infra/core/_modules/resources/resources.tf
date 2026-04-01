@@ -249,9 +249,9 @@ resource "null_resource" "upload_metadata" {
 
 
 resource "null_resource" "upload_product_institution_types" {
-    triggers = {
-      file_sha1 = filesha1("${path.module}/../../${var.env}-${var.app_domain}/assets/product_institution_types.json")
-    }
+  triggers = {
+    file_sha1 = filesha1("${path.module}/../../${var.env}-${var.app_domain}/assets/product_institution_types.json")
+  }
 
   provisioner "local-exec" {
     command = <<EOT

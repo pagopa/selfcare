@@ -56,9 +56,9 @@ module "collection_webhook_notifications" {
 ###############################################################################
 
 locals {
-  
-  webhook_container_app_name  = "${module.local.config.project}-webhook-ms"
-  
+
+  webhook_container_app_name = "${module.local.config.project}-webhook-ms"
+
   app_settings_webhook_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"

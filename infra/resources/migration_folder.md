@@ -17,8 +17,8 @@ Tabella delle migrazioni effettuate
 | product        |   ✓    |          |        |          |         |           |
 | product-cdc    |   ✓    |          |        |          |         |           |
 | registry-proxy |   ✓    |    ✓     |        |          |         |           |
-| spid-login     |   x    |          |   x    |          |    x    |     ◌     |
-| webhook        |        |          |        |          |         |           |
+| spid-login     |   x    |    ✓     |   x    |          |    x    |     ◌     |
+| webhook        |   ✓    |          |        |          |         |           |
 +----------------+--------+----------+--------+----------+---------+-----------+
 ```
 
