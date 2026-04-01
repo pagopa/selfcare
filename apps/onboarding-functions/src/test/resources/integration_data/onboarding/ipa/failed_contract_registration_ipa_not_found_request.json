@@ -15,7 +15,7 @@
     "originId": "test_not_found"
   },
   "productId": "prod-io",
-  "status": "REQUEST",
+  "status": "PENDING",
   "users": [
     {
       "id": "6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b",
