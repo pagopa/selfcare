@@ -8,6 +8,7 @@ import it.pagopa.selfcare.onboarding.dto.OnboardingAggregateOrchestratorInput;
 import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
+import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.mapper.ProductMapper;
@@ -424,7 +425,8 @@ public class CompletionServiceDefault implements CompletionService {
             return true;
         } catch (WebApplicationException e) {
             if (e.getResponse().getStatus() == 404) {
-                return false;
+                String identifier = institution.getSubunitCode() != null ? institution.getSubunitCode() : institution.getTaxCode();
+                throw new ResourceNotFoundException(String.format("Institution with code '%s' not found in the IPA registry", identifier));
             }
             throw new GenericOnboardingException(e.getMessage());
         }
