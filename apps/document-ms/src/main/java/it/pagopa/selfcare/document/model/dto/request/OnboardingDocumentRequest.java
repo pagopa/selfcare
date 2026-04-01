@@ -16,7 +16,6 @@ public class OnboardingDocumentRequest {
 
     private LocalDateTime contractCreatedAt;
 
-    @NotBlank
     private String contractFilePath;
 
     private String contractFileName;
