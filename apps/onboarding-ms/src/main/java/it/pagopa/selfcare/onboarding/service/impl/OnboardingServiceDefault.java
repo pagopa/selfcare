@@ -1559,35 +1559,31 @@ public class OnboardingServiceDefault implements OnboardingService {
         return responseUni
                 .onItem()
                 .transformToUni(response -> {
-                    try {
-                        int status = Objects.nonNull(response)
-                                ? response.getStatus()
-                                : Response.Status.BAD_GATEWAY.getStatusCode();
-                        if (Objects.isNull(response)
-                                || Objects.isNull(response.getStatusInfo())
-                                || !SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
-                            log.warn(
-                                    "Document service call failed: operation={}, onboardingId={}, status={}",
-                                    operation,
-                                    onboardingId,
-                                    status);
-                            throw new WebApplicationException(
-                                    String.format(
-                                            "Document service call failed while trying to %s for onboarding %s. status=%s",
-                                            operation, onboardingId, status),
-                                    status);
-                        }
-                        log.debug(
-                                "Document service call succeeded: operation={}, onboardingId={}, status={}",
-                                operation,
-                                onboardingId,
-                                status);
-                        return Uni.createFrom().voidItem();
-                    } finally {
-                        if (Objects.nonNull(response)) {
-                            response.close();
-                        }
+                    int status = Objects.nonNull(response)
+                            ? response.getStatus()
+                            : Response.Status.BAD_GATEWAY.getStatusCode();
+
+                    boolean isSuccess = Objects.nonNull(response)
+                            && Objects.nonNull(response.getStatusInfo())
+                            && SUCCESSFUL.equals(response.getStatusInfo().getFamily());
+
+                    if (Objects.nonNull(response)) {
+                        response.close();
                     }
+
+                    if (!isSuccess) {
+                        log.warn("Document service call failed: operation={}, onboardingId={}, status={}",
+                                operation, onboardingId, status);
+                        return Uni.createFrom().failure(new WebApplicationException(
+                                String.format(
+                                        "Document service call failed while trying to %s for onboarding %s. status=%s",
+                                        operation, onboardingId, status),
+                                status));
+                    }
+
+                    log.debug("Document service call succeeded: operation={}, onboardingId={}, status={}",
+                            operation, onboardingId, status);
+                    return Uni.createFrom().voidItem();
                 });
     }
 

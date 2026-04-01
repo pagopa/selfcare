@@ -4679,19 +4679,21 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(actualUserResource)));
         asserter.execute(() -> when(documentContentControllerApi.uploadSignedContract(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.status(500).build())));
-        when(onboardingUtils.buildUploadSignedContractRequest(
+        asserter.execute(() -> when(onboardingUtils.buildUploadSignedContractRequest(
                 any(Onboarding.class),
                 anyBoolean(),
                 any(FormItem.class),
                 any(Product.class),
                 any(DocumentType.class),
                 anyList()))
-                .thenReturn(Uni.createFrom().item(new DocumentContentControllerApi.UploadSignedContractMultipartForm()));
+                .thenReturn(Uni.createFrom().item(new DocumentContentControllerApi.UploadSignedContractMultipartForm())));
 
         asserter.assertFailedWith(
                 () -> onboardingService.uploadContractSigned(onboardingId, TEST_FORM_ITEM),
                 WebApplicationException.class);
-        asserter.execute(() -> verify(documentControllerApi, never()).updateDocumentUpdatedAt(any()));
+        asserter.execute(() -> {
+            verify(documentControllerApi, never()).updateDocumentUpdatedAt(any());
+        });
     }
 
 
