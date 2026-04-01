@@ -9,3 +9,7 @@ output "container_app_environment_name" {
 output "container_app_name" {
   value = azurerm_container_app.container_app.name
 }
+
+output "cae_identity_id" {
+  value = data.azurerm_user_assigned_identity.cae_identity.id
+}

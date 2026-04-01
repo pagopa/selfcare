@@ -20,7 +20,7 @@ on:
 
 jobs:
   release:
-    name: "Trigger Release Workflow"
+    name: "Trigger Release Workflows"
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -39,13 +39,26 @@ jobs:
         run: |
           echo "VERSION=$(echo "${{ inputs.branch }}" | sed 's/.*_//;s/^v//')" >> $GITHUB_ENV
 
-      - name: Trigger Registry Proxy Release
+      - name: Trigger Resources Infra Release (AR)
+        run: |
+          gh workflow run publish_registry_proxy_infra.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=ar
+
+      - name: Trigger Resources Infra Release (PNPG)
+        run: |
+          gh workflow run publish_registry_proxy_infra.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg
+
+      - name: Trigger Registry Proxy ms Release
         run: |
           gh workflow run release_app.yml \
-            --ref ${{ inputs.branch }} \
-            -f env=${{ inputs.env }} \
-            -f target=selc \
-            -f app=registry-proxy
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=selc -f app=registry-proxy
+
+      - name: Trigger PNPG Registry Proxy Release
+        run: |
+          gh workflow run release_app.yml \
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=registry-proxy
+
 
   update_uat_variable:
     name: "Update UAT Version Variable"

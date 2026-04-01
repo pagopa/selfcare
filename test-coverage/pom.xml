@@ -8,7 +8,7 @@
         <artifactId>root</artifactId>
         <version>0.0.1</version>
     </parent>
-    
+
     <artifactId>test-coverage</artifactId>
     <packaging>pom</packaging>
     <name>test-coverage</name>
@@ -80,7 +80,7 @@
                 </dependency>
                 <dependency>
                     <groupId>it.pagopa.selfcare.party</groupId>
-                    <artifactId>selc-party-registry-proxy</artifactId>
+                    <artifactId>selc-party-registry-proxy-app</artifactId>
                     <version>0.2.0-SNAPSHOT</version>
                 </dependency>
             </dependencies>
@@ -152,6 +152,31 @@
                 <dependency>
                     <groupId>it.pagopa.selfcare</groupId>
                     <artifactId>onboarding-cdc</artifactId>
+                    <version>1.0.0-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>onboarding-bff</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>apps</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>onboarding-bff</artifactId>
                     <version>1.0.0-SNAPSHOT</version>
                 </dependency>
             </dependencies>

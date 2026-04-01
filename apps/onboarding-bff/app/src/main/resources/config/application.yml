@@ -1,0 +1,46 @@
+server:
+  port: ${B4F_ONBOARDING_SERVER_PORT:8080}
+  shutdown: graceful
+
+spring:
+  application:
+    name: "@project.artifactId@"
+    version: "@project.version@"
+  profiles:
+    include:
+      - swaggerEN
+
+management:
+  tracing:
+      sampling:
+        probability: 1.0
+  zipkin:
+    enabled: false
+  baggage:
+      remote-fields: X-Client-Ip
+      correlation-fields: X-Client-Ip
+
+info:
+  build:
+    artifact: "@project.artifactId@"
+    name: "@project.artifactId@"
+    description: "@project.description@"
+    version: "@project.version@"
+
+
+logging:
+  level:
+    it.pagopa.selfcare: ${B4F_ONBOARDING_LOG_LEVEL:DEBUG}
+  pattern:
+    additional-info: ",%X{X-Client-Ip:-}]"
+
+
+resilience4j:
+  retry:
+    retry-aspect-order: 1
+    instances:
+      retryTimeout:
+        max-attempts: 3
+        wait-duration: 5s
+        retry-exceptions:
+          - feign.RetryableException

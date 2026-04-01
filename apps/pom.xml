@@ -119,14 +119,14 @@
             </modules>
         </profile>
         <profile>
-            <id>onboarding-backend</id>
+            <id>onboarding-bff</id>
             <activation>
                 <file>
-                    <exists>onboarding-backend/pom.xml</exists>
+                    <exists>onboarding-bff/pom.xml</exists>
                 </file>
             </activation>
             <modules>
-                <module>onboarding-backend</module>
+                <module>onboarding-bff</module>
             </modules>
         </profile>
         <profile>

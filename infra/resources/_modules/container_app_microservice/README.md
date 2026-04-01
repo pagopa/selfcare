@@ -66,6 +66,7 @@ No modules.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_cae_identity_id"></a> [cae\_identity\_id](#output\_cae\_identity\_id) | n/a |
 | <a name="output_container_app_environment_name"></a> [container\_app\_environment\_name](#output\_container\_app\_environment\_name) | n/a |
 | <a name="output_container_app_name"></a> [container\_app\_name](#output\_container\_app\_name) | n/a |
 | <a name="output_container_app_resource_group_name"></a> [container\_app\_resource\_group\_name](#output\_container\_app\_resource\_group\_name) | n/a |

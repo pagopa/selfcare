@@ -24,47 +24,18 @@ module "apim_api" {
   service_url = "https://${var.private_dns_name}"
 
   content_format = "openapi+json"
-  content_value = templatefile(var.openapi_path, {
-    url      = format("%s.%s", var.api_dns_zone_prefix, var.external_domain)
-    basePath = var.base_path
-  })
+  content_value = replace(
+    templatefile(var.openapi_path, {
+      url      = format("%s.%s", var.api_dns_zone_prefix, var.external_domain)
+      basePath = var.base_path
+    }),
+    "/\"title\"\\s*:\\s*\"[^\"]*\"/",
+    "\"title\" : \"${var.display_name}\""
+  )
 
   subscription_required = false
 
-  api_operation_policies = [{
-    operation_id = "loginSaml"
-    xml_content  = <<XML
-      <policies>
-          <inbound>
-              <cors allow-credentials="true">
-                  <allowed-origins>
-                      <origin>https://${var.dns_zone_prefix}.${var.external_domain}</origin>
-                      <origin>https://${var.api_dns_zone_prefix}.${var.external_domain}</origin>
-                      <origin>http://localhost:3000</origin>
-                      <origin>https://accounts.google.com</origin>
-                  </allowed-origins>
-                  <allowed-methods>
-                      <method>POST</method>
-                  </allowed-methods>
-                  <allowed-headers>
-                      <header>*</header>
-                  </allowed-headers>
-              </cors>
-              <base />
-          </inbound>
-          <backend>
-              <base />
-          </backend>
-          <outbound>
-              <base />
-          </outbound>
-          <on-error>
-              <base />
-          </on-error>
-      </policies>
-      XML
-    }
-  ]
+  api_operation_policies = var.api_operation_policies
 
   xml_content = <<XML
 <policies>

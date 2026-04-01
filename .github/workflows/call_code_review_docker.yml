@@ -4,7 +4,7 @@ on:
       dockerfile_path:
         type: string
         required: false
-        default: "./Dockerfile.new"
+        default: "./Dockerfile"
       dockerfile_context:
         type: string
         required: false

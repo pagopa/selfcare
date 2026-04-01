@@ -5,7 +5,7 @@ auth:
 document-ms:
   - changed-files:
       - any-glob-to-any-file:
-          ["apps/document-ms/**", "infra/resources/*/document.tf"]
+          ["apps/document-ms/**", "infra/resources/document-ms/**"]
 
 iam:
   - changed-files:
@@ -14,26 +14,26 @@ iam:
 onboarding-cdc:
   - changed-files:
       - any-glob-to-any-file:
-          ["apps/onboarding-cdc/**", "infra/resources/*/onboarding.tf"]
+          ["apps/onboarding-cdc/**", "infra/resources/onboarding-cdc/**"]
 
 onboarding-functions:
   - changed-files:
       - any-glob-to-any-file:
-          ["apps/onboarding-functions/**", "infra/resources/*/onboarding.tf", "infra/apps/onboarding-functions/**"]
+          ["apps/onboarding-functions/**", "infra/resources/onboarding-functions/**", "infra/apps/onboarding-functions/**"]
 
 onboarding-ms:
   - changed-files:
       - any-glob-to-any-file:
-          ["apps/onboarding-ms/**", "infra/resources/*/onboarding.tf"]
+          ["apps/onboarding-ms/**", "infra/resources/onboarding-ms/**"]
 
 product:
   - changed-files:
-      - any-glob-to-any-file: ["apps/product/**", "infra/resources/*/product.tf"]
+      - any-glob-to-any-file: ["apps/product/**", "infra/resources/product/**"]
 
 product-cdc:
   - changed-files:
       - any-glob-to-any-file:
-          ["apps/product-cdc/**", "infra/resources/*/product.tf"]
+          ["apps/product-cdc/**", "infra/resources/product-cdc/**"]
 
 webhook:
   - changed-files:
@@ -43,17 +43,17 @@ registry-proxy:
   - changed-files:
       - any-glob-to-any-file: ["apps/registry-proxy/**", "infra/resources/*/registry-proxy*.tf"]
 
-onboarding-backend:
+onboarding-bff:
   - changed-files:
-      - any-glob-to-any-file: ["apps/onboarding-backend/**", "infra/resources/*/onboarding_backend*.tf"]
+      - any-glob-to-any-file: ["apps/onboarding-bff/**", "infra/resources/onboarding-bff/**"]
 
 hub-spid-login:
   - changed-files:
-      - any-glob-to-any-file: ["infra/apps/hub_spid_login/**", "infra/resources/*/hub_spid_login.tf"]
+      - any-glob-to-any-file: ["infra/apps/hub_spid_login/**", "infra/resources/spid-login/**/hub_spid_login.tf"]
 
 namirial-sign:
   - changed-files:
-      - any-glob-to-any-file: ["infra/apps/namirial-sign/**", "infra/resources/*/namirial-sign.tf"]
+      - any-glob-to-any-file: ["infra/apps/namirial-sign/**", "infra/resources/registry-proxy/**/namirial-sign.tf"]
 
 cucumber-sdk:
   - changed-files:

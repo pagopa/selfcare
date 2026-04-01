@@ -133,7 +133,7 @@ data "azurerm_key_vault_certificate" "cdn" {
 ###############################################################################
 module "checkout_cdn" {
   source  = "pagopa-dx/azure-cdn/azurerm"
-  version = "~> 0.5"
+  version = "~> 0.6"
 
   resource_group_name = azurerm_resource_group.checkout_fe_rg.name
 
