@@ -1,9 +1,5 @@
 package it.pagopa.selfcare.onboarding.service;
 
-import static it.pagopa.selfcare.onboarding.service.OnboardingService.USERS_FIELD_LIST;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.microsoft.azure.functions.ExecutionContext;
@@ -18,6 +14,7 @@ import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.onboarding.entity.Billing;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
+import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
 import it.pagopa.selfcare.onboarding.repository.TokenRepository;
@@ -28,11 +25,6 @@ import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
-
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.logging.Logger;
-
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.core.ServerResponse;
 import org.junit.jupiter.api.*;
@@ -45,10 +37,20 @@ import org.openapi.quarkus.party_registry_proxy_json.api.AooApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.InfocamereApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.NationalRegistriesApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.UoApi;
-import org.openapi.quarkus.party_registry_proxy_json.model.*;
+import org.openapi.quarkus.party_registry_proxy_json.model.AOOResource;
+import org.openapi.quarkus.party_registry_proxy_json.model.InstitutionResource;
+import org.openapi.quarkus.party_registry_proxy_json.model.UOResource;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.logging.Logger;
+
+import static it.pagopa.selfcare.onboarding.service.OnboardingService.USERS_FIELD_LIST;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @QuarkusTest
 public class CompletionServiceDefaultTest {
@@ -646,7 +648,7 @@ public class CompletionServiceDefaultTest {
     }
 
     @Test
-    void createInstitutionAndPersistInstitutionId_notFoundInstitutionAndCreate() {
+    void createInstitutionAndPersistInstitutionId_notFoundOnIpaThrowsResourceNotFoundException() {
         Onboarding onboarding = createOnboarding();
 
         Institution institution = new Institution();
@@ -659,20 +661,15 @@ public class CompletionServiceDefaultTest {
                 .thenThrow(e);
 
         InstitutionsResponse response = new InstitutionsResponse();
-        InstitutionResponse institutionResponse = dummyInstitutionResponse();
-
         when(institutionApi.getInstitutionsUsingGET(onboarding.getInstitution().getTaxCode(),
                 null, Origin.IPA.name(), null, null, null))
                 .thenReturn(response);
 
-        when(institutionApi.createInstitutionUsingPOST(any())).thenReturn(institutionResponse);
+        assertThrows(ResourceNotFoundException.class,
+                () -> completionServiceDefault.createInstitutionAndPersistInstitutionId(onboarding));
 
-        mockOnboardingUpdateAndExecuteCreateInstitution(onboarding);
-
-        ArgumentCaptor<InstitutionRequest> captor = ArgumentCaptor.forClass(InstitutionRequest.class);
-        verify(institutionApi, times(1))
-                .createInstitutionUsingPOST(captor.capture());
-        assertEquals(institution.getTaxCode(), captor.getValue().getTaxCode());
+        verify(institutionApi, never()).createInstitutionUsingPOST(any());
+        verify(institutionApi, never()).createInstitutionFromIpaUsingPOST(any());
     }
 
 

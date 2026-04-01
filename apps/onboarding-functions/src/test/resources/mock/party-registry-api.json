@@ -113,6 +113,42 @@
       "path": "/party-registry-mock/institutions/{taxCode}",
       "pathParameters": {
         "taxCode": [
+          "00231830688"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": "{\"id\": \"00231830688\", \"originId\": \"c_fx00\", \"taxCode\": \"00231830688\", \"category\": \"L6\", \"description\": \"Comune di Tocco da Casauria\", \"digitalAddress\": \"www.comune.toccodacasauria.pe.it\", \"address\": \"Piazza Municipio, 1\", \"zipCode\": \"65028\", \"origin\": \"IPA\", \"istatCode\": \"038008\"}",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/party-registry-mock/institutions/{taxCode}",
+      "pathParameters": {
+        "taxCode": [
+          "83001010616"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": "{\"id\": \"83001010616\", \"originId\": \"c_fx00\", \"taxCode\": \"83001010616\", \"category\": \"L6\", \"description\": \"Comune di Tocco da Casauria\", \"digitalAddress\": \"www.comune.toccodacasauria.pe.it\", \"address\": \"Piazza Municipio, 1\", \"zipCode\": \"65028\", \"origin\": \"IPA\", \"istatCode\": \"038008\"}",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/party-registry-mock/institutions/{taxCode}",
+      "pathParameters": {
+        "taxCode": [
           "00297110389"
         ]
       }
