@@ -78,6 +78,13 @@ Feature: Onboarding collection
 #    And the answer should contain "id,purgeHistoryDeleteUri,restartPostUri"
 #    And there is a document for onboarding with status "FAILED"
 
+  Scenario: Verify onboarding fails when institution with IPA origin is not found on IPA registry
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "89ad7142-24bb-48ad-8504-9c9232137e98"
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And the answer should contain "id,purgeHistoryDeleteUri,restartPostUri"
+    And there is a document for onboarding with status "FAILED"
+
   Scenario Outline: Verify correct invocation of the StartOnboardingOrchestration for correct workflow FOR_APPROVE request
     Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "89ad7142-24bb-48ad-8502-9c9232137e95"
     When I send a GET request with given onboardingId
