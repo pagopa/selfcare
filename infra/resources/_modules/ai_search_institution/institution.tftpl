@@ -1,11 +1,5 @@
-resource "restapi_object" "search_index" {
-  provider     = restapi.search
-  query_string = "api-version=${var.api_version}"
-  id_attribute = "name"
-  path         = "/indexes"
-
-  data = jsonencode({
-    "name" : "institution-index-${var.domain}",
+{
+    "name" : "institution-index-${domain}",
     "analyzers" : [
       {
         "name" : "autocomplete_analyzer",
@@ -99,7 +93,4 @@ resource "restapi_object" "search_index" {
         "searchable" : false
       }
     ]
-  })
-
-}
-
+  }

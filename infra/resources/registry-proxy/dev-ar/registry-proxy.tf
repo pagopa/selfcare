@@ -19,7 +19,7 @@ module "apim_api_registry_proxy" {
   api_name            = "selc-${module.local.config.env_short}-api-bff-proxy"
   display_name        = "BFF Proxy API"
   base_path           = "party-registry-proxy/v1"
-  private_dns_name    = module.local.config.private_dns_name_ms.private_dns_name_registry_proxy_ms
+  private_dns_name    = "selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
   dns_zone_prefix     = module.local.config.dns_zone_prefix
   api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
   openapi_path        = "../../../../apps/registry-proxy/app/src/main/resources/swagger/apim_api_bff_proxy.json"
@@ -32,7 +32,7 @@ module "apim_api_registry_proxy" {
 locals {
   ca_name          = "selc-${module.local.config.env_short}-party-reg-proxy-ca"
   storage_logs     = "selc${module.local.config.env_short}stlogs"
-  existing_logs_rg = "selc-${module.local.config.env_short}-logs-storage-rg"
+  storage_logs_rg  = "selc-${module.local.config.env_short}-logs-storage-rg"
 
   dapr_settings = [{
     name  = "DAPR_HTTP_PORT"
@@ -175,7 +175,7 @@ locals {
     }
   ]
 
-  registry_proxy_secrets_names = {
+  secrets_names = {
     "BLOB_STORAGE_CONN_STRING"              = "web-storage-connection-string"
     "NATIONAL_REGISTRY_API_KEY"             = "national-registry-api-key"
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
@@ -199,7 +199,7 @@ locals {
     "REDIS_PASSWORD"                        = "redis-primary-access-key"
   }
 
-  app_settings = concat(module.local.config.registry_proxy_app_settings, module.local.config.dapr_settings)
+  app_settings = concat(local.registry_proxy_app_settings, local.dapr_settings)
 
   # cae_id               = 
   # container_app_id     = try(data.azurerm_container_app.ca.id, null)
@@ -243,16 +243,6 @@ resource "azurerm_container_app_environment_dapr_component" "blob_state" {
     prevent_destroy = false
   }
 }
-###############################################################################
-# Identity and Access
-###############################################################################
-
-# FIXME: is still mandatory?
-# resource "azurerm_role_assignment" "blob_state_access" {
-#   scope                = try(data.azurerm_storage_account.existing_logs_storage.id, null)
-#   role_definition_name = "Storage Blob Data Contributor"
-#   principal_id         = try(module.container_app_registry_proxy_ms.cae_identity_id, null)
-# }
 
 ###############################################################################
 # Container App
@@ -264,12 +254,12 @@ module "container_app_registry_proxy_ms" {
   env_short                      = module.local.config.env_short
   resource_group_name            = module.local.config.ca_resource_group_name
   container_app                  = module.local.config.container_app
-  container_app_name             = module.local.config.ca_name //"party-reg-proxy"
+  container_app_name             = local.ca_name //"party-reg-proxy"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-ms-party-registry-proxy"
   image_tag                      = module.local.config.image_tag_latest
-  app_settings                   = module.local.config.registry_proxy_app_settings
-  secrets_names                  = module.local.config.registry_proxy_secrets_names
+  app_settings                   = local.app_settings
+  secrets_names                  = local.secrets_names
   workload_profile_name          = "Consumption"
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
@@ -282,11 +272,14 @@ module "container_app_registry_proxy_ms" {
 # AI Search
 ###############################################################################
 
-module "ai_search_institution" {
-  source            = "../../_modules/ai_search_institution"
-  domain            = module.local.config.domain
-  search_service_id = module.ai_search.search_service_id
-}
+# Commented out: the module belongs to a different tf state and cannot be imported.
+# module "ai_search_institution" {
+#   source                   = "../../_modules/ai_search_institution"
+#   domain                   = module.local.config.domain
+#   search_service_id        = data.azurerm_search_service.srch_service.id
+#   srch_service_name        = data.azurerm_search_service.srch_service.name
+#   srch_service_primary_key = data.azurerm_search_service.srch_service.primary_key
+# }
 
 ###############################################################################
 # DAPR
@@ -300,8 +293,8 @@ module "dapr" {
   env_short = module.local.config.env_short
 
   cae_name    = "selc-${module.local.config.env_short}-cae-002"
-  cae_rg_name = "selc-${module.local.config.env_short}-container-app-002-rg"
-  ca_name     = "selc-${module.local.config.env_short}-party-reg-proxy-ca"
+  cae_rg_name = module.local.config.ca_resource_group_name
+  ca_name     = local.ca_name
   ca_rg_name  = "selc-${module.local.config.env_short}-container-app-002-rg"
 
   key_vault_name                   = "selc-${module.local.config.env_short}-kv"
@@ -321,8 +314,8 @@ module "dapr" {
   redis_family                   = "C"
   redis_sku_name                 = "Basic"
 
-  search_service_name = module.ai_search.search_service_name
-  search_service_key  = module.ai_search.search_service_admin_key
+  search_service_name = data.azurerm_search_service.srch_service.name
+  search_service_key  = data.azurerm_search_service.srch_service.primary_key
 
   tags = module.local.config.tags
 }
