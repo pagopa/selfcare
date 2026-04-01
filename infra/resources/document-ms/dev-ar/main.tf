@@ -80,8 +80,8 @@ locals {
     "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
     "BLOB-STORAGE-PRODUCT-CONNECTION-STRING"  = "blob-storage-product-connection-string"
     "BLOB-STORAGE-CONTRACT-CONNECTION-STRING" = "documents-storage-connection-string"
-    "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-identity-password"
-    "NAMIRIAL_SIGN_SERVICE_IDENTITY_USERNAME" = "namirial-sign-service-identity-username"
+    "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"     = "namirial-sign-service-user"
+    "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
   }
 }
 module "container_app_document_ms" {
