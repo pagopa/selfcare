@@ -11,7 +11,7 @@ locals {
   external_domain     = "pagopa.it"
 
   apim_name = "selc-${local.env_short}-apim-v2"
-  apim_rg   = "selc-${local.env_short}-api-v2-rg"  
+  apim_rg   = "selc-${local.env_short}-api-v2-rg"
 
   project = "${local.prefix}-${local.env_short}"
 
@@ -24,7 +24,7 @@ locals {
   ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-002-rg"
 
   private_dns_name_domain = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
-  
+
   container_app = {
     min_replicas = 0
     max_replicas = 1

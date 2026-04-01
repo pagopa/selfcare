@@ -1,7 +1,7 @@
 {
   "openapi" : "3.0.1",
   "info" : {
-    "title" : "${openapi_title}",
+    "title" : "BFF Onboarding API",
     "description" : "Self Care OnBoarding API documentation",
     "contact" : {
       "name" : "PagoPA",

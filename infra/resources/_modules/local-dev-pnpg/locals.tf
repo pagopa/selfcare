@@ -10,9 +10,9 @@ locals {
   api_dns_zone_prefix = "api-pnpg.dev.selfcare"
   external_domain     = "pagopa.it"
 
-  apim_name      = "selc-${local.env_short}-apim-v2"
-  apim_rg        = "selc-${local.env_short}-api-v2-rg"
-  
+  apim_name = "selc-${local.env_short}-apim-v2"
+  apim_rg   = "selc-${local.env_short}-api-v2-rg"
+
   pnpg_suffix = "${local.location_short}-${local.domain}"
   project     = "${local.prefix}-${local.env_short}"
 
@@ -96,8 +96,8 @@ locals {
 
   cidr_subnet_document_storage = ["10.1.136.0/24"]
 
-  key_vault_resource_group_name = "${local.prefix}-${local.env_short}-sec-rg"
-  key_vault_name                = "${local.prefix}-${local.env_short}-kv"
+  key_vault_resource_group_name = "${local.prefix}-${local.env_short}-${local.domain}-sec-rg"
+  key_vault_name                = "${local.prefix}-${local.env_short}-${local.domain}-kv"
 
   resource_group_name_vnet = "${local.project}-vnet-rg"
 

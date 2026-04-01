@@ -9,7 +9,7 @@ module "local" {
 ###############################################################################
 # APIM
 ###############################################################################
-  
+
 module "apim_api" {
   source              = "../../_modules/apim_api"
   apim_name           = module.local.config.apim_name
@@ -129,11 +129,8 @@ module "container_app_iam_ms" {
   image_tag                      = module.local.config.image_tag_latest
   app_settings                   = local.app_settings_iam_ms
   secrets_names                  = local.secrets_names_iam_ms
-
-  key_vault_resource_group_name = module.local.config.key_vault_resource_group_name
-  key_vault_name                = module.local.config.key_vault_name
-
-  probes = module.local.config.quarkus_health_probes
-
-  tags = module.local.config.tags
+  key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
+  key_vault_name                 = module.local.config.key_vault_name
+  probes                         = module.local.config.quarkus_health_probes
+  tags                           = module.local.config.tags
 }
