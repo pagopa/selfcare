@@ -19,7 +19,7 @@ public interface OnboardingDocumentMapper {
     @Mapping(target = "templateVersion", expression = "java(getContractTemplateVersion(onboarding, product))")
     @Mapping(target = "contractFilePath", source = "contractImported.filePath")
     @Mapping(target = "contractFileName", source = "contractImported.fileName")
-    @Mapping(target = "contractCreatedAt", expression = "java(toOffsetDateTime(contractImported.getCreatedAt()))")
+    @Mapping(target = "contractCreatedAt", expression = "java(toOffsetDateTime(contractImported))")
     @Mapping(target = "productId", source = "onboarding.productId")
     OnboardingDocumentRequest toRequest(
             Onboarding onboarding,
@@ -39,11 +39,10 @@ public interface OnboardingDocumentMapper {
         return contractTemplate.getContractTemplateVersion();
     }
 
-    default OffsetDateTime toOffsetDateTime(java.time.LocalDateTime localDateTime) {
-        if (Objects.isNull(localDateTime)) {
-            return null;
+    default OffsetDateTime toOffsetDateTime(OnboardingImportContract contractImported) {
+        if (Objects.nonNull(contractImported) && Objects.nonNull(contractImported.getCreatedAt())) {
+            return contractImported.getCreatedAt().atOffset(java.time.ZoneOffset.UTC);
         }
-
-        return localDateTime.atOffset(java.time.ZoneOffset.UTC);
+        return null;
     }
 }
