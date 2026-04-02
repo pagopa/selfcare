@@ -6,7 +6,7 @@ Tabella delle migrazioni effettuate
 +----------------+--------+----------+--------+----------+---------+-----------+
 | category       | dev-ar | dev-pnpg | uat-ar | uat-pnpg | prod-ar | prod-pnpg |
 +----------------+--------+----------+--------+----------+---------+-----------+
-| auth           |   ✓    |          |        |          |         |           |
+| auth           |   ✓    |          |   ✓    |          |         |           |
 | document-ms    |   ✓    |          |        |          |         |           |
 | iam            |   ✓    |    ✓     |        |          |         |           |
 | namirial-sign  |   ✓    |          |        |          |         |           |
