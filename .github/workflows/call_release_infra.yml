@@ -71,16 +71,39 @@ jobs:
         with:
           terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
 
-      - name: Terraform Plan
-        uses: pagopa/terraform-preapply-azure-action@54ded8cda3437c3f6a9f46baf69cb321ce82f5cd
+      - name: Retrieve Terraform Modules from Cache
+        id: cache-terraform-modules
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
         with:
-          client_id: ${{ secrets.ARM_CLIENT_ID }}
-          tenant_id: ${{ vars.ARM_TENANT_ID }}
-          subscription_id: ${{ vars.ARM_SUBSCRIPTION_ID }}
-          dir: ${{ inputs.dir }}
-          azure_environment: ${{ env.TERRAFORM_ENVIRONMENT }}
+          path: ${{ inputs.dir }}/.terraform
+          key: terraform-${{ inputs.dir }}-${{ github.sha }}
+          restore-keys: |
+            terraform-${{ inputs.dir }}
+
+      - name: Terraform Init
+        shell: bash
+        working-directory: ${{ inputs.dir }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -f "./terraform.sh" ]; then
+            bash ./terraform.sh init ${{ env.TERRAFORM_ENVIRONMENT }}
+          else
+            terraform init
+          fi
+
+      - name: Terraform Plan
+        shell: bash
+        working-directory: ${{ inputs.dir }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          plan_file="tfplan-${{ env.TERRAFORM_ENVIRONMENT }}-${{ github.sha }}"
+          if [ -f "./terraform.sh" ]; then
+            bash ./terraform.sh plan ${{ env.TERRAFORM_ENVIRONMENT }} -tfplan="$plan_file"
+          else
+            terraform plan -lock-timeout=3000s -out="$plan_file" -input=false
+          fi
 
       - name: Upload Terraform Plan as Artifact
         uses: pagopa/dx/actions/terraform-plan-upload@main
