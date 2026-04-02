@@ -99,6 +99,19 @@ services:
     volumes:
       - "./mock:/config"
 
+  document-ms:
+    platform: linux/amd64
+    image: ghcr.io/pagopa/selfcare-document-ms:latest
+    depends_on:
+      - azurite
+      - mongo-db
+    ports:
+      - "8091:8080"
+    networks:
+      - developer-network
+    env_file:
+      - test-integration-document.env
+
 #  fake-smtp:
 #    image: reachfive/fake-smtp-server@sha256:4b6d2f1e24481527de1429f88db18a377252a5e9e95bc083fa3d77e402cdadc8
 #    ports:
