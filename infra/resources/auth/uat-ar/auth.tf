@@ -6,7 +6,7 @@ module "local" {
 }
 
 ###############################################################################
-# Container App 
+# APIM
 ###############################################################################
 
 module "apim_api_auth" {
@@ -88,6 +88,8 @@ module "collection_auth_otp_flows" {
     { keys = ["userId", "createdAt"], unique = false },
     { keys = ["createdAt"], unique = false }
   ]
+
+  depends_on = [module.cosmosdb_auth]
 }
 
 ###############################################################################

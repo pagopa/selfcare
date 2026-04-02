@@ -6,7 +6,7 @@ module "local" {
 }
 
 ###############################################################################
-# Container App 
+# APIM
 ###############################################################################
 
 module "apim_api_auth" {
@@ -75,7 +75,7 @@ module "collection_auth_otp_flows" {
   name                        = "otpFlows"
   resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
   cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
-  database_name               = module.local.config.mongo_db.database_auth_name
+  database_name               = module.cosmosdb_auth.database_name
 
   lock_enable = true
 
@@ -88,6 +88,8 @@ module "collection_auth_otp_flows" {
     { keys = ["userId", "createdAt"], unique = false },
     { keys = ["createdAt"], unique = false }
   ]
+
+  depends_on = [module.cosmosdb_auth]
 }
 
 ###############################################################################
