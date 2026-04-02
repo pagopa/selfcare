@@ -48,6 +48,13 @@ services:
       # - "5005:5005"
     networks:
       - developer-network
+    depends_on:
+      - mongo-db
+      - mock-server
+      - azure-cli
+      - user-ms
+      - institution-ms
+      - document-ms
     env_file:
       - test-integration-function.env
     environment:
@@ -106,7 +113,7 @@ services:
       - azurite
       - mongo-db
     ports:
-      - "8091:8080"
+      - "8091:8091"
     networks:
       - developer-network
     env_file:
