@@ -52,7 +52,7 @@ services:
 
   document-ms:
      platform: linux/amd64
-     image: ghcr.io/pagopa/selfcare-document-ms:sha-1972aad
+     image: ghcr.io/pagopa/selfcare-document-ms:latest
      depends_on:
        - azurite
        - mongo-db
