@@ -1,10 +1,18 @@
 ###############################################################################
+# GLOBAL VARIABLES
+###############################################################################
+module "local" {
+  source = "../../_modules/local-dev-pnpg"
+}
+
+
+###############################################################################
 # Container App
 ###############################################################################
 
 
 locals {
-  hub_spid_login_app_settings = [
+  app_settings = [
     {
       name  = "JAVA_TOOL_OPTIONS"
       value = "",
@@ -180,7 +188,7 @@ locals {
     }
   ]
 
-  hub_spid_login_secrets_names = {
+  secrets_names = {
     "SPID_LOGS_PUBLIC_KEY"                  = "spid-logs-encryption-public-key"
     "REDIS_PASSWORD"                        = "redis-primary-access-key"
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
@@ -193,7 +201,7 @@ locals {
     "SPID_LOGS_STORAGE_CONNECTION_STRING"   = "logs-storage-connection-string"
   }
 
-  hub_spid_login_probes = [
+  probes = [
     {
       httpGet = {
         path   = "/info"
@@ -228,29 +236,24 @@ locals {
       initialDelaySeconds = 30
     }
   ]
+
 }
 
 module "container_app_hub_spid_login" {
   source = "../../_modules/container_app_microservice"
 
-  env_short                      = local.env_short
-  resource_group_name            = local.ca_resource_group_name
-  container_app                  = local.container_app
+  env_short                      = module.local.config.env_short
+  resource_group_name            = module.local.config.ca_resource_group_name
+  container_app                  = module.local.config.container_app
   container_app_name             = "hub-spid-login"
-  container_app_environment_name = local.container_app_environment_name
+  container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "hub-spid-login-ms"
-  app_settings                   = local.hub_spid_login_app_settings
-  secrets_names                  = local.hub_spid_login_secrets_names
+  app_settings                   = local.app_settings
+  secrets_names                  = local.secrets_names
   workload_profile_name          = "Consumption"
-
-  key_vault_resource_group_name = local.key_vault_resource_group_name
-  key_vault_name                = local.key_vault_name
-  image_tag                     = "5.5.3-RELEASE"
-
-  # user_assigned_identity_id           = data.azurerm_user_assigned_identity.cae_identity.id
-  # user_assigned_identity_principal_id = data.azurerm_user_assigned_identity.cae_identity.principal_id
-
-  probes = local.hub_spid_login_probes
-
-  tags = local.tags
+  image_tag                      = "5.5.3-RELEASE"
+  key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
+  key_vault_name                 = module.local.config.key_vault_name
+  probes                         = local.probes
+  tags                           = module.local.config.tags
 }

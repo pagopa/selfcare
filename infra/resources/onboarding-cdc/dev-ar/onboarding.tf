@@ -1,3 +1,10 @@
+###############################################################################
+# GLOBAL VARIABLES
+###############################################################################
+module "local" {
+  source = "../../_modules/local-dev-ar"
+}
+
 locals {
   app_settings_onboarding_ms = [
     {
@@ -125,18 +132,18 @@ locals {
 module "container_app_onboarding_cdc" {
   source = "../../_modules/container_app_microservice"
 
-  env_short                      = local.env_short
-  resource_group_name            = local.ca_resource_group_name
-  container_app                  = local.container_app_onboarding_cdc
-  container_app_name             = "selc-${local.env_short}-onboarding-cdc"
-  container_app_environment_name = local.container_app_environment_name
+  env_short                      = module.local.config.env_short
+  resource_group_name            = module.local.config.ca_resource_group_name
+  container_app                  = module.local.config.container_app
+  container_app_name             = "selc-${module.local.config.env_short}-onboarding-cdc"
+  container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-onboarding-cdc"
-  image_tag                      = var.image_tag
+  image_tag                      = module.local.config.image_tag_latest
   app_settings                   = local.app_settings_onboarding_cdc
   secrets_names                  = local.secrets_names_onboarding_cdc
-  key_vault_resource_group_name  = local.key_vault_resource_group_name
-  key_vault_name                 = local.key_vault_name
-  probes                         = local.quarkus_health_probes
-  tags                           = local.tags
+  key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
+  key_vault_name                 = module.local.config.key_vault_name
+  probes                         = module.local.config.quarkus_health_probes
+  tags                           = module.local.config.tags
 }
 

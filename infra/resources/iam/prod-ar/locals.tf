@@ -9,7 +9,7 @@ locals {
   dns_zone_prefix     = "selfcare"
   api_dns_zone_prefix = "api.selfcare"
   external_domain     = "pagopa.it"
-  
+
   apim_name = "selc-${local.env_short}-apim-v2"
   apim_rg   = "selc-${local.env_short}-api-v2-rg"
 
