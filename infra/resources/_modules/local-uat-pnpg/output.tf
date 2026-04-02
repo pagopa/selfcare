@@ -15,7 +15,6 @@ output "config" {
     container_app_environment_name = local.container_app_environment_name
     ca_resource_group_name         = local.ca_resource_group_name
     private_dns_name_domain        = local.private_dns_name_domain
-    private_dns_name_ms            = local.private_dns_name_ms
     container_app                  = local.container_app
     quarkus_health_probes          = local.quarkus_health_probes
     container_app_onboarding_bff   = local.container_app

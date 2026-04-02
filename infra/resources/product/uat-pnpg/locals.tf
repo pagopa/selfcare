@@ -4,29 +4,46 @@ locals {
   env_short      = "u"
   location       = "westeurope"
   location_short = "weu"
-  domain         = "pnpg"
+  domain         = "ar"
 
-  dns_zone_prefix     = "pnpg.uat.selfcare"
-  api_dns_zone_prefix = "api-pnpg.uat.selfcare"
-  external_domain     = "pagopa.it"
+  dns_zone_prefix     = "dev.selfcare"
+  api_dns_zone_prefix = "api.dev.selfcare"
 
-  apim_name = "selc-${local.env_short}-apim-v2"
-  apim_rg   = "selc-${local.env_short}-api-v2-rg"
-
-  pnpg_suffix = "${local.location_short}-${local.domain}"
-  project     = "${local.prefix}-${local.env_short}"
+  project = "${local.prefix}-${local.env_short}"
 
   mongo_db = {
-    mongodb_rg_name               = "${local.prefix}-${local.env_short}-${local.pnpg_suffix}-cosmosdb-mongodb-rg",
-    cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}-${local.pnpg_suffix}-cosmosdb-mongodb-account"
+    mongodb_rg_name               = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-rg",
+    cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-account"
+    mongodb_name                  = "selcOnboarding"
   }
 
-  container_app_environment_name = "${local.prefix}-${local.env_short}-${local.domain}-cae-001"
-  ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-001-rg"
-  
-  private_dns_name_domain = "orangeground-0bd2d4dc.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "${local.prefix}-${local.env_short}-cae-002"
+  ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-002-rg"
+
+  function_name = "${local.storage_prefix}-onboarding-fn"
 
   container_app = {
+    min_replicas = 1
+    max_replicas = 2
+    scale_rules = [
+      {
+        custom = {
+          metadata = {
+            "desiredReplicas" = "1"
+            "start"           = "0 8 * * MON-FRI"
+            "end"             = "0 19 * * MON-FRI"
+            "timezone"        = "Europe/Rome"
+          }
+          type = "cron"
+        }
+        name = "cron-scale-rule"
+      }
+    ]
+    cpu    = 0.5
+    memory = "1Gi"
+  }
+
+  microservice_container_app = {
     min_replicas = 1
     max_replicas = 1
     scale_rules = [
@@ -85,9 +102,9 @@ locals {
 
   tags = {
     CreatedBy   = "Terraform"
-    Environment = "Uat"
-    Owner       = "Selfcare"
-    Source      = "https://github.com/pagopa/selfcare"
+    Environment = "UAT"
+    Owner       = "SelfCare"
+    Source      = "https://github.com/pagopa/selfcare-onboarding"
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
   }
 
@@ -96,6 +113,7 @@ locals {
   key_vault_resource_group_name = "${local.prefix}-${local.env_short}-sec-rg"
   key_vault_name                = "${local.prefix}-${local.env_short}-kv"
 
+  naming_config            = "documents"
   resource_group_name_vnet = "${local.project}-vnet-rg"
 
   image_tag_latest = "latest"

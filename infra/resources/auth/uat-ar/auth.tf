@@ -160,7 +160,7 @@ locals {
     },
     {
       name  = "IAM_API_URL"
-      value = "https://selc-u-iam-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
+      value = "https://selc-${module.local.config.env_short}-iam-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "OTP_DAILY_LIMIT"

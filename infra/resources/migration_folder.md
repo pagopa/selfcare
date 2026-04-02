@@ -8,7 +8,7 @@ Tabella delle migrazioni effettuate
 +----------------+--------+----------+--------+----------+---------+-----------+
 | auth           |   ✓    |          |   ✓    |          |         |           |
 | document-ms    |   ✓    |          |        |          |         |           |
-| iam            |   ✓    |    ✓     |        |          |         |           |
+| iam            |   ✓    |    ✓     |   ✓    |    ✓     |         |           |
 | namirial-sign  |   ✓    |          |        |          |         |           |
 | onboarding-bff |   ✓    |    ✓     |        |          |         |           |
 | onboarding-cdc |   ✓    |    ✓     |        |          |         |           |
