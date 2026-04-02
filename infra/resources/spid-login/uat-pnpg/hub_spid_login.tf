@@ -250,7 +250,7 @@ module "container_app_hub_spid_login" {
   image_name                     = "hub-spid-login-ms"
   app_settings                   = local.app_settings
   secrets_names                  = local.secrets_names
-  workload_profile_name          = "Consumption"
+  workload_profile_name          = null
   image_tag                      = "5.5.3-RELEASE"
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
