@@ -5,8 +5,6 @@ import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.onboarding.crypto.*;
-import it.pagopa.selfcare.product.service.ProductService;
-import it.pagopa.selfcare.product.service.ProductServiceCacheable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import lombok.Data;
