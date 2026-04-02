@@ -26,15 +26,6 @@ public class DocumentMsConfig {
     public static final String PDF_FORMAT_FILENAME = "%s_accordo_adesione.pdf";
 
 
-    @ConfigProperty(name = "document-ms.blob-storage.container-product")
-    String containerProduct;
-
-    @ConfigProperty(name = "document-ms.blob-storage.filepath-product")
-    String filepathProduct;
-
-    @ConfigProperty(name = "document-ms.blob-storage.connection-string-product")
-    String connectionStringProduct;
-
     @ConfigProperty(name = "document-ms.blob-storage.path-contracts")
     String contractPath;
 
@@ -46,11 +37,6 @@ public class DocumentMsConfig {
 
     void onStart(@Observes StartupEvent ev) {
         log.info("Database {} is starting...", Document.mongoDatabase().getName());
-    }
-
-    @ApplicationScoped
-    public ProductService productService(){
-        return new ProductServiceCacheable(connectionStringProduct, containerProduct, filepathProduct);
     }
 
     @ApplicationScoped
