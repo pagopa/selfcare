@@ -47,11 +47,11 @@ locals {
     },
     {
       name  = "ENDPOINT_ERROR"
-      value = "https://pnpg.uat.selfcare.pagopa.it/auth/login/error"
+      value = "https://imprese.uat.notifichedigitali.it/auth/login/error"
     },
     {
       name  = "ENDPOINT_SUCCESS"
-      value = "https://pnpg.uat.selfcare.pagopa.it/auth/login/success"
+      value = "https://imprese.uat.notifichedigitali.it/auth/login/success"
     },
     {
       name  = "ENDPOINT_LOGIN"
