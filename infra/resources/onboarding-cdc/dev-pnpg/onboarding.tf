@@ -1,3 +1,9 @@
+###############################################################################
+# GLOBAL VARIABLES
+###############################################################################
+module "local" {
+  source = "../../_modules/local-dev-pnpg"
+}
 locals {
   onboarding_ms_app_settings = [
     {
@@ -38,7 +44,7 @@ locals {
     },
     {
       name  = "JWT_BEARER_TOKEN"
-      value = "@Microsoft.KeyVault(SecretUri=https://${local.key_vault_name}.vault.azure.net/secrets/jwt-bearer-token-functions/)"
+      value = "@Microsoft.KeyVault(SecretUri=https://${module.local.config.key_vault_name}.vault.azure.net/secrets/jwt-bearer-token-functions/)"
     },
     {
       name  = "ONBOARDING-UPDATE-USER-REQUESTER"
@@ -108,18 +114,18 @@ locals {
 module "container_app_onboarding_cdc" {
   source = "../../_modules/container_app_microservice"
 
-  env_short                      = local.env_short
-  resource_group_name            = local.ca_resource_group_name
-  container_app                  = local.onboarding_cdc_container_app
-  container_app_name             = "selc-${local.env_short}-pnpg-onboarding-cdc"
-  container_app_environment_name = local.container_app_environment_name
+  env_short                      = module.local.config.env_short
+  resource_group_name            = module.local.config.ca_resource_group_name
+  container_app                  = module.local.config.container_app
+  container_app_name             = "selc-${module.local.config.env_short}-pnpg-onboarding-cdc"
+  container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-onboarding-cdc"
-  image_tag                      = var.image_tag
+  image_tag                      = module.local.config.image_tag_latest
   app_settings                   = local.onboarding_cdc_app_settings
   secrets_names                  = local.onboarding_cdc_secrets_names
-  key_vault_resource_group_name  = local.key_vault_resource_group_name
-  key_vault_name                 = local.key_vault_name
-  probes                         = local.quarkus_health_probes
-  tags                           = local.tags
+  key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
+  key_vault_name                 = module.local.config.key_vault_name
+  probes                         = module.local.config.quarkus_health_probes
+  tags                           = module.local.config.tags
 }
 

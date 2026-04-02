@@ -10,9 +10,9 @@ locals {
   api_dns_zone_prefix = "api-pnpg.dev.selfcare"
   external_domain     = "pagopa.it"
 
-  apim_name      = "selc-${local.env_short}-apim-v2"
-  apim_rg        = "selc-${local.env_short}-api-v2-rg"
-  
+  apim_name = "selc-${local.env_short}-apim-v2"
+  apim_rg   = "selc-${local.env_short}-api-v2-rg"
+
   pnpg_suffix = "${local.location_short}-${local.domain}"
   project     = "${local.prefix}-${local.env_short}"
 

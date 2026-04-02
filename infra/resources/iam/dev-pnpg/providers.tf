@@ -17,8 +17,8 @@ terraform {
   }
 }
 
-provider "azurerm" { 
-  features {} 
+provider "azurerm" {
+  features {}
   storage_use_azuread = true
 }
 
