@@ -333,7 +333,6 @@ components:
       required:
       - onboardingId
       - productId
-      - contractFilePath
       type: object
       properties:
         onboardingId:
@@ -345,7 +344,6 @@ components:
         contractCreatedAt:
           $ref: "#/components/schemas/LocalDateTime"
         contractFilePath:
-          pattern: \S
           type: string
         contractFileName:
           type: string

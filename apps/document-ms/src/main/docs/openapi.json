@@ -425,7 +425,7 @@
         "example" : "2022-03-10T12:15:50"
       },
       "OnboardingDocumentRequest" : {
-        "required" : [ "onboardingId", "productId", "contractFilePath" ],
+        "required" : [ "onboardingId", "productId" ],
         "type" : "object",
         "properties" : {
           "onboardingId" : {
@@ -440,7 +440,6 @@
             "$ref" : "#/components/schemas/LocalDateTime"
           },
           "contractFilePath" : {
-            "pattern" : "\\S",
             "type" : "string"
           },
           "contractFileName" : {
