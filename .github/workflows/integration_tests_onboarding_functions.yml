@@ -85,7 +85,6 @@ jobs:
       - name: Startup services
         working-directory: apps/onboarding-functions
         run: |
-          docker compose -f src/test/resources/docker-compose.yml pull
           docker compose -f src/test/resources/docker-compose.yml up -d
 
       - name: Wait for startup-services
@@ -126,7 +125,7 @@ jobs:
         shell: bash
         working-directory: apps/onboarding-functions
         run: |
-          mvn clean test -q \
+          mvn test -q \
               -Dtest=it.pagopa.selfcare.onboarding.steps.OnboardingFunctionStep \
               -Dsurefire.parallel=none \
               -Dsurefire.threadCount=1 \
