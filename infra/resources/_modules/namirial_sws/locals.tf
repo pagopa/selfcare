@@ -1,6 +1,6 @@
 locals {
   project                                 = "selc-${var.env_short}"
-  container_app_environment_name          = "${var.cae_name}"
+  container_app_environment_name          = var.cae_name
   ca_resource_group_name                  = "${local.project}-container-app${var.suffix_increment}-rg"
   container_app_environment_dns_zone_name = "azurecontainerapps.io"
   vnet_name                               = "${local.project}-vnet-rg"
