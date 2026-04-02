@@ -61,10 +61,6 @@ locals {
       value = "namirial"
     },
     {
-      name  = "STORAGE_CONTAINER_PRODUCT"
-      value = "selc-d-product"
-    },
-    {
       name  = "STORAGE_CONTAINER_CONTRACT"
       value = "sc-d-documents-blob"
     },
@@ -78,7 +74,6 @@ locals {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
     "JWT-PUBLIC-KEY"                          = "jwt-public-key"
     "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
-    "BLOB-STORAGE-PRODUCT-CONNECTION-STRING"  = "blob-storage-product-connection-string"
     "BLOB-STORAGE-CONTRACT-CONNECTION-STRING" = "documents-storage-connection-string"
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"     = "namirial-sign-service-user"
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
