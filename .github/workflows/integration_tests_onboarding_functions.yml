@@ -97,6 +97,7 @@ jobs:
             "localhost:8087"    #user-ms
             "localhost:8082"    #institution-ms
             "localhost:1080"    #mock-server
+            "localhost:8091"    #document-ms
             "localhost:8090"    #onboarding-functions
           )
 
