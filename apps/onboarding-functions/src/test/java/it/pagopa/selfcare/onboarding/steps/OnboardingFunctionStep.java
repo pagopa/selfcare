@@ -51,6 +51,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestInstance(Lifecycle.PER_CLASS)
 public class OnboardingFunctionStep extends CucumberQuarkusTest {
 
+    private static final long STATUS_POLL_TIMEOUT_MS = 40_000L;
+    private static final long STATUS_POLL_INTERVAL_MS = 1_000L;
+
     private ValidatableResponse validatableResponse;
     private static ObjectMapper objectMapper;
     private static String tokenTest;
@@ -157,9 +160,23 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
 
     @Then("there is a document for onboarding with status {string}")
     public void theResponseShouldHaveFieldWithValue(String status) throws InterruptedException {
-        Thread.sleep(40000);
+        long deadline = System.currentTimeMillis() + STATUS_POLL_TIMEOUT_MS;
+
+        while (System.currentTimeMillis() < deadline) {
+            onboarding = integrationOperationUtils.findIntoMongoOnboarding(getOnboardingId());
+
+            if (Objects.nonNull(onboarding)
+                    && Objects.nonNull(onboarding.getStatus())
+                    && status.equals(onboarding.getStatus().name())) {
+                return;
+            }
+
+            Thread.sleep(STATUS_POLL_INTERVAL_MS);
+        }
+
         onboarding = integrationOperationUtils.findIntoMongoOnboarding(getOnboardingId());
-        assertTrue(Objects.nonNull(onboarding));
+        assertTrue(Objects.nonNull(onboarding), "Onboarding not found after polling timeout");
+        assertTrue(Objects.nonNull(onboarding.getStatus()), "Onboarding status is null after polling timeout");
         assertEquals(status, onboarding.getStatus().name());
     }
 

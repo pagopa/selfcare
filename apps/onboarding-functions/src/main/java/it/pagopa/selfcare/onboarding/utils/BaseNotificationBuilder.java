@@ -8,9 +8,9 @@ import it.pagopa.selfcare.onboarding.dto.*;
 import it.pagopa.selfcare.onboarding.entity.Billing;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.PaymentServiceProvider;
-import it.pagopa.selfcare.onboarding.entity.Token;
 import org.openapi.quarkus.core_json.model.InstitutionResponse;
 import org.openapi.quarkus.core_json.model.PaymentServiceProviderResponse;
+import org.openapi.quarkus.document_json.model.DocumentResponse;
 import org.openapi.quarkus.party_registry_proxy_json.api.GeographicTaxonomiesApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.InstitutionApi;
 import org.openapi.quarkus.party_registry_proxy_json.model.GeographicTaxonomyResource;
@@ -50,7 +50,7 @@ public class BaseNotificationBuilder implements NotificationBuilder {
     }
 
     public NotificationToSend buildNotificationToSend(
-            Onboarding onboarding, Token token, InstitutionResponse institution, QueueEvent queueEvent) {
+            Onboarding onboarding, DocumentResponse document, InstitutionResponse institution, QueueEvent queueEvent) {
         NotificationToSend notificationToSend = new NotificationToSend();
         if (queueEvent.equals(QueueEvent.ADD)) {
             notificationToSend.setId(onboarding.getId());
@@ -61,8 +61,8 @@ public class BaseNotificationBuilder implements NotificationBuilder {
                 convertOnboardingStatusToNotificationStatus(onboarding.getStatus()));
         mapDataFromOnboarding(onboarding, notificationToSend, queueEvent);
         notificationToSend.setInstitution(retrieveInstitution(institution, onboarding));
-        if (Objects.nonNull(token)) {
-            setTokenData(notificationToSend, token);
+        if (Objects.nonNull(document)) {
+            setTokenData(notificationToSend, document);
         }
 
         return notificationToSend;
@@ -225,11 +225,11 @@ public class BaseNotificationBuilder implements NotificationBuilder {
     }
 
     @Override
-    public void setTokenData(NotificationToSend notificationToSend, Token token) {
-        if (Objects.nonNull(token) && Objects.nonNull(token.getContractSigned())) {
-            File file = new File(token.getContractSigned());
+    public void setTokenData(NotificationToSend notificationToSend, DocumentResponse document) {
+        if (Objects.nonNull(document) && Objects.nonNull(document.getContractSigned())) {
+            File file = new File(document.getContractSigned());
             notificationToSend.setFileName(file.getName());
-            notificationToSend.setContentType(token.getContractSigned());
+            notificationToSend.setContentType(document.getContractSigned());
         }
     }
 }

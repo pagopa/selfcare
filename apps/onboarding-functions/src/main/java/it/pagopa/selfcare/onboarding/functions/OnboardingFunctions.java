@@ -30,7 +30,12 @@ import it.pagopa.selfcare.onboarding.utils.InstitutionUtils;
 import it.pagopa.selfcare.onboarding.workflow.*;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.model.DelegationResponse;
+import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
+
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +48,7 @@ import java.util.function.Supplier;
 import static it.pagopa.selfcare.onboarding.functions.CommonFunctions.FORMAT_LOGGER_ONBOARDING_STRING;
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.*;
 import static it.pagopa.selfcare.onboarding.utils.Utils.*;
+import static jakarta.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
 /** Azure Functions with HTTP Trigger integrated with Quarkus */
 public class OnboardingFunctions {
@@ -61,6 +67,8 @@ public class OnboardingFunctions {
   private final TelemetryService telemetryService;
   private final ProductService productService;
   private final AggregateBatchConfig aggregateBatchConfig;
+
+  @RestClient @Inject DocumentContentControllerApi documentContentControllerApi;
 
   public OnboardingFunctions(
       OnboardingService service,
@@ -911,7 +919,33 @@ public class OnboardingFunctions {
         Map.of(
             "onboardingId", onboardingWorkflow.getOnboarding().getId(),
             "productId", onboardingWorkflow.getOnboarding().getProductId()));
-    contractService.uploadAggregatesCsv(onboardingWorkflow);
+    DocumentContentControllerApi.UploadAggregatesCsvMultipartForm request =
+        contractService.requestUploadAggregatesCsv(onboardingWorkflow);
+    try (Response response = documentContentControllerApi.uploadAggregatesCsv(request)) {
+      if (response == null
+          || response.getStatusInfo() == null
+          || !SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
+        int status = response != null ? response.getStatus() : -1;
+        context
+            .getLogger()
+            .warning(
+                () ->
+                    String.format(
+                        "Document service uploadAggregatesCsv failed for onboardingId=%s status=%s",
+                        onboardingWorkflow.getOnboarding().getId(), status));
+        throw new GenericOnboardingException(
+            String.format(
+                "Unable to upload aggregates csv for onboarding %s. status=%s",
+                onboardingWorkflow.getOnboarding().getId(), status));
+      }
+      context
+          .getLogger()
+          .fine(
+              () ->
+                  String.format(
+                      "Document service uploadAggregatesCsv succeeded for onboardingId=%s status=%s",
+                      onboardingWorkflow.getOnboarding().getId(), response.getStatus()));
+    }
   }
 
   @FunctionName(RETRIEVE_AGGREGATES_ACTIVITY)

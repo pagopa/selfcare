@@ -11,9 +11,7 @@ import it.pagopa.selfcare.onboarding.config.NotificationConfig;
 import it.pagopa.selfcare.onboarding.dto.*;
 import it.pagopa.selfcare.onboarding.dto.webhook.NotificationRequest;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
-import it.pagopa.selfcare.onboarding.entity.Token;
 import it.pagopa.selfcare.onboarding.exception.NotificationException;
-import it.pagopa.selfcare.onboarding.repository.TokenRepository;
 import it.pagopa.selfcare.onboarding.utils.*;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
@@ -22,6 +20,8 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.api.InstitutionApi;
 import org.openapi.quarkus.core_json.model.InstitutionResponse;
+import org.openapi.quarkus.document_json.api.DocumentControllerApi;
+import org.openapi.quarkus.document_json.model.DocumentResponse;
 import org.openapi.quarkus.user_json.model.OnboardedProductResponse;
 import org.openapi.quarkus.user_json.model.UserDataResponse;
 
@@ -51,11 +51,14 @@ public class NotificationEventServiceDefault implements NotificationEventService
     @Inject
     WebhookRestClient webhookRestClient;
 
+    @RestClient
+    @Inject
+    DocumentControllerApi documentControllerApi;
+
     private final ProductService productService;
     private final NotificationConfig notificationConfig;
     private final NotificationBuilderFactory notificationBuilderFactory;
     private final NotificationUserBuilderFactory notificationUserBuilderFactory;
-    private final TokenRepository tokenRepository;
     private final ObjectMapper mapper;
     private final QueueEventExaminer queueEventExaminer;
     private static final String NOTIFICATION_EVENT_STRING = "notificationEventTraceId";
@@ -64,14 +67,12 @@ public class NotificationEventServiceDefault implements NotificationEventService
                                            NotificationConfig notificationConfig,
                                            NotificationBuilderFactory notificationBuilderFactory,
                                            NotificationUserBuilderFactory notificationUserBuilderFactory,
-                                           TokenRepository tokenRepository,
                                            QueueEventExaminer queueEventExaminer,
                                            TelemetryService telemetryService) {
         this.productService = productService;
         this.notificationConfig = notificationConfig;
         this.notificationBuilderFactory = notificationBuilderFactory;
         this.notificationUserBuilderFactory = notificationUserBuilderFactory;
-        this.tokenRepository = tokenRepository;
         this.queueEventExaminer = queueEventExaminer;
         this.telemetryService = telemetryService;
         mapper = new ObjectMapper();
@@ -104,8 +105,9 @@ public class NotificationEventServiceDefault implements NotificationEventService
         context.getLogger().info(() -> String.format("Retrieving institution having ID %s", onboarding.getInstitution().getId()));
         InstitutionResponse institution = institutionApi.retrieveInstitutionByIdUsingGET(onboarding.getInstitution().getId(), onboarding.getProductId());
 
-        Token token = tokenRepository.findByOnboardingId(onboarding.getId()).orElse(null);
-        NotificationsResources notificationsResources = new NotificationsResources(onboarding, institution, token, queueEvent);
+        DocumentResponse document = documentControllerApi.getDocumentByOnboardingId(onboarding.getId()).stream().findFirst().orElse(null);
+
+        NotificationsResources notificationsResources = new NotificationsResources(onboarding, institution, document, queueEvent);
         for (String consumer : product.getConsumers()) {
             NotificationConfig.Consumer consumerConfig = notificationConfig.consumers().get(consumer.toLowerCase());
             prepareAndSendNotification(context, product, consumerConfig, notificationsResources, notificationEventTraceId);
@@ -116,7 +118,7 @@ public class NotificationEventServiceDefault implements NotificationEventService
     private void prepareAndSendNotification(ExecutionContext context, Product product, NotificationConfig.Consumer consumer, NotificationsResources notificationsResources, String notificationEventTraceId) {
         NotificationBuilder notificationBuilder = notificationBuilderFactory.create(consumer);
         if (notificationBuilder.shouldSendNotification(notificationsResources.getOnboarding(), notificationsResources.getInstitution())) {
-            NotificationToSend notificationToSend = notificationBuilder.buildNotificationToSend(notificationsResources.getOnboarding(), notificationsResources.getToken(), notificationsResources.getInstitution(), notificationsResources.getQueueEvent());
+            NotificationToSend notificationToSend = notificationBuilder.buildNotificationToSend(notificationsResources.getOnboarding(), notificationsResources.getDocument(), notificationsResources.getInstitution(), notificationsResources.getQueueEvent());
             sendNotification(context, consumer.topic(), notificationToSend, notificationEventTraceId);
             sendWebHookNotification(context, notificationToSend, notificationEventTraceId);
             sendTestEnvProductsNotification(context, product, consumer.topic(), notificationToSend, notificationEventTraceId);
@@ -159,7 +161,7 @@ public class NotificationEventServiceDefault implements NotificationEventService
                                                                    NotificationUserBuilder notificationUserBuilder) {
         return notificationUserBuilder.buildUserNotificationToSend(
                 notificationsResources.getOnboarding(),
-                notificationsResources.getToken(),
+                notificationsResources.getDocument(),
                 notificationsResources.getInstitution(),
                 onboardedProductResponse.getCreatedAt() != null ? onboardedProductResponse.getCreatedAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) : null,
                 onboardedProductResponse.getUpdatedAt() != null ? onboardedProductResponse.getUpdatedAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) : null,

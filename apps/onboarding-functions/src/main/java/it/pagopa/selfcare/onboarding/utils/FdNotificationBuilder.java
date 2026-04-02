@@ -3,8 +3,8 @@ package it.pagopa.selfcare.onboarding.utils;
 import it.pagopa.selfcare.onboarding.config.NotificationConfig;
 import it.pagopa.selfcare.onboarding.dto.*;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
-import it.pagopa.selfcare.onboarding.entity.Token;
 import org.openapi.quarkus.core_json.model.InstitutionResponse;
+import org.openapi.quarkus.document_json.model.DocumentResponse;
 import org.openapi.quarkus.party_registry_proxy_json.api.GeographicTaxonomiesApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.InstitutionApi;
 
@@ -30,9 +30,9 @@ public class FdNotificationBuilder extends BaseNotificationBuilder
 
   @Override
   public NotificationToSend buildNotificationToSend(
-      Onboarding onboarding, Token token, InstitutionResponse institution, QueueEvent queueEvent) {
+          Onboarding onboarding, DocumentResponse document, InstitutionResponse institution, QueueEvent queueEvent) {
     NotificationToSend notificationToSend =
-        super.buildNotificationToSend(onboarding, token, institution, queueEvent);
+        super.buildNotificationToSend(onboarding, document, institution, queueEvent);
     notificationToSend.setId(UUID.randomUUID().toString());
     notificationToSend.setInstitutionId(institution.getId());
     notificationToSend.setType(NotificationType.getNotificationTypeFromQueueEvent(queueEvent));
@@ -65,7 +65,7 @@ public class FdNotificationBuilder extends BaseNotificationBuilder
   @Override
   public NotificationUserToSend buildUserNotificationToSend(
       Onboarding onboarding,
-      Token token,
+      DocumentResponse document,
       InstitutionResponse institution,
       String createdAt,
       String updatedAt,
@@ -74,7 +74,7 @@ public class FdNotificationBuilder extends BaseNotificationBuilder
       String partyRole,
       String productRole) {
     NotificationToSend notification =
-        buildNotificationToSend(onboarding, token, institution, QueueEvent.UPDATE);
+        buildNotificationToSend(onboarding, document, institution, QueueEvent.UPDATE);
     NotificationUserToSend notificationUserToSend = new NotificationUserToSend();
     notificationUserToSend.setId(notification.getId());
     notificationUserToSend.setInstitutionId(notification.getInstitutionId());

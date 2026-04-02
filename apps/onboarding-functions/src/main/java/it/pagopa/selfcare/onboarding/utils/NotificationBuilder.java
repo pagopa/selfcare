@@ -5,12 +5,12 @@ import it.pagopa.selfcare.onboarding.dto.InstitutionToNotify;
 import it.pagopa.selfcare.onboarding.dto.NotificationToSend;
 import it.pagopa.selfcare.onboarding.dto.QueueEvent;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
-import it.pagopa.selfcare.onboarding.entity.Token;
 import org.openapi.quarkus.core_json.model.InstitutionResponse;
+import org.openapi.quarkus.document_json.model.DocumentResponse;
 
 public interface NotificationBuilder {
   NotificationToSend buildNotificationToSend(
-      Onboarding onboarding, Token token, InstitutionResponse institution, QueueEvent queueEvent);
+          Onboarding onboarding, DocumentResponse document, InstitutionResponse institution, QueueEvent queueEvent);
 
   default boolean shouldSendNotification(Onboarding onboarding, InstitutionResponse institution) {
     return true;
@@ -18,7 +18,7 @@ public interface NotificationBuilder {
 
   InstitutionToNotify retrieveInstitution(InstitutionResponse institution, Onboarding onboarding);
 
-  void setTokenData(NotificationToSend notificationToSend, Token token);
+  void setTokenData(NotificationToSend notificationToSend, DocumentResponse document);
 
   void retrieveAndSetGeographicData(InstitutionToNotify institution);
 

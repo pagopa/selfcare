@@ -4,35 +4,25 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.onboarding.config.AzureStorageConfig;
-import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
-import it.pagopa.selfcare.onboarding.config.PagoPaSignatureConfig;
-import it.pagopa.selfcare.onboarding.crypto.PadesSignService;
-import it.pagopa.selfcare.onboarding.crypto.utils.DataEncryptionUtils;
 import it.pagopa.selfcare.onboarding.entity.*;
 import jakarta.inject.Inject;
-import org.apache.commons.io.IOUtils;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InOrder;
 import org.mockito.Mockito;
+import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermission;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,44 +33,17 @@ import static org.mockito.Mockito.*;
 @QuarkusTest
 class ContractServiceDefaultTest {
 
-  @Inject
-  AzureStorageConfig azureStorageConfig;
+  @InjectMock @RestClient UserApi userRegistryApi;
 
-  @InjectMock
-  AzureBlobClient azureBlobClient;
+  @InjectMock AzureBlobClient azureBlobClient;
 
-  @InjectMock
-  @RestClient
-  UserApi userRegistryApi;
-  PadesSignService padesSignService;
+  @Inject ContractService contractService;
 
-  @Inject
-  ContractService contractService;
-
-  @Inject
-  PagoPaSignatureConfig pagoPaSignatureConfig;
-
-  @Inject
-  MailTemplatePlaceholdersConfig mailTemplatePlaceholdersConfig;
-
-
-  static final String PRODUCT_NAME_EXAMPLE = "product-name";
   static final String LOGO_PATH = "logo-path";
-  static final String PDF_FORMAT_FILENAME = "%s_accordo_adesione.pdf";
 
   @BeforeEach
   void setup() {
-    padesSignService = mock(PadesSignService.class);
-    contractService =
-      new ContractServiceDefault(
-        azureStorageConfig,
-        azureBlobClient,
-        padesSignService,
-        pagoPaSignatureConfig,
-        mailTemplatePlaceholdersConfig,
-        LOGO_PATH,
-        true,
-        userRegistryApi);
+    contractService = new ContractServiceDefault(azureBlobClient, LOGO_PATH, true, userRegistryApi);
   }
 
   private Onboarding createOnboarding() {
@@ -226,7 +189,6 @@ class ContractServiceDefaultTest {
     return new OnboardingWorkflowAggregator(onboarding, "string");
   }
 
-
   OnboardingWorkflow createOnboardingWorkflowSend() {
     Onboarding onboarding = createOnboarding();
     onboarding.setProductId("prod-pn");
@@ -247,280 +209,6 @@ class ContractServiceDefaultTest {
     return new OnboardingWorkflowAggregator(onboarding, "string");
   }
 
-  UserResource createDummyUserResource(String id, String userMailUuid) {
-    UserResource validManager = new UserResource();
-    validManager.setId(UUID.fromString(id));
-    CertifiableFieldResourceOfstring emailCert = new CertifiableFieldResourceOfstring();
-    emailCert.setValue("email");
-    WorkContactResource workContact = new WorkContactResource();
-    workContact.setEmail(emailCert);
-    Map<String, WorkContactResource> map = new HashMap<>();
-    map.put(userMailUuid, workContact);
-
-    validManager.setWorkContacts(map);
-    return validManager;
-  }
-
-  @Test
-  void createContractPDF() {
-    final String contractFilepath = "contract";
-    final String contractHtml = "contract";
-    final String productNameAccent = "Interoperabilità";
-
-    Onboarding onboarding = createOnboarding();
-    User userManager = onboarding.getUsers().get(0);
-    UserResource manager =
-      createDummyUserResource(userManager.getId(), userManager.getUserMailUuid());
-
-    Mockito.when(azureBlobClient.getFileAsText(contractFilepath)).thenReturn(contractHtml);
-
-    Mockito.when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(contractHtml);
-
-    File contract =
-      contractService.createContractPDF(
-        contractFilepath,
-        onboarding,
-        manager,
-        List.of(),
-        productNameAccent,
-        PDF_FORMAT_FILENAME);
-
-    assertNotNull(contract);
-
-    ArgumentCaptor<String> captorFilename = ArgumentCaptor.forClass(String.class);
-    verify(azureBlobClient, times(1)).uploadFile(any(), captorFilename.capture(), any());
-    assertEquals("Interoperabilita_accordo_adesione.pdf", captorFilename.getValue());
-  }
-
-  @Test
-  void createAttachmentPDF() {
-    final String contractFilepath = "attachment";
-    final String contractHtml = "attachment";
-    final String productNameAccent = "Interoperabilità";
-    final String pdfFormatFile = "checklist";
-
-    Onboarding onboarding = createOnboarding();
-
-    Mockito.when(azureBlobClient.getFileAsText(contractFilepath)).thenReturn(contractHtml);
-    Mockito.when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(contractHtml);
-
-    UserResource userResource = createUserResource();
-
-    File attachmentPDF =
-      contractService.createAttachmentPDF(
-        contractFilepath, onboarding, productNameAccent, pdfFormatFile, userResource);
-
-    assertNotNull(attachmentPDF);
-
-    ArgumentCaptor<String> captorFilename = ArgumentCaptor.forClass(String.class);
-    verify(azureBlobClient, times(1)).uploadFile(any(), captorFilename.capture(), any());
-    assertEquals("Interoperabilita_checklist.pdf", captorFilename.getValue());
-  }
-
-  @Test
-  void createContractPDFSA() {
-    final String contractFilepath = "contract";
-    final String contractHtml = "contract";
-
-    Onboarding onboarding = createOnboarding();
-    User userManager = onboarding.getUsers().get(0);
-    UserResource manager =
-      createDummyUserResource(userManager.getId(), userManager.getUserMailUuid());
-    onboarding.getInstitution().setInstitutionType(InstitutionType.SA);
-
-    Mockito.when(azureBlobClient.getFileAsText(contractFilepath)).thenReturn(contractHtml);
-
-    Mockito.when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(contractHtml);
-
-    assertNotNull(
-      contractService.createContractPDF(
-        contractFilepath,
-        onboarding,
-        manager,
-        List.of(),
-        PRODUCT_NAME_EXAMPLE,
-        PDF_FORMAT_FILENAME));
-  }
-
-  @Test
-  void createContractPDFForECAndProdPagoPA() {
-    final String contractFilepath = "contract";
-    final String contractHtml = "contract";
-
-    Onboarding onboarding = createOnboarding();
-    User userManager = onboarding.getUsers().get(0);
-    UserResource manager =
-      createDummyUserResource(userManager.getId(), userManager.getUserMailUuid());
-    onboarding.getInstitution().setInstitutionType(InstitutionType.PA);
-    onboarding.setProductId("prod-pagopa");
-
-    Mockito.when(azureBlobClient.getFileAsText(contractFilepath)).thenReturn(contractHtml);
-
-    Mockito.when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(contractHtml);
-
-    assertNotNull(
-      contractService.createContractPDF(
-        contractFilepath,
-        onboarding,
-        manager,
-        List.of(),
-        PRODUCT_NAME_EXAMPLE,
-        PDF_FORMAT_FILENAME));
-  }
-
-  @Test
-  void createContractPDFForPRV_PF() {
-    // given
-    final String contractFilepath = "contract";
-    final String contractHtml = "contract";
-    final String institutionTaxCodeUuid = UUID.randomUUID().toString();
-    final String realFiscalCode = "RSSMRA80A01H501U";
-
-    Onboarding onboarding = createOnboarding();
-    User userManager = onboarding.getUsers().get(0);
-    UserResource manager =
-      createDummyUserResource(userManager.getId(), userManager.getUserMailUuid());
-
-    onboarding.getInstitution().setInstitutionType(InstitutionType.PRV_PF);
-    onboarding.getInstitution().setTaxCode(institutionTaxCodeUuid);
-    onboarding.getInstitution().setOriginId("originalOriginId");
-
-    UserResource userResourceFromRegistry = createUserResource();
-    userResourceFromRegistry.setFiscalCode(realFiscalCode);
-
-    Mockito.when(azureBlobClient.getFileAsText(contractFilepath)).thenReturn(contractHtml);
-    Mockito.when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(contractHtml);
-    Mockito.when(userRegistryApi.findByIdUsingGET(any(), eq(institutionTaxCodeUuid)))
-      .thenReturn(userResourceFromRegistry);
-
-    // when
-    File result = contractService.createContractPDF(
-      contractFilepath,
-      onboarding,
-      manager,
-      List.of(),
-      PRODUCT_NAME_EXAMPLE,
-      PDF_FORMAT_FILENAME);
-
-    // then
-    assertNotNull(result);
-
-    Mockito.verify(userRegistryApi, times(1))
-      .findByIdUsingGET(any(), eq(institutionTaxCodeUuid));
-
-    assertEquals(realFiscalCode, onboarding.getInstitution().getTaxCode());
-    assertEquals(realFiscalCode, onboarding.getInstitution().getOriginId());
-
-    Mockito.verify(azureBlobClient, times(1)).getFileAsText(contractFilepath);
-    Mockito.verify(azureBlobClient, times(1)).uploadFile(any(), any(), any());
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"prod-io", "prod-io-sign"})
-  void createContractPDFForProdIo(String productId) {
-    final String contractFilepath = "contract";
-    final String contractHtml = "contract";
-
-    Onboarding onboarding = createOnboarding();
-    User userManager = onboarding.getUsers().get(0);
-    UserResource manager =
-      createDummyUserResource(userManager.getId(), userManager.getUserMailUuid());
-    onboarding.getInstitution().setInstitutionType(InstitutionType.PA);
-    onboarding.setProductId(productId);
-
-    Mockito.when(azureBlobClient.getFileAsText(contractFilepath)).thenReturn(contractHtml);
-
-    Mockito.when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(contractHtml);
-
-    assertNotNull(
-      contractService.createContractPDF(
-        contractFilepath,
-        onboarding,
-        manager,
-        List.of(),
-        PRODUCT_NAME_EXAMPLE,
-        PDF_FORMAT_FILENAME));
-  }
-
-  @Test
-  void createContractPDFAndSigned() {
-    final String contractFilepath = "contract";
-    final String contractHtml = "contract";
-
-    Onboarding onboarding = createOnboarding();
-    User userManager = onboarding.getUsers().get(0);
-    UserResource manager =
-      createDummyUserResource(userManager.getId(), userManager.getUserMailUuid());
-
-    pagoPaSignatureConfig = Mockito.spy(this.pagoPaSignatureConfig);
-    when(pagoPaSignatureConfig.source()).thenReturn("local");
-    contractService =
-      new ContractServiceDefault(
-        azureStorageConfig,
-        azureBlobClient,
-        padesSignService,
-        pagoPaSignatureConfig,
-        mailTemplatePlaceholdersConfig,
-        "logo-path",
-        true,
-        userRegistryApi);
-
-    Mockito.when(azureBlobClient.getFileAsText(contractFilepath)).thenReturn(contractHtml);
-
-    Mockito.doNothing().when(padesSignService).padesSign(any(), any(), any());
-
-    Mockito.when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(contractHtml);
-
-    assertNotNull(
-      contractService.createContractPDF(
-        contractFilepath,
-        onboarding,
-        manager,
-        List.of(),
-        PRODUCT_NAME_EXAMPLE,
-        PDF_FORMAT_FILENAME));
-  }
-
-  @Test
-  void loadContractPDF() {
-    final String contractFilepath = "contract";
-    final String contractHtml = "contract";
-
-    Onboarding onboarding = createOnboarding();
-
-    File pdf =
-      new File(
-        Objects.requireNonNull(
-            getClass().getClassLoader().getResource("application.properties"))
-          .getFile());
-
-    Mockito.when(azureBlobClient.getFileAsPdf(contractFilepath)).thenReturn(pdf);
-
-    Mockito.when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(contractHtml);
-
-    assertNotNull(
-      contractService.loadContractPDF(
-        contractFilepath, onboarding.getId(), PRODUCT_NAME_EXAMPLE));
-  }
-
-  @Test
-  void retrieveContractNotSigned() {
-
-    Onboarding onboarding = createOnboarding();
-    OnboardingWorkflow onboardingWorkflow = new OnboardingWorkflowInstitution();
-    onboardingWorkflow.setOnboarding(onboarding);
-
-    File pdf = mock(File.class);
-    Mockito.when(azureBlobClient.getFileAsPdf(any())).thenReturn(pdf);
-
-    contractService.retrieveContractNotSigned(onboardingWorkflow, PRODUCT_NAME_EXAMPLE);
-
-    ArgumentCaptor<String> filepathActual = ArgumentCaptor.forClass(String.class);
-    Mockito.verify(azureBlobClient, times(1)).getFileAsPdf(filepathActual.capture());
-    assertTrue(filepathActual.getValue().contains(onboarding.getId()));
-    assertTrue(filepathActual.getValue().contains(PRODUCT_NAME_EXAMPLE));
-  }
-
   @Test
   void getLogoFile() {
     Mockito.when(azureBlobClient.getFileAsText(any())).thenReturn("example");
@@ -531,35 +219,56 @@ class ContractServiceDefaultTest {
   }
 
   @Test
-  void uploadCsvAggregatesIO() {
-    final String contractHtml = "contract";
-
+  void uploadCsvAggregatesIO() throws Exception {
     OnboardingWorkflow onboardingWorkflow = createOnboardingWorkflowIO();
 
-    Mockito.when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(contractHtml);
+    DocumentContentControllerApi.UploadAggregatesCsvMultipartForm request =
+      contractService.requestUploadAggregatesCsv(onboardingWorkflow);
 
-    contractService.uploadAggregatesCsv(onboardingWorkflow);
+    List<String> nonBlankLines = readCsvLines(request.csv).stream().filter(line -> !line.isBlank()).toList();
+    assertEquals(
+      "Ragione Sociale;PEC;Codice Fiscale;P.IVA;Sede legale - Indirizzo;Sede legale - Citta';Sede legale - Provincia (Sigla);Codice IPA;AOO/UO;Codice Univoco",
+      nonBlankLines.get(0));
+    assertEquals(onboardingWorkflow.getOnboarding().getAggregates().size() + 2, nonBlankLines.size());
 
-    Mockito.verify(azureBlobClient, times(1)).uploadFile(any(), any(), any());
+    String[] firstInstitution = nonBlankLines.get(1).split(";", -1);
+    assertEquals("description1", firstInstitution[0]);
+    assertEquals("pec1", firstInstitution[1]);
+    assertEquals("originId1", firstInstitution[7]);
+    assertEquals("", firstInstitution[8]);
+    assertEquals("", firstInstitution[9]);
+
+    String subunitRow =
+      nonBlankLines.stream().filter(line -> line.contains("description6")).findFirst().orElseThrow();
+    String[] subunitInstitution = subunitRow.split(";", -1);
+    assertEquals("", subunitInstitution[7]);
+    assertEquals("AOO", subunitInstitution[8]);
+    assertEquals("code6", subunitInstitution[9]);
+
+    String legalRow = nonBlankLines.get(nonBlankLines.size() - 1);
+    assertTrue(legalRow.startsWith("\"*** Il presente file"));
   }
 
   @Test
-  void uploadCsvAggregatesPagoPa() {
-    final String contractHtml = "contract";
-
+  void uploadCsvAggregatesPagoPa() throws Exception {
     OnboardingWorkflow onboardingWorkflow = createOnboardingWorkflowPagoPa();
 
-    Mockito.when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(contractHtml);
+    DocumentContentControllerApi.UploadAggregatesCsvMultipartForm request =
+      contractService.requestUploadAggregatesCsv(onboardingWorkflow);
 
-    contractService.uploadAggregatesCsv(onboardingWorkflow);
+    List<String> nonBlankLines = readCsvLines(request.csv).stream().filter(line -> !line.isBlank()).toList();
+    assertEquals(
+      "Ragione Sociale;PEC;Codice Fiscale;P.IVA;Sede legale - Indirizzo;Sede legale - Citta';Sede legale - Provincia (Sigla);IBAN",
+      nonBlankLines.get(0));
+    assertEquals(onboardingWorkflow.getOnboarding().getAggregates().size() + 1, nonBlankLines.size());
 
-    Mockito.verify(azureBlobClient, times(1)).uploadFile(any(), any(), any());
+    String[] firstInstitution = nonBlankLines.get(1).split(";", -1);
+    assertEquals("description1", firstInstitution[0]);
+    assertEquals("iban1", firstInstitution[7]);
   }
 
   @Test
-  void uploadCsvAggregatesProdPn() {
-    final String contractHtml = "contract";
-
+  void uploadCsvAggregatesProdPn() throws Exception {
     OnboardingWorkflow onboardingWorkflow = createOnboardingWorkflowSend();
 
     UserResource userResource = new UserResource();
@@ -579,14 +288,34 @@ class ContractServiceDefaultTest {
     userResource.setFiscalCode(fiscalCode);
     userResource.setWorkContacts(workContacts);
 
-    when(userRegistryApi.findByIdUsingGET(anyString(), any()))
-      .thenReturn(userResource);
+    when(userRegistryApi.findByIdUsingGET(anyString(), any())).thenReturn(userResource);
 
-    Mockito.when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(contractHtml);
+    DocumentContentControllerApi.UploadAggregatesCsvMultipartForm request =
+      contractService.requestUploadAggregatesCsv(onboardingWorkflow);
 
-    contractService.uploadAggregatesCsv(onboardingWorkflow);
+    List<String> nonBlankLines = readCsvLines(request.csv).stream().filter(line -> !line.isBlank()).toList();
+    assertEquals(
+      "Ragione Sociale;PEC;Codice Fiscale;P.IVA;Codice SDI;Sede legale - Indirizzo;Sede legale - Citta';Sede legale - Provincia (Sigla);Codice IPA;AOO/UO;Codice Univoco;Nome Amministratore Ente Aggregato;Cognome Amministratore Ente Aggregato;Codice Fiscale Amministratore Ente Aggregato;email Amministratore Ente Aggregato",
+      nonBlankLines.get(0));
+    assertEquals(onboardingWorkflow.getOnboarding().getAggregates().size() + 1, nonBlankLines.size());
 
-    Mockito.verify(azureBlobClient, times(1)).uploadFile(any(), any(), any());
+    String[] firstInstitution = nonBlankLines.get(1).split(";", -1);
+    assertEquals("recipientCode1", firstInstitution[4]);
+    assertEquals("originId1", firstInstitution[8]);
+    assertEquals("name", firstInstitution[11]);
+    assertEquals("familyName", firstInstitution[12]);
+    assertEquals("fiscalCode", firstInstitution[13]);
+    assertEquals("email", firstInstitution[14]);
+
+    String subunitRow =
+      nonBlankLines.stream().filter(line -> line.contains("description5")).findFirst().orElseThrow();
+    String[] subunitInstitution = subunitRow.split(";", -1);
+    assertEquals("", subunitInstitution[8]);
+    assertEquals("AOO", subunitInstitution[9]);
+    assertEquals("code5", subunitInstitution[10]);
+
+    verify(userRegistryApi, times(onboardingWorkflow.getOnboarding().getAggregates().size()))
+      .findByIdUsingGET(anyString(), any());
   }
 
   @Test
@@ -596,304 +325,8 @@ class ContractServiceDefaultTest {
     OnboardingWorkflow onboardingWorkflow = new OnboardingWorkflowAggregator(onboarding, "string");
 
     Assertions.assertThrows(
-      IllegalArgumentException.class,
-      () -> contractService.uploadAggregatesCsv(onboardingWorkflow));
-  }
-
-  @Test
-  void createContractPRV() {
-    // given
-    String contractFilepath = "contract";
-    String contractHtml = "contract";
-
-    Onboarding onboarding = createOnboarding();
-    User userManager = onboarding.getUsers().get(0);
-    UserResource manager =
-      createDummyUserResource(userManager.getId(), userManager.getUserMailUuid());
-    onboarding.getInstitution().setInstitutionType(InstitutionType.PRV);
-    onboarding.setProductId("prod-pagopa");
-
-    Mockito.when(azureBlobClient.getFileAsText(contractFilepath)).thenReturn(contractHtml);
-    Mockito.when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(contractHtml);
-
-    // when
-    File result =
-      contractService.createContractPDF(
-        contractFilepath,
-        onboarding,
-        manager,
-        List.of(),
-        PRODUCT_NAME_EXAMPLE,
-        PDF_FORMAT_FILENAME);
-
-    // then
-    assertNotNull(result);
-    Mockito.verify(azureBlobClient, Mockito.times(1)).getFileAsText(contractFilepath);
-    Mockito.verify(azureBlobClient, Mockito.times(1)).uploadFile(any(), any(), any());
-    Mockito.verifyNoMoreInteractions(azureBlobClient);
-  }
-
-
-  @Test
-  void createContractTestcaseDashboardPsp() {
-    // given
-    String contractFilepath = "contract";
-    String contractHtml = "contract";
-
-    Onboarding onboarding = createOnboarding();
-    User userManager = onboarding.getUsers().get(0);
-    UserResource manager =
-      createDummyUserResource(userManager.getId(), userManager.getUserMailUuid());
-    onboarding.getInstitution().setInstitutionType(InstitutionType.PSP);
-    onboarding.setProductId("prod-dashboard-psp");
-
-    Mockito.when(azureBlobClient.getFileAsText(contractFilepath)).thenReturn(contractHtml);
-    Mockito.when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(contractHtml);
-
-    // when
-    File result =
-      contractService.createContractPDF(
-        contractFilepath,
-        onboarding,
-        manager,
-        List.of(),
-        PRODUCT_NAME_EXAMPLE,
-        PDF_FORMAT_FILENAME);
-
-    // then
-    assertNotNull(result);
-    Mockito.verify(azureBlobClient, Mockito.times(1)).getFileAsText(contractFilepath);
-    Mockito.verify(azureBlobClient, Mockito.times(1)).uploadFile(any(), any(), any());
-    Mockito.verifyNoMoreInteractions(azureBlobClient);
-  }
-
-  private UserResource createUserResource() {
-    UserResource userResource = new UserResource();
-    userResource.setId(UUID.randomUUID());
-
-    CertifiableFieldResourceOfstring resourceOfName = new CertifiableFieldResourceOfstring();
-    resourceOfName.setCertification(CertifiableFieldResourceOfstring.CertificationEnum.NONE);
-    resourceOfName.setValue("name");
-    userResource.setName(resourceOfName);
-
-    CertifiableFieldResourceOfstring resourceOfSurname = new CertifiableFieldResourceOfstring();
-    resourceOfSurname.setCertification(CertifiableFieldResourceOfstring.CertificationEnum.NONE);
-    resourceOfSurname.setValue("surname");
-    userResource.setFamilyName(resourceOfSurname);
-    return userResource;
-  }
-
-  @Test
-  void deleteContractTest() throws IOException {
-    // given
-    String originalContractPath = "parties/docs/123/contract.pdf";
-    String expectedDeletedPath = "parties/deleted/123/contract.pdf";
-
-    Token token = new Token();
-    token.setContractSigned(originalContractPath);
-
-    ClassLoader classLoader = getClass().getClassLoader();
-    String resourcePath = Objects.requireNonNull(classLoader.getResource("documents/test.pdf")).getPath();
-    File contract = new File(resourcePath);
-    byte[] contractBytes = Files.readAllBytes(contract.toPath());
-
-    // Mock specifici con parametri esatti
-    when(azureBlobClient.retrieveFile(eq(originalContractPath))).thenReturn(contract);
-    when(azureBlobClient.uploadFilePath(eq(expectedDeletedPath), eq(contractBytes))).thenReturn(expectedDeletedPath);
-    doNothing().when(azureBlobClient).removeFile(eq(originalContractPath));
-
-    // when
-    String deletedContractSigned = contractService.deleteContract(token.getContractSigned(), true);
-
-    // then
-    assertNotNull(deletedContractSigned);
-    assertEquals(expectedDeletedPath, deletedContractSigned);
-    assertTrue(deletedContractSigned.startsWith("parties/deleted"));
-
-    InOrder inOrder = inOrder(azureBlobClient);
-    inOrder.verify(azureBlobClient).retrieveFile(eq(originalContractPath));
-    inOrder.verify(azureBlobClient).uploadFilePath(eq(expectedDeletedPath), eq(contractBytes));
-    inOrder.verify(azureBlobClient).removeFile(eq(originalContractPath));
-
-    verifyNoMoreInteractions(azureBlobClient);
-  }
-
-  @Test
-  void createContractIdPayMerchant() throws IOException {
-    // given
-    String contractFilepath = getDummyTemplate();
-    String contractHtml = "contract";
-
-    Onboarding onboarding = createOnboarding();
-    User userManager = onboarding.getUsers().get(0);
-    UserResource manager =
-            createDummyUserResource(userManager.getId(), userManager.getUserMailUuid());
-    onboarding.getInstitution().setInstitutionType(InstitutionType.PRV);
-    onboarding.setProductId("prod-idpay-merchant");
-
-    Payment payment = new Payment();
-
-    payment.setHolder(DataEncryptionUtils.encrypt("test"));
-    payment.setIban(DataEncryptionUtils.encrypt("IT12Z0300203280366182987462"));
-
-    onboarding.setPayment(payment);
-
-    Mockito.when(azureBlobClient.getFileAsText(contractFilepath)).thenReturn(contractFilepath);
-    Mockito.when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(contractHtml);
-
-    // when
-    File result =
-            contractService.createContractPDF(
-                    contractFilepath,
-                    onboarding,
-                    manager,
-                    List.of(),
-                    PRODUCT_NAME_EXAMPLE,
-                    PDF_FORMAT_FILENAME);
-
-    // then
-    assertNotNull(result);
-    Mockito.verify(azureBlobClient, Mockito.times(1)).getFileAsText(contractFilepath);
-    Mockito.verify(azureBlobClient, Mockito.times(1)).uploadFile(any(), any(), any());
-    Mockito.verifyNoMoreInteractions(azureBlobClient);
-    Files.deleteIfExists(result.toPath());
-  }
-
-  @Test
-  void createContractPDFForPspAndPagoPa() {
-    final String contractFilepath = "contract";
-    final String contractHtml = "contract";
-
-    Onboarding onboarding = createOnboarding();
-    User userManager = onboarding.getUsers().get(0);
-    UserResource manager = createDummyUserResource(userManager.getId(), userManager.getUserMailUuid());
-    onboarding.getInstitution().setInstitutionType(InstitutionType.PSP);
-    onboarding.setProductId("prod-pagopa");
-
-    Mockito.when(azureBlobClient.getFileAsText(contractFilepath)).thenReturn(contractHtml);
-    Mockito.when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(contractHtml);
-
-    File result = contractService.createContractPDF(
-            contractFilepath,
-            onboarding,
-            manager,
-            List.of(),
-            PRODUCT_NAME_EXAMPLE,
-            PDF_FORMAT_FILENAME);
-
-    assertNotNull(result);
-    // Verify permissions if POSIX
-    verifyFilePermissions(result);
-  }
-
-  @Test
-  void createContractPDFForProdIO() {
-    final String contractFilepath = "contract";
-    final String contractHtml = "contract";
-
-    Onboarding onboarding = createOnboarding();
-    User userManager = onboarding.getUsers().get(0);
-    UserResource manager = createDummyUserResource(userManager.getId(), userManager.getUserMailUuid());
-    onboarding.setProductId("prod-io");
-
-    Mockito.when(azureBlobClient.getFileAsText(contractFilepath)).thenReturn(contractHtml);
-    Mockito.when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(contractHtml);
-
-    File result = contractService.createContractPDF(
-            contractFilepath,
-            onboarding,
-            manager,
-            List.of(),
-            PRODUCT_NAME_EXAMPLE,
-            PDF_FORMAT_FILENAME);
-
-    assertNotNull(result);
-    verifyFilePermissions(result);
-  }
-
-  @Test
-  void createContractPDFForProdPN() {
-    final String contractFilepath = "contract";
-    final String contractHtml = "contract";
-
-    Onboarding onboarding = createOnboarding();
-    User userManager = onboarding.getUsers().get(0);
-    UserResource manager = createDummyUserResource(userManager.getId(), userManager.getUserMailUuid());
-    onboarding.setProductId("prod-pn");
-    onboarding.setBilling(new Billing());
-
-    Mockito.when(azureBlobClient.getFileAsText(contractFilepath)).thenReturn(contractHtml);
-    Mockito.when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(contractHtml);
-
-    File result = contractService.createContractPDF(
-            contractFilepath,
-            onboarding,
-            manager,
-            List.of(),
-            PRODUCT_NAME_EXAMPLE,
-            PDF_FORMAT_FILENAME);
-
-    assertNotNull(result);
-    verifyFilePermissions(result);
-  }
-
-  @Test
-  void createContractPDFForProdInterop() {
-    final String contractFilepath = "contract";
-    final String contractHtml = "contract";
-
-    Onboarding onboarding = createOnboarding();
-    User userManager = onboarding.getUsers().get(0);
-    UserResource manager = createDummyUserResource(userManager.getId(), userManager.getUserMailUuid());
-    onboarding.setProductId("prod-interop");
-
-    Mockito.when(azureBlobClient.getFileAsText(contractFilepath)).thenReturn(contractHtml);
-    Mockito.when(azureBlobClient.uploadFile(any(), any(), any())).thenReturn(contractHtml);
-
-    File result = contractService.createContractPDF(
-            contractFilepath,
-            onboarding,
-            manager,
-            List.of(),
-            PRODUCT_NAME_EXAMPLE,
-            PDF_FORMAT_FILENAME);
-
-    assertNotNull(result);
-    verifyFilePermissions(result);
-  }
-
-  @Test
-  void createSafeTempFile() throws IOException {
-    String prefix = "testPrefix";
-    String suffix = ".txt";
-    Path tempFile = ((ContractServiceDefault) contractService).createSafeTempFile(prefix, suffix);
-
-    assertTrue(tempFile.getFileName().toString().startsWith(prefix));
-    assertTrue(tempFile.getFileName().toString().endsWith(suffix));
-    assertTrue(Files.exists(tempFile));
-
-    try {
-      if (Files.getFileStore(tempFile).supportsFileAttributeView("posix")) {
-        Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(tempFile);
-        assertTrue(permissions.contains(PosixFilePermission.OWNER_READ));
-        assertTrue(permissions.contains(PosixFilePermission.OWNER_WRITE));
-        assertFalse(permissions.contains(PosixFilePermission.OWNER_EXECUTE));
-        assertFalse(permissions.contains(PosixFilePermission.GROUP_READ));
-        assertFalse(permissions.contains(PosixFilePermission.GROUP_WRITE));
-        assertFalse(permissions.contains(PosixFilePermission.GROUP_EXECUTE));
-        assertFalse(permissions.contains(PosixFilePermission.OTHERS_READ));
-        assertFalse(permissions.contains(PosixFilePermission.OTHERS_WRITE));
-        assertFalse(permissions.contains(PosixFilePermission.OTHERS_EXECUTE));
-      }
-    } catch (IOException e) {
-      // Fallback for non-POSIX systems, check readable/writable/executable
-      File f = tempFile.toFile();
-      assertTrue(f.canRead());
-      assertTrue(f.canWrite());
-      assertFalse(f.canExecute());
-    } finally {
-      Files.deleteIfExists(tempFile);
-    }
+        IllegalArgumentException.class,
+        () -> contractService.requestUploadAggregatesCsv(onboardingWorkflow));
   }
 
   @Test
@@ -903,7 +336,8 @@ class ContractServiceDefaultTest {
 
     ContractServiceDefault serviceSpy = spy((ContractServiceDefault) contractService);
     doThrow(new UnsupportedOperationException("forced"))
-            .when(serviceSpy).createTempFileWithPosix(anyString(), anyString());
+        .when(serviceSpy)
+        .createTempFileWithPosix(anyString(), anyString());
 
     Path tempFile = serviceSpy.createSafeTempFile(prefix, suffix);
 
@@ -918,27 +352,7 @@ class ContractServiceDefaultTest {
     Files.deleteIfExists(tempFile);
   }
 
-  private void verifyFilePermissions(File file) {
-    Path path = file.toPath();
-    try {
-      if (Files.getFileStore(path).supportsFileAttributeView("posix")) {
-        Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(path);
-        assertTrue(permissions.contains(PosixFilePermission.OWNER_READ));
-        assertTrue(permissions.contains(PosixFilePermission.OWNER_WRITE));
-        assertFalse(permissions.contains(PosixFilePermission.OWNER_EXECUTE));
-        // Ensure no other permissions are set (group/others)
-        assertEquals(2, permissions.size(), "File should only have owner read/write permissions: " + permissions);
-      }
-    } catch (IOException e) {
-      // Ignore if not supported
-    }
+  private List<String> readCsvLines(InputStream csv) throws IOException {
+    return new String(csv.readAllBytes(), StandardCharsets.UTF_8).lines().toList();
   }
-
-  String getDummyTemplate() throws IOException {
-
-    FileInputStream fis = new FileInputStream("src/test/resources/fn/dummy-accordo_di_adesione.html");
-    return IOUtils.toString(fis, StandardCharsets.UTF_8);
-
-  }
-
 }

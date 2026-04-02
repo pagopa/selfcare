@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   mongo-db:
     image: mongo:latest
@@ -10,6 +8,32 @@ services:
       - develop-network
     volumes:
       - "./mongo-init/:/docker-entrypoint-initdb.d"
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    networks:
+      - develop-network
+    environment:
+      - AZURITE_ACCOUNTS=devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==
+    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --inMemoryPersistence"
+
+  azure-cli:
+    build:
+      context: "."
+      dockerfile: "Dockerfile-azure-cli"
+    depends_on:
+      - azurite
+    volumes:
+      - "./blobStorageInit/init_azurite.sh:/init_azurite.sh"
+      - "./blobStorageInit/products.json:/workspace/products.json"
+    environment:
+      - SELFCARE_INFRA_PRIVATE_ENV=dev
+    networks:
+      - develop-network
 
   mock-server:
     image: mockserver/mockserver@sha256:adec675a93253dcd503cda331dbc8c88383c1c79ceb2370ec9766ad3f010d255
@@ -24,6 +48,23 @@ services:
     volumes:
       - "./mock:/config"
 
+  document-ms:
+     platform: linux/amd64
+     image: ghcr.io/pagopa/selfcare-document-ms:latest
+     depends_on:
+       - azurite
+       - mongo-db
+     ports:
+      - "8091:8080"
+     networks:
+      - develop-network
+     env_file:
+      - test-integration-document.env
+
 networks:
   develop-network:
     name: selfcare-develop-network
+
+secrets:
+  maven_settings:
+    file: ~/.m2/settings.xml

@@ -1,5 +1,5 @@
 {
-  "openapi": "3.1.0",
+  "openapi": "3.0.1",
   "tags": [
     {
       "name": "System",
@@ -242,9 +242,7 @@
       "LocalDateTime": {
         "type": "string",
         "format": "date-time",
-        "examples": [
-          "2022-03-10T12:15:50"
-        ]
+        "example": "2022-03-10T12:15:50"
       },
       "NotificationRequest": {
         "type": "object",

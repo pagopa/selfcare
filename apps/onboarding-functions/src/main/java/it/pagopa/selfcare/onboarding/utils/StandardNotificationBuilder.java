@@ -3,8 +3,8 @@ package it.pagopa.selfcare.onboarding.utils;
 import it.pagopa.selfcare.onboarding.config.NotificationConfig;
 import it.pagopa.selfcare.onboarding.dto.*;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
-import it.pagopa.selfcare.onboarding.entity.Token;
 import org.openapi.quarkus.core_json.model.InstitutionResponse;
+import org.openapi.quarkus.document_json.model.DocumentResponse;
 import org.openapi.quarkus.party_registry_proxy_json.api.GeographicTaxonomiesApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.InstitutionApi;
 
@@ -28,9 +28,9 @@ public class StandardNotificationBuilder extends BaseNotificationBuilder
 
     @Override
     public NotificationToSend buildNotificationToSend(
-            Onboarding onboarding, Token token, InstitutionResponse institution, QueueEvent queueEvent) {
+            Onboarding onboarding, DocumentResponse document, InstitutionResponse institution, QueueEvent queueEvent) {
         NotificationToSend notificationToSend =
-                super.buildNotificationToSend(onboarding, token, institution, queueEvent);
+                super.buildNotificationToSend(onboarding, document, institution, queueEvent);
         this.retrieveAndSetAggregatorInfo(onboarding, notificationToSend);
         notificationToSend.setInternalIstitutionID(institution.getId());
         notificationToSend.setInstitutionId(institution.getId());
@@ -52,10 +52,10 @@ public class StandardNotificationBuilder extends BaseNotificationBuilder
     }
 
     @Override
-    public void setTokenData(NotificationToSend notificationToSend, Token token) {
-        if (Objects.nonNull(token)) {
-            super.setTokenData(notificationToSend, token);
-            notificationToSend.setFilePath(token.getContractSigned());
+    public void setTokenData(NotificationToSend notificationToSend, DocumentResponse document) {
+        if (Objects.nonNull(document)) {
+            super.setTokenData(notificationToSend, document);
+            notificationToSend.setFilePath(document.getContractSigned());
         }
     }
 
@@ -75,7 +75,7 @@ public class StandardNotificationBuilder extends BaseNotificationBuilder
     @Override
     public NotificationUserToSend buildUserNotificationToSend(
             Onboarding onboarding,
-            Token token,
+            DocumentResponse document,
             InstitutionResponse institution,
             String createdAt,
             String updatedAt,
