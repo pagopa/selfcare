@@ -3,9 +3,9 @@ on:
     inputs:
       app:
         type: string
-        description: 'Microservice name'
+        description: "Microservice name"
         required: false
-        default: 'app'
+        default: "app"
       tf_dir:
         type: string
         required: true
@@ -18,11 +18,11 @@ on:
       dockerfile_path:
         type: string
         required: false
-        default: './Dockerfile'
+        default: "./Dockerfile"
       dockerfile_context:
         type: string
         required: false
-        default: '.'
+        default: "."
       docker_image_name:
         type: string
         required: false
@@ -30,12 +30,12 @@ on:
       path_openapi_docs:
         type: string
         required: false
-        description: 'Path to the OpenAPI documentation'
+        description: "Path to the OpenAPI documentation"
         default: app/src/main/resources/swagger/api-docs.json
       upload_openapi_enabled:
         type: boolean
         required: false
-        description: 'Set to False if workflow must not upload openapi on storage'
+        description: "Set to False if workflow must not upload openapi on storage"
         default: true
 
 env:
@@ -46,7 +46,6 @@ env:
   ARM_STORAGE_USE_AZUREAD: true
 
 jobs:
-
   build_push_docker:
     name: ${{ inputs.app }} - Build and Push Docker
     runs-on: ubuntu-24.04
@@ -55,7 +54,6 @@ jobs:
       packages: write
 
     steps:
-
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
 
@@ -75,11 +73,10 @@ jobs:
         with:
           images: ghcr.io/${{ inputs.docker_image_name }}
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
             type=ref,event=branch
             type=sha
-          labels:
-            org.opencontainers.image.title=${{ inputs.docker_image_name }}
+          labels: org.opencontainers.image.title=${{ inputs.docker_image_name }}
             org.opencontainers.image.description=${{ github.repository }} microservice image
             org.opencontainers.image.authors=PagoPA
             org.opencontainers.image.url=github.com/pagopa/${{ github.repository }}
@@ -112,7 +109,6 @@ jobs:
       image_tag: ${{ steps.setsha.outputs.short_sha }}
 
     steps:
-
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
 
@@ -166,7 +162,7 @@ jobs:
   release:
     name: ${{ inputs.app }} - Release
     runs-on: ubuntu-24.04
-    needs: [ build_push_docker, tf_plan ]
+    needs: [build_push_docker, tf_plan]
     environment: ${{ inputs.environment }}-cd
     permissions:
       id-token: write
@@ -176,7 +172,6 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
 
@@ -227,7 +222,7 @@ jobs:
   upload_openapi:
     name: ${{ inputs.app }} - Upload OpenAPI
     runs-on: ubuntu-24.04
-    needs: [ release ]
+    needs: [release]
     if: ${{ inputs.upload_openapi_enabled }}
     environment: ${{ inputs.environment }}-cd
     permissions:
@@ -238,7 +233,6 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
 
