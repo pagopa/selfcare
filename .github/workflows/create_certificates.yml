@@ -65,7 +65,7 @@ jobs:
       csr_common_name: "${{ needs.setup.outputs.domain }}${{ inputs.target }}.pagopa.it"
       dns_zone: "${{ needs.setup.outputs.domain }}${{ inputs.target }}.pagopa.it"
       dns_zone_resource_group: "selc-${{ needs.setup.outputs.prefix }}-vnet-rg"
-      environment: ${{ inputs.environment }}-ci
+      environment: ${{ inputs.environment }}
 
       # arm_client_id: ${{ secrets.ARM_CLIENT_ID }}
       # arm_subscription_id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
