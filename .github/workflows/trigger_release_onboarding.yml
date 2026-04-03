@@ -37,36 +37,6 @@ jobs:
         run: |
           echo "VERSION=$(echo "${{ inputs.branch }}" | sed 's/.*_//;s/^v//')" >> $GITHUB_ENV
 
-      - name: Trigger Onboarding MS Infra Release (AR)
-        run: |
-          gh workflow run publish_onboarding_infra_ms.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=ar
-
-      - name: Trigger Onboarding CDC Infra Release (AR)
-        run: |
-          gh workflow run publish_onboarding_infra_cdc.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=ar
-
-      - name: Trigger Onboarding Functions Infra Release (AR)
-        run: |
-          gh workflow run publish_onboarding_infra_functions.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=ar
-
-      - name: Trigger Onboarding MS Infra Release (PNPG)
-        run: |
-          gh workflow run publish_onboarding_infra_ms.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg
-
-      - name: Trigger Onboarding CDC Infra Release (PNPG)
-        run: |
-          gh workflow run publish_onboarding_infra_cdc.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg
-
-      - name: Trigger Onboarding Functions Infra Release (PNPG)
-        run: |
-          gh workflow run publish_onboarding_infra_functions.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg
-
       - name: Trigger Functions Release
         run: |
           gh workflow run release_functions.yml \
