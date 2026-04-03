@@ -9,7 +9,7 @@ module "local" {
 # Onboarding BFF
 ###############################################################################
 locals {
-  image_tag = module.local.config.image_tag_latest
+  image_tag = var.image_tag
 
   app_settings_onboarding_bff = [
     { name = "APPLICATIONINSIGHTS_ROLE_NAME", value = "b4f-onboarding" },

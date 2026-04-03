@@ -191,7 +191,7 @@ module "container_app_auth_ms" {
   container_app_name             = "${module.local.config.project}-auth-ms"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-auth-ms"
-  image_tag                      = module.local.config.image_tag_latest
+  image_tag                      = var.image_tag
   app_settings                   = local.app_settings_auth_ms
   secrets_names                  = local.secrets_names_auth_ms
 
