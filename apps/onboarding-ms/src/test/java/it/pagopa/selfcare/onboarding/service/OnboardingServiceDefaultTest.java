@@ -4,8 +4,8 @@ import static it.pagopa.selfcare.onboarding.common.InstitutionType.PA;
 import static it.pagopa.selfcare.onboarding.common.InstitutionType.PSP;
 import static it.pagopa.selfcare.onboarding.common.ProductId.*;
 import static it.pagopa.selfcare.onboarding.common.WorkflowType.*;
-import static it.pagopa.selfcare.onboarding.service.impl.OnboardingServiceDefault.USERS_FIELD_LIST;
-import static it.pagopa.selfcare.onboarding.service.impl.OnboardingServiceDefault.USERS_FIELD_TAXCODE;
+import static it.pagopa.selfcare.onboarding.service.util.UserRegistryHelper.USERS_FIELD_LIST;
+import static it.pagopa.selfcare.onboarding.service.util.UserRegistryHelper.USERS_FIELD_TAXCODE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -4687,6 +4687,8 @@ class OnboardingServiceDefaultTest {
                 any(DocumentType.class),
                 anyList()))
                 .thenReturn(Uni.createFrom().item(new DocumentContentControllerApi.UploadSignedContractMultipartForm())));
+        asserter.execute(() -> when(onboardingUtils.ensureSuccessfulDocumentResponse(any(), anyString(), anyString()))
+                .thenReturn(Uni.createFrom().failure(new WebApplicationException(500))));
 
         asserter.assertFailedWith(
                 () -> onboardingService.uploadContractSigned(onboardingId, TEST_FORM_ITEM),
