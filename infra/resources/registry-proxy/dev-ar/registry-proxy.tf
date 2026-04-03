@@ -43,7 +43,6 @@ locals {
     memory       = "2Gi"
   }
 
-  # registry-proxy è Spring Boot → usa /actuator/health (non i path Quarkus)
   spring_boot_health_probes = [
     {
       httpGet = {
@@ -96,8 +95,7 @@ locals {
 
   registry_proxy_app_settings = [
     {
-      name  = "JAVA_TOOL_OPTIONS"
-      # -XX:MaxRAMPercentage=75.0 → heap = ~1.5Gi su 2Gi container, evita OOM con Lucene
+      name = "JAVA_TOOL_OPTIONS"
       value = "-javaagent:applicationinsights-agent.jar -XX:MaxRAMPercentage=75.0"
     },
     {
@@ -304,7 +302,7 @@ module "container_app_registry_proxy_ms" {
   container_app_name             = "selc-${module.local.config.env_short}-party-reg-proxy"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-ms-party-registry-proxy"
-  image_tag                      = module.local.config.image_tag_latest
+  image_tag                      = var.image_tag
   app_settings                   = local.app_settings
   secrets_names                  = local.secrets_names
   workload_profile_name          = "Consumption"

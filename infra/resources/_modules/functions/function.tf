@@ -72,9 +72,10 @@ resource "azurerm_linux_function_app" "fn" {
   }
 
   site_config {
-    always_on              = var.always_on
-    vnet_route_all_enabled = true
-    http2_enabled          = true
+    always_on                              = var.always_on
+    vnet_route_all_enabled                 = true
+    http2_enabled                          = true
+    application_insights_connection_string = var.application_insights_connection_string
 
     application_stack {
       java_version = "17"
@@ -84,12 +85,6 @@ resource "azurerm_linux_function_app" "fn" {
   app_settings = var.app_settings
 
   tags = var.tags
-
-  lifecycle {
-    ignore_changes = [
-      app_settings,
-    ]
-  }
 }
 
 resource "azurerm_key_vault_access_policy" "fn_keyvault_access_policy" {
