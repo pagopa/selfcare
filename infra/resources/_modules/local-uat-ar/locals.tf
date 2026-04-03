@@ -2,6 +2,7 @@ locals {
   prefix         = "selc"
   storage_prefix = "sc"
   env_short      = "u"
+  env            = "uat"
   location       = "westeurope"
   location_short = "weu"
   domain         = "ar"
@@ -23,7 +24,7 @@ locals {
   container_app_environment_name = "${local.prefix}-${local.env_short}-cae-002"
   ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-002-rg"
 
-  private_dns_name_domain = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+  private_dns_name_domain = "mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
 
   container_app = {
     min_replicas = 1
@@ -97,5 +98,4 @@ locals {
 
   resource_group_name_vnet = "${local.project}-vnet-rg"
 
-  image_tag_latest = "latest"
 }

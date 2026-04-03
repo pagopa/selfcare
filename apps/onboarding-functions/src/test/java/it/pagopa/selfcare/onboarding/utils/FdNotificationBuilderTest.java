@@ -8,11 +8,11 @@ import it.pagopa.selfcare.onboarding.dto.QueueEvent;
 import it.pagopa.selfcare.onboarding.dto.*;
 import it.pagopa.selfcare.onboarding.entity.Billing;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
-import it.pagopa.selfcare.onboarding.entity.Token;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.core_json.model.InstitutionResponse;
+import org.openapi.quarkus.document_json.model.DocumentResponse;
 import org.openapi.quarkus.party_registry_proxy_json.api.GeographicTaxonomiesApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.InstitutionApi;
 import org.openapi.quarkus.user_json.model.*;
@@ -65,14 +65,14 @@ class FdNotificationBuilderTest {
         // Create Institution
         InstitutionResponse institution = createInstitution();
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
 
         InstitutionResponse institutionParentResource = new InstitutionResponse();
         institutionParentResource.setOriginId("parentOriginId");
         when(coreInstitutionApi.retrieveInstitutionByIdUsingGET(any(), any()))
                 .thenReturn(institutionParentResource);
 
-        NotificationToSend notification = fdNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.ADD);
+        NotificationToSend notification = fdNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.ADD);
 
         assertNotNull(notification);
         assertNotEquals(onboarding.getId(), notification.getId());
@@ -102,7 +102,7 @@ class FdNotificationBuilderTest {
         // Create Institution
         InstitutionResponse institution = createInstitution();
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
 
         InstitutionResponse institutionParentResource = new InstitutionResponse();
         institutionParentResource.setOriginId("parentOriginId");
@@ -126,7 +126,7 @@ class FdNotificationBuilderTest {
 
         NotificationUserToSend notification = fdNotificationBuilder.buildUserNotificationToSend(
                 onboarding,
-                token,
+                document,
                 institution,
                 productResponse.getCreatedAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
                 productResponse.getUpdatedAt().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
@@ -183,7 +183,7 @@ class FdNotificationBuilderTest {
         // Create Institution
         InstitutionResponse institution = createInstitution();
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
 
         InstitutionResponse institutionParentResource = new InstitutionResponse();
         institutionParentResource.setOriginId("parentOriginId");
@@ -191,7 +191,7 @@ class FdNotificationBuilderTest {
                 .thenReturn(institutionParentResource);
 
         // when
-        NotificationToSend notification = fdNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.ADD);
+        NotificationToSend notification = fdNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.ADD);
 
         // then
         assertNotNull(notification);
@@ -207,7 +207,7 @@ class FdNotificationBuilderTest {
         // Create Institution
         InstitutionResponse institution = createInstitution();
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
 
         InstitutionResponse institutionParentResource = new InstitutionResponse();
         institutionParentResource.setOriginId("parentOriginId");
@@ -215,7 +215,7 @@ class FdNotificationBuilderTest {
                 .thenReturn(institutionParentResource);
 
         // when
-        NotificationToSend notification = fdNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.ADD);
+        NotificationToSend notification = fdNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.ADD);
 
         // then
         assertNotNull(notification);

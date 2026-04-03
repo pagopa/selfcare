@@ -16,7 +16,7 @@ module "apim_api_auth" {
   api_name            = "selc-${module.local.config.env_short}-api-auth"
   display_name        = "Auth API"
   base_path           = "auth"
-  private_dns_name    = "selc-d-auth-ms-ca.${module.local.config.private_dns_name_domain}"
+  private_dns_name    = "selc-${module.local.config.env_short}-auth-ms-ca.${module.local.config.private_dns_name_domain}"
   dns_zone_prefix     = module.local.config.dns_zone_prefix
   api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
   openapi_path        = "../../../../apps/auth/src/main/docs/openapi.json"
@@ -192,7 +192,7 @@ module "container_app_auth_ms" {
   container_app_name             = "${module.local.config.project}-auth-ms"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-auth-ms"
-  image_tag                      = module.local.config.image_tag_latest
+  image_tag                      = var.image_tag
   app_settings                   = local.app_settings_auth_ms
   secrets_names                  = local.secrets_names_auth_ms
   workload_profile_name          = "Consumption"

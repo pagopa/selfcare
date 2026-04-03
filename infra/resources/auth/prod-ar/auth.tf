@@ -6,7 +6,7 @@ module "local" {
 }
 
 ###############################################################################
-# Container App 
+# APIM
 ###############################################################################
 
 module "apim_api_auth" {
@@ -16,7 +16,7 @@ module "apim_api_auth" {
   api_name            = "selc-${module.local.config.env_short}-api-auth"
   display_name        = "Auth API"
   base_path           = "auth"
-  private_dns_name    = "selc-d-auth-ms-ca.${module.local.config.private_dns_name_domain}"
+  private_dns_name    = "selc-${module.local.config.env_short}-auth-ms-ca.${module.local.config.private_dns_name_domain}"
   dns_zone_prefix     = module.local.config.dns_zone_prefix
   api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
   openapi_path        = "../../../../apps/auth/src/main/docs/openapi.json"
@@ -75,7 +75,7 @@ module "collection_auth_otp_flows" {
   name                        = "otpFlows"
   resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
   cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
-  database_name               = module.local.config.mongo_db.database_auth_name
+  database_name               = module.cosmosdb_auth.database_name
 
   lock_enable = true
 
@@ -88,6 +88,8 @@ module "collection_auth_otp_flows" {
     { keys = ["userId", "createdAt"], unique = false },
     { keys = ["createdAt"], unique = false }
   ]
+
+  depends_on = [module.cosmosdb_auth]
 }
 
 ###############################################################################
@@ -158,7 +160,7 @@ locals {
     },
     {
       name  = "IAM_API_URL"
-      value = "https://selc-p-iam-ms-ca.lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
+      value = "https://selc-${module.local.config.env_short}-iam-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "OTP_DAILY_LIMIT"
@@ -191,7 +193,7 @@ module "container_app_auth_ms" {
   container_app_name             = "${module.local.config.project}-auth-ms"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-auth-ms"
-  image_tag                      = module.local.config.image_tag_latest
+  image_tag                      = var.image_tag
   app_settings                   = local.app_settings_auth_ms
   secrets_names                  = local.secrets_names_auth_ms
 

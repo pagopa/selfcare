@@ -105,11 +105,11 @@ locals {
   app_settings_onboarding_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar",
+      value = "-javaagent:applicationinsights-agent.jar"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
-      value = "onboarding-ms",
+      value = "onboarding-ms"
     },
     {
       name  = "USER_REGISTRY_URL"
@@ -117,27 +117,35 @@ locals {
     },
     {
       name  = "ONBOARDING_FUNCTIONS_URL"
-      value = "https://selc-d-onboarding-fn.azurewebsites.net"
+      value = "https://selc-${module.local.config.env_short}-onboarding-fn.azurewebsites.net"
     },
     {
       name  = "STORAGE_CONTAINER_PRODUCT"
-      value = "selc-d-product"
+      value = "selc-${module.local.config.env_short}-product"
     },
     {
       name  = "MS_CORE_URL"
-      value = "http://selc-d-ms-core-ca"
+      value = "http://selc-${module.local.config.env_short}-ms-core-ca"
     },
     {
       name  = "MS_PARTY_REGISTRY_URL"
-      value = "http://selc-d-party-reg-proxy-ca"
+      value = "http://selc-${module.local.config.env_short}-party-reg-proxy-ca"
+    },
+    {
+      name  = "MS_DOCUMENT_URL"
+      value = "https://selc-d-document-ms-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
     },
     {
       name  = "SIGNATURE_VALIDATION_ENABLED"
       value = "false"
     },
     {
+      name  = "STORAGE_CONTAINER_CONTRACT"
+      value = "sc-${module.local.config.env_short}-documents-blob"
+    },
+    {
       name  = "MS_USER_URL"
-      value = "http://selc-d-user-ms-ca"
+      value = "http://selc-${module.local.config.env_short}-user-ms-ca"
     },
     {
       name  = "ALLOWED_ATECO_CODES"
@@ -149,11 +157,15 @@ locals {
     },
     {
       name  = "NAMIRIAL_BASE_URL"
-      value = "https://selc-d-namirial-sws-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+      value = "https://selc-${module.local.config.env_short}-namirial-sws-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "ONBOARDING-UPDATE-USER-REQUESTER"
       value = "true"
+    },
+    {
+      name  = "MS_DOCUMENT_URL"
+      value = "https://selc-d-document-ms-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
     }
   ]
 
@@ -204,7 +216,7 @@ locals {
     },
     {
       name  = "ONBOARDING_FUNCTIONS_URL"
-      value = "https://selc-d-onboarding-fn.azurewebsites.net"
+      value = "https://selc-${module.local.config.env_short}-onboarding-fn.azurewebsites.net"
     },
     {
       name  = "ONBOARDING-CDC-MONGODB-WATCH-ENABLED"
@@ -234,7 +246,7 @@ module "container_app_onboarding_ms" {
   container_app_name             = "selc-${module.local.config.env_short}-onboarding-ms"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-onboarding-ms"
-  image_tag                      = module.local.config.image_tag_latest
+  image_tag                      = var.image_tag
   app_settings                   = local.app_settings_onboarding_ms
   secrets_names                  = local.secrets_names_onboarding_ms
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
@@ -242,4 +254,3 @@ module "container_app_onboarding_ms" {
   probes                         = module.local.config.quarkus_health_probes
   tags                           = module.local.config.tags
 }
-

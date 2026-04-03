@@ -1,12 +1,12 @@
 variable "ca_name" {
   type        = string
-  description = "Container App name"
+  description = "Container App name. Used directly as DAPR app_id scope (avoids data source lookup that fails on first deploy)."
   default     = "cae-cp"
 }
 
 variable "ca_rg_name" {
   type        = string
-  description = "Container App Resource group name"
+  description = "Deprecated - no longer used. Kept for backward compatibility."
   default     = "cae-rg"
 }
 

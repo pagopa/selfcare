@@ -10,12 +10,12 @@ import it.pagopa.selfcare.onboarding.dto.QueueEvent;
 import it.pagopa.selfcare.onboarding.entity.Billing;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
-import it.pagopa.selfcare.onboarding.entity.Token;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.core_json.model.InstitutionResponse;
+import org.openapi.quarkus.document_json.model.DocumentResponse;
 import org.openapi.quarkus.party_registry_proxy_json.api.AooApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.GeographicTaxonomiesApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.InstitutionApi;
@@ -83,7 +83,7 @@ class SapNotificationBuilderTest {
         InstitutionResponse institution = createInstitution();
         institution.setCity(null);
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
 
         InstitutionResponse institutionParentResource = new InstitutionResponse();
         institutionParentResource.setOriginId("parentOriginId");
@@ -96,7 +96,7 @@ class SapNotificationBuilderTest {
         when(geographicTaxonomiesApi.retrieveGeoTaxonomiesByCodeUsingGET(any()))
                 .thenReturn(new GeographicTaxonomyResource().country("country").provinceAbbreviation("provinceAbbreviation").countryAbbreviation("countryAbbreviation").desc("desc"));
 
-        NotificationToSend notification = sapNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.ADD);
+        NotificationToSend notification = sapNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.ADD);
 
         assertNotNull(notification);
         assertNull(notification.getClosedAt());
@@ -140,7 +140,7 @@ class SapNotificationBuilderTest {
         institution.setSubunitCode("subunitCode");
         institution.setCity(null);
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
 
         InstitutionResponse institutionParentResource = new InstitutionResponse();
         institutionParentResource.setOriginId("parentOriginId");
@@ -154,7 +154,7 @@ class SapNotificationBuilderTest {
         when(geographicTaxonomiesApi.retrieveGeoTaxonomiesByCodeUsingGET(any()))
                 .thenReturn(new GeographicTaxonomyResource().country("country").provinceAbbreviation("provinceAbbreviation").countryAbbreviation("countryAbbreviation").desc("desc"));
 
-        NotificationToSend notification = sapNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.ADD);
+        NotificationToSend notification = sapNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.ADD);
 
         assertNotNull(notification);
         assertNull(notification.getClosedAt());
@@ -199,7 +199,7 @@ class SapNotificationBuilderTest {
         institution.setSubunitCode("subunitCode");
         institution.setCity(null);
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
 
         InstitutionResponse institutionParentResource = new InstitutionResponse();
         institutionParentResource.setOriginId("parentOriginId");
@@ -213,7 +213,7 @@ class SapNotificationBuilderTest {
         when(geographicTaxonomiesApi.retrieveGeoTaxonomiesByCodeUsingGET(any()))
                 .thenReturn(new GeographicTaxonomyResource().country("country").provinceAbbreviation("provinceAbbreviation").countryAbbreviation("countryAbbreviation").desc("desc"));
 
-        NotificationToSend notification = sapNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.ADD);
+        NotificationToSend notification = sapNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.ADD);
 
         assertNotNull(notification);
         assertNull(notification.getClosedAt());
@@ -255,7 +255,7 @@ class SapNotificationBuilderTest {
         InstitutionResponse institution = createInstitution();
         institution.setCity(null);
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
 
         InstitutionResponse institutionParentResource = new InstitutionResponse();
         institutionParentResource.setOriginId("parentOriginId");
@@ -265,7 +265,7 @@ class SapNotificationBuilderTest {
         when(registryProxyInstitutionsApi.findInstitutionUsingGET(any(), any(), any()))
                 .thenThrow(new RuntimeException("Error"));
 
-        assertThrows(RuntimeException.class, () -> sapNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.ADD));
+        assertThrows(RuntimeException.class, () -> sapNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.ADD));
     }
 
     @Test
@@ -355,7 +355,7 @@ class SapNotificationBuilderTest {
         InstitutionResponse institution = createInstitution();
         institution.setCity(null);
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
 
         InstitutionResponse institutionParentResource = new InstitutionResponse();
         institutionParentResource.setOriginId("parentOriginId");
@@ -369,7 +369,7 @@ class SapNotificationBuilderTest {
                 .thenReturn(new GeographicTaxonomyResource().country("country").provinceAbbreviation("provinceAbbreviation").countryAbbreviation("countryAbbreviation").desc("desc"));
 
         // when
-        NotificationToSend notification = sapNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.ADD);
+        NotificationToSend notification = sapNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.ADD);
 
         // then
         assertNotNull(notification);
@@ -397,7 +397,7 @@ class SapNotificationBuilderTest {
         InstitutionResponse institution = createInstitution();
         institution.setCity(null);
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
 
         InstitutionResponse institutionParentResource = new InstitutionResponse();
         institutionParentResource.setOriginId("parentOriginId");
@@ -411,7 +411,7 @@ class SapNotificationBuilderTest {
                 .thenReturn(new GeographicTaxonomyResource().country("country").provinceAbbreviation("provinceAbbreviation").countryAbbreviation("countryAbbreviation").desc("desc"));
 
         // when
-        NotificationToSend notification = sapNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.ADD);
+        NotificationToSend notification = sapNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.ADD);
 
         // then
         assertNotNull(notification);

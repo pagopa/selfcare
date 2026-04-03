@@ -2,6 +2,7 @@ locals {
   prefix         = "selc"
   storage_prefix = "sc"
   env_short      = "p"
+  env            = "prod"
   location       = "westeurope"
   location_short = "weu"
   domain         = "ar"
@@ -100,5 +101,4 @@ locals {
 
   resource_group_name_vnet = "${local.project}-vnet-rg"
 
-  image_tag_latest = "latest"
 }

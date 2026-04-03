@@ -1,13 +1,14 @@
 locals {
   prefix         = "selc"
   storage_prefix = "sc"
-  env_short      = "d"
+  env_short      = "u"
+  env            = "uat"
   location       = "westeurope"
   location_short = "weu"
   domain         = "pnpg"
 
-  dns_zone_prefix     = "pnpg.dev.selfcare"
-  api_dns_zone_prefix = "api-pnpg.dev.selfcare"
+  dns_zone_prefix     = "pnpg.uat.selfcare"
+  api_dns_zone_prefix = "api-pnpg.uat.selfcare"
   external_domain     = "pagopa.it"
 
   apim_name = "selc-${local.env_short}-apim-v2"
@@ -21,16 +22,13 @@ locals {
     cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}-${local.pnpg_suffix}-cosmosdb-mongodb-account"
   }
 
-  container_app_environment_name = "${local.prefix}-${local.env_short}-${local.domain}-cae-cp"
-  ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-rg"
-
+  container_app_environment_name = "${local.prefix}-${local.env_short}-${local.domain}-cae-001"
+  ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-001-rg"
+  
   private_dns_name_domain = "orangeground-0bd2d4dc.westeurope.azurecontainerapps.io"
-  private_dns_name_ms = {
-    private_dns_name_ms = "selc-${local.env_short}-${local.domain}-iam-ms-ca.${local.private_dns_name_domain}"
-  }
 
   container_app = {
-    min_replicas = 0
+    min_replicas = 1
     max_replicas = 1
     scale_rules = [
       {
@@ -88,7 +86,7 @@ locals {
 
   tags = {
     CreatedBy   = "Terraform"
-    Environment = "Dev"
+    Environment = "Uat"
     Owner       = "Selfcare"
     Source      = "https://github.com/pagopa/selfcare"
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
@@ -96,10 +94,9 @@ locals {
 
   cidr_subnet_document_storage = ["10.1.136.0/24"]
 
-  key_vault_resource_group_name = "${local.prefix}-${local.env_short}-sec-rg"
-  key_vault_name                = "${local.prefix}-${local.env_short}-kv"
+  key_vault_resource_group_name = "${local.prefix}-${local.env_short}-${local.domain}-sec-rg"
+  key_vault_name                = "${local.prefix}-${local.env_short}-${local.domain}-kv"
 
   resource_group_name_vnet = "${local.project}-vnet-rg"
 
-  image_tag_latest = "latest"
 }

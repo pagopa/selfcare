@@ -7,10 +7,54 @@ module "local" {
 locals {
   # ca_name = "selc-${module.local.config.env_short}-party-reg-proxy-ca"
 
+  registry_proxy_container_app = {
+    min_replicas = module.local.config.container_app.min_replicas
+    max_replicas = module.local.config.container_app.max_replicas
+    scale_rules  = module.local.config.container_app.scale_rules
+    cpu          = 1.0
+    memory       = "2Gi"
+  }
+
+  spring_boot_health_probes = [
+    {
+      httpGet = {
+        path   = "/actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Liveness"
+      failureThreshold    = 3
+      initialDelaySeconds = 1
+    },
+    {
+      httpGet = {
+        path   = "/actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Readiness"
+      failureThreshold    = 30
+      initialDelaySeconds = 30
+    },
+    {
+      httpGet = {
+        path   = "/actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Startup"
+      failureThreshold    = 30
+      initialDelaySeconds = 60
+    }
+  ]
+
   registry_proxy_app_settings = [
     {
-      name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      name = "JAVA_TOOL_OPTIONS"
+      value = "-javaagent:applicationinsights-agent.jar -XX:MaxRAMPercentage=75.0"
     },
     {
       name  = "APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL"
@@ -26,7 +70,7 @@ locals {
     },
     {
       name  = "MOCK_OPEN_DATA_URL"
-      value = "https://selcdweupnpgcheckoutsa.z6.web.core.windows.net/resources"
+      value = "https://selc${module.local.config.env_short}weupnpgcheckoutsa.z6.web.core.windows.net/resources"
     },
     {
       name  = "MOCK_OPEN_DATA_INSTITUTION_ENDPOINT"
@@ -58,7 +102,7 @@ locals {
     },
     {
       name  = "NATIONAL_REGISTRIES_URL"
-      value = "https://api-selcpg.dev.notifichedigitali.it/national-registries-private"
+      value = "https://api-selcpg.${module.local.config.env}.notifichedigitali.it/national-registries-private"
     },
     {
       name  = "PDND_BASE_URL"
@@ -74,7 +118,7 @@ locals {
     },
     {
       name  = "REDIS_URL"
-      value = "selc-d-weu-pnpg-redis.redis.cache.windows.net"
+      value = "selc-${module.local.config.env_short}-weu-pnpg-redis.redis.cache.windows.net"
     },
     {
       name  = "REDIS_PORT"
@@ -107,16 +151,16 @@ module "container_app_registry_proxy_ms" {
 
   env_short                      = module.local.config.env_short
   resource_group_name            = module.local.config.ca_resource_group_name
-  container_app                  = module.local.config.container_app
+  container_app                  = local.registry_proxy_container_app
   container_app_name             = "selc-${module.local.config.env_short}-pnpg-party-reg-proxy"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-ms-party-registry-proxy"
-  image_tag                      = module.local.config.image_tag_latest
+  image_tag                      = var.image_tag
   app_settings                   = local.app_settings
   secrets_names                  = local.secrets_names
   workload_profile_name          = "Consumption"
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
-  probes                         = module.local.config.quarkus_health_probes
+  probes                         = local.spring_boot_health_probes
   tags                           = module.local.config.tags
 }

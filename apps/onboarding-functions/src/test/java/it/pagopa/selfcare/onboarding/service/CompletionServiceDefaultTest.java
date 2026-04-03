@@ -17,7 +17,6 @@ import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
-import it.pagopa.selfcare.onboarding.repository.TokenRepository;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
@@ -33,6 +32,8 @@ import org.mockito.Mockito;
 import org.openapi.quarkus.core_json.api.DelegationApi;
 import org.openapi.quarkus.core_json.api.InstitutionApi;
 import org.openapi.quarkus.core_json.model.*;
+import org.openapi.quarkus.document_json.api.DocumentControllerApi;
+import org.openapi.quarkus.document_json.model.DocumentResponse;
 import org.openapi.quarkus.party_registry_proxy_json.api.AooApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.InfocamereApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.NationalRegistriesApi;
@@ -60,8 +61,6 @@ public class CompletionServiceDefaultTest {
 
     @InjectMock
     OnboardingRepository onboardingRepository;
-    @InjectMock
-    TokenRepository tokenRepository;
     @InjectMock
     NotificationService notificationService;
     @InjectMock
@@ -97,6 +96,9 @@ public class CompletionServiceDefaultTest {
     @RestClient
     @InjectMock
     NationalRegistriesApi nationalRegistriesApi;
+    @RestClient
+    @InjectMock
+    DocumentControllerApi documentControllerApi;
 
     final String productId = "productId";
     private static final UserResource userResource;
@@ -690,10 +692,10 @@ public class CompletionServiceDefaultTest {
 
         when(institutionApi.onboardingInstitutionUsingPOST(any(), any()))
                 .thenReturn(new InstitutionResponse());
-        Token token = new Token();
-        token.setContractSigned("contract-signed-path");
-        when(tokenRepository.findByOnboardingId(onboarding.getId()))
-                .thenReturn(Optional.of(token));
+        DocumentResponse document = new DocumentResponse();
+        document.setContractSigned("contract-signed-path");
+        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId()))
+                .thenReturn(List.of(document));
 
         mockOnboardingUpdateWhenPersistOnboarding(onboarding);
 
@@ -703,8 +705,8 @@ public class CompletionServiceDefaultTest {
         verify(institutionApi, times(1))
                 .onboardingInstitutionUsingPOST(any(), captor.capture());
 
-        verify(tokenRepository, times(1))
-                .findByOnboardingId(onboarding.getId());
+        verify(documentControllerApi, times(1))
+                .getDocumentByOnboardingId(onboarding.getId());
 
         InstitutionOnboardingRequest actual = captor.getValue();
         assertEquals(productId, actual.getProductId());
@@ -719,10 +721,10 @@ public class CompletionServiceDefaultTest {
         onboarding.setActivatedAt(LocalDateTime.now());
         when(institutionApi.onboardingInstitutionUsingPOST(any(), any()))
                 .thenReturn(new InstitutionResponse());
-        Token token = new Token();
-        token.setContractSigned("contract-signed-path");
-        when(tokenRepository.findByOnboardingId(onboarding.getId()))
-                .thenReturn(Optional.of(token));
+        DocumentResponse document = new DocumentResponse();
+        document.setContractSigned("contract-signed-path");
+        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId()))
+                .thenReturn(List.of(document));
 
         mockOnboardingUpdateWhenPersistOnboarding(onboarding);
 
@@ -732,13 +734,13 @@ public class CompletionServiceDefaultTest {
         verify(institutionApi, times(1))
                 .onboardingInstitutionUsingPOST(any(), captor.capture());
 
-        verify(tokenRepository, times(1))
-                .findByOnboardingId(onboarding.getId());
+        verify(documentControllerApi, times(1))
+                .getDocumentByOnboardingId(onboarding.getId());
 
         InstitutionOnboardingRequest actual = captor.getValue();
         assertEquals(onboarding.getProductId(), actual.getProductId());
         assertEquals(onboarding.getPricingPlan(), actual.getPricingPlan());
-        assertEquals(token.getContractSigned(), actual.getContractPath());
+        assertEquals(document.getContractSigned(), actual.getContractPath());
         assertEquals(onboarding.getIsAggregator(), actual.getIsAggregator());
         assertEquals(actual.getActivatedAt().getDayOfYear(), onboarding.getActivatedAt().getDayOfYear());
     }

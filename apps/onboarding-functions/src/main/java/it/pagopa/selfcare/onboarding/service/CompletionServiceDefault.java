@@ -14,7 +14,6 @@ import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.mapper.ProductMapper;
 import it.pagopa.selfcare.onboarding.mapper.UserMapper;
 import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
-import it.pagopa.selfcare.onboarding.repository.TokenRepository;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -28,6 +27,8 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.api.DelegationApi;
 import org.openapi.quarkus.core_json.api.InstitutionApi;
 import org.openapi.quarkus.core_json.model.*;
+import org.openapi.quarkus.document_json.api.DocumentControllerApi;
+import org.openapi.quarkus.document_json.model.DocumentResponse;
 import org.openapi.quarkus.party_registry_proxy_json.api.AooApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.InfocamereApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.NationalRegistriesApi;
@@ -81,12 +82,14 @@ public class CompletionServiceDefault implements CompletionService {
     @RestClient
     @Inject
     NationalRegistriesApi nationalRegistriesApi;
+    @RestClient
+    @Inject
+    DocumentControllerApi documentControllerApi;
 
 
     private final InstitutionMapper institutionMapper;
     private final OnboardingRepository onboardingRepository;
     private final ObjectMapper objectMapper;
-    private final TokenRepository tokenRepository;
     private final UserMapper userMapper;
     private final ProductMapper productMapper;
     private final NotificationService notificationService;
@@ -103,13 +106,11 @@ public class CompletionServiceDefault implements CompletionService {
                                     ProductMapper productMapper,
                                     InstitutionMapper institutionMapper,
                                     OnboardingRepository onboardingRepository, ObjectMapper objectMapper,
-                                    TokenRepository tokenRepository,
                                     @ConfigProperty(name = "onboarding-functions.persist-users.send-mail") boolean hasToSendEmail,
                                     @ConfigProperty(name = "onboarding-functions.force-institution-persist") boolean forceInstitutionCreation) {
         this.institutionMapper = institutionMapper;
         this.onboardingRepository = onboardingRepository;
         this.objectMapper = objectMapper;
-        this.tokenRepository = tokenRepository;
         this.productService = productService;
         this.notificationService = notificationService;
         this.onboardingMapper = onboardingMapper;
@@ -274,8 +275,8 @@ public class CompletionServiceDefault implements CompletionService {
         onboardingRequest.setInstitutionType(InstitutionOnboardingRequest.InstitutionTypeEnum.valueOf(onboarding.getInstitution().getInstitutionType().name()));
         onboardingRequest.setIsAggregator(onboarding.getIsAggregator());
         //If contract exists we send the path of the contract
-        Optional<Token> optToken = tokenRepository.findByOnboardingId(onboarding.getId());
-        optToken.ifPresent(token -> onboardingRequest.setContractPath(token.getContractSigned()));
+        Optional<DocumentResponse> optDocument = documentControllerApi.getDocumentByOnboardingId(onboarding.getId()).stream().findFirst();
+        optDocument.ifPresent(token -> onboardingRequest.setContractPath(token.getContractSigned()));
 
         institutionApi.onboardingInstitutionUsingPOST(onboarding.getInstitution().getId(), onboardingRequest);
     }

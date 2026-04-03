@@ -1,14 +1,11 @@
 package it.pagopa.selfcare.onboarding.service;
 
+import static it.pagopa.selfcare.onboarding.utils.Utils.NOT_ALLOWED_WORKFLOWS_FOR_INSTITUTION_NOTIFICATIONS;
+import static jakarta.ws.rs.core.Response.Status.Family.SUCCESSFUL;
+
 import com.microsoft.azure.functions.ExecutionContext;
-import eu.europa.esig.dss.enumerations.DigestAlgorithm;
-import eu.europa.esig.dss.model.DSSDocument;
-import eu.europa.esig.dss.model.FileDocument;
-import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.onboarding.common.DocumentType;
-import it.pagopa.selfcare.onboarding.config.AzureStorageConfig;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePathConfig;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
 import it.pagopa.selfcare.onboarding.dto.NotificationCountResult;
@@ -16,19 +13,33 @@ import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
 import it.pagopa.selfcare.onboarding.dto.SendMailInput;
 import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
-import it.pagopa.selfcare.onboarding.mapper.UserMapper;
+import it.pagopa.selfcare.onboarding.mapper.AttachmentPdfRequestMapper;
+import it.pagopa.selfcare.onboarding.mapper.ContractPdfRequestMapper;
+import it.pagopa.selfcare.onboarding.mapper.DocumentBuilderRequestMapper;
 import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
-import it.pagopa.selfcare.onboarding.repository.TokenRepository;
 import it.pagopa.selfcare.onboarding.utils.GenericError;
-import it.pagopa.selfcare.onboarding.utils.InstitutionUtils;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
+import java.io.ByteArrayInputStream;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Stream;
 import org.bson.Document;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.model.OnboardedProductResponse;
+import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
+import org.openapi.quarkus.document_json.api.DocumentControllerApi;
+import org.openapi.quarkus.document_json.model.AttachmentPdfRequest;
+import org.openapi.quarkus.document_json.model.ContractPdfRequest;
+import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
+import org.openapi.quarkus.document_json.model.DocumentType;
 import org.openapi.quarkus.party_registry_proxy_json.api.PdndVisuraInfoCamereControllerApi;
 import org.openapi.quarkus.user_json.api.InstitutionApi;
 import org.openapi.quarkus.user_json.model.SendMailDto;
@@ -38,17 +49,6 @@ import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfst
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Stream;
-
-import static it.pagopa.selfcare.onboarding.utils.Utils.CONTRACT_FILENAME_FUNC;
-import static it.pagopa.selfcare.onboarding.utils.Utils.NOT_ALLOWED_WORKFLOWS_FOR_INSTITUTION_NOTIFICATIONS;
 
 @ApplicationScoped
 public class OnboardingService {
@@ -68,38 +68,36 @@ public class OnboardingService {
   org.openapi.quarkus.user_json.api.UserApi userApi;
   @RestClient @Inject
   PdndVisuraInfoCamereControllerApi pndnInfocamereApi;
+  @RestClient @Inject
+  DocumentControllerApi documentControllerApi;
+  @RestClient @Inject
+  DocumentContentControllerApi documentContentControllerApi;
   @Inject NotificationService notificationService;
-  private final ContractService contractService;
   private final ProductService productService;
   private final OnboardingRepository repository;
-  private final TokenRepository tokenRepository;
   private final MailTemplatePathConfig mailTemplatePathConfig;
   private final MailTemplatePlaceholdersConfig mailTemplatePlaceholdersConfig;
-  private final AzureBlobClient azureBlobClient;
-  private final UserMapper userMapper;
-  private final AzureStorageConfig azureStorageConfig;
+  private final ContractPdfRequestMapper contractPdfRequestMapper;
+  private final AttachmentPdfRequestMapper attachmentPdfRequestMapper;
+  private final DocumentBuilderRequestMapper documentBuilderRequestMapper;
 
   public OnboardingService(
           ProductService productService,
-          ContractService contractService,
           OnboardingRepository repository,
           MailTemplatePathConfig mailTemplatePathConfig,
           MailTemplatePlaceholdersConfig mailTemplatePlaceholdersConfig,
-          TokenRepository tokenRepository,
           NotificationService notificationService,
-          UserMapper userMapper,
-          AzureBlobClient azureBlobClient,
-          AzureStorageConfig azureStorageConfig) {
-    this.contractService = contractService;
+          ContractPdfRequestMapper contractPdfRequestMapper,
+          AttachmentPdfRequestMapper attachmentPdfRequestMapper,
+          DocumentBuilderRequestMapper documentBuilderRequestMapper) {
     this.repository = repository;
-    this.tokenRepository = tokenRepository;
     this.productService = productService;
     this.notificationService = notificationService;
     this.mailTemplatePathConfig = mailTemplatePathConfig;
     this.mailTemplatePlaceholdersConfig = mailTemplatePlaceholdersConfig;
-    this.userMapper = userMapper;
-    this.azureBlobClient = azureBlobClient;
-    this.azureStorageConfig = azureStorageConfig;
+    this.contractPdfRequestMapper  = contractPdfRequestMapper;
+    this.attachmentPdfRequestMapper = attachmentPdfRequestMapper;
+    this.documentBuilderRequestMapper = documentBuilderRequestMapper;
   }
 
   public Optional<Onboarding> getOnboarding(String onboardingId) {
@@ -116,15 +114,18 @@ public class OnboardingService {
           userToOnboard ->
             userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userToOnboard.getId()))
         .toList();
-
+    UserResource manager = getUserResource(onboarding);
     Product product = productService.getProductIsValid(onboarding.getProductId());
-    contractService.createContractPDF(
-      onboardingWorkflow.getContractTemplatePath(product),
-      onboarding,
-      getUserResource(onboarding),
-      delegates,
-      product.getTitle(),
-      onboardingWorkflow.getPdfFormatFilename());
+    ContractPdfRequest request =
+        contractPdfRequestMapper.toRequest(
+            onboarding,
+            manager,
+            delegates,
+            product,
+            onboardingWorkflow.getContractTemplatePath(product),
+            mailTemplatePlaceholdersConfig.rejectOnboardingUrlValue());
+
+      documentContentControllerApi.createContractPdf(request);
   }
 
   private UserResource getUserResource(Onboarding onboarding) {
@@ -136,114 +137,34 @@ public class OnboardingService {
     Onboarding onboarding = onboardingAttachment.getOnboarding();
     Product product = productService.getProductIsValid(onboarding.getProductId());
     AttachmentTemplate attachment = onboardingAttachment.getAttachment();
+    AttachmentPdfRequest request =
+        attachmentPdfRequestMapper.toRequest(
+            onboarding, attachment, product, getUserResource(onboarding));
 
-    contractService.createAttachmentPDF(
-      attachment.getTemplatePath(), onboarding, product.getTitle(), attachment.getName(), getUserResource(onboarding));
-  }
-
-  public void loadContract(Onboarding onboarding) {
-    Product product = productService.getProductIsValid(onboarding.getProductId());
-    contractService.loadContractPDF(
-      product
-        .getInstitutionContractTemplate(InstitutionUtils.getCurrentInstitutionType(onboarding))
-        .getContractTemplatePath(),
-      onboarding.getId(),
-      product.getTitle());
+    documentContentControllerApi.createAttachmentPdf(request);
   }
 
   public void saveTokenWithContract(OnboardingWorkflow onboardingWorkflow) {
-
     Onboarding onboarding = onboardingWorkflow.getOnboarding();
-
-    // Skip if token already exists
-    if (checkTokenExist(onboarding)) {
-      return;
-    }
-
     Product product = productService.getProductIsValid(onboarding.getProductId());
-
-    // Load PDF contract and create digest
-    File contract =
-      contractService.retrieveContractNotSigned(onboardingWorkflow, product.getTitle());
-    DSSDocument document = new FileDocument(contract);
-    String digest = document.getDigest(DigestAlgorithm.SHA256).getBase64Value();
-
-    saveToken(onboardingWorkflow, product, digest);
+    DocumentBuilderRequest request =
+        documentBuilderRequestMapper.toRequest(onboarding, product, onboardingWorkflow);
+    try (Response response = documentControllerApi.saveDocument(request)) {
+      ensureSuccessfulDocumentResponse(
+          response, "save contract document", onboarding.getId());
+    }
   }
 
   public void saveTokenWithAttachment(OnboardingAttachment onboardingAttachment) {
-
     Onboarding onboarding = onboardingAttachment.getOnboarding();
-
     Product product = productService.getProductIsValid(onboarding.getProductId());
-
-    File contract = contractService.retrieveAttachment(onboardingAttachment, product.getTitle());
-    DSSDocument document = new FileDocument(contract);
-    String digest = document.getDigest(DigestAlgorithm.SHA256).getBase64Value();
-
-    saveTokenAttachment(onboardingAttachment, product, digest);
-  }
-
-  private boolean checkTokenExist(Onboarding onboarding) {
-    // Skip if token already exists
-    Optional<Token> optToken = tokenRepository.findByIdOptional(onboarding.getId());
-    if (optToken.isPresent()) {
-      log.debug("Token has already exists for onboarding {}", onboarding.getId());
-      return true;
-    }
-    return false;
-  }
-
-  public Optional<Token> getToken(String onboardingId) {
-    return tokenRepository.findByIdOptional(onboardingId);
-  }
-
-  private void saveToken(OnboardingWorkflow onboardingWorkflow, Product product, String digest) {
-
-    Onboarding onboarding = onboardingWorkflow.getOnboarding();
-
-    // Persist token entity
-    Token token = buildBaseToken(onboarding, digest);
-    token.setId(onboarding.getId());
-    token.setContractTemplate(onboardingWorkflow.getContractTemplatePath(product));
-    token.setContractVersion(onboardingWorkflow.getContractTemplateVersion(product));
-    token.setContractFilename(
-      CONTRACT_FILENAME_FUNC.apply(
-        onboardingWorkflow.getPdfFormatFilename(), product.getTitle()));
-    token.setType(onboardingWorkflow.getDocumentType());
-
-    tokenRepository.persist(token);
-  }
-
-  private void saveTokenAttachment(
-    OnboardingAttachment onboardingAttachment, Product product, String digest) {
-
-    Onboarding onboarding = onboardingAttachment.getOnboarding();
     AttachmentTemplate attachmentTemplate = onboardingAttachment.getAttachment();
-
-    // Persist token entity
-    Token token = buildBaseToken(onboarding, digest);
-    token.setId(UUID.randomUUID().toString());
-    token.setName(attachmentTemplate.getName());
-    token.setContractTemplate(attachmentTemplate.getTemplatePath());
-    token.setContractVersion(attachmentTemplate.getTemplateVersion());
-    token.setContractFilename(
-      CONTRACT_FILENAME_FUNC.apply(
-        "%s_" + attachmentTemplate.getName() + ".pdf", product.getTitle()));
-    token.setType(DocumentType.ATTACHMENT);
-
-    tokenRepository.persist(token);
-  }
-
-  private Token buildBaseToken(Onboarding onboarding, String digest) {
-    log.debug("creating Token for onboarding {} ...", onboarding.getId());
-    Token token = new Token();
-    token.setOnboardingId(onboarding.getId());
-    token.setCreatedAt(LocalDateTime.now());
-    token.setUpdatedAt(LocalDateTime.now());
-    token.setChecksum(digest);
-    token.setProductId(onboarding.getProductId());
-    return token;
+    DocumentBuilderRequest request =
+        documentBuilderRequestMapper.toRequest(onboarding, product, attachmentTemplate, DocumentType.ATTACHMENT);
+    try (Response response = documentControllerApi.saveDocument(request)) {
+      ensureSuccessfulDocumentResponse(
+          response, "save attachment document", onboarding.getId());
+    }
   }
 
   public void sendMailRegistration(Onboarding onboarding) {
@@ -269,39 +190,67 @@ public class OnboardingService {
    sendMailDto.setProductId(onboarding.getProductId());
    sendMailDto.setUserMailUuid(user.getUserMailUuid());
 
-   try {
-     userApi.sendMailRequest(user.getId(), sendMailDto);
-   } catch (Exception e) {
-     log.error("Impossible to send mail to user");
-   }
+    try {
+      userApi.sendMailRequest(user.getId(), sendMailDto);
+    } catch (Exception e) {
+      log.error("Impossible to send mail to user");
+    }
   }
 
-    public void sendMailRegistrationForUserRequester(Onboarding onboarding) {
+  public void sendMailRegistrationForUserRequester(Onboarding onboarding) {
 
-        log.info("Sending mail to user requester");
-        UserRequester userRequester = onboarding.getUserRequester();
-        SendMailDto sendMailDto = new SendMailDto();
-        sendMailDto.setInstitutionName(onboarding.getInstitution().getDescription());
-        sendMailDto.setProductId(onboarding.getProductId());
-        sendMailDto.setUserMailUuid(userRequester.getUserMailUuid());
+    log.info("Sending mail to user requester");
+    UserRequester userRequester = onboarding.getUserRequester();
+    SendMailDto sendMailDto = new SendMailDto();
+    sendMailDto.setInstitutionName(onboarding.getInstitution().getDescription());
+    sendMailDto.setProductId(onboarding.getProductId());
+    sendMailDto.setUserMailUuid(userRequester.getUserMailUuid());
 
-        try {
-            userApi.sendMailRequest(userRequester.getUserRequestUid(), sendMailDto);
-        } catch (Exception e) {
-            log.error("Impossible to send mail to user");
-        }
+    try {
+      userApi.sendMailRequest(userRequester.getUserRequestUid(), sendMailDto);
+    } catch (Exception e) {
+      log.error("Impossible to send mail to user");
     }
+  }
 
   public void saveVisuraForMerchant(Onboarding onboarding) {
     var taxCode = onboarding.getInstitution().getTaxCode();
-    try {
-      var bytes = pndnInfocamereApi.institutionVisuraDocumentByTaxCodeUsingGET(taxCode);
-      final String filename = String.format("VISURA_%s.xml", taxCode);
-      final String path = String.format("%s%s%s", azureStorageConfig.contractPath(), onboarding.getId(), "/visura");
-      azureBlobClient.uploadFile(path, filename, bytes);
-    } catch (Exception e) {
-      log.error("Impossible to store visura document for institution with taxCode: {}. Error: {}", taxCode, e.getMessage(), e);
+    var bytes = pndnInfocamereApi.institutionVisuraDocumentByTaxCodeUsingGET(taxCode);
+    final String filename = String.format("VISURA_%s.xml", taxCode);
+    DocumentContentControllerApi.SaveVisuraForMerchantMultipartForm request =
+        new DocumentContentControllerApi.SaveVisuraForMerchantMultipartForm();
+    request.fileContent = new ByteArrayInputStream(bytes);
+    request.onboardingId = onboarding.getId();
+    request.filename = filename;
+    try (Response response = documentContentControllerApi.saveVisuraForMerchant(request)) {
+      ensureSuccessfulDocumentResponse(
+          response,
+          "store visura document for institution with taxCode: " + taxCode,
+          onboarding.getId());
     }
+  }
+
+  private void ensureSuccessfulDocumentResponse(
+      Response response, String operation, String onboardingId) {
+    int status = Objects.nonNull(response) ? response.getStatus() : -1;
+    if (Objects.isNull(response)
+        || Objects.isNull(response.getStatusInfo())
+        || !SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
+      log.warn(
+          "Document service call failed: operation={}, onboardingId={}, status={}",
+          operation,
+          onboardingId,
+          status);
+      throw new GenericOnboardingException(
+          String.format(
+              "Document service call failed while trying to %s for onboarding %s. status=%s",
+              operation, onboardingId, status));
+    }
+    log.debug(
+        "Document service call succeeded: operation={}, onboardingId={}, status={}",
+        operation,
+        onboardingId,
+        status);
   }
 
   public void sendMailRegistrationForContract(OnboardingWorkflow onboardingWorkflow) {
@@ -418,20 +367,6 @@ public class OnboardingService {
             .orElse(""));
     sendMailInput.setInstitutionName(Optional.ofNullable(onboarding.getInstitution().getDescription()).orElse(""));
     return sendMailInput;
-  }
-
-  public long updateTokenContractFiles(Token token) {
-    Map<String, Object> paramsUpdate = new HashMap<>();
-    paramsUpdate.put("contractSigned", token.getContractSigned());
-    paramsUpdate.put("contractFilename", token.getContractFilename());
-    paramsUpdate.put("updatedAt", LocalDateTime.now());
-
-    Map<String, Object> paramsWhere = new HashMap<>();
-    paramsWhere.put("tokenId", token.getId());
-
-    return tokenRepository
-      .update ("contractSigned = :contractSigned and contractFilename = :contractFilename and updatedAt = :updatedAt", paramsUpdate)
-      .where("_id = :tokenId", paramsWhere);
   }
 
   public void updateOnboardingStatus(String onboardingId, OnboardingStatus status) {

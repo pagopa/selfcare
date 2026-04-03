@@ -333,7 +333,6 @@ components:
       required:
       - onboardingId
       - productId
-      - contractFilePath
       type: object
       properties:
         onboardingId:
@@ -345,7 +344,6 @@ components:
         contractCreatedAt:
           $ref: "#/components/schemas/LocalDateTime"
         contractFilePath:
-          pattern: \S
           type: string
         contractFileName:
           type: string
@@ -658,34 +656,6 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
-  /v1/document-content/{id}/contract-signed:
-    get:
-      summary: Retrieve contract signed for a given onboarding
-      description: Downloads the contract file associated with the specified onboarding
-        ID.
-      operationId: getContractSigned
-      tags:
-      - Document Content Controller
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/octet-stream:
-              schema:
-                format: binary
-                type: string
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
   /v1/document-content/{onboardingId}/attachment:
     get:
       summary: Retrieve attachment for a given onboarding and filename
@@ -725,6 +695,34 @@ paths:
       description: Downloads the unsigned contract file associated with the specified
         onboarding ID.
       operationId: getContract
+      tags:
+      - Document Content Controller
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                format: binary
+                type: string
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /v1/document-content/{onboardingId}/contract-signed:
+    get:
+      summary: Retrieve contract signed for a given onboarding
+      description: Downloads the contract file associated with the specified onboarding
+        ID.
+      operationId: getContractSigned
       tags:
       - Document Content Controller
       parameters:

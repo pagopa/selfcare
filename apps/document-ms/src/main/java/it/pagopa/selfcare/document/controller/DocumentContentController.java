@@ -121,9 +121,9 @@ public class DocumentContentController {
     )
     @GET
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Path("/{id}/contract-signed")
-    public Uni<RestResponse<File>> getContractSigned(@PathParam(value = "id") String id) {
-        return documentContentService.retrieveSignedFile(id);
+    @Path("/{onboardingId}/contract-signed")
+    public Uni<RestResponse<File>> getContractSigned(@PathParam(value = "onboardingId") String onboardingId) {
+        return documentContentService.retrieveSignedFile(onboardingId);
     }
 
     @Operation(

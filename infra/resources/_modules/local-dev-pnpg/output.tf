@@ -2,6 +2,7 @@ output "config" {
   value = {
     prefix         = local.prefix
     env_short      = local.env_short
+    env            = local.env
     location_short = local.location_short
     domain         = local.domain
 
@@ -23,7 +24,6 @@ output "config" {
     key_vault_name                 = local.key_vault_name
 
     resource_group_name_vnet = local.resource_group_name_vnet
-    image_tag_latest         = local.image_tag_latest
   }
 }
 

@@ -548,7 +548,6 @@ class DocumentControllerTest {
   void persistDocumentForImport_shouldReturnBadRequest_whenContractFilePathIsNull() {
     OnboardingDocumentRequest invalidRequest = new OnboardingDocumentRequest();
     invalidRequest.setOnboardingId(ONBOARDING_ID);
-    invalidRequest.setProductId("prod-123");
 
     given()
         .contentType(MediaType.APPLICATION_JSON)

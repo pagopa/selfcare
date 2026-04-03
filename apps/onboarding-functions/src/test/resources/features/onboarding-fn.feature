@@ -78,6 +78,7 @@ Feature: Onboarding collection
 #    And the answer should contain "id,purgeHistoryDeleteUri,restartPostUri"
 #    And there is a document for onboarding with status "FAILED"
 
+
   Scenario Outline: Verify correct invocation of the StartOnboardingOrchestration for correct workflow FOR_APPROVE request
     Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "89ad7142-24bb-48ad-8502-9c9232137e95"
     When I send a GET request with given onboardingId

@@ -11,12 +11,12 @@ import it.pagopa.selfcare.onboarding.dto.NotificationToSend;
 import it.pagopa.selfcare.onboarding.dto.QueueEvent;
 import it.pagopa.selfcare.onboarding.entity.Aggregator;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
-import it.pagopa.selfcare.onboarding.entity.Token;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.core_json.model.AttributesResponse;
 import org.openapi.quarkus.core_json.model.InstitutionResponse;
+import org.openapi.quarkus.document_json.model.DocumentResponse;
 import org.openapi.quarkus.party_registry_proxy_json.api.GeographicTaxonomiesApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.InstitutionApi;
 
@@ -65,7 +65,7 @@ class StandardNotificationBuilderTest {
         InstitutionResponse institution = createInstitution();
         institution.setIsTest(Boolean.TRUE);
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
 
         InstitutionResponse institutionParentResource = new InstitutionResponse();
         institutionParentResource.setOriginId("parentOriginId");
@@ -73,7 +73,7 @@ class StandardNotificationBuilderTest {
                 .thenReturn(institutionParentResource);
         onboarding.setIsAggregator(true);
 
-        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.ADD);
+        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.ADD);
 
         assertNotNull(notification);
         assertNull(notification.getClosedAt());
@@ -81,7 +81,7 @@ class StandardNotificationBuilderTest {
         assertEquals(TOKEN_ID, notification.getOnboardingTokenId());
         assertEquals(onboarding.getActivatedAt(), notification.getCreatedAt().toLocalDateTime());
         assertEquals(onboarding.getActivatedAt(), notification.getUpdatedAt().toLocalDateTime());
-        assertEquals(token.getContractSigned(), notification.getFilePath());
+        assertEquals(document.getContractSigned(), notification.getFilePath());
         assertEquals(QueueEvent.ADD, notification.getNotificationType());
     }
 
@@ -99,7 +99,7 @@ class StandardNotificationBuilderTest {
         // Create Institution
         InstitutionResponse institution = createInstitution();
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
 
         InstitutionResponse institutionParentResource = new InstitutionResponse();
         institutionParentResource.setOriginId("parentOriginId");
@@ -113,7 +113,7 @@ class StandardNotificationBuilderTest {
         aggregator.setTaxCode("TaxCode");
         aggregator.setOriginId("OriginId");
         onboarding.setAggregator(aggregator);
-        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.ADD);
+        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.ADD);
 
         assertNotNull(notification);
         assertNull(notification.getClosedAt());
@@ -143,14 +143,14 @@ class StandardNotificationBuilderTest {
         // Create Institution
         InstitutionResponse institution = createInstitution();
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
 
         InstitutionResponse institutionParentResource = new InstitutionResponse();
         institutionParentResource.setOriginId("parentOriginId");
         when(coreInstitutionApi.retrieveInstitutionByIdUsingGET(any(), any()))
                 .thenReturn(institutionParentResource);
 
-        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.UPDATE);
+        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.UPDATE);
 
         assertNotNull(notification);
         assertNull(notification.getClosedAt());
@@ -175,14 +175,14 @@ class StandardNotificationBuilderTest {
         // Create Institution
         InstitutionResponse institution = createInstitution();
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
 
         InstitutionResponse institutionParentResource = new InstitutionResponse();
         institutionParentResource.setOriginId("parentOriginId");
         when(coreInstitutionApi.retrieveInstitutionByIdUsingGET(any(), any()))
                 .thenReturn(institutionParentResource);
 
-        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.UPDATE);
+        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.UPDATE);
 
         assertNotNull(notification);
         assertNull(notification.getClosedAt());
@@ -207,14 +207,14 @@ class StandardNotificationBuilderTest {
         // Create Institution
         InstitutionResponse institution = createInstitution();
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
 
         InstitutionResponse institutionParentResource = new InstitutionResponse();
         institutionParentResource.setOriginId("parentOriginId");
         when(coreInstitutionApi.retrieveInstitutionByIdUsingGET(any(), any()))
                 .thenReturn(institutionParentResource);
 
-        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.UPDATE);
+        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.UPDATE);
 
         assertNotNull(notification);
         assertEquals("CLOSED", notification.getState());
@@ -239,14 +239,14 @@ class StandardNotificationBuilderTest {
         // Create Institution
         InstitutionResponse institution = createInstitution();
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
 
         InstitutionResponse institutionParentResource = new InstitutionResponse();
         institutionParentResource.setOriginId("parentOriginId");
         when(coreInstitutionApi.retrieveInstitutionByIdUsingGET(any(), any()))
                 .thenReturn(institutionParentResource);
 
-        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.UPDATE);
+        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.UPDATE);
 
         assertNotNull(notification);
         assertEquals("CLOSED", notification.getState());
@@ -266,7 +266,7 @@ class StandardNotificationBuilderTest {
         attribute.setCode("code");
         institution.setAttributes(List.of(attribute));
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
         // Create Onboarding
         Onboarding onboarding = createOnboarding(
                 OnboardingStatus.COMPLETED,
@@ -283,7 +283,7 @@ class StandardNotificationBuilderTest {
 
 
         //when
-        NotificationToSend notificationToSend = standardNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.ADD);
+        NotificationToSend notificationToSend = standardNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.ADD);
         //then
         assertNotNull(notificationToSend);
         verifyNoInteractions(registryProxyInstitutionsApi);
@@ -297,7 +297,7 @@ class StandardNotificationBuilderTest {
         InstitutionResponse institution = createInstitution();
         institution.setCity(null);
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
         // Create Onboarding
         Onboarding onboarding = createOnboarding(
                 OnboardingStatus.COMPLETED,
@@ -316,7 +316,7 @@ class StandardNotificationBuilderTest {
         mockPartyRegistryProxy(registryProxyInstitutionsApi, geographicTaxonomiesApi, institution);
 
         //when
-        NotificationToSend notificationToSend = standardNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.ADD);
+        NotificationToSend notificationToSend = standardNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.ADD);
         //then
         assertNotNull(notificationToSend);
         verify(registryProxyInstitutionsApi).findInstitutionUsingGET(any(), any(), any());
@@ -330,7 +330,7 @@ class StandardNotificationBuilderTest {
         // Create Institution
         InstitutionResponse institution = createInstitution();
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
         // Create Onboarding
         Onboarding onboarding = createOnboarding(
                 OnboardingStatus.COMPLETED,
@@ -343,7 +343,7 @@ class StandardNotificationBuilderTest {
         onboarding.getInstitution().setOrigin(Origin.SELC);
 
         //when
-        NotificationToSend notificationToSend = standardNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.ADD);
+        NotificationToSend notificationToSend = standardNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.ADD);
         //then
         assertNotNull(notificationToSend);
 
@@ -366,7 +366,7 @@ class StandardNotificationBuilderTest {
         InstitutionResponse institution = createInstitution();
 
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
 
         InstitutionResponse institutionParentResource = new InstitutionResponse();
         institutionParentResource.setOriginId("parentOriginId");
@@ -374,7 +374,7 @@ class StandardNotificationBuilderTest {
                 .thenReturn(institutionParentResource);
         onboarding.setIsAggregator(true);
 
-        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.ADD);
+        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.ADD);
 
         assertNotNull(notification);
         assertNull(notification.getClosedAt());
@@ -382,7 +382,7 @@ class StandardNotificationBuilderTest {
         assertEquals(TOKEN_ID, notification.getOnboardingTokenId());
         assertEquals(onboarding.getActivatedAt(), notification.getCreatedAt().toLocalDateTime());
         assertEquals(onboarding.getActivatedAt(), notification.getUpdatedAt().toLocalDateTime());
-        assertEquals(token.getContractSigned(), notification.getFilePath());
+        assertEquals(document.getContractSigned(), notification.getFilePath());
         assertEquals(QueueEvent.ADD, notification.getNotificationType());
         assertEquals(2, notification.getInstitution().getPaymentServiceProvider().getProviderNames().size());
     }
@@ -404,12 +404,12 @@ class StandardNotificationBuilderTest {
         InstitutionResponse institution = createInstitution();
 
         // Create Token
-        Token token = createToken();
-        token.setContractSigned("path/Interoperabilità.p7m");
+        DocumentResponse document = createDocument();
+        document.setContractSigned("path/Interoperabilità.p7m");
 
 
-        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.ADD);
-        standardNotificationBuilder.setTokenData(notification, token);
+        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.ADD);
+        standardNotificationBuilder.setTokenData(notification, document);
 
         assertNotNull(notification);
         assertNull(notification.getClosedAt());
@@ -434,7 +434,7 @@ class StandardNotificationBuilderTest {
         // Create Institution
         InstitutionResponse institution = createInstitution();
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
 
         InstitutionResponse institutionParentResource = new InstitutionResponse();
         institutionParentResource.setOriginId("parentOriginId");
@@ -442,7 +442,7 @@ class StandardNotificationBuilderTest {
                 .thenReturn(institutionParentResource);
 
         // when
-        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.ADD);
+        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.ADD);
 
         // then
         assertNotNull(notification);
@@ -464,7 +464,7 @@ class StandardNotificationBuilderTest {
         // Create Institution
         InstitutionResponse institution = createInstitution();
         // Create Token
-        Token token = createToken();
+        DocumentResponse document = createDocument();
 
         InstitutionResponse institutionParentResource = new InstitutionResponse();
         institutionParentResource.setOriginId("parentOriginId");
@@ -472,7 +472,7 @@ class StandardNotificationBuilderTest {
                 .thenReturn(institutionParentResource);
 
         // when
-        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, token, institution, QueueEvent.ADD);
+        NotificationToSend notification = standardNotificationBuilder.buildNotificationToSend(onboarding, document, institution, QueueEvent.ADD);
 
         // then
         assertNotNull(notification);

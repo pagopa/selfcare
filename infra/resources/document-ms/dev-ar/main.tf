@@ -34,7 +34,8 @@ module "collection_documents" {
     { keys = ["rootOnboardingId"], unique = false },
     { keys = ["productId"], unique = false },
     { keys = ["type"], unique = false },
-    { keys = ["attachmentName"], unique = false }
+    { keys = ["attachmentName"], unique = false },
+    { keys = ["createdAt"], unique = false }
   ]
 }
 
@@ -61,10 +62,6 @@ locals {
       value = "namirial"
     },
     {
-      name  = "STORAGE_CONTAINER_PRODUCT"
-      value = "selc-d-product"
-    },
-    {
       name  = "STORAGE_CONTAINER_CONTRACT"
       value = "sc-d-documents-blob"
     },
@@ -78,7 +75,6 @@ locals {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
     "JWT-PUBLIC-KEY"                          = "jwt-public-key"
     "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
-    "BLOB-STORAGE-PRODUCT-CONNECTION-STRING"  = "blob-storage-product-connection-string"
     "BLOB-STORAGE-CONTRACT-CONNECTION-STRING" = "documents-storage-connection-string"
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"     = "namirial-sign-service-user"
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
@@ -93,7 +89,7 @@ module "container_app_document_ms" {
   container_app_name             = "${module.local.config.project}-document-ms"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-document-ms"
-  image_tag                      = module.local.config.image_tag_latest
+  image_tag                      = var.image_tag
   app_settings                   = local.app_settings_document_ms
   secrets_names                  = local.secrets_names_document_ms
 
