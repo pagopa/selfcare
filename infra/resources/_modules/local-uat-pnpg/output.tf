@@ -2,6 +2,7 @@ output "config" {
   value = {
     prefix         = local.prefix
     env_short      = local.env_short
+    env            = "uat"
     location_short = local.location_short
     location       = local.location
     domain         = local.domain

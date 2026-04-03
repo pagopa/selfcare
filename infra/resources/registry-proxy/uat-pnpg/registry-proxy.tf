@@ -114,7 +114,7 @@ module "container_app_registry_proxy_ms" {
   image_tag                      = var.image_tag
   app_settings                   = local.app_settings
   secrets_names                  = local.secrets_names
-  workload_profile_name          = "Consumption"
+  workload_profile_name          = null
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
   probes                         = module.local.config.quarkus_health_probes

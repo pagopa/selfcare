@@ -7,7 +7,7 @@ Tabella delle migrazioni effettuate
 | category       | dev-ar | dev-pg | uat-ar | uat-pg | prd-ar | prd-pg |
 +----------------+--------+--------+--------+--------+--------+--------+
 | auth           |   ✓    |   ◌    |   ✓    |   ◌    |        |   ◌    |
-| document-ms    |   ✓    |   x    |        |   x    |        |   x    |
+| document-ms    |   ✓    |   x    |   ◌    |   x    |   ◌    |   x    |
 | iam            |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
 | namirial-sign  |   ✓    |   x    |   ✓    |   x    |        |   x    |
 | onboarding-bff |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
@@ -16,7 +16,7 @@ Tabella delle migrazioni effettuate
 | onboarding-ms  |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
 | product        |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
 | product-cdc    |   ✓    |   x    |   ✓    |   x    |        |   x    |
-| registry-proxy |   ✓    |   ✓    |        |        |        |        |
+| registry-proxy |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
 | spid-login     |   x    |   ✓    |   x    |   ✓    |   x    |   ◌    |
 | webhook        |   ✓    |   x    |   ✓    |   x    |        |   x    |
 +----------------+--------+--------+--------+--------+--------+--------+
