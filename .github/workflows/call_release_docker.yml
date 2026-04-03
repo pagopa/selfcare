@@ -107,6 +107,7 @@ jobs:
     outputs:
       terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version}}
       image_tag: ${{ steps.setsha.outputs.short_sha }}
+      plan_file: ${{ steps.planfile.outputs.plan_file }}
 
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -117,6 +118,11 @@ jobs:
         run: |
           calculatedSha=$(git rev-parse --short ${{ github.sha }})
           echo "short_sha=sha-$calculatedSha" >> $GITHUB_OUTPUT
+
+      - name: Set Terraform plan filename
+        id: planfile
+        run: |
+          echo "plan_file=tfplan-${{ inputs.tf_environment }}-${{ steps.setsha.outputs.short_sha }}" >> $GITHUB_OUTPUT
 
       - name: Set Terraform Version
         id: set-terraform-version
@@ -141,7 +147,7 @@ jobs:
         shell: bash
         working-directory: ${{ inputs.tf_dir }}
         run: |
-          terraform plan -lock-timeout=3000s -input=false -out=tfplan-${{ inputs.tf_environment }}-${{ github.sha }}
+          terraform plan -lock-timeout=3000s -input=false -out=${{ steps.planfile.outputs.plan_file }}
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -154,7 +160,7 @@ jobs:
         env:
           ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
         with:
-          plan-file: tfplan-${{ inputs.tf_environment }}-${{ github.sha }}
+          plan-file: ${{ steps.planfile.outputs.plan_file }}
           working-directory: ${{ inputs.tf_dir }}
           artifact-name: terraform-plan
           retention-days: 1
@@ -187,7 +193,7 @@ jobs:
         env:
           ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
         with:
-          plan-file: tfplan-${{ inputs.tf_environment }}-${{ github.sha }}
+          plan-file: ${{ needs.tf_plan.outputs.plan_file }}
           working-directory: ${{ inputs.tf_dir }}
           artifact-name: terraform-plan
 
@@ -215,7 +221,7 @@ jobs:
         shell: bash
         working-directory: ${{ inputs.tf_dir }}
         run: |
-          terraform apply -lock-timeout=3000s -auto-approve -input=false tfplan-${{ inputs.tf_environment }}-${{ github.sha }}
+          terraform apply -lock-timeout=3000s -auto-approve -input=false ${{ needs.tf_plan.outputs.plan_file }}
         env:
           TF_VAR_image_tag: ${{ needs.tf_plan.outputs.image_tag }}
 
