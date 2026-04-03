@@ -3,23 +3,23 @@
 Tabella delle migrazioni effettuate
 
 ```
-+----------------+--------+----------+--------+----------+---------+-----------+
-| category       | dev-ar | dev-pnpg | uat-ar | uat-pnpg | prod-ar | prod-pnpg |
-+----------------+--------+----------+--------+----------+---------+-----------+
-| auth           |   ✓    |          |   ✓    |          |         |           |
-| document-ms    |   ✓    |          |        |          |         |           |
-| iam            |   ✓    |    ✓     |   ✓    |    ✓     |         |           |
-| namirial-sign  |   ✓    |          |   ✓    |          |         |           |
-| onboarding-bff |   ✓    |    ✓     |   ✓    |    ✓     |         |           |
-| onboarding-cdc |   ✓    |    ✓     |        |          |         |           |
-| onboarding-fn  |   ✓    |    ✓     |        |          |         |           |
-| onboarding-ms  |   ✓    |    ✓     |        |          |         |           |
-| product        |   ✓    |          |        |          |         |           |
-| product-cdc    |   ✓    |          |        |          |         |           |
-| registry-proxy |   ✓    |    ✓     |        |          |         |           |
-| spid-login     |   x    |    ✓     |   x    |    ✓     |    x    |     ◌     |
-| webhook        |   ✓    |          |   ✓    |          |         |           |
-+----------------+--------+----------+--------+----------+---------+-----------+
++----------------+--------+--------+--------+--------+--------+--------+
+| category       | dev-ar | dev-pg | uat-ar | uat-pg | prd-ar | prd-pg |
++----------------+--------+--------+--------+--------+--------+--------+
+| auth           |   ✓    |        |   ✓    |        |        |        |
+| document-ms    |   ✓    |        |        |        |        |        |
+| iam            |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
+| namirial-sign  |   ✓    |        |   ✓    |        |        |        |
+| onboarding-bff |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
+| onboarding-cdc |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
+| onboarding-fn  |   ✓    |   ✓    |        |        |        |        |
+| onboarding-ms  |   ✓    |   ✓    |        |        |        |        |
+| product        |   ✓    |        |        |        |        |        |
+| product-cdc    |   ✓    |        |        |        |        |        |
+| registry-proxy |   ✓    |   ✓    |        |        |        |        |
+| spid-login     |   x    |   ✓    |   x    |        |   x    |   ◌    |
+| webhook        |   ✓    |        |   ✓    |        |        |        |
++----------------+--------+--------+--------+--------+--------+--------+
 ```
 
 Legend:

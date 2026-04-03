@@ -3,6 +3,7 @@ output "config" {
     prefix         = local.prefix
     env_short      = local.env_short
     location_short = local.location_short
+    location       = local.location
     domain         = local.domain
 
     dns_zone_prefix                = local.dns_zone_prefix
