@@ -32,7 +32,7 @@ locals {
     },
     {
       name  = "STORAGE_CONTAINER_PRODUCT"
-      value = "selc-d-product"
+      value = "selc-${module.local.config.env_short}-product"
     }
   ]
 
@@ -54,12 +54,11 @@ module "container_app_product_cdc" {
   container_app_name             = "${module.local.config.project}-product-cdc"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-product-cdc"
-  image_tag                      = "sha-c8eea8c" #module.local.config.image_tag_latest
+  image_tag                      = var.image_tag
   app_settings                   = local.app_settings
   secrets_names                  = local.secrets_names
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
-
-  probes = module.local.config.quarkus_health_probes
-  tags   = module.local.config.tags
+  probes                         = module.local.config.quarkus_health_probes
+  tags                           = module.local.config.tags
 }

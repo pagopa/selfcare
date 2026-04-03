@@ -125,7 +125,7 @@ module "container_app_iam_ms" {
   container_app_name             = "${module.local.config.project}-${module.local.config.domain}-iam-ms"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-iam-ms"
-  image_tag                      = module.local.config.image_tag_latest
+  image_tag                      = var.image_tag
   app_settings                   = local.app_settings_iam_ms
   secrets_names                  = local.secrets_names_iam_ms
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name

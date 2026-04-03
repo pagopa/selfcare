@@ -95,7 +95,7 @@ module "container_app_webhook_ms" {
   container_app_name             = local.webhook_container_app_name
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-webhook-ms"
-  image_tag                      = module.local.config.image_tag_latest
+  image_tag                      = var.image_tag
   app_settings                   = local.app_settings_webhook_ms
   secrets_names                  = local.secrets_names_webhook_ms
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name

@@ -138,7 +138,7 @@ module "container_app_onboarding_cdc" {
   container_app_name             = "selc-${module.local.config.env_short}-onboarding-cdc"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-onboarding-cdc"
-  image_tag                      = module.local.config.image_tag_latest
+  image_tag                      = var.image_tag
   app_settings                   = local.app_settings_onboarding_cdc
   secrets_names                  = local.secrets_names_onboarding_cdc
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
