@@ -2,7 +2,8 @@ name: Code Review - Product
 
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: write
+  packages: read
 
 on:
   workflow_dispatch:

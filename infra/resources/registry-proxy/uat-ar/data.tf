@@ -3,11 +3,6 @@ data "azurerm_container_app_environment" "cae" {
   resource_group_name = module.local.config.ca_resource_group_name
 }
 
-data "azurerm_container_app" "ca" {
-  name                = local.ca_name
-  resource_group_name = module.local.config.ca_resource_group_name
-}
-
 data "azurerm_storage_account" "existing_logs_storage" {
   name                = local.storage_logs
   resource_group_name = local.storage_logs_rg

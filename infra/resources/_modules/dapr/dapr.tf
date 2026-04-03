@@ -29,7 +29,7 @@ resource "azurerm_container_app_environment_dapr_component" "eventhub_pubsub" {
     value = "${var.queue_url}:${var.queue_port}"
   }
 
-  scopes = [data.azurerm_container_app.ca.dapr[0].app_id]
+  scopes = [var.ca_name]
 }
 
 resource "azurerm_container_app_environment_dapr_component" "appinsight_binding" {
@@ -65,7 +65,7 @@ resource "azurerm_container_app_environment_dapr_component" "appinsight_binding"
     })
   }
 
-  scopes = [data.azurerm_container_app.ca.dapr[0].app_id]
+  scopes = [var.ca_name]
 }
 
 resource "azurerm_resource_group" "redis_rg" {
@@ -142,7 +142,7 @@ resource "azurerm_container_app_environment_dapr_component" "redis_state" {
     value = "true"
   }
 
-  scopes = [data.azurerm_container_app.ca.dapr[0].app_id]
+  scopes = [var.ca_name]
 }
 
 # Secrets per Dapr Components
@@ -162,7 +162,7 @@ resource "azurerm_container_app_environment_dapr_component" "secrets" {
     value = data.azurerm_user_assigned_identity.cae_identity.client_id
   }
 
-  scopes = [data.azurerm_container_app.ca.dapr[0].app_id]
+  scopes = [var.ca_name]
 
 
   lifecycle {

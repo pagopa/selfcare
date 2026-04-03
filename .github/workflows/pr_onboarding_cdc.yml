@@ -4,6 +4,7 @@ permissions:
   contents: read
   id-token: write
   pull-requests: write
+  packages: read
 
 on:
   workflow_dispatch:

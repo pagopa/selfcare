@@ -75,3 +75,15 @@ variable "tenant_id" {
   description = "Azure tenant ID"
   type        = string
 }
+
+variable "application_insights_connection_string" {
+  description = "Application Insights connection string for linking diagnostics"
+  type        = string
+  default     = null
+}
+
+variable "application_insights_key" {
+  description = "Application Insights instrumentation key"
+  type        = string
+  default     = null
+}
