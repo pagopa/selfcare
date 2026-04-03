@@ -1,5 +1,5 @@
 variable "image_tag" {
   type        = string
-  description = "Image tag to use for product"
+  description = "Image tag"
   default     = "latest"
 }

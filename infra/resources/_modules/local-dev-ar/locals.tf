@@ -2,6 +2,7 @@ locals {
   prefix         = "selc"
   storage_prefix = "sc"
   env_short      = "d"
+  env            = "dev"
   location       = "westeurope"
   location_short = "weu"
   domain         = "ar"

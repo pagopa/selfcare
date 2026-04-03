@@ -311,3 +311,11 @@ module "container_app_environments" {
 
   tags = local.tags
 }
+
+resource "azurerm_key_vault_access_policy" "container_app_environment" {
+  key_vault_id = module.key_vault.key_vault_id
+  tenant_id    = module.key_vault.tenant_id
+  object_id    = module.container_app_environments.user_assigned_identity.principal_id
+
+  secret_permissions      = ["Get", "List"]
+}
