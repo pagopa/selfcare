@@ -134,6 +134,15 @@ jobs:
         with:
           terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version}}
 
+      - name: Retrieve Terraform Modules from Cache
+        id: cache-terraform-modules
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        with:
+          path: ${{ inputs.tf_dir }}/.terraform
+          key: terraform-${{ inputs.tf_dir }}-${{ steps.planfile.outputs.plan_file }}
+          restore-keys: |
+            terraform-${{ inputs.tf_dir }}
+
       - name: Terraform Init
         shell: bash
         working-directory: ${{ inputs.tf_dir }}
@@ -202,7 +211,7 @@ jobs:
         uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
         with:
           path: ${{ inputs.tf_dir }}/.terraform
-          key: terraform-${{ inputs.tf_dir }}-${{ github.sha }}
+          key: terraform-${{ inputs.tf_dir }}-${{ needs.tf_plan.outputs.plan_file }}
           restore-keys: |
             terraform-${{ inputs.tf_dir }}
 
