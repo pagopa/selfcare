@@ -10,7 +10,7 @@ Tabella delle migrazioni effettuate
 | document-ms    |   ✓    |          |        |          |         |           |
 | iam            |   ✓    |    ✓     |   ✓    |    ✓     |         |           |
 | namirial-sign  |   ✓    |          |   ✓    |          |         |           |
-| onboarding-bff |   ✓    |    ✓     |        |          |         |           |
+| onboarding-bff |   ✓    |    ✓     |   ✓    |    ✓     |         |           |
 | onboarding-cdc |   ✓    |    ✓     |        |          |         |           |
 | onboarding-fn  |   ✓    |    ✓     |        |          |         |           |
 | onboarding-ms  |   ✓    |    ✓     |        |          |         |           |
@@ -18,7 +18,7 @@ Tabella delle migrazioni effettuate
 | product-cdc    |   ✓    |          |        |          |         |           |
 | registry-proxy |   ✓    |    ✓     |        |          |         |           |
 | spid-login     |   x    |    ✓     |   x    |    ✓     |    x    |     ◌     |
-| webhook        |   ✓    |          |        |          |         |           |
+| webhook        |   ✓    |          |   ✓    |          |         |           |
 +----------------+--------+----------+--------+----------+---------+-----------+
 ```
 
