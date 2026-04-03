@@ -118,5 +118,4 @@ locals {
 
   cidr_subnet_contract_storage = ["10.1.136.0/24"]
 
-  image_tag_latest = "latest"
 }

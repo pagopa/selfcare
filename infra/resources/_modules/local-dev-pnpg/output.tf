@@ -23,7 +23,6 @@ output "config" {
     key_vault_name                 = local.key_vault_name
 
     resource_group_name_vnet = local.resource_group_name_vnet
-    image_tag_latest         = local.image_tag_latest
   }
 }
 

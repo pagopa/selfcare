@@ -117,7 +117,7 @@ jobs:
         id: setsha
         run: |
           calculatedSha=$(git rev-parse --short ${{ github.sha }})
-          echo "short_sha=sha-$calculatedSha" >> $GITHUB_OUTPUT
+          echo "short_sha=sha-${calculatedSha}" >> $GITHUB_OUTPUT
 
       - name: Set Terraform plan filename
         id: planfile

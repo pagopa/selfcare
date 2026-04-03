@@ -102,7 +102,6 @@ locals {
   naming_config            = "documents"
   resource_group_name_vnet = "${local.project}-vnet-rg"
 
-  image_tag_latest = "latest"
 }
 
 //pnpg https://selc-p-pnpg-user-cdc-ca.calmmoss-0be48755.westeurope.azurecontainerapps.io
