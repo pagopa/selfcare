@@ -5399,3 +5399,33 @@ Feature: User
     Then The status code is 401
 
   ######################### END GET /{userId}/institutions/{institutionId} #########################
+
+  ######################### BEGIN GET /{userId}/otp-info #########################
+
+  Scenario: Successfully retrieves user OTP info
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId | 97a511a7-2acc-47b9-afed-2f3c65753b4a |
+    When I send a GET request to "users/{userId}/otp-info"
+    Then The status code is 200
+    And The response body contains:
+      | userId                    | 97a511a7-2acc-47b9-afed-2f3c65753b4a         |
+      | otpEmail                  | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it |
+      | otpReferenceInstitutionId | df5ebeaf-6f7d-4c79-b35f-b44b689c5cc3         |
+      | canUserChangeOtpEmail     | true                                         |
+
+  Scenario: Not found when retrieving user OTP info with wrong userId
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId | 123 |
+    When I send a GET request to "users/{userId}/otp-info"
+    Then The status code is 404
+
+  Scenario: Unauthorized when retrieving user OTP info with bad token
+    Given A bad jwt token
+    And The following path params:
+      | userId | 97a511a7-2acc-47b9-afed-2f3c65753b4a |
+    When I send a GET request to "users/{userId}/otp-info"
+    Then The status code is 401
+
+  ######################### END GET /{userId}/otp-info #########################

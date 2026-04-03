@@ -1603,6 +1603,43 @@
         } ]
       }
     },
+    "/users/{userId}/otp-info" : {
+      "get" : {
+        "tags" : [ "User" ],
+        "summary" : "Get user's email for OTP",
+        "description" : "Get the user's email configured to receive the OTP",
+        "operationId" : "getUserOtpEmailInfo",
+        "parameters" : [ {
+          "name" : "userId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserOtpEmailInfoResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/users/{userId}/send-mail-otp" : {
       "post" : {
         "tags" : [ "User" ],
@@ -2245,6 +2282,23 @@
           },
           "user" : {
             "$ref" : "#/components/schemas/UserToNotify"
+          }
+        }
+      },
+      "UserOtpEmailInfoResponse" : {
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "type" : "string"
+          },
+          "otpEmail" : {
+            "type" : "string"
+          },
+          "otpReferenceInstitutionId" : {
+            "type" : "string"
+          },
+          "canUserChangeOtpEmail" : {
+            "type" : "boolean"
           }
         }
       },

@@ -870,6 +870,19 @@ class UserControllerTest {
                 .statusCode(400);
     }
 
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testGetUserOtpEmailInfo() {
+        when(userService.getUserOtpEmailInfo("userId")).thenReturn(Uni.createFrom().item(new UserOtpEmailInfoResponse()));
+        given()
+                .when()
+                .pathParam("userId", "userId")
+                .get("/{userId}/otp-info")
+                .then()
+                .statusCode(200);
+        verify(userService, times(1)).getUserOtpEmailInfo(anyString());
+    }
+
     private CreateUserDto buildCreateUserDto() {
         CreateUserDto userDto = new CreateUserDto();
         userDto.setInstitutionId("institutionId");

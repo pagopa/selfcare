@@ -454,6 +454,15 @@ public class UserController {
                         .status(HttpStatus.SC_ACCEPTED).build());
     }
 
+    @Operation(description = "Get the user's email configured to receive the OTP", summary = "Get user's email for OTP")
+    @GET
+    @Tag(name = "User")
+    @Path(value = "/{userId}/otp-info")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<UserOtpEmailInfoResponse> getUserOtpEmailInfo(@PathParam(value = "userId") String userId) {
+        return userService.getUserOtpEmailInfo(userId);
+    }
+
     private Uni<LoggedUser> readUserIdFromToken(SecurityContext ctx) {
         return currentIdentityAssociation.getDeferredIdentity()
                 .onItem().transformToUni(identity -> {

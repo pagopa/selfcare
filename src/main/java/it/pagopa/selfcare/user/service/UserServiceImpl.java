@@ -52,6 +52,7 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -956,6 +957,40 @@ public class UserServiceImpl implements UserService {
                 .map(userResource -> userResource.getName().getValue()).chain(name ->
                         userNotificationService.sendOtpNotification(institutionalEmail,name, otp)
                 );
+    }
+
+    @Override
+    public Uni<UserOtpEmailInfoResponse> getUserOtpEmailInfo(String userId) {
+        return userRegistryService.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userId)
+                .onItem().transformToUni(userResource ->
+                        userInstitutionService.findByUserId(userId).collect().asList()
+                        .onItem().transformToUni(l -> l.stream()
+                                .flatMap(u -> u.getProducts().stream()
+                                        .filter(p -> p.getStatus().equals(ACTIVE))
+                                        .map(p -> Map.entry(u, p)))
+                                .max(Comparator.comparing(e -> e.getValue().getCreatedAt()))
+                                .map(e -> {
+                                    final UserInstitutionResponse userInstitution = e.getKey();
+                                    final UserOtpEmailInfoResponse response = new UserOtpEmailInfoResponse();
+                                    response.setUserId(userId);
+                                    response.setOtpReferenceInstitutionId(userInstitution.getInstitutionId());
+                                    response.setCanUserChangeOtpEmail(getAllowedActions(userInstitution.getProducts())
+                                            .contains("Selc:UpdateProductUsers"));
+                                    response.setOtpEmail(Optional.ofNullable(userResource.getWorkContacts().get(userInstitution.getUserMailUuid()))
+                                            .map(m -> m.getEmail().getValue()).orElse(null));
+                                    return Uni.createFrom().item(response);
+                                }).orElseThrow()))
+                .onFailure().invoke(t -> log.error("Error retrieving OTP email info for userId {}: {}", Encode.forJava(userId), t.getMessage(), t))
+                .onFailure().transform(t -> new ResourceNotFoundException("No OTP info found for user"));
+    }
+
+    private Set<String> getAllowedActions(List<OnboardedProductResponse> products) {
+        return products.stream()
+                .filter(p -> p.getStatus().equals(ACTIVE))
+                .map(p -> {
+                    final Map<String, List<String>> roleProductsActions = actionMapRetriever.getUserActionsMap().get(p.getRole());
+                    return roleProductsActions.getOrDefault(p.getProductId(), roleProductsActions.get("default"));
+                }).flatMap(List::stream).collect(Collectors.toSet());
     }
 
     private boolean isNotFound(Throwable throwable) {

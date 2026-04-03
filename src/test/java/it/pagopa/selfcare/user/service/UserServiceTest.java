@@ -2440,4 +2440,61 @@ class UserServiceTest {
         );
     }
 
+    @Test
+    void testGetUserOtpEmailInfo() {
+        final UserResource userResource = UserResource.builder().workContacts(
+                Map.of("email1", WorkContactResource.builder().email(
+                        new EmailCertifiableSchema(EmailCertifiableSchema.CertificationEnum.SPID, "test1@test.com")).build(),
+                        "email2", WorkContactResource.builder().email(
+                        new EmailCertifiableSchema(EmailCertifiableSchema.CertificationEnum.SPID, "test2@test.com")).build()
+                )).build();
+
+        final UserInstitutionResponse u1 = new UserInstitutionResponse();
+        u1.setInstitutionId("inst1");
+        u1.setUserMailUuid("email1");
+        final OnboardedProductResponse p1 = new OnboardedProductResponse();
+        p1.setProductId("prod-1");
+        p1.setStatus(ACTIVE);
+        p1.setRole("MANAGER");
+        p1.setCreatedAt(OffsetDateTime.parse("2026-01-01T00:00:00Z"));
+        final OnboardedProductResponse p2 = new OnboardedProductResponse();
+        p2.setProductId("prod-2");
+        p2.setStatus(DELETED);
+        p2.setRole("OPERATOR");
+        p2.setCreatedAt(OffsetDateTime.parse("2026-02-01T00:00:00Z"));
+        u1.setProducts(List.of(p1, p2));
+
+        final UserInstitutionResponse u2 = new UserInstitutionResponse();
+        u2.setInstitutionId("inst2");
+        u2.setUserMailUuid("email2");
+        final OnboardedProductResponse p3 = new OnboardedProductResponse();
+        p3.setProductId("prod-3");
+        p3.setStatus(ACTIVE);
+        p3.setRole("OPERATOR");
+        p3.setCreatedAt(OffsetDateTime.parse("2025-12-15T00:00:00Z"));
+        u2.setProducts(List.of(p3));
+
+        when(userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, "userId")).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.findByUserId("userId")).thenReturn(Multi.createFrom().iterable(List.of(u1, u2)));
+
+        final UserOtpEmailInfoResponse expectedResponse1 = new UserOtpEmailInfoResponse();
+        expectedResponse1.setUserId("userId");
+        expectedResponse1.setOtpEmail("test1@test.com");
+        expectedResponse1.setOtpReferenceInstitutionId("inst1");
+        expectedResponse1.setCanUserChangeOtpEmail(true);
+        userService.getUserOtpEmailInfo("userId").subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(expectedResponse1);
+
+        p3.setCreatedAt(OffsetDateTime.parse("2026-03-01T00:00:00Z"));
+        final UserOtpEmailInfoResponse expectedResponse2 = new UserOtpEmailInfoResponse();
+        expectedResponse2.setUserId("userId");
+        expectedResponse2.setOtpEmail("test2@test.com");
+        expectedResponse2.setOtpReferenceInstitutionId("inst2");
+        expectedResponse2.setCanUserChangeOtpEmail(false);
+        userService.getUserOtpEmailInfo("userId").subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(expectedResponse2);
+    }
+
 }
