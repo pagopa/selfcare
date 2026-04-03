@@ -222,7 +222,8 @@ module "container_app_registry_proxy_ms" {
   image_tag                      = local.image_tag_latest
   app_settings                   = local.registry_proxy_app_settings
   secrets_names                  = local.registry_proxy_secrets_names
-  workload_profile_name          = "Consumption"
+  workload_profile_name          = null
+  # workload_profile_name          = "Consumption"
 
   key_vault_resource_group_name = local.key_vault_resource_group_name
   key_vault_name                = local.key_vault_name
