@@ -3,10 +3,6 @@ data "azurerm_container_app_environment" "cae" {
   resource_group_name = var.cae_rg_name
 }
 
-data "azurerm_container_app" "ca" {
-  name                = var.ca_name
-  resource_group_name = var.ca_rg_name
-}
 
 data "azurerm_user_assigned_identity" "cae_identity" {
   name                = "${var.cae_name}-managed_identity"

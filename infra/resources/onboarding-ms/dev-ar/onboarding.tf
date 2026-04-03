@@ -154,6 +154,10 @@ locals {
     {
       name  = "ONBOARDING-UPDATE-USER-REQUESTER"
       value = "true"
+    },
+    {
+      name  = "MS_DOCUMENT_URL"
+      value = "https://selc-d-document-ms-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
     }
   ]
 
