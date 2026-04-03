@@ -6,19 +6,19 @@ Tabella delle migrazioni effettuate
 +----------------+--------+--------+--------+--------+--------+--------+
 | category       | dev-ar | dev-pg | uat-ar | uat-pg | prd-ar | prd-pg |
 +----------------+--------+--------+--------+--------+--------+--------+
-| auth           |   ✓    |        |   ✓    |        |        |        |
-| document-ms    |   ✓    |        |        |        |        |        |
+| auth           |   ✓    |   ◌    |   ✓    |   ◌    |        |   ◌    |
+| document-ms    |   ✓    |   x    |        |   x    |        |   x    |
 | iam            |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
-| namirial-sign  |   ✓    |        |   ✓    |        |        |        |
+| namirial-sign  |   ✓    |   x    |   ✓    |   x    |        |   x    |
 | onboarding-bff |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
 | onboarding-cdc |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
 | onboarding-fn  |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
 | onboarding-ms  |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
 | product        |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
-| product-cdc    |   ✓    |        |        |        |        |        |
+| product-cdc    |   ✓    |   x    |   ✓    |   x    |        |   x    |
 | registry-proxy |   ✓    |   ✓    |        |        |        |        |
-| spid-login     |   x    |   ✓    |   x    |        |   x    |   ◌    |
-| webhook        |   ✓    |        |   ✓    |        |        |        |
+| spid-login     |   x    |   ✓    |   x    |   ✓    |   x    |   ◌    |
+| webhook        |   ✓    |   x    |   ✓    |   x    |        |   x    |
 +----------------+--------+--------+--------+--------+--------+--------+
 ```
 
