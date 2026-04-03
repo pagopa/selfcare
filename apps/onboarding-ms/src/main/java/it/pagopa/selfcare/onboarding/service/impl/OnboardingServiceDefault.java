@@ -99,28 +99,34 @@ public class OnboardingServiceDefault implements OnboardingService {
     public Uni<OnboardingResponse> onboarding(Onboarding onboarding, List<UserRequest> userRequests,
                                                List<AggregateInstitutionRequest> aggregates,
                                                UserRequesterDto userRequester) {
-        onboarding.setExpiringDate(computeExpiry(onboarding.getProductId()));
         WorkflowType workflowType = workflowTypeResolver.resolve(onboarding);
         onboarding.setWorkflowType(workflowType);
         onboarding.setStatus(OnboardingStatus.REQUEST);
         log.info("Starting onboarding: description={}, origin={}, institutionType={}, workflowType={}",
                 onboarding.getInstitution().getDescription(), onboarding.getInstitution().getOrigin(),
                 onboarding.getInstitution().getInstitutionType(), workflowType);
-        return fillUsersAndOnboarding(onboarding, userRequests, aggregates, false, userRequester);
+        return computeExpiry(onboarding.getProductId())
+                .onItem().transformToUni(expiry -> {
+                    onboarding.setExpiringDate(expiry);
+                    return fillUsersAndOnboarding(onboarding, userRequests, aggregates, false, userRequester);
+                });
     }
 
     @Override
     public Uni<OnboardingResponse> onboardingIncrement(Onboarding onboarding, List<UserRequest> userRequests,
                                                         List<AggregateInstitutionRequest> aggregates,
                                                         UserRequesterDto userRequester) {
-        onboarding.setExpiringDate(computeExpiry(onboarding.getProductId()));
         onboarding.setWorkflowType(WorkflowType.INCREMENT_REGISTRATION_AGGREGATOR);
         onboarding.setStatus(PENDING);
         log.info("Starting onboardingIncrement: description={}, origin={}, institutionType={}",
                 onboarding.getInstitution().getDescription(), onboarding.getInstitution().getOrigin(),
                 onboarding.getInstitution().getInstitutionType());
-        return persistenceHelper.addReferencedOnboardingId(onboarding)
-                .flatMap(o -> fillUsersAndOnboarding(o, userRequests, aggregates, true, userRequester));
+        return computeExpiry(onboarding.getProductId())
+                .onItem().transformToUni(expiry -> {
+                    onboarding.setExpiringDate(expiry);
+                    return persistenceHelper.addReferencedOnboardingId(onboarding)
+                            .flatMap(o -> fillUsersAndOnboarding(o, userRequests, aggregates, true, userRequester));
+                });
     }
 
     @Override
@@ -128,17 +134,20 @@ public class OnboardingServiceDefault implements OnboardingService {
                                                     WorkflowType workflowType) {
         log.info("Starting onboardingUsers: origin={}, institutionType={}, workflowType={}",
                 request.getOrigin(), request.getInstitutionType(), workflowType);
-        int expirationDays = productService.getProductExpirationDate(request.getProductId());
-        return queryHelper.getInstitutionFromUserRequest(request)
-                .onItem().transform(response -> {
-                    Onboarding onboarding = onboardingMapper.toEntity(request, userId, workflowType);
-                    it.pagopa.selfcare.onboarding.entity.Institution institution = institutionMapper.toEntity(response);
-                    institution.setInstitutionType(request.getInstitutionType());
-                    onboarding.setInstitution(institution);
-                    onboarding.setExpiringDate(OffsetDateTime.now().plusDays(expirationDays).toLocalDateTime());
-                    return onboarding;
-                })
-                .onItem().transformToUni(onboarding -> verifyExistingOnboarding(onboarding, request.getUsers()));
+        return Uni.createFrom()
+                .item(() -> productService.getProductExpirationDate(request.getProductId()))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .onItem().transformToUni(expirationDays ->
+                        queryHelper.getInstitutionFromUserRequest(request)
+                                .onItem().transform(response -> {
+                                    Onboarding onboarding = onboardingMapper.toEntity(request, userId, workflowType);
+                                    it.pagopa.selfcare.onboarding.entity.Institution institution = institutionMapper.toEntity(response);
+                                    institution.setInstitutionType(request.getInstitutionType());
+                                    onboarding.setInstitution(institution);
+                                    onboarding.setExpiringDate(OffsetDateTime.now().plusDays(expirationDays).toLocalDateTime());
+                                    return onboarding;
+                                })
+                                .onItem().transformToUni(onboarding -> verifyExistingOnboarding(onboarding, request.getUsers())));
     }
 
     @Override
@@ -617,9 +626,11 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .findFirst().orElse(null);
     }
 
-    private LocalDateTime computeExpiry(String productId) {
-        return OffsetDateTime.now()
-                .plusDays(productService.getProductExpirationDate(productId))
-                .toLocalDateTime();
+    private Uni<LocalDateTime> computeExpiry(String productId) {
+        return Uni.createFrom()
+                .item(() -> OffsetDateTime.now()
+                        .plusDays(productService.getProductExpirationDate(productId))
+                        .toLocalDateTime())
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 }

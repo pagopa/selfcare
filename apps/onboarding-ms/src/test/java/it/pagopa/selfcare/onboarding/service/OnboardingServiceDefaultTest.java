@@ -2968,7 +2968,8 @@ class OnboardingServiceDefaultTest {
     }
 
     @Test
-    void onboardingUsersWithInstitutionNotFound() {
+    @RunOnVertxContext
+    void onboardingUsersWithInstitutionNotFound(UniAsserter asserter) {
         OnboardingUserRequest request = new OnboardingUserRequest();
         List<UserRequest> users = List.of(manager);
         request.setTaxCode("taxCode");
@@ -2983,15 +2984,15 @@ class OnboardingServiceDefaultTest {
         institutionResponse.setInstitutionType("PSP");
         InstitutionsResponse response = new InstitutionsResponse();
         response.setInstitutions(List.of(institutionResponse, institutionResponse));
-        when(institutionService.getInstitutionsUsingGET("taxCode", "subunitCode", null, null, null, null))
-                .thenReturn(Uni.createFrom().item(response));
 
-        onboardingService
-                .onboardingUsers(request, "userId", WorkflowType.USERS)
-                .subscribe()
-                .withSubscriber(UniAssertSubscriber.create())
-                .assertFailedWith(ResourceNotFoundException.class);
+        asserter.execute(() -> {
+            when(productService.getProductExpirationDate(request.getProductId())).thenReturn(30);
+            when(institutionService.getInstitutionsUsingGET("taxCode", "subunitCode", null, null, null, null))
+                    .thenReturn(Uni.createFrom().item(response));
+        });
 
+        asserter.assertFailedWith(() -> onboardingService.onboardingUsers(request, "userId", WorkflowType.USERS),
+                ResourceNotFoundException.class);
     }
 
     @Test
