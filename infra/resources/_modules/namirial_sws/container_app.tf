@@ -17,8 +17,8 @@
 # }
 
 resource "azurerm_container_app_environment_storage" "namirial_sws_storage_env" {
-count     = var.enable_ca_sws ? 1 : 0
-  name                         =  "${local.project}-namirial-sws-se"
+  count                        = var.enable_ca_sws ? 1 : 0
+  name                         = "${local.project}-namirial-sws-se"
   container_app_environment_id = data.azurerm_container_app_environment.container_app_environment.id
   account_name                 = azurerm_storage_account.namirial_sws_storage_account[0].name
   share_name                   = azurerm_storage_share.namirial_sws_storage_share[0].name
@@ -97,8 +97,8 @@ resource "azurerm_container_app" "namirial_container_app" {
       dynamic "env" {
         for_each = concat(var.app_settings, local.secrets_env)
         content {
-          name        = env.value.name
-          value       = lookup(env.value, "value", null)
+          name  = env.value.name
+          value = lookup(env.value, "value", null)
           # In azapi si usa 'secretRef', in azurerm si usa 'secret_name'
           secret_name = lookup(env.value, "secretRef", lookup(env.value, "secret_name", null))
         }

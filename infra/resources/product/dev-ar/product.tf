@@ -88,7 +88,7 @@ locals {
     },
     {
       name  = "BLOB_STORAGE_CONTAINER_CONTRACT_TEMPLATE"
-      value = "sc-d-documents-blob"
+      value = "sc-${module.local.config.env_short}-documents-blob"
     }
   ]
 

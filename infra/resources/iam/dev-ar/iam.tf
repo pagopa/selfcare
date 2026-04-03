@@ -104,7 +104,7 @@ locals {
     },
     {
       name  = "INSTITUTION_API_URL"
-      value = "https://selc-d-ms-core-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+      value = "https://selc-${module.local.config.env_short}-ms-core-ca.${module.local.config.private_dns_name_domain}"
     }
   ]
 

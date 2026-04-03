@@ -1,4 +1,4 @@
 variable "image_tag" {
   type    = string
-  default = "latest"
+  default = "sha-c8eea8c"
 }

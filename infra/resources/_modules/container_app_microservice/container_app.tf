@@ -195,16 +195,16 @@ resource "azurerm_container_app" "container_app" {
 #   name        = "${local.project}-keyvault-access-policy-containerapp"
 # }
 
-resource "azurerm_key_vault_access_policy" "keyvault_containerapp_access_policy" {
-  key_vault_id = data.azurerm_key_vault.key_vault.id
-  tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = data.azurerm_user_assigned_identity.cae_identity.principal_id
+# resource "azurerm_key_vault_access_policy" "keyvault_containerapp_access_policy" {
+#   key_vault_id = data.azurerm_key_vault.key_vault.id
+#   tenant_id    = data.azurerm_client_config.current.tenant_id
+#   object_id    = data.azurerm_user_assigned_identity.cae_identity.principal_id
 
-  secret_permissions = [
-    "Get",
-    "List"
-  ]
-}
+#   secret_permissions = [
+#     "Get",
+#     "List"
+#   ]
+# }
 
 # resource "azurerm_role_definition" "container_apps_action" {
 #   name        = "SelfCare ContainerApp action"

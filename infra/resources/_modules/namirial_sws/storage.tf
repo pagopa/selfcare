@@ -17,6 +17,6 @@ resource "azurerm_storage_share" "namirial_sws_storage_share" {
   name  = "${local.project}-namirial-sws-share"
 
   # storage_account_name = azurerm_storage_account.namirial_sws_storage_account[0].name
-  storage_account_id   = azurerm_storage_account.namirial_sws_storage_account[0].id
-  quota = 1
+  storage_account_id = azurerm_storage_account.namirial_sws_storage_account[0].id
+  quota              = 1
 }

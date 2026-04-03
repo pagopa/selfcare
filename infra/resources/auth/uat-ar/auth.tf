@@ -6,7 +6,7 @@ module "local" {
 }
 
 ###############################################################################
-# Container App 
+# APIM
 ###############################################################################
 
 module "apim_api_auth" {
@@ -16,7 +16,7 @@ module "apim_api_auth" {
   api_name            = "selc-${module.local.config.env_short}-api-auth"
   display_name        = "Auth API"
   base_path           = "auth"
-  private_dns_name    = "selc-d-auth-ms-ca.${module.local.config.private_dns_name_domain}"
+  private_dns_name    = "selc-${module.local.config.env_short}-auth-ms-ca.${module.local.config.private_dns_name_domain}"
   dns_zone_prefix     = module.local.config.dns_zone_prefix
   api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
   openapi_path        = "../../../../apps/auth/src/main/docs/openapi.json"
@@ -88,6 +88,8 @@ module "collection_auth_otp_flows" {
     { keys = ["userId", "createdAt"], unique = false },
     { keys = ["createdAt"], unique = false }
   ]
+
+  depends_on = [module.cosmosdb_auth]
 }
 
 ###############################################################################
@@ -158,7 +160,7 @@ locals {
     },
     {
       name  = "IAM_API_URL"
-      value = "https://selc-u-iam-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
+      value = "https://selc-${module.local.config.env_short}-iam-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "OTP_DAILY_LIMIT"
