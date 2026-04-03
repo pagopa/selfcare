@@ -1,4 +1,5 @@
-name: Deploy Functions
+name: Release Functions
+run-name: Release ${{ inputs.app }} (${{ inputs.target }})
 
 on:
   workflow_dispatch:
