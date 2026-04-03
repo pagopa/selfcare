@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.onboarding.service.util;
+package it.pagopa.selfcare.onboarding.service.helper;
 
 import static it.pagopa.selfcare.onboarding.constants.CustomError.*;
 
@@ -53,9 +53,12 @@ public class OnboardingPgHelper {
     @Inject OrchestrationService orchestrationService;
     @Inject ProductService productService;
     @Inject UserService userService;
-    @Inject UserRegistryHelper userRegistryHelper;
-    @Inject OnboardingPersistenceHelper persistenceHelper;
-    @Inject OnboardingValidationHelper validationHelper;
+    @Inject
+    UserRegistryHelper userRegistryHelper;
+    @Inject
+    OnboardingPersistenceHelper persistenceHelper;
+    @Inject
+    OnboardingValidationHelper validationHelper;
 
     // -------------------------------------------------------------------------
     // Public API

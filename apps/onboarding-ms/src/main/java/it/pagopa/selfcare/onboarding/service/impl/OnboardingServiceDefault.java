@@ -21,6 +21,7 @@ import it.pagopa.selfcare.onboarding.model.FormItem;
 import it.pagopa.selfcare.onboarding.model.OnboardingGetFilters;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.service.OrchestrationService;
+import it.pagopa.selfcare.onboarding.service.helper.*;
 import it.pagopa.selfcare.onboarding.service.util.*;
 import it.pagopa.selfcare.onboarding.util.QueryUtils;
 import it.pagopa.selfcare.product.entity.Product;
@@ -74,12 +75,17 @@ public class OnboardingServiceDefault implements OnboardingService {
     @Inject OrchestrationService orchestrationService;
 
     // Helpers
-    @Inject UserRegistryHelper userRegistryHelper;
-    @Inject OnboardingValidationHelper validationHelper;
+    @Inject
+    UserRegistryHelper userRegistryHelper;
+    @Inject
+    OnboardingValidationHelper validationHelper;
     @Inject WorkflowTypeResolver workflowTypeResolver;
-    @Inject OnboardingPgHelper pgHelper;
-    @Inject OnboardingPersistenceHelper persistenceHelper;
-    @Inject OnboardingQueryHelper queryHelper;
+    @Inject
+    OnboardingPgHelper pgHelper;
+    @Inject
+    OnboardingPersistenceHelper persistenceHelper;
+    @Inject
+    OnboardingQueryHelper queryHelper;
     @Inject OnboardingUtils onboardingUtils;
 
     @ConfigProperty(name = "onboarding.orchestration.enabled")

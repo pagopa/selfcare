@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.onboarding.service.util;
+package it.pagopa.selfcare.onboarding.service.helper;
 
 import static it.pagopa.selfcare.onboarding.common.Origin.IPA;
 import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_PAGOPA;

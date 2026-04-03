@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.onboarding.service.util;
+package it.pagopa.selfcare.onboarding.service.helper;
 
 import static it.pagopa.selfcare.onboarding.constants.CustomError.*;
 
