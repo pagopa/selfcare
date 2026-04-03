@@ -12,7 +12,7 @@ Tabella delle migrazioni effettuate
 | namirial-sign  |   ✓    |        |   ✓    |        |        |        |
 | onboarding-bff |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
 | onboarding-cdc |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
-| onboarding-fn  |   ✓    |   ✓    |        |        |        |        |
+| onboarding-fn  |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
 | onboarding-ms  |   ✓    |   ✓    |        |        |        |        |
 | product        |   ✓    |        |        |        |        |        |
 | product-cdc    |   ✓    |        |        |        |        |        |
