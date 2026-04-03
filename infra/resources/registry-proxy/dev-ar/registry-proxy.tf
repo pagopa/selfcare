@@ -147,11 +147,11 @@ locals {
     },
     {
       name  = "SELC_INSTITUTION_URL"
-      value = "https://selc-d-ms-core-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+      value = "https://selc-${module.local.config.env_short}-ms-core-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "AZURE_SEARCH_URL"
-      value = "https://selc-d-weu-ar-srch.search.windows.net/"
+      value = "https://selc-${module.local.config.env_short}-weu-ar-srch.search.windows.net/"
     },
     {
       name  = "AZURE_SEARCH_INSTITUTION_INDEX"
@@ -163,7 +163,7 @@ locals {
     },
     {
       name  = "REDIS_URL"
-      value = "selc-d-redis.redis.cache.windows.net"
+      value = "selc-${module.local.config.env_short}-redis.redis.cache.windows.net"
     },
     {
       name  = "REDIS_PORT"
@@ -267,19 +267,6 @@ module "container_app_registry_proxy_ms" {
   probes = module.local.config.quarkus_health_probes
   tags   = module.local.config.tags
 }
-
-###############################################################################
-# AI Search
-###############################################################################
-
-# Commented out: the module belongs to a different tf state and cannot be imported.
-# module "ai_search_institution" {
-#   source                   = "../../_modules/ai_search_institution"
-#   domain                   = module.local.config.domain
-#   search_service_id        = data.azurerm_search_service.srch_service.id
-#   srch_service_name        = data.azurerm_search_service.srch_service.name
-#   srch_service_primary_key = data.azurerm_search_service.srch_service.primary_key
-# }
 
 ###############################################################################
 # DAPR

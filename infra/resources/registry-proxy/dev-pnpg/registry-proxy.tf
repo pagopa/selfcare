@@ -26,7 +26,7 @@ locals {
     },
     {
       name  = "MOCK_OPEN_DATA_URL"
-      value = "https://selcdweupnpgcheckoutsa.z6.web.core.windows.net/resources"
+      value = "https://selc${module.local.config.env_short}weupnpgcheckoutsa.z6.web.core.windows.net/resources"
     },
     {
       name  = "MOCK_OPEN_DATA_INSTITUTION_ENDPOINT"
@@ -58,7 +58,7 @@ locals {
     },
     {
       name  = "NATIONAL_REGISTRIES_URL"
-      value = "https://api-selcpg.dev.notifichedigitali.it/national-registries-private"
+      value = "https://api-selcpg.${module.local.config.env}.notifichedigitali.it/national-registries-private"
     },
     {
       name  = "PDND_BASE_URL"
@@ -74,7 +74,7 @@ locals {
     },
     {
       name  = "REDIS_URL"
-      value = "selc-d-weu-pnpg-redis.redis.cache.windows.net"
+      value = "selc-${module.local.config.env_short}-weu-pnpg-redis.redis.cache.windows.net"
     },
     {
       name  = "REDIS_PORT"
