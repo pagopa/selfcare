@@ -326,7 +326,14 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                                 skipSignatureVerification))
                     .chain(document -> uploadToAzureAndUpdateDb(document, physicalFile, fileName))
                     .onTermination()
-                    .invoke(physicalFile::delete));
+                    .invoke(() -> {
+                        physicalFile.delete();
+                        log.info(
+                                "END - Uploading and verifying signed contract for onboardingId={}, productId={}",
+                                sanitize(onboardingId),
+                                sanitize(request.getProductId())
+                        );
+                    }));
   }
 
   // ==================== Private Reactive I/O isolation methods ====================
