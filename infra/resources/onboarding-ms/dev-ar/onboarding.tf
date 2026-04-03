@@ -105,11 +105,11 @@ locals {
   app_settings_onboarding_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar",
+      value = "-javaagent:applicationinsights-agent.jar"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
-      value = "onboarding-ms",
+      value = "onboarding-ms"
     },
     {
       name  = "USER_REGISTRY_URL"
@@ -117,27 +117,31 @@ locals {
     },
     {
       name  = "ONBOARDING_FUNCTIONS_URL"
-      value = "https://selc-d-onboarding-fn.azurewebsites.net"
+      value = "https://selc-${module.local.config.env_short}-onboarding-fn.azurewebsites.net"
     },
     {
       name  = "STORAGE_CONTAINER_PRODUCT"
-      value = "selc-d-product"
+      value = "selc-${module.local.config.env_short}-product"
     },
     {
       name  = "MS_CORE_URL"
-      value = "http://selc-d-ms-core-ca"
+      value = "http://selc-${module.local.config.env_short}-ms-core-ca"
     },
     {
       name  = "MS_PARTY_REGISTRY_URL"
-      value = "http://selc-d-party-reg-proxy-ca"
+      value = "http://selc-${module.local.config.env_short}-party-reg-proxy-ca"
     },
     {
       name  = "SIGNATURE_VALIDATION_ENABLED"
       value = "false"
     },
     {
+      name  = "STORAGE_CONTAINER_CONTRACT"
+      value = "sc-${module.local.config.env_short}-documents-blob"
+    },
+    {
       name  = "MS_USER_URL"
-      value = "http://selc-d-user-ms-ca"
+      value = "http://selc-${module.local.config.env_short}-user-ms-ca"
     },
     {
       name  = "ALLOWED_ATECO_CODES"
@@ -149,7 +153,7 @@ locals {
     },
     {
       name  = "NAMIRIAL_BASE_URL"
-      value = "https://selc-d-namirial-sws-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+      value = "https://selc-${module.local.config.env_short}-namirial-sws-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "ONBOARDING-UPDATE-USER-REQUESTER"
@@ -204,7 +208,7 @@ locals {
     },
     {
       name  = "ONBOARDING_FUNCTIONS_URL"
-      value = "https://selc-d-onboarding-fn.azurewebsites.net"
+      value = "https://selc-${module.local.config.env_short}-onboarding-fn.azurewebsites.net"
     },
     {
       name  = "ONBOARDING-CDC-MONGODB-WATCH-ENABLED"
