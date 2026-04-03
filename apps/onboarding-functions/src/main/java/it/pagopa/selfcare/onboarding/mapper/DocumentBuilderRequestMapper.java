@@ -20,6 +20,7 @@ public interface DocumentBuilderRequestMapper {
     @Mapping(target = "templatePath", expression = "java(onboardingWorkflow.getContractTemplatePath(product))")
     @Mapping(target = "templateVersion", expression = "java(onboardingWorkflow.getContractTemplateVersion(product))")
     @Mapping(target = "productTitle", source = "product.title")
+    @Mapping(target = "rootOnboardingId", source = "onboarding.referenceOnboardingId")
     DocumentBuilderRequest toRequest(Onboarding onboarding, Product product, OnboardingWorkflow onboardingWorkflow);
 
     @Mapping(target = "onboardingId", source = "onboarding.id")
