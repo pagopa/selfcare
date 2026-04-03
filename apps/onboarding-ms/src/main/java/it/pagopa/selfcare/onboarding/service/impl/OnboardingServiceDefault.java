@@ -99,13 +99,17 @@ public class OnboardingServiceDefault implements OnboardingService {
     public Uni<OnboardingResponse> onboarding(Onboarding onboarding, List<UserRequest> userRequests,
                                                List<AggregateInstitutionRequest> aggregates,
                                                UserRequesterDto userRequester) {
-        WorkflowType workflowType = workflowTypeResolver.resolve(onboarding);
-        onboarding.setWorkflowType(workflowType);
         onboarding.setStatus(OnboardingStatus.REQUEST);
-        log.info("Starting onboarding: description={}, origin={}, institutionType={}, workflowType={}",
+        log.info("Starting onboarding: description={}, origin={}, institutionType={}",
                 onboarding.getInstitution().getDescription(), onboarding.getInstitution().getOrigin(),
-                onboarding.getInstitution().getInstitutionType(), workflowType);
-        return computeExpiry(onboarding.getProductId())
+                onboarding.getInstitution().getInstitutionType());
+        return workflowTypeResolver.resolve(onboarding)
+                .onItem().invoke(workflowType -> {
+                    onboarding.setWorkflowType(workflowType);
+                    log.info("Resolved workflowType={} for institution: {}",
+                            workflowType, onboarding.getInstitution().getDescription());
+                })
+                .onItem().transformToUni(workflowType -> computeExpiry(onboarding.getProductId()))
                 .onItem().transformToUni(expiry -> {
                     onboarding.setExpiringDate(expiry);
                     return fillUsersAndOnboarding(onboarding, userRequests, aggregates, false, userRequester);

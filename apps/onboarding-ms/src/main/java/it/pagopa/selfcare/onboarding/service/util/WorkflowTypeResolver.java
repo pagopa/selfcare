@@ -3,6 +3,8 @@ package it.pagopa.selfcare.onboarding.service.util;
 import static it.pagopa.selfcare.onboarding.common.Origin.IPA;
 import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_PAGOPA;
 
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
@@ -24,12 +26,22 @@ public class WorkflowTypeResolver {
     ProductService productService;
 
     /**
-     * Identifica il workflow corretto per l'onboarding.
+     * Identifica il workflow corretto per l'onboarding in modo non-bloccante.
+     * La risoluzione avviene sul worker pool per evitare di bloccare l'event loop.
      *
      * @param onboarding richiesta di onboarding
-     * @return WorkflowType appropriato
+     * @return Uni con il WorkflowType appropriato
      */
-    public WorkflowType resolve(Onboarding onboarding) {
+    public Uni<WorkflowType> resolve(Onboarding onboarding) {
+        return Uni.createFrom()
+                .item(() -> resolveSync(onboarding))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+    }
+
+    /**
+     * Logica sincrona di risoluzione del workflow (da invocare solo su worker thread).
+     */
+    private WorkflowType resolveSync(Onboarding onboarding) {
         InstitutionType institutionType = onboarding.getInstitution().getInstitutionType();
         Product product = productService.getProductIsValid(onboarding.getProductId());
 
