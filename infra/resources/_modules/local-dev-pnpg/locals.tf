@@ -102,5 +102,4 @@ locals {
 
   resource_group_name_vnet = "${local.project}-vnet-rg"
 
-  image_tag_latest = "latest"
 }

@@ -30,7 +30,7 @@ module "apim_api_registry_proxy" {
 # DAPR
 ###############################################################################
 locals {
-  ca_name         = "selc-${module.local.config.env_short}-party-reg-proxy-ca"
+  ca_name         = "selc-${module.local.config.env_short}-party-reg-proxy"
   storage_logs    = "selc${module.local.config.env_short}stlogs"
   storage_logs_rg = "selc-${module.local.config.env_short}-logs-storage-rg"
 

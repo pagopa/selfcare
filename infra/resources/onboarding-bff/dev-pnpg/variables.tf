@@ -1,4 +1,5 @@
 variable "image_tag" {
-  type    = string
-  default = "latest"
+  type        = string
+  description = "Image tag"
+  default     = "latest"
 }

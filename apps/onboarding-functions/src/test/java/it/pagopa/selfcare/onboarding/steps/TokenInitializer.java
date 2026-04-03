@@ -7,9 +7,12 @@ import it.pagopa.selfcare.onboarding.utils.JwtUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.util.Objects;
 
+import static io.smallrye.common.constraint.Assert.assertNotNull;
 import static it.pagopa.selfcare.onboarding.steps.IntegrationFunctionProfile.buildJwtHeader;
 import static it.pagopa.selfcare.onboarding.steps.IntegrationFunctionProfile.buildJwtPayload;
 
@@ -32,5 +35,25 @@ public class TokenInitializer {
 
             log.debug("Actived profile:" + activeProfile);
         }
+    }
+
+    @Test
+    @Disabled
+    void generateToken (){
+        // given
+
+        // when
+        var result = JwtUtils.generateToken(
+                JwtData.builder()
+                        .username("f.rossi")
+                        .password("test")
+                        .jwtHeader(buildJwtHeader())
+                        .jwtPayload(buildJwtPayload())
+                        .build());
+
+        // then
+        assertNotNull(result);
+
+
     }
 }

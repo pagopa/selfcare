@@ -1,19 +1,19 @@
 package it.pagopa.selfcare.onboarding.dto;
 
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
-import it.pagopa.selfcare.onboarding.entity.Token;
 import org.openapi.quarkus.core_json.model.InstitutionResponse;
+import org.openapi.quarkus.document_json.model.DocumentResponse;
 
 public class NotificationsResources {
     private Onboarding onboarding;
     private InstitutionResponse institution;
-    private Token token;
+    private DocumentResponse document;
     private QueueEvent queueEvent;
 
-    public NotificationsResources(Onboarding onboarding, InstitutionResponse institution, Token token, QueueEvent queueEvent) {
+    public NotificationsResources(Onboarding onboarding, InstitutionResponse institution, org.openapi.quarkus.document_json.model.DocumentResponse document, QueueEvent queueEvent) {
         this.onboarding = onboarding;
         this.institution = institution;
-        this.token = token;
+        this.document = document;
         this.queueEvent = queueEvent;
     }
 
@@ -33,12 +33,12 @@ public class NotificationsResources {
         this.institution = institution;
     }
 
-    public Token getToken() {
-        return token;
+    public DocumentResponse getDocument() {
+        return document;
     }
 
-    public void setToken(Token token) {
-        this.token = token;
+    public void setToken(DocumentResponse document) {
+        this.document = document;
     }
 
     public QueueEvent getQueueEvent() {

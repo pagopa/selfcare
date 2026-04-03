@@ -211,7 +211,7 @@ module "container_app_registry_proxy_ms" {
   container_app_name             = local.ca_name //"party-reg-proxy"
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-ms-party-registry-proxy"
-  image_tag                      = local.image_tag_latest
+  image_tag                      = var.image_tag
   app_settings                   = local.registry_proxy_app_settings
   secrets_names                  = local.registry_proxy_secrets_names
   workload_profile_name          = "Consumption"

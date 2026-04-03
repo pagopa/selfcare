@@ -246,4 +246,3 @@ module "container_app_onboarding_ms" {
   probes                         = module.local.config.quarkus_health_probes
   tags                           = module.local.config.tags
 }
-

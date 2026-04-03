@@ -6,29 +6,28 @@ import com.microsoft.azure.functions.ExecutionContext;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.dto.EntityFilter;
-import it.pagopa.selfcare.onboarding.entity.Token;
-import it.pagopa.selfcare.onboarding.service.ContractService;
+import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
+import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
 
-import java.util.Optional;
 import java.util.logging.Logger;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @QuarkusTest
-public class TokenFunctionsTest {
+public class DocumentFunctionsTest {
 
   @Inject
-  TokenFunctions function;
+  DocumentFunctions function;
 
+  @RestClient
   @InjectMock
-  OnboardingService onboardingService;
+  DocumentContentControllerApi documentContentControllerApi;
 
-  @InjectMock
-  ContractService contractService;
 
   @Inject
   ObjectMapper objectMapper;
@@ -42,19 +41,22 @@ public class TokenFunctionsTest {
 
   @Test
   void deleteContract() throws JsonProcessingException {
-    Token tokenOriginal = new Token();
-    tokenOriginal.setContractSigned("parties/docs/123/file.pdf");
-    Token tokenDeleted = new Token();
-    tokenDeleted.setContractSigned("parties/deleted/123/file.pdf");
-
-    when(onboardingService.getToken(anyString())).thenReturn(Optional.of(tokenOriginal));
-    when(contractService.deleteContract(any(), anyBoolean())).thenReturn(tokenDeleted.getContractFilename());
-    when(onboardingService.updateTokenContractFiles(any())).thenReturn(1L);
-
     EntityFilter entity = EntityFilter.builder().value("123").build();
     String params = objectMapper.writeValueAsString(entity);
+    when(documentContentControllerApi.deleteContract("123")).thenReturn(Response.ok().build());
     function.deleteContract(params, executionContext);
+    verify(documentContentControllerApi, times(1)).deleteContract("123");
 
-    verify(onboardingService, times(1)).updateTokenContractFiles(any());
+  }
+
+  @Test
+  void deleteContract_shouldThrowWhenDocumentServiceFails() throws JsonProcessingException {
+    EntityFilter entity = EntityFilter.builder().value("123").build();
+    String params = objectMapper.writeValueAsString(entity);
+    when(documentContentControllerApi.deleteContract("123")).thenReturn(Response.status(500).build());
+
+    org.junit.jupiter.api.Assertions.assertThrows(
+        GenericOnboardingException.class,
+        () -> function.deleteContract(params, executionContext));
   }
 }

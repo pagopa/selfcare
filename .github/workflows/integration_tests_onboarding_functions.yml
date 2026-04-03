@@ -37,7 +37,7 @@ jobs:
           java-version: 17
           java-distribution: "temurin"
           maven-version: "3.9.5"
-          cache-enabled: false
+          cache-enabled: true
 
       - name: Add custom Maven settings
         uses: s4u/maven-settings-action@60912582505985be4cc55d2b890eb32767f8de5f
@@ -85,7 +85,6 @@ jobs:
       - name: Startup services
         working-directory: apps/onboarding-functions
         run: |
-          docker compose -f src/test/resources/docker-compose.yml pull
           docker compose -f src/test/resources/docker-compose.yml up -d
 
       - name: Wait for startup-services
@@ -97,6 +96,7 @@ jobs:
             "localhost:8087"    #user-ms
             "localhost:8082"    #institution-ms
             "localhost:1080"    #mock-server
+            "localhost:8091"    #document-ms
             "localhost:8090"    #onboarding-functions
           )
 
@@ -125,7 +125,7 @@ jobs:
         shell: bash
         working-directory: apps/onboarding-functions
         run: |
-          mvn clean test -q \
+          mvn test -q \
               -Dtest=it.pagopa.selfcare.onboarding.steps.OnboardingFunctionStep \
               -Dsurefire.parallel=none \
               -Dsurefire.threadCount=1 \

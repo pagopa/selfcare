@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   mongo-db:
     image: mongo:latest
@@ -48,6 +46,13 @@ services:
       # - "5005:5005"
     networks:
       - developer-network
+    depends_on:
+      - mongo-db
+      - mock-server
+      - azure-cli
+      - user-ms
+      - institution-ms
+      - document-ms
     env_file:
       - test-integration-function.env
     environment:
@@ -98,6 +103,19 @@ services:
       - MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES="true"
     volumes:
       - "./mock:/config"
+
+  document-ms:
+    platform: linux/amd64
+    image: ghcr.io/pagopa/selfcare-document-ms:latest
+    depends_on:
+      - azurite
+      - mongo-db
+    ports:
+      - "8091:8091"
+    networks:
+      - developer-network
+    env_file:
+      - test-integration-document.env
 
 #  fake-smtp:
 #    image: reachfive/fake-smtp-server@sha256:4b6d2f1e24481527de1429f88db18a377252a5e9e95bc083fa3d77e402cdadc8

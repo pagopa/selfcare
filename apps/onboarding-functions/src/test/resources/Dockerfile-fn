@@ -38,7 +38,7 @@ COPY selfcare/apps/onboarding-functions/src/test/resources/fn/entrypoint.sh entr
 
 RUN chmod +x entrypoint.sh
 
-RUN --mount=type=secret,id=maven_settings,target=/root/.m2/settings.xml \
-    mvn clean install -DskipTests -q
+RUN --mount=type=secret,id=maven_settings,target=/run/secrets/maven_settings,required=true \
+    mvn -s /run/secrets/maven_settings clean install -DskipTests -q
 
 CMD ["./entrypoint.sh"]
