@@ -50,10 +50,10 @@ locals {
         port   = 8080
         scheme = "HTTP"
       }
-      timeoutSeconds      = 5
+      timeoutSeconds      = 30
       type                = "Liveness"
       failureThreshold    = 3
-      initialDelaySeconds = 30
+      initialDelaySeconds = 1
     },
     {
       httpGet = {
@@ -61,7 +61,7 @@ locals {
         port   = 8080
         scheme = "HTTP"
       }
-      timeoutSeconds      = 5
+      timeoutSeconds      = 30
       type                = "Readiness"
       failureThreshold    = 30
       initialDelaySeconds = 30
@@ -72,10 +72,10 @@ locals {
         port   = 8080
         scheme = "HTTP"
       }
-      timeoutSeconds      = 10
+      timeoutSeconds      = 30
       type                = "Startup"
-      failureThreshold    = 10
-      initialDelaySeconds = 30
+      failureThreshold    = 30
+      initialDelaySeconds = 60
     }
   ]
 
@@ -90,6 +90,14 @@ locals {
     {
       name  = "AZURE_CLIENT_ID"
       value = module.container_app_registry_proxy_ms.cae_identity_id
+    }
+  ]
+
+  dapr_sidecar_settings = [
+    {
+      app_id       = "party-reg-proxy"
+      app_port     = 8080
+      app_protocol = "http"
     }
   ]
 
@@ -299,7 +307,7 @@ module "container_app_registry_proxy_ms" {
   env_short                      = module.local.config.env_short
   resource_group_name            = module.local.config.ca_resource_group_name
   container_app                  = local.registry_proxy_container_app
-  container_app_name             = "selc-${module.local.config.env_short}-party-reg-proxy"
+  container_app_name             = local.ca_base_name
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-ms-party-registry-proxy"
   image_tag                      = var.image_tag
@@ -309,7 +317,8 @@ module "container_app_registry_proxy_ms" {
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
 
-  probes = local.spring_boot_health_probes
+  dapr_settings = local.dapr_sidecar_settings
+  probes        = local.spring_boot_health_probes
   tags   = module.local.config.tags
 }
 

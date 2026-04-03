@@ -22,9 +22,54 @@ module "apim_api_registry_proxy" {
 # DAPR
 ###############################################################################
 locals {
-  ca_name          = "selc-${local.env_short}-party-reg-proxy-ca"
+  ca_base_name     = "selc-${local.env_short}-party-reg-proxy"
+  ca_name          = "${local.ca_base_name}-ca"
   storage_logs     = "selc${local.env_short}stlogs"
   existing_logs_rg = "selc-${local.env_short}-logs-storage-rg"
+
+  registry_proxy_container_app = {
+    min_replicas = local.container_app.min_replicas
+    max_replicas = local.container_app.max_replicas
+    scale_rules  = local.container_app.scale_rules
+    cpu          = 1.0
+    memory       = "2Gi"
+  }
+
+  spring_boot_health_probes = [
+    {
+      httpGet = {
+        path   = "/actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Liveness"
+      failureThreshold    = 3
+      initialDelaySeconds = 1
+    },
+    {
+      httpGet = {
+        path   = "/actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Readiness"
+      failureThreshold    = 30
+      initialDelaySeconds = 30
+    },
+    {
+      httpGet = {
+        path   = "/actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Startup"
+      failureThreshold    = 30
+      initialDelaySeconds = 60
+    }
+  ]
 
   dapr_settings = [{
     name  = "DAPR_HTTP_PORT"
@@ -40,10 +85,18 @@ locals {
     }
   ]
 
+  dapr_sidecar_settings = [
+    {
+      app_id       = "party-reg-proxy"
+      app_port     = 8080
+      app_protocol = "http"
+    }
+  ]
+
   registry_proxy_app_settings = [
     {
-      name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      name = "JAVA_TOOL_OPTIONS"
+      value = "-javaagent:applicationinsights-agent.jar -XX:MaxRAMPercentage=75.0"
     },
     {
       name  = "APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL"
@@ -194,7 +247,6 @@ locals {
   app_settings = concat(local.registry_proxy_app_settings, local.dapr_settings)
 
   cae_id               = try(data.azurerm_container_app_environment.cae.id, null)
-  container_app_id     = try(data.azurerm_container_app.ca.id, null)
   storage_account_id   = try(data.azurerm_storage_account.existing_logs_storage.id, null)
   storage_account_name = try(data.azurerm_storage_account.existing_logs_storage.name, null)
   key_vault_id         = try(data.azurerm_key_vault.key_vault.id, null)
@@ -229,7 +281,7 @@ resource "azurerm_container_app_environment_dapr_component" "blob_state" {
     value = module.container_app_registry_proxy_ms.cae_identity_id
   }
 
-  scopes = [data.azurerm_container_app.ca.dapr[0].app_id]
+  scopes = [local.ca_name]
 
   lifecycle {
     prevent_destroy = false
@@ -255,12 +307,12 @@ module "container_app_registry_proxy_ms" {
 
   env_short                      = local.env_short
   resource_group_name            = local.ca_resource_group_name
-  container_app                  = local.container_app
-  container_app_name             = local.ca_name //"party-reg-proxy"
+  container_app                  = local.registry_proxy_container_app
+  container_app_name             = local.ca_base_name
   container_app_environment_name = local.container_app_environment_name
   image_name                     = "selfcare-ms-party-registry-proxy"
   image_tag                      = var.image_tag
-  app_settings                   = local.registry_proxy_app_settings
+  app_settings                   = local.app_settings
   secrets_names                  = local.registry_proxy_secrets_names
   workload_profile_name          = "Consumption"
 
@@ -270,7 +322,8 @@ module "container_app_registry_proxy_ms" {
   # user_assigned_identity_id           = data.azurerm_user_assigned_identity.cae_identity.id
   # user_assigned_identity_principal_id = data.azurerm_user_assigned_identity.cae_identity.principal_id
 
-  probes = local.quarkus_health_probes
+  dapr_settings = local.dapr_sidecar_settings
+  probes        = local.spring_boot_health_probes
 
   tags = local.tags
 }
