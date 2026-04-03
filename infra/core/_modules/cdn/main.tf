@@ -127,6 +127,13 @@ data "azurerm_key_vault_certificate" "cdn" {
   key_vault_id = var.key_vault_id
 }
 
+# Key Vault certificate for areariservata apex domain
+data "azurerm_key_vault_certificate" "cdn_ar" {
+  count        = var.cdn_certificate_name_ar != null ? 1 : 0
+  name         = var.cdn_certificate_name_ar
+  key_vault_id = var.key_vault_id
+}
+
 
 ###############################################################################
 # CDN Front Door (pagopa-dx/azure-cdn/azurerm)
@@ -149,21 +156,38 @@ module "checkout_cdn" {
     }
   }
 
-  custom_domains = [
-    {
-      host_name = var.host_name
-      dns = {
-        zone_name                = "${var.dns_zone_prefix}.${var.external_domain}"
-        zone_resource_group_name = var.rg_vnet_name
+  custom_domains = concat(
+    [
+      {
+        host_name = var.host_name
+        dns = {
+          zone_name                = "${var.dns_zone_prefix}.${var.external_domain}"
+          zone_resource_group_name = var.rg_vnet_name
+        }
+        custom_certificate = {
+          key_vault_certificate_versionless_id = var.cdn_certificate_name != null ? data.azurerm_key_vault_certificate.cdn[0].versionless_id : null
+          key_vault_name                       = var.key_vault_name != null ? var.key_vault_name : null
+          key_vault_resource_group_name        = var.key_vault_resource_group_name != null ? var.key_vault_resource_group_name : null
+          key_vault_has_rbac_support           = false
+        }
       }
-      custom_certificate = {
-        key_vault_certificate_versionless_id = var.cdn_certificate_name != null ? data.azurerm_key_vault_certificate.cdn[0].versionless_id : null
-        key_vault_name                       = var.key_vault_name != null ? var.key_vault_name : null
-        key_vault_resource_group_name        = var.key_vault_resource_group_name != null ? var.key_vault_resource_group_name : null
-        key_vault_has_rbac_support           = false
+    ],
+    var.dns_zone_prefix_ar != null ? [
+      {
+        host_name = "${var.dns_zone_prefix_ar}.${var.external_domain}"
+        dns = {
+          zone_name                = "${var.dns_zone_prefix_ar}.${var.external_domain}"
+          zone_resource_group_name = var.rg_vnet_name
+        }
+        custom_certificate = {
+          key_vault_certificate_versionless_id = var.cdn_certificate_name_ar != null ? data.azurerm_key_vault_certificate.cdn_ar[0].versionless_id : null
+          key_vault_name                       = var.key_vault_name != null ? var.key_vault_name : null
+          key_vault_resource_group_name        = var.key_vault_resource_group_name != null ? var.key_vault_resource_group_name : null
+          key_vault_has_rbac_support           = false
+        }
       }
-    }
-  ]
+    ] : []
+  )
 
   diagnostic_settings = {
     enabled                    = var.log_analytics_workspace_enabled
