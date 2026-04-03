@@ -81,3 +81,9 @@ variable "application_insights_connection_string" {
   type        = string
   default     = null
 }
+
+variable "application_insights_key" {
+  description = "Application Insights instrumentation key"
+  type        = string
+  default     = null
+}

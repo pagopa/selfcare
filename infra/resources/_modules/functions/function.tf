@@ -76,6 +76,7 @@ resource "azurerm_linux_function_app" "fn" {
     vnet_route_all_enabled                 = true
     http2_enabled                          = true
     application_insights_connection_string = var.application_insights_connection_string
+    application_insights_key               = var.application_insights_key
 
     application_stack {
       java_version = "17"

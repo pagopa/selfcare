@@ -5,9 +5,22 @@ module "local" {
   source = "../../_modules/local-dev-ar"
 }
 
+data "azurerm_key_vault_secret" "appinsights_connection_string" {
+  name         = "appinsights-connection-string"
+  key_vault_id = module.local.key_vault_id
+}
+
 ###############################################################################
 # ONBOARDING FUNCTIONS
 ###############################################################################
+
+locals {
+  appinsights_connection_string = data.azurerm_key_vault_secret.appinsights_connection_string.value
+  appinsights_instrumentation_key = element([
+    for part in split(";", local.appinsights_connection_string) : trimprefix(part, "InstrumentationKey=")
+    if startswith(part, "InstrumentationKey=")
+  ], 0)
+}
 
 locals {
   onboarding_functions = {
@@ -112,7 +125,8 @@ module "onboarding_functions" {
   tenant_id                              = module.local.tenant_id
   replication_type                       = "LRS"
   app_settings                           = local.onboarding_functions.app_settings
-  application_insights_connection_string = local.onboarding_functions.app_settings["APPLICATIONINSIGHTS_CONNECTION_STRING"]
+  application_insights_connection_string = local.appinsights_connection_string
+  application_insights_key               = local.appinsights_instrumentation_key
   location                               = module.local.config.location
   tags                                   = module.local.config.tags
 }
