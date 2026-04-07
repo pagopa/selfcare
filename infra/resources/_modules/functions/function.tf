@@ -83,7 +83,15 @@ resource "azurerm_linux_function_app" "fn" {
     }
   }
 
-  app_settings = var.app_settings
+  app_settings = merge(
+    var.app_settings,
+    {
+      AzureWebJobsStorage__accountName     = azurerm_storage_account.fn_storage.name
+      AzureWebJobsStorage__blobServiceUri  = azurerm_storage_account.fn_storage.primary_blob_endpoint
+      AzureWebJobsStorage__queueServiceUri = azurerm_storage_account.fn_storage.primary_queue_endpoint
+      AzureWebJobsStorage__tableServiceUri = azurerm_storage_account.fn_storage.primary_table_endpoint
+    }
+  )
 
   tags = var.tags
 }
