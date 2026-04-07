@@ -59,8 +59,8 @@ resource "azurerm_linux_function_app" "fn" {
   location            = azurerm_resource_group.fn_rg.location
   resource_group_name = azurerm_resource_group.fn_rg.name
 
-  service_plan_id            = azurerm_service_plan.fn_plan.id
-  storage_account_name       = azurerm_storage_account.fn_storage.name
+  service_plan_id               = azurerm_service_plan.fn_plan.id
+  storage_account_name          = azurerm_storage_account.fn_storage.name
   storage_uses_managed_identity = true
 
   functions_extension_version = "~4"
@@ -97,6 +97,12 @@ resource "azurerm_role_assignment" "fn_storage_blob_data_contributor" {
 resource "azurerm_role_assignment" "fn_storage_queue_data_contributor" {
   scope                = azurerm_storage_account.fn_storage.id
   role_definition_name = "Storage Queue Data Contributor"
+  principal_id         = azurerm_linux_function_app.fn.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "fn_storage_table_data_contributor" {
+  scope                = azurerm_storage_account.fn_storage.id
+  role_definition_name = "Storage Table Data Contributor"
   principal_id         = azurerm_linux_function_app.fn.identity[0].principal_id
 }
 
