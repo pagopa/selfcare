@@ -429,6 +429,7 @@
               <goal>verify</goal>
             </goals>
             <configuration>
+              <skip>${skipITs}</skip>
               <systemPropertyVariables>
                 <native.image.path>${project.build.directory}/${project.build.finalName}-runner
                 </native.image.path>

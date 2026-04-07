@@ -304,6 +304,9 @@
             </configuration>
           </execution>
         </executions>
+        <configuration>
+          <skip>${skipITs}</skip>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>com.diffplug.spotless</groupId>

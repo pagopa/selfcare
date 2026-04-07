@@ -298,6 +298,7 @@
           </execution>
         </executions>
         <configuration>
+          <skip>${skipITs}</skip>
           <systemPropertyVariables>
             <user.language>en</user.language>
             <user.country>US</user.country>
