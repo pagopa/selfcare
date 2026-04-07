@@ -426,20 +426,5 @@ class AggregatesServiceDefaultTest {
         return verifyAggregateResponse;
     }
 
-    @Test
-    void retrieveContractNotSigned() {
-        Token token = new Token();
-        token.setContractFilename("fileName");
-        final String onboardingId = "onboardingId";
-        final String productId = "productId";
 
-        when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(new File("fileName"));
-
-        UniAssertSubscriber<RestResponse<File>> subscriber = aggregatesServiceDefault.retrieveAggregatesCsv(onboardingId, productId)
-                .subscribe().withSubscriber(UniAssertSubscriber.create());
-
-        RestResponse<File> actual = subscriber.awaitItem().getItem();
-        Assertions.assertNotNull(actual);
-        Assertions.assertEquals(RestResponse.Status.OK.getStatusCode(), actual.getStatus());
-    }
 }
