@@ -124,7 +124,8 @@ locals {
     { name = "PRODUCT_STORAGE_CONTAINER", value = "selc-p-product" },
     { name = "ONBOARDING_FUNCTIONS_URL", value = "https://selc-p-onboarding-fn.azurewebsites.net" },
     { name = "MS_USER_INSTITUTION_URL", value = "http://selc-p-user-ms-ca" },
-    { name = "MS_PRODUCT_URL", value = "http://selc-p-product-ms-ca" }
+    { name = "MS_PRODUCT_URL", value = "http://selc-p-product-ms-ca" },
+    { name = "MS_DOCUMENT_URL", value = "http://selc-p-document-ms-ca" }
   ]
 
   secrets_names_onboarding_bff = {
