@@ -361,92 +361,6 @@ class OnboardingMsConnectorImplTest {
     }
 
     @Test
-    void getContract() {
-        // given
-        final String onboardingId = "onboardingId";
-        Resource resource = Mockito.mock(Resource.class);
-        when(msOnboardingTokenApiClient._getContract(onboardingId))
-                .thenReturn(ResponseEntity.of(Optional.of(resource)));
-        // when
-        final Executable executable = () -> onboardingMsConnector.getContract(onboardingId);
-        // then
-        assertDoesNotThrow(executable);
-        verify(msOnboardingTokenApiClient, times(1))
-                ._getContract(onboardingId);
-        verifyNoMoreInteractions(msOnboardingTokenApiClient);
-    }
-
-    @Test
-    void getTemplateAttachment() {
-        // given
-        final String onboardingId = "onboardingId";
-        final String filename = "filename";
-        Resource resource = Mockito.mock(Resource.class);
-        when(msOnboardingTokenApiClient._getTemplateAttachment(onboardingId, filename))
-                .thenReturn(ResponseEntity.of(Optional.of(resource)));
-        // when
-        final Executable executable = () -> onboardingMsConnector.getTemplateAttachment(onboardingId, filename);
-        // then
-        assertDoesNotThrow(executable);
-        verify(msOnboardingTokenApiClient, times(1))
-                ._getTemplateAttachment(onboardingId, filename);
-        verifyNoMoreInteractions(msOnboardingTokenApiClient);
-    }
-
-    @Test
-    void headAttachment() {
-        // given
-        final String onboardingId = "onboardingId";
-        final String filename = "filename";
-
-        when(msOnboardingTokenApiClient._headAttachment(onboardingId, filename))
-                .thenReturn(ResponseEntity.status(HttpStatusCode.valueOf(204)).build());
-        // when
-        HttpStatusCode result = onboardingMsConnector.headAttachment(onboardingId, filename);
-
-        // then
-        verify(msOnboardingTokenApiClient, times(1))
-                ._headAttachment(onboardingId, filename);
-        verifyNoMoreInteractions(msOnboardingTokenApiClient);
-        assertEquals(result, HttpStatusCode.valueOf(204));
-    }
-
-    @Test
-    void headAttachment_shouldReturn404_whenNotFound() {
-        // given
-        final String onboardingId = "onboardingId";
-        final String filename = "filename";
-
-        when(msOnboardingTokenApiClient._headAttachment(onboardingId, filename))
-                .thenReturn(ResponseEntity.status(HttpStatusCode.valueOf(404)).build());
-        // when
-        HttpStatusCode result = onboardingMsConnector.headAttachment(onboardingId, filename);
-
-        // then
-        verify(msOnboardingTokenApiClient, times(1))
-                ._headAttachment(onboardingId, filename);
-        verifyNoMoreInteractions(msOnboardingTokenApiClient);
-        assertEquals(result, HttpStatusCode.valueOf(404));
-    }
-
-    @Test
-    void getAggregatesCsv() {
-        // given
-        final String onboardingId = "onboardingId";
-        final String productId = "productId";
-        Resource resource = Mockito.mock(Resource.class);
-        when(msOnboardingAggregatesApiClient._getAggregatesCsv(onboardingId, productId))
-                .thenReturn(ResponseEntity.of(Optional.of(resource)));
-        // when
-        final Executable executable = () -> onboardingMsConnector.getAggregatesCsv(onboardingId, productId);
-        // then
-        assertDoesNotThrow(executable);
-        verify(msOnboardingAggregatesApiClient, times(1))
-                ._getAggregatesCsv(onboardingId, productId);
-        verifyNoMoreInteractions(msOnboardingAggregatesApiClient);
-    }
-
-    @Test
     void onboardingUsers() {
         // given
         final String origin = "origin";
@@ -791,25 +705,6 @@ class OnboardingMsConnectorImplTest {
                 .toOnboardingWithFilter(responseEntity.getBody());
         verifyNoMoreInteractions(msOnboardingApiClient);
         verifyNoMoreInteractions(onboardingMapper);
-    }
-
-    @Test
-    void uploadAttachment() {
-        // given
-        final String onboardingId = "onboardingId";
-        final String filename = "filename";
-        MockMultipartFile file = new MockMultipartFile("file", "content".getBytes());
-
-        when(msOnboardingTokenApiClient._uploadAttachment(onboardingId, filename, file))
-                .thenReturn(ResponseEntity.ok().build());
-
-        // when
-        onboardingMsConnector.uploadAttachment(onboardingId, file, filename);
-
-        // then
-        verify(msOnboardingTokenApiClient, times(1))
-                ._uploadAttachment(onboardingId, filename, file);
-        verifyNoMoreInteractions(msOnboardingTokenApiClient);
     }
 
 }
