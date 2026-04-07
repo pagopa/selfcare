@@ -31,25 +31,13 @@ on:
 permissions:
   id-token: write
 
-
 jobs:
-  # release:
-  #   uses: ./.github/workflows/call_release_app.yml
-  #   name: Call Release App
-  #   secrets: inherit
-  #   with:
-  #     env: ${{ inputs.env }}
-  #     target: ${{ inputs.target }}
-  #     app: ${{ inputs.app }}
-  #     APP_PATH: apps/${{ inputs.app }}
-  #     APPS_POM: apps/pom.xml
-  #     POM: pom.xml
-  renew-certificate:
+  setup:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}-ci
+    outputs:
+      prefix: ${{ steps.prefix.outputs.value }}
+      domain: ${{ steps.domain.outputs.value }}
     steps:
-      - uses: actions/checkout@v4
-      
       - name: Set env prefix
         id: prefix
         run: echo "value=${ENV:0:1}" >> "$GITHUB_OUTPUT"
@@ -66,18 +54,21 @@ jobs:
           fi
         env:
           ENV: ${{ inputs.environment }}
-      
-      - uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@main
-        with:
-          force_renewal: ${{ inputs.force_renewal || false }}
-          key_vault_name: "selc-${{ steps.prefix.outputs.value }}-kv"
-          csr_common_name: "${{ steps.domain.outputs.value }}${{ inputs.target }}.pagopa.it"
-          dns_zone: "${{ steps.domain.outputs.value }}${{ inputs.target }}.pagopa.it"
-          dns_zone_resource_group: "selc-${{ steps.prefix.outputs.value }}-vnet-rg"
-          environment: ${{ inputs.environment }}-ci
 
-          # arm_client_id: ${{ secrets.ARM_CLIENT_ID }}
-          # arm_subscription_id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          # arm_tenant_id: ${{ secrets.ARM_TENANT_ID }}
-          # lets_encrypt_private_key_json: ${{ secrets.LETS_ENCRYPT_PRIVATE_KEY_JSON }}
-          # lets_encrypt_registration_json: ${{ secrets.LETS_ENCRYPT_REGISTRATION_JSON }}
+  renew-certificate:
+    needs: setup
+    uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@main
+    secrets: inherit
+    with:
+      force_renewal: ${{ inputs.force_renewal || false }}
+      key_vault_name: "selc-${{ needs.setup.outputs.prefix }}-kv"
+      csr_common_name: "${{ needs.setup.outputs.domain }}${{ inputs.target }}.pagopa.it"
+      dns_zone: "${{ needs.setup.outputs.domain }}${{ inputs.target }}.pagopa.it"
+      dns_zone_resource_group: "selc-${{ needs.setup.outputs.prefix }}-vnet-rg"
+      environment: ${{ inputs.environment }}
+
+      # arm_client_id: ${{ secrets.ARM_CLIENT_ID }}
+      # arm_subscription_id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      # arm_tenant_id: ${{ secrets.ARM_TENANT_ID }}
+      # lets_encrypt_private_key_json: ${{ secrets.LETS_ENCRYPT_PRIVATE_KEY_JSON }}
+      # lets_encrypt_registration_json: ${{ secrets.LETS_ENCRYPT_REGISTRATION_JSON }}
