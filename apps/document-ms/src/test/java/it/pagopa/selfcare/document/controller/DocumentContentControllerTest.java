@@ -303,6 +303,22 @@ class DocumentContentControllerTest {
     }
 
     @Test
+    void getAggregatesCsv() {
+        final String onboardingId = "onboardingId";
+        final String productId = "productId";
+        RestResponse.ResponseBuilder<File> response = RestResponse.ResponseBuilder.ok();
+        when(documentContentService.retrieveAggregatesCsv(onboardingId,productId))
+                .thenReturn(Uni.createFrom().item(response.build()));
+
+        given()
+                .when()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .get(BASE_PATH + "aggregates-csv/{onboardingId}/products/{productId}", onboardingId, productId)
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
     void saveVisuraForMerchant_shouldReturnNoContent_whenUploadSuccessful() throws IOException {
         File tempFile = Files.createTempFile("visura", ".pdf").toFile();
         tempFile.deleteOnExit();

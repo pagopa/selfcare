@@ -507,6 +507,39 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
+  /v1/document-content/aggregates-csv/{onboardingId}/products/{productId}:
+    get:
+      summary: Retrieve aggregates csv for a given onboarding and product
+      description: Downloads the aggregates csv associated with the specified onboarding
+        ID and product.
+      operationId: getAggregatesCsv
+      tags:
+      - Document Content Controller
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                format: binary
+                type: string
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
   /v1/document-content/attachment:
     post:
       summary: Create attachment PDF
