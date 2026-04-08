@@ -13,7 +13,7 @@
     <artifactId>onboarding-bff</artifactId>
 
     <properties>
-        <commmon-cucumber-sdk.version>0.0.7</commmon-cucumber-sdk.version>
+        <commmon-cucumber-sdk.version>0.1.0</commmon-cucumber-sdk.version>
         <cucumber.version>7.20.1</cucumber.version>
         <cucumber-spring.version>7.19.0</cucumber-spring.version>
     </properties>
@@ -57,7 +57,7 @@
 
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>cucumber-sdk</artifactId>
+            <artifactId>selfcare-cucumber-sdk</artifactId>
             <version>${commmon-cucumber-sdk.version}</version>
             <scope>test</scope>
         </dependency>
