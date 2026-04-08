@@ -7,7 +7,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.NotAllowedException;
 import jakarta.ws.rs.core.Response;
 import org.apache.http.HttpStatus;
-import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,16 +27,25 @@ public class ExceptionHandler {
   }
 
   @ServerExceptionMapper
-  public RestResponse<String> toResponse(InvalidRequestException exception) {
+  public Response toResponse(InvalidRequestException exception) {
     LOGGER.warn(PREFIX_LOGGER, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
-    return RestResponse.status(Response.Status.BAD_REQUEST, exception.getMessage());
+    Problem problem =
+        new Problem(
+            exception.getMessage(), null, HttpStatus.SC_BAD_REQUEST, exception.getCode(), null);
+    return Response.status(Response.Status.BAD_REQUEST).entity(problem).build();
   }
 
   @ServerExceptionMapper
-  public RestResponse<String> toResponse(Exception exception) {
+  public Response toResponse(Exception exception) {
     LOGGER.error(PREFIX_LOGGER, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
-    return RestResponse.status(
-        Response.Status.INTERNAL_SERVER_ERROR, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER);
+    Problem problem =
+        new Problem(
+            SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER,
+            null,
+            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+            SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER,
+            null);
+    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(problem).build();
   }
 
   @ServerExceptionMapper
