@@ -235,7 +235,7 @@ public class SignatureServiceImpl implements SignatureService {
      * Recupera il digest del contratto dal token associato all'onboarding.
      */
     private Uni<String> retrieveContractDigest(String onboardingId) {
-        return documentService.getDocumentById(onboardingId)
+        return documentService.getDocumentByOnboardingId(onboardingId)
                 .onItem()
                 .transform(Document::getChecksum);
     }
