@@ -95,10 +95,7 @@ public class OnboardingUtils {
                 .onFailure(WebApplicationException.class).recoverWithUni(ex -> {
                     WebApplicationException wae = (WebApplicationException) ex;
                     InvalidRequestException parsed = extractDocumentError(wae.getResponse(), operation, onboardingId);
-                    if (parsed != null) {
-                        return Uni.createFrom().failure(parsed);
-                    }
-                    return Uni.createFrom().failure(ex);
+                    return Uni.createFrom().failure(Objects.requireNonNullElse(parsed, ex));
                 })
                 .onItem().transformToUni(response -> {
                     int status = Objects.nonNull(response)
