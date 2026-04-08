@@ -140,7 +140,7 @@ locals {
     },
     {
       name  = "JWT_BEARER_TOKEN"
-      value = "@Microsoft.KeyVault(SecretUri=https://${local.key_vault_name}.vault.azure.net/secrets/jwt-bearer-token-functions/)"
+      value = "@Microsoft.KeyVault(SecretUri=https://${module.local.config.key_vault_name}.vault.azure.net/secrets/jwt-bearer-token-functions/)"
     },
     {
       name  = "ONBOARDING-UPDATE-USER-REQUESTER"
@@ -177,6 +177,7 @@ module "container_app_onboarding_ms" {
   image_tag                      = var.image_tag
   app_settings                   = local.app_settings_onboarding_ms
   secrets_names                  = local.onboarding_ms_secrets_names
+  workload_profile_name          = null
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
   probes                         = module.local.config.quarkus_health_probes
