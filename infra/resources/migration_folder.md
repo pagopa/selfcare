@@ -10,7 +10,7 @@ Tabella delle migrazioni effettuate
 | document-ms    |   ✓    |   x    |   ◌    |   x    |   ◌    |   x    |
 | iam            |   ✓    |   ✓    |   ✓    |   ✓    |   ✓    |   ✓    |
 | namirial-sign  |   ✓    |   x    |   ✓    |   x    |   ✓    |   x    |
-| onboarding-bff |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
+| onboarding-bff |   ✓    |   ✓    |   ✓    |   ✓    |   ✓    |   ✓    |
 | onboarding-cdc |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
 | onboarding-fn  |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
 | onboarding-ms  |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
