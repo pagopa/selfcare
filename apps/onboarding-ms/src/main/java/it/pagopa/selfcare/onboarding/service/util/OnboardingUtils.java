@@ -3,10 +3,13 @@ package it.pagopa.selfcare.onboarding.service.util;
 import static it.pagopa.selfcare.onboarding.constants.CustomError.*;
 import static jakarta.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.DocumentType;
 import it.pagopa.selfcare.onboarding.constants.CustomError;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
+import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.model.FormItem;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
@@ -27,6 +30,8 @@ import org.openapi.quarkus.party_registry_proxy_json.model.UOResource;
 @Slf4j
 @ApplicationScoped
 public class OnboardingUtils {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @RestClient
     @Inject
@@ -78,7 +83,9 @@ public class OnboardingUtils {
 
     /**
      * Verifica che la risposta del document service sia successful (2xx).
-     * In caso contrario logga e propaga un {@link WebApplicationException}.
+     * In caso di errore, legge il body della risposta per estrarre codice e dettaglio
+     * dal Problem JSON restituito da document-ms (title = code, detail = message)
+     * e propaga un {@link InvalidRequestException} con il codice originale.
      */
     public Uni<Void> ensureSuccessfulDocumentResponse(Uni<Response> responseUni, String operation, String onboardingId) {
         return responseUni.onItem().transformToUni(response -> {
@@ -89,16 +96,49 @@ public class OnboardingUtils {
                     && Objects.nonNull(response.getStatusInfo())
                     && SUCCESSFUL.equals(response.getStatusInfo().getFamily());
 
-            if (Objects.nonNull(response)) response.close();
-
             if (!isSuccess) {
-                log.warn("Document service call failed: operation={}, onboardingId={}, status={}", operation, onboardingId, status);
+                String body = readResponseBody(response);
+                if (Objects.nonNull(response)) response.close();
+
+                log.warn("Document service call failed: operation={}, onboardingId={}, status={}, body={}",
+                        operation, onboardingId, status, body);
+                
+                String errorCode = null;
+                String errorDetail = null;
+                if (body != null) {
+                    try {
+                        JsonNode root = OBJECT_MAPPER.readTree(body);
+                        if (root.has("title") && root.has("detail")) {
+                            errorCode = root.get("title").asText(null);
+                            errorDetail = root.get("detail").asText(null);
+                        }
+                    } catch (Exception e) {
+                        log.debug("Could not parse document-ms error response as JSON: {}", e.getMessage());
+                    }
+                }
+
+                if (errorCode != null && errorDetail != null) {
+                    return Uni.createFrom().failure(new InvalidRequestException(errorDetail, errorCode));
+                }
+
                 return Uni.createFrom().failure(new WebApplicationException(
                         String.format("Document service call failed while trying to %s for onboarding %s. status=%s",
                                 operation, onboardingId, status), status));
             }
+
+            response.close();
             log.debug("Document service call succeeded: operation={}, onboardingId={}", operation, onboardingId);
             return Uni.createFrom().voidItem();
         });
+    }
+
+    private String readResponseBody(Response response) {
+        if (Objects.isNull(response)) return null;
+        try {
+            return response.readEntity(String.class);
+        } catch (Exception e) {
+            log.debug("Could not read response body: {}", e.getMessage());
+            return null;
+        }
     }
 }
