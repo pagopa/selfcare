@@ -25,6 +25,7 @@ import eu.europa.esig.dss.tsl.source.LOTLSource;
 import eu.europa.esig.dss.tsl.sync.AcceptAllStrategy;
 import eu.europa.esig.dss.xml.common.DocumentBuilderFactoryBuilder;
 import eu.europa.esig.dss.xml.common.SchemaFactoryBuilder;
+import eu.europa.esig.dss.xml.common.ValidatorConfigurator;
 import eu.europa.esig.dss.xml.common.XmlDefinerUtils;
 import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.runtime.Startup;
@@ -100,7 +101,8 @@ public class TrustedListsCertificateSourceConfig {
      * accessExternalDTD/accessExternalSchema security properties.
      * Xerces is required on the classpath by openhtmltopdf/jsoup for PDF generation,
      * but it overrides the JDK's built-in XML parser which supports these properties.
-     * Setting LogOnStatusAlert makes DSS log a warning instead of throwing AlertException.
+     * Setting LogOnStatusAlert on DocumentBuilderFactoryBuilder, SchemaFactoryBuilder
+     * and ValidatorConfigurator makes DSS log a warning instead of throwing AlertException.
      */
     private void configureDssXmlSecurity() {
         LogOnStatusAlert logAlert = new LogOnStatusAlert();
@@ -111,9 +113,13 @@ public class TrustedListsCertificateSourceConfig {
         DocumentBuilderFactoryBuilder docBuilderFactoryBuilder = DocumentBuilderFactoryBuilder.getSecureDocumentBuilderFactoryBuilder();
         docBuilderFactoryBuilder.setSecurityExceptionAlert(logAlert);
 
+        ValidatorConfigurator validatorConfigurator = ValidatorConfigurator.getSecureValidatorConfigurator();
+        validatorConfigurator.setSecurityExceptionAlert(logAlert);
+
         XmlDefinerUtils xmlDefinerUtils = XmlDefinerUtils.getInstance();
         xmlDefinerUtils.setSchemaFactoryBuilder(schemaFactoryBuilder);
         xmlDefinerUtils.setDocumentBuilderFactoryBuilder(docBuilderFactoryBuilder);
+        xmlDefinerUtils.setValidatorConfigurator(validatorConfigurator);
     }
 
     private LOTLSource getEuropeanLOTL() {
