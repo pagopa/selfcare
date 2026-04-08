@@ -1,8 +1,8 @@
 version: '3.8'
 services:
 
-  mongo:
-    image: mongo:7.0
+  mongodb:
+    image: mongo:latest
     ports:
       - "27017:27017"
     networks:
