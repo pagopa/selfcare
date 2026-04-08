@@ -657,19 +657,19 @@ class SignatureServiceImplTest {
         setField(service, "isVerifyEnabled", Boolean.TRUE);
         Document document = mock(Document.class);
         when(document.getChecksum()).thenReturn("checksum");
-        when(documentService.getDocumentById("onboarding-id")).thenReturn(Uni.createFrom().item(document));
+        when(documentService.getDocumentByOnboardingId("onboarding-id")).thenReturn(Uni.createFrom().item(document));
 
         File file = createTempFile("test");
         Uni<Void> result = service.verifyContractSignature("onboarding-id", file, List.of("CF1"), false);
 
         assertThatThrownBy(() -> result.await().indefinitely()).isInstanceOf(Exception.class);
-        verify(documentService).getDocumentById("onboarding-id");
+        verify(documentService).getDocumentByOnboardingId("onboarding-id");
     }
 
     @Test
     void verifyContractSignature_shouldPropagateExceptionWhenDocumentServiceFails() throws IOException {
         setField(service, "isVerifyEnabled", Boolean.TRUE);
-        when(documentService.getDocumentById("onboarding-id"))
+        when(documentService.getDocumentByOnboardingId("onboarding-id"))
                 .thenReturn(Uni.createFrom().failure(new RuntimeException("DB error")));
 
         File file = createTempFile("test");
@@ -677,7 +677,7 @@ class SignatureServiceImplTest {
 
         assertThatThrownBy(() -> result.await().indefinitely())
                 .hasMessageContaining("DB error");
-        verify(documentService).getDocumentById("onboarding-id");
+        verify(documentService).getDocumentByOnboardingId("onboarding-id");
     }
 
     // ==================== chooseEarliestSignature ====================
