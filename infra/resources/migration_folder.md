@@ -11,8 +11,8 @@ Tabella delle migrazioni effettuate
 | iam            |   ✓    |   ✓    |   ✓    |   ✓    |   ✓    |   ✓    |
 | namirial-sign  |   ✓    |   x    |   ✓    |   x    |   ✓    |   x    |
 | onboarding-bff |   ✓    |   ✓    |   ✓    |   ✓    |   ✓    |   ✓    |
-| onboarding-cdc |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
-| onboarding-fn  |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
+| onboarding-cdc |   ✓    |   ✓    |   ✓    |   ✓    |   ✓    |   x    |
+| onboarding-fn  |   ✓    |   ✓    |   ✓    |   ✓    |   ✓    |        |
 | onboarding-ms  |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
 | product        |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
 | product-cdc    |   ✓    |   x    |   ✓    |   x    |        |   x    |
