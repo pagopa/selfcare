@@ -167,6 +167,12 @@
       <artifactId>openhtmltopdf-svg-support</artifactId>
       <version>${openhtmltopdf.version}</version>
       <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>xml-apis</groupId>
+          <artifactId>xml-apis</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>io.github.openhtmltopdf</groupId>
@@ -178,6 +184,16 @@
       <groupId>xerces</groupId>
       <artifactId>xercesImpl</artifactId>
       <version>2.12.2</version>
+      <exclusions>
+        <!-- xml-apis ships ancient javax.xml.stream / javax.xml.xpath classes that shadow
+             the JDK 17 built-in XML APIs, causing NoSuchMethodError on XMLInputFactory.newFactory()
+             and XPathFactory.newInstance() failures in the container. JDK 17 already provides
+             all these APIs in their correct, modern versions. -->
+        <exclusion>
+          <groupId>xml-apis</groupId>
+          <artifactId>xml-apis</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
