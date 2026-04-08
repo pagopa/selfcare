@@ -2,7 +2,7 @@
 # GLOBAL VARIABLES
 ###############################################################################
 module "local" {
-  source = "../../_modules/local-prod-ar"
+  source = "../../_modules/local-prod-pnpg"
 }
 
 
