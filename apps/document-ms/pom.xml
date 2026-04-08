@@ -175,11 +175,6 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>xerces</groupId>
-      <artifactId>xercesImpl</artifactId>
-      <version>2.12.2</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-text</artifactId>
       <version>1.10.0</version>
@@ -235,6 +230,19 @@
       <groupId>it.pagopa.selfcare</groupId>
       <artifactId>selfcare-onboarding-sdk-crypto</artifactId>
       <version>${selfcare-onboarding-sdk.version}</version>
+      <exclusions>
+        <!-- Escludi il vecchio JAXB impl (com.sun.xml.bind) portato transitivamente da sdk-crypto:
+             confligge con org.glassfish.jaxb:jaxb-runtime usato da DSS e Quarkus 3.31.x (Jakarta EE).
+             L'implementazione corretta (glassfish jaxb-runtime) viene già fornita da dss-pki-factory-jaxb. -->
+        <exclusion>
+          <groupId>com.sun.xml.bind</groupId>
+          <artifactId>jaxb-impl</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.xml.bind</groupId>
+          <artifactId>jaxb-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>it.pagopa.selfcare</groupId>
@@ -371,12 +379,6 @@
     </dependency>
   </dependencies>
   <build>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>true</filtering>
-      </resource>
-    </resources>
     <plugins>
       <plugin>
         <groupId>${quarkus.platform.group-id}</groupId>
