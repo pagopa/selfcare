@@ -26,7 +26,7 @@ locals {
   ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-rg"
 
   private_dns_name_domain = "calmmoss-0be48755.westeurope.azurecontainerapps.io"
-  
+
 
   container_app = {
     min_replicas = 0

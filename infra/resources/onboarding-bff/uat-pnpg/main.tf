@@ -68,7 +68,7 @@ module "apim_api_bff_onboarding_pnpg" {
   api_name            = "selc-${module.local.config.env_short}-pnpg-api-bff-onboarding"
   display_name        = "BFF PNPG Onboarding API"
   base_path           = "imprese/onboarding"
-  private_dns_name    = "selc-${module.local.config.env_short}-onboarding-bff-ca.${module.local.config.private_dns_name_domain}"
+  private_dns_name    = "selc-${module.local.config.env_short}-pnpg-onboarding-bff-ca.${module.local.config.private_dns_name_domain}"
   dns_zone_prefix     = module.local.config.dns_zone_prefix
   api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
   external_domain     = "pagopa.it"

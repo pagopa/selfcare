@@ -6,9 +6,9 @@ Tabella delle migrazioni effettuate
 +----------------+--------+--------+--------+--------+--------+--------+
 | category       | dev-ar | dev-pg | uat-ar | uat-pg | prd-ar | prd-pg |
 +----------------+--------+--------+--------+--------+--------+--------+
-| auth           |   ✓    |   ◌    |   ✓    |   ◌    |        |   ◌    |
+| auth           |   ✓    |   ◌    |   ✓    |   ◌    |   ✓    |   ◌    |
 | document-ms    |   ✓    |   x    |   ◌    |   x    |   ◌    |   x    |
-| iam            |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
+| iam            |   ✓    |   ✓    |   ✓    |   ✓    |   ✓    |   ✓    |
 | namirial-sign  |   ✓    |   x    |   ✓    |   x    |        |   x    |
 | onboarding-bff |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
 | onboarding-cdc |   ✓    |   ✓    |   ✓    |   ✓    |        |        |

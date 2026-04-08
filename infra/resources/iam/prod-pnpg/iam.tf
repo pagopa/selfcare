@@ -14,10 +14,10 @@ module "apim_api" {
   source              = "../../_modules/apim_api"
   apim_name           = module.local.config.apim_name
   apim_rg             = module.local.config.apim_rg
-  api_name            = "selc-${module.local.config.env_short}-api-iam"
-  display_name        = "IAM API"
-  base_path           = "iam"
-  private_dns_name    = "selc-${module.local.config.env_short}-iam-ms-ca.${module.local.config.private_dns_name_domain}"
+  api_name            = "selc-${module.local.config.env_short}-${module.local.config.domain}-api-iam"
+  display_name        = "IAM PNPG API"
+  base_path           = "imprese/iam"
+  private_dns_name    = "selc-${module.local.config.env_short}-${module.local.config.domain}-iam-ms-ca.${module.local.config.private_dns_name_domain}"
   dns_zone_prefix     = module.local.config.dns_zone_prefix
   api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
   openapi_path        = "../../../../apps/iam/src/main/docs/openapi.json"
@@ -123,7 +123,7 @@ module "container_app_iam_ms" {
   env_short                      = module.local.config.env_short
   resource_group_name            = module.local.config.ca_resource_group_name
   container_app                  = module.local.config.container_app
-  container_app_name             = "${module.local.config.project}-iam-ms"
+  container_app_name             = "${module.local.config.project}-pnpg-iam-ms"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-iam-ms"
   image_tag                      = var.image_tag
@@ -132,5 +132,6 @@ module "container_app_iam_ms" {
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
   probes                         = module.local.config.quarkus_health_probes
+  workload_profile_name          = null
   tags                           = module.local.config.tags
 }
