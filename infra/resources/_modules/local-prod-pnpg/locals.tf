@@ -29,13 +29,13 @@ locals {
 
 
   container_app = {
-    min_replicas = 0
-    max_replicas = 1
+    min_replicas = 1
+    max_replicas = 5
     scale_rules = [
       {
         custom = {
           metadata = {
-            "desiredReplicas" = "1"
+            "desiredReplicas" = "3"
             "start"           = "0 8 * * MON-FRI"
             "end"             = "0 19 * * MON-FRI"
             "timezone"        = "Europe/Rome"
@@ -45,8 +45,8 @@ locals {
         name = "cron-scale-rule"
       }
     ]
-    cpu    = 0.5
-    memory = "1Gi"
+    cpu    = 1.25
+    memory = "2.5Gi"
   }
 
   quarkus_health_probes = [
