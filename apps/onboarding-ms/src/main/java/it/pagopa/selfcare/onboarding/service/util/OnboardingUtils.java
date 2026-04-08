@@ -83,53 +83,71 @@ public class OnboardingUtils {
 
     /**
      * Verifica che la risposta del document service sia successful (2xx).
-     * In caso di errore, legge il body della risposta per estrarre codice e dettaglio
-     * dal Problem JSON restituito da document-ms (title = code, detail = message)
-     * e propaga un {@link InvalidRequestException} con il codice originale.
+     * Gestisce due scenari:
+     * 1. Il REST client ritorna un Uni con Response di errore (onItem path)
+     * 2. Il REST client lancia WebApplicationException su non-2xx (onFailure path)
+     *
+     * In entrambi i casi, estrae codice e dettaglio dal Problem JSON di document-ms
+     * (title = code, detail = message) e propaga un {@link InvalidRequestException}.
      */
     public Uni<Void> ensureSuccessfulDocumentResponse(Uni<Response> responseUni, String operation, String onboardingId) {
-        return responseUni.onItem().transformToUni(response -> {
-            int status = Objects.nonNull(response)
-                    ? response.getStatus()
-                    : Response.Status.BAD_GATEWAY.getStatusCode();
-            boolean isSuccess = Objects.nonNull(response)
-                    && Objects.nonNull(response.getStatusInfo())
-                    && SUCCESSFUL.equals(response.getStatusInfo().getFamily());
-
-            if (!isSuccess) {
-                String body = readResponseBody(response);
-                if (Objects.nonNull(response)) response.close();
-
-                log.warn("Document service call failed: operation={}, onboardingId={}, status={}, body={}",
-                        operation, onboardingId, status, body);
-                
-                String errorCode = null;
-                String errorDetail = null;
-                if (body != null) {
-                    try {
-                        JsonNode root = OBJECT_MAPPER.readTree(body);
-                        if (root.has("title") && root.has("detail")) {
-                            errorCode = root.get("title").asText(null);
-                            errorDetail = root.get("detail").asText(null);
-                        }
-                    } catch (Exception e) {
-                        log.debug("Could not parse document-ms error response as JSON: {}", e.getMessage());
+        return responseUni
+                .onFailure(WebApplicationException.class).recoverWithUni(ex -> {
+                    WebApplicationException wae = (WebApplicationException) ex;
+                    InvalidRequestException parsed = extractDocumentError(wae.getResponse(), operation, onboardingId);
+                    if (parsed != null) {
+                        return Uni.createFrom().failure(parsed);
                     }
-                }
+                    return Uni.createFrom().failure(ex);
+                })
+                .onItem().transformToUni(response -> {
+                    int status = Objects.nonNull(response)
+                            ? response.getStatus()
+                            : Response.Status.BAD_GATEWAY.getStatusCode();
+                    boolean isSuccess = Objects.nonNull(response)
+                            && Objects.nonNull(response.getStatusInfo())
+                            && SUCCESSFUL.equals(response.getStatusInfo().getFamily());
 
+                    if (!isSuccess) {
+                        InvalidRequestException parsed = extractDocumentError(response, operation, onboardingId);
+                        if (Objects.nonNull(response)) response.close();
+                        if (parsed != null) {
+                            return Uni.createFrom().failure(parsed);
+                        }
+                        return Uni.createFrom().failure(new WebApplicationException(
+                                String.format("Document service call failed while trying to %s for onboarding %s. status=%s",
+                                        operation, onboardingId, status), status));
+                    }
+
+                    response.close();
+                    log.debug("Document service call succeeded: operation={}, onboardingId={}", operation, onboardingId);
+                    return Uni.createFrom().voidItem();
+                });
+    }
+
+    /**
+     * Tenta di estrarre codice e dettaglio dal Problem JSON restituito da document-ms.
+     * Il formato atteso è: { "title": "002-1003", "detail": "Only CAdES ...", "status": 400 }
+     */
+    private InvalidRequestException extractDocumentError(Response response, String operation, String onboardingId) {
+        String body = readResponseBody(response);
+        if (body == null) return null;
+
+        log.warn("Document service call failed: operation={}, onboardingId={}, body={}", operation, onboardingId, body);
+
+        try {
+            JsonNode root = OBJECT_MAPPER.readTree(body);
+            if (root.has("title") && root.has("detail")) {
+                String errorCode = root.get("title").asText(null);
+                String errorDetail = root.get("detail").asText(null);
                 if (errorCode != null && errorDetail != null) {
-                    return Uni.createFrom().failure(new InvalidRequestException(errorDetail, errorCode));
+                    return new InvalidRequestException(errorDetail, errorCode);
                 }
-
-                return Uni.createFrom().failure(new WebApplicationException(
-                        String.format("Document service call failed while trying to %s for onboarding %s. status=%s",
-                                operation, onboardingId, status), status));
             }
-
-            response.close();
-            log.debug("Document service call succeeded: operation={}, onboardingId={}", operation, onboardingId);
-            return Uni.createFrom().voidItem();
-        });
+        } catch (Exception e) {
+            log.debug("Could not parse document-ms error response as JSON: {}", e.getMessage());
+        }
+        return null;
     }
 
     private String readResponseBody(Response response) {
