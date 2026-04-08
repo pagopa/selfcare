@@ -1,13 +1,14 @@
 package it.pagopa.selfcare.document.integrationTest;
 
 import io.quarkus.test.junit.QuarkusTestProfile;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Map;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @NoArgsConstructor
