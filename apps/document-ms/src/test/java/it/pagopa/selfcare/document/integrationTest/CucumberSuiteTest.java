@@ -40,7 +40,7 @@ public class CucumberSuiteTest extends CucumberQuarkusTest {
         new ComposeContainer(new File("./src/test/resources/docker-compose.yml"))
             .withPull(true)
             .waitingFor("mongodb", Wait.forListeningPort())
-            .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1))
+            .waitingFor("azure-cli", Wait.forListeningPort())
             .withStartupTimeout(Duration.ofMinutes(5));
 
     composeContainer.start();
