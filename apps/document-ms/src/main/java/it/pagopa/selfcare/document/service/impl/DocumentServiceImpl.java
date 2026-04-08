@@ -69,6 +69,11 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
+    public Uni<Document> getDocumentByOnboardingId(String onboardingId) {
+        return documentRepository.findByOnboardingId(onboardingId);
+    }
+
+    @Override
     public Uni<Long> updateContractSigned(String onboardingId, String documentSignedPath) {
         return documentRepository.updateContractSignedByOnboardingId(onboardingId, documentSignedPath);
     }
