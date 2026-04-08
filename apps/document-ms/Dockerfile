@@ -40,7 +40,7 @@ ARG REPO_PASSWORD
 
 RUN mvn --global-settings settings.xml --projects :document-ms -DrepositoryId=${REPO_SELFCARE} -DselfcareOnboardingId=${REPO_ONBOARDING} -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} --also-make clean package -DskipTests
 
-FROM eclipse-temurin:17-jre AS runtime
+FROM eclipse-temurin:17 AS runtime
 
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
 ENV JAVA_OPTIONS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
