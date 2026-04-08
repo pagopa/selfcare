@@ -8,6 +8,7 @@ import it.pagopa.selfcare.party.registry_proxy.connector.api.SearchServiceConnec
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ServiceUnavailableException;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.AzureSearchValue;
+import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceInstitution;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceStatus;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.institution.Institution;
@@ -119,5 +120,24 @@ public class SearchServiceImpl implements SearchService {
 
     return filterBuilder.toString();
   }
+
+  @Override
+  public boolean indexOnboarding(OnboardingIndex onboardingIndex) {
+    final SearchServiceStatus status = searchServiceConnector.indexOnboarding(onboardingIndex);
+
+    if (status == null || status.getValue() == null || status.getValue().isEmpty()) {
+      throw new ServiceUnavailableException();
+    }
+
+    for (AzureSearchValue value : status.getValue()) {
+      log.debug("Indexing status for onboarding {}: {}", onboardingIndex.getOnboardingId(), value.getStatus());
+      if (Boolean.FALSE.equals(value.getStatus())) {
+        throw new ServiceUnavailableException();
+      }
+    }
+
+    return true;
+  }
+
 }
 

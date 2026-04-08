@@ -14,6 +14,42 @@
     "description" : "Generated server url"
   } ],
   "paths" : {
+    "/onboarding/update-index" : {
+      "post" : {
+        "tags" : [ "onboarding" ],
+        "operationId" : "updateOnboardingIndex",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OnboardingIndexResource"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "Onboarding index updated successfully"
+          },
+          "400" : {
+            "description" : "Bad Request"
+          },
+          "401" : {
+            "description" : "Unauthorized"
+          },
+          "404" : {
+            "description" : "Not Found"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
     "/info-camere/institutions" : {
       "post" : {
         "tags" : [ "infocamere", "support-pnpg" ],
@@ -409,7 +445,7 @@
     },
     "/search/institutions" : {
       "get" : {
-        "tags" : [ "external-v2", "support" ],
+        "tags" : [ "institution", "external-v2", "support" ],
         "summary" : "Retrieve institutions",
         "description" : "Retrieves a list of institutions based on a search engine query",
         "operationId" : "retrieveInstitutionOnSearchEngine",
@@ -1271,6 +1307,58 @@
   },
   "components" : {
     "schemas" : {
+      "OnboardingIndexResource" : {
+        "required" : [ "onboardingId" ],
+        "type" : "object",
+        "properties" : {
+          "onboardingId" : {
+            "type" : "string"
+          },
+          "institutionId" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "parentDescription" : {
+            "type" : "string"
+          },
+          "taxCode" : {
+            "type" : "string"
+          },
+          "subunitCode" : {
+            "type" : "string"
+          },
+          "subunitType" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "string"
+          },
+          "institutionType" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "activatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "expiringDate" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
       "GetInstitutionsByLegalDto" : {
         "type" : "object",
         "properties" : {

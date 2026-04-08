@@ -2,6 +2,7 @@ package it.pagopa.selfcare.party.registry_proxy.connector.rest;
 
 import io.github.resilience4j.retry.annotation.Retry;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.SearchServiceConnector;
+import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceInstitution;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceStatus;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.institution.Institution;
@@ -9,6 +10,9 @@ import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.AzureSearch
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.SearchServiceInstitutionRequest;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.SearchServiceRequest;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.SearchServiceResponse;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexRequest;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceMapper;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceOnboardingIndex;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -22,9 +26,11 @@ import java.util.Optional;
 public class SearchServiceConnectorImpl implements SearchServiceConnector {
 
   private final AzureSearchRestClient azureSearchRestClient;
+  private final SearchServiceMapper searchServiceMapper;
 
-  public SearchServiceConnectorImpl(AzureSearchRestClient azureSearchRestClient) {
+  public SearchServiceConnectorImpl(AzureSearchRestClient azureSearchRestClient, SearchServiceMapper searchServiceMapper) {
     this.azureSearchRestClient = azureSearchRestClient;
+    this.searchServiceMapper = searchServiceMapper;
   }
 
   @Override
@@ -48,4 +54,12 @@ public class SearchServiceConnectorImpl implements SearchServiceConnector {
     });
     return institutions;
   }
+
+  @Override
+  public SearchServiceStatus indexOnboarding(OnboardingIndex onboardingIndex) {
+    final SearchServiceIndexRequest<SearchServiceOnboardingIndex> searchServiceIndexRequest = new SearchServiceIndexRequest<>();
+    searchServiceIndexRequest.getValue().add(searchServiceMapper.toSearchServiceOnboardingIndex(onboardingIndex));
+    return azureSearchRestClient.indexOnboarding(searchServiceIndexRequest);
+  }
+
 }
