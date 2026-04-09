@@ -47,3 +47,11 @@ output "subscription_id" {
 output "tenant_id" {
   value = data.azurerm_client_config.current.tenant_id
 }
+
+output "nat_gw_id" {
+  value = data.azurerm_nat_gateway.nat_gateway.id
+}
+
+output "nat_gw_rg_name" {
+  value = data.azurerm_nat_gateway.nat_gateway.resource_group_name
+}

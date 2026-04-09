@@ -6,6 +6,7 @@ output "config" {
     location_short = local.location_short
     location       = local.location
     domain         = local.domain
+    pnpg_suffix    = local.pnpg_suffix
 
     dns_zone_prefix                = local.dns_zone_prefix
     api_dns_zone_prefix            = local.api_dns_zone_prefix
@@ -17,7 +18,6 @@ output "config" {
     container_app_environment_name = local.container_app_environment_name
     ca_resource_group_name         = local.ca_resource_group_name
     private_dns_name_domain        = local.private_dns_name_domain
-    private_dns_name_ms            = local.private_dns_name_ms
     container_app                  = local.container_app
     quarkus_health_probes          = local.quarkus_health_probes
     container_app_onboarding_bff   = local.container_app
@@ -48,4 +48,12 @@ output "subscription_id" {
 
 output "tenant_id" {
   value = data.azurerm_client_config.current.tenant_id
+}
+
+output "nat_gw_id" {
+  value = data.azurerm_nat_gateway.nat_gateway.id
+}
+
+output "nat_gw_rg_name" {
+  value = data.azurerm_nat_gateway.nat_gateway.resource_group_name
 }

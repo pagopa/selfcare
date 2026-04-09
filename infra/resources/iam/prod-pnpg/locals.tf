@@ -1,36 +1,42 @@
 # locals {
 #   prefix         = "selc"
 #   storage_prefix = "sc"
-#   env_short      = "u"
+#   env_short      = "p"
 #   location       = "westeurope"
 #   location_short = "weu"
-#   # suffix_increment = "-002"
-#   domain = "ar"
+#   domain         = "ar"
 
-#   dns_zone_prefix     = "dev.selfcare"
-#   api_dns_zone_prefix = "api.dev.selfcare"
+#   dns_zone_prefix     = "selfcare"
+#   api_dns_zone_prefix = "api.selfcare"
+#   external_domain     = "pagopa.it"
+
+#   apim_name = "selc-${local.env_short}-apim-v2"
+#   apim_rg   = "selc-${local.env_short}-api-v2-rg"
 
 #   project = "${local.prefix}-${local.env_short}"
 
 #   mongo_db = {
 #     mongodb_rg_name               = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-rg",
 #     cosmosdb_account_mongodb_name = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-account"
-#     mongodb_name                  = "selcOnboarding"
+#     database_name                 = "selcIam"
 #   }
 
 #   container_app_environment_name = "${local.prefix}-${local.env_short}-cae-002"
 #   ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-002-rg"
 
-#   function_name = "${local.storage_prefix}-onboarding-fn"
+#   private_dns_name_domain = "lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
+#   private_dns_name_ms = {
+#     private_dns_name_ms = "selc-${local.env_short}-iam-ms-ca.${local.private_dns_name_domain}"
+#   }
 
 #   container_app = {
 #     min_replicas = 1
-#     max_replicas = 2
+#     max_replicas = 5
 #     scale_rules = [
 #       {
 #         custom = {
 #           metadata = {
-#             "desiredReplicas" = "1"
+#             "desiredReplicas" = "3"
 #             "start"           = "0 8 * * MON-FRI"
 #             "end"             = "0 19 * * MON-FRI"
 #             "timezone"        = "Europe/Rome"
@@ -40,29 +46,8 @@
 #         name = "cron-scale-rule"
 #       }
 #     ]
-#     cpu    = 0.5
-#     memory = "1Gi"
-#   }
-
-#   microservice_container_app = {
-#     min_replicas = 1
-#     max_replicas = 1
-#     scale_rules = [
-#       {
-#         custom = {
-#           metadata = {
-#             "desiredReplicas" = "1"
-#             "start"           = "0 8 * * MON-FRI"
-#             "end"             = "0 19 * * MON-FRI"
-#             "timezone"        = "Europe/Rome"
-#           }
-#           type = "cron"
-#         }
-#         name = "cron-scale-rule"
-#       }
-#     ]
-#     cpu    = 0.5
-#     memory = "1Gi"
+#     cpu    = 1.25
+#     memory = "2.5Gi"
 #   }
 
 #   quarkus_health_probes = [
@@ -103,9 +88,9 @@
 
 #   tags = {
 #     CreatedBy   = "Terraform"
-#     Environment = "UAT"
-#     Owner       = "SelfCare"
-#     Source      = "https://github.com/pagopa/selfcare-onboarding"
+#     Environment = "Prod"
+#     Owner       = "Selfcare"
+#     Source      = "https://github.com/pagopa/selfcare"
 #     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
 #   }
 
@@ -117,7 +102,6 @@
 #   naming_config            = "documents"
 #   resource_group_name_vnet = "${local.project}-vnet-rg"
 
-#   cidr_subnet_contract_storage = ["10.1.136.0/24"]
-
-#   image_tag_latest = "latest"
 # }
+
+# //pnpg https://selc-p-pnpg-user-cdc-ca.calmmoss-0be48755.westeurope.azurecontainerapps.io

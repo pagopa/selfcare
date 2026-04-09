@@ -247,6 +247,11 @@ module "cdn" {
   vnet_name       = module.network.vnet_core.name
   rg_vnet_name    = module.network.vnet_core.resource_group_name
   cidr_subnet_cdn = local.cidr_subnet_cdn
+
+  origin_health_probe = {
+    path         = "/health.json"
+    request_type = "HEAD"
+  }
 }
 
 # ###############################################################################
@@ -331,5 +336,5 @@ resource "azurerm_key_vault_access_policy" "container_app_environment" {
   tenant_id    = module.key_vault.tenant_id
   object_id    = module.container_app_environments.user_assigned_identity.principal_id
 
-  secret_permissions      = ["Get", "List"]
+  secret_permissions = ["Get", "List"]
 }
