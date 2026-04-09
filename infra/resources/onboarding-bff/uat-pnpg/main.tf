@@ -71,6 +71,6 @@ module "apim_api_bff_onboarding_pnpg" {
   private_dns_name    = "selc-${module.local.config.env_short}-pnpg-onboarding-bff-ca.${module.local.config.private_dns_name_domain}"
   dns_zone_prefix     = module.local.config.dns_zone_prefix
   api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
-  external_domain     = "pagopa.it"
+  external_domain     = module.local.config.external_domain
   openapi_path        = "../../../../apps/onboarding-bff/app/src/main/resources/swagger/api-docs.json"
 }

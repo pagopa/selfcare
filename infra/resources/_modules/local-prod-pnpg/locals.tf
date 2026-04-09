@@ -7,9 +7,9 @@ locals {
   location_short = "weu"
   domain         = "pnpg"
 
-  dns_zone_prefix     = "pnpg.selfcare"
+  dns_zone_prefix     = "imprese.notifichedigitali"
   api_dns_zone_prefix = "api-pnpg.selfcare"
-  external_domain     = "pagopa.it"
+  external_domain     = "it"
 
   apim_name = "selc-${local.env_short}-apim-v2"
   apim_rg   = "selc-${local.env_short}-api-v2-rg"

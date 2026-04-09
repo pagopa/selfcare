@@ -16,9 +16,9 @@ Tabella delle migrazioni effettuate
 | onboarding-ms  |   ✓    |   ✓    |   ✓    |   ✓    |   ✓    |   ✓    |
 | product        |   ✓    |   ✓    |   ✓    |   ✓    |   ✓    |   ✓    |
 | product-cdc    |   ✓    |   x    |   ✓    |   x    |   ✓    |   x    |
-| registry-proxy |   ✓    |   ✓    |   ✓    |   ✓    |        |        |
+| registry-proxy |   ✓    |   ✓    |   ✓    |   ✓    |        |   ✓    |
 | spid-login     |   x    |   ✓    |   x    |   ✓    |   x    |   ✓    |
-| webhook        |   ✓    |   x    |   ✓    |   x    |        |   x    |
+| webhook        |   ✓    |   x    |   ✓    |   x    |   ✓    |   x    |
 +----------------+--------+--------+--------+--------+--------+--------+
 ```
 
