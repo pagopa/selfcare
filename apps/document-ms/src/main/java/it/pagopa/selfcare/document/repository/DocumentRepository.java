@@ -24,7 +24,7 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
     }
 
     public Uni<Document> findAttachment(String onboardingId, String type, String name) {
-        return find("onboardingId = ?1 and type = ?2 and name = ?3", onboardingId, type, name)
+        return find("onboardingId = ?1 and type = ?2 and attachmentName = ?3", onboardingId, type, name)
                 .firstResult();
     }
 

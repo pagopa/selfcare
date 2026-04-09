@@ -2,6 +2,7 @@ package it.pagopa.selfcare.onboarding.connector;
 
 import io.github.resilience4j.retry.annotation.Retry;
 import it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentBuilderRequest;
+import it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType;
 import it.pagopa.selfcare.onboarding.connector.api.DocumentMsConnector;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.connector.rest.client.MsDocumentApiClient;
@@ -73,6 +74,7 @@ public class DocumentMsConnectorImpl implements DocumentMsConnector {
     request.setOnboardingId(onboardingId);
     request.setTemplatePath(template.getTemplatePath());
     request.setTemplateVersion(template.getTemplateVersion());
+    request.setDocumentType(DocumentType.ATTACHMENT);
     msDocumentContentApiClient._uploadAttachment(attachment, request);
   }
 
