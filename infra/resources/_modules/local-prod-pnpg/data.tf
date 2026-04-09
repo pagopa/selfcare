@@ -11,3 +11,12 @@ data "azurerm_key_vault" "key_vault" {
 data "azurerm_subscription" "current" {}
 
 data "azurerm_client_config" "current" {}
+
+data "azurerm_resource_group" "nat_rg" {
+  name = "${local.project}-${local.pnpg_suffix}-nat-rg"
+}
+
+data "azurerm_nat_gateway" "nat_gateway" {
+  name                = "${local.project}-${local.pnpg_suffix}-nat_gw"
+  resource_group_name = data.azurerm_resource_group.nat_rg.name
+}

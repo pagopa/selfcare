@@ -5,11 +5,11 @@
 #   location       = "westeurope"
 #   location_short = "weu"
 #   domain         = "ar"
-#   # suffix_increment = "-002"
 
 #   dns_zone_prefix     = "dev.selfcare"
 #   api_dns_zone_prefix = "api.dev.selfcare"
-#   project             = "${local.prefix}-${local.env_short}"
+
+#   project = "${local.prefix}-${local.env_short}"
 
 #   mongo_db = {
 #     mongodb_rg_name               = "${local.prefix}-${local.env_short}-cosmosdb-mongodb-rg",
@@ -116,7 +116,4 @@
 #   naming_config            = "documents"
 #   resource_group_name_vnet = "${local.project}-vnet-rg"
 
-#   cidr_subnet_contract_storage = ["10.1.136.0/24"]
-
-#   image_tag_latest = "latest"
 # }

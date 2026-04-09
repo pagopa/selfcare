@@ -7,9 +7,9 @@ locals {
   location_short = "weu"
   domain         = "pnpg"
 
-  dns_zone_prefix     = "pnpg.selfcare"
+  dns_zone_prefix     = "imprese.notifichedigitali"
   api_dns_zone_prefix = "api-pnpg.selfcare"
-  external_domain     = "pagopa.it"
+  external_domain     = "it"
 
   apim_name = "selc-${local.env_short}-apim-v2"
   apim_rg   = "selc-${local.env_short}-api-v2-rg"
@@ -26,16 +26,16 @@ locals {
   ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-rg"
 
   private_dns_name_domain = "calmmoss-0be48755.westeurope.azurecontainerapps.io"
-  
+
 
   container_app = {
-    min_replicas = 0
-    max_replicas = 1
+    min_replicas = 1
+    max_replicas = 5
     scale_rules = [
       {
         custom = {
           metadata = {
-            "desiredReplicas" = "1"
+            "desiredReplicas" = "3"
             "start"           = "0 8 * * MON-FRI"
             "end"             = "0 19 * * MON-FRI"
             "timezone"        = "Europe/Rome"
@@ -45,8 +45,8 @@ locals {
         name = "cron-scale-rule"
       }
     ]
-    cpu    = 0.5
-    memory = "1Gi"
+    cpu    = 1.25
+    memory = "2.5Gi"
   }
 
   quarkus_health_probes = [

@@ -28,7 +28,7 @@ locals {
     },
     {
       name  = "PRODUCT-CDC-MONGODB-WATCH-ENABLED"
-      value = true
+      value = false
     },
     {
       name  = "STORAGE_CONTAINER_PRODUCT"
@@ -53,7 +53,7 @@ module "container_app_product_cdc" {
   container_app                  = module.local.config.container_app
   container_app_name             = "${module.local.config.project}-product-cdc"
   container_app_environment_name = module.local.config.container_app_environment_name
-  image_name                     = "selfcare-product-cdc"
+  image_name                     = "selfcare-product-cdc-ms"
   image_tag                      = var.image_tag
   app_settings                   = local.app_settings
   secrets_names                  = local.secrets_names

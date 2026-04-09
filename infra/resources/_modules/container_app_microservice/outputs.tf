@@ -13,3 +13,7 @@ output "container_app_name" {
 output "cae_identity_id" {
   value = data.azurerm_user_assigned_identity.cae_identity.id
 }
+
+output "cae_identity_client_id" {
+  value = data.azurerm_user_assigned_identity.cae_identity.client_id
+}

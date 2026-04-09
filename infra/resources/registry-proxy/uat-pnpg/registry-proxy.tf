@@ -139,6 +139,42 @@ locals {
   }
 
   app_settings = local.registry_proxy_app_settings
+
+  probes = [
+    {
+      httpGet = {
+        path   = "actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Liveness"
+      failureThreshold    = 3
+      initialDelaySeconds = 1
+    },
+    {
+      httpGet = {
+        path   = "actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Readiness"
+      failureThreshold    = 30
+      initialDelaySeconds = 30
+    },
+    {
+      httpGet = {
+        path   = "actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      failureThreshold    = 30
+      type                = "Startup"
+      initialDelaySeconds = 60
+    }
+  ]
 }
 
 
@@ -161,6 +197,6 @@ module "container_app_registry_proxy_ms" {
   workload_profile_name          = null
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
-  probes                         = local.spring_boot_health_probes
+  probes                         = local.probes
   tags                           = module.local.config.tags
 }
