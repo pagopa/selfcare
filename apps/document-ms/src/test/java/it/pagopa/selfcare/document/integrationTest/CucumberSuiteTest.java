@@ -24,7 +24,6 @@ import java.time.Duration;
     })
 @TestProfile(IntegrationProfile.class)
 public class CucumberSuiteTest extends CucumberQuarkusTest {
-
   public static void main(String[] args) {
     ConsoleLauncher.main(new String[] {"execute", "-c", CucumberSuiteTest.class.getName()});
   }
@@ -41,7 +40,8 @@ public class CucumberSuiteTest extends CucumberQuarkusTest {
         new ComposeContainer(new File("./src/test/resources/docker-compose.yml"))
             .withPull(true)
             .waitingFor("mongodb", Wait.forListeningPort())
-            .waitingFor("azure-cli", Wait.forListeningPort())
+            .waitingFor("azurite", Wait.forListeningPort())
+            .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*", 1))
             .withStartupTimeout(Duration.ofMinutes(5));
 
     composeContainer.start();

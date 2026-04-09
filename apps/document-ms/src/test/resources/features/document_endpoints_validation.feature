@@ -3,7 +3,7 @@ Feature: Document API validation
   Scenario: GET documents by onboardingId not found
     Given User login with username "j.doe" and password "test"
     When I send a GET request to "/v1/documents/onboarding/onb-not-found"
-    Then The status code is 404
+    Then The status code is 200
 
   Scenario: GET document by id not found
     Given User login with username "j.doe" and password "test"

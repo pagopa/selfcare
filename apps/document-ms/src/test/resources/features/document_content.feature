@@ -42,7 +42,7 @@ Feature: Document content health
       },
       "manager": {
         "id": "user-1",
-        "role": "ADMIN",
+        "role": "MANAGER",
         "name": "Mario",
         "surname": "Rossi",
         "taxCode": "RSSMRA80A01F205X",
