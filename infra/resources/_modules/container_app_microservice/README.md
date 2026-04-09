@@ -29,7 +29,6 @@ No modules.
 | Name | Type |
 |------|------|
 | [azurerm_container_app.container_app](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app) | resource |
-| [azurerm_key_vault_access_policy.keyvault_containerapp_access_policy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) | resource |
 | [azurerm_private_dns_a_record.private_dns_record_a_azurecontainerapps_io](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_a_record) | resource |
 | [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
 | [azurerm_container_app_environment.container_app_environment](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/container_app_environment) | data source |
@@ -66,6 +65,7 @@ No modules.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_cae_identity_client_id"></a> [cae\_identity\_client\_id](#output\_cae\_identity\_client\_id) | n/a |
 | <a name="output_cae_identity_id"></a> [cae\_identity\_id](#output\_cae\_identity\_id) | n/a |
 | <a name="output_container_app_environment_name"></a> [container\_app\_environment\_name](#output\_container\_app\_environment\_name) | n/a |
 | <a name="output_container_app_name"></a> [container\_app\_name](#output\_container\_app\_name) | n/a |

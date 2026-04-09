@@ -121,3 +121,9 @@ variable "location" {
   type    = string
   default = "westeurope"
 }
+
+variable "cross_tenant_replication_enabled" {
+  type        = bool
+  description = "Should cross Tenant replication be enabled?"
+  default     = false
+}

@@ -138,7 +138,7 @@ locals {
   # monitoring
   law_sku               = "PerGB2018"
   law_retention_in_days = 30
-  law_daily_quota_gb    = 2
+  law_daily_quota_gb    = -1
 
   # CosmosDb MongoDb
   cosmosdb_mongodb_extra_capabilities = [] //"EnableServerless", "EnableMongoRoleBasedAccessControl"

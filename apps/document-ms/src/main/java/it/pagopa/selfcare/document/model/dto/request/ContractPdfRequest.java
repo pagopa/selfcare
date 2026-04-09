@@ -49,8 +49,7 @@ public class ContractPdfRequest {
     @Valid
     private UserPdfData manager;
 
-    @Valid
-    private List<UserPdfData> delegates;
+    private List<@Valid UserPdfData> delegates;
 
     @Valid
     private BillingPdfData billing;
