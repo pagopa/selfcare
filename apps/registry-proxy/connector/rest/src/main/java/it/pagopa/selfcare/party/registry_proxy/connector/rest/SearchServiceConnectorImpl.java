@@ -11,7 +11,7 @@ import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.SearchServic
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.SearchServiceRequest;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.SearchServiceResponse;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexRequest;
-import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceMapper;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.mapper.SearchServiceMapper;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceOnboardingIndex;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

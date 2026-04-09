@@ -9,6 +9,7 @@ import it.pagopa.selfcare.party.registry_proxy.connector.model.institution.Onboa
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.AzureSearchRestClient;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.SearchServiceInstitutionResponse;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.SearchServiceResponse;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.mapper.SearchServiceMapperImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 
-@ContextConfiguration(classes = {SearchServiceConnectorImpl.class})
+@ContextConfiguration(classes = {SearchServiceConnectorImpl.class, SearchServiceMapperImpl.class})
 @ExtendWith(SpringExtension.class)
 public class SearchServiceConnectorImplTest {
 
