@@ -269,7 +269,7 @@ resource "azurerm_container_app_environment_dapr_component" "blob_state" {
 
   metadata {
     name  = "azureClientId"
-    value = module.container_app_registry_proxy_ms.cae_identity_id
+    value = module.container_app_registry_proxy_ms.cae_identity_client_id
   }
 
   scopes = [data.azurerm_container_app.ca.dapr[0].app_id]
@@ -300,6 +300,11 @@ module "container_app_registry_proxy_ms" {
   key_vault_name                 = module.local.config.key_vault_name
   probes                         = local.probes
   tags                           = module.local.config.tags
+  dapr_settings = [{
+    app_id       = "party-reg-proxy"
+    app_port     = "8080"
+    app_protocol = "http"
+  }]
 }
 
 ###############################################################################

@@ -67,7 +67,7 @@ locals {
     },
     {
       name  = "MOCK_OPEN_DATA_URL"
-      value = "https://selc${module.local.config.env_short}checkoutsa.z6.web.core.windows.net/resources"
+      value = "https://selcdcheckoutsa.z6.web.core.windows.net/resources"
     },
     {
       name  = "MOCK_OPEN_DATA_INSTITUTION_ENDPOINT"
@@ -201,12 +201,6 @@ locals {
 
   app_settings = concat(local.registry_proxy_app_settings, local.dapr_settings)
 
-  # cae_id               = 
-  # container_app_id     = try(data.azurerm_container_app.ca.id, null)
-  # storage_account_id   = try(data.azurerm_storage_account.existing_logs_storage.id, null)
-  # storage_account_name = 
-  # key_vault_id         = try(data.azurerm_key_vault.key_vault.id, null)
-  # logs_storage_key     = try(data.azurerm_key_vault_secret.logs_storage_access_key.value, null)
   probes = [
     {
       httpGet = {
@@ -269,7 +263,7 @@ resource "azurerm_container_app_environment_dapr_component" "blob_state" {
 
   metadata {
     name  = "azureClientId"
-    value = module.container_app_registry_proxy_ms.cae_identity_id
+    value = module.container_app_registry_proxy_ms.cae_identity_client_id
   }
 
   scopes = [data.azurerm_container_app.ca.dapr[0].app_id]
@@ -300,6 +294,11 @@ module "container_app_registry_proxy_ms" {
   key_vault_name                 = module.local.config.key_vault_name
   probes                         = local.probes
   tags                           = module.local.config.tags
+  dapr_settings = [{
+    app_id       = "party-reg-proxy"
+    app_port     = "8080"
+    app_protocol = "http"
+  }]
 }
 
 ###############################################################################

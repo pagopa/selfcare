@@ -10,7 +10,6 @@ module "local" {
 # DAPR
 ###############################################################################
 locals {
-  # ca_name = "selc-${module.local.config.env_short}-party-reg-proxy-ca"
 
   registry_proxy_app_settings = [
     {
