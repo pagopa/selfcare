@@ -4,7 +4,6 @@ import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoRepositoryBase;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.model.entity.Document;
 import jakarta.enterprise.context.ApplicationScoped;
-import org.bson.types.ObjectId;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,7 +11,7 @@ import java.util.List;
 import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
 
 @ApplicationScoped
-public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Document, ObjectId> {
+    public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Document, String> {
 
     private static final List<String> CONTRACT_TYPES = List.of(INSTITUTION.name(), USER.name());
     private static final String ONBOARDING_AND_TYPES_FILTER = "onboardingId = ?1 and type in ?2";

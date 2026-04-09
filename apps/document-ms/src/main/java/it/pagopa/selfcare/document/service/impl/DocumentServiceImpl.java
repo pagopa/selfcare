@@ -20,7 +20,6 @@ import it.pagopa.selfcare.document.util.DocumentFileUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.types.ObjectId;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -64,7 +63,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public Uni<Document> getDocumentById(String documentId) {
-        return documentRepository.findById(new ObjectId(documentId))
+        return documentRepository.findById(documentId)
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Document with id %s not found", documentId)));
     }
 
