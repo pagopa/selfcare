@@ -7,6 +7,7 @@ import io.restassured.RestAssured;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.platform.console.ConsoleLauncher;
 import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
@@ -25,7 +26,7 @@ import java.time.Duration;
 public class CucumberSuiteTest extends CucumberQuarkusTest {
 
   public static void main(String[] args) {
-    runMain(CucumberSuiteTest.class, args);
+    ConsoleLauncher.main(new String[] {"execute", "-c", CucumberSuiteTest.class.getName()});
   }
 
   @BeforeAll
