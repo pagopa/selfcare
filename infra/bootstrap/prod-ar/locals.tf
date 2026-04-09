@@ -9,9 +9,9 @@ locals {
 
   storage_state = {
     resource_group_name  = "io-infra-rg"
-    storage_account_name = "selcpstinfraterraform"
+    storage_account_name = "selc${local.env_short}stinfraterraform"
     container_name       = "azurermstate"
-    key                  = "selc.infra.bootstrap.prod.tfstate"
+    key                  = "selc.infra.bootstrap.${local.env}.tfstate"
   }
 
   storage_role = {
@@ -57,198 +57,154 @@ locals {
   ci_github_federations = [
     {
       repository = "selfcare"
-      subject    = "prod-ci"
+      subject    = "${local.env}-ci"
     }
   ]
 
   cd_github_federations = [
     {
       repository = "selfcare"
-      subject    = "prod-cd"
+      subject    = "${local.env}-cd"
     }
   ]
 
   ci_github_federations_fe = [
     {
       repository = "selfcare-assistance-frontend"
-      subject    = "prod-ci"
+      subject    = "${local.env}-ci"
     },
     {
       repository = "selfcare-pnpg-onboarding-frontend"
-      subject    = "prod-ci"
+      subject    = "${local.env}-ci"
     },
     {
       repository = "selfcare-token-exchange-frontend"
-      subject    = "prod-ci"
+      subject    = "${local.env}-ci"
     },
     {
       repository = "selfcare-login-frontend"
-      subject    = "prod-ci"
+      subject    = "${local.env}-ci"
     },
     {
       repository = "selfcare-dashboard-frontend"
-      subject    = "prod-ci"
+      subject    = "${local.env}-ci"
     },
     {
       repository = "selfcare-dashboard-admin-microfrontend"
-      subject    = "prod-ci"
+      subject    = "${local.env}-ci"
     },
     {
       repository = "selfcare-dashboard-groups-microfrontend"
-      subject    = "prod-ci"
+      subject    = "${local.env}-ci"
     },
     {
       repository = "selfcare-dashboard-users-microfrontend"
-      subject    = "prod-ci"
+      subject    = "${local.env}-ci"
     },
     {
       repository = "selfcare-onboarding-frontend"
-      subject    = "prod-ci"
+      subject    = "${local.env}-ci"
     },
     {
       repository = "selfcare-pnpg-dashboard-frontend"
-      subject    = "prod-ci"
+      subject    = "${local.env}-ci"
     }
   ]
 
   ci_github_federations_ms = [
     {
       repository = "selfcare-dashboard-backend"
-      subject    = "prod-ci"
+      subject    = "${local.env}-ci"
     },
     {
       repository = "selfcare-external-api-backend"
-      subject    = "prod-ci"
-    },
-    {
-      repository = "selfcare-infra"
-      subject    = "prod-ci"
+      subject    = "${local.env}-ci"
     },
     {
       repository = "selfcare-ms-core"
-      subject    = "prod-ci"
-    },
-    {
-      repository = "selfcare-ms-external-interceptor"
-      subject    = "prod-ci"
-    },
-    {
-      repository = "selfcare-ms-party-registry-proxy"
-      subject    = "prod-ci"
-    },
-    {
-      repository = "selfcare-onboarding"
-      subject    = "prod-ci"
-    },
-    {
-      repository = "selfcare-onboarding-backend"
-      subject    = "prod-ci"
+      subject    = "${local.env}-ci"
     },
     {
       repository = "selfcare-user"
-      subject    = "prod-ci"
+      subject    = "${local.env}-ci"
     },
     {
       repository = "selfcare-institution"
-      subject    = "prod-ci"
-    },
-    {
-      repository = "selfcare-infra-private"
-      subject    = "prod-ci"
+      subject    = "${local.env}-ci"
     },
     {
       repository = "selfcare"
-      subject    = "prod-ci"
+      subject    = "${local.env}-ci"
     }
   ]
 
   cd_github_federations_fe = [
     {
       repository = "selfcare-assistance-frontend"
-      subject    = "prod-cd"
+      subject    = "${local.env}-cd"
     },
     {
       repository = "selfcare-pnpg-onboarding-frontend"
-      subject    = "prod-cd"
+      subject    = "${local.env}-cd"
     },
     {
       repository = "selfcare-login-frontend"
-      subject    = "prod-cd"
+      subject    = "${local.env}-cd"
     },
     {
       repository = "selfcare-token-exchange-frontend"
-      subject    = "prod-cd"
+      subject    = "${local.env}-cd"
     },
     {
       repository = "selfcare-dashboard-frontend"
-      subject    = "prod-cd"
+      subject    = "${local.env}-cd"
     },
     {
       repository = "selfcare-dashboard-admin-microfrontend"
-      subject    = "prod-cd"
+      subject    = "${local.env}-cd"
     },
     {
       repository = "selfcare-dashboard-groups-microfrontend"
-      subject    = "prod-cd"
+      subject    = "${local.env}-cd"
     },
     {
       repository = "selfcare-dashboard-users-microfrontend"
-      subject    = "prod-cd"
+      subject    = "${local.env}-cd"
     },
     {
       repository = "selfcare-onboarding-frontend"
-      subject    = "prod-cd"
+      subject    = "${local.env}-cd"
     },
     {
       repository = "selfcare-pnpg-dashboard-frontend"
-      subject    = "prod-cd"
+      subject    = "${local.env}-cd"
     }
   ]
 
   cd_github_federations_ms = [
     {
       repository = "selfcare-dashboard-backend"
-      subject    = "prod-cd"
+      subject    = "${local.env}-cd"
     },
     {
       repository = "selfcare-external-api-backend"
-      subject    = "prod-cd"
+      subject    = "${local.env}-cd"
     },
     {
       repository = "selfcare-ms-core"
-      subject    = "prod-cd"
-    },
-    {
-      repository = "selfcare-ms-external-interceptor"
-      subject    = "prod-cd"
-    },
-    {
-      repository = "selfcare-ms-party-registry-proxy"
-      subject    = "prod-cd"
-    },
-    {
-      repository = "selfcare-onboarding"
-      subject    = "prod-cd"
-    },
-    {
-      repository = "selfcare-onboarding-backend"
-      subject    = "prod-cd"
+      subject    = "${local.env}-cd"
     },
     {
       repository = "selfcare-user"
-      subject    = "prod-cd"
+      subject    = "${local.env}-cd"
     },
     {
       repository = "selfcare-institution"
-      subject    = "prod-cd"
-    },
-    {
-      repository = "selfcare-infra-private"
-      subject    = "prod-cd"
+      subject    = "${local.env}-cd"
     },
     {
       repository = "selfcare"
-      subject    = "prod-cd"
+      subject    = "${local.env}-cd"
     }
   ]
 
@@ -265,13 +221,13 @@ locals {
       "io-infra-rg" = [
         "Storage Blob Data Contributor"
       ],
-      "selc-p-aks-rg" = [
+      "selc-${local.env_short}-aks-rg" = [
         "Azure Kubernetes Service Cluster Admin Role"
       ],
-      "selc-p-documents-storage-rg" = [
+      "selc-${local.env_short}-documents-storage-rg" = [
         "Storage Blob Data Contributor"
       ],
-      "selc-p-logs-storage-rg" = [
+      "selc-${local.env_short}-logs-storage-rg" = [
         "Storage Blob Data Contributor"
       ]
     }
@@ -282,13 +238,13 @@ locals {
       "Contributor"
     ]
     resource_groups = {
-      "selc-p-aks-rg" = [
+      "selc-${local.env_short}-aks-rg" = [
         "Azure Kubernetes Service Cluster Admin Role"
       ],
-      "selc-p-cosmosdb-mongodb-rg" : [
+      "selc-${local.env_short}-cosmosdb-mongodb-rg" : [
         "PagoPA Resource Lock Contributor"
       ],
-      "selc-p-documents-storage-rg" = [
+      "selc-${local.env_short}-documents-storage-rg" = [
         "Storage Blob Data Contributor"
       ],
       "io-infra-rg" = [
@@ -307,7 +263,7 @@ locals {
       terraform-state-rg = [
         "Storage Blob Data Contributor"
       ],
-      "selc-p-contracts-storage-rg" = [
+      "selc-${local.env_short}-contracts-storage-rg" = [
         "Storage Blob Data Contributor"
       ],
       io-infra-rg = [
@@ -345,26 +301,26 @@ locals {
   }
 
   github_federations_fe = {
-    "selfcare-assistance-frontend"            = "prod"
-    "selfcare-pnpg-onboarding-frontend"       = "prod"
-    "selfcare-token-exchange-frontend"        = "prod"
-    "selfcare-login-frontend"                 = "prod"
-    "selfcare-dashboard-frontend"             = "prod"
-    "selfcare-dashboard-admin-microfrontend"  = "prod"
-    "selfcare-dashboard-groups-microfrontend" = "prod"
-    "selfcare-dashboard-users-microfrontend"  = "prod"
-    "selfcare-onboarding-frontend"            = "prod"
-    "selfcare-pnpg-dashboard-frontend"        = "prod"
+    "selfcare-assistance-frontend"            = "${local.env}"
+    "selfcare-pnpg-onboarding-frontend"       = "${local.env}"
+    "selfcare-token-exchange-frontend"        = "${local.env}"
+    "selfcare-login-frontend"                 = "${local.env}"
+    "selfcare-dashboard-frontend"             = "${local.env}"
+    "selfcare-dashboard-admin-microfrontend"  = "${local.env}"
+    "selfcare-dashboard-groups-microfrontend" = "${local.env}"
+    "selfcare-dashboard-users-microfrontend"  = "${local.env}"
+    "selfcare-onboarding-frontend"            = "${local.env}"
+    "selfcare-pnpg-dashboard-frontend"        = "${local.env}"
   }
   github_federations_ms = {
-    "selfcare"                         = "prod"
-    "selfcare-dashboard-backend"       = "prod"
-    "selfcare-external-api-backend"    = "prod"
-    "selfcare-infra"                   = "prod"
-    "selfcare-institution"             = "prod"
-    "selfcare-ms-external-interceptor" = "prod"
-    "selfcare-ms-party-registry-proxy" = "prod"
-    "selfcare-onboarding-backend"      = "prod"
-    "selfcare-user"                    = "prod"
+    "selfcare"                         = "${local.env}"
+    "selfcare-dashboard-backend"       = "${local.env}"
+    "selfcare-external-api-backend"    = "${local.env}"
+    "selfcare-infra"                   = "${local.env}"
+    "selfcare-institution"             = "${local.env}"
+    "selfcare-ms-external-interceptor" = "${local.env}"
+    "selfcare-ms-party-registry-proxy" = "${local.env}"
+    "selfcare-onboarding-backend"      = "${local.env}"
+    "selfcare-user"                    = "${local.env}"
   }
 }

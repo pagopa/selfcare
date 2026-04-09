@@ -221,7 +221,7 @@ resource "azurerm_cdn_frontdoor_rule" "default_application" {
   actions {
     url_redirect_action {
       redirect_type        = "Found"
-      destination_hostname = var.host_name
+      destination_hostname = ""
       destination_path     = "/dashboard/"
     }
   }
