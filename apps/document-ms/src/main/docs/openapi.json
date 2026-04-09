@@ -1053,6 +1053,7 @@
           "content" : {
             "multipart/form-data" : {
               "schema" : {
+                "required" : [ "file" ],
                 "type" : "object",
                 "properties" : {
                   "request" : {

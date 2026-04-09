@@ -243,9 +243,9 @@ public class DocumentContentController {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Uni<Response> uploadSignedContract(
             @PathParam("onboardingId") String onboardingId,
-            @RestForm("request") @PartType(MediaType.APPLICATION_JSON) DocumentBuilderRequest request,
+            @NotNull @RestForm("request") @PartType(MediaType.APPLICATION_JSON) DocumentBuilderRequest request,
             @RestForm("skipSignatureVerification") @DefaultValue("false") boolean skipSignatureVerification,
-            @RestForm("file") InputStream file,
+            @NotNull @RestForm("file") InputStream file,
             @RestForm("fileName") String fileName) {
         return documentContentService.uploadSignedContract(
                         onboardingId, request, skipSignatureVerification, file, fileName)
