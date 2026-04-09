@@ -27,6 +27,7 @@ import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
 import it.pagopa.selfcare.user.service.utils.CreateOrUpdateUserByFiscalCodeResponse;
+import it.pagopa.selfcare.user.util.UserUtils;
 import it.pagopa.selfcare.user.util.product.ProductIdNormalizer;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,6 +51,8 @@ class UserControllerTest {
     private UserService userService;
     @InjectMock
     private UserRegistryService userRegistryService;
+    @InjectMock
+    private UserUtils userUtils;
 
     @BeforeEach
     void setup() {
@@ -623,6 +626,8 @@ class UserControllerTest {
         CreateUserDto userDto = buildCreateUserDto();
 
         // Mock the userService.createOrUpdateUser method
+        when(userUtils.checkProductRoles(anyString(), any(), anyList()))
+                .thenReturn(Uni.createFrom().nullItem());
         when(userService.createOrUpdateUserByFiscalCode(any(CreateUserDto.class), any()))
                 .thenReturn(Uni.createFrom().item(CreateOrUpdateUserByFiscalCodeResponse.builder().build()));
 
@@ -643,6 +648,8 @@ class UserControllerTest {
         CreateUserDto userDto = buildCreateUserDto_withChildProduct();
 
         // Mock the userService.createOrUpdateUser method
+        when(userUtils.checkProductRoles(anyString(), any(), anyList()))
+                .thenReturn(Uni.createFrom().nullItem());
         when(userService.createOrUpdateUserByFiscalCode(any(CreateUserDto.class), any()))
                 .thenReturn(Uni.createFrom().item(CreateOrUpdateUserByFiscalCodeResponse.builder().build()));
 
@@ -681,12 +688,34 @@ class UserControllerTest {
 
     @Test
     @TestSecurity(user = "userJwt")
+    void testCreateOrUpdateUserByFiscalCodeWithInvalidProductRole() {
+        // Prepare test data
+        CreateUserDto userDto = buildCreateUserDto();
+
+        // Mock the userService.createOrUpdateUser method
+        when(userUtils.checkProductRoles(anyString(), any(), anyList()))
+                .thenThrow(new IllegalArgumentException());
+
+        // Perform the API call
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .body(userDto)
+                .post("/")
+                .then()
+                .statusCode(500);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
     void testCreateOrUpdateUserByUserId() {
         // Prepare test data
         AddUserRoleDto userDto = buildAddUserRoleDto();
 
 
         // Mock the userService.createOrUpdateUser method
+        when(userUtils.checkProductRoles(anyString(), any(), anyList()))
+                .thenReturn(Uni.createFrom().nullItem());
         when(userService.createOrUpdateUserByUserId(any(AddUserRoleDto.class), anyString(), any(), any()))
                 .thenReturn(Uni.createFrom().item("example"));
 
@@ -723,8 +752,31 @@ class UserControllerTest {
 
     @Test
     @TestSecurity(user = "userJwt")
+    void testCreateOrUpdateUserByUserIdWithInvalidProductRole() {
+        // Prepare test data
+        AddUserRoleDto userDto = buildAddUserRoleDto();
+
+
+        // Mock the userService.createOrUpdateUser method
+        when(userUtils.checkProductRoles(anyString(), any(), anyList()))
+                .thenThrow(new IllegalArgumentException());
+
+        // Perform the API call
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .body(userDto)
+                .post("/userId")
+                .then()
+                .statusCode(500);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
     void testCheckRoleOrCreateOrUpdateByUserIdWhenUserIsManager() {
         AddUserRoleDto userDto = buildAddUserRoleDto();
+        when(userUtils.checkProductRoles(anyString(), any(), anyList()))
+                .thenReturn(Uni.createFrom().nullItem());
         when(userService.createUserByUserId(any(AddUserRoleDto.class), anyString(), any()))
                 .thenReturn(Uni.createFrom().failure(new UserRoleAlreadyPresentException("test")));
         given()
@@ -740,6 +792,8 @@ class UserControllerTest {
     @TestSecurity(user = "userJwt")
     void testCheckRoleOrCreateOrUpdateByUserIdWhenUserIsNotManager() {
         AddUserRoleDto userDto = buildAddUserRoleDtoWithOtherRole();
+        when(userUtils.checkProductRoles(anyString(), any(), anyList()))
+                .thenReturn(Uni.createFrom().nullItem());
         when(userService.createUserByUserId(any(AddUserRoleDto.class), anyString(), any()))
                 .thenReturn(Uni.createFrom().nullItem());
         given()
@@ -762,6 +816,21 @@ class UserControllerTest {
                 .post("/userId/onboarding")
                 .then()
                 .statusCode(400);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testCheckRoleOrCreateOrUpdateByUserIdWithInvalidProductRole() {
+        AddUserRoleDto userDto = buildAddUserRoleDto();
+        when(userUtils.checkProductRoles(anyString(), any(), anyList()))
+                .thenThrow(new IllegalArgumentException());
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .body(userDto)
+                .post("/userId/onboarding")
+                .then()
+                .statusCode(500);
     }
 
     @Test

@@ -111,7 +111,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
         Map<String, Object> filterMap = OnboardedProductFilter.builder().productId(productId).role(role).productRole(productRole).build().constructMap();
         return retrieveFirstFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilterMap, filterMap))
-                .onItem().transformToUni(userInstitution -> userUtils.checkProductRole(productId, retrieveRoleFromUserInstitution(userInstitution, productId, productRole), productRole)
+                .onItem().transformToUni(userInstitution -> userUtils.checkProductRoles(productId, retrieveRoleFromUserInstitution(userInstitution, productId, productRole), productRole == null ? Collections.emptyList() : List.of(productRole))
                         .replaceWith(userInstitution))
                 .onItem().transformToUni(userInstitution -> evaluateStatusAndUpdateUserInstitutionProduct(userInstitution, userId, institutionId, productId, role, productRole, status));
 

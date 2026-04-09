@@ -3181,6 +3181,33 @@ Feature: User
     And The response body contains field "[0].products[0].roleId"
     And The response body contains field "[0].products[1].roleId"
 
+
+  @RemoveUserInstitutionAfterCreateFromAPI
+  Scenario: Unsuccessfully update or create a user by userId with wrong ProductRole
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+      {
+          "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
+          "product": {
+              "productId": "prod-io",
+              "role": "DELEGATE",
+              "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+              "productRoles": [
+                  "admin"
+              ]
+          },
+          "institutionDescription": "Comune di Bergamo",
+          "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+      }
+      """
+    And The following path params:
+      | userId                        | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+    When I send a POST request to "users/{userId}"
+    Then The status code is 400
+    And The response body contains string:
+      | ProductRole admin not found for role DELEGATE |
+
   @RemoveUserInstitutionAfterCreateFromAPI
   Scenario: Unsuccessfully update or create a user by userId with a new role (2 times with same product for same institution)
     Given User login with username "j.doe" and password "test"
@@ -3397,7 +3424,7 @@ Feature: User
               "role": "MANAGER",
               "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
               "productRoles": [
-                  "admin"
+                  "referente amministrativo"
               ]
           },
           "institutionDescription": "Comune di Bergamo",
@@ -3427,8 +3454,35 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | tokenId                                       | role         | productRole               | status     |
       | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE     | referente amministrativo  | DELETED    |
-      | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | MANAGER      | admin                     | ACTIVE     |
+      | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | MANAGER      | referente amministrativo  | ACTIVE     |
     And The response body contains field "[0].products[0].roleId"
+
+
+  @RemoveUserInstitutionAfterCreateFromAPI
+  Scenario: Unsuccessfully update or create a user by userId with wrong productRole
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+      {
+          "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
+          "product": {
+              "productId": "prod-io",
+              "role": "DELEGATE",
+              "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+              "productRoles": [
+                  "admin"
+              ]
+          },
+          "institutionDescription": "Comune di Bergamo",
+          "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+      }
+      """
+    And The following path params:
+      | userId                        | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+    When I send a POST request to "users/{userId}/onboarding"
+    Then The status code is 400
+    And The response body contains string:
+      | ProductRole admin not found for role DELEGATE  |
 
 
   Scenario: Unsuccessfully update or create a user by userId after check if user is a manager for the specified product (with wrong role and user not created)
@@ -3770,7 +3824,7 @@ Feature: User
                 "role": "DELEGATE",
                 "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
                 "productRoles": [
-                    "referente amministrativo"
+                    "admin"
                 ]
             },
             "institutionDescription": "Comune di Bergamo",
@@ -3795,8 +3849,8 @@ Feature: User
       | [0].institutionDescription     | Comune di Bergamo                             |
     And The response body contains the list "[0].products" of size 1
     And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId                      | productRole                                   | role         | status | tokenId                                |
-      | prod-pagopa                    | referente amministrativo                      | DELEGATE     | ACTIVE | 7a3df825-8317-4601-9fea-12283b7ed97f   |
+      | productId                      | productRole                    | role         | status | tokenId                                |
+      | prod-pagopa                    | admin                          | DELEGATE     | ACTIVE | 7a3df825-8317-4601-9fea-12283b7ed97f   |
     And The response body contains field "[0].products[0].roleId"
 
 
@@ -3835,7 +3889,7 @@ Feature: User
                 "role": "MANAGER",
                 "tokenId": "aa1112-5132-4432-gsds-d12322",
                 "productRoles": [
-                    "referente amministrativo"
+                    "admin"
                 ]
             },
             "institutionDescription": "Comune di Milano",
@@ -3863,7 +3917,7 @@ Feature: User
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                      | productRole                                   | role         | status | tokenId                                |
       | prod-io                        | admin                                         | SUB_DELEGATE | ACTIVE | asda8312-3311-5642-gsds-gfr2252341     |
-      | prod-pagopa                    | referente amministrativo                      | MANAGER      | ACTIVE | aa1112-5132-4432-gsds-d12322           |
+      | prod-pagopa                    | admin                                         | MANAGER      | ACTIVE | aa1112-5132-4432-gsds-d12322           |
     And The response body contains field "[0].products[0].roleId"
     And The response body contains field "[0].products[1].roleId"
 
@@ -3895,6 +3949,35 @@ Feature: User
     When I send a POST request to "users/"
     Then The status code is 201
     And The userInstitution with field toAddOnAggregates was saved with value "true"
+
+  @RemoveUserInstitutionWithMockUser3
+  Scenario: Unsuccessfully create a new user or update an existing one with wrong product role
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+        {
+            "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
+            "hasToSendEmail": false,
+            "user": {
+              "fiscalCode": "VRDMRA22T71F205A",
+              "institutionEmail": "prova@email.com"
+            },
+            "product": {
+                "productId": "prod-pagopa",
+                "role": "DELEGATE",
+                "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+                "productRoles": [
+                    "referente amministrativo"
+                ]
+            },
+            "institutionDescription": "Comune di Bergamo",
+            "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+        }
+      """
+    When I send a POST request to "users/"
+    Then The status code is 400
+    And The response body contains string:
+      | ProductRole referente amministrativo not found for role DELEGATE |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Unsuccessfully create a new user or update an existing one with ACTIVE status (existing userInstitution with existing product)
@@ -3931,7 +4014,7 @@ Feature: User
                 "role": "MANAGER",
                 "tokenId": "asda8312-3311-5642-gsds-gfr2252341",
                 "productRoles": [
-                    "referente amministrativo"
+                    "admin"
                 ]
             },
             "institutionDescription": "Comune di Milano",
@@ -3996,7 +4079,7 @@ Feature: User
                 "role": "MANAGER",
                 "tokenId": "asda8312-3311-5642-gsds-gfr2252341",
                 "productRoles": [
-                    "referente amministrativo"
+                    "admin"
                 ]
             },
             "institutionDescription": "Comune di Milano",

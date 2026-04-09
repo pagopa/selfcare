@@ -82,37 +82,37 @@ class UserUtilTest {
     @Test
     void checkRoleValid() {
         when(productService.validateProductRole(any(), any(), any())).thenReturn(new ProductRole());
-        Assertions.assertDoesNotThrow(() -> userUtils.checkProductRole("prod-pagopa", PartyRole.MANAGER, "operatore"));
+        Assertions.assertDoesNotThrow(() -> userUtils.checkProductRoles("prod-pagopa", PartyRole.MANAGER, List.of("operatore")));
     }
 
     @Test
     void checkRoleProductRoleNotFound() {
         when(productService.validateProductRole(any(), any(), any())).thenThrow(new IllegalArgumentException("RoleMappings map for product prod-pagopa not found"));
-        Assertions.assertThrows(InvalidRequestException.class, () -> userUtils.checkProductRole("prod-pagopa", PartyRole.MANAGER, "amministratore"), "RoleMappings map for product prod-pagopa not found");
+        Assertions.assertThrows(InvalidRequestException.class, () -> userUtils.checkProductRoles("prod-pagopa", PartyRole.MANAGER, List.of("amministratore")), "RoleMappings map for product prod-pagopa not found");
     }
 
     @Test
     void checkRoleProductRoleListNotExists() {
         when(productService.validateProductRole(any(), any(), any())).thenThrow(new IllegalArgumentException("Role DELEGATE not found"));
-        Assertions.assertThrows(InvalidRequestException.class, () -> userUtils.checkProductRole("prod-pagopa", PartyRole.DELEGATE, "operatore"), "Role DELEGATE not found");
+        Assertions.assertThrows(InvalidRequestException.class, () -> userUtils.checkProductRoles("prod-pagopa", PartyRole.DELEGATE, List.of("operatore")), "Role DELEGATE not found");
     }
 
     @Test
     void checkProductRoleWithoutProductRole() {
         when(productService.validateProductRole(any(), any(), any())).thenThrow(new IllegalArgumentException("ProductRole operatore not found for role MANAGER"));
-        Assertions.assertThrows(InvalidRequestException.class, () -> userUtils.checkProductRole("prod-io", PartyRole.MANAGER, "operatore"), "ProductRole operatore not found for role MANAGER");
+        Assertions.assertThrows(InvalidRequestException.class, () -> userUtils.checkProductRoles("prod-io", PartyRole.MANAGER, List.of("operatore")), "ProductRole operatore not found for role MANAGER");
     }
 
     @Test
     void checkProductRoleWithoutRole() {
         when(productService.validateProductRole(any(), any(), any())).thenThrow(new IllegalArgumentException("Role is mandatory to check productRole"));
-        Assertions.assertThrows(InvalidRequestException.class, () -> userUtils.checkProductRole("prod-io", null, "operatore"), "Role is mandatory to check productRole");
+        Assertions.assertThrows(InvalidRequestException.class, () -> userUtils.checkProductRoles("prod-io", null, List.of("operatore")), "Role is mandatory to check productRole");
     }
 
     @Test
     void checkRoleWithoutProduct() {
         when(productService.validateProductRole(any(), any(), any())).thenThrow(new IllegalArgumentException("ProductRole admin not found for role MANAGER"));
-        Assertions.assertThrows(InvalidRequestException.class, () -> userUtils.checkProductRole("prod-io", PartyRole.MANAGER, "admin"), "ProductRole admin not found for role MANAGER");
+        Assertions.assertThrows(InvalidRequestException.class, () -> userUtils.checkProductRoles("prod-io", PartyRole.MANAGER, List.of("admin")), "ProductRole admin not found for role MANAGER");
     }
 
     private Product getProductResource() {

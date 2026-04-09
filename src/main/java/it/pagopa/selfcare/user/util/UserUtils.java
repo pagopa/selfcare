@@ -23,6 +23,7 @@ import org.apache.http.HttpStatus;
 import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.openapi.quarkus.user_registry_json.model.*;
+import org.owasp.encoder.Encode;
 
 import java.util.*;
 
@@ -47,11 +48,15 @@ public class UserUtils {
         return map;
     }
 
-    public Uni<Void> checkProductRole(String productId, PartyRole role, String productRole) {
-        if (StringUtils.isNotBlank(productRole) && StringUtils.isNotBlank(productId)) {
+        public Uni<Void> checkProductRoles(String productId, PartyRole role, List<String> productRoles) {
+        if (StringUtils.isNotBlank(productId) && productRoles != null) {
             try {
-                productService.validateProductRole(productId, productRole, role);
-                log.debug("Product role {} is valid for product {}", productRole, productId);
+                for (String productRole : productRoles) {
+                    if (StringUtils.isNotBlank(productRole)) {
+                        productService.validateProductRole(productId, productRole, role);
+                        log.debug("Product role {} is valid for product {}", Encode.forJava(productRole), Encode.forJava(productId));
+                    }
+                }
             } catch (IllegalArgumentException e) {
                 throw new InvalidRequestException(e.getMessage());
             }

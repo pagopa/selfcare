@@ -21,6 +21,7 @@ import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
 import it.pagopa.selfcare.user.service.utils.OPERATION_TYPE;
+import it.pagopa.selfcare.user.util.UserUtils;
 import it.pagopa.selfcare.user.util.product.ProductId;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -62,6 +63,7 @@ public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
     private final UserRegistryService userRegistryService;
+    private final UserUtils userUtils;
 
     @Operation(description = "The API retrieves Users' emails using institution id and product id",
             summary = "Retrieve users' emails by institution ID and product ID")
@@ -319,7 +321,8 @@ public class UserController {
     public Uni<Response> createOrUpdateByUserId(@PathParam("userId") String userId,
                                                 @Valid AddUserRoleDto userDto,
                                                 @Context SecurityContext ctx) {
-        return readUserIdFromToken(ctx)
+        return userUtils.checkProductRoles(userDto.getProduct().getProductId(), PartyRole.valueOf(userDto.getProduct().getRole()), userDto.getProduct().getProductRoles())
+                .chain(() -> readUserIdFromToken(ctx))
                 .onItem().transformToUni(loggedUser -> userService.createOrUpdateUserByUserId(userDto, userId, loggedUser, OnboardedProductState.ACTIVE))
                 .onItem().ifNotNull().transform(ignore -> Response.status(HttpStatus.SC_CREATED).build())
                 .onItem().ifNull().continueWith(Response.status(HttpStatus.SC_OK).build());
@@ -345,7 +348,9 @@ public class UserController {
     public Uni<Response> createUserByUserId(@PathParam("userId") String userId,
                                             @Valid AddUserRoleDto userDto,
                                             @Context SecurityContext ctx) {
-        return readUserIdFromToken(ctx)
+
+        return userUtils.checkProductRoles(userDto.getProduct().getProductId(), PartyRole.valueOf(userDto.getProduct().getRole()), userDto.getProduct().getProductRoles())
+                .chain(() -> readUserIdFromToken(ctx))
                 .onItem().transformToUni(loggedUser -> userService.createUserByUserId(userDto, userId, loggedUser))
                 .onItem().transform(ignore -> Response.status(HttpStatus.SC_CREATED).entity(userId).build())
                 .onFailure(UserRoleAlreadyPresentException.class).recoverWithUni(throwable -> Uni.createFrom().item(Response.status(HttpStatus.SC_OK).entity(userId).build()));
@@ -372,7 +377,8 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> createOrUpdateByFiscalCode(@Valid CreateUserDto userDto,
                                                   @Context SecurityContext ctx) {
-        return readUserIdFromToken(ctx)
+        return userUtils.checkProductRoles(userDto.getProduct().getProductId(), PartyRole.valueOf(userDto.getProduct().getRole()), userDto.getProduct().getProductRoles())
+                .chain(() -> readUserIdFromToken(ctx))
                 .onItem().transformToUni(loggedUser -> userService.createOrUpdateUserByFiscalCode(userDto, loggedUser))
                 .map(response -> Response
                         .status(OPERATION_TYPE.CREATED_OR_UPDATED.equals(response.getOperationType()) ? HttpStatus.SC_CREATED : HttpStatus.SC_OK)
