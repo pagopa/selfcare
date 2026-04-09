@@ -9,6 +9,7 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.restassured.RestAssured;
+import io.restassured.specification.RequestSpecification;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
@@ -148,13 +149,17 @@ public class CommonSteps {
     @When("I send a POST request to {string} with form data and multi-part file")
     public void sendPostRequestWithFormDataAndFileUpload(String url) {
         final String token = sharedStepData.getToken();
-        sharedStepData.setResponse(RestAssured
+        RequestSpecification request = RestAssured
             .given()
             .contentType(ContentType.MULTIPART)
             .header("Authorization", "Bearer " + token)
             .pathParams(Optional.ofNullable(sharedStepData.getPathParams()).orElse(Collections.emptyMap()))
-            .queryParams(Optional.ofNullable(sharedStepData.getQueryParams()).orElse(Collections.emptyMap()))
-            .formParams(Optional.ofNullable(sharedStepData.getFormData()).orElse(Collections.emptyMap()))
+            .queryParams(Optional.ofNullable(sharedStepData.getQueryParams()).orElse(Collections.emptyMap()));
+
+        addMultipartFormFields(request, Optional.ofNullable(sharedStepData.getFormData()).orElse(Collections.emptyMap()));
+
+        sharedStepData.setResponse(RestAssured
+            .given(request)
             .multiPart(
                 sharedStepData.getFileUpload().getKeyParamRequest(),
                 new File(getClass().getClassLoader().getResource(sharedStepData.getFileUpload().getFilePathReference()).getFile()),
@@ -170,13 +175,16 @@ public class CommonSteps {
     @When("I send a POST request to {string} with form data only")
     public void sendPostRequestWithFormDataOnly(String url) {
         final String token = sharedStepData.getToken();
-        sharedStepData.setResponse(RestAssured
+        RequestSpecification request = RestAssured
             .given()
             .contentType(ContentType.MULTIPART)
             .header("Authorization", "Bearer " + token)
             .pathParams(Optional.ofNullable(sharedStepData.getPathParams()).orElse(Collections.emptyMap()))
-            .queryParams(Optional.ofNullable(sharedStepData.getQueryParams()).orElse(Collections.emptyMap()))
-            .formParams(Optional.ofNullable(sharedStepData.getFormData()).orElse(Collections.emptyMap()))
+            .queryParams(Optional.ofNullable(sharedStepData.getQueryParams()).orElse(Collections.emptyMap()));
+
+        addMultipartFormFields(request, Optional.ofNullable(sharedStepData.getFormData()).orElse(Collections.emptyMap()));
+
+        sharedStepData.setResponse(request
             .when()
             .post(url)
             .then()
@@ -453,5 +461,9 @@ public class CommonSteps {
                 .then()
                 .extract()
         );
+    }
+
+    private void addMultipartFormFields(RequestSpecification request, Map<String, String> formData) {
+        formData.forEach(request::multiPart);
     }
 }
