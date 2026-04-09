@@ -463,6 +463,8 @@ public class UserController {
     @Operation(description = "Get the user's email configured to receive the OTP", summary = "Get user's email for OTP")
     @GET
     @Tag(name = "User")
+    @Tag(name = "internal-v1")
+    @Tag(name = "support")
     @Path(value = "/{userId}/otp-info")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<UserOtpEmailInfoResponse> getUserOtpEmailInfo(@PathParam(value = "userId") String userId) {
