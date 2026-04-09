@@ -18,9 +18,20 @@ on:
 
 jobs:
 
+  infra_dev:
+    name: ${{ inputs.target == 'selc' && '[Dev]' || '[Dev-PNPG]' }} - Infra Apply
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    uses: ./.github/workflows/call_release_infra.yml
+    secrets: inherit
+    with:
+      environment: dev
+      tf_environment: ${{ inputs.target == 'selc' && 'dev-ar' || 'dev-pnpg' }}
+      dir: ${{ inputs.target == 'selc' && 'infra/resources/onboarding-functions/dev-ar' || 'infra/resources/onboarding-functions/dev-pnpg' }}
+
   release_dev:
     name: ${{ inputs.target == 'selc' && '[Dev]' || '[Dev-PNPG]' }} - ${{ inputs.app }} Release
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    needs: [infra_dev]
     runs-on: ubuntu-24.04
     environment:
       name: dev-cd
@@ -61,9 +72,20 @@ jobs:
             -Dquarkus.azure-functions.app-service-plan-name=${{ format('selc-{0}-onboarding-fn-plan', inputs.target == 'selc' && 'd' || 'd-pnpg') }} \
             -Dquarkus.azure-functions.runtime.java-version=17
 
+  infra_uat:
+    name: ${{ inputs.target == 'selc' && '[Uat]' || '[Uat-PNPG]' }} - Infra Apply
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    uses: ./.github/workflows/call_release_infra.yml
+    secrets: inherit
+    with:
+      environment: uat
+      tf_environment: ${{ inputs.target == 'selc' && 'uat-ar' || 'uat-pnpg' }}
+      dir: ${{ inputs.target == 'selc' && 'infra/resources/onboarding-functions/uat-ar' || 'infra/resources/onboarding-functions/uat-pnpg' }}
+
   release_uat:
     name: ${{ inputs.target == 'selc' && '[Uat]' || '[Uat-PNPG]' }} - ${{ inputs.app }} Release
     if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    needs: [infra_uat]
     runs-on: ubuntu-24.04
     environment:
       name: uat-cd
@@ -104,9 +126,20 @@ jobs:
             -Dquarkus.azure-functions.app-service-plan-name=${{ format('selc-{0}-onboarding-fn-plan', inputs.target == 'selc' && 'u' || 'u-pnpg') }} \
             -Dquarkus.azure-functions.runtime.java-version=17
 
+  infra_prod:
+    name: ${{ inputs.target == 'selc' && '[Prod]' || '[Prod-PNPG]' }} - Infra Apply
+    if: ${{ inputs.env == 'prod' }}
+    uses: ./.github/workflows/call_release_infra.yml
+    secrets: inherit
+    with:
+      environment: prod
+      tf_environment: ${{ inputs.target == 'selc' && 'prod-ar' || 'prod-pnpg' }}
+      dir: ${{ inputs.target == 'selc' && 'infra/resources/onboarding-functions/prod-ar' || 'infra/resources/onboarding-functions/prod-pnpg' }}
+
   release_prod:
     name: ${{ inputs.target == 'selc' && '[Prod]' || '[Prod-PNPG]' }} - ${{ inputs.app }} Release
     if: ${{ inputs.env == 'prod' }}
+    needs: [infra_prod]
     runs-on: ubuntu-24.04
     environment:
       name: prod-cd

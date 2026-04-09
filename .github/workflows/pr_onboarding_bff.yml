@@ -3,6 +3,7 @@ name: Code Review - Onboarding BFF
 permissions:
   contents: read
   id-token: write
+  packages: read
   pull-requests: write
 
 on:

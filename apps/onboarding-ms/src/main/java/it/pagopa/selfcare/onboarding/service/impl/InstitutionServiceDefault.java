@@ -9,7 +9,10 @@ import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.service.InstitutionService;
 import it.pagopa.selfcare.onboarding.util.QueryUtils;
 import jakarta.enterprise.context.ApplicationScoped;
+
 import java.util.*;
+
+import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -20,6 +23,8 @@ import org.openapi.quarkus.core_json.model.InstitutionsResponse;
 @ApplicationScoped
 public class InstitutionServiceDefault implements InstitutionService {
 
+    @RestClient
+    @Inject
     private final InstitutionApi institutionApi;
 
     public InstitutionServiceDefault(@RestClient InstitutionApi institutionApi) {

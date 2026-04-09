@@ -26,7 +26,8 @@ module "collection_documents" {
     { keys = ["rootOnboardingId"], unique = false },
     { keys = ["productId"], unique = false },
     { keys = ["type"], unique = false },
-    { keys = ["attachmentName"], unique = false }
+    { keys = ["attachmentName"], unique = false },
+    { keys = ["createdAt"], unique = false }
   ]
 }
 

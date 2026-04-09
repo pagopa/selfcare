@@ -34,6 +34,50 @@ locals {
   storage_logs    = "selc${module.local.config.env_short}stlogs"
   storage_logs_rg = "selc-${module.local.config.env_short}-logs-storage-rg"
 
+  registry_proxy_container_app = {
+    min_replicas = local.container_app.min_replicas
+    max_replicas = local.container_app.max_replicas
+    scale_rules  = local.container_app.scale_rules
+    cpu          = 1.0
+    memory       = "2Gi"
+  }
+
+  spring_boot_health_probes = [
+    {
+      httpGet = {
+        path   = "/actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Liveness"
+      failureThreshold    = 3
+      initialDelaySeconds = 1
+    },
+    {
+      httpGet = {
+        path   = "/actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Readiness"
+      failureThreshold    = 30
+      initialDelaySeconds = 30
+    },
+    {
+      httpGet = {
+        path   = "/actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Startup"
+      failureThreshold    = 30
+      initialDelaySeconds = 60
+    }
+  ]
+
   dapr_settings = [{
     name  = "DAPR_HTTP_PORT"
     value = "3500"
@@ -48,10 +92,18 @@ locals {
     }
   ]
 
+  dapr_sidecar_settings = [
+    {
+      app_id       = "party-reg-proxy"
+      app_port     = 8080
+      app_protocol = "http"
+    }
+  ]
+
   registry_proxy_app_settings = [
     {
-      name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      name = "JAVA_TOOL_OPTIONS"
+      value = "-javaagent:applicationinsights-agent.jar -XX:MaxRAMPercentage=75.0"
     },
     {
       name  = "APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL"
@@ -266,7 +318,7 @@ resource "azurerm_container_app_environment_dapr_component" "blob_state" {
     value = module.container_app_registry_proxy_ms.cae_identity_client_id
   }
 
-  scopes = [data.azurerm_container_app.ca.dapr[0].app_id]
+  scopes = [local.ca_name]
 
   lifecycle {
     prevent_destroy = false

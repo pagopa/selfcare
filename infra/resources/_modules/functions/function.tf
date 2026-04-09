@@ -59,9 +59,9 @@ resource "azurerm_linux_function_app" "fn" {
   location            = azurerm_resource_group.fn_rg.location
   resource_group_name = azurerm_resource_group.fn_rg.name
 
-  service_plan_id            = azurerm_service_plan.fn_plan.id
-  storage_account_name       = azurerm_storage_account.fn_storage.name
-  storage_account_access_key = azurerm_storage_account.fn_storage.primary_access_key
+  service_plan_id               = azurerm_service_plan.fn_plan.id
+  storage_account_name          = azurerm_storage_account.fn_storage.name
+  storage_uses_managed_identity = true
 
   functions_extension_version = "~4"
   virtual_network_subnet_id   = azurerm_subnet.fn_snet.id
@@ -72,24 +72,46 @@ resource "azurerm_linux_function_app" "fn" {
   }
 
   site_config {
-    always_on              = var.always_on
-    vnet_route_all_enabled = true
-    http2_enabled          = true
+    always_on                              = var.always_on
+    vnet_route_all_enabled                 = true
+    http2_enabled                          = true
+    application_insights_connection_string = var.application_insights_connection_string
+    application_insights_key               = var.application_insights_key
 
     application_stack {
       java_version = "17"
     }
   }
 
-  app_settings = var.app_settings
+  app_settings = merge(
+    var.app_settings,
+    {
+      AzureWebJobsStorage__accountName     = azurerm_storage_account.fn_storage.name
+      AzureWebJobsStorage__blobServiceUri  = azurerm_storage_account.fn_storage.primary_blob_endpoint
+      AzureWebJobsStorage__queueServiceUri = azurerm_storage_account.fn_storage.primary_queue_endpoint
+      AzureWebJobsStorage__tableServiceUri = azurerm_storage_account.fn_storage.primary_table_endpoint
+    }
+  )
 
   tags = var.tags
+}
 
-  lifecycle {
-    ignore_changes = [
-      app_settings,
-    ]
-  }
+resource "azurerm_role_assignment" "fn_storage_blob_data_contributor" {
+  scope                = azurerm_storage_account.fn_storage.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_linux_function_app.fn.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "fn_storage_queue_data_contributor" {
+  scope                = azurerm_storage_account.fn_storage.id
+  role_definition_name = "Storage Queue Data Contributor"
+  principal_id         = azurerm_linux_function_app.fn.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "fn_storage_table_data_contributor" {
+  scope                = azurerm_storage_account.fn_storage.id
+  role_definition_name = "Storage Table Data Contributor"
+  principal_id         = azurerm_linux_function_app.fn.identity[0].principal_id
 }
 
 resource "azurerm_key_vault_access_policy" "fn_keyvault_access_policy" {

@@ -53,6 +53,12 @@ variable "dns_zone_prefix" {
   default = "selfcare"
 }
 
+variable "dns_zone_prefix_ar" {
+  type        = string
+  description = "DNS zone prefix for the areariservata domain (e.g., areariservata.selfcare)"
+  default     = null
+}
+
 variable "external_domain" {
   type    = string
   default = "pagopa.it"
@@ -99,6 +105,12 @@ variable "key_vault_resource_group_name" {
 variable "cdn_certificate_name" {
   type        = string
   description = "Name of the Key Vault certificate for the custom domain"
+  default     = null
+}
+
+variable "cdn_certificate_name_ar" {
+  type        = string
+  description = "Name of the Key Vault certificate for the areariservata apex domain"
   default     = null
 }
 

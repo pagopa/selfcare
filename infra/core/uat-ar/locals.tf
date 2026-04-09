@@ -78,6 +78,7 @@ locals {
   # app_gateway
   app_gateway_api_certificate_name      = "api-uat-selfcare-pagopa-it"
   app_gateway_api_pnpg_certificate_name = "api-pnpg-uat-selfcare-pagopa-it"
+  cdn_certificate_name_ar               = "uat-areariservata-pagopa-it"
 
   # redis
   redis_sku_name                 = "Standard"

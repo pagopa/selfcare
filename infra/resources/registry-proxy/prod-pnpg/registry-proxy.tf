@@ -6,15 +6,56 @@ module "local" {
 }
 
 
-###############################################################################
-# DAPR
-###############################################################################
 locals {
+
+  registry_proxy_container_app = {
+    min_replicas = local.container_app.min_replicas
+    max_replicas = local.container_app.max_replicas
+    scale_rules  = local.container_app.scale_rules
+    cpu          = 1.0
+    memory       = "2Gi"
+  }
+
+  spring_boot_health_probes = [
+    {
+      httpGet = {
+        path   = "/actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Liveness"
+      failureThreshold    = 3
+      initialDelaySeconds = 1
+    },
+    {
+      httpGet = {
+        path   = "/actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Readiness"
+      failureThreshold    = 30
+      initialDelaySeconds = 30
+    },
+    {
+      httpGet = {
+        path   = "/actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Startup"
+      failureThreshold    = 30
+      initialDelaySeconds = 60
+    }
+  ]
 
   registry_proxy_app_settings = [
     {
-      name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      name = "JAVA_TOOL_OPTIONS"
+      value = "-javaagent:applicationinsights-agent.jar -XX:MaxRAMPercentage=75.0"
     },
     {
       name  = "APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL"

@@ -132,6 +132,10 @@ locals {
       value = "http://selc-${module.local.config.env_short}-party-reg-proxy-ca"
     },
     {
+      name  = "MS_DOCUMENT_URL"
+      value = "https://selc-d-document-ms-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+    },
+    {
       name  = "SIGNATURE_VALIDATION_ENABLED"
       value = "false"
     },
@@ -158,6 +162,10 @@ locals {
     {
       name  = "ONBOARDING-UPDATE-USER-REQUESTER"
       value = "true"
+    },
+    {
+      name  = "MS_DOCUMENT_URL"
+      value = "https://selc-d-document-ms-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
     }
   ]
 
