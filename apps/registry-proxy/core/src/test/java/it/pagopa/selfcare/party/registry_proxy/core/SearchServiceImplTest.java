@@ -6,6 +6,7 @@ import it.pagopa.selfcare.party.registry_proxy.connector.api.SearchServiceConnec
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ServiceUnavailableException;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.AzureSearchValue;
+import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceInstitution;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceStatus;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.institution.Institution;
@@ -258,6 +259,28 @@ public class SearchServiceImplTest {
     assertEquals(mockResponse, result);
 
     verify(searchServiceConnector, times(1)).searchInstitution(search, expectedFilter, products, top, skip, null, null);
+  }
+
+  @Test
+  void indexOnboardingTest() {
+    final SearchServiceStatus status = new SearchServiceStatus();
+    final AzureSearchValue value = new AzureSearchValue();
+    value.setStatus(true);
+    status.setValue(List.of(value));
+    when(searchServiceConnector.indexOnboarding(any(OnboardingIndex.class))).thenReturn(status);
+    assertDoesNotThrow(() -> searchService.indexOnboarding(new OnboardingIndex()));
+    verify(searchServiceConnector, times(1)).indexOnboarding(any(OnboardingIndex.class));
+  }
+
+  @Test
+  void indexOnboardingTest_serviceUnavailable() {
+    final SearchServiceStatus status = new SearchServiceStatus();
+    final AzureSearchValue value = new AzureSearchValue();
+    value.setStatus(false);
+    status.setValue(List.of(value));
+    when(searchServiceConnector.indexOnboarding(any(OnboardingIndex.class))).thenReturn(status);
+    assertThrows(ServiceUnavailableException.class, () -> searchService.indexOnboarding(new OnboardingIndex()));
+    verify(searchServiceConnector, times(1)).indexOnboarding(any(OnboardingIndex.class));
   }
 
 }

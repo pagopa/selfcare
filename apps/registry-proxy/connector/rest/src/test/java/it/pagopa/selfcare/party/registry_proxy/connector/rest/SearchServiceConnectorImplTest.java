@@ -2,6 +2,7 @@ package it.pagopa.selfcare.party.registry_proxy.connector.rest;
 
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.AzureSearchValue;
+import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceInstitution;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceStatus;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.institution.Institution;
@@ -382,5 +383,13 @@ public class SearchServiceConnectorImplTest {
     response.setLastModified(OffsetDateTime.parse("2023-10-10T17:13:44.263Z"));
     return response;
   }
+
+  @Test
+  void testIndexOnboarding() {
+    when(azureSearchRestClient.indexOnboarding(any())).thenReturn(new SearchServiceStatus());
+    searchServiceConnector.indexOnboarding(new OnboardingIndex());
+    verify(azureSearchRestClient, times(1)).indexOnboarding(any());
+  }
+
 }
 
