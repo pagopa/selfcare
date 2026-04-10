@@ -12,6 +12,24 @@
 
     <artifactId>onboarding-bff-connector-rest</artifactId>
 
+    <properties>
+        <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
+        <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
+        <quarkus.platform.version>3.31.2</quarkus.platform.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>${quarkus.platform.group-id}</groupId>
+                <artifactId>${quarkus.platform.artifact-id}</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
@@ -49,218 +67,45 @@
             <version>0.2.4</version>
         </dependency>
         <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-spring-boot3</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.github.openfeign</groupId>
-            <artifactId>feign-httpclient</artifactId>
-            <version>12.3</version>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-arc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-rest-client-jackson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.openapi.generator</groupId>
+            <artifactId>quarkus-openapi-generator</artifactId>
+            <version>2.16.0</version>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
-                <groupId>org.openapitools</groupId>
-                <artifactId>openapi-generator-maven-plugin</artifactId>
-                <version>7.17.0</version>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-maven-plugin</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <extensions>true</extensions>
                 <executions>
                     <execution>
-                        <id>selfcare-ms-core</id>
                         <goals>
-                            <goal>generate</goal>
+                            <goal>build</goal>
+                            <goal>generate-code</goal>
                         </goals>
-                        <phase>process-resources</phase>
-                        <configuration>
-                            <inputSpec>${project.basedir}/docs/openapi/api-selfcare-core-docs.json</inputSpec>
-                            <generatorName>spring</generatorName>
-                            <library>spring-cloud</library>
-                            <modelNameSuffix/>
-                            <generateApiTests>false</generateApiTests>
-                            <generateModelTests>false</generateModelTests>
-                            <configOptions>
-                                <useSpringBoot3>true</useSpringBoot3>
-                                <generateForOpenFeign>true</generateForOpenFeign>
-                                <basePackage>${project.groupId}.core.generated.openapi.v1</basePackage>
-                                <modelPackage>${project.groupId}.core.generated.openapi.v1.dto</modelPackage>
-                                <apiPackage>${project.groupId}.core.generated.openapi.v1.api</apiPackage>
-                                <configPackage>${project.groupId}.core.generated.openapi.v1.config</configPackage>
-                                <dateLibrary>java8-localdatetime</dateLibrary>
-                                <delegatePattern>true</delegatePattern>
-                                <interfaceOnly>true</interfaceOnly>
-                                <annotationLibrary>none</annotationLibrary>
-                                <documentationProvider>source</documentationProvider>
-                                <openApiNullable>false</openApiNullable>
-                                <skipDefaultInterface>false</skipDefaultInterface>
-                                <useTags>true</useTags>
-                            </configOptions>
-                        </configuration>
                     </execution>
-
-                    <execution>
-                        <id>selfcare-ms-onboarding</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <phase>process-resources</phase>
-                        <configuration>
-                            <inputSpec>${project.basedir}/docs/openapi/api-selfcare-onboarding-docs.json</inputSpec>
-                            <generatorName>spring</generatorName>
-                            <library>spring-cloud</library>
-                            <modelNameSuffix/>
-                            <generateApiTests>false</generateApiTests>
-                            <generateModelTests>false</generateModelTests>
-                            <configOptions>
-                                <useSpringBoot3>true</useSpringBoot3>
-                                <generateForOpenFeign>true</generateForOpenFeign>
-                                <basePackage>${project.groupId}.onboarding.generated.openapi.v1</basePackage>
-                                <modelPackage>${project.groupId}.onboarding.generated.openapi.v1.dto</modelPackage>
-                                <apiPackage>${project.groupId}.onboarding.generated.openapi.v1.api</apiPackage>
-                                <configPackage>${project.groupId}.onboarding.generated.openapi.v1.config</configPackage>
-                                <dateLibrary>java8-localdatetime</dateLibrary>
-                                <delegatePattern>true</delegatePattern>
-                                <interfaceOnly>true</interfaceOnly>
-                                <annotationLibrary>none</annotationLibrary>
-                                <documentationProvider>source</documentationProvider>
-                                <openApiNullable>false</openApiNullable>
-                                <skipDefaultInterface>false</skipDefaultInterface>
-                                <useTags>true</useTags>
-                            </configOptions>
-                        </configuration>
-                    </execution>
-
-                    <execution>
-                        <id>selfcare-ms-user</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <phase>process-resources</phase>
-                        <configuration>
-                            <inputSpec>${project.basedir}/docs/openapi/api-selfcare-user-docs.json</inputSpec>
-                            <generatorName>spring</generatorName>
-                            <library>spring-cloud</library>
-                            <modelNameSuffix/>
-                            <generateApiTests>false</generateApiTests>
-                            <generateModelTests>false</generateModelTests>
-                            <configOptions>
-                                <useSpringBoot3>true</useSpringBoot3>
-                                <generateForOpenFeign>true</generateForOpenFeign>
-                                <basePackage>${project.groupId}.user.generated.openapi.v1</basePackage>
-                                <modelPackage>${project.groupId}.user.generated.openapi.v1.dto</modelPackage>
-                                <apiPackage>${project.groupId}.user.generated.openapi.v1.api</apiPackage>
-                                <configPackage>${project.groupId}.user.generated.openapi.v1.config</configPackage>
-                                <dateLibrary>java8-localdatetime</dateLibrary>
-                                <delegatePattern>true</delegatePattern>
-                                <interfaceOnly>true</interfaceOnly>
-                                <annotationLibrary>none</annotationLibrary>
-                                <documentationProvider>source</documentationProvider>
-                                <openApiNullable>false</openApiNullable>
-                                <skipDefaultInterface>false</skipDefaultInterface>
-                                <useTags>true</useTags>
-                            </configOptions>
-                        </configuration>
-                    </execution>
-
-                    <execution>
-                        <id>selfcare-onboarding-functions</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <phase>process-resources</phase>
-                        <configuration>
-                            <inputSpec>${project.basedir}/docs/openapi/api-selfcare-onboarding-functions-docs.json</inputSpec>
-                            <generatorName>spring</generatorName>
-                            <library>spring-cloud</library>
-                            <modelNameSuffix/>
-                            <generateApiTests>false</generateApiTests>
-                            <generateModelTests>false</generateModelTests>
-                            <configOptions>
-                                <useSpringBoot3>true</useSpringBoot3>
-                                <generateForOpenFeign>true</generateForOpenFeign>
-                                <basePackage>${project.groupId}.onboarding_functions.generated.openapi.v1</basePackage>
-                                <modelPackage>${project.groupId}.onboarding_functions.generated.openapi.v1.dto</modelPackage>
-                                <apiPackage>${project.groupId}.onboarding_functions.generated.openapi.v1.api</apiPackage>
-                                <configPackage>${project.groupId}.onboarding_functions.generated.openapi.v1.config</configPackage>
-                                <dateLibrary>java8-localdatetime</dateLibrary>
-                                <delegatePattern>true</delegatePattern>
-                                <interfaceOnly>true</interfaceOnly>
-                                <annotationLibrary>none</annotationLibrary>
-                                <documentationProvider>source</documentationProvider>
-                                <openApiNullable>false</openApiNullable>
-                                <skipDefaultInterface>false</skipDefaultInterface>
-                                <useTags>true</useTags>
-                            </configOptions>
-                        </configuration>
-                    </execution>
-
-                    <execution>
-                        <id>user-registry</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <phase>process-resources</phase>
-                        <configuration>
-                            <inputSpec>${project.basedir}/docs/openapi/api-user-registry-docs.json</inputSpec>
-                            <generatorName>spring</generatorName>
-                            <library>spring-cloud</library>
-                            <modelNameSuffix/>
-                            <generateApiTests>false</generateApiTests>
-                            <generateModelTests>false</generateModelTests>
-                            <configOptions>
-                                <useSpringBoot3>true</useSpringBoot3>
-                                <generateForOpenFeign>true</generateForOpenFeign>
-                                <basePackage>${project.groupId}.user_registry.generated.openapi.v1</basePackage>
-                                <modelPackage>${project.groupId}.user_registry.generated.openapi.v1.dto</modelPackage>
-                                <apiPackage>${project.groupId}.user_registry.generated.openapi.v1.api</apiPackage>
-                                <configPackage>${project.groupId}.user_registry.generated.openapi.v1.config</configPackage>
-                                <dateLibrary>java8-localdatetime</dateLibrary>
-                                <delegatePattern>true</delegatePattern>
-                                <interfaceOnly>true</interfaceOnly>
-                                <annotationLibrary>none</annotationLibrary>
-                                <documentationProvider>source</documentationProvider>
-                                <openApiNullable>false</openApiNullable>
-                                <skipDefaultInterface>false</skipDefaultInterface>
-                                <useTags>true</useTags>
-                            </configOptions>
-                        </configuration>
-                    </execution>
-
-                    <execution>
-                        <id>selc-ms-product</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <phase>process-resources</phase>
-                        <configuration>
-                            <inputSpec>${project.basedir}/docs/openapi/api-selfcare-ms-product-docs.json</inputSpec>
-                            <generatorName>spring</generatorName>
-                            <library>spring-cloud</library>
-                            <modelNameSuffix/>
-                            <generateApiTests>false</generateApiTests>
-                            <generateModelTests>false</generateModelTests>
-                            <configOptions>
-                                <useSpringBoot3>true</useSpringBoot3>
-                                <generateForOpenFeign>true</generateForOpenFeign>
-                                <basePackage>${project.groupId}.product.generated.openapi.v1</basePackage>
-                                <modelPackage>${project.groupId}.product.generated.openapi.v1.dto</modelPackage>
-                                <apiPackage>${project.groupId}.product.generated.openapi.v1.api</apiPackage>
-                                <configPackage>${project.groupId}.product.generated.openapi.v1.config</configPackage>
-                                <dateLibrary>java8-localdatetime</dateLibrary>
-                                <delegatePattern>true</delegatePattern>
-                                <interfaceOnly>true</interfaceOnly>
-                                <annotationLibrary>none</annotationLibrary>
-                                <documentationProvider>source</documentationProvider>
-                                <openApiNullable>false</openApiNullable>
-                                <skipDefaultInterface>false</skipDefaultInterface>
-                                <useTags>true</useTags>
-                            </configOptions>
-                        </configuration>
-                    </execution>
-
                 </executions>
             </plugin>
         </plugins>
     </build>
-
 </project>

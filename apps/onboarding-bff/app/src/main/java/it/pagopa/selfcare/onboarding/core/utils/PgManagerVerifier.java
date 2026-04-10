@@ -8,15 +8,15 @@ import it.pagopa.selfcare.onboarding.connector.model.institutions.ManagerVerific
 import it.pagopa.selfcare.onboarding.connector.model.institutions.MatchInfoResult;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.infocamere.BusinessInfoIC;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.infocamere.InstitutionInfoIC;
+import jakarta.enterprise.context.ApplicationScoped;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
-import org.springframework.stereotype.Service;
 
 import java.util.Objects;
 
 @Slf4j
-@Service
+@ApplicationScoped
 @AllArgsConstructor
 public class PgManagerVerifier {
     private final PartyRegistryProxyConnector partyRegistryProxyConnector;

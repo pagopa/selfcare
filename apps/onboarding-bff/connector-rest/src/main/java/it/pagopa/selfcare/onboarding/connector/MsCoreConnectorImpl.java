@@ -4,12 +4,12 @@ import it.pagopa.selfcare.onboarding.connector.api.MsCoreConnector;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.Institution;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.CreateInstitutionData;
 import it.pagopa.selfcare.onboarding.connector.rest.client.MsCoreRestClient;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.springframework.util.Assert;
 
-@Service
+@ApplicationScoped
 @Slf4j
 class MsCoreConnectorImpl implements MsCoreConnector {
 
@@ -18,9 +18,7 @@ class MsCoreConnectorImpl implements MsCoreConnector {
     protected static final String REQUIRED_PRODUCT_ID_MESSAGE = "A product Id is required";
 
     private final MsCoreRestClient restClient;
-
-    @Autowired
-    public MsCoreConnectorImpl(MsCoreRestClient restClient) {
+    public MsCoreConnectorImpl(@RestClient MsCoreRestClient restClient) {
         this.restClient = restClient;
     }
 

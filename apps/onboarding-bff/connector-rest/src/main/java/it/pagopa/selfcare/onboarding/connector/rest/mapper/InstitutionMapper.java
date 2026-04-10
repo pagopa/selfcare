@@ -6,9 +6,9 @@ import it.pagopa.selfcare.onboarding.connector.model.institutions.*;
 import it.pagopa.selfcare.onboarding.connector.rest.model.BillingDataResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.InstitutionResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.OnboardingResponse;
-import it.pagopa.selfcare.user.generated.openapi.v1.dto.OnboardedProductResponse;
-import it.pagopa.selfcare.user.generated.openapi.v1.dto.OnboardedProductState;
-import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionResponse;
+import org.openapi.quarkus.user_json.model.OnboardedProductResponse;
+import org.openapi.quarkus.user_json.model.OnboardedProductState;
+import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -16,7 +16,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "cdi")
 public interface InstitutionMapper {
 
     @Mapping(target = "companyInformations", source = ".", qualifiedByName = "toCompanyInformationsEntity")
@@ -76,7 +76,7 @@ public interface InstitutionMapper {
                         ? product1
                         : product2)
                     .map(OnboardedProductResponse::getStatus)
-                    .map(OnboardedProductState::getValue)
+                    .map(OnboardedProductState::value)
                     .orElse(null);
         } catch (IllegalArgumentException e) {
             return null;

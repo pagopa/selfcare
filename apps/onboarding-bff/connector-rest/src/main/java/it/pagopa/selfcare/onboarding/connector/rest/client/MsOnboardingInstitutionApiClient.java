@@ -1,8 +1,16 @@
 package it.pagopa.selfcare.onboarding.connector.rest.client;
 
-import it.pagopa.selfcare.onboarding.generated.openapi.v1.api.InstitutionControllerApi;
-import org.springframework.cloud.openfeign.FeignClient;
+import java.util.List;
+import org.openapi.quarkus.onboarding_json.api.InstitutionControllerApi;
+import org.openapi.quarkus.onboarding_json.model.GetInstitutionRequest;
+import org.openapi.quarkus.onboarding_json.model.InstitutionResponse;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import org.springframework.http.ResponseEntity;
 
-@FeignClient(name = "${rest-client.ms-onboarding-institution-api.serviceCode}", url = "${rest-client.ms-onboarding.base-url}")
+@RegisterRestClient(configKey = "onboarding_json")
 public interface MsOnboardingInstitutionApiClient extends InstitutionControllerApi {
+
+    default ResponseEntity<List<InstitutionResponse>> _getInstitutions(GetInstitutionRequest request) {
+        return ResponseEntity.ok(getInstitutions(request).await().indefinitely());
+    }
 }

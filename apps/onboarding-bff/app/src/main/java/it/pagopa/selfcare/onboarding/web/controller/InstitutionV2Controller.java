@@ -17,24 +17,24 @@ import it.pagopa.selfcare.onboarding.web.model.*;
 import it.pagopa.selfcare.onboarding.web.model.mapper.InstitutionResourceMapper;
 import it.pagopa.selfcare.onboarding.web.model.mapper.OnboardingResourceMapper;
 import it.pagopa.selfcare.onboarding.web.utils.FileValidationUtils;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.Valid;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.owasp.encoder.Encode;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 import java.util.List;
 
-import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
-
 @Slf4j
-@RestController
-@RequestMapping(value = "/v2/institutions", produces = MediaType.APPLICATION_JSON_VALUE)
+@ApplicationScoped
+@Path("/v2/institutions")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 @Api(tags = "institutions")
 public class InstitutionV2Controller {
 
@@ -44,7 +44,6 @@ public class InstitutionV2Controller {
     private static final String ONBOARDING_START = "onboarding start";
     private static final String ONBOARDING_END = "onboarding end";
 
-    @Autowired
     public InstitutionV2Controller(InstitutionService institutionService,
                                    OnboardingResourceMapper onboardingResourceMapper,
                                    InstitutionResourceMapper institutionMapper) {
@@ -56,14 +55,14 @@ public class InstitutionV2Controller {
     @ApiResponse(responseCode = "403",
             description = "Forbidden",
             content = {
-                    @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE,
+                    @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = Problem.class))
             })
-    @PostMapping(value = "/onboarding")
-    @ResponseStatus(HttpStatus.CREATED)
+    @POST
+    @Path("/onboarding")
     @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.subunit}",
             description = "${swagger.onboarding.institutions.api.onboarding.subunit}", operationId = "institutionOnboarding")
-    public void onboarding(@RequestBody @Valid OnboardingProductDto request) {
+    public Response onboarding(@Valid OnboardingProductDto request) {
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", request);
         institutionService.validateOnboardingByProductOrInstitutionTaxCode(request.getTaxCode(), request.getProductId());
@@ -73,51 +72,52 @@ public class InstitutionV2Controller {
             institutionService.onboardingProductV2(onboardingResourceMapper.toEntity(request));
         }
         log.trace(ONBOARDING_END);
+        return Response.status(Response.Status.CREATED).build();
     }
 
     @ApiResponse(responseCode = "403",
             description = "Forbidden",
             content = {
-                    @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE,
+                    @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = Problem.class))
             })
-    @PostMapping(value = "/company/onboarding")
-    @ResponseStatus(HttpStatus.CREATED)
+    @POST
+    @Path("/company/onboarding")
     @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.subunit}",
             description = "${swagger.onboarding.institutions.api.onboarding.subunit}", operationId = "institutionOnboardingCompany")
-    public void onboarding(@RequestBody @Valid CompanyOnboardingDto request, Principal principal) {
+    public Response onboarding(@Valid CompanyOnboardingDto request, Principal principal) {
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", Encode.forJava(request.toString()));
         JwtAuthenticationToken jwtAuthenticationToken = (JwtAuthenticationToken) principal;
         SelfCareUser selfCareUser = (SelfCareUser) jwtAuthenticationToken.getPrincipal();
         institutionService.onboardingCompanyV2(onboardingResourceMapper.toEntity(request), selfCareUser.getFiscalCode());
         log.trace(ONBOARDING_END);
+        return Response.status(Response.Status.CREATED).build();
     }
 
     @ApiResponse(responseCode = "403",
             description = "Forbidden",
             content = {
-                    @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE,
+                    @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = Problem.class))
             })
-    @GetMapping
-    @ResponseStatus(HttpStatus.OK)
+    @GET
     @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.subunit}",
             description = "${swagger.onboarding.institutions.api.onboarding.subunit}", operationId = "v2GetInstitutionByFilters")
     public List<InstitutionResource> getInstitution(@ApiParam("${swagger.onboarding.institutions.model.productFilter}")
-                                                    @RequestParam(value = "productId")
+                                                    @QueryParam("productId")
                                                     String productId,
                                                     @ApiParam("${swagger.onboarding.institutions.model.taxCode}")
-                                                    @RequestParam(value = "taxCode", required = false)
+                                                    @QueryParam("taxCode")
                                                     String taxCode,
                                                     @ApiParam("${swagger.onboarding.institutions.model.origin}")
-                                                    @RequestParam(value = "origin", required = false)
+                                                    @QueryParam("origin")
                                                     String origin,
                                                     @ApiParam("${swagger.onboarding.institutions.model.originId}")
-                                                    @RequestParam(value = "originId", required = false)
+                                                    @QueryParam("originId")
                                                     String originId,
                                                     @ApiParam("${swagger.onboarding.institutions.model.subunitCode}")
-                                                    @RequestParam(value = "subunitCode", required = false)
+                                                    @QueryParam("subunitCode")
                                                     String subunitCode) {
         log.trace("getInstitution start");
         final List<InstitutionResource> institutions = institutionService.getByFilters(productId, taxCode, origin, originId, subunitCode)
@@ -129,13 +129,13 @@ public class InstitutionV2Controller {
         return institutions;
     }
 
-    @PostMapping(value = "/onboarding/aggregation/verification")
-    @ResponseStatus(HttpStatus.OK)
+    @POST
+    @Path("/onboarding/aggregation/verification")
     @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",
             description = "${swagger.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",  operationId = "verifyAggregatesCsvUsingPOST")
-    public VerifyAggregatesResponse verifyAggregatesCsv(@RequestParam("aggregates") MultipartFile file,
-                                                        @RequestParam(value = "institutionType", required = false) String institutionType,
-                                                        @RequestParam("productId") String productId){
+    public VerifyAggregatesResponse verifyAggregatesCsv(@QueryParam("aggregates") MultipartFile file,
+                                                        @QueryParam("institutionType") String institutionType,
+                                                        @QueryParam("productId") String productId){
         log.trace("Verify Aggregates Csv start");
         log.debug("Verify Aggregates Csv start for productId {}", productId);
 
@@ -145,12 +145,12 @@ public class InstitutionV2Controller {
         return response;
     }
 
-    @PostMapping(value = "/company/verify-manager")
-    @ResponseStatus(HttpStatus.OK)
+    @POST
+    @Path("/company/verify-manager")
     @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.verifyManager}",
             description = "${swagger.onboarding.institutions.api.onboarding.verifyManager}", operationId = "verifyManagerUsingPOST")
     public VerifyManagerResponse verifyManager(
-            @RequestBody @Valid VerifyManagerRequest request,
+            @Valid VerifyManagerRequest request,
             Principal principal
     ) {
         log.trace("verifyManager start");
@@ -162,13 +162,13 @@ public class InstitutionV2Controller {
         return response;
     }
 
-    @GetMapping(value = "/onboarding/active")
-    @ResponseStatus(HttpStatus.OK)
+    @GET
+    @Path("/onboarding/active")
     @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.getActiveOnboarding}",
             description = "${swagger.onboarding.institutions.api.onboarding.getActiveOnboarding}", operationId = "getActiveOnboardingUsingGET")
-    public List<InstitutionOnboardingResource> getActiveOnboarding(@RequestParam("taxCode") String taxCode,
-                                                                   @RequestParam("productId") String productId,
-                                                                   @RequestParam(value = "subunitCode", required = false) String subunitCode
+    public List<InstitutionOnboardingResource> getActiveOnboarding(@QueryParam("taxCode") String taxCode,
+                                                                   @QueryParam("productId") String productId,
+                                                                   @QueryParam("subunitCode") String subunitCode
     ) {
         log.trace("getActiveOnboarding start");
         log.debug("getActiveOnboarding taxCode = {}, productId = {}", Encode.forJava(taxCode), Encode.forJava(productId));
@@ -183,12 +183,12 @@ public class InstitutionV2Controller {
         return response;
     }
 
-    @GetMapping(value = "/onboarding/recipient-code/verification")
-    @ResponseStatus(HttpStatus.OK)
+    @GET
+    @Path("/onboarding/recipient-code/verification")
     @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.checkRecipientCode}",
             description = "${swagger.onboarding.institutions.api.onboarding.checkRecipientCode}", operationId = "checkRecipientCodeUsingGET")
-    public RecipientCodeStatus checkRecipientCode(@RequestParam(value = "originId") String originId,
-                                                  @RequestParam(value = "recipientCode") String recipientCode) {
+    public RecipientCodeStatus checkRecipientCode(@QueryParam("originId") String originId,
+                                                  @QueryParam("recipientCode") String recipientCode) {
         log.trace("Check recipientCode start");
         log.debug("Check originId start for institution with originId {} and recipientCode {}", originId, recipientCode);
         RecipientCodeStatus response = onboardingResourceMapper.toRecipientCodeStatus(institutionService.checkRecipientCode(originId, recipientCode));
@@ -196,23 +196,23 @@ public class InstitutionV2Controller {
         return response;
     }
 
-    @PostMapping(value = "/onboarding/users/pg")
-    @ResponseStatus(HttpStatus.OK)
+    @POST
+    @Path("/onboarding/users/pg")
     @Operation(summary = "${swagger.onboarding.institutions.api.onboardingUsersPg}",
             description = "${swagger.onboarding.institutions.api.onboardingUsersPg}", operationId = "onboardingUsersPgUsingPOST")
-    public void onboardingUsers(@Valid @RequestBody(required = false) CompanyOnboardingUserDto companyOnboardingUserDto) {
+    public void onboardingUsers(@Valid CompanyOnboardingUserDto companyOnboardingUserDto) {
         log.trace("onboardingUsersPgFromIcAndAde start");
         log.debug("onboardingUsersPgFromIcAndAde request = {}", Encode.forJava(companyOnboardingUserDto.toString()));
         institutionService.onboardingUsersPgFromIcAndAde(onboardingResourceMapper.toEntity(companyOnboardingUserDto));
         log.trace("onboardingUsersPgFromIcAndAde end");
     }
 
-    @GetMapping(value = "/onboardings")
-    @ResponseStatus(HttpStatus.OK)
+    @GET
+    @Path("/onboardings")
     @Operation(summary = "${swagger.onboarding.institutions.api.onboardingInfo.summary}",
             description = "${swagger.onboarding.institutions.api.onboardingInfo.description}", operationId = "getOnboardingInfo")
-    public List<OnboardingResult> getOnboardingsInfo(@RequestParam(value = "taxCode") String inputTaxCode,
-                                                     @RequestParam(value = "status") String inputStatus) {
+    public List<OnboardingResult> getOnboardingsInfo(@QueryParam("taxCode") String inputTaxCode,
+                                                     @QueryParam("status") String inputStatus) {
         log.trace("onboardingInfo start");
         String taxCode = Encode.forJava(inputTaxCode);
         String status = Encode.forJava(inputStatus);

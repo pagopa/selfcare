@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.connector;
 
 import feign.FeignException;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.onboarding.connector.api.UserRegistryConnector;
 import it.pagopa.selfcare.onboarding.connector.model.user.MutableUserFieldsDto;
@@ -10,10 +11,9 @@ import it.pagopa.selfcare.onboarding.connector.model.user.UserId;
 import it.pagopa.selfcare.onboarding.connector.rest.client.UserRegistryRestClient;
 import it.pagopa.selfcare.onboarding.connector.rest.mapper.UserMapper;
 import it.pagopa.selfcare.onboarding.connector.rest.model.user_registry.EmbeddedExternalId;
-import it.pagopa.selfcare.user_registry.generated.openapi.v1.dto.UserSearchDto;
+import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.springframework.util.Assert;
 
 import java.util.EnumSet;
@@ -21,15 +21,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
-@Service
+@ApplicationScoped
 public class UserRegistryConnectorImpl implements UserRegistryConnector {
 
     private final UserRegistryRestClient restClient;
     public static final String USERS_FIELD_LIST = "fiscalCode,familyName,name,workContacts";
     private final UserMapper userRegistryMapper;
-
-    @Autowired
-    public UserRegistryConnectorImpl(UserRegistryRestClient restClient, UserMapper userRegistryMapper) {
+    public UserRegistryConnectorImpl(@RestClient UserRegistryRestClient restClient, UserMapper userRegistryMapper) {
         this.restClient = restClient;
         this.userRegistryMapper = userRegistryMapper;
     }

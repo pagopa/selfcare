@@ -6,14 +6,14 @@ import it.pagopa.selfcare.onboarding.connector.api.ProductsConnector;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.springframework.util.Assert;
 
 import java.util.List;
 import java.util.Objects;
 
 @Slf4j
-@Service
+@ApplicationScoped
 public class ProductsConnectorImpl implements ProductsConnector {
     private final ProductService productService;
 

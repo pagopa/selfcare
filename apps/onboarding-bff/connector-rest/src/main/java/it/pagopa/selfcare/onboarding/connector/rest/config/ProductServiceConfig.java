@@ -4,22 +4,20 @@ import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.product.service.ProductServiceCacheable;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-@Configuration
-@PropertySource("classpath:config/products-sdk.properties")
+@ApplicationScoped
 public class ProductServiceConfig {
-    @Value("${onboarding-bff.blob-storage.container-product}")
-    private String containerProduct;
-    @Value("${onboarding-bff.blob-storage.filepath-product}")
-    private String filepathProduct;
-    @Value("${onboarding-bff.blob-storage.connection-string-product}")
-    private String connectionStringProduct;
+    @ConfigProperty(name = "onboarding-bff.blob-storage.container-product")
+    String containerProduct;
+    @ConfigProperty(name = "onboarding-bff.blob-storage.filepath-product")
+    String filepathProduct;
+    @ConfigProperty(name = "onboarding-bff.blob-storage.connection-string-product")
+    String connectionStringProduct;
 
-    @Bean
+    @Produces
     public ProductService productService() {
         AzureBlobClient azureBlobClient = new AzureBlobClientDefault(connectionStringProduct, containerProduct);
         try{

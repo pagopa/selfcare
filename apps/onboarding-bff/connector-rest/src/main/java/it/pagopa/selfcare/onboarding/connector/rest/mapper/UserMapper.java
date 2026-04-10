@@ -1,11 +1,11 @@
 package it.pagopa.selfcare.onboarding.connector.rest.mapper;
 
 import it.pagopa.selfcare.onboarding.connector.model.user.UserId;
-import it.pagopa.selfcare.user_registry.generated.openapi.v1.dto.UserResource;
+import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "cdi")
 public interface UserMapper {
 
     @Mapping(source = "userResource.id", target = "id")

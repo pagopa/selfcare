@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.connector;
 
 import io.github.resilience4j.retry.annotation.Retry;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import it.pagopa.selfcare.onboarding.common.InstitutionPaSubunitType;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.connector.api.OnboardingMsConnector;
@@ -12,14 +13,14 @@ import it.pagopa.selfcare.onboarding.connector.model.onboarding.CheckManagerData
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.connector.rest.client.*;
 import it.pagopa.selfcare.onboarding.connector.rest.mapper.OnboardingMapper;
-import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.*;
+import org.openapi.quarkus.onboarding_json.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,7 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Objects;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
 
@@ -43,11 +44,11 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
     private final MsOnboardingInternalApiClient msOnboardingInternalApiClient;
     protected static final String REQUIRED_PRODUCT_ID_MESSAGE = "A product Id is required";
 
-    public OnboardingMsConnectorImpl(MsOnboardingApiClient msOnboardingApiClient, MsOnboardingBillingApiClient msOnboardingBillingApiClient,
-                                     MsOnboardingTokenApiClient msOnboardingTokenApiClient,
-                                     MsOnboardingSupportApiClient msOnboardingSupportApiClient,
-                                     MsOnboardingAggregatesApiClient msOnboardingAggregatesApiClient, OnboardingMapper onboardingMapper,
-                                     MsOnboardingInternalApiClient msOnboardingInternalApiClient) {
+    public OnboardingMsConnectorImpl(@RestClient MsOnboardingApiClient msOnboardingApiClient, @RestClient MsOnboardingBillingApiClient msOnboardingBillingApiClient,
+                                     @RestClient MsOnboardingTokenApiClient msOnboardingTokenApiClient,
+                                     @RestClient MsOnboardingSupportApiClient msOnboardingSupportApiClient,
+                                     @RestClient MsOnboardingAggregatesApiClient msOnboardingAggregatesApiClient, OnboardingMapper onboardingMapper,
+                                     @RestClient MsOnboardingInternalApiClient msOnboardingInternalApiClient) {
         this.msOnboardingApiClient = msOnboardingApiClient;
         this.msOnboardingBillingApiClient = msOnboardingBillingApiClient;
         this.msOnboardingTokenApiClient = msOnboardingTokenApiClient;

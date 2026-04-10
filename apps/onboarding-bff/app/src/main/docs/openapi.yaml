@@ -1,0 +1,1996 @@
+---
+openapi: 3.1.0
+components:
+  schemas:
+    AdditionalInformations:
+      type: object
+      properties:
+        belongRegulatedMarket:
+          type: boolean
+        regulatedMarketNote:
+          type: string
+        ipa:
+          type: boolean
+        ipaCode:
+          type: string
+        establishedByRegulatoryProvision:
+          type: boolean
+        establishedByRegulatoryProvisionNote:
+          type: string
+        agentOfPublicService:
+          type: boolean
+        agentOfPublicServiceNote:
+          type: string
+        otherNote:
+          type: string
+    AdditionalInformationsDto:
+      type: object
+      properties:
+        belongRegulatedMarket:
+          type: boolean
+        regulatedMarketNote:
+          type: string
+        ipa:
+          type: boolean
+        ipaCode:
+          type: string
+        establishedByRegulatoryProvision:
+          type: boolean
+        establishedByRegulatoryProvisionNote:
+          type: string
+        agentOfPublicService:
+          type: boolean
+        agentOfPublicServiceNote:
+          type: string
+        otherNote:
+          type: string
+    AggregateInstitution:
+      type: object
+      required:
+      - taxCode
+      - description
+      properties:
+        taxCode:
+          type: string
+        description:
+          type: string
+        subunitCode:
+          type: string
+        subunitType:
+          type: string
+        geographicTaxonomies:
+          type: array
+          items:
+            $ref: "#/components/schemas/GeographicTaxonomyDto"
+        address:
+          type: string
+        zipCode:
+          type: string
+        originId:
+          type: string
+        origin:
+          $ref: "#/components/schemas/Origin"
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserDto"
+        iban:
+          type: string
+        recipientCode:
+          type: string
+        vatNumber:
+          type: string
+        digitalAddress:
+          type: string
+        city:
+          type: string
+        county:
+          type: string
+        parentDescription:
+          type: string
+    AggregateResult:
+      type: object
+      properties:
+        subunitCode:
+          type: string
+        subunitType:
+          type: string
+        description:
+          type: string
+        recipientCode:
+          type: string
+        digitalAddress:
+          type: string
+        taxCode:
+          type: string
+        vatNumber:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        county:
+          type: string
+        zipCode:
+          type: string
+        originId:
+          type: string
+        origin:
+          type: string
+        iban:
+          type: string
+        parentDescription:
+          type: string
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/AggregateUserResult"
+    AggregateUserResult:
+      type: object
+      properties:
+        name:
+          type: string
+        surname:
+          type: string
+        taxCode:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+    AssistanceContactsDto:
+      type: object
+      properties:
+        supportEmail:
+          type: string
+        supportPhone:
+          type: string
+    AssistanceContactsResource:
+      type: object
+      properties:
+        supportEmail:
+          type: string
+        supportPhone:
+          type: string
+    Billing:
+      type: object
+      properties:
+        vatNumber:
+          type: string
+        recipientCode:
+          type: string
+        publicServices:
+          type: boolean
+        taxCodeInvoicing:
+          type: string
+    BillingDataDto:
+      type: object
+      required:
+      - businessName
+      - registeredOffice
+      - digitalAddress
+      properties:
+        businessName:
+          type: string
+          pattern: \S
+        registeredOffice:
+          type: string
+          pattern: \S
+        digitalAddress:
+          type: string
+          pattern: \S
+        zipCode:
+          type: string
+        taxCode:
+          type: string
+        taxCodeInvoicing:
+          type: string
+        vatNumber:
+          type: string
+        recipientCode:
+          type: string
+        publicServices:
+          type: boolean
+        certified:
+          type: boolean
+        legalForm:
+          type: string
+    BillingDataResponseDto:
+      type: object
+      properties:
+        businessName:
+          type: string
+        registeredOffice:
+          type: string
+        digitalAddress:
+          type: string
+        zipCode:
+          type: string
+        taxCode:
+          type: string
+        vatNumber:
+          type: string
+        recipientCode:
+          type: string
+        publicServices:
+          type: boolean
+        certified:
+          type: boolean
+    BusinessResourceIC:
+      type: object
+      properties:
+        businessName:
+          type: string
+        businessTaxId:
+          type: string
+    CheckManagerDto:
+      type: object
+      required:
+      - userId
+      - productId
+      properties:
+        userId:
+          $ref: "#/components/schemas/UUID"
+        institutionType:
+          $ref: "#/components/schemas/InstitutionType"
+        origin:
+          type: string
+        originId:
+          type: string
+        productId:
+          type: string
+        taxCode:
+          type: string
+        subunitCode:
+          type: string
+    CheckManagerResponse:
+      type: object
+      required:
+      - result
+      properties:
+        result:
+          type: boolean
+    CompanyBillingDataDto:
+      type: object
+      required:
+      - businessName
+      - taxCode
+      - certified
+      - digitalAddress
+      properties:
+        businessName:
+          type: string
+        taxCode:
+          type: string
+          pattern: \S
+        certified:
+          type: boolean
+        digitalAddress:
+          type: string
+          pattern: \S
+    CompanyInformationsDto:
+      type: object
+      properties:
+        rea:
+          type: string
+        shareCapital:
+          type: string
+        businessRegisterPlace:
+          type: string
+    CompanyInformationsResource:
+      type: object
+      properties:
+        rea:
+          type: string
+        shareCapital:
+          type: string
+        businessRegisterPlace:
+          type: string
+    CompanyOnboardingDto:
+      type: object
+      required:
+      - users
+      - billingData
+      - institutionType
+      - productId
+      - taxCode
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/CompanyUserDto"
+          minItems: 1
+        billingData:
+          $ref: "#/components/schemas/CompanyBillingDataDto"
+        institutionType:
+          $ref: "#/components/schemas/InstitutionType"
+        productId:
+          type: string
+        taxCode:
+          type: string
+    CompanyOnboardingUserDto:
+      type: object
+      required:
+      - users
+      - institutionType
+      - productId
+      - taxCode
+      - certified
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/CompanyUserDto"
+          minItems: 1
+        institutionType:
+          $ref: "#/components/schemas/InstitutionType"
+        productId:
+          type: string
+        taxCode:
+          type: string
+        certified:
+          type: boolean
+    CompanyUserDto:
+      type: object
+      required:
+      - name
+      - surname
+      - taxCode
+      - role
+      properties:
+        name:
+          type: string
+          pattern: \S
+        surname:
+          type: string
+          pattern: \S
+        email:
+          type: string
+        taxCode:
+          type: string
+          pattern: \S
+        role:
+          $ref: "#/components/schemas/PartyRole"
+        productRole:
+          type: string
+    DataProtectionOfficer:
+      type: object
+      properties:
+        address:
+          type: string
+        email:
+          type: string
+        pec:
+          type: string
+    DpoData:
+      type: object
+      required:
+      - address
+      - pec
+      - email
+      properties:
+        address:
+          type: string
+          pattern: \S
+        pec:
+          type: string
+          pattern: \S
+        email:
+          type: string
+          pattern: \S
+    DpoDataDto:
+      type: object
+      required:
+      - address
+      - pec
+      - email
+      properties:
+        address:
+          type: string
+          pattern: \S
+        pec:
+          type: string
+          pattern: \S
+        email:
+          type: string
+          pattern: \S
+    GPUData:
+      type: object
+      properties:
+        businessRegisterNumber:
+          type: string
+        legalRegisterNumber:
+          type: string
+        legalRegisterName:
+          type: string
+        longTermPayments:
+          type: boolean
+        manager:
+          type: boolean
+        managerAuthorized:
+          type: boolean
+        managerEligible:
+          type: boolean
+        managerProsecution:
+          type: boolean
+        institutionCourtMeasures:
+          type: boolean
+    GeographicTaxonomyDto:
+      type: object
+      required:
+      - code
+      - desc
+      properties:
+        code:
+          type: string
+          pattern: \S
+        desc:
+          type: string
+          pattern: \S
+    GeographicTaxonomyResource:
+      type: object
+      properties:
+        code:
+          type: string
+        desc:
+          type: string
+    InstitutionData:
+      type: object
+      properties:
+        id:
+          type: string
+        institutionType:
+          $ref: "#/components/schemas/InstitutionType"
+        billingData:
+          $ref: "#/components/schemas/BillingDataResponseDto"
+        city:
+          type: string
+        county:
+          type: string
+        country:
+          type: string
+        origin:
+          type: string
+        originId:
+          type: string
+        paymentServiceProvider:
+          $ref: "#/components/schemas/PaymentServiceProvider"
+        dataProtectionOfficer:
+          $ref: "#/components/schemas/DataProtectionOfficer"
+        gpuData:
+          $ref: "#/components/schemas/GPUData"
+        companyInformations:
+          $ref: "#/components/schemas/CompanyInformationsResource"
+        assistanceContacts:
+          $ref: "#/components/schemas/AssistanceContactsResource"
+    InstitutionInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        institutionType:
+          type: string
+        address:
+          type: string
+        zipCode:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        county:
+          type: string
+        mailAddress:
+          type: string
+        fiscalCode:
+          type: string
+        taxCodeInvoicing:
+          type: string
+        vatNumber:
+          type: string
+        recipientCode:
+          type: string
+        pspData:
+          $ref: "#/components/schemas/PspData"
+        dpoData:
+          $ref: "#/components/schemas/DpoData"
+        additionalInformations:
+          $ref: "#/components/schemas/AdditionalInformations"
+      required:
+      - name
+      - institutionType
+      - address
+      - zipCode
+      - mailAddress
+      - fiscalCode
+    InstitutionLegalAddressResource:
+      type: object
+      properties:
+        address:
+          type: string
+        zipCode:
+          type: string
+    InstitutionLocationDataDto:
+      type: object
+      properties:
+        city:
+          type: string
+        county:
+          type: string
+        country:
+          type: string
+    InstitutionOnboarding:
+      type: object
+      properties:
+        productId:
+          type: string
+        tokenId:
+          type: string
+        status:
+          type: string
+        contract:
+          type: string
+        pricingPlan:
+          type: string
+        billing:
+          $ref: "#/components/schemas/Billing"
+        createdAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        updatedAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        closedAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+    InstitutionOnboardingInfoResource:
+      type: object
+      properties:
+        institution:
+          $ref: "#/components/schemas/InstitutionData"
+        geographicTaxonomies:
+          type: array
+          items:
+            $ref: "#/components/schemas/GeographicTaxonomyResource"
+    InstitutionOnboardingResource:
+      type: object
+      properties:
+        institutionId:
+          type: string
+        businessName:
+          type: string
+        onboardings:
+          type: array
+          items:
+            $ref: "#/components/schemas/InstitutionOnboarding"
+    InstitutionResource:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        description:
+          type: string
+        parentDescription:
+          type: string
+        externalId:
+          type: string
+        originId:
+          type: string
+        institutionType:
+          type: string
+        digitalAddress:
+          type: string
+        address:
+          type: string
+        zipCode:
+          type: string
+        city:
+          type: string
+        county:
+          type: string
+        country:
+          type: string
+        taxCode:
+          type: string
+        origin:
+          type: string
+        userRole:
+          $ref: "#/components/schemas/SelfCareAuthority"
+    InstitutionResourceIC:
+      type: object
+      properties:
+        legalTaxId:
+          type: string
+        requestDateTime:
+          type: string
+        businesses:
+          type: array
+          items:
+            $ref: "#/components/schemas/BusinessResourceIC"
+    InstitutionType:
+      type: string
+      enum:
+      - PA
+      - PG
+      - GSP
+      - SA
+      - PT
+      - SCP
+      - PSP
+      - AS
+      - REC
+      - CON
+      - PRV
+      - PRV_PF
+      - GPU
+      - SCEC
+    InstitutionType1:
+      type: string
+      enum:
+      - PA
+      - PG
+      - GSP
+      - SA
+      - PT
+      - SCP
+      - PSP
+      - AS
+      - REC
+      - CON
+      - PRV
+      - PRV_PF
+      - GPU
+      - SCEC
+      - DEFAULT
+    LocalDateTime:
+      type: string
+      format: date-time
+      examples:
+      - 2022-03-10T12:15:50
+    ManagerInfoResponse:
+      type: object
+      properties:
+        name:
+          type: string
+        surname:
+          type: string
+    MatchInfoResultResource:
+      type: object
+      properties:
+        verificationResult:
+          type: boolean
+    OffsetDateTime:
+      type: string
+      format: date-time
+      examples:
+      - 2022-03-10T12:15:50-04:00
+    OnboardingProductDto:
+      type: object
+      required:
+      - users
+      - institutionType
+      - productId
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserDto"
+          minItems: 1
+        billingData:
+          $ref: "#/components/schemas/BillingDataDto"
+        institutionLocationData:
+          $ref: "#/components/schemas/InstitutionLocationDataDto"
+        institutionType:
+          $ref: "#/components/schemas/InstitutionType"
+        origin:
+          type: string
+        originId:
+          type: string
+        pricingPlan:
+          type: string
+        pspData:
+          $ref: "#/components/schemas/PspDataDto"
+        geographicTaxonomies:
+          type: array
+          items:
+            $ref: "#/components/schemas/GeographicTaxonomyDto"
+        companyInformations:
+          $ref: "#/components/schemas/CompanyInformationsDto"
+        assistanceContacts:
+          $ref: "#/components/schemas/AssistanceContactsDto"
+        productId:
+          type: string
+        taxCode:
+          type: string
+        subunitCode:
+          type: string
+        subunitType:
+          type: string
+        additionalInformations:
+          $ref: "#/components/schemas/AdditionalInformationsDto"
+        isAggregator:
+          type: boolean
+        aggregates:
+          type: array
+          items:
+            $ref: "#/components/schemas/AggregateInstitution"
+        gpuData:
+          $ref: "#/components/schemas/GPUData"
+        istatCode:
+          type: string
+        atecoCodes:
+          type: array
+          items:
+            type: string
+        payment:
+          $ref: "#/components/schemas/PaymentDto"
+        userRequester:
+          $ref: "#/components/schemas/UserRequestDto"
+    OnboardingRequestResource:
+      type: object
+      required:
+      - status
+      - institutionInfo
+      properties:
+        status:
+          type: string
+        institutionInfo:
+          $ref: "#/components/schemas/InstitutionInfo"
+        manager:
+          $ref: "#/components/schemas/UserInfo"
+        admins:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserInfo"
+        productId:
+          type: string
+        updatedAt:
+          $ref: "#/components/schemas/LocalDateTime"
+        expiringDate:
+          $ref: "#/components/schemas/LocalDateTime"
+        reasonForReject:
+          type: string
+        attachments:
+          type: array
+          items:
+            type: string
+    OnboardingResult:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        productId:
+          type: string
+    OnboardingUserDto:
+      type: object
+      required:
+      - users
+      - productId
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserDto"
+          minItems: 1
+        institutionType:
+          $ref: "#/components/schemas/InstitutionType"
+        origin:
+          type: string
+        originId:
+          type: string
+        productId:
+          type: string
+        taxCode:
+          type: string
+        subunitCode:
+          type: string
+        toAddOnAggregates:
+          type: boolean
+    OnboardingVerify:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          type: string
+        productId:
+          type: string
+        expiringDate:
+          $ref: "#/components/schemas/LocalDateTime"
+    Origin:
+      type: string
+      enum:
+      - MOCK
+      - IPA
+      - SELC
+      - ANAC
+      - UNKNOWN
+      - ADE
+      - INFOCAMERE
+      - IVASS
+      - PDND_INFOCAMERE
+    OriginEntry:
+      type: object
+      properties:
+        institutionType:
+          $ref: "#/components/schemas/InstitutionType1"
+        origin:
+          $ref: "#/components/schemas/Origin"
+        labelKey:
+          type: string
+    OriginResponse:
+      type: object
+      properties:
+        origins:
+          type: array
+          items:
+            $ref: "#/components/schemas/OriginEntry"
+    PartyRole:
+      type: string
+      enum:
+      - MANAGER
+      - DELEGATE
+      - SUB_DELEGATE
+      - OPERATOR
+      - ADMIN_EA
+    PartyRole1:
+      type: string
+      enum:
+      - MANAGER
+      - DELEGATE
+      - SUB_DELEGATE
+      - OPERATOR
+      - ADMIN_EA
+    PaymentDto:
+      type: object
+      properties:
+        iban:
+          type: string
+        holder:
+          type: string
+    PaymentServiceProvider:
+      type: object
+      properties:
+        businessRegisterNumber:
+          type: string
+        legalRegisterNumber:
+          type: string
+        legalRegisterName:
+          type: string
+        longTermPayments:
+          type: boolean
+        abiCode:
+          type: string
+        vatNumberGroup:
+          type: boolean
+    Principal:
+      type: object
+      properties:
+        name:
+          type: string
+    ProductResource:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        parentId:
+          type: string
+        status:
+          $ref: "#/components/schemas/ProductStatus"
+        logo:
+          type: string
+        logoBgColor:
+          type: string
+    ProductStatus:
+      type: string
+      enum:
+      - ACTIVE
+      - TESTING
+      - PHASE_OUT
+      - INACTIVE
+    PspData:
+      type: object
+      required:
+      - businessRegisterNumber
+      - legalRegisterName
+      - legalRegisterNumber
+      - abiCode
+      - vatNumberGroup
+      properties:
+        businessRegisterNumber:
+          type: string
+        legalRegisterName:
+          type: string
+        legalRegisterNumber:
+          type: string
+        abiCode:
+          type: string
+        vatNumberGroup:
+          type: boolean
+    PspDataDto:
+      type: object
+      required:
+      - businessRegisterNumber
+      - legalRegisterName
+      - legalRegisterNumber
+      - abiCode
+      - vatNumberGroup
+      - dpoData
+      properties:
+        businessRegisterNumber:
+          type: string
+          pattern: \S
+        legalRegisterName:
+          type: string
+          pattern: \S
+        legalRegisterNumber:
+          type: string
+          pattern: \S
+        abiCode:
+          type: string
+          pattern: \S
+        vatNumberGroup:
+          type: boolean
+        dpoData:
+          $ref: "#/components/schemas/DpoDataDto"
+    ReasonForRejectDto:
+      type: object
+      properties:
+        reason:
+          type: string
+    RecipientCodeStatus:
+      type: string
+      enum:
+      - ACCEPTED
+      - DENIED_NO_BILLING
+      - DENIED_NO_ASSOCIATION
+    RowErrorResponse:
+      type: object
+      properties:
+        riga:
+          type: integer
+          format: int32
+        codice fiscale:
+          type: string
+        errore:
+          type: string
+    SelfCareAuthority:
+      type: string
+      enum:
+      - ADMIN
+      - LIMITED
+      - ADMIN_EA
+    UUID:
+      type: string
+      format: uuid
+      pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+    UserDataValidationDto:
+      type: object
+      required:
+      - taxCode
+      properties:
+        taxCode:
+          type: string
+          pattern: \S
+        name:
+          type: string
+        surname:
+          type: string
+    UserDto:
+      type: object
+      required:
+      - name
+      - surname
+      - taxCode
+      - role
+      properties:
+        name:
+          type: string
+          pattern: \S
+        surname:
+          type: string
+          pattern: \S
+        taxCode:
+          type: string
+          pattern: \S
+        role:
+          $ref: "#/components/schemas/PartyRole1"
+        email:
+          type: string
+        productRole:
+          type: string
+    UserId:
+      type: object
+      required:
+      - id
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+    UserInfo:
+      type: object
+      required:
+      - id
+      - name
+      - surname
+      - email
+      - fiscalCode
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        name:
+          type: string
+        surname:
+          type: string
+        email:
+          type: string
+        fiscalCode:
+          type: string
+    UserRequestDto:
+      type: object
+      required:
+      - name
+      - surname
+      - email
+      properties:
+        name:
+          type: string
+          pattern: \S
+        surname:
+          type: string
+          pattern: \S
+        email:
+          type: string
+          pattern: \S
+    UserTaxCodeDto:
+      type: object
+      required:
+      - taxCode
+      properties:
+        taxCode:
+          type: string
+          pattern: \S
+    VerificationLegalAddressRequest:
+      type: object
+      required:
+      - taxCode
+      properties:
+        taxCode:
+          type: string
+          pattern: \S
+    VerificationMatchRequest:
+      type: object
+      required:
+      - taxCode
+      - userDto
+      properties:
+        taxCode:
+          type: string
+          pattern: \S
+        userDto:
+          $ref: "#/components/schemas/UserDto"
+    VerifyAggregatesResponse:
+      type: object
+      properties:
+        aggregates:
+          type: array
+          items:
+            $ref: "#/components/schemas/AggregateResult"
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/RowErrorResponse"
+    VerifyManagerRequest:
+      type: object
+      required:
+      - companyTaxCode
+      properties:
+        companyTaxCode:
+          type: string
+          pattern: \S
+    VerifyManagerResponse:
+      type: object
+      properties:
+        origin:
+          type: string
+        companyName:
+          type: string
+    VerifyType:
+      type: string
+      enum:
+      - INTERNAL
+      - EXTERNAL
+  securitySchemes:
+    SecurityScheme:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Authentication
+paths:
+  /v1/institutions:
+    get:
+      parameters:
+      - name: productId
+        in: query
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Principal"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InstitutionResource"
+      summary: Get Institutions
+      tags:
+      - Institution Controller
+  /v1/institutions/company/onboarding:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanyOnboardingDto"
+        required: true
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+      summary: Onboarding
+      tags:
+      - Institution Controller
+  /v1/institutions/from-infocamere:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Principal"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstitutionResourceIC"
+      summary: Get Institutions From Infocamere
+      tags:
+      - Institution Controller
+  /v1/institutions/geographic-taxonomies:
+    get:
+      parameters:
+      - name: subunitCode
+        in: query
+        schema:
+          type: string
+      - name: taxCode
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GeographicTaxonomyResource"
+      summary: Get Geographic Taxonomies By Tax Code And Subunit Code
+      tags:
+      - Institution Controller
+  /v1/institutions/onboarding:
+    get:
+      parameters:
+      - name: institutionId
+        in: query
+        schema:
+          type: string
+      - name: productId
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstitutionOnboardingInfoResource"
+      summary: Get Institution Onboarding Info By Id
+      tags:
+      - Institution Controller
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingProductDto"
+        required: true
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+      summary: Onboarding
+      tags:
+      - Institution Controller
+    head:
+      parameters:
+      - name: institutionType
+        in: query
+        schema:
+          type: string
+      - name: origin
+        in: query
+        schema:
+          type: string
+      - name: originId
+        in: query
+        schema:
+          type: string
+      - name: productId
+        in: query
+        schema:
+          type: string
+      - name: subunitCode
+        in: query
+        schema:
+          type: string
+      - name: taxCode
+        in: query
+        schema:
+          type: string
+      - name: vatNumber
+        in: query
+        schema:
+          type: string
+        required: false
+      - name: verifyType
+        in: query
+        schema:
+          $ref: "#/components/schemas/VerifyType"
+      responses:
+        "204":
+          description: No Content
+  /v1/institutions/verification/legal-address:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerificationLegalAddressRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstitutionLegalAddressResource"
+        "400":
+          description: Bad Request
+      summary: Post Verification Legal Address
+      tags:
+      - Institution Controller
+  /v1/institutions/verification/match:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerificationMatchRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchInfoResultResource"
+        "400":
+          description: Bad Request
+      summary: Post Verification Match
+      tags:
+      - Institution Controller
+  /v1/institutions/{externalInstitutionId}/geographic-taxonomy:
+    get:
+      parameters:
+      - name: externalInstitutionId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GeographicTaxonomyResource"
+      summary: Get Institution Geographic Taxonomy
+      tags:
+      - Institution Controller
+  /v1/institutions/{externalInstitutionId}/products/{productId}:
+    head:
+      parameters:
+      - name: externalInstitutionId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+  /v1/institutions/{externalInstitutionId}/products/{productId}/onboarded-institution-info:
+    get:
+      deprecated: true
+      parameters:
+      - name: externalInstitutionId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstitutionOnboardingInfoResource"
+      summary: Get Institution Onboarding Info
+      tags:
+      - Institution Controller
+  /v1/product/{id}:
+    get:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: institutionType
+        in: query
+        schema:
+          $ref: "#/components/schemas/InstitutionType"
+        required: false
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResource"
+      summary: Get Product
+      tags:
+      - Product Controller
+  /v1/products:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductResource"
+      summary: Get Products
+      tags:
+      - Product Controller
+  /v1/products/admin:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductResource"
+      summary: Get Products Admin
+      tags:
+      - Product Controller
+  /v1/users/check-manager:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckManagerDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckManagerResponse"
+        "400":
+          description: Bad Request
+      summary: Check Manager
+      tags:
+      - User Controller
+  /v1/users/onboarding:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingUserDto"
+        required: true
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+      summary: Onboarding
+      tags:
+      - User Controller
+  /v1/users/onboarding/aggregator:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingUserDto"
+        required: true
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+      summary: Onboarding Aggregator
+      tags:
+      - User Controller
+  /v1/users/onboarding/{onboardingId}/manager:
+    get:
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Principal"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagerInfoResponse"
+      summary: Get Manager Info
+      tags:
+      - User Controller
+  /v1/users/search-user:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserTaxCodeDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserId"
+        "400":
+          description: Bad Request
+      summary: Search User
+      tags:
+      - User Controller
+  /v1/users/validate:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserDataValidationDto"
+        required: true
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+      summary: Validate
+      tags:
+      - User Controller
+  /v2/institutions:
+    get:
+      parameters:
+      - name: origin
+        in: query
+        schema:
+          type: string
+      - name: originId
+        in: query
+        schema:
+          type: string
+      - name: productId
+        in: query
+        schema:
+          type: string
+      - name: subunitCode
+        in: query
+        schema:
+          type: string
+      - name: taxCode
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InstitutionResource"
+      summary: Get Institution
+      tags:
+      - Institution V 2 Controller
+  /v2/institutions/company/onboarding:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanyOnboardingDto"
+        required: true
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+      summary: Onboarding
+      tags:
+      - Institution V 2 Controller
+  /v2/institutions/company/verify-manager:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyManagerRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyManagerResponse"
+        "400":
+          description: Bad Request
+      summary: Verify Manager
+      tags:
+      - Institution V 2 Controller
+  /v2/institutions/onboarding:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingProductDto"
+        required: true
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+      summary: Onboarding
+      tags:
+      - Institution V 2 Controller
+  /v2/institutions/onboarding/active:
+    get:
+      parameters:
+      - name: productId
+        in: query
+        schema:
+          type: string
+      - name: subunitCode
+        in: query
+        schema:
+          type: string
+      - name: taxCode
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InstitutionOnboardingResource"
+      summary: Get Active Onboarding
+      tags:
+      - Institution V 2 Controller
+  /v2/institutions/onboarding/aggregation/verification:
+    post:
+      parameters:
+      - name: aggregates
+        in: query
+        schema:
+          type: object
+      - name: institutionType
+        in: query
+        schema:
+          type: string
+      - name: productId
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyAggregatesResponse"
+      summary: Verify Aggregates Csv
+      tags:
+      - Institution V 2 Controller
+  /v2/institutions/onboarding/recipient-code/verification:
+    get:
+      parameters:
+      - name: originId
+        in: query
+        schema:
+          type: string
+      - name: recipientCode
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecipientCodeStatus"
+      summary: Check Recipient Code
+      tags:
+      - Institution V 2 Controller
+  /v2/institutions/onboarding/users/pg:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanyOnboardingUserDto"
+        required: true
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+      summary: Onboarding Users
+      tags:
+      - Institution V 2 Controller
+  /v2/institutions/onboardings:
+    get:
+      parameters:
+      - name: status
+        in: query
+        schema:
+          type: string
+      - name: taxCode
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OnboardingResult"
+      summary: Get Onboardings Info
+      tags:
+      - Institution V 2 Controller
+  /v2/product:
+    get:
+      parameters:
+      - name: productId
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OriginResponse"
+      summary: Get Origins
+      tags:
+      - Product V 2 Controller
+  /v2/tokens/{onboardingId}:
+    get:
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingRequestResource"
+      summary: Retrieve Onboarding Request
+      tags:
+      - Token V 2 Controller
+  /v2/tokens/{onboardingId}/approve:
+    post:
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "201":
+          description: Created
+      summary: Approve Onboarding
+      tags:
+      - Token V 2 Controller
+  /v2/tokens/{onboardingId}/attachment:
+    get:
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: filename
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+      summary: Get Attachment
+      tags:
+      - Token V 2 Controller
+    post:
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: name
+        in: query
+        schema:
+          type: string
+      responses:
+        "201":
+          description: Created
+      summary: Upload Attachment
+      tags:
+      - Token V 2 Controller
+  /v2/tokens/{onboardingId}/attachment/status:
+    head:
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: name
+        in: query
+        schema:
+          type: string
+        required: true
+      responses:
+        "204":
+          description: No Content
+  /v2/tokens/{onboardingId}/complete:
+    post:
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "201":
+          description: Created
+      summary: Complete
+      tags:
+      - Token V 2 Controller
+    delete:
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+      summary: Delete Onboarding
+      tags:
+      - Token V 2 Controller
+  /v2/tokens/{onboardingId}/complete-onboarding-users:
+    post:
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "201":
+          description: Created
+      summary: Complete Onboarding Users
+      tags:
+      - Token V 2 Controller
+  /v2/tokens/{onboardingId}/contract:
+    get:
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+      summary: Get Contract
+      tags:
+      - Token V 2 Controller
+  /v2/tokens/{onboardingId}/products/{productId}/aggregates-csv:
+    get:
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Principal"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+      summary: Get Aggregates Csv
+      tags:
+      - Token V 2 Controller
+  /v2/tokens/{onboardingId}/reject:
+    post:
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReasonForRejectDto"
+        required: true
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+      summary: Reject Onboarding
+      tags:
+      - Token V 2 Controller
+  /v2/tokens/{onboardingId}/template-attachment:
+    get:
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: filename
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+      summary: Get Template Attachment
+      tags:
+      - Token V 2 Controller
+  /v2/tokens/{onboardingId}/verify:
+    post:
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingVerify"
+      summary: Verify Onboarding
+      tags:
+      - Token V 2 Controller
+info:
+  title: onboarding-bff
+  version: 1.0.0-SNAPSHOT
+  description: SelfCare Onboarding BFF
+servers:
+- url: http://localhost:8080
+  description: Auto generated value
+- url: http://0.0.0.0:8080
+  description: Auto generated value

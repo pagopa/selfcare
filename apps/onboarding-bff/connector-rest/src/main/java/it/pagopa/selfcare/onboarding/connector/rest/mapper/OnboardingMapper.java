@@ -6,7 +6,7 @@ import it.pagopa.selfcare.onboarding.connector.model.RecipientCodeStatusResult;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.VerifyAggregateResult;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.*;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.GeographicTaxonomy;
-import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.*;
+import org.openapi.quarkus.onboarding_json.model.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -14,8 +14,10 @@ import org.mapstruct.Named;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "cdi")
 public interface OnboardingMapper {
 
     @Mapping(target = "institution", source = ".", qualifiedByName = "toInstitutionBase")
@@ -44,7 +46,7 @@ public interface OnboardingMapper {
         institution.subunitType(Optional.ofNullable(onboardingData.getSubunitType())
                 .map(InstitutionPaSubunitType::valueOf)
                 .orElse(null));
-        institution.setOrigin(Optional.ofNullable(onboardingData.getOrigin()).map(Origin::fromValue).orElse(null));
+        institution.setOrigin(Optional.ofNullable(onboardingData.getOrigin()).map(Origin::fromString).orElse(null));
         if(Objects.nonNull(onboardingData.getOriginId())) {
             institution.setOriginId(onboardingData.getOriginId());
         }
@@ -84,7 +86,7 @@ public interface OnboardingMapper {
                 .map(InstitutionPaSubunitType::valueOf)
                 .orElse(null));
         institutionPsp.setIstatCode(onboardingData.getIstatCode());
-        institutionPsp.setOrigin(Optional.ofNullable(onboardingData.getOrigin()).map(Origin::fromValue).orElse(null));
+        institutionPsp.setOrigin(Optional.ofNullable(onboardingData.getOrigin()).map(Origin::fromString).orElse(null));
         if(Objects.nonNull(onboardingData.getOriginId())) {
             institutionPsp.setOriginId(onboardingData.getOriginId());
         }
@@ -144,6 +146,10 @@ public interface OnboardingMapper {
     RecipientCodeStatusResult toRecipientCodeStatusResult(RecipientCodeStatus recipientCodeStatus);
 
     OnboardingUserPgRequest toOnboardingUserPgRequest(OnboardingData onboardingData);
+
+    default LocalDateTime map(OffsetDateTime value) {
+        return value != null ? value.toLocalDateTime() : null;
+    }
 
    default List<OnboardingResult> toOnboardingWithFilter(OnboardingGetResponse onboardingGetResponse) {
         if (onboardingGetResponse == null || onboardingGetResponse.getItems() == null) {

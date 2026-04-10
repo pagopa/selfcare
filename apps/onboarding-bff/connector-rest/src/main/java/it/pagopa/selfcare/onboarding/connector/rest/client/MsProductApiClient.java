@@ -1,8 +1,14 @@
 package it.pagopa.selfcare.onboarding.connector.rest.client;
 
-import it.pagopa.selfcare.product.generated.openapi.v1.api.ProductApi;
-import org.springframework.cloud.openfeign.FeignClient;
+import org.openapi.quarkus.product_json.api.ProductApi;
+import org.openapi.quarkus.product_json.model.ProductOriginResponse;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import org.springframework.http.ResponseEntity;
 
-@FeignClient(name = "${rest-client.ms-product-api.serviceCode}", url = "${rest-client.ms-product.base-url}")
+@RegisterRestClient(configKey = "product_json")
 public interface MsProductApiClient extends ProductApi {
+
+    default ResponseEntity<ProductOriginResponse> _getProductOriginsById(String productId) {
+        return ResponseEntity.ok(getProductOriginsById(productId).await().indefinitely());
+    }
 }

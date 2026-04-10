@@ -4,40 +4,71 @@ import it.pagopa.selfcare.onboarding.connector.model.user.MutableUserFieldsDto;
 import it.pagopa.selfcare.onboarding.connector.model.user.SaveUserDto;
 import it.pagopa.selfcare.onboarding.connector.model.user.User;
 import it.pagopa.selfcare.onboarding.connector.model.user.UserId;
-import it.pagopa.selfcare.onboarding.connector.rest.config.FeignClientConfig;
 import it.pagopa.selfcare.onboarding.connector.rest.model.user_registry.EmbeddedExternalId;
-import it.pagopa.selfcare.user_registry.generated.openapi.v1.api.UserApi;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.EnumSet;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import org.openapi.quarkus.user_registry_json.api.UserApi;
+import org.openapi.quarkus.user_registry_json.model.UserResource;
+import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 
-@FeignClient(name = "${rest-client.user-registry.serviceCode}", url = "${rest-client.user-registry.base-url}", configuration = FeignClientConfig.class)
+@RegisterRestClient(configKey = "user_registry_json")
+@ClientHeaderParam(name = "x-api-key", value = "${USERVICE_USER_REGISTRY_API_KEY:api-key}")
 public interface UserRegistryRestClient extends UserApi {
 
-    @PostMapping(value = "${rest-client.user-registry.getUserByExternalId.path}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    User search(@RequestBody EmbeddedExternalId externalId,
-                @RequestParam(value = "fl") EnumSet<User.Fields> fields);
+    @POST
+    @Path("/users/search")
+    @Consumes(MediaType.APPLICATION_JSON_VALUE)
+    @Produces(MediaType.APPLICATION_JSON_VALUE)
+    User searchByExternalId(EmbeddedExternalId externalId, @QueryParam("fl") String fields);
 
-    @PatchMapping(value = "${rest-client.user-registry.patchUser.path}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    void patchUser(@PathVariable("id") UUID id,
-                   @RequestBody MutableUserFieldsDto request);
+    default User search(EmbeddedExternalId externalId, EnumSet<User.Fields> fields) {
+        return searchByExternalId(externalId, toFieldList(fields));
+    }
 
-    @GetMapping(value = "${rest-client.user-registry.getUserByInternalId.path}")
-    @ResponseBody
-    User getUserByInternalId(@PathVariable("id") UUID id,
-                             @RequestParam(value = "fl") EnumSet<User.Fields> fieldList);
+    @PATCH
+    @Path("/users/{id}")
+    @Consumes(MediaType.APPLICATION_JSON_VALUE)
+    void patchUser(@PathParam("id") UUID id, MutableUserFieldsDto request);
 
-    @PatchMapping(value = "${rest-client.user-registry.saveUser.path}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    UserId saveUser(@RequestBody SaveUserDto request);
+    @GET
+    @Path("/users/{id}")
+    @Produces(MediaType.APPLICATION_JSON_VALUE)
+    User getUserByInternalIdRaw(@PathParam("id") UUID id, @QueryParam("fl") String fieldList);
 
-    @DeleteMapping(value = "${rest-client.user-registry.deleteUserById.path}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    void deleteById(@PathVariable("id") UUID id);
+    default User getUserByInternalId(UUID id, EnumSet<User.Fields> fieldList) {
+        return getUserByInternalIdRaw(id, toFieldList(fieldList));
+    }
 
+    @PATCH
+    @Path("/users")
+    @Consumes(MediaType.APPLICATION_JSON_VALUE)
+    @Produces(MediaType.APPLICATION_JSON_VALUE)
+    UserId saveUser(SaveUserDto request);
+
+    @DELETE
+    @Path("/users/{id}")
+    @Consumes(MediaType.APPLICATION_JSON_VALUE)
+    void deleteById(@PathParam("id") UUID id);
+
+    default ResponseEntity<UserResource> _searchUsingPOST(String fl, UserSearchDto userSearchDto) {
+        return ResponseEntity.ok(searchUsingPOST(fl, userSearchDto).await().indefinitely());
+    }
+
+    private static String toFieldList(EnumSet<User.Fields> fields) {
+        return fields.stream().map(Enum::name).collect(Collectors.joining(","));
+    }
 }

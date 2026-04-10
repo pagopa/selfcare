@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.connector;
 import static it.pagopa.selfcare.onboarding.connector.model.RelationshipState.ACTIVE;
 
 import io.github.resilience4j.retry.annotation.Retry;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.onboarding.connector.api.PartyConnector;
 import it.pagopa.selfcare.onboarding.connector.model.RelationshipInfo;
@@ -19,20 +20,19 @@ import it.pagopa.selfcare.onboarding.connector.rest.client.MsUserApiClient;
 import it.pagopa.selfcare.onboarding.connector.rest.client.PartyProcessRestClient;
 import it.pagopa.selfcare.onboarding.connector.rest.mapper.InstitutionMapper;
 import it.pagopa.selfcare.onboarding.connector.rest.model.*;
-import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.GetInstitutionRequest;
+import org.openapi.quarkus.onboarding_json.model.GetInstitutionRequest;
 import it.pagopa.selfcare.product.entity.Product;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionResponse;
+import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.springframework.util.Assert;
 
-@Service
+@ApplicationScoped
 @Slf4j
 class PartyConnectorImpl implements PartyConnector {
 
@@ -54,18 +54,16 @@ class PartyConnectorImpl implements PartyConnector {
         return userInfo;
     };
 
-    private Map<String, it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.InstitutionResponse> buildInstitutionMap(List<InstitutionInfo> result) {
+    private Map<String, org.openapi.quarkus.onboarding_json.model.InstitutionResponse> buildInstitutionMap(List<InstitutionInfo> result) {
         GetInstitutionRequest request = new GetInstitutionRequest();
         request.setInstitutionIds(result.stream().map(InstitutionInfo::getId).toList());
-        List<it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.InstitutionResponse> response = institutionApiClient._getInstitutions(request).getBody();
-        return Objects.isNull(response) ? Map.of() : response.stream().collect(Collectors.toMap(it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.InstitutionResponse::getId, Function.identity()));
+        List<org.openapi.quarkus.onboarding_json.model.InstitutionResponse> response = institutionApiClient._getInstitutions(request).getBody();
+        return Objects.isNull(response) ? Map.of() : response.stream().collect(Collectors.toMap(org.openapi.quarkus.onboarding_json.model.InstitutionResponse::getId, Function.identity()));
     }
-
-    @Autowired
-    public PartyConnectorImpl(PartyProcessRestClient restClient,
+    public PartyConnectorImpl(@RestClient PartyProcessRestClient restClient,
                               InstitutionMapper institutionMapper,
-                              MsUserApiClient userApiClient,
-                              MsOnboardingInstitutionApiClient institutionApiClient) {
+                              @RestClient MsUserApiClient userApiClient,
+                              @RestClient MsOnboardingInstitutionApiClient institutionApiClient) {
         this.restClient = restClient;
         this.institutionMapper = institutionMapper;
         this.userApiClient = userApiClient;
@@ -156,7 +154,7 @@ class PartyConnectorImpl implements PartyConnector {
                     .toList();
         }
 
-        Map<String, it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.InstitutionResponse> map = buildInstitutionMap(result);
+        Map<String, org.openapi.quarkus.onboarding_json.model.InstitutionResponse> map = buildInstitutionMap(result);
 
         // Filtering result for allowed institution types on product
         List<InstitutionInfo> allowedInstitutions = Objects.isNull(product.getInstitutionTypesAllowed())

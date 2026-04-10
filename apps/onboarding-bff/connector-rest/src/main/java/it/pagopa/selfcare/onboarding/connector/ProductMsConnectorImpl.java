@@ -4,12 +4,13 @@ import it.pagopa.selfcare.onboarding.connector.api.ProductMsConnector;
 import it.pagopa.selfcare.onboarding.connector.model.product.OriginResult;
 import it.pagopa.selfcare.onboarding.connector.rest.client.MsProductApiClient;
 import it.pagopa.selfcare.onboarding.connector.rest.mapper.ProductMapper;
-import it.pagopa.selfcare.product.generated.openapi.v1.dto.ProductOriginResponse;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.openapi.quarkus.product_json.model.ProductOriginResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class ProductMsConnectorImpl implements ProductMsConnector {
 
@@ -19,7 +20,7 @@ public class ProductMsConnectorImpl implements ProductMsConnector {
     // MAPPER
     private final ProductMapper productMapper;
 
-    public ProductMsConnectorImpl(MsProductApiClient msProductApiClient, ProductMapper productMapper) {
+    public ProductMsConnectorImpl(@RestClient MsProductApiClient msProductApiClient, ProductMapper productMapper) {
         this.msProductApiClient = msProductApiClient;
         this.productMapper = productMapper;
     }

@@ -20,17 +20,16 @@ import it.pagopa.selfcare.onboarding.core.exception.InvalidUserFieldsException;
 import it.pagopa.selfcare.onboarding.core.exception.OnboardingNotAllowedException;
 import it.pagopa.selfcare.onboarding.core.strategy.UserAllowedValidationStrategy;
 import it.pagopa.selfcare.onboarding.core.utils.PgManagerVerifier;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
+import java.util.Objects;
 
 @Slf4j
-@Service
+@ApplicationScoped
 public class UserServiceImpl implements UserService {
 
     private static final EnumSet<it.pagopa.selfcare.onboarding.connector.model.user.User.Fields> FIELD_LIST = EnumSet.of(name, familyName);
@@ -40,7 +39,6 @@ public class UserServiceImpl implements UserService {
     private final PgManagerVerifier pgManagerVerifier;
     private final UserAllowedValidationStrategy userAllowedValidationStrategy;
 
-    @Autowired
     public UserServiceImpl(UserRegistryConnector userRegistryConnector,
                            OnboardingMsConnector onboardingMsConnector,
                            PgManagerVerifier pgManagerVerifier, UserAllowedValidationStrategy userAllowedValidationStrategy) {
@@ -54,7 +52,7 @@ public class UserServiceImpl implements UserService {
     public void validate(User user) {
         log.trace("validate start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "validate user = {}", user);
-        Assert.notNull(user, "An user is required");
+        Objects.requireNonNull(user, "An user is required");
         final Optional<it.pagopa.selfcare.onboarding.connector.model.user.User> searchResult =
                 userRegistryConnector.search(user.getTaxCode(), FIELD_LIST);
         searchResult.ifPresent(foundUser -> {

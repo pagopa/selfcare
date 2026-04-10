@@ -1,9 +1,12 @@
 package it.pagopa.selfcare.onboarding.connector.rest.client;
 
+import org.openapi.quarkus.onboarding_functions_json.api.OrganizationApi;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
-import it.pagopa.selfcare.onboarding_functions.generated.openapi.v1.api.OrganizationApi;
-import org.springframework.cloud.openfeign.FeignClient;
-
-@FeignClient(name = "${rest-client.onboarding-functions-api.serviceCode}", url = "${rest-client.onboarding-functions-api.baseUrl}")
+@RegisterRestClient(configKey = "onboarding_functions_json")
 public interface OnboardingFunctionsApiClient extends OrganizationApi {
+
+    default void _checkOrganization(String fiscalCode, String vatNumber) {
+        checkOrganization(fiscalCode, vatNumber).await().indefinitely();
+    }
 }

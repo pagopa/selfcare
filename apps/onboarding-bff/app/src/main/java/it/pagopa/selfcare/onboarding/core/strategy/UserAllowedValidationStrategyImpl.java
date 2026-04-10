@@ -1,23 +1,21 @@
 package it.pagopa.selfcare.onboarding.core.strategy;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @Slf4j
 @Data
-@Service
+@ApplicationScoped
 public class UserAllowedValidationStrategyImpl implements UserAllowedValidationStrategy {
 
   private List<String> userAllowedList;
 
-  @Autowired
   public UserAllowedValidationStrategyImpl(
-      @Value("${user-allowed-list}") String userAllowedListKV) {
+      @ConfigProperty(name = "user-allowed-list", defaultValue = "") String userAllowedListKV) {
 
     if (userAllowedListKV.equalsIgnoreCase("null") || userAllowedListKV.trim().isEmpty()) {
       log.trace("Malformed string for user-allowed-list: {}", userAllowedListKV);

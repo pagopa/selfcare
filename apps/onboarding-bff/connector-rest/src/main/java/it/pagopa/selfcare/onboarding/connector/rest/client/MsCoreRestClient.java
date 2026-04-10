@@ -3,33 +3,40 @@ package it.pagopa.selfcare.onboarding.connector.rest.client;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.Institution;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.CreateInstitutionData;
 import it.pagopa.selfcare.onboarding.connector.rest.model.OnboardingInstitutionRequest;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.*;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HEAD;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.web.bind.annotation.RequestMethod.HEAD;
+import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
-/**
- * Ms Core Rest Client
- */
-@FeignClient(name = "${rest-client.ms-core.serviceCode}", url = "${rest-client.ms-core.base-url}")
+@RegisterRestClient(configKey = "ms_core")
+@RegisterClientHeaders(it.pagopa.selfcare.onboarding.client.auth.AuthenticationPropagationHeadersFactory.class)
 public interface MsCoreRestClient {
 
-    @PostMapping(value = "${rest-client.ms-core.onboardingOrganization.path}", consumes = APPLICATION_JSON_VALUE)
-    @ResponseBody
-    void onboardingOrganization(@RequestBody OnboardingInstitutionRequest request);
+    @POST
+    @Path("/onboarding/institution")
+    @Consumes(APPLICATION_JSON)
+    void onboardingOrganization(OnboardingInstitutionRequest request);
 
-    @GetMapping(value = "${rest-client.ms-core.getInstitutionByExternalId.path}", produces = APPLICATION_JSON_VALUE)
-    @ResponseBody
-    Institution getInstitutionByExternalId(@PathVariable("externalId") String externalId);
+    @GET
+    @Path("/external/institutions/{externalId}")
+    @Produces(APPLICATION_JSON)
+    Institution getInstitutionByExternalId(@PathParam("externalId") String externalId);
 
-    @PostMapping(value = "${rest-client.ms-core.createInstitutionUsingInstitutionData.path}", consumes = APPLICATION_JSON_VALUE)
-    @ResponseBody
-    Institution createInstitutionUsingInstitutionData(@RequestBody CreateInstitutionData request);
+    @POST
+    @Path("/institutions/pg")
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    Institution createInstitutionUsingInstitutionData(CreateInstitutionData request);
 
-    @RequestMapping(method = HEAD, value = "${rest-client.ms-core.verifyOnboarding.path}")
-    @ResponseBody
-    void verifyOnboarding(@PathVariable("externalId") String externalInstitutionId,
-                          @PathVariable("productId") String productId);
-
+    @HEAD
+    @Path("/onboarding/institution/{externalId}/products/{productId}")
+    void verifyOnboarding(@PathParam("externalId") String externalInstitutionId,
+                          @PathParam("productId") String productId);
 }

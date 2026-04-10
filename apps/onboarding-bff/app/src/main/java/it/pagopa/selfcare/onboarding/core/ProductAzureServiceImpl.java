@@ -6,21 +6,19 @@ import it.pagopa.selfcare.onboarding.connector.exceptions.ResourceNotFoundExcept
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductStatus;
 import it.pagopa.selfcare.product.exception.ProductNotFoundException;
+import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
 
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
-@Service
+@ApplicationScoped
 public class ProductAzureServiceImpl implements ProductAzureService {
 
     private final ProductsConnector productsConnector;
 
-    @Autowired
     public ProductAzureServiceImpl(ProductsConnector productsConnector) {
         this.productsConnector = productsConnector;
     }
@@ -30,7 +28,7 @@ public class ProductAzureServiceImpl implements ProductAzureService {
         log.trace("getProduct start");
         String idSanitized = Encode.forJava(id);
         log.debug("getProduct id = {}, institutionType = {}", idSanitized, institutionType);
-        Assert.notNull(id, "ProductId is required");
+        Objects.requireNonNull(id, "ProductId is required");
         try {
             Product product = productsConnector.getProduct(id, institutionType);
             log.debug("getProduct result = {}", product);
@@ -45,7 +43,7 @@ public class ProductAzureServiceImpl implements ProductAzureService {
     public Product getProductValid(String id) {
         log.trace("getProductValid start");
         log.debug("getProductValid id = {}", id);
-        Assert.notNull(id, "ProductId is required");
+        Objects.requireNonNull(id, "ProductId is required");
         Product product = productsConnector.getProductValid(id);
         log.debug("getProductValid result = {}", product);
         log.trace("getProductValid end");

@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.connector;
 
 import io.github.resilience4j.retry.annotation.Retry;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.onboarding.connector.api.PartyRegistryProxyConnector;
 import it.pagopa.selfcare.onboarding.connector.model.InstitutionLegalAddressData;
@@ -19,11 +20,10 @@ import it.pagopa.selfcare.onboarding.connector.rest.model.UoResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.institution_pnpg.InstitutionByLegalTaxIdRequest;
 import it.pagopa.selfcare.onboarding.connector.rest.model.institution_pnpg.InstitutionByLegalTaxIdRequestDto;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.springframework.util.Assert;
 
-@Service
+@ApplicationScoped
 @Slf4j
 class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
 
@@ -33,10 +33,7 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
     private final PartyRegistryProxyRestClient restClient;
 
     private final RegistryProxyMapper proxyMapper;
-
-
-    @Autowired
-    public PartyRegistryProxyConnectorImpl(PartyRegistryProxyRestClient restClient, RegistryProxyMapper proxyMapper) {
+    public PartyRegistryProxyConnectorImpl(@RestClient PartyRegistryProxyRestClient restClient, RegistryProxyMapper proxyMapper) {
         this.restClient = restClient;
         this.proxyMapper = proxyMapper;
     }

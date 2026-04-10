@@ -2,12 +2,12 @@ package it.pagopa.selfcare.onboarding.core;
 
 import it.pagopa.selfcare.onboarding.connector.api.ProductMsConnector;
 import it.pagopa.selfcare.onboarding.connector.model.product.OriginResult;
+import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
-import org.springframework.stereotype.Service;
 
 @Slf4j
-@Service
+@ApplicationScoped
 public class ProductServiceImpl implements ProductService {
 
     // CONNECTOR

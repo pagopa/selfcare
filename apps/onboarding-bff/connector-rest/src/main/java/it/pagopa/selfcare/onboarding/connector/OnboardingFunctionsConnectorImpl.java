@@ -2,15 +2,16 @@ package it.pagopa.selfcare.onboarding.connector;
 
 import it.pagopa.selfcare.onboarding.connector.api.OnboardingFunctionsConnector;
 import it.pagopa.selfcare.onboarding.connector.rest.client.OnboardingFunctionsApiClient;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class OnboardingFunctionsConnectorImpl implements OnboardingFunctionsConnector {
     private final OnboardingFunctionsApiClient onboardingFunctionsApiClient;
 
-    public OnboardingFunctionsConnectorImpl(OnboardingFunctionsApiClient onboardingFunctionsApiClient) {
+    public OnboardingFunctionsConnectorImpl(@RestClient OnboardingFunctionsApiClient onboardingFunctionsApiClient) {
         this.onboardingFunctionsApiClient = onboardingFunctionsApiClient;
     }
 

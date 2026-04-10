@@ -8,38 +8,42 @@ import it.pagopa.selfcare.onboarding.core.ProductAzureService;
 import it.pagopa.selfcare.onboarding.web.model.ProductResource;
 import it.pagopa.selfcare.onboarding.web.model.mapper.ProductMapper;
 import it.pagopa.selfcare.product.entity.Product;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
 
 @Slf4j
-@RestController
+@ApplicationScoped
+@Path("/")
+@Produces(MediaType.APPLICATION_JSON)
 @Api(tags = "product")
 public class ProductController {
 
     private final ProductAzureService productAzureService;
     private final ProductMapper productMapper;
 
-    @Autowired
     public ProductController(ProductAzureService productAzureService, ProductMapper productMapper) {
         this.productAzureService = productAzureService;
         this.productMapper = productMapper;
     }
 
-    @GetMapping(value = "/v1/product/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.OK)
+    @GET
+    @Path("/v1/product/{id}")
     @Operation(summary = "${swagger.onboarding.product.api.getProduct}",
             description = "${swagger.onboarding.product.api.getProduct}", operationId = "getProductUsingGET")
     public ProductResource getProduct(@ApiParam("${swagger.onboarding.product.model.id}")
-                                      @PathVariable("id")
+                                      @PathParam("id")
                                       String id,
                                       @ApiParam("${swagger.onboarding.institutions.model.institutionType}")
-                                      @RequestParam(value = "institutionType", required = false)
+                                      @QueryParam("institutionType")
                                       Optional<InstitutionType> institutionType) {
         log.trace("getProduct start");
         log.debug("getProduct id = {}, institutionType = {}", id, institutionType);
@@ -50,8 +54,8 @@ public class ProductController {
         return resource;
     }
 
-    @GetMapping(value = "/v1/products",  produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.OK)
+    @GET
+    @Path("/v1/products")
     @Operation(summary = "${swagger.onboarding.product.api.getProducts}",
             description = "${swagger.onboarding.product.api.getProducts}", operationId = "getProducts")
     public List<ProductResource> getProducts() {
@@ -65,8 +69,8 @@ public class ProductController {
         return resources;
     }
 
-    @GetMapping(value = "/v1/products/admin",  produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.OK)
+    @GET
+    @Path("/v1/products/admin")
     @Operation(summary = "${swagger.onboarding.product.api.getProductsAdmin}",
             description = "${swagger.onboarding.product.api.getProductsAdmin}", operationId = "getProductsAdmin")
     public List<ProductResource> getProductsAdmin() {

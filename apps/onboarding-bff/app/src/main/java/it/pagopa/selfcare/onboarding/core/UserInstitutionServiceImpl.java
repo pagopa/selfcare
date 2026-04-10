@@ -7,20 +7,18 @@ import it.pagopa.selfcare.onboarding.connector.api.UserInstitutionConnector;
 import it.pagopa.selfcare.onboarding.connector.model.userInstitution.UserInstitutionRequest;
 import it.pagopa.selfcare.onboarding.connector.model.userInstitution.UserInstitutionResponse;
 import it.pagopa.selfcare.product.entity.ProductStatus;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 @Slf4j
-@Service
+@ApplicationScoped
 public class UserInstitutionServiceImpl implements UserInstitutionService {
 
   private final UserInstitutionConnector userInstitutionConnector;
 
-  @Autowired
   public UserInstitutionServiceImpl(UserInstitutionConnector userInstitutionConnector) {
     this.userInstitutionConnector = userInstitutionConnector;
   }

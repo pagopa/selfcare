@@ -5,22 +5,20 @@ import it.pagopa.selfcare.onboarding.connector.api.UserInstitutionConnector;
 import it.pagopa.selfcare.onboarding.connector.model.userInstitution.UserInstitutionRequest;
 import it.pagopa.selfcare.onboarding.connector.model.userInstitution.UserInstitutionResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.client.MsUserInstitutionApiClient;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
-@Service
+@ApplicationScoped
 @Slf4j
 @Data
 class MsUserInstitutionConnectorImpl implements UserInstitutionConnector {
 
   private final MsUserInstitutionApiClient userInstitutionApiClient;
-
-    @Autowired
-    public MsUserInstitutionConnectorImpl(MsUserInstitutionApiClient userInstitutionApiClient) {
+    public MsUserInstitutionConnectorImpl(@RestClient MsUserInstitutionApiClient userInstitutionApiClient) {
         this.userInstitutionApiClient = userInstitutionApiClient;
     }
 
@@ -31,7 +29,7 @@ class MsUserInstitutionConnectorImpl implements UserInstitutionConnector {
 
     log.debug("getInstitutionUsersByFilter institutionId = {}", userInstitutionRequest.getInstitutionId());
 
-    List<it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionResponse> response =
+    List<org.openapi.quarkus.user_json.model.UserInstitutionResponse> response =
         userInstitutionApiClient
             ._institutionsInstitutionIdUserInstitutionsGet(
                 userInstitutionRequest.getInstitutionId(), userInstitutionRequest.getProductRoles(), userInstitutionRequest.getProducts(), userInstitutionRequest.getRoles(), userInstitutionRequest.getStates(), userInstitutionRequest.getUserId())
