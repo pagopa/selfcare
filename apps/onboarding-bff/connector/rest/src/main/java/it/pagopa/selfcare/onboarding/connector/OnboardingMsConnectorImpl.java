@@ -14,10 +14,7 @@ import it.pagopa.selfcare.onboarding.connector.rest.client.*;
 import it.pagopa.selfcare.onboarding.connector.rest.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.*;
 import lombok.extern.slf4j.Slf4j;
-import org.owasp.encoder.Encode;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -37,20 +34,17 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
     private final MsOnboardingApiClient msOnboardingApiClient;
     private final MsOnboardingBillingApiClient msOnboardingBillingApiClient;
     private final MsOnboardingSupportApiClient msOnboardingSupportApiClient;
-    private final MsOnboardingTokenApiClient msOnboardingTokenApiClient;
     private final MsOnboardingAggregatesApiClient msOnboardingAggregatesApiClient;
     private final OnboardingMapper onboardingMapper;
     private final MsOnboardingInternalApiClient msOnboardingInternalApiClient;
     protected static final String REQUIRED_PRODUCT_ID_MESSAGE = "A product Id is required";
 
     public OnboardingMsConnectorImpl(MsOnboardingApiClient msOnboardingApiClient, MsOnboardingBillingApiClient msOnboardingBillingApiClient,
-                                     MsOnboardingTokenApiClient msOnboardingTokenApiClient,
                                      MsOnboardingSupportApiClient msOnboardingSupportApiClient,
                                      MsOnboardingAggregatesApiClient msOnboardingAggregatesApiClient, OnboardingMapper onboardingMapper,
                                      MsOnboardingInternalApiClient msOnboardingInternalApiClient) {
         this.msOnboardingApiClient = msOnboardingApiClient;
         this.msOnboardingBillingApiClient = msOnboardingBillingApiClient;
-        this.msOnboardingTokenApiClient = msOnboardingTokenApiClient;
         this.msOnboardingSupportApiClient = msOnboardingSupportApiClient;
         this.msOnboardingAggregatesApiClient = msOnboardingAggregatesApiClient;
         this.onboardingMapper = onboardingMapper;
@@ -158,30 +152,6 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
 
     @Override
     @Retry(name = "retryTimeout")
-    public Resource getContract(String onboardingId) {
-        return msOnboardingTokenApiClient._getContract(onboardingId).getBody();
-    }
-
-    @Override
-    @Retry(name = "retryTimeout")
-    public Resource getTemplateAttachment(String onboardingId, String filename) {
-        return msOnboardingTokenApiClient._getTemplateAttachment(onboardingId, filename).getBody();
-    }
-
-    @Override
-    @Retry(name = "retryTimeout")
-    public Resource getAttachment(String onboardingId, String filename) {
-        return msOnboardingTokenApiClient._getAttachment(onboardingId, filename).getBody();
-    }
-
-    @Override
-    @Retry(name = "retryTimeout")
-    public Resource getAggregatesCsv(String onboardingId, String productId) {
-        return msOnboardingAggregatesApiClient._getAggregatesCsv(onboardingId, productId).getBody();
-    }
-
-    @Override
-    @Retry(name = "retryTimeout")
     public void onboardingPaAggregation(OnboardingData onboardingData) {
         msOnboardingApiClient._onboardingPaAggregation(onboardingMapper.toOnboardingPaAggregationRequest(onboardingData));
     }
@@ -247,19 +217,6 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
         List<OnboardingResult> onboardingResults = onboardingMapper.toOnboardingWithFilter(response.getBody());
         log.trace("onboardingWithFilter end");
         return onboardingResults;
-    }
-
-    @Override
-    public void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName) {
-        msOnboardingTokenApiClient._uploadAttachment(onboardingId, attachmentName, attachment);
-    }
-
-    @Override
-    public HttpStatusCode headAttachment(String onboardingId, String filename) {
-        log.info("headAttachment for onboardingId: {}, filename: {}", Encode.forJava(onboardingId), Encode.forJava(filename));
-        ResponseEntity<Void> responseEntity = msOnboardingTokenApiClient._headAttachment(onboardingId, filename);
-        log.info("headAttachment response status code: {}", responseEntity.getStatusCode());
-        return HttpStatus.resolve(responseEntity.getStatusCode().value());
     }
 
 }

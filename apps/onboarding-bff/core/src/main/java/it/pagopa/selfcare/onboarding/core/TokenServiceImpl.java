@@ -1,7 +1,11 @@
 package it.pagopa.selfcare.onboarding.core;
 
+import it.pagopa.selfcare.onboarding.connector.api.DocumentMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.OnboardingMsConnector;
+import it.pagopa.selfcare.onboarding.connector.exceptions.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
+import it.pagopa.selfcare.product.entity.AttachmentTemplate;
+import it.pagopa.selfcare.product.entity.Product;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 import org.springframework.core.io.Resource;
@@ -15,12 +19,18 @@ import org.springframework.web.multipart.MultipartFile;
 public class TokenServiceImpl implements TokenService {
 
     private final OnboardingMsConnector onboardingMsConnector;
+    private final DocumentMsConnector documentMsConnector;
+    private final ProductAzureService productAzureService;
 
     private static final String ONBOARDING_ID_REQUIRED_MESSAGE = "OnboardingId is required";
     private static final String TOKEN_ID_IS_REQUIRED = "TokenId is required";
 
-    public TokenServiceImpl(OnboardingMsConnector onboardingMsConnector) {
+    public TokenServiceImpl(OnboardingMsConnector onboardingMsConnector,
+                            DocumentMsConnector documentMsConnector,
+                            ProductAzureService productAzureService) {
         this.onboardingMsConnector = onboardingMsConnector;
+        this.documentMsConnector = documentMsConnector;
+        this.productAzureService = productAzureService;
     }
 
     @Override
@@ -90,7 +100,7 @@ public class TokenServiceImpl implements TokenService {
         log.trace("getContract start");
         log.debug("getContract id = {}", onboardingId);
         Assert.notNull(onboardingId, TOKEN_ID_IS_REQUIRED);
-        Resource resource = onboardingMsConnector.getContract(onboardingId);
+        Resource resource = documentMsConnector.getContract(onboardingId);
         log.debug("getContract result = success");
         log.trace("getContract end");
         return resource;
@@ -102,10 +112,28 @@ public class TokenServiceImpl implements TokenService {
         log.debug("getTemplateAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(filename));
         Assert.notNull(onboardingId, TOKEN_ID_IS_REQUIRED);
         Assert.notNull(filename, "filename is required");
-        Resource resource = onboardingMsConnector.getTemplateAttachment(onboardingId, filename);
+        OnboardingData onboarding = onboardingMsConnector.getOnboarding(onboardingId);
+        Product product = productAzureService.getProductValid(onboarding.getProductId());
+        String templatePath = getAttachmentTemplate(filename, onboarding, product).getTemplatePath();
+        Resource resource = documentMsConnector.getTemplateAttachment(onboarding, filename, templatePath);
         log.debug("getTemplateAttachment result = success");
         log.trace("getTemplateAttachment end");
         return resource;
+    }
+
+    private AttachmentTemplate getAttachmentTemplate(String attachmentName, OnboardingData onboarding, Product product) {
+        return product
+                .getInstitutionContractMappings()
+                .get(onboarding.getInstitutionType().name())
+                .getAttachments()
+                .stream()
+                .filter(a -> a.getName().equals(attachmentName))
+                .findFirst()
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                String.format("Attachment with name %s not found", attachmentName)
+                        )
+                );
     }
 
     @Override
@@ -114,7 +142,7 @@ public class TokenServiceImpl implements TokenService {
         log.debug("getAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(filename));
         Assert.notNull(onboardingId, TOKEN_ID_IS_REQUIRED);
         Assert.notNull(filename, "filename is required");
-        Resource resource = onboardingMsConnector.getAttachment(onboardingId, filename);
+        Resource resource = documentMsConnector.getAttachment(onboardingId, filename);
         log.debug("getAttachment result = success");
         log.trace("getAttachment end");
         return resource;
@@ -126,18 +154,18 @@ public class TokenServiceImpl implements TokenService {
         log.debug("getAggregatesCsv id = {}, productId = {}", Encode.forJava(onboardingId), Encode.forJava(productId));
         Assert.notNull(onboardingId, ONBOARDING_ID_REQUIRED_MESSAGE);
         Assert.notNull(productId, "ProductId is required");
-        Resource resource = onboardingMsConnector.getAggregatesCsv(onboardingId, productId);
+        Resource resource = documentMsConnector.getAggregatesCsv(onboardingId, productId);
         log.debug("getAggregatesCsv result = success");
         log.trace("getAggregatesCsv end");
         return resource;
     }
 
-  @Override
-  public boolean verifyAllowedUserByRole(String onboardingId, String uid) {
-    log.trace("verifyAllowedUserRole for {} - {}", onboardingId, uid);
-    OnboardingData onboardingData = getOnboardingWithUserInfo(onboardingId);
-    return onboardingData.getUsers().stream().anyMatch(user -> uid.equalsIgnoreCase(user.getId()));
-  }
+    @Override
+    public boolean verifyAllowedUserByRole(String onboardingId, String uid) {
+        log.trace("verifyAllowedUserRole for {} - {}", onboardingId, uid);
+        OnboardingData onboardingData = getOnboardingWithUserInfo(onboardingId);
+        return onboardingData.getUsers().stream().anyMatch(user -> uid.equalsIgnoreCase(user.getId()));
+    }
 
     @Override
     public void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName) {
@@ -146,7 +174,10 @@ public class TokenServiceImpl implements TokenService {
         Assert.notNull(onboardingId, TOKEN_ID_IS_REQUIRED);
         Assert.notNull(attachmentName, "filename is required");
         Assert.notNull(attachment, "file is required");
-        onboardingMsConnector.uploadAttachment(onboardingId, attachment, attachmentName);
+        OnboardingData onboarding = onboardingMsConnector.getOnboarding(onboardingId);
+        Product product = productAzureService.getProductValid(onboarding.getProductId());
+        AttachmentTemplate template = getAttachmentTemplate(attachmentName, onboarding, product);
+        documentMsConnector.uploadAttachment(onboardingId, attachment, attachmentName, product.getId(), template);
         log.debug("getAttachment result = success");
         log.trace("getAttachment end");
     }
@@ -157,7 +188,7 @@ public class TokenServiceImpl implements TokenService {
         log.debug("headAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(filename));
         Assert.notNull(onboardingId, TOKEN_ID_IS_REQUIRED);
         Assert.notNull(filename, "filename is required");
-        HttpStatusCode resource = onboardingMsConnector.headAttachment(onboardingId, filename);
+        HttpStatusCode resource = documentMsConnector.headAttachment(onboardingId, filename);
         log.debug("headAttachment result {}", resource.value());
         log.trace("headAttachment end");
         return resource;

@@ -38,6 +38,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.Executors;
 
 import static it.pagopa.selfcare.document.config.DocumentMsConfig.PDF_FORMAT_FILENAME;
 import static it.pagopa.selfcare.document.util.ErrorMessage.ATTACHMENT_UPLOAD_ERROR;
@@ -55,6 +56,7 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.ATTACHMENT;
 @ApplicationScoped
 public class DocumentContentServiceImpl implements DocumentContentService {
     public static final String HTTP_HEADER_VALUE_ATTACHMENT_FILENAME = "attachment;filename=";
+    private static final String FILE_NAME_AGGREGATES_CSV = "aggregates.csv";
 
     private final AzureBlobClient azureBlobClient;
     private final DocumentMsConfig documentMsConfig;
@@ -233,7 +235,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     public Uni<Void> uploadAggregatesCsv(UploadAggregateCsvRequest request) {
         log.info("Uploading aggregates CSV for onboardingId: {}, productId: {}",
                 sanitize(request.getOnboardingId()), sanitize(request.getProductId()));
-        final String filename = "aggregates.csv";
+        final String filename = FILE_NAME_AGGREGATES_CSV;
 
         return Uni.createFrom().item(request::getCsv)
                 .emitOn(Infrastructure.getDefaultWorkerPool())
@@ -248,8 +250,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                         throw new RuntimeException("Error during Azure upload", e);
                     }
                 })
-                .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)                .onFailure()
-                .transform(e -> {
+                .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)
+                .onFailure().transform(e -> {
                     log.error(
                             "Impossible to store csv aggregate for onboardingId: {}, filename: {}. Error: {}",
                             sanitize(request.getOnboardingId()), sanitize(filename), e.getMessage(), e);
@@ -258,6 +260,31 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                             String.format("Error storing csv aggregate for onboardingId: %s", sanitize(request.getOnboardingId())));
                 })
                 .replaceWithVoid();
+    }
+
+    @Override
+    public Uni<RestResponse<File>> retrieveAggregatesCsv(String onboardingId, String productId) {
+    return Uni.createFrom()
+        .item(
+            () ->
+                azureBlobClient.getFileAsPdf(
+                    String.format(
+                        "%s%s/%s/%s",
+                        documentMsConfig.getAggregatesPath(),
+                        onboardingId,
+                        productId,
+                        FILE_NAME_AGGREGATES_CSV)))
+        .runSubscriptionOn(Executors.newSingleThreadExecutor())
+        .onItem()
+        .transform(
+            csv -> {
+              RestResponse.ResponseBuilder<File> response =
+                  RestResponse.ResponseBuilder.ok(csv, MediaType.APPLICATION_OCTET_STREAM);
+              response.header(
+                  HttpHeaders.CONTENT_DISPOSITION,
+                  "attachment;filename=" + FILE_NAME_AGGREGATES_CSV);
+              return response.build();
+            });
     }
 
     @Override
@@ -336,7 +363,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                     }));
   }
 
-  // ==================== Private Reactive I/O isolation methods ====================
+    // ==================== Private Reactive I/O isolation methods ====================
 
   private Uni<File> fetchPdfFromAzureAsync(
       Document document, String onboardingId, boolean isSigned) {

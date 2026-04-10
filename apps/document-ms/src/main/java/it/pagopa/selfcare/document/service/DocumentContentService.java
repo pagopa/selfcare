@@ -55,4 +55,6 @@ public interface DocumentContentService {
     Uni<Void> uploadAggregatesCsv(UploadAggregateCsvRequest request);
 
     Uni<String> uploadSignedContract(String onboardingId, DocumentBuilderRequest request, boolean skipSignatureVerification, InputStream file, String fileName);
+
+    Uni<RestResponse<File>> retrieveAggregatesCsv(String onboardingId, String productId);
 }

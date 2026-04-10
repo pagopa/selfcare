@@ -164,10 +164,8 @@ components:
       type: object
       properties:
         onboardingId:
-          pattern: \S
           type: string
         productId:
-          pattern: \S
           type: string
         documentType:
           $ref: "#/components/schemas/DocumentType"
@@ -501,6 +499,39 @@ paths:
           description: OK
           content:
             application/json: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /v1/document-content/aggregates-csv/{onboardingId}/products/{productId}:
+    get:
+      summary: Retrieve aggregates csv for a given onboarding and product
+      description: Downloads the aggregates csv associated with the specified onboarding
+        ID and product.
+      operationId: getAggregatesCsv
+      tags:
+      - Document Content Controller
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                format: binary
+                type: string
         "401":
           description: Not Authorized
         "403":
@@ -1140,7 +1171,7 @@ info:
   title: Document API
   version: 1.0.0
 servers:
-- url: http://localhost:8080
+- url: http://localhost:8081
   description: Auto generated value
-- url: http://0.0.0.0:8080
+- url: http://0.0.0.0:8081
   description: Auto generated value

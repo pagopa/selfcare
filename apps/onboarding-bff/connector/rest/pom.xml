@@ -243,6 +243,38 @@
                         </configuration>
                     </execution>
 
+                    <execution>
+                        <id>selfcare-ms-document</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <inputSpec>${project.basedir}/docs/openapi/api-selfcare-document-docs.json</inputSpec>
+                            <generatorName>spring</generatorName>
+                            <library>spring-cloud</library>
+                            <modelNameSuffix/>
+                            <generateApiTests>false</generateApiTests>
+                            <generateModelTests>false</generateModelTests>
+                            <configOptions>
+                                <useSpringBoot3>true</useSpringBoot3>
+                                <generateForOpenFeign>true</generateForOpenFeign>
+                                <basePackage>${project.groupId}.document.generated.openapi.v1</basePackage>
+                                <modelPackage>${project.groupId}.document.generated.openapi.v1.dto</modelPackage>
+                                <apiPackage>${project.groupId}.document.generated.openapi.v1.api</apiPackage>
+                                <configPackage>${project.groupId}.document.generated.openapi.v1.config</configPackage>
+                                <dateLibrary>java8-localdatetime</dateLibrary>
+                                <delegatePattern>true</delegatePattern>
+                                <interfaceOnly>true</interfaceOnly>
+                                <annotationLibrary>none</annotationLibrary>
+                                <documentationProvider>source</documentationProvider>
+                                <openApiNullable>false</openApiNullable>
+                                <skipDefaultInterface>false</skipDefaultInterface>
+                                <useTags>true</useTags>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+
                 </executions>
             </plugin>
         </plugins>
