@@ -1,13 +1,12 @@
 package it.pagopa.selfcare.onboarding.connector.api;
 
+import it.pagopa.selfcare.onboarding.connector.model.BinaryData;
 import it.pagopa.selfcare.onboarding.connector.model.OnboardingResult;
 import it.pagopa.selfcare.onboarding.connector.model.RecipientCodeStatusResult;
+import it.pagopa.selfcare.onboarding.connector.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.VerifyAggregateResult;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.CheckManagerData;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -21,9 +20,9 @@ public interface OnboardingMsConnector {
 
     void onboardingCompany(OnboardingData onboardingData);
 
-    void onboardingTokenComplete(String onboardingId, MultipartFile contract);
+    void onboardingTokenComplete(String onboardingId, UploadedFile contract);
 
-    void onboardingUsersComplete(String onboardingId, MultipartFile contract);
+    void onboardingUsersComplete(String onboardingId, UploadedFile contract);
 
     void onboardingPending(String onboardingId);
 
@@ -35,13 +34,13 @@ public interface OnboardingMsConnector {
 
     OnboardingData getOnboardingWithUserInfo(String onboardingId);
 
-    Resource getContract(String onboardingId);
+    BinaryData getContract(String onboardingId);
 
-    Resource getTemplateAttachment(String onboardingId, String filename);
+    BinaryData getTemplateAttachment(String onboardingId, String filename);
 
-    Resource getAttachment(String onboardingId, String filename);
+    BinaryData getAttachment(String onboardingId, String filename);
 
-    Resource getAggregatesCsv(String onboardingId, String productId);
+    BinaryData getAggregatesCsv(String onboardingId, String productId);
 
     void onboardingPaAggregation(OnboardingData onboardingData);
 
@@ -51,7 +50,7 @@ public interface OnboardingMsConnector {
 
     RecipientCodeStatusResult checkRecipientCode(String originId, String recipientCode);
 
-    VerifyAggregateResult aggregatesVerification(MultipartFile file, String productId);
+    VerifyAggregateResult aggregatesVerification(UploadedFile file, String productId);
 
     void verifyOnboarding(String productId, String taxCode, String origin, String originId, String subunitCode, String institutionType);
 
@@ -59,7 +58,7 @@ public interface OnboardingMsConnector {
 
     List<OnboardingResult> onboardingWithFilter(String taxCode, String status);
 
-    void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName);
+    void uploadAttachment(String onboardingId, UploadedFile attachment, String attachmentName);
 
-    HttpStatusCode headAttachment(String onboardingId, String filename);
+    int headAttachment(String onboardingId, String filename);
 }

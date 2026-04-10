@@ -32,8 +32,7 @@ class MsUserInstitutionConnectorImpl implements UserInstitutionConnector {
     List<org.openapi.quarkus.user_json.model.UserInstitutionResponse> response =
         userInstitutionApiClient
             ._institutionsInstitutionIdUserInstitutionsGet(
-                userInstitutionRequest.getInstitutionId(), userInstitutionRequest.getProductRoles(), userInstitutionRequest.getProducts(), userInstitutionRequest.getRoles(), userInstitutionRequest.getStates(), userInstitutionRequest.getUserId())
-            .getBody();
+                userInstitutionRequest.getInstitutionId(), userInstitutionRequest.getProductRoles(), userInstitutionRequest.getProducts(), userInstitutionRequest.getRoles(), userInstitutionRequest.getStates(), userInstitutionRequest.getUserId());
 
     assert response != null;
       log.debug("Found user: {}", response.size());

@@ -7,7 +7,6 @@ import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import jakarta.enterprise.context.ApplicationScoped;
-import org.springframework.util.Assert;
 
 import java.util.List;
 import java.util.Objects;
@@ -26,7 +25,7 @@ public class ProductsConnectorImpl implements ProductsConnector {
         if (id.matches("\\w*")) {
             log.debug(LogUtils.CONFIDENTIAL_MARKER, "getProduct id = {}", id);
         }
-        Assert.hasText(id, "A productId is required");
+        requireHasText(id, "A productId is required");
         Product product = productService.getProduct(id);
 
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getProduct result = {}", product);
@@ -37,7 +36,7 @@ public class ProductsConnectorImpl implements ProductsConnector {
         if (id.matches("\\w*")) {
             log.debug(LogUtils.CONFIDENTIAL_MARKER, "getProductValid id = {}", id);
         }
-        Assert.hasText(id, "A productId is required");
+        requireHasText(id, "A productId is required");
         Product result = productService.getProductIsValid(id);
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getProductValid result = {}", result);
         return result;
@@ -48,6 +47,12 @@ public class ProductsConnectorImpl implements ProductsConnector {
         List<Product> result = productService.getProducts(rootOnly, true);
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getProducts result = {}", result);
         return result;
+    }
+
+    private static void requireHasText(String value, String message) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException(message);
+        }
     }
 
 }

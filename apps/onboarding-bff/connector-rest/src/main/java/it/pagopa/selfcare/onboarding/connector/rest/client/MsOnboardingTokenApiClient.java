@@ -1,51 +1,57 @@
 package it.pagopa.selfcare.onboarding.connector.rest.client;
 
+import it.pagopa.selfcare.onboarding.connector.model.BinaryData;
+import it.pagopa.selfcare.onboarding.connector.model.UploadedFile;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import org.openapi.quarkus.onboarding_json.api.TokenControllerApi;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.multipart.MultipartFile;
 
 @RegisterRestClient(configKey = "onboarding_json")
 public interface MsOnboardingTokenApiClient extends TokenControllerApi {
 
-    default ResponseEntity<Resource> _getContract(String onboardingId) {
+    default BinaryData _getContract(String onboardingId) {
         File file = getContract(onboardingId).await().indefinitely();
-        return ResponseEntity.ok(new FileSystemResource(file));
+        return toBinaryData(file, file.getName());
     }
 
-    default ResponseEntity<Resource> _getTemplateAttachment(String onboardingId, String name) {
+    default BinaryData _getTemplateAttachment(String onboardingId, String name) {
         File file = getTemplateAttachment(onboardingId, name).await().indefinitely();
-        return ResponseEntity.ok(new FileSystemResource(file));
+        return toBinaryData(file, name);
     }
 
-    default ResponseEntity<Resource> _getAttachment(String onboardingId, String name) {
+    default BinaryData _getAttachment(String onboardingId, String name) {
         File file = getAttachment(onboardingId, name).await().indefinitely();
-        return ResponseEntity.ok(new FileSystemResource(file));
+        return toBinaryData(file, name);
     }
 
-    default void _uploadAttachment(String onboardingId, String name, MultipartFile file) {
+    default void _uploadAttachment(String onboardingId, String name, UploadedFile file) {
         TokenControllerApi.UploadAttachmentMultipartForm form = new TokenControllerApi.UploadAttachmentMultipartForm();
         form._file = toTempFile(file);
         uploadAttachment(form, onboardingId, name).await().indefinitely();
     }
 
-    default ResponseEntity<Void> _headAttachment(String onboardingId, String name) {
+    default int _headAttachment(String onboardingId, String name) {
         jakarta.ws.rs.core.Response response = headAttachment(onboardingId, name).await().indefinitely();
-        HttpStatus httpStatus = HttpStatus.resolve(response.getStatus());
-        return ResponseEntity.status(httpStatus == null ? HttpStatus.INTERNAL_SERVER_ERROR : httpStatus).build();
+        return response.getStatus();
     }
 
-    private static File toTempFile(MultipartFile multipartFile) {
+    private static BinaryData toBinaryData(File file, String fallbackName) {
         try {
-            String suffix = multipartFile.getOriginalFilename() == null ? ".bin" : "-" + multipartFile.getOriginalFilename();
+            String fileName = fallbackName == null || fallbackName.isBlank() ? file.getName() : fallbackName;
+            return new BinaryData(fileName, Files.readAllBytes(file.toPath()));
+        } catch (IOException e) {
+            throw new IllegalStateException("Cannot read downloaded file", e);
+        }
+    }
+
+    private static File toTempFile(UploadedFile uploadedFile) {
+        try {
+            String fileName = uploadedFile.fileName();
+            String suffix = fileName == null ? ".bin" : "-" + fileName;
             File file = Files.createTempFile("token-", suffix).toFile();
-            multipartFile.transferTo(file);
+            Files.write(file.toPath(), uploadedFile.content());
             file.deleteOnExit();
             return file;
         } catch (IOException e) {

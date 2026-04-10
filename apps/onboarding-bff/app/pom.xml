@@ -96,14 +96,6 @@
             <artifactId>quarkus-config-yaml</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-spring-di</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-spring-web</artifactId>
-        </dependency>
-        <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selc-commons-connector-rest</artifactId>
             <type>test-jar</type>

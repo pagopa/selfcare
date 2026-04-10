@@ -1,13 +1,12 @@
 package it.pagopa.selfcare.onboarding.core;
 
 import it.pagopa.selfcare.onboarding.connector.api.OnboardingMsConnector;
+import it.pagopa.selfcare.onboarding.connector.model.BinaryData;
+import it.pagopa.selfcare.onboarding.connector.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.web.multipart.MultipartFile;
 import java.util.Objects;
 
 @Slf4j
@@ -66,7 +65,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public void completeTokenV2(String onboardingId, MultipartFile contract) {
+    public void completeTokenV2(String onboardingId, UploadedFile contract) {
         log.trace("completeTokenAsync start");
         log.debug("completeTokenAsync id = {}", onboardingId);
         Objects.requireNonNull(onboardingId, TOKEN_ID_IS_REQUIRED);
@@ -76,7 +75,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public void completeOnboardingUsers(String onboardingId, MultipartFile contract) {
+    public void completeOnboardingUsers(String onboardingId, UploadedFile contract) {
         log.trace("completeOnboardingUsersAsync start");
         log.debug("completeOnboardingUsersAsync id = {}", onboardingId);
         Objects.requireNonNull(onboardingId, ONBOARDING_ID_REQUIRED_MESSAGE);
@@ -86,47 +85,47 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public Resource getContract(String onboardingId) {
+    public BinaryData getContract(String onboardingId) {
         log.trace("getContract start");
         log.debug("getContract id = {}", onboardingId);
         Objects.requireNonNull(onboardingId, TOKEN_ID_IS_REQUIRED);
-        Resource resource = onboardingMsConnector.getContract(onboardingId);
+        BinaryData resource = onboardingMsConnector.getContract(onboardingId);
         log.debug("getContract result = success");
         log.trace("getContract end");
         return resource;
     }
 
     @Override
-    public Resource getTemplateAttachment(String onboardingId, String filename) {
+    public BinaryData getTemplateAttachment(String onboardingId, String filename) {
         log.trace("getTemplateAttachment start");
         log.debug("getTemplateAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(filename));
         Objects.requireNonNull(onboardingId, TOKEN_ID_IS_REQUIRED);
         Objects.requireNonNull(filename, "filename is required");
-        Resource resource = onboardingMsConnector.getTemplateAttachment(onboardingId, filename);
+        BinaryData resource = onboardingMsConnector.getTemplateAttachment(onboardingId, filename);
         log.debug("getTemplateAttachment result = success");
         log.trace("getTemplateAttachment end");
         return resource;
     }
 
     @Override
-    public Resource getAttachment(String onboardingId, String filename) {
+    public BinaryData getAttachment(String onboardingId, String filename) {
         log.trace("getAttachment start");
         log.debug("getAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(filename));
         Objects.requireNonNull(onboardingId, TOKEN_ID_IS_REQUIRED);
         Objects.requireNonNull(filename, "filename is required");
-        Resource resource = onboardingMsConnector.getAttachment(onboardingId, filename);
+        BinaryData resource = onboardingMsConnector.getAttachment(onboardingId, filename);
         log.debug("getAttachment result = success");
         log.trace("getAttachment end");
         return resource;
     }
 
     @Override
-    public Resource getAggregatesCsv(String onboardingId, String productId) {
+    public BinaryData getAggregatesCsv(String onboardingId, String productId) {
         log.trace("getAggregatesCsv start");
         log.debug("getAggregatesCsv id = {}, productId = {}", Encode.forJava(onboardingId), Encode.forJava(productId));
         Objects.requireNonNull(onboardingId, ONBOARDING_ID_REQUIRED_MESSAGE);
         Objects.requireNonNull(productId, "ProductId is required");
-        Resource resource = onboardingMsConnector.getAggregatesCsv(onboardingId, productId);
+        BinaryData resource = onboardingMsConnector.getAggregatesCsv(onboardingId, productId);
         log.debug("getAggregatesCsv result = success");
         log.trace("getAggregatesCsv end");
         return resource;
@@ -140,7 +139,7 @@ public class TokenServiceImpl implements TokenService {
   }
 
     @Override
-    public void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName) {
+    public void uploadAttachment(String onboardingId, UploadedFile attachment, String attachmentName) {
         log.trace("uploadAttachment start");
         log.debug("uploadAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(attachmentName));
         Objects.requireNonNull(onboardingId, TOKEN_ID_IS_REQUIRED);
@@ -152,13 +151,13 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public HttpStatusCode headAttachment(String onboardingId, String filename) {
+    public int headAttachment(String onboardingId, String filename) {
         log.trace("headAttachment start");
         log.debug("headAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(filename));
         Objects.requireNonNull(onboardingId, TOKEN_ID_IS_REQUIRED);
         Objects.requireNonNull(filename, "filename is required");
-        HttpStatusCode resource = onboardingMsConnector.headAttachment(onboardingId, filename);
-        log.debug("headAttachment result {}", resource.value());
+        int resource = onboardingMsConnector.headAttachment(onboardingId, filename);
+        log.debug("headAttachment result {}", resource);
         log.trace("headAttachment end");
         return resource;
     }

@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.onboarding.connector.rest.client;
 
-import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.onboarding.connector.model.UploadedFile;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,13 +13,10 @@ import org.openapi.quarkus.onboarding_json.model.OnboardingGetResponse;
 import org.openapi.quarkus.onboarding_json.model.OnboardingPaRequest;
 import org.openapi.quarkus.onboarding_json.model.OnboardingPgRequest;
 import org.openapi.quarkus.onboarding_json.model.OnboardingPspRequest;
-import org.openapi.quarkus.onboarding_json.model.OnboardingResponse;
 import org.openapi.quarkus.onboarding_json.model.OnboardingUserPgRequest;
 import org.openapi.quarkus.onboarding_json.model.OnboardingUserRequest;
 import org.openapi.quarkus.onboarding_json.model.ReasonRequest;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.multipart.MultipartFile;
 
 @RegisterRestClient(configKey = "onboarding_json")
 public interface MsOnboardingApiClient extends OnboardingControllerApi {
@@ -56,7 +53,7 @@ public interface MsOnboardingApiClient extends OnboardingControllerApi {
         onboardingUsersPg(request).await().indefinitely();
     }
 
-    default void _completeOnboardingUser(String onboardingId, MultipartFile contract) {
+    default void _completeOnboardingUser(String onboardingId, UploadedFile contract) {
         OnboardingControllerApi.CompleteOnboardingUserMultipartForm form =
             new OnboardingControllerApi.CompleteOnboardingUserMultipartForm();
         form.contract = toTempFile(contract);
@@ -71,20 +68,20 @@ public interface MsOnboardingApiClient extends OnboardingControllerApi {
         delete(onboardingId, reasonRequest).await().indefinitely();
     }
 
-    default ResponseEntity<OnboardingGet> _getById(String onboardingId) {
-        return ResponseEntity.ok(getById(onboardingId).await().indefinitely());
+    default OnboardingGet _getById(String onboardingId) {
+        return getById(onboardingId).await().indefinitely();
     }
 
-    default ResponseEntity<OnboardingGet> _getByIdWithUserInfo(String onboardingId) {
-        return ResponseEntity.ok(getByIdWithUserInfo(onboardingId).await().indefinitely());
+    default OnboardingGet _getByIdWithUserInfo(String onboardingId) {
+        return getByIdWithUserInfo(onboardingId).await().indefinitely();
     }
 
-    default ResponseEntity<OnboardingGet> _getOnboardingPending(String onboardingId) {
-        return ResponseEntity.ok(getOnboardingPending(onboardingId).await().indefinitely());
+    default OnboardingGet _getOnboardingPending(String onboardingId) {
+        return getOnboardingPending(onboardingId).await().indefinitely();
     }
 
-    default ResponseEntity<CheckManagerResponse> _checkManager(CheckManagerRequest request) {
-        return ResponseEntity.ok(checkManager(request).await().indefinitely());
+    default CheckManagerResponse _checkManager(CheckManagerRequest request) {
+        return checkManager(request).await().indefinitely();
     }
 
     default void _verifyOnboardingInfoByFilters(
@@ -99,7 +96,7 @@ public interface MsOnboardingApiClient extends OnboardingControllerApi {
             .await().indefinitely();
     }
 
-    default ResponseEntity<OnboardingGetResponse> _getOnboardingWithFilter(
+    default OnboardingGetResponse _getOnboardingWithFilter(
         String from,
         String institutionId,
         String onboardingId,
@@ -114,30 +111,29 @@ public interface MsOnboardingApiClient extends OnboardingControllerApi {
         String to,
         String userId
     ) {
-        return ResponseEntity.ok(
-            getOnboardingWithFilter(
-                from,
-                institutionId,
-                onboardingId,
-                page,
-                productId,
-                productIds,
-                size,
-                skipPagination,
-                status,
-                subunitCode,
-                taxCode,
-                to,
-                userId
-            ).await().indefinitely()
-        );
+        return getOnboardingWithFilter(
+            from,
+            institutionId,
+            onboardingId,
+            page,
+            productId,
+            productIds,
+            size,
+            skipPagination,
+            status,
+            subunitCode,
+            taxCode,
+            to,
+            userId
+        ).await().indefinitely();
     }
 
-    private static File toTempFile(MultipartFile multipartFile) {
+    private static File toTempFile(UploadedFile uploadedFile) {
         try {
-            String suffix = multipartFile.getOriginalFilename() == null ? ".bin" : "-" + multipartFile.getOriginalFilename();
+            String fileName = uploadedFile.fileName();
+            String suffix = fileName == null ? ".bin" : "-" + fileName;
             File file = Files.createTempFile("onboarding-", suffix).toFile();
-            multipartFile.transferTo(file);
+            Files.write(file.toPath(), uploadedFile.content());
             file.deleteOnExit();
             return file;
         } catch (IOException e) {

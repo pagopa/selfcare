@@ -6,8 +6,10 @@ import it.pagopa.selfcare.onboarding.common.InstitutionPaSubunitType;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.connector.api.OnboardingMsConnector;
 import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
+import it.pagopa.selfcare.onboarding.connector.model.BinaryData;
 import it.pagopa.selfcare.onboarding.connector.model.OnboardingResult;
 import it.pagopa.selfcare.onboarding.connector.model.RecipientCodeStatusResult;
+import it.pagopa.selfcare.onboarding.connector.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.VerifyAggregateResult;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.CheckManagerData;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
@@ -16,14 +18,7 @@ import it.pagopa.selfcare.onboarding.connector.rest.mapper.OnboardingMapper;
 import org.openapi.quarkus.onboarding_json.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
 import jakarta.enterprise.context.ApplicationScoped;
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Objects;
@@ -71,21 +66,21 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
     }
 
     @Override
-    public VerifyAggregateResult aggregatesVerification(MultipartFile file, String productId) {
+    public VerifyAggregateResult aggregatesVerification(UploadedFile file, String productId) {
         log.info("validateAggregatesCsv for product: {}", productId);
         switch (productId) {
             case PROD_IO -> {
-                return onboardingMapper.toVerifyAggregateResult(msOnboardingAggregatesApiClient._verifyAppIoAggregatesCsv(file).getBody());
+                return onboardingMapper.toVerifyAggregateResult(msOnboardingAggregatesApiClient._verifyAppIoAggregatesCsv(file));
             }
             case PROD_PAGOPA -> {
-                return onboardingMapper.toVerifyAggregateResult(msOnboardingAggregatesApiClient._verifyPagoPaAggregatesCsv(file).getBody());
+                return onboardingMapper.toVerifyAggregateResult(msOnboardingAggregatesApiClient._verifyPagoPaAggregatesCsv(file));
             }
             case PROD_PN -> {
-                return onboardingMapper.toVerifyAggregateResult(msOnboardingAggregatesApiClient._verifySendAggregatesCsv(file).getBody());
+                return onboardingMapper.toVerifyAggregateResult(msOnboardingAggregatesApiClient._verifySendAggregatesCsv(file));
             }
             default -> {
                 log.error("Unsupported productId: {}", productId);
-                throw new InvalidRequestException(String.format("%s Unsupported productId: %s", HttpStatus.BAD_REQUEST, productId));
+                throw new InvalidRequestException("Unsupported productId: " + productId);
             }
         }
     }
@@ -111,13 +106,13 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
 
     @Override
     @Retry(name = "retryTimeout")
-    public void onboardingTokenComplete(String onboardingId, MultipartFile contract) {
+    public void onboardingTokenComplete(String onboardingId, UploadedFile contract) {
         msOnboardingInternalApiClient._completeOnboardingUsingPUT(onboardingId, contract);
     }
 
     @Override
     @Retry(name = "retryTimeout")
-    public void onboardingUsersComplete(String onboardingId, MultipartFile contract) {
+    public void onboardingUsersComplete(String onboardingId, UploadedFile contract) {
         msOnboardingApiClient._completeOnboardingUser(onboardingId, contract);
     }
 
@@ -137,7 +132,7 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
     @Retry(name = "retryTimeout")
     public void rejectOnboarding(String onboardingId, String reason) {
         ReasonRequest reasonForReject = new ReasonRequest();
-        if (StringUtils.hasText(reason)) {
+        if (reason != null && !reason.isBlank()) {
             reasonForReject.setReasonForReject(reason);
         }
         msOnboardingApiClient._delete(onboardingId, reasonForReject);
@@ -146,39 +141,39 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
     @Override
     @Retry(name = "retryTimeout")
     public OnboardingData getOnboarding(String onboardingId) {
-        OnboardingGet onboardingGet = msOnboardingApiClient._getById(onboardingId).getBody();
+        OnboardingGet onboardingGet = msOnboardingApiClient._getById(onboardingId);
         return onboardingMapper.toOnboardingData(onboardingGet);
     }
 
     @Override
     @Retry(name = "retryTimeout")
     public OnboardingData getOnboardingWithUserInfo(String onboardingId) {
-        OnboardingGet onboardingGet = msOnboardingApiClient._getByIdWithUserInfo(onboardingId).getBody();
+        OnboardingGet onboardingGet = msOnboardingApiClient._getByIdWithUserInfo(onboardingId);
         return onboardingMapper.toOnboardingData(onboardingGet);
     }
 
     @Override
     @Retry(name = "retryTimeout")
-    public Resource getContract(String onboardingId) {
-        return msOnboardingTokenApiClient._getContract(onboardingId).getBody();
+    public BinaryData getContract(String onboardingId) {
+        return msOnboardingTokenApiClient._getContract(onboardingId);
     }
 
     @Override
     @Retry(name = "retryTimeout")
-    public Resource getTemplateAttachment(String onboardingId, String filename) {
-        return msOnboardingTokenApiClient._getTemplateAttachment(onboardingId, filename).getBody();
+    public BinaryData getTemplateAttachment(String onboardingId, String filename) {
+        return msOnboardingTokenApiClient._getTemplateAttachment(onboardingId, filename);
     }
 
     @Override
     @Retry(name = "retryTimeout")
-    public Resource getAttachment(String onboardingId, String filename) {
-        return msOnboardingTokenApiClient._getAttachment(onboardingId, filename).getBody();
+    public BinaryData getAttachment(String onboardingId, String filename) {
+        return msOnboardingTokenApiClient._getAttachment(onboardingId, filename);
     }
 
     @Override
     @Retry(name = "retryTimeout")
-    public Resource getAggregatesCsv(String onboardingId, String productId) {
-        return msOnboardingAggregatesApiClient._getAggregatesCsv(onboardingId, productId).getBody();
+    public BinaryData getAggregatesCsv(String onboardingId, String productId) {
+        return msOnboardingAggregatesApiClient._getAggregatesCsv(onboardingId, productId);
     }
 
     @Override
@@ -189,7 +184,7 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
 
     @Override
     public List<OnboardingData> getByFilters(String productId, String taxCode, String origin, String originId, String subunitCode) {
-        List<OnboardingResponse> result = msOnboardingSupportApiClient._onboardingInstitutionUsingGET(origin, originId, OnboardingStatus.COMPLETED, subunitCode, taxCode).getBody();
+        List<OnboardingResponse> result = msOnboardingSupportApiClient._onboardingInstitutionUsingGET(origin, originId, OnboardingStatus.COMPLETED, subunitCode, taxCode);
         return Objects.nonNull(result) ? result.stream()
                 // TODO this filter should be into query
                 .filter(onboardingResponse -> {
@@ -197,7 +192,8 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
                         return !onboardingResponse.getInstitution().getSubunitType().name().equals(InstitutionPaSubunitType.UO.name())
                                 && !onboardingResponse.getInstitution().getSubunitType().name().equals(InstitutionPaSubunitType.AOO.name());
                     }
-                    return !StringUtils.hasText(onboardingResponse.getReferenceOnboardingId());
+                    String referenceOnboardingId = onboardingResponse.getReferenceOnboardingId();
+                    return referenceOnboardingId == null || referenceOnboardingId.isBlank();
                 })
                 .filter(onboardingResponse -> onboardingResponse.getProductId().equals(productId))
                 .map(onboardingMapper::toOnboardingData)
@@ -207,17 +203,19 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
     @Override
     @Retry(name = "retryTimeout")
     public boolean checkManager(CheckManagerData checkManagerData) {
-        return Objects.requireNonNull(msOnboardingApiClient._checkManager(onboardingMapper.toCheckManagerRequest(checkManagerData)).getBody()).getResponse();
+        return Objects.requireNonNull(msOnboardingApiClient._checkManager(onboardingMapper.toCheckManagerRequest(checkManagerData))).getResponse();
     }
 
     @Override
     public RecipientCodeStatusResult checkRecipientCode(String originId, String recipientCode) {
-        return onboardingMapper.toRecipientCodeStatusResult(msOnboardingBillingApiClient._checkRecipientCode(originId, recipientCode).getBody());
+        return onboardingMapper.toRecipientCodeStatusResult(msOnboardingBillingApiClient._checkRecipientCode(originId, recipientCode));
     }
 
     public void verifyOnboarding(String productId, String taxCode, String origin, String originId, String subunitCode, String institutionType) {
         log.trace("verifyOnboarding start");
-        Assert.hasText(productId, REQUIRED_PRODUCT_ID_MESSAGE);
+        if (productId == null || productId.isBlank()) {
+            throw new IllegalArgumentException(REQUIRED_PRODUCT_ID_MESSAGE);
+        }
         msOnboardingApiClient._verifyOnboardingInfoByFilters(institutionType, origin, originId, productId, subunitCode, taxCode);
         log.trace("verifyOnboarding end");
     }
@@ -232,7 +230,7 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
     @Override
     public List<OnboardingResult> onboardingWithFilter(String taxCode, String status) {
         log.trace("onboardingWithFilter start");
-        ResponseEntity<OnboardingGetResponse> response = msOnboardingApiClient._getOnboardingWithFilter( null,
+        OnboardingGetResponse response = msOnboardingApiClient._getOnboardingWithFilter( null,
                 null,
                 null,
                 null,
@@ -245,22 +243,22 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
                 taxCode,
                 null,
                 null);
-        List<OnboardingResult> onboardingResults = onboardingMapper.toOnboardingWithFilter(response.getBody());
+        List<OnboardingResult> onboardingResults = onboardingMapper.toOnboardingWithFilter(response);
         log.trace("onboardingWithFilter end");
         return onboardingResults;
     }
 
     @Override
-    public void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName) {
+    public void uploadAttachment(String onboardingId, UploadedFile attachment, String attachmentName) {
         msOnboardingTokenApiClient._uploadAttachment(onboardingId, attachmentName, attachment);
     }
 
     @Override
-    public HttpStatusCode headAttachment(String onboardingId, String filename) {
+    public int headAttachment(String onboardingId, String filename) {
         log.info("headAttachment for onboardingId: {}, filename: {}", Encode.forJava(onboardingId), Encode.forJava(filename));
-        ResponseEntity<Void> responseEntity = msOnboardingTokenApiClient._headAttachment(onboardingId, filename);
-        log.info("headAttachment response status code: {}", responseEntity.getStatusCode());
-        return HttpStatus.resolve(responseEntity.getStatusCode().value());
+        int statusCode = msOnboardingTokenApiClient._headAttachment(onboardingId, filename);
+        log.info("headAttachment response status code: {}", statusCode);
+        return statusCode;
     }
 
 }

@@ -12,6 +12,7 @@ import it.pagopa.selfcare.commons.web.model.Problem;
 import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
 import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.connector.model.OnboardingResult;
+import it.pagopa.selfcare.onboarding.connector.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.core.InstitutionService;
 import it.pagopa.selfcare.onboarding.web.model.*;
 import it.pagopa.selfcare.onboarding.web.model.mapper.InstitutionResourceMapper;
@@ -22,10 +23,13 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.io.IOException;
+import java.nio.file.Files;
 import lombok.extern.slf4j.Slf4j;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.apache.commons.lang3.StringUtils;
 import org.owasp.encoder.Encode;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 import java.util.List;
@@ -131,16 +135,18 @@ public class InstitutionV2Controller {
 
     @POST
     @Path("/onboarding/aggregation/verification")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",
             description = "${swagger.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",  operationId = "verifyAggregatesCsvUsingPOST")
-    public VerifyAggregatesResponse verifyAggregatesCsv(@QueryParam("aggregates") MultipartFile file,
-                                                        @QueryParam("institutionType") String institutionType,
-                                                        @QueryParam("productId") String productId){
+    public VerifyAggregatesResponse verifyAggregatesCsv(@RestForm("aggregates") FileUpload file,
+                                                        @RestForm("institutionType") String institutionType,
+                                                        @RestForm("productId") String productId){
         log.trace("Verify Aggregates Csv start");
         log.debug("Verify Aggregates Csv start for productId {}", productId);
 
-        FileValidationUtils.validateAggregatesFile(file);
-        VerifyAggregatesResponse response = onboardingResourceMapper.toVerifyAggregatesResponse(institutionService.validateAggregatesCsv(file, productId));
+        UploadedFile uploadedFile = toUploadedFile(file);
+        FileValidationUtils.validateAggregatesFile(uploadedFile);
+        VerifyAggregatesResponse response = onboardingResourceMapper.toVerifyAggregatesResponse(institutionService.validateAggregatesCsv(uploadedFile, productId));
         log.trace("Verify Aggregates Csv end");
         return response;
     }
@@ -220,6 +226,17 @@ public class InstitutionV2Controller {
         List<OnboardingResult> results = institutionService.getOnboardingWithFilter(taxCode, status);
         log.trace("onboardingInfo end");
         return results;
+    }
+
+    private static UploadedFile toUploadedFile(FileUpload fileUpload) {
+        if (fileUpload == null) {
+            return null;
+        }
+        try {
+            return new UploadedFile(fileUpload.fileName(), fileUpload.contentType(), Files.readAllBytes(fileUpload.uploadedFile()));
+        } catch (IOException e) {
+            throw new IllegalStateException("Cannot read uploaded file", e);
+        }
     }
 
 }

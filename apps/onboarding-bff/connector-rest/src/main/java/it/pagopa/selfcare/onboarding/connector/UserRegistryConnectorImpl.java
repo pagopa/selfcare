@@ -14,8 +14,8 @@ import it.pagopa.selfcare.onboarding.connector.rest.model.user_registry.Embedded
 import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 import lombok.extern.slf4j.Slf4j;
 import jakarta.enterprise.context.ApplicationScoped;
-import org.springframework.util.Assert;
 
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,8 +36,8 @@ public class UserRegistryConnectorImpl implements UserRegistryConnector {
     public Optional<User> search(String externalId, EnumSet<User.Fields> fieldList) {
         log.trace("getUserByExternalId start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getUserByExternalId externalId = {}", externalId);
-        Assert.hasText(externalId, "A TaxCode is required");
-        Assert.notEmpty(fieldList, "At least one user fields is required");
+        requireHasText(externalId, "A TaxCode is required");
+        requireNotEmpty(fieldList, "At least one user fields is required");
         Optional<User> user;
         try {
             user = Optional.of(restClient.search(new EmbeddedExternalId(externalId), fieldList));
@@ -54,8 +54,8 @@ public class UserRegistryConnectorImpl implements UserRegistryConnector {
     public User getUserByInternalId(String userId, EnumSet<User.Fields> fieldList) {
         log.trace("getUserByInternalId start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getUserByInternalId userId = {}", userId);
-        Assert.hasText(userId, "A userId is required");
-        Assert.notEmpty(fieldList, "At least one user fields is required");
+        requireHasText(userId, "A userId is required");
+        requireNotEmpty(fieldList, "At least one user fields is required");
         User result = restClient.getUserByInternalId(UUID.fromString(userId), fieldList);
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getUserByInternalId result = {}", result);
         log.trace("getUserByInternalId end");
@@ -66,7 +66,9 @@ public class UserRegistryConnectorImpl implements UserRegistryConnector {
     public void updateUser(UUID id, MutableUserFieldsDto userDto) {
         log.trace("update start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "update id = {}, userDto = {}}", id, userDto);
-        Assert.notNull(id, "A UUID is required");
+        if (id == null) {
+            throw new IllegalArgumentException("A UUID is required");
+        }
         restClient.patchUser(id, userDto);
         log.trace("update end");
     }
@@ -85,7 +87,7 @@ public class UserRegistryConnectorImpl implements UserRegistryConnector {
     public void deleteById(String userId) {
         log.trace("deleteById start");
         log.debug("deleteById id = {}", userId);
-        Assert.hasText(userId, "A UUID is required");
+        requireHasText(userId, "A UUID is required");
         restClient.deleteById(UUID.fromString(userId));
         log.trace("deleteById end");
     }
@@ -94,11 +96,22 @@ public class UserRegistryConnectorImpl implements UserRegistryConnector {
     public UserId searchUser(String taxCode) {
         log.trace("searchUser start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "searchUser taxCode = {}}", taxCode);
-        UserId userId = userRegistryMapper.toUserId(restClient._searchUsingPOST(USERS_FIELD_LIST, new UserSearchDto().fiscalCode(taxCode)).getBody());
+        UserId userId = userRegistryMapper.toUserId(restClient._searchUsingPOST(USERS_FIELD_LIST, new UserSearchDto().fiscalCode(taxCode)));
         log.debug("searchUser result = {}", userId);
         log.trace("searchUser end");
         return userId;
     }
 
 
+    private static void requireHasText(String value, String message) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    private static void requireNotEmpty(Collection<?> values, String message) {
+        if (values == null || values.isEmpty()) {
+            throw new IllegalArgumentException(message);
+        }
+    }
 }

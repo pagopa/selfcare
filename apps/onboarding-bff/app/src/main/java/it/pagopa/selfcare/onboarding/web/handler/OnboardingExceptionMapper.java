@@ -1,7 +1,5 @@
 package it.pagopa.selfcare.onboarding.web.handler;
 
-import static org.springframework.http.HttpStatus.*;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -19,7 +17,6 @@ import it.pagopa.selfcare.onboarding.core.exception.UpdateNotAllowedException;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
-import org.springframework.http.HttpStatus;
 
 @Slf4j
 @ApplicationScoped
@@ -28,44 +25,44 @@ public class OnboardingExceptionMapper {
     @ServerExceptionMapper
     public Response handleInvalidRequestException(InvalidRequestException e) {
         log.warn(e.toString());
-        return problemResponse(BAD_REQUEST, e.getMessage());
+        return problemResponse(Response.Status.BAD_REQUEST, e.getMessage());
     }
 
     @ServerExceptionMapper
     public Response handleResourceNotFoundException(ResourceNotFoundException e) {
         log.warn(e.toString());
-        return problemResponse(NOT_FOUND, e.getMessage());
+        return problemResponse(Response.Status.NOT_FOUND, e.getMessage());
     }
 
     @ServerExceptionMapper
     public Response handleResourceConflictException(ResourceConflictException e) {
         log.warn(e.toString());
-        return problemResponse(CONFLICT, e.getMessage());
+        return problemResponse(Response.Status.CONFLICT, e.getMessage());
     }
 
     @ServerExceptionMapper
     public Response handleProductHasNoRelationshipException(ManagerNotFoundException e) {
         log.warn(e.toString());
-        return problemResponse(INTERNAL_SERVER_ERROR, e.getMessage());
+        return problemResponse(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
     @ServerExceptionMapper
     public Response handleUpdateNotAllowedException(UpdateNotAllowedException e) {
         log.warn(e.toString());
-        return problemResponse(CONFLICT, e.getMessage());
+        return problemResponse(Response.Status.CONFLICT, e.getMessage());
     }
 
     @ServerExceptionMapper
     public Response handleInvalidUserFieldsException(InvalidUserFieldsException e) {
         log.warn(e.toString());
-        final Problem problem = new Problem(HttpStatus.CONFLICT, e.getMessage());
+        final Problem problem = buildProblem(Response.Status.CONFLICT, e.getMessage());
         if (e.getInvalidFields() != null) {
             problem.setInvalidParams(
                     e.getInvalidFields().stream()
                             .map(invalidField -> new Problem.InvalidParam(invalidField.getName(), invalidField.getReason()))
                             .collect(Collectors.toList()));
         }
-        return Response.status(CONFLICT.value())
+        return Response.status(Response.Status.CONFLICT.getStatusCode())
                 .type(MediaType.APPLICATION_JSON)
                 .entity(problem)
                 .build();
@@ -74,19 +71,19 @@ public class OnboardingExceptionMapper {
     @ServerExceptionMapper
     public Response handleOnboardingNotAllowedException(OnboardingNotAllowedException e) {
         log.warn(e.toString());
-        return problemResponse(FORBIDDEN, e.getMessage());
+        return problemResponse(Response.Status.FORBIDDEN, e.getMessage());
     }
 
     @ServerExceptionMapper
     public Response handleInternalGatewayErrorException(InternalGatewayErrorException e) {
         log.warn(e.toString());
-        return problemResponse(BAD_GATEWAY, e.getMessage());
+        return problemResponse(Response.Status.BAD_GATEWAY, e.getMessage());
     }
 
     @ServerExceptionMapper
     public Response handleUnauthorizedUserException(UnauthorizedUserException e) {
         log.warn(e.toString());
-        return problemResponse(FORBIDDEN, e.getMessage());
+        return problemResponse(Response.Status.FORBIDDEN, e.getMessage());
     }
 
     @ServerExceptionMapper
@@ -97,10 +94,18 @@ public class OnboardingExceptionMapper {
                 .build();
     }
 
-    private Response problemResponse(HttpStatus status, String message) {
-        return Response.status(status.value())
+    private Response problemResponse(Response.Status status, String message) {
+        return Response.status(status.getStatusCode())
                 .type(MediaType.APPLICATION_JSON)
-                .entity(new Problem(status, message))
+                .entity(buildProblem(status, message))
                 .build();
+    }
+
+    private Problem buildProblem(Response.Status status, String message) {
+        Problem problem = new Problem();
+        problem.setStatus(status.getStatusCode());
+        problem.setTitle(status.getReasonPhrase());
+        problem.setDetail(message);
+        return problem;
     }
 }

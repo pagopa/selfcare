@@ -4,13 +4,13 @@ import it.pagopa.selfcare.onboarding.connector.model.InstitutionLegalAddressData
 import it.pagopa.selfcare.onboarding.connector.model.InstitutionOnboardingData;
 import it.pagopa.selfcare.onboarding.connector.model.OnboardingResult;
 import it.pagopa.selfcare.onboarding.connector.model.RecipientCodeStatusResult;
+import it.pagopa.selfcare.onboarding.connector.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.*;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.infocamere.InstitutionInfoIC;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.GeographicTaxonomy;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.User;
 import java.util.List;
-import org.springframework.web.multipart.MultipartFile;
 
 public interface InstitutionService {
 
@@ -49,7 +49,7 @@ public interface InstitutionService {
 
     List<Institution> getByFilters(String productId, String taxCode, String origin, String originId, String subunitCode);
 
-    VerifyAggregateResult validateAggregatesCsv(MultipartFile file, String productId);
+    VerifyAggregateResult validateAggregatesCsv(UploadedFile file, String productId);
 
     RecipientCodeStatusResult checkRecipientCode(String originId, String recipientCode);
 

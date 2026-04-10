@@ -7,7 +7,6 @@ import it.pagopa.selfcare.onboarding.connector.rest.mapper.ProductMapper;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.product_json.model.ProductOriginResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
@@ -28,8 +27,8 @@ public class ProductMsConnectorImpl implements ProductMsConnector {
     @Override
     public OriginResult getOrigins(String productId) {
         log.trace("getOrigins start");
-        ResponseEntity<ProductOriginResponse> origins = msProductApiClient._getProductOriginsById(productId);
-        OriginResult entryList = productMapper.toOriginResult(origins.getBody());
+        ProductOriginResponse origins = msProductApiClient._getProductOriginsById(productId);
+        OriginResult entryList = productMapper.toOriginResult(origins);
         log.debug("getOrigins size = {}", entryList.getOrigins().isEmpty());
         log.trace("getOrigins end");
         return entryList;

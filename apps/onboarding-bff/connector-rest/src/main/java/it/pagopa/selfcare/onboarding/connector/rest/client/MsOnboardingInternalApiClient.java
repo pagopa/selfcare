@@ -1,27 +1,28 @@
 package it.pagopa.selfcare.onboarding.connector.rest.client;
 
+import it.pagopa.selfcare.onboarding.connector.model.UploadedFile;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import org.openapi.quarkus.onboarding_json.api.InternalV1Api;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
-import org.springframework.web.multipart.MultipartFile;
 
 @RegisterRestClient(configKey = "onboarding_json")
 public interface MsOnboardingInternalApiClient extends InternalV1Api {
 
-    default void _completeOnboardingUsingPUT(String onboardingId, MultipartFile contract) {
+    default void _completeOnboardingUsingPUT(String onboardingId, UploadedFile contract) {
         InternalV1Api.CompleteOnboardingUsingPUTMultipartForm form =
             new InternalV1Api.CompleteOnboardingUsingPUTMultipartForm();
         form.contract = toTempFile(contract);
         completeOnboardingUsingPUT(form, onboardingId).await().indefinitely();
     }
 
-    private static File toTempFile(MultipartFile multipartFile) {
+    private static File toTempFile(UploadedFile uploadedFile) {
         try {
-            String suffix = multipartFile.getOriginalFilename() == null ? ".bin" : "-" + multipartFile.getOriginalFilename();
+            String fileName = uploadedFile.fileName();
+            String suffix = fileName == null ? ".bin" : "-" + fileName;
             File file = Files.createTempFile("internal-", suffix).toFile();
-            multipartFile.transferTo(file);
+            Files.write(file.toPath(), uploadedFile.content());
             file.deleteOnExit();
             return file;
         } catch (IOException e) {

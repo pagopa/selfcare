@@ -32,7 +32,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
-import org.springframework.web.multipart.MultipartFile;
 import java.util.*;
 import static io.netty.util.internal.StringUtil.isNullOrEmpty;
 import static it.pagopa.selfcare.onboarding.connector.model.user.User.Fields.*;
@@ -520,7 +519,7 @@ class InstitutionServiceImpl implements InstitutionService {
         return result;
     }
     @Override
-    public VerifyAggregateResult validateAggregatesCsv(MultipartFile file, String productId) {
+    public VerifyAggregateResult validateAggregatesCsv(UploadedFile file, String productId) {
         log.trace("validateAggregatesCsv start");
         log.debug("validateAggregatesCsv productId = {}", productId);
         VerifyAggregateResult verifyAggregateResult = onboardingMsConnector.aggregatesVerification(file, productId);

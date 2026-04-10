@@ -21,7 +21,6 @@ import it.pagopa.selfcare.onboarding.connector.rest.model.institution_pnpg.Insti
 import it.pagopa.selfcare.onboarding.connector.rest.model.institution_pnpg.InstitutionByLegalTaxIdRequestDto;
 import lombok.extern.slf4j.Slf4j;
 import jakarta.enterprise.context.ApplicationScoped;
-import org.springframework.util.Assert;
 
 @ApplicationScoped
 @Slf4j
@@ -43,7 +42,7 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
     public InstitutionInfoIC getInstitutionsByUserFiscalCode(String taxCode) {
         log.trace("getInstitutionsByUserFiscalCode start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionsByUserFiscalCode taxCode = {}", taxCode);
-        Assert.hasText(taxCode, REQUIRED_FISCAL_CODE_MESSAGE);
+        requireHasText(taxCode, REQUIRED_FISCAL_CODE_MESSAGE);
         InstitutionByLegalTaxIdRequestDto institutionByLegalTaxIdRequestDto = new InstitutionByLegalTaxIdRequestDto();
         institutionByLegalTaxIdRequestDto.setLegalTaxId(taxCode);
         InstitutionByLegalTaxIdRequest institutionByLegalTaxIdRequest = new InstitutionByLegalTaxIdRequest();
@@ -60,8 +59,8 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
     public MatchInfoResult matchInstitutionAndUser(String externalInstitutionId, String taxCode) {
         log.trace("matchInstitutionAndUser start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "matchInstitutionAndUser taxCode = {}", taxCode);
-        Assert.hasText(externalInstitutionId, REQUIRED_EXTERNAL_ID_MESSAGE);
-        Assert.hasText(taxCode, REQUIRED_FISCAL_CODE_MESSAGE);
+        requireHasText(externalInstitutionId, REQUIRED_EXTERNAL_ID_MESSAGE);
+        requireHasText(taxCode, REQUIRED_FISCAL_CODE_MESSAGE);
         MatchInfoResult result = restClient.matchInstitutionAndUser(externalInstitutionId, taxCode);
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "matchInstitutionAndUser result = {}", result);
         log.trace("matchInstitutionAndUser end");
@@ -73,7 +72,7 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
     public InstitutionLegalAddressData getInstitutionLegalAddress(String externalInstitutionId) {
         log.trace("getInstitutionLegalAddress start");
         log.debug("getInstitutionLegalAddress externalInstitutionId = {}", externalInstitutionId);
-        Assert.hasText(externalInstitutionId, REQUIRED_EXTERNAL_ID_MESSAGE);
+        requireHasText(externalInstitutionId, REQUIRED_EXTERNAL_ID_MESSAGE);
         InstitutionLegalAddressData result = restClient.getInstitutionLegalAddress(externalInstitutionId);
         log.debug("getInstitutionLegalAddress result = {}", result);
         log.trace("getInstitutionLegalAddress end");
@@ -126,6 +125,12 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
         log.debug("getInstitutionProxyById result = {}", institutionProxyInfo);
         log.trace("getInstitutionProxyById end");
         return institutionProxyInfo;
+    }
+
+    private static void requireHasText(String value, String message) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException(message);
+        }
     }
 
 }

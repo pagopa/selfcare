@@ -1,6 +1,5 @@
 package it.pagopa.selfcare.onboarding.web.controller;
 
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,6 +8,8 @@ import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.connector.exceptions.UnauthorizedUserException;
+import it.pagopa.selfcare.onboarding.connector.model.BinaryData;
+import it.pagopa.selfcare.onboarding.connector.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.core.TokenService;
 import it.pagopa.selfcare.onboarding.core.UserInstitutionService;
@@ -18,33 +19,42 @@ import it.pagopa.selfcare.onboarding.web.model.OnboardingVerify;
 import it.pagopa.selfcare.onboarding.web.model.ReasonForRejectDto;
 import it.pagopa.selfcare.onboarding.web.model.mapper.OnboardingResourceMapper;
 import it.pagopa.selfcare.onboarding.web.utils.FileValidationUtils;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.constraints.NotNull;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
-import org.owasp.encoder.Encode;
-import org.springframework.core.io.Resource;
-import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HEAD;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Files;
 import java.security.Principal;
-
-import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
-import static org.springframework.web.bind.annotation.RequestMethod.HEAD;
+import lombok.extern.slf4j.Slf4j;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
+import org.owasp.encoder.Encode;
 
 @Slf4j
-@RestController
-@RequestMapping(value = "/v2/tokens", produces = MediaType.APPLICATION_JSON_VALUE)
+@ApplicationScoped
+@Path("/v2/tokens")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 @Api(tags = "tokens")
 public class TokenV2Controller {
 
+    private static final String ACCESS_CONTROL_EXPOSE_HEADERS = "Access-Control-Expose-Headers";
     private final TokenService tokenService;
     private final UserService userService;
     private final UserInstitutionService userInstitutionService;
     private final OnboardingResourceMapper onboardingResourceMapper;
-    private final static String SANITIZIER = "[^a-zA-Z0-9-_]";
+    private static final String SANITIZIER = "[^a-zA-Z0-9-_]";
 
     public TokenV2Controller(TokenService tokenService, UserService userService, UserInstitutionService userInstitutionService, OnboardingResourceMapper onboardingResourceMapper) {
         this.tokenService = tokenService;
@@ -53,79 +63,46 @@ public class TokenV2Controller {
         this.onboardingResourceMapper = onboardingResourceMapper;
     }
 
-    /**
-     * The function perform complete operation of an onboarding request receiving onboarding id and contract signed by hte institution.
-     * It checks the contract's signature and upload the contract on an azure storage
-     * At the end, function triggers async activities related to complete onboarding
-     * that consist of create the institution, activate the onboarding and sending data to notification queue
-     *
-     * @param onboardingId String
-     * @param contract     MultipartFile
-     * @return no content
-     * * Code: 204, Message: successful operation, DataType: TokenId
-     * * Code: 400, Message: Invalid ID supplied, DataType: Problem
-     * * Code: 404, Message: Not found, DataType: Problem
-     */
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @POST
+    @Path("/{onboardingId}/complete")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(description = "${swagger.tokens.complete}", summary = "${swagger.tokens.complete}", operationId = "completeUsingPOST")
-    @PostMapping(value = "/{onboardingId}/complete")
-    public ResponseEntity<Void> complete(@ApiParam("${swagger.tokens.onboardingId}")
-                                         @PathVariable(value = "onboardingId") String onboardingId,
-                                         @RequestPart MultipartFile contract) {
+    public Response complete(@ApiParam("${swagger.tokens.onboardingId}")
+                             @PathParam("onboardingId") String onboardingId,
+                             @RestForm("contract") FileUpload contract) {
         log.trace("complete Token start");
-        FileValidationUtils.validatePdfOrP7m(contract);
-        String sanitizedFileName = Encode.forJava(contract.getOriginalFilename());
-        String sanitizedOnboardingId = onboardingId.replaceAll("[^a-zA-Z0-9-_]", "");
+        UploadedFile uploadedFile = toUploadedFile(contract);
+        FileValidationUtils.validatePdfOrP7m(uploadedFile);
+        String sanitizedFileName = Encode.forJava(uploadedFile.fileName());
+        String sanitizedOnboardingId = onboardingId.replaceAll(SANITIZIER, "");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "complete Token tokenId = {}, contract = {}", sanitizedOnboardingId, sanitizedFileName);
-        tokenService.completeTokenV2(onboardingId, contract);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        tokenService.completeTokenV2(onboardingId, uploadedFile);
+        return Response.noContent().build();
     }
 
-    /**
-     * The function perform complete operation of an onboarding request receiving onboarding id and contract signed by hte institution.
-     * It checks the contract's signature and upload the contract on an azure storage
-     * At the end, function triggers async activities related to complete users onboarding
-     * that consist of create userInstitution and userInfo records, activate the onboarding for users and sending data to notification queue
-     *
-     * @param onboardingId String
-     * @param contract     MultipartFile
-     * @return no content
-     * * Code: 204, Message: successful operation, DataType: TokenId
-     * * Code: 400, Message: Invalid ID supplied, DataType: Problem
-     * * Code: 404, Message: Not found, DataType: Problem
-     */
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @POST
+    @Path("/{onboardingId}/complete-onboarding-users")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(description = "${swagger.tokens.completeOnboardingUsers}", summary = "${swagger.tokens.completeOnboardingUsers}",
             operationId = "completeOnboardingUsersUsingPOST")
-    @PostMapping(value = "/{onboardingId}/complete-onboarding-users")
-    public ResponseEntity<Void> completeOnboardingUsers(@ApiParam("${swagger.tokens.onboardingId}")
-                                                        @PathVariable(value = "onboardingId") String onboardingId,
-                                                        @RequestPart MultipartFile contract) {
+    public Response completeOnboardingUsers(@ApiParam("${swagger.tokens.onboardingId}")
+                                            @PathParam("onboardingId") String onboardingId,
+                                            @RestForm("contract") FileUpload contract) {
         log.trace("complete Onboarding Users start");
-        FileValidationUtils.validatePdfOrP7m(contract);
-        String sanitizedFileName = Encode.forJava(contract.getOriginalFilename());
+        UploadedFile uploadedFile = toUploadedFile(contract);
+        FileValidationUtils.validatePdfOrP7m(uploadedFile);
+        String sanitizedFileName = Encode.forJava(uploadedFile.fileName());
         String sanitizedOnboardingId = onboardingId.replaceAll(SANITIZIER, "");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "complete Onboarding Users tokenId = {}, contract = {}", sanitizedOnboardingId, sanitizedFileName);
-        tokenService.completeOnboardingUsers(onboardingId, contract);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        tokenService.completeOnboardingUsers(onboardingId, uploadedFile);
+        return Response.noContent().build();
     }
 
-    /**
-     * The verifyOnboarding function is used to verify the onboarding has already consumed.
-     * It takes in a String onboarding and returns a Token object.
-     *
-     * @param onboardingId onboardingId
-     * @return The onboardingId
-     * * Code: 200, Message: successful operation, DataType: TokenId
-     * * Code: 400, Message: Invalid ID supplied, DataType: Problem
-     * * Code: 404, Message: Token not found, DataType: Problem
-     * * Code: 409, Message: Token already consumed, DataType: Problem
-     */
-    @ResponseStatus(HttpStatus.OK)
+    @POST
+    @Path("/{onboardingId}/verify")
     @Operation(description = "${swagger.tokens.verify}",
             summary = "${swagger.tokens.verify}", operationId = "verifyOnboardingUsingPOST")
-    @PostMapping("/{onboardingId}/verify")
-    public OnboardingVerify verifyOnboarding(@ApiParam("${swagger.tokens.onboardingId}") @PathVariable("onboardingId") String onboardingId) {
+    public OnboardingVerify verifyOnboarding(@ApiParam("${swagger.tokens.onboardingId}") @PathParam("onboardingId") String onboardingId) {
         String sanitizedOnboardingId = onboardingId.replace("\n", "").replace("\r", "");
         log.debug("Verify token identified with {}", sanitizedOnboardingId);
         final OnboardingData onboardingData = tokenService.verifyOnboarding(sanitizedOnboardingId);
@@ -135,12 +112,12 @@ public class TokenV2Controller {
         return result;
     }
 
-    @GetMapping(value = "/{onboardingId}")
-    @ResponseStatus(HttpStatus.OK)
+    @GET
+    @Path("/{onboardingId}")
     @Operation(summary = "${swagger.tokens.retrieveOnboardingRequest}",
             description = "${swagger.tokens.retrieveOnboardingRequest}", operationId = "retrieveOnboardingRequestUsingGET")
     public OnboardingRequestResource retrieveOnboardingRequest(@ApiParam("${swagger.tokens.onboardingId}")
-                                                               @PathVariable("onboardingId")
+                                                               @PathParam("onboardingId")
                                                                String onboardingId) {
         log.trace("retrieveOnboardingRequest start");
         String sanitizedOnboardingId = onboardingId.replace("\n", "").replace("\r", "");
@@ -152,155 +129,131 @@ public class TokenV2Controller {
         return result;
     }
 
-    /**
-     * The function is used to approve the onboarding by admin.
-     * It takes in a String onboarding id.
-     *
-     * @param onboardingId onboardingId
-     *                     * Code: 200, Message: successful operation, DataType: TokenId
-     *                     * Code: 400, Message: Invalid ID supplied, DataType: Problem
-     *                     * Code: 404, Message: Token not found, DataType: Problem
-     *                     * Code: 409, Message: Token already consumed, DataType: Problem
-     */
-    @ResponseStatus(HttpStatus.OK)
+    @POST
+    @Path("/{onboardingId}/approve")
     @Operation(description = "${swagger.tokens.approveOnboardingRequest}",
             summary = "${swagger.tokens.approveOnboardingRequest}", operationId = "approveOnboardingUsingPOST")
-    @PostMapping("/{onboardingId}/approve")
     public void approveOnboarding(@ApiParam("${swagger.tokens.onboardingId}")
-                                  @PathVariable("onboardingId") String onboardingId) {
+                                  @PathParam("onboardingId") String onboardingId) {
         log.debug("approve onboarding identified with {}", onboardingId);
         tokenService.approveOnboarding(onboardingId);
     }
 
-    /**
-     * The function is used to reject the onboarding by admin.
-     * It takes in a String onboarding id.
-     *
-     * @param onboardingId onboardingId
-     *                     * Code: 200, Message: successful operation, DataType: TokenId
-     *                     * Code: 400, Message: Invalid ID supplied, DataType: Problem
-     *                     * Code: 404, Message: Token not found, DataType: Problem
-     *                     * Code: 409, Message: Token already consumed, DataType: Problem
-     */
-    @ResponseStatus(HttpStatus.OK)
+    @POST
+    @Path("/{onboardingId}/reject")
     @Operation(summary = "Service to reject a specific onboarding request",
             description = "Service to reject a specific onboarding request", operationId = "rejectOnboardingUsingPOST")
-    @PostMapping("/{onboardingId}/reject")
     public void rejectOnboarding(@ApiParam("${swagger.tokens.onboardingId}")
-                                 @PathVariable("onboardingId") String onboardingId,
-                                 @RequestBody ReasonForRejectDto reasonForRejectDto) {
+                                 @PathParam("onboardingId") String onboardingId,
+                                 ReasonForRejectDto reasonForRejectDto) {
         log.debug("reject onboarding identified with {}", onboardingId);
         tokenService.rejectOnboarding(onboardingId, reasonForRejectDto.getReason());
     }
 
-    /**
-     * The function delete token on onboarding request
-     * it is duplicated with /reject for retro compatibility
-     *
-     * @param onboardingId String
-     * @return no content
-     * * Code: 204, Message: successful operation, DataType: TokenId
-     * * Code: 400, Message: Invalid ID supplied, DataType: Problem
-     * * Code: 404, Message: Not found, DataType: Problem
-     */
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DELETE
+    @Path("/{onboardingId}/complete")
     @Operation(summary = "${swagger.tokens.complete}",
             description = "${swagger.tokens.complete}", operationId = "deleteUsingDELETE")
-    @DeleteMapping(value = "/{onboardingId}/complete")
-    public ResponseEntity<Void> deleteOnboarding(@ApiParam("${swagger.tokens.tokenId}")
-                                                 @PathVariable(value = "onboardingId") String onboardingId) {
+    public Response deleteOnboarding(@ApiParam("${swagger.tokens.tokenId}")
+                                     @PathParam("onboardingId") String onboardingId) {
         log.trace("delete Token start");
         String sanitizedOnboardingId = onboardingId.replace("\n", "").replace("\r", "");
         log.debug("delete Token tokenId = {}", sanitizedOnboardingId);
         tokenService.rejectOnboarding(sanitizedOnboardingId, "REJECTED_BY_USER");
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return Response.noContent().build();
     }
 
-
-    @GetMapping(value = "/{onboardingId}/contract", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    @ResponseStatus(HttpStatus.OK)
+    @GET
+    @Path("/{onboardingId}/contract")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Operation(summary = "${swagger.tokens.getContract}",
             description = "${swagger.tokens.getContract}", operationId = "getContractUsingGET")
-    public ResponseEntity<byte[]> getContract(@ApiParam("${swagger.tokens.onboardingId}")
-                                              @PathVariable("onboardingId")
-                                              String onboardingId) throws IOException {
+    public Response getContract(@ApiParam("${swagger.tokens.onboardingId}")
+                                @PathParam("onboardingId")
+                                String onboardingId) {
         log.trace("getContract start");
         log.debug("getContract onboardingId = {}", onboardingId);
-        Resource contract = tokenService.getContract(onboardingId);
-        return getResponseEntity(contract);
+        BinaryData contract = tokenService.getContract(onboardingId);
+        return binaryResponse(contract);
     }
 
-    @GetMapping(value = "/{onboardingId}/template-attachment", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    @ResponseStatus(HttpStatus.OK)
+    @GET
+    @Path("/{onboardingId}/template-attachment")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Operation(summary = "${swagger.tokens.getTemplateAttachment}",
-            description = "${swagger.tokens.getTemplateAttachment}",  operationId = "getTemplateAttachmentUsingGET")
-    public ResponseEntity<byte[]> getTemplateAttachment(@ApiParam("${swagger.tokens.onboardingId}")
-                                                @PathVariable("onboardingId")
-                                                String onboardingId,
-                                                        @ApiParam("${swagger.tokens.attachmentName}")
-                                                @RequestParam(name = "name") String filename) throws IOException {
+            description = "${swagger.tokens.getTemplateAttachment}", operationId = "getTemplateAttachmentUsingGET")
+    public Response getTemplateAttachment(@ApiParam("${swagger.tokens.onboardingId}")
+                                          @PathParam("onboardingId")
+                                          String onboardingId,
+                                          @ApiParam("${swagger.tokens.attachmentName}")
+                                          @QueryParam("name") String filename) {
         log.trace("getTemplateAttachment start");
         String sanitizedFilename = filename.replaceAll(SANITIZIER, "_");
         log.debug("getTemplateAttachment onboardingId = {}, filename = {}", Encode.forJava(onboardingId), sanitizedFilename);
-        Resource contract = tokenService.getTemplateAttachment(onboardingId, filename);
-        return getResponseEntity(contract);
+        BinaryData contract = tokenService.getTemplateAttachment(onboardingId, filename);
+        return binaryResponse(contract);
     }
 
-    @GetMapping(value = "/{onboardingId}/attachment", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    @ResponseStatus(HttpStatus.OK)
+    @GET
+    @Path("/{onboardingId}/attachment")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Operation(summary = "${swagger.tokens.getAttachment}",
-            description = "${swagger.tokens.getAttachment}",  operationId = "getAttachmentUsingGET")
-    public ResponseEntity<byte[]> getAttachment(@ApiParam("${swagger.tokens.onboardingId}")
-                                                        @PathVariable("onboardingId")
-                                                        String onboardingId,
-                                                        @ApiParam("${swagger.tokens.attachmentName}")
-                                                        @RequestParam(name = "name") String filename) throws IOException {
+            description = "${swagger.tokens.getAttachment}", operationId = "getAttachmentUsingGET")
+    public Response getAttachment(@ApiParam("${swagger.tokens.onboardingId}")
+                                  @PathParam("onboardingId")
+                                  String onboardingId,
+                                  @ApiParam("${swagger.tokens.attachmentName}")
+                                  @QueryParam("name") String filename) {
         log.trace("getAttachment start");
         String sanitizedFilename = filename.replaceAll(SANITIZIER, "_");
         log.debug("getAttachment onboardingId = {}, filename = {}", Encode.forJava(onboardingId), sanitizedFilename);
-        Resource contract = tokenService.getAttachment(onboardingId, filename);
-        return getResponseEntity(contract);
+        BinaryData contract = tokenService.getAttachment(onboardingId, filename);
+        return binaryResponse(contract);
     }
 
-    @RequestMapping(method = HEAD, value = "/{onboardingId}/attachment/status")
+    @HEAD
+    @Path("/{onboardingId}/attachment/status")
     @Operation(summary = "${swagger.tokens.headAttachment}",
-            description = "${swagger.tokens.headAttachment}",  operationId = "headAttachmentUsingGET")
-    public ResponseEntity<Void> headAttachment(@ApiParam("${swagger.tokens.onboardingId}")
-                                                @PathVariable("onboardingId")
-                                                String onboardingId, @NotNull @RequestParam("name") String attachmentName) {
+            description = "${swagger.tokens.headAttachment}", operationId = "headAttachmentUsingGET")
+    public Response headAttachment(@ApiParam("${swagger.tokens.onboardingId}")
+                                   @PathParam("onboardingId") String onboardingId,
+                                   @NotNull @QueryParam("name") String attachmentName) {
         log.trace("headAttachment start");
         log.debug("headAttachment onboardingId = {}, filename = {}", Encode.forJava(onboardingId), Encode.forJava(attachmentName));
-        HttpStatusCode attachmentResponse = tokenService.headAttachment(onboardingId, attachmentName);
-        return attachmentResponse.is2xxSuccessful() ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build();
+        int attachmentResponse = tokenService.headAttachment(onboardingId, attachmentName);
+        return attachmentResponse >= 200 && attachmentResponse < 300
+                ? Response.noContent().build()
+                : Response.status(Response.Status.NOT_FOUND).build();
     }
 
-
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @POST
+    @Path("/{onboardingId}/attachment")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(description = "${swagger.tokens.uploadAttachment}", summary = "${swagger.tokens.uploadAttachment}", operationId = "uploadAttachmentUsingPOST")
-    @PostMapping(value = "/{onboardingId}/attachment")
-    public ResponseEntity<Void> uploadAttachment(@ApiParam("${swagger.tokens.onboardingId}")
-                                                 @PathVariable(value = "onboardingId") String onboardingId,
-                                                 @RequestParam("name") String attachmentName,
-                                                 @RequestPart MultipartFile attachment) {
+    public Response uploadAttachment(@ApiParam("${swagger.tokens.onboardingId}")
+                                     @PathParam("onboardingId") String onboardingId,
+                                     @QueryParam("name") String attachmentName,
+                                     @RestForm("file") FileUpload attachment) {
         log.trace("uploadAttachment start");
-        FileValidationUtils.validatePdfOrP7m(attachment);
-        String sanitizedFileName = Encode.forJava(attachment.getOriginalFilename());
+        UploadedFile uploadedFile = toUploadedFile(attachment);
+        FileValidationUtils.validatePdfOrP7m(uploadedFile);
+        String sanitizedFileName = Encode.forJava(uploadedFile.fileName());
         String sanitizedOnboardingId = onboardingId.replaceAll(SANITIZIER, "");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "upload Attachment tokenId = {}, file = {}", sanitizedOnboardingId, sanitizedFileName);
-        tokenService.uploadAttachment(onboardingId, attachment, attachmentName);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        tokenService.uploadAttachment(onboardingId, uploadedFile, attachmentName);
+        return Response.noContent().build();
     }
 
-    @GetMapping(value = "/{onboardingId}/products/{productId}/aggregates-csv", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    @ResponseStatus(HttpStatus.OK)
+    @GET
+    @Path("/{onboardingId}/products/{productId}/aggregates-csv")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Operation(summary = "${swagger.tokens.getAggregatesCsv}",
             description = "${swagger.tokens.getAggregatesCsv}", operationId = "getAggregatesCsvUsingGET")
-    public ResponseEntity<byte[]> getAggregatesCsv(@ApiParam("${swagger.tokens.onboardingId}") @PathVariable("onboardingId")
-                                                   String onboardingIdInput,
-                                                   @ApiParam("${swagger.tokens.productId}")
-                                                   @PathVariable("productId")
-                                                   String productIdInput, Principal principal) throws Exception {
+    public Response getAggregatesCsv(@ApiParam("${swagger.tokens.onboardingId}") @PathParam("onboardingId")
+                                     String onboardingIdInput,
+                                     @ApiParam("${swagger.tokens.productId}")
+                                     @PathParam("productId")
+                                     String productIdInput, Principal principal) {
 
         JwtAuthenticationToken jwtAuthenticationToken = (JwtAuthenticationToken) principal;
         SelfCareUser selfCareUser = (SelfCareUser) jwtAuthenticationToken.getPrincipal();
@@ -315,34 +268,30 @@ public class TokenV2Controller {
         if ((OnboardingStatus.COMPLETED.name().equalsIgnoreCase(onboardingWithUserInfo.getStatus()) && userInstitutionService.verifyAllowedUserInstitution(
                 onboardingWithUserInfo.getInstitutionUpdate().getId(), productId, userUid)) || tokenService.verifyAllowedUserByRole(onboardingId, userUid)
                 || userService.isAllowedUserByUid(userUid)) {
-            Resource csv = tokenService.getAggregatesCsv(onboardingId, productId);
-            return getResponseEntity(csv);
+            BinaryData csv = tokenService.getAggregatesCsv(onboardingId, productId);
+            return binaryResponse(csv);
         } else {
             throw new UnauthorizedUserException("Normal-User not allowed to use this endpoint.");
         }
 
     }
 
-    private HttpHeaders getHttpHeaders(Resource contract) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_TYPE, APPLICATION_OCTET_STREAM_VALUE);
-        headers.add(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION);
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + contract.getFilename());
-        return headers;
+    private static Response binaryResponse(BinaryData data) {
+        String fileName = data.fileName() == null || data.fileName().isBlank() ? "download.bin" : data.fileName();
+        return Response.ok(data.content(), MediaType.APPLICATION_OCTET_STREAM)
+                .header(ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName)
+                .build();
     }
 
-    private ResponseEntity<byte[]> getResponseEntity(Resource contract) throws IOException {
-        InputStream inputStream = null;
+    private static UploadedFile toUploadedFile(FileUpload fileUpload) {
+        if (fileUpload == null) {
+            return null;
+        }
         try {
-            inputStream = contract.getInputStream();
-            byte[] byteArray = IOUtils.toByteArray(inputStream);
-
-            HttpHeaders headers = getHttpHeaders(contract);
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .body(byteArray);
-        } finally {
-            IOUtils.close(inputStream);
+            return new UploadedFile(fileUpload.fileName(), fileUpload.contentType(), Files.readAllBytes(fileUpload.uploadedFile()));
+        } catch (IOException e) {
+            throw new IllegalStateException("Cannot read uploaded file", e);
         }
     }
 }

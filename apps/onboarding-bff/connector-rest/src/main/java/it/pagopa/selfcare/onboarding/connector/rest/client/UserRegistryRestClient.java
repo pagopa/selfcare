@@ -17,13 +17,12 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 
 @RegisterRestClient(configKey = "user_registry_json")
 @ClientHeaderParam(name = "x-api-key", value = "${USERVICE_USER_REGISTRY_API_KEY:api-key}")
@@ -31,8 +30,8 @@ public interface UserRegistryRestClient extends UserApi {
 
     @POST
     @Path("/users/search")
-    @Consumes(MediaType.APPLICATION_JSON_VALUE)
-    @Produces(MediaType.APPLICATION_JSON_VALUE)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     User searchByExternalId(EmbeddedExternalId externalId, @QueryParam("fl") String fields);
 
     default User search(EmbeddedExternalId externalId, EnumSet<User.Fields> fields) {
@@ -41,12 +40,12 @@ public interface UserRegistryRestClient extends UserApi {
 
     @PATCH
     @Path("/users/{id}")
-    @Consumes(MediaType.APPLICATION_JSON_VALUE)
+    @Consumes(MediaType.APPLICATION_JSON)
     void patchUser(@PathParam("id") UUID id, MutableUserFieldsDto request);
 
     @GET
     @Path("/users/{id}")
-    @Produces(MediaType.APPLICATION_JSON_VALUE)
+    @Produces(MediaType.APPLICATION_JSON)
     User getUserByInternalIdRaw(@PathParam("id") UUID id, @QueryParam("fl") String fieldList);
 
     default User getUserByInternalId(UUID id, EnumSet<User.Fields> fieldList) {
@@ -55,17 +54,17 @@ public interface UserRegistryRestClient extends UserApi {
 
     @PATCH
     @Path("/users")
-    @Consumes(MediaType.APPLICATION_JSON_VALUE)
-    @Produces(MediaType.APPLICATION_JSON_VALUE)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     UserId saveUser(SaveUserDto request);
 
     @DELETE
     @Path("/users/{id}")
-    @Consumes(MediaType.APPLICATION_JSON_VALUE)
+    @Consumes(MediaType.APPLICATION_JSON)
     void deleteById(@PathParam("id") UUID id);
 
-    default ResponseEntity<UserResource> _searchUsingPOST(String fl, UserSearchDto userSearchDto) {
-        return ResponseEntity.ok(searchUsingPOST(fl, userSearchDto).await().indefinitely());
+    default UserResource _searchUsingPOST(String fl, UserSearchDto userSearchDto) {
+        return searchUsingPOST(fl, userSearchDto).await().indefinitely();
     }
 
     private static String toFieldList(EnumSet<User.Fields> fields) {

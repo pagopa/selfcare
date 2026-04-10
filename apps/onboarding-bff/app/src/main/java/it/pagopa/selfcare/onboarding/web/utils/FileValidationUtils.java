@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.onboarding.web.utils;
 
 import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
-import org.springframework.web.multipart.MultipartFile;
+import it.pagopa.selfcare.onboarding.connector.model.UploadedFile;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -27,19 +27,19 @@ public class FileValidationUtils {
     private FileValidationUtils() {
     }
 
-    public static void validateAggregatesFile(MultipartFile file) {
+    public static void validateAggregatesFile(UploadedFile file) {
         validateFile(file, ALLOWED_EXTENSIONS_AGGREGATES, ALLOWED_MIME_TYPES_AGGREGATES);
     }
 
-    public static void validatePdfFile(MultipartFile file) {
+    public static void validatePdfFile(UploadedFile file) {
         validateFile(file, ALLOWED_EXTENSIONS_PDF, ALLOWED_MIME_TYPES_PDF);
     }
 
-    public static void validateP7mFile(MultipartFile file) {
+    public static void validateP7mFile(UploadedFile file) {
         validateFile(file, ALLOWED_EXTENSIONS_P7M, ALLOWED_MIME_TYPES_P7M);
     }
 
-    public static void validatePdfOrP7m(MultipartFile file) {
+    public static void validatePdfOrP7m(UploadedFile file) {
         List<String> extensions = Stream.concat(ALLOWED_EXTENSIONS_PDF.stream(), ALLOWED_EXTENSIONS_P7M.stream())
                 .toList();
         List<String> mimeTypes = Stream.concat(ALLOWED_MIME_TYPES_PDF.stream(), ALLOWED_MIME_TYPES_P7M.stream())
@@ -48,13 +48,13 @@ public class FileValidationUtils {
         validateFile(file, extensions, mimeTypes);
     }
 
-    public static void validateFile(MultipartFile file, List<String> allowedExtensions, List<String> allowedMimeTypes) {
-        if (file == null || file.isEmpty()) {
+    public static void validateFile(UploadedFile file, List<String> allowedExtensions, List<String> allowedMimeTypes) {
+        if (file == null || file.content() == null || file.content().length == 0) {
             throw new InvalidRequestException("Il file è vuoto o mancante.");
         }
 
-        final String filename = file.getOriginalFilename();
-        final String contentType = file.getContentType();
+        final String filename = file.fileName();
+        final String contentType = file.contentType();
 
         boolean isValid = allowedMimeTypes.contains(contentType) ||
                 allowedExtensions.stream().anyMatch(ext -> filename != null && filename.toLowerCase().endsWith(ext));

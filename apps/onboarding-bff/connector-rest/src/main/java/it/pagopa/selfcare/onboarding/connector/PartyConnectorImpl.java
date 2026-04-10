@@ -30,7 +30,6 @@ import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 import jakarta.enterprise.context.ApplicationScoped;
-import org.springframework.util.Assert;
 
 @ApplicationScoped
 @Slf4j
@@ -57,7 +56,7 @@ class PartyConnectorImpl implements PartyConnector {
     private Map<String, org.openapi.quarkus.onboarding_json.model.InstitutionResponse> buildInstitutionMap(List<InstitutionInfo> result) {
         GetInstitutionRequest request = new GetInstitutionRequest();
         request.setInstitutionIds(result.stream().map(InstitutionInfo::getId).toList());
-        List<org.openapi.quarkus.onboarding_json.model.InstitutionResponse> response = institutionApiClient._getInstitutions(request).getBody();
+        List<org.openapi.quarkus.onboarding_json.model.InstitutionResponse> response = institutionApiClient._getInstitutions(request);
         return Objects.isNull(response) ? Map.of() : response.stream().collect(Collectors.toMap(org.openapi.quarkus.onboarding_json.model.InstitutionResponse::getId, Function.identity()));
     }
     public PartyConnectorImpl(@RestClient PartyProcessRestClient restClient,
@@ -72,7 +71,7 @@ class PartyConnectorImpl implements PartyConnector {
 
     @Override
     public void onboardingOrganization(OnboardingData onboardingData) {
-        Assert.notNull(onboardingData, "Onboarding data is required");
+        java.util.Objects.requireNonNull(onboardingData, "Onboarding data is required");
         OnboardingInstitutionRequest onboardingInstitutionRequest = new OnboardingInstitutionRequest();
         onboardingInstitutionRequest.setInstitutionExternalId(onboardingData.getInstitutionExternalId());
         onboardingInstitutionRequest.setPricingPlan(onboardingData.getPricingPlan());
@@ -130,12 +129,12 @@ class PartyConnectorImpl implements PartyConnector {
     public List<InstitutionInfo> getInstitutionsByUser(Product product, String userId) {
         log.trace("getInstitutionsByUser start");
         final String parentProductId = product.getParentId();
-        List<UserInstitutionResponse> userInstitutions = userApiClient._usersGet(null, null, null, Optional.ofNullable(product.getId()).map(List::of).orElse(null), null, 500, List.of(ACTIVE.name()), userId).getBody();
+        List<UserInstitutionResponse> userInstitutions = userApiClient._usersGet(null, null, null, Optional.ofNullable(product.getId()).map(List::of).orElse(null), null, 500, List.of(ACTIVE.name()), userId);
         List<InstitutionInfo> result;
 
         if (Objects.nonNull(parentProductId)) {
 
-            List<UserInstitutionResponse> parentUserInstitutions = userApiClient._usersGet(null, null, null, Optional.ofNullable(parentProductId).map(List::of).orElse(null), null, 500, List.of(ACTIVE.name()), userId).getBody();
+            List<UserInstitutionResponse> parentUserInstitutions = userApiClient._usersGet(null, null, null, Optional.ofNullable(parentProductId).map(List::of).orElse(null), null, 500, List.of(ACTIVE.name()), userId);
 
             // Get institution identifiers from list linked to the product
             List<String> childInstitutionIds = userInstitutions.stream()
@@ -174,8 +173,8 @@ class PartyConnectorImpl implements PartyConnector {
     public RelationshipsResponse getUserInstitutionRelationships(String externalInstitutionId, UserInfo.UserInfoFilter userInfoFilter) {
         log.trace("getUserInstitutionRelationships start");
         log.debug("getUserInstitutionRelationships externalInstitutionId = {}, userInfoFilter = {}", externalInstitutionId, userInfoFilter);
-        Assert.hasText(externalInstitutionId, REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE);
-        Assert.notNull(userInfoFilter, "A filter is required");
+        requireHasText(externalInstitutionId, REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE);
+        java.util.Objects.requireNonNull(userInfoFilter, "A filter is required");
         RelationshipsResponse institutionRelationships = restClient.getUserInstitutionRelationships(
                 externalInstitutionId,
                 userInfoFilter.getRole().orElse(null),
@@ -193,7 +192,7 @@ class PartyConnectorImpl implements PartyConnector {
     public Collection<UserInfo> getUsers(String externalInstitutionId, UserInfo.UserInfoFilter userInfoFilter) {
         log.trace("getUsers start");
         log.debug("getUsers externalInstitutionId = {}, role = {}, productId = {}, productRoles = {}, userId = {}", externalInstitutionId, userInfoFilter.getRole(), userInfoFilter.getProductId(), userInfoFilter.getProductRoles(), userInfoFilter.getUserId());
-        Assert.hasText(externalInstitutionId, REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE);
+        requireHasText(externalInstitutionId, REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE);
 
         Collection<UserInfo> userInfos = Collections.emptyList();
         RelationshipsResponse institutionRelationships = restClient.getUserInstitutionRelationships(externalInstitutionId,
@@ -229,7 +228,7 @@ class PartyConnectorImpl implements PartyConnector {
     public List<Institution> getInstitutionsByTaxCodeAndSubunitCode(String taxCode, String subunitCode) {
         log.trace("getInstitution start");
         log.debug("getInstitution taxCode = {}, subunitCode = {}", Encode.forJava(taxCode), Encode.forJava(subunitCode));
-        Assert.hasText(taxCode, REQUIRED_INSTITUTION_TAXCODE_MESSAGE);
+        requireHasText(taxCode, REQUIRED_INSTITUTION_TAXCODE_MESSAGE);
         InstitutionsResponse partyInstitutionResponse = restClient.getInstitutions(taxCode, subunitCode);
         List<Institution> result = partyInstitutionResponse.getInstitutions().stream()
                 .map(institutionMapper::toEntity)
@@ -243,7 +242,7 @@ class PartyConnectorImpl implements PartyConnector {
     public Institution getInstitutionByExternalId(String externalInstitutionId) {
         log.trace("getInstitution start");
         log.debug("getInstitution externalInstitutionId = {}", externalInstitutionId);
-        Assert.hasText(externalInstitutionId, REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE);
+        requireHasText(externalInstitutionId, REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE);
         InstitutionResponse partyInstitutionResponse = restClient.getInstitutionByExternalId(externalInstitutionId);
         Institution result = institutionMapper.toEntity(partyInstitutionResponse);
         log.debug("getInstitution result = {}", result);
@@ -255,7 +254,7 @@ class PartyConnectorImpl implements PartyConnector {
     public Institution getInstitutionById(String institutionId) {
         log.trace("getInstitutionById start");
         log.debug("getInstitutionById institutionId = {}", Encode.forJava(institutionId));
-        Assert.hasText(institutionId, REQUIRED_INSTITUTION_ID_MESSAGE);
+        requireHasText(institutionId, REQUIRED_INSTITUTION_ID_MESSAGE);
         InstitutionResponse institutionResponse = restClient.getInstitutionById(institutionId);
         Institution result = institutionMapper.toEntity(institutionResponse);
         log.debug("getInstitutionById result = {}", result);
@@ -267,7 +266,7 @@ class PartyConnectorImpl implements PartyConnector {
     public List<OnboardingResource> getOnboardings(String institutionId, String productId) {
         log.trace("getOnboardings start");
         log.debug("getOnboardings institutionId = {}", Encode.forJava(institutionId));
-        Assert.hasText(institutionId, REQUIRED_INSTITUTION_ID_MESSAGE);
+        requireHasText(institutionId, REQUIRED_INSTITUTION_ID_MESSAGE);
         OnboardingsResponse onboardings = restClient.getOnboardings(institutionId, productId);
         List<OnboardingResource> onboardingResources = onboardings.getOnboardings().stream()
                 .map(institutionMapper::toResource)
@@ -281,7 +280,7 @@ class PartyConnectorImpl implements PartyConnector {
     public Institution createInstitutionFromIpa(String taxCode, String subunitCode, String subunitType) {
         log.trace("createInstitutionFromIpa start");
         log.debug("createInstitutionFromIpa taxCode = {}, subunitCode = {}, subunitType = {}", taxCode, subunitCode, subunitType);
-        Assert.hasText(taxCode, REQUIRED_INSTITUTION_TAXCODE_MESSAGE);
+        requireHasText(taxCode, REQUIRED_INSTITUTION_TAXCODE_MESSAGE);
         InstitutionFromIpaPost institutionFromIpaPost = new InstitutionFromIpaPost();
         institutionFromIpaPost.setSubunitCode(subunitCode);
         institutionFromIpaPost.setTaxCode(taxCode);
@@ -296,7 +295,7 @@ class PartyConnectorImpl implements PartyConnector {
     @Override
     public Institution createInstitutionFromANAC(OnboardingData onboardingData) {
         log.trace("createInstitutionFromAnac start");
-        Assert.notNull(onboardingData, "An OnboardingData is required");
+        java.util.Objects.requireNonNull(onboardingData, "An OnboardingData is required");
         InstitutionResponse partyInstitutionResponse = restClient.createInstitutionFromANAC(new InstitutionSeed(onboardingData));
         Institution result = institutionMapper.toEntity(partyInstitutionResponse);
         log.debug("createInstitutionFromAnac result = {}", result);
@@ -307,7 +306,7 @@ class PartyConnectorImpl implements PartyConnector {
     @Override
     public Institution createInstitutionFromIVASS(OnboardingData onboardingData) {
         log.trace("createInstitutionFromIVASS start");
-        Assert.notNull(onboardingData, "An OnboardingData is required");
+        java.util.Objects.requireNonNull(onboardingData, "An OnboardingData is required");
         InstitutionResponse partyInstitutionResponse = restClient.createInstitutionFromIVASS(new InstitutionSeed(onboardingData));
         Institution result = institutionMapper.toEntity(partyInstitutionResponse);
         log.debug("createInstitutionFromIVASS result = {}", result);
@@ -319,7 +318,7 @@ class PartyConnectorImpl implements PartyConnector {
     public Institution createInstitutionUsingExternalId(String institutionExternalId) {
         log.trace("createInstitutionUsingExternalId start");
         log.debug("createInstitutionUsingExternalId externalId = {}", institutionExternalId);
-        Assert.hasText(institutionExternalId, REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE);
+        requireHasText(institutionExternalId, REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE);
         InstitutionResponse partyInstitutionResponse = restClient.createInstitutionUsingExternalId(institutionExternalId);
         Institution result = institutionMapper.toEntity(partyInstitutionResponse);
         log.debug("createInstitutionUsingExternalId result = {}", result);
@@ -330,7 +329,7 @@ class PartyConnectorImpl implements PartyConnector {
     @Override
     public Institution createInstitutionFromInfocamere(OnboardingData onboardingData) {
         log.trace("createInstitutionFromInfocamere start");
-        Assert.notNull(onboardingData, "An OnboardingData is required");
+        java.util.Objects.requireNonNull(onboardingData, "An OnboardingData is required");
         InstitutionResponse partyInstitutionResponse = restClient.createInstitutionFromInfocamere(new InstitutionSeed(onboardingData));
         Institution result = institutionMapper.toEntity(partyInstitutionResponse);
         log.debug("createInstitutionFromInfocamere result = {}", result);
@@ -341,7 +340,7 @@ class PartyConnectorImpl implements PartyConnector {
     @Override
     public Institution createInstitution(OnboardingData onboardingData) {
         log.trace("createInstitution start");
-        Assert.notNull(onboardingData, "An OnboardingData is required");
+        java.util.Objects.requireNonNull(onboardingData, "An OnboardingData is required");
         InstitutionResponse partyInstitutionResponse = restClient.createInstitution(new InstitutionSeed(onboardingData));
         Institution result = institutionMapper.toEntity(partyInstitutionResponse);
         log.debug("createInstitution result = {}", result);
@@ -353,8 +352,8 @@ class PartyConnectorImpl implements PartyConnector {
     public UserInfo getInstitutionManager(String externalInstitutionId, String productId) {
         log.trace("getInstitutionManager start");
         log.debug("getInstitutionManager externalId = {}, productId = {}", externalInstitutionId, productId);
-        Assert.hasText(externalInstitutionId, REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE);
-        Assert.hasText(productId, REQUIRED_PRODUCT_ID_MESSAGE);
+        requireHasText(externalInstitutionId, REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE);
+        requireHasText(productId, REQUIRED_PRODUCT_ID_MESSAGE);
         RelationshipInfo relationshipInfo = restClient.getInstitutionManager(externalInstitutionId, productId);
         UserInfo result = RELATIONSHIP_INFO_TO_USER_INFO_FUNCTION.apply(relationshipInfo);
         log.debug("getInstitutionManager result = {}", result);
@@ -366,8 +365,8 @@ class PartyConnectorImpl implements PartyConnector {
     public InstitutionInfo getInstitutionBillingData(String externalId, String productId) {
         log.trace("getInstitutionBillingData start");
         log.debug("getInstitutionBillingData externalId = {}, productId = {}", externalId, productId);
-        Assert.hasText(externalId, REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE);
-        Assert.hasText(productId, REQUIRED_PRODUCT_ID_MESSAGE);
+        requireHasText(externalId, REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE);
+        requireHasText(productId, REQUIRED_PRODUCT_ID_MESSAGE);
         BillingDataResponse billingDataResponse = restClient.getInstitutionBillingData(externalId, productId);
         InstitutionInfo result = institutionMapper.toInstitutionInfo(billingDataResponse);
         log.debug("getInstitutionBillingData result = {}", result);
@@ -379,8 +378,8 @@ class PartyConnectorImpl implements PartyConnector {
     public void verifyOnboarding(String externalInstitutionId, String productId) {
         log.trace("verifyOnboarding start");
         log.debug("verifyOnboarding externalInstitutionId = {}, productId = {}", externalInstitutionId, productId);
-        Assert.hasText(externalInstitutionId, REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE);
-        Assert.hasText(productId, REQUIRED_PRODUCT_ID_MESSAGE);
+        requireHasText(externalInstitutionId, REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE);
+        requireHasText(productId, REQUIRED_PRODUCT_ID_MESSAGE);
         restClient.verifyOnboarding(externalInstitutionId, productId);
         log.trace("verifyOnboarding end");
     }
@@ -389,9 +388,15 @@ class PartyConnectorImpl implements PartyConnector {
     @Override
     public void verifyOnboarding(String productId, String externalId, String taxCode, String origin, String originId, String subunitCode) {
         log.trace("verifyOnboarding start");
-        Assert.hasText(productId, REQUIRED_PRODUCT_ID_MESSAGE);
+        requireHasText(productId, REQUIRED_PRODUCT_ID_MESSAGE);
         restClient._verifyOnboardingInfoByFiltersUsingHEAD(productId, externalId, taxCode, origin, originId, subunitCode);
         log.trace("verifyOnboarding end");
+    }
+
+    private static void requireHasText(String value, String message) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException(message);
+        }
     }
 
 }

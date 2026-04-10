@@ -7,7 +7,6 @@ import it.pagopa.selfcare.onboarding.connector.rest.client.MsCoreRestClient;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import lombok.extern.slf4j.Slf4j;
 import jakarta.enterprise.context.ApplicationScoped;
-import org.springframework.util.Assert;
 
 @ApplicationScoped
 @Slf4j
@@ -26,7 +25,7 @@ class MsCoreConnectorImpl implements MsCoreConnector {
     public Institution getInstitutionByExternalId(String externalInstitutionId) {
         log.trace("getInstitution start");
         log.debug("getInstitution externalInstitutionId = {}", externalInstitutionId);
-        Assert.hasText(externalInstitutionId, REQUIRED_INSTITUTION_ID_MESSAGE);
+        requireHasText(externalInstitutionId, REQUIRED_INSTITUTION_ID_MESSAGE);
         Institution result = restClient.getInstitutionByExternalId(externalInstitutionId);
         log.debug("getInstitution result = {}", result);
         log.trace("getInstitution end");
@@ -37,8 +36,8 @@ class MsCoreConnectorImpl implements MsCoreConnector {
     public Institution createInstitutionUsingInstitutionData(CreateInstitutionData createInstitutionData) {
         log.trace("createInstitutionUsingInstitutionData start");
         log.debug("createInstitutionUsingInstitutionData externalId = {}, description = {}", createInstitutionData.getTaxId(), createInstitutionData.getDescription());
-        Assert.hasText(createInstitutionData.getTaxId(), REQUIRED_INSTITUTION_ID_MESSAGE);
-        Assert.hasText(createInstitutionData.getDescription(), REQUIRED_DESCRIPTION_MESSAGE);
+        requireHasText(createInstitutionData.getTaxId(), REQUIRED_INSTITUTION_ID_MESSAGE);
+        requireHasText(createInstitutionData.getDescription(), REQUIRED_DESCRIPTION_MESSAGE);
         Institution result = restClient.createInstitutionUsingInstitutionData(createInstitutionData);
         log.debug("createInstitutionUsingInstitutionData result = {}", result);
         log.trace("createInstitutionUsingInstitutionData end");
@@ -49,10 +48,16 @@ class MsCoreConnectorImpl implements MsCoreConnector {
     public void verifyOnboarding(String externalInstitutionId, String productId) {
         log.trace("verifyOnboarding start");
         log.debug("verifyOnboarding externalInstitutionId = {}, productId = {}", externalInstitutionId, productId);
-        Assert.hasText(externalInstitutionId, REQUIRED_INSTITUTION_ID_MESSAGE);
-        Assert.hasText(productId, REQUIRED_PRODUCT_ID_MESSAGE);
+        requireHasText(externalInstitutionId, REQUIRED_INSTITUTION_ID_MESSAGE);
+        requireHasText(productId, REQUIRED_PRODUCT_ID_MESSAGE);
         restClient.verifyOnboarding(externalInstitutionId, productId);
         log.trace("verifyOnboarding end");
+    }
+
+    private static void requireHasText(String value, String message) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException(message);
+        }
     }
 
 }
