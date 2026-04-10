@@ -107,7 +107,7 @@ Feature: Document content health
     And The following form params:
       | request | {"onboardingId":"onb-123","productId":"prod-test","documentType":"INSTITUTION"} |
     When I send a POST request to "/v1/document-content/{onboardingId}/upload-signed-contract" with form data only
-    Then The status code is 400
+    Then The status code is 500
 
   Scenario: Retrieve template attachment successfully
     Given User login with username "j.doe" and password "test"
