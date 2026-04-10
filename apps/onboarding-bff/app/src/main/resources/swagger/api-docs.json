@@ -508,7 +508,7 @@
             "type" : "string"
           }
         }, {
-          "name" : "name",
+          "name" : "attachmentName",
           "in" : "query",
           "required" : true,
           "schema" : {
@@ -2160,7 +2160,7 @@
             "type" : "string"
           }
         }, {
-          "name" : "name",
+          "name" : "attachmentName",
           "in" : "query",
           "required" : true,
           "schema" : {

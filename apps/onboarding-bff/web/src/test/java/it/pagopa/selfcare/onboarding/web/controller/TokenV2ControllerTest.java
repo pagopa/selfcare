@@ -270,7 +270,7 @@ class TokenV2ControllerTest {
 
         //when
         mvc.perform(MockMvcRequestBuilders
-                        .get("/v2/tokens/{onboardingId}/template-attachment?name={name}", onboardingId, filename)
+                        .get("/v2/tokens/{onboardingId}/template-attachment?attachmentName={name}", onboardingId, filename)
                         .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -339,7 +339,7 @@ class TokenV2ControllerTest {
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
                 .multipart("/v2/tokens/{onboardingId}/attachment", onboardingId)
                 .file(file)
-                .queryParam("name", filename);
+                .queryParam("attachmentName", filename);
 
         mvc.perform(requestBuilder)
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
