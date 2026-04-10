@@ -1,2 +1,9 @@
-FROM mcr.microsoft.com/azure-cli@sha256:ed67c5ef4d0a87396fe39a8114db69b6c351c4af3b17119ac205bb6c0ee3a185
-CMD ["/bin/sh", "-c", "/blobStorage/initAzurite.sh"]
+FROM mcr.microsoft.com/azure-cli:2.63.0
+
+WORKDIR /workspace
+
+COPY blobStorageInit /workspace
+
+RUN chmod +x /workspace/init_azurite.sh
+
+CMD ["sh", "/workspace/init_azurite.sh"]

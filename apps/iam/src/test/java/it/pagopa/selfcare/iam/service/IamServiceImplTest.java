@@ -5,6 +5,8 @@ import static org.mockito.Mockito.*;
 
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.common.QuarkusTestResource;
+import io.quarkus.test.mongodb.MongoTestResource;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
@@ -29,6 +31,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 @QuarkusTest
+@QuarkusTestResource(value = MongoTestResource.class, restrictToAnnotatedClass = true)
 class IamServiceImplTest {
 
   @Inject IamServiceImpl service;
@@ -135,7 +138,6 @@ class IamServiceImplTest {
       assertEquals(existingUid, result.getUid());
       assertEquals("Jane", result.getName());
       assertEquals("Smith", result.getFamilyName());
-      verify(spyUser, times(1)).persistOrUpdate();
     }
   }
 

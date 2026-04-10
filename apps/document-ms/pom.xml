@@ -28,7 +28,7 @@
     <surefire-plugin.version>3.5.4</surefire-plugin.version>
     <quarkus-openapi-generator.version>2.16.0</quarkus-openapi-generator.version>
     <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
-    <selfcare-cucumber-sdk.version>0.1.0</selfcare-cucumber-sdk.version>
+    <selfcare-cucumber-sdk.version>0.1.1</selfcare-cucumber-sdk.version>
     <security-sdk.version>0.2.3</security-sdk.version>
     <selfcare-onboarding-sdk.version>0.15.5</selfcare-onboarding-sdk.version>
     <mapstruct.lombok.version>0.2.0</mapstruct.lombok.version>
@@ -344,6 +344,12 @@
       <groupId>eu.europa.ec.joinup.sd-dss</groupId>
       <artifactId>dss-test</artifactId>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>eu.europa.ec.joinup.sd-dss</groupId>
@@ -452,6 +458,7 @@
               <goal>verify</goal>
             </goals>
             <configuration>
+              <skip>${skipITs}</skip>
               <systemPropertyVariables>
                 <native.image.path>${project.build.directory}/${project.build.finalName}-runner
                 </native.image.path>

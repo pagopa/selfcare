@@ -27,7 +27,7 @@
     <surefire-plugin.version>3.5.4</surefire-plugin.version>
     <quarkus-openapi-generator.version>2.16.0</quarkus-openapi-generator.version>
     <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
-    <selfcare-cucumber-sdk.version>0.1.0</selfcare-cucumber-sdk.version>
+    <selfcare-cucumber-sdk.version>0.1.1</selfcare-cucumber-sdk.version>
     <security-sdk.version>0.2.3</security-sdk.version>
     <selfcare-onboarding-sdk.version>0.15.5</selfcare-onboarding-sdk.version>
     <mapstruct.lombok.version>0.2.0</mapstruct.lombok.version>
@@ -323,6 +323,7 @@
           </execution>
         </executions>
         <configuration>
+          <skip>${skipITs}</skip>
           <systemPropertyVariables>
             <user.language>en</user.language>
             <user.country>US</user.country>
