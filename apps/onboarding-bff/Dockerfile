@@ -3,8 +3,7 @@ FROM maven:3-eclipse-temurin-17@sha256:6ca4f2d4c7a8affa4a7cdec526dd2aa5d433ddd63
 WORKDIR /src
 
 COPY --link ./apps/onboarding-bff/pom.xml ./apps/onboarding-bff/pom.xml
-COPY --link ./apps/onboarding-bff/connector-api ./apps/onboarding-bff/connector-api
-COPY --link ./apps/onboarding-bff/connector ./apps/onboarding-bff/connector
+COPY --link ./apps/onboarding-bff/connector-rest ./apps/onboarding-bff/connector-rest
 COPY --link ./apps/onboarding-bff/core ./apps/onboarding-bff/core
 COPY --link ./apps/onboarding-bff/web ./apps/onboarding-bff/web
 COPY --link ./apps/onboarding-bff/app ./apps/onboarding-bff/app

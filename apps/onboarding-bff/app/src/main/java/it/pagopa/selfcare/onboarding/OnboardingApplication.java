@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication(scanBasePackages = "it.pagopa.selfcare")
-public class SelfCareOnboardingApplication {
+public class OnboardingApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SelfCareOnboardingApplication.class, args);
+        SpringApplication.run(OnboardingApplication.class, args);
     }
 
 }

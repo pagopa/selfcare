@@ -32,7 +32,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
     value = "it.pagopa.selfcare.cucumber.utils, it.pagopa.selfcare.onboarding")
 @CucumberContextConfiguration
 @SpringBootTest(
-    classes = {SelfCareOnboardingApplication.class, RestAssuredConfiguration.class},
+    classes = {OnboardingApplication.class, RestAssuredConfiguration.class},
     webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestPropertySource(locations = "classpath:application-test.properties")
 @Slf4j

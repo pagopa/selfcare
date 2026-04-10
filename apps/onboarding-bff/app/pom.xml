@@ -21,12 +21,42 @@
     <dependencies>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>selc-onboarding-web</artifactId>
+            <artifactId>onboarding-bff-connector-rest</artifactId>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>selc-onboarding-connector-rest</artifactId>
-            <scope>runtime</scope>
+            <artifactId>selc-commons-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selc-commons-web</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selfcare-onboarding-sdk-common</artifactId>
+            <version>${parent-commons-sdk-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selfcare-onboarding-sdk-product</artifactId>
+            <version>${parent-commons-sdk-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selfcare-onboarding-sdk-azure-storage</artifactId>
+            <version>${parent-commons-sdk-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selc-commons-connector-rest</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
 
         <!-- test -->
@@ -101,6 +131,11 @@
             <groupId>com.auth0</groupId>
             <artifactId>java-jwt</artifactId>
             <version>4.0.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-contract-wiremock</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

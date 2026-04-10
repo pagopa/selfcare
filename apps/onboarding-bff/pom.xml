@@ -4,10 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
     <modules>
-        <module>connector-api</module>
-        <module>connector</module>
-        <module>core</module>
-        <module>web</module>
+        <module>connector-rest</module>
         <module>app</module>
     </modules>
     <parent>
@@ -32,22 +29,7 @@
         <dependencies>
             <dependency>
                 <groupId>it.pagopa.selfcare</groupId>
-                <artifactId>selc-onboarding-connector-rest</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>it.pagopa.selfcare</groupId>
-                <artifactId>selc-onboarding-connector-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>it.pagopa.selfcare</groupId>
-                <artifactId>selc-onboarding-core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>it.pagopa.selfcare</groupId>
-                <artifactId>selc-onboarding-web</artifactId>
+                <artifactId>onboarding-bff-connector-rest</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
