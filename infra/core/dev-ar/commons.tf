@@ -643,7 +643,7 @@ resource "azurerm_key_vault_access_policy" "container_app_environment" {
   tenant_id    = module.key_vault.tenant_id
   object_id    = module.container_app_environments.user_assigned_identity.principal_id
 
-  secret_permissions      = ["Get", "List"]
+  secret_permissions = ["Get", "List"]
 }
 
 ###############################################################################

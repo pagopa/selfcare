@@ -197,6 +197,9 @@
                         </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <skip>${skipITs}</skip>
+                </configuration>
             </plugin>
         </plugins>
     </build>

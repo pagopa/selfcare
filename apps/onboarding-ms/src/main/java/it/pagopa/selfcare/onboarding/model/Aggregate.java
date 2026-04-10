@@ -1,8 +1,7 @@
 package it.pagopa.selfcare.onboarding.model;
 
 import lombok.Data;
-import wiremock.com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 
 @Data

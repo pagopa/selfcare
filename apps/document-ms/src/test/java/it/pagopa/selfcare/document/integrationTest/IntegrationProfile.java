@@ -23,7 +23,7 @@ public class IntegrationProfile implements QuarkusTestProfile {
     File file = new File("src/test/resources/certs/pk-key.pub");
     String key = StringUtils.EMPTY;
     try {
-      key = new String(Files.readAllBytes(file.toPath()));
+      key = Files.readString(file.toPath());
     } catch (IOException e) {
       log.error("Exception reading file", e);
     }
