@@ -8,20 +8,18 @@ import it.pagopa.selfcare.auth.util.GeneralUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
-import java.time.Duration;
-import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.openapi.quarkus.internal_json.model.SearchUserDto;
-import org.openapi.quarkus.internal_json.model.UserInfoResource;
-import org.openapi.quarkus.internal_json.model.UserResource;
+import org.openapi.quarkus.internal_json.model.UserOtpEmailInfoResponse;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.SaveUserDto;
+
+import java.time.Duration;
+import java.util.Optional;
 
 @Slf4j
 @ApplicationScoped
@@ -102,29 +100,24 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public Uni<String> getUserInfoEmail(UserClaims userClaims) {
-    SearchUserDto searchUserDto =
-        SearchUserDto.builder()
-            .fiscalCode(userClaims.getFiscalCode())
-            .statuses(List.of(SearchUserDto.StatusesEnum.ACTIVE))
-            .build();
     return externalInternalUserApi
-        .v2getUserInfoUsingGET(null, searchUserDto)
-        .onFailure(GeneralUtils::checkIfIsRetryableException)
-        .retry()
-        .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))
-        .atMost(maxRetry)
-        .onFailure(WebApplicationException.class)
-        .transform(GeneralUtils::extractExceptionFromWebAppException)
-        .map(UserInfoResource::getUser)
-        .map(UserResource::getLastActiveOnboardingUserEmail)
-        .map(Optional::ofNullable)
-        .chain(
-            maybeInstitutionalEmail ->
-                maybeInstitutionalEmail
-                    .map(institutionalEmail -> Uni.createFrom().item(institutionalEmail))
-                    .orElse(
-                        Uni.createFrom()
-                            .failure(
-                                new ResourceNotFoundException("Institutional Email Not Found"))));
+            .getUserOtpEmailInfo(userClaims.getUid())
+            .onFailure(GeneralUtils::checkIfIsRetryableException)
+            .retry()
+            .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))
+            .atMost(maxRetry)
+            .onFailure(WebApplicationException.class)
+            .transform(GeneralUtils::extractExceptionFromWebAppException)
+            .map(UserOtpEmailInfoResponse::getOtpEmail)
+            .map(Optional::ofNullable)
+            .chain(
+                    maybeInstitutionalEmail ->
+                            maybeInstitutionalEmail
+                                    .map(institutionalEmail -> Uni.createFrom().item(institutionalEmail))
+                                    .orElse(
+                                            Uni.createFrom()
+                                                    .failure(
+                                                            new ResourceNotFoundException("Institutional Email Not Found"))));
+
   }
 }
