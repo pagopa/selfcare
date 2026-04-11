@@ -441,6 +441,74 @@ resource "azurerm_cdn_frontdoor_rule" "csp_frame_ancestors" {
   }
 }
 
+############################################################################################
+# Rule for areariservata apex domain (if applicable) — same CSP as main domain
+############################################################################################
+
+resource "azurerm_cdn_frontdoor_rule" "content_security_policy_fonts_ar" {
+  count                     = var.dns_zone_prefix_ar != null ? 1 : 0
+  name                      = "ContentSecurityPolicyFontsAR"
+  cdn_frontdoor_rule_set_id = module.checkout_cdn.rule_set_id
+  order                     = 2 + length(var.spa) + 10
+  behavior_on_match         = "Continue"
+
+  actions {
+    response_header_action {
+      header_action = "Append"
+      header_name   = "Content-Security-Policy-Report-Only"
+      value         = "script-src 'self'; style-src 'self' 'unsafe-inline' https://${var.dns_zone_prefix_ar}.${var.external_domain}/assets/font/selfhostedfonts.css; worker-src 'none'; font-src 'self' https://${var.dns_zone_prefix_ar}.${var.external_domain}/assets/font/; "
+    }
+  }
+}
+
+resource "azurerm_cdn_frontdoor_rule" "content_security_policy_io_ar" {
+  count                     = var.dns_zone_prefix_ar != null ? 1 : 0
+  name                      = "ContentSecurityPolicyIOAR"
+  cdn_frontdoor_rule_set_id = module.checkout_cdn.rule_set_id
+  order                     = 2 + length(var.spa) + 11
+  behavior_on_match         = "Continue"
+
+  actions {
+    response_header_action {
+      header_action = "Append"
+      header_name   = "Content-Security-Policy-Report-Only"
+      value         = "img-src 'self' https://assets.cdn.io.italia.it https://${var.dns_zone_prefix_ar}.${var.external_domain} data:; "
+    }
+  }
+}
+
+resource "azurerm_cdn_frontdoor_rule" "content_security_policy_mixpanel_ar" {
+  count                     = var.dns_zone_prefix_ar != null ? 1 : 0
+  name                      = "ContentSecurityPolicyMixpanelAR"
+  cdn_frontdoor_rule_set_id = module.checkout_cdn.rule_set_id
+  order                     = 2 + length(var.spa) + 12
+  behavior_on_match         = "Continue"
+
+  actions {
+    response_header_action {
+      header_action = "Overwrite"
+      header_name   = "Content-Security-Policy-Report-Only"
+      value         = "default-src 'self'; object-src 'none'; connect-src 'self' https://${var.prefix_api}.${var.dns_zone_prefix_ar}.${var.external_domain}/ https://api-eu.mixpanel.com/track/; "
+    }
+  }
+}
+
+resource "azurerm_cdn_frontdoor_rule" "csp_frame_ancestors_ar" {
+  count                     = var.dns_zone_prefix_ar != null ? 1 : 0
+  name                      = "cspFrameAncestorsAR"
+  cdn_frontdoor_rule_set_id = module.checkout_cdn.rule_set_id
+  order                     = 2 + length(var.spa) + 13
+  behavior_on_match         = "Continue"
+
+  actions {
+    response_header_action {
+      header_action = "Append"
+      header_name   = "Content-Security-Policy"
+      value         = "frame-ancestors 'none'; object-src 'none'; frame-src 'self' *.${var.dns_zone_prefix_ar}.${var.external_domain};"
+    }
+  }
+}
+
 ###############################################################################
 # Key Vault Secrets
 ###############################################################################
