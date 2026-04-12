@@ -2,7 +2,18 @@
 # GLOBAL VARIABLES
 ###############################################################################
 module "local" {
-  source = "../../_modules/local-dev-ar"
+  source = "../../_modules/local-env"
+
+  env       = "dev"
+  env_short = "d"
+  domain    = "ar"
+
+  dns_zone_prefix                = "dev.selfcare"
+  api_dns_zone_prefix            = "api.dev.selfcare"
+  private_dns_name_domain        = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-d-cae-002"
+  ca_resource_group_name         = "selc-d-container-app-002-rg"
+  container_app_min_replicas     = 0
 }
 
 module "cosmosdb" {
