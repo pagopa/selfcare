@@ -1171,7 +1171,7 @@ info:
   title: Document API
   version: 1.0.0
 servers:
-- url: http://localhost:8081
+- url: http://localhost:8080
   description: Auto generated value
-- url: http://0.0.0.0:8081
+- url: http://0.0.0.0:8080
   description: Auto generated value

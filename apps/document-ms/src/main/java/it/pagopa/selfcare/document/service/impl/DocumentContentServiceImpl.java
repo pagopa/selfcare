@@ -444,6 +444,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         document.setAttachmentName(request.getAttachmentName());
         document.setCreatedAt(LocalDateTime.now());
         document.setUpdatedAt(LocalDateTime.now());
+        document.setRootOnboardingId(request.getOnboardingId());
 
         String signedContractFileName = extractFileName(request.getTemplatePath());
         String filename = String.format("signed_%s", signedContractFileName);
