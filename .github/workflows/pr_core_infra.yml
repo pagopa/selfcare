@@ -57,7 +57,7 @@ jobs:
       dir: './infra/core'
       # Optional parameters
       env_vars: ""
-      use_private_agent: true
-      # override_github_environment: pe-prod
-      use_labels: true
-      override_labels: ""
+      # use_private_agent: true
+      # # override_github_environment: pe-prod
+      # use_labels: true
+      # override_labels: ""
