@@ -69,7 +69,7 @@ jobs:
 
       - name: Run Integration Tests
         id: int_tests
-        working-directory: apps/onboarding-bff/app
+        working-directory: apps/onboarding-bff
         run: mvn test -Dtest=it.pagopa.selfcare.onboarding.CucumberSuite -Dsurefire.failIfNoSpecifiedTests=false
         shell: bash
         env:
@@ -80,4 +80,4 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: cucumber-report
-          path: apps/onboarding-bff/app/target/cucumber-report/cucumber.html
+          path: apps/onboarding-bff/target/cucumber-report/cucumber.html

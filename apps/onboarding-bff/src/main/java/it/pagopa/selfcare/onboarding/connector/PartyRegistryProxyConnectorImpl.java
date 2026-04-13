@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.onboarding.connector;
 
-import io.github.resilience4j.retry.annotation.Retry;
+import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.onboarding.connector.api.PartyRegistryProxyConnector;
@@ -55,7 +55,7 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
 
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public MatchInfoResult matchInstitutionAndUser(String externalInstitutionId, String taxCode) {
         log.trace("matchInstitutionAndUser start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "matchInstitutionAndUser taxCode = {}", taxCode);
@@ -68,7 +68,7 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public InstitutionLegalAddressData getInstitutionLegalAddress(String externalInstitutionId) {
         log.trace("getInstitutionLegalAddress start");
         log.debug("getInstitutionLegalAddress externalInstitutionId = {}", externalInstitutionId);
@@ -80,7 +80,7 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public HomogeneousOrganizationalArea getAooById(String aooCode) {
         log.trace("getAooById start");
         log.debug("getAooById aooCode = {}", aooCode);
@@ -92,7 +92,7 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public OrganizationUnit getUoById(String uoCode) {
         log.trace("getUoById start");
         log.debug("getUoById uoCode = {}", uoCode);
@@ -104,7 +104,7 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public GeographicTaxonomies getExtById(String code){
         log.trace("getExtById start");
         log.debug("getExtById code = {}", code);
@@ -116,7 +116,7 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public InstitutionProxyInfo getInstitutionProxyById(String externalId) {
         log.trace("getInstitutionProxyById start");
         log.debug("getInstitutionProxyById externalId = {}", externalId);

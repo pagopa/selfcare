@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.onboarding.connector;
 
-import io.github.resilience4j.retry.annotation.Retry;
+import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import it.pagopa.selfcare.onboarding.common.InstitutionPaSubunitType;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
@@ -54,7 +54,7 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public void onboarding(OnboardingData onboardingData) {
         if (onboardingData.getInstitutionType() == InstitutionType.PA) {
             msOnboardingApiClient._onboardingPa(onboardingMapper.toOnboardingPaRequest(onboardingData));
@@ -86,50 +86,50 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public void onboardingUsers(OnboardingData onboardingData) {
         msOnboardingApiClient._onboardingUsers(onboardingMapper.toOnboardingUsersRequest(onboardingData));
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public void onboardingUsersAggregator(OnboardingData onboardingData) {
         msOnboardingApiClient._onboardingUsersAggregator(onboardingMapper.toOnboardingUsersRequest(onboardingData));
     }
 
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public void onboardingCompany(OnboardingData onboardingData) {
         msOnboardingApiClient._onboardingPgCompletion(onboardingMapper.toOnboardingPgRequest(onboardingData));
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public void onboardingTokenComplete(String onboardingId, UploadedFile contract) {
         msOnboardingInternalApiClient._completeOnboardingUsingPUT(onboardingId, contract);
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public void onboardingUsersComplete(String onboardingId, UploadedFile contract) {
         msOnboardingApiClient._completeOnboardingUser(onboardingId, contract);
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public void onboardingPending(String onboardingId) {
         msOnboardingApiClient._getOnboardingPending(onboardingId);
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public void approveOnboarding(String onboardingId) {
         msOnboardingApiClient._approve(onboardingId);
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public void rejectOnboarding(String onboardingId, String reason) {
         ReasonRequest reasonForReject = new ReasonRequest();
         if (reason != null && !reason.isBlank()) {
@@ -139,45 +139,45 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public OnboardingData getOnboarding(String onboardingId) {
         OnboardingGet onboardingGet = msOnboardingApiClient._getById(onboardingId);
         return onboardingMapper.toOnboardingData(onboardingGet);
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public OnboardingData getOnboardingWithUserInfo(String onboardingId) {
         OnboardingGet onboardingGet = msOnboardingApiClient._getByIdWithUserInfo(onboardingId);
         return onboardingMapper.toOnboardingData(onboardingGet);
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getContract(String onboardingId) {
         return msOnboardingTokenApiClient._getContract(onboardingId);
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getTemplateAttachment(String onboardingId, String filename) {
         return msOnboardingTokenApiClient._getTemplateAttachment(onboardingId, filename);
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getAttachment(String onboardingId, String filename) {
         return msOnboardingTokenApiClient._getAttachment(onboardingId, filename);
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getAggregatesCsv(String onboardingId, String productId) {
         return msOnboardingAggregatesApiClient._getAggregatesCsv(onboardingId, productId);
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public void onboardingPaAggregation(OnboardingData onboardingData) {
         msOnboardingApiClient._onboardingPaAggregation(onboardingMapper.toOnboardingPaAggregationRequest(onboardingData));
     }
@@ -201,7 +201,7 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
     }
 
     @Override
-    @Retry(name = "retryTimeout")
+    @Retry(maxRetries = 2, delay = 5000)
     public boolean checkManager(CheckManagerData checkManagerData) {
         return Objects.requireNonNull(msOnboardingApiClient._checkManager(onboardingMapper.toCheckManagerRequest(checkManagerData))).getResponse();
     }
