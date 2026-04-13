@@ -134,4 +134,4 @@ crash.log
 **/*.key
 **/*.p12
 **/*.pfx
-**/secrets.json
+**/secrets.jsonapps/onboarding-bff/src/test/resources/storagedata/**
