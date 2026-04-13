@@ -156,6 +156,7 @@ module "cdn" {
   instance_number = "01"
 
   host_name            = "${local.dns_zone_prefix}.${local.external_domain}"
+  dns_zone_prefix_ar   = local.dns_zone_prefix_ar
   dns_zone_prefix      = local.dns_zone_prefix
   external_domain      = local.external_domain
   robots_indexed_paths = local.robots_indexed_paths
@@ -167,6 +168,7 @@ module "cdn" {
   key_vault_name                  = module.key_vault.key_vault_name
   key_vault_resource_group_name   = module.key_vault.key_vault_resource_group_name
   cdn_certificate_name            = replace("${local.dns_zone_prefix}.${local.external_domain}", ".", "-")
+  cdn_certificate_name_ar         = local.cdn_certificate_name_ar
   vnet_name                       = module.network.vnet_name
   rg_vnet_name                    = module.network.rg_vnet_name
   cidr_subnet_cdn                 = local.cidr_subnet_cdn
@@ -177,26 +179,26 @@ module "cdn" {
 # TMP OLD Storage Account
 ###############################################################################
 
-data "azurerm_storage_account" "old_cdn_storage_account" {
-  name                = "${local.prefix}${local.env_short}checkoutsa"
-  resource_group_name = "${local.prefix}-${local.env_short}-checkout-fe-rg"
-}
+# data "azurerm_storage_account" "old_cdn_storage_account" {
+#   name                = "${local.prefix}${local.env_short}checkoutsa"
+#   resource_group_name = "${local.prefix}-${local.env_short}-checkout-fe-rg"
+# }
 
-resource "null_resource" "cdn_storage_copy" {
-  for_each = toset(["$web", "selc-${local.env_short}-product", "selc-openapi"])
+# resource "null_resource" "cdn_storage_copy" {
+#   for_each = toset(["$web", "selc-${local.env_short}-product", "selc-openapi"])
 
-  provisioner "local-exec" {
-    command = <<EOT
-        az storage blob copy start-batch \
-        --account-name "${module.cdn.storage_name}" \
-        --account-key "${module.cdn.storage_primary_access_key}" \
-        --destination-container '${each.value}' \
-        --source-account-name "${data.azurerm_storage_account.old_cdn_storage_account.name}" \
-        --source-account-key "${data.azurerm_storage_account.old_cdn_storage_account.primary_access_key}" \
-        --source-container '${each.value}'
-    EOT
-  }
-}
+#   provisioner "local-exec" {
+#     command = <<EOT
+#         az storage blob copy start-batch \
+#         --account-name "${module.cdn.storage_name}" \
+#         --account-key "${module.cdn.storage_primary_access_key}" \
+#         --destination-container '${each.value}' \
+#         --source-account-name "${data.azurerm_storage_account.old_cdn_storage_account.name}" \
+#         --source-account-key "${data.azurerm_storage_account.old_cdn_storage_account.primary_access_key}" \
+#         --source-container '${each.value}'
+#     EOT
+#   }
+# }
 
 ###############################################################################
 # monitor (action groups, web tests, alerts)

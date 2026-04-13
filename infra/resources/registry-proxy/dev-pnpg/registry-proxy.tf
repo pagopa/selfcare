@@ -2,7 +2,18 @@
 # GLOBAL VARIABLES
 ###############################################################################
 module "local" {
-  source = "../../_modules/local-dev-pnpg"
+  source = "../../_modules/local-env"
+
+  env       = "dev"
+  env_short = "d"
+  domain    = "pnpg"
+
+  dns_zone_prefix                = "pnpg.dev.selfcare"
+  api_dns_zone_prefix            = "api-pnpg.dev.selfcare"
+  private_dns_name_domain        = "blackhill-644148c0.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-d-pnpg-cae-cp"
+  ca_resource_group_name         = "selc-d-container-app-rg"
+  container_app_min_replicas     = 0
 }
 locals {
   # ca_name = "selc-${module.local.config.env_short}-party-reg-proxy-ca"
@@ -53,7 +64,7 @@ locals {
 
   registry_proxy_app_settings = [
     {
-      name = "JAVA_TOOL_OPTIONS"
+      name  = "JAVA_TOOL_OPTIONS"
       value = "-javaagent:applicationinsights-agent.jar -XX:MaxRAMPercentage=75.0"
     },
     {

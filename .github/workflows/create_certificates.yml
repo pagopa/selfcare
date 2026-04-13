@@ -5,20 +5,28 @@ on:
     - cron: "0 2 * * 1,3"
   workflow_dispatch:
     inputs:
+      api_prefix:
+        type: choice
+        description: API Prefix
+        options:
+          - "true"
+          - "false"
+          # - prod
+        required: true
       environment:
         type: choice
         description: Environment
         options:
-          # - dev
+          - dev
           - uat
-          # - prod
+          - prod
         required: true
       target:
         type: choice
         description: Target type
         options:
           - areariservata
-          # - selfcare
+          - selfcare
           # - pnpg
         required: true
         default: areariservata
@@ -37,6 +45,7 @@ jobs:
     outputs:
       prefix: ${{ steps.prefix.outputs.value }}
       domain: ${{ steps.domain.outputs.value }}
+      api_prefix: ${{ steps.api_prefix.outputs.value }}
     steps:
       - name: Set env prefix
         id: prefix
@@ -54,6 +63,17 @@ jobs:
           fi
         env:
           ENV: ${{ inputs.environment }}
+      
+      - name: Set api prefix
+        id: api_prefix
+        run: |
+          if [[ "${{ inputs.api_prefix }}" == "true" ]]; then
+            echo "value=api." >> "$GITHUB_OUTPUT"
+          else
+            echo "value=" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          ENV: ${{ inputs.api_prefix }}
 
   renew-certificate:
     needs: setup
