@@ -320,8 +320,8 @@ module "storage" {
   location  = local.location
   tags      = local.tags
 
-  adgroup_developers_object_id = module.key_vault.adgroup_developers_object_id
-  adgroup_admin_object_id      = module.key_vault.adgroup_admin_object_id
+  adgroup_developers_object_id = local.adgroup_developers_object_id
+  adgroup_admin_object_id      = local.adgroup_admin_object_id
 }
 
 ###############################################################################
