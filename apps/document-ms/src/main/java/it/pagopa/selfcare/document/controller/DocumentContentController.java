@@ -235,6 +235,18 @@ public class DocumentContentController {
     }
 
     @Operation(
+            summary = "Retrieve aggregates csv for a given onboarding and product",
+            description = "Downloads the aggregates csv associated with the specified onboarding ID and product."
+    )
+    @GET
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Path("/aggregates-csv/{onboardingId}/products/{productId}")
+    public Uni<RestResponse<File>> getAggregatesCsv(@PathParam(value = "onboardingId") String onboardingId,
+                                                    @PathParam(value = "productId") String productId){
+        return documentContentService.retrieveAggregatesCsv(onboardingId, productId);
+    }
+
+    @Operation(
             summary = "Upload signed contract",
             description = "Uploads a signed contract for the specified onboarding ID and updates the document metadata."
     )

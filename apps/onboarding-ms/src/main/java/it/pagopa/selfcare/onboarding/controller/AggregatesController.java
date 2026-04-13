@@ -64,17 +64,5 @@ public class AggregatesController {
         return aggregatesService.validateSendAggregatesCsv(file);
     }
 
-    @Operation(
-            summary = "Retrieve aggregates csv for a given onboarding and product",
-            description = "Downloads the aggregates csv associated with the specified onboarding ID and product."
-    )
-    @GET
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Path("/csv/{onboardingId}/products/{productId}")
-    public Uni<RestResponse<File>> getAggregatesCsv(@PathParam(value = "onboardingId") String onboardingId,
-                                                    @PathParam(value = "productId") String productId){
-        return aggregatesService.retrieveAggregatesCsv(onboardingId, productId);
-    }
-
 
 }
