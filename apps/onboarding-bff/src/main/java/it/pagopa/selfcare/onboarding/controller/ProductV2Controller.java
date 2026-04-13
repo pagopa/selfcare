@@ -1,8 +1,7 @@
 package it.pagopa.selfcare.onboarding.controller;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiParam;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import it.pagopa.selfcare.onboarding.client.model.product.OriginResult;
 import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.onboarding.model.OriginResponse;
@@ -20,7 +19,7 @@ import org.owasp.encoder.Encode;
 @ApplicationScoped
 @Path("/v2/product")
 @Produces(MediaType.APPLICATION_JSON)
-@Api(tags = "product-ms")
+@Tag(name = "product-ms")
 public class ProductV2Controller {
 
     private final ProductService productService;
@@ -34,10 +33,12 @@ public class ProductV2Controller {
     @GET
     @Operation(summary = "${swagger.product.ms.api.getOrigins.summary}",
             description = "${swagger.product.ms.api.getOrigins.description}", operationId = "getOrigins")
-    public OriginResponse getOrigins(@ApiParam("${swagger.onboarding.institutions.model.institutionType}")
+    public OriginResponse getOrigins(@Parameter(description = "${swagger.onboarding.institutions.model.institutionType}")
                                       @QueryParam("productId")
                                       String productId) {
         log.trace("getOrigins start");
+...
+
         String productIdSanitized = Encode.forJava(productId);
         log.debug("getOrigins productId = {}", productIdSanitized);
         OriginResult originEntries = productService.getOrigins(productId);

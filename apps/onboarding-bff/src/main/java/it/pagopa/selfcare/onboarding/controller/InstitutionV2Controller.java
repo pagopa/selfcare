@@ -1,11 +1,11 @@
 package it.pagopa.selfcare.onboarding.controller;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiParam;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
@@ -40,7 +40,7 @@ import java.util.List;
 @Path("/v2/institutions")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Api(tags = "institutions")
+@Tag(name = "institutions")
 public class InstitutionV2Controller {
 
     private final InstitutionService institutionService;
@@ -108,19 +108,19 @@ public class InstitutionV2Controller {
     @GET
     @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.subunit}",
             description = "${swagger.onboarding.institutions.api.onboarding.subunit}", operationId = "v2GetInstitutionByFilters")
-    public List<InstitutionResource> getInstitution(@ApiParam("${swagger.onboarding.institutions.model.productFilter}")
+    public List<InstitutionResource> getInstitution(@Parameter(description = "${swagger.onboarding.institutions.model.productFilter}")
                                                     @QueryParam("productId")
                                                     String productId,
-                                                    @ApiParam("${swagger.onboarding.institutions.model.taxCode}")
+                                                    @Parameter(description = "${swagger.onboarding.institutions.model.taxCode}")
                                                     @QueryParam("taxCode")
                                                     String taxCode,
-                                                    @ApiParam("${swagger.onboarding.institutions.model.origin}")
+                                                    @Parameter(description = "${swagger.onboarding.institutions.model.origin}")
                                                     @QueryParam("origin")
                                                     String origin,
-                                                    @ApiParam("${swagger.onboarding.institutions.model.originId}")
+                                                    @Parameter(description = "${swagger.onboarding.institutions.model.originId}")
                                                     @QueryParam("originId")
                                                     String originId,
-                                                    @ApiParam("${swagger.onboarding.institutions.model.subunitCode}")
+                                                    @Parameter(description = "${swagger.onboarding.institutions.model.subunitCode}")
                                                     @QueryParam("subunitCode")
                                                     String subunitCode) {
         log.trace("getInstitution start");

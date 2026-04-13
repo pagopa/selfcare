@@ -1,8 +1,11 @@
 package it.pagopa.selfcare.onboarding.controller;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiParam;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
@@ -47,7 +50,7 @@ import org.owasp.encoder.Encode;
 @Path("/v2/tokens")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Api(tags = "tokens")
+@Tag(name = "tokens")
 public class TokenV2Controller {
 
     private static final String ACCESS_CONTROL_EXPOSE_HEADERS = "Access-Control-Expose-Headers";
@@ -68,7 +71,7 @@ public class TokenV2Controller {
     @Path("/{onboardingId}/complete")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(description = "${swagger.tokens.complete}", summary = "${swagger.tokens.complete}", operationId = "completeUsingPOST")
-    public Response complete(@ApiParam("${swagger.tokens.onboardingId}")
+    public Response complete(@Parameter(description = "${swagger.tokens.onboardingId}")
                              @PathParam("onboardingId") String onboardingId,
                              @RestForm("contract") FileUpload contract) {
         log.trace("complete Token start");
@@ -86,7 +89,7 @@ public class TokenV2Controller {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(description = "${swagger.tokens.completeOnboardingUsers}", summary = "${swagger.tokens.completeOnboardingUsers}",
             operationId = "completeOnboardingUsersUsingPOST")
-    public Response completeOnboardingUsers(@ApiParam("${swagger.tokens.onboardingId}")
+    public Response completeOnboardingUsers(@Parameter(description = "${swagger.tokens.onboardingId}")
                                             @PathParam("onboardingId") String onboardingId,
                                             @RestForm("contract") FileUpload contract) {
         log.trace("complete Onboarding Users start");
@@ -103,7 +106,7 @@ public class TokenV2Controller {
     @Path("/{onboardingId}/verify")
     @Operation(description = "${swagger.tokens.verify}",
             summary = "${swagger.tokens.verify}", operationId = "verifyOnboardingUsingPOST")
-    public OnboardingVerify verifyOnboarding(@ApiParam("${swagger.tokens.onboardingId}") @PathParam("onboardingId") String onboardingId) {
+    public OnboardingVerify verifyOnboarding(@Parameter(description = "${swagger.tokens.onboardingId}") @PathParam("onboardingId") String onboardingId) {
         String sanitizedOnboardingId = onboardingId.replace("\n", "").replace("\r", "");
         log.debug("Verify token identified with {}", sanitizedOnboardingId);
         final OnboardingData onboardingData = tokenService.verifyOnboarding(sanitizedOnboardingId);
@@ -117,7 +120,7 @@ public class TokenV2Controller {
     @Path("/{onboardingId}")
     @Operation(summary = "${swagger.tokens.retrieveOnboardingRequest}",
             description = "${swagger.tokens.retrieveOnboardingRequest}", operationId = "retrieveOnboardingRequestUsingGET")
-    public OnboardingRequestResource retrieveOnboardingRequest(@ApiParam("${swagger.tokens.onboardingId}")
+    public OnboardingRequestResource retrieveOnboardingRequest(@Parameter(description = "${swagger.tokens.onboardingId}")
                                                                @PathParam("onboardingId")
                                                                String onboardingId) {
         log.trace("retrieveOnboardingRequest start");
@@ -134,7 +137,7 @@ public class TokenV2Controller {
     @Path("/{onboardingId}/approve")
     @Operation(description = "${swagger.tokens.approveOnboardingRequest}",
             summary = "${swagger.tokens.approveOnboardingRequest}", operationId = "approveOnboardingUsingPOST")
-    public void approveOnboarding(@ApiParam("${swagger.tokens.onboardingId}")
+    public void approveOnboarding(@Parameter(description = "${swagger.tokens.onboardingId}")
                                   @PathParam("onboardingId") String onboardingId) {
         log.debug("approve onboarding identified with {}", onboardingId);
         tokenService.approveOnboarding(onboardingId);
@@ -144,7 +147,7 @@ public class TokenV2Controller {
     @Path("/{onboardingId}/reject")
     @Operation(summary = "Service to reject a specific onboarding request",
             description = "Service to reject a specific onboarding request", operationId = "rejectOnboardingUsingPOST")
-    public void rejectOnboarding(@ApiParam("${swagger.tokens.onboardingId}")
+    public void rejectOnboarding(@Parameter(description = "${swagger.tokens.onboardingId}")
                                  @PathParam("onboardingId") String onboardingId,
                                  ReasonForRejectDto reasonForRejectDto) {
         log.debug("reject onboarding identified with {}", onboardingId);
@@ -155,7 +158,7 @@ public class TokenV2Controller {
     @Path("/{onboardingId}/complete")
     @Operation(summary = "${swagger.tokens.complete}",
             description = "${swagger.tokens.complete}", operationId = "deleteUsingDELETE")
-    public Response deleteOnboarding(@ApiParam("${swagger.tokens.tokenId}")
+    public Response deleteOnboarding(@Parameter(description = "${swagger.tokens.tokenId}")
                                      @PathParam("onboardingId") String onboardingId) {
         log.trace("delete Token start");
         String sanitizedOnboardingId = onboardingId.replace("\n", "").replace("\r", "");
@@ -169,7 +172,7 @@ public class TokenV2Controller {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Operation(summary = "${swagger.tokens.getContract}",
             description = "${swagger.tokens.getContract}", operationId = "getContractUsingGET")
-    public Response getContract(@ApiParam("${swagger.tokens.onboardingId}")
+    public Response getContract(@Parameter(description = "${swagger.tokens.onboardingId}")
                                 @PathParam("onboardingId")
                                 String onboardingId) {
         log.trace("getContract start");
@@ -183,10 +186,10 @@ public class TokenV2Controller {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Operation(summary = "${swagger.tokens.getTemplateAttachment}",
             description = "${swagger.tokens.getTemplateAttachment}", operationId = "getTemplateAttachmentUsingGET")
-    public Response getTemplateAttachment(@ApiParam("${swagger.tokens.onboardingId}")
+    public Response getTemplateAttachment(@Parameter(description = "${swagger.tokens.onboardingId}")
                                           @PathParam("onboardingId")
                                           String onboardingId,
-                                          @ApiParam("${swagger.tokens.attachmentName}")
+                                          @Parameter(description = "${swagger.tokens.attachmentName}")
                                           @QueryParam("name") String filename) {
         log.trace("getTemplateAttachment start");
         String sanitizedFilename = filename.replaceAll(SANITIZIER, "_");
@@ -200,10 +203,10 @@ public class TokenV2Controller {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Operation(summary = "${swagger.tokens.getAttachment}",
             description = "${swagger.tokens.getAttachment}", operationId = "getAttachmentUsingGET")
-    public Response getAttachment(@ApiParam("${swagger.tokens.onboardingId}")
+    public Response getAttachment(@Parameter(description = "${swagger.tokens.onboardingId}")
                                   @PathParam("onboardingId")
                                   String onboardingId,
-                                  @ApiParam("${swagger.tokens.attachmentName}")
+                                  @Parameter(description = "${swagger.tokens.attachmentName}")
                                   @QueryParam("name") String filename) {
         log.trace("getAttachment start");
         String sanitizedFilename = filename.replaceAll(SANITIZIER, "_");
@@ -216,7 +219,7 @@ public class TokenV2Controller {
     @Path("/{onboardingId}/attachment/status")
     @Operation(summary = "${swagger.tokens.headAttachment}",
             description = "${swagger.tokens.headAttachment}", operationId = "headAttachmentUsingGET")
-    public Response headAttachment(@ApiParam("${swagger.tokens.onboardingId}")
+    public Response headAttachment(@Parameter(description = "${swagger.tokens.onboardingId}")
                                    @PathParam("onboardingId") String onboardingId,
                                    @NotNull @QueryParam("name") String attachmentName) {
         log.trace("headAttachment start");
@@ -231,7 +234,7 @@ public class TokenV2Controller {
     @Path("/{onboardingId}/attachment")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(description = "${swagger.tokens.uploadAttachment}", summary = "${swagger.tokens.uploadAttachment}", operationId = "uploadAttachmentUsingPOST")
-    public Response uploadAttachment(@ApiParam("${swagger.tokens.onboardingId}")
+    public Response uploadAttachment(@Parameter(description = "${swagger.tokens.onboardingId}")
                                      @PathParam("onboardingId") String onboardingId,
                                      @QueryParam("name") String attachmentName,
                                      @RestForm("file") FileUpload attachment) {
@@ -250,9 +253,9 @@ public class TokenV2Controller {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Operation(summary = "${swagger.tokens.getAggregatesCsv}",
             description = "${swagger.tokens.getAggregatesCsv}", operationId = "getAggregatesCsvUsingGET")
-    public Response getAggregatesCsv(@ApiParam("${swagger.tokens.onboardingId}") @PathParam("onboardingId")
+    public Response getAggregatesCsv(@Parameter(description = "${swagger.tokens.onboardingId}") @PathParam("onboardingId")
                                      String onboardingIdInput,
-                                     @ApiParam("${swagger.tokens.productId}")
+                                     @Parameter(description = "${swagger.tokens.productId}")
                                      @PathParam("productId")
                                      String productIdInput, @Context Principal principal) {
 

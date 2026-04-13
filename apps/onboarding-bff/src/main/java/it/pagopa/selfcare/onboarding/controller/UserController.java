@@ -1,10 +1,10 @@
 package it.pagopa.selfcare.onboarding.controller;
 
-import io.swagger.annotations.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.onboarding.client.model.user.UserId;
@@ -34,7 +34,7 @@ import org.owasp.encoder.Encode;
 @Path("/v1/users")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Api(tags = "user")
+@Tag(name = "user")
 public class UserController {
 
     private final UserService userService;

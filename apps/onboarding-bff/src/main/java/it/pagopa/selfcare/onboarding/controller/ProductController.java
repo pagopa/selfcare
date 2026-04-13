@@ -1,8 +1,7 @@
 package it.pagopa.selfcare.onboarding.controller;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiParam;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.service.ProductAzureService;
 import it.pagopa.selfcare.onboarding.model.ProductResource;
@@ -24,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @ApplicationScoped
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
-@Api(tags = "product")
+@Tag(name = "product")
 public class ProductController {
 
     private final ProductAzureService productAzureService;
@@ -39,13 +38,15 @@ public class ProductController {
     @Path("/v1/product/{id}")
     @Operation(summary = "${swagger.onboarding.product.api.getProduct}",
             description = "${swagger.onboarding.product.api.getProduct}", operationId = "getProductUsingGET")
-    public ProductResource getProduct(@ApiParam("${swagger.onboarding.product.model.id}")
+    public ProductResource getProduct(@Parameter(description = "${swagger.onboarding.product.model.id}")
                                       @PathParam("id")
                                       String id,
-                                      @ApiParam("${swagger.onboarding.institutions.model.institutionType}")
+                                      @Parameter(description = "${swagger.onboarding.institutions.model.institutionType}")
                                       @QueryParam("institutionType")
                                       Optional<InstitutionType> institutionType) {
         log.trace("getProduct start");
+...
+
         log.debug("getProduct id = {}, institutionType = {}", id, institutionType);
         Product product = productAzureService.getProduct(id, institutionType.orElse(null));
         ProductResource resource = productMapper.toResource(product);
