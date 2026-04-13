@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.controller;
 
+import io.quarkus.security.identity.SecurityIdentity;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,8 +22,8 @@ import it.pagopa.selfcare.onboarding.model.OnboardingVerify;
 import it.pagopa.selfcare.onboarding.controller.request.ReasonForRejectDto;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingResourceMapper;
 import it.pagopa.selfcare.onboarding.util.FileValidationUtils;
-import it.pagopa.selfcare.onboarding.util.PrincipalUtils;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -33,13 +34,11 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.security.Principal;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
@@ -59,6 +58,9 @@ public class TokenV2Controller {
     private final UserInstitutionService userInstitutionService;
     private final OnboardingResourceMapper onboardingResourceMapper;
     private static final String SANITIZIER = "[^a-zA-Z0-9-_]";
+
+    @Inject
+    SecurityIdentity securityIdentity;
 
     public TokenV2Controller(TokenService tokenService, UserService userService, UserInstitutionService userInstitutionService, OnboardingResourceMapper onboardingResourceMapper) {
         this.tokenService = tokenService;
@@ -257,9 +259,9 @@ public class TokenV2Controller {
                                      String onboardingIdInput,
                                      @Parameter(description = "${swagger.tokens.productId}")
                                      @PathParam("productId")
-                                     String productIdInput, @Context Principal principal) {
+                                     String productIdInput) {
 
-        SelfCareUser selfCareUser = PrincipalUtils.getSelfCareUser(principal);
+        SelfCareUser selfCareUser = (SelfCareUser) securityIdentity.getPrincipal();
         log.trace("getAggregatesCsv start");
         String onboardingId = Encode.forJava(onboardingIdInput);
         String productId = Encode.forJava(productIdInput);

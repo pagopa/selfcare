@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.controller;
 import static it.pagopa.selfcare.commons.base.utils.ProductId.PROD_FD;
 import static it.pagopa.selfcare.commons.base.utils.ProductId.PROD_FD_GARANTITO;
 
+import io.quarkus.security.identity.SecurityIdentity;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,14 +22,12 @@ import it.pagopa.selfcare.onboarding.controller.request.*;
 import it.pagopa.selfcare.onboarding.controller.response.*;
 import it.pagopa.selfcare.onboarding.model.error.Problem;
 import it.pagopa.selfcare.onboarding.mapper.*;
-import it.pagopa.selfcare.onboarding.util.PrincipalUtils;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.security.Principal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -52,6 +51,9 @@ public class InstitutionController {
     private static final String ONBOARDING_START = "onboarding start";
     private static final String ONBOARDING_END = "onboarding end";
     private final GeographicTaxonomyMapper geographicTaxonomyMapper;
+
+    @Inject
+    SecurityIdentity securityIdentity;
 
     public InstitutionController(InstitutionService institutionService,
                                  OnboardingResourceMapper onboardingResourceMapper,
@@ -170,10 +172,9 @@ public class InstitutionController {
             description = "${swagger.onboarding.institutions.api.getInstitutions}", operationId = "getInstitutionsUsingGET")
     public List<InstitutionResource> getInstitutions(@Parameter(description = "${swagger.onboarding.institutions.model.productFilter}")
                                                      @QueryParam("productId")
-                                                     String productId,
-                                                     @Context Principal principal) {
+                                                     String productId) {
         log.trace("getInstitutions start");
-        SelfCareUser selfCareUser = PrincipalUtils.getSelfCareUser(principal);
+        SelfCareUser selfCareUser = (SelfCareUser) securityIdentity.getPrincipal();
 
         List<InstitutionResource> institutionResources = institutionService.getInstitutions(productId, selfCareUser.getId())
                 .stream()
@@ -252,10 +253,10 @@ public class InstitutionController {
     @Path("/from-infocamere/")
     @Operation(summary = "${swagger.onboarding.institutions.api.getInstitutionsByUser}",
             description = "${swagger.onboarding.institutions.api.getInstitutionsByUser}", operationId = "getInstitutionsFromInfocamereUsingGET")
-    public InstitutionResourceIC getInstitutionsFromInfocamere(@Context Principal principal) {
+    public InstitutionResourceIC getInstitutionsFromInfocamere() {
         log.trace("getInstitutionsFromInfocamere start");
 
-        SelfCareUser selfCareUser = PrincipalUtils.getSelfCareUser(principal);
+        SelfCareUser selfCareUser = (SelfCareUser) securityIdentity.getPrincipal();
 
         InstitutionInfoIC institutionInfoIC = institutionService.getInstitutionsByUser(selfCareUser.getFiscalCode());
         InstitutionResourceIC institutionResourceIC = institutionMapper.toResource(institutionInfoIC);

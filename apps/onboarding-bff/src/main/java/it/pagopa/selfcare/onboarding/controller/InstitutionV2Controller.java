@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.controller;
 
+import io.quarkus.security.identity.SecurityIdentity;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -18,11 +19,10 @@ import it.pagopa.selfcare.onboarding.model.error.Problem;
 import it.pagopa.selfcare.onboarding.mapper.InstitutionResourceMapper;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingResourceMapper;
 import it.pagopa.selfcare.onboarding.util.FileValidationUtils;
-import it.pagopa.selfcare.onboarding.util.PrincipalUtils;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.io.IOException;
@@ -33,7 +33,6 @@ import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.apache.commons.lang3.StringUtils;
 import org.owasp.encoder.Encode;
 
-import java.security.Principal;
 import java.util.List;
 
 @Slf4j
@@ -49,6 +48,9 @@ public class InstitutionV2Controller {
     private final InstitutionResourceMapper institutionMapper;
     private static final String ONBOARDING_START = "onboarding start";
     private static final String ONBOARDING_END = "onboarding end";
+
+    @Inject
+    SecurityIdentity securityIdentity;
 
     public InstitutionV2Controller(InstitutionService institutionService,
                                    OnboardingResourceMapper onboardingResourceMapper,
@@ -91,10 +93,10 @@ public class InstitutionV2Controller {
     @Path("/company/onboarding")
     @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.subunit}",
             description = "${swagger.onboarding.institutions.api.onboarding.subunit}", operationId = "institutionOnboardingCompany")
-    public Response onboarding(@Valid CompanyOnboardingDto request, @Context Principal principal) {
+    public Response onboarding(@Valid CompanyOnboardingDto request) {
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", Encode.forJava(request.toString()));
-        SelfCareUser selfCareUser = PrincipalUtils.getSelfCareUser(principal);
+        SelfCareUser selfCareUser = (SelfCareUser) securityIdentity.getPrincipal();
         institutionService.onboardingCompanyV2(onboardingResourceMapper.toEntity(request), selfCareUser.getFiscalCode());
         log.trace(ONBOARDING_END);
         return Response.status(Response.Status.CREATED).build();
@@ -157,11 +159,10 @@ public class InstitutionV2Controller {
     @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.verifyManager}",
             description = "${swagger.onboarding.institutions.api.onboarding.verifyManager}", operationId = "verifyManagerUsingPOST")
     public VerifyManagerResponse verifyManager(
-            @Valid VerifyManagerRequest request,
-            @Context Principal principal
+            @Valid VerifyManagerRequest request
     ) {
         log.trace("verifyManager start");
-        SelfCareUser selfCareUser = PrincipalUtils.getSelfCareUser(principal);
+        SelfCareUser selfCareUser = (SelfCareUser) securityIdentity.getPrincipal();
 
         VerifyManagerResponse response = onboardingResourceMapper.toManagerVerification(institutionService.verifyManager(selfCareUser.getFiscalCode(), request.getCompanyTaxCode()));
         log.trace("verifyManager end");

@@ -2,12 +2,10 @@ package it.pagopa.selfcare.onboarding.controller;
 
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.http.ContentType;
-import it.pagopa.selfcare.onboarding.service.ProductAzureService;
+import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +22,7 @@ import static org.mockito.Mockito.when;
 class ProductControllerTest {
 
     @InjectMock
-    ProductAzureService productAzureService;
+    ProductService productService;
 
     @Test
     void getProduct() {
@@ -32,7 +30,7 @@ class ProductControllerTest {
         Product product = new Product();
         product.setId(productId);
 
-        when(productAzureService.getProduct(any(), any()))
+        when(productService.getProduct(any(), any()))
                 .thenReturn(product);
 
         given()
@@ -49,7 +47,7 @@ class ProductControllerTest {
         Product product = new Product();
         product.setId("id");
 
-        when(productAzureService.getProducts(anyBoolean()))
+        when(productService.getProducts(anyBoolean()))
                 .thenReturn(List.of(product));
 
         given()
@@ -71,7 +69,7 @@ class ProductControllerTest {
         userContractMappings.put(Product.CONTRACT_TYPE_DEFAULT, userContract);
         product.setUserContractMappings(userContractMappings);
 
-        when(productAzureService.getProducts(true))
+        when(productService.getProducts(anyBoolean()))
                 .thenReturn(List.of(product));
 
         given()

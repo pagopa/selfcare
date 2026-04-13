@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.onboarding.config;
+package it.pagopa.selfcare.onboarding.conf;
 
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;

@@ -1,26 +1,32 @@
 package it.pagopa.selfcare.onboarding.controller;
 
+import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
-import it.pagopa.selfcare.onboarding.controller.request.CompanyOnboardingDto;
-import it.pagopa.selfcare.onboarding.controller.request.CompanyOnboardingUserDto;
-import it.pagopa.selfcare.onboarding.controller.request.OnboardingProductDto;
-import it.pagopa.selfcare.onboarding.controller.request.VerifyManagerRequest;
+import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.onboarding.service.InstitutionService;
+import it.pagopa.selfcare.onboarding.controller.request.OnboardingProductDto;
+import it.pagopa.selfcare.onboarding.controller.request.CompanyOnboardingDto;
+import it.pagopa.selfcare.onboarding.controller.request.VerifyManagerRequest;
+import it.pagopa.selfcare.onboarding.controller.request.CompanyOnboardingUserDto;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import static io.restassured.RestAssured.given;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 class InstitutionV2ControllerTest {
 
     @InjectMock
     InstitutionService institutionService;
+
+    @InjectMock
+    SecurityIdentity securityIdentity;
 
     @Test
     void onboarding() {
@@ -47,6 +53,10 @@ class InstitutionV2ControllerTest {
         request.setTaxCode("taxCode");
         request.setProductId("productId");
 
+        SelfCareUser selfCareUser = SelfCareUser.builder("id").build();
+        selfCareUser.setFiscalCode("fiscalCode");
+        when(securityIdentity.getPrincipal()).thenReturn(selfCareUser);
+
         given()
                 .contentType(ContentType.JSON)
                 .body(request)
@@ -56,7 +66,7 @@ class InstitutionV2ControllerTest {
                 .statusCode(201);
 
         Mockito.verify(institutionService, Mockito.times(1))
-                .onboardingCompanyV2(any(), any());
+                .onboardingCompanyV2(any(), anyString());
     }
 
     @Test
@@ -94,6 +104,10 @@ class InstitutionV2ControllerTest {
     void verifyManager() {
         VerifyManagerRequest request = new VerifyManagerRequest();
         request.setCompanyTaxCode("taxCode");
+
+        SelfCareUser selfCareUser = SelfCareUser.builder("id").build();
+        selfCareUser.setFiscalCode("fiscalCode");
+        when(securityIdentity.getPrincipal()).thenReturn(selfCareUser);
 
         given()
                 .contentType(ContentType.JSON)

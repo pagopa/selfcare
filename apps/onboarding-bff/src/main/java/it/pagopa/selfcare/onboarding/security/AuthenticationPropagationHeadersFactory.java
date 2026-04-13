@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.onboarding.client.auth;
+package it.pagopa.selfcare.onboarding.security;
 
 import jakarta.ws.rs.core.MultivaluedMap;
 import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;

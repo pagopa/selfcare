@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.controller;
 
+import io.quarkus.security.identity.SecurityIdentity;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,8 +15,8 @@ import it.pagopa.selfcare.onboarding.controller.response.*;
 import it.pagopa.selfcare.onboarding.model.error.Problem;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingResourceMapper;
 import it.pagopa.selfcare.onboarding.mapper.UserResourceMapper;
-import it.pagopa.selfcare.onboarding.util.PrincipalUtils;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -23,10 +24,8 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.security.Principal;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 
@@ -41,6 +40,9 @@ public class UserController {
     private final UserService userService;
     private final OnboardingResourceMapper onboardingResourceMapper;
     private final UserResourceMapper userResourceMapper;
+
+    @Inject
+    SecurityIdentity securityIdentity;
 
     public UserController(UserService userService,
                           OnboardingResourceMapper onboardingResourceMapper,
@@ -132,9 +134,9 @@ public class UserController {
     @Path("/onboarding/{onboardingId}/manager")
     @Operation(summary = "${swagger.onboarding.users.api.check-manager}",
             description = "${swagger.onboarding.users.api.check-manager}", operationId = "getManagerInfo")
-    public ManagerInfoResponse getManagerInfo(@PathParam("onboardingId") String onboardingId, @Context Principal principal) {
+    public ManagerInfoResponse getManagerInfo(@PathParam("onboardingId") String onboardingId) {
         log.trace("getManagerInfo start");
-        SelfCareUser selfCareUser = PrincipalUtils.getSelfCareUser(principal);
+        SelfCareUser selfCareUser = (SelfCareUser) securityIdentity.getPrincipal();
 
         ManagerInfoResponse managerInfoResponse = userResourceMapper.toManagerInfoResponse(userService.getManagerInfo(onboardingId, selfCareUser.getFiscalCode()));
         log.trace("getManagerInfo end");

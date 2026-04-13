@@ -1,16 +1,18 @@
 package it.pagopa.selfcare.onboarding.controller;
 
+import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
+import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.InstitutionUpdate;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.OnboardingData;
-import it.pagopa.selfcare.onboarding.controller.request.ReasonForRejectDto;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionUpdate;
+import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
 import it.pagopa.selfcare.onboarding.service.TokenService;
 import it.pagopa.selfcare.onboarding.service.UserInstitutionService;
 import it.pagopa.selfcare.onboarding.service.UserService;
+import it.pagopa.selfcare.onboarding.controller.request.ReasonForRejectDto;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -31,6 +33,9 @@ class TokenV2ControllerTest {
 
     @InjectMock
     UserInstitutionService userInstitutionService;
+
+    @InjectMock
+    SecurityIdentity securityIdentity;
 
     @Test
     void complete() {
@@ -138,7 +143,7 @@ class TokenV2ControllerTest {
 
     @Test
     void getContract() {
-        BinaryData data = new BinaryData( "contract.pdf", "contract".getBytes());
+        BinaryData data = new BinaryData("contract".getBytes(), "contract.pdf", "application/pdf");
         when(tokenService.getContract(anyString()))
                 .thenReturn(data);
 
@@ -160,12 +165,15 @@ class TokenV2ControllerTest {
         iu.setId("instId");
         data.setInstitutionUpdate(iu);
 
+        SelfCareUser selfCareUser = SelfCareUser.builder("id").build();
+        when(securityIdentity.getPrincipal()).thenReturn(selfCareUser);
+
         when(tokenService.getOnboardingWithUserInfo(anyString()))
                 .thenReturn(data);
         when(userInstitutionService.verifyAllowedUserInstitution(anyString(), anyString(), anyString()))
                 .thenReturn(true);
         when(tokenService.getAggregatesCsv(anyString(), anyString()))
-                .thenReturn(new BinaryData( "agg.csv", "csv".getBytes()));
+                .thenReturn(new BinaryData("csv".getBytes(), "agg.csv", "text/csv"));
 
         given()
                 .pathParam("onboardingId", "42")

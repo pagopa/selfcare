@@ -1,10 +1,12 @@
 package it.pagopa.selfcare.onboarding.controller;
 
+import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
-import it.pagopa.selfcare.onboarding.client.model.user.UserId;
+import it.pagopa.selfcare.commons.base.security.SelfCareUser;
+import it.pagopa.selfcare.onboarding.client.model.UserId;
 import it.pagopa.selfcare.onboarding.service.UserService;
 import it.pagopa.selfcare.onboarding.controller.request.UserDataValidationDto;
 import it.pagopa.selfcare.onboarding.controller.request.OnboardingUserDto;
@@ -25,6 +27,9 @@ class UserControllerTest {
 
     @InjectMock
     UserService userService;
+
+    @InjectMock
+    SecurityIdentity securityIdentity;
 
     @Test
     void validate() {
@@ -84,6 +89,24 @@ class UserControllerTest {
 
         Mockito.verify(userService, Mockito.times(1))
                 .checkManager(any());
+    }
+
+    @Test
+    @TestSecurity(user = "user", roles = {"user"})
+    void getManagerInfo() {
+        SelfCareUser selfCareUser = SelfCareUser.builder("id").build();
+        selfCareUser.setFiscalCode("fiscalCode");
+        when(securityIdentity.getPrincipal()).thenReturn(selfCareUser);
+
+        given()
+                .pathParam("onboardingId", "onboardingId")
+                .when()
+                .get("/v1/users/onboarding/{onboardingId}/manager")
+                .then()
+                .statusCode(200);
+
+        Mockito.verify(userService, Mockito.times(1))
+                .getManagerInfo(Mockito.anyString(), Mockito.anyString());
     }
 
     @Test

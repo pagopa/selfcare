@@ -1,13 +1,15 @@
 package it.pagopa.selfcare.onboarding.controller;
 
+import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
+import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.onboarding.client.model.InstitutionOnboardingData;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.GeographicTaxonomy;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.OnboardingData;
-import it.pagopa.selfcare.onboarding.client.model.institutions.InstitutionInfo;
+import it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomy;
+import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionInfo;
 import it.pagopa.selfcare.onboarding.service.InstitutionService;
 import it.pagopa.selfcare.onboarding.controller.request.OnboardingProductDto;
 import it.pagopa.selfcare.onboarding.controller.request.CompanyOnboardingDto;
@@ -21,13 +23,15 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static it.pagopa.selfcare.commons.utils.TestUtils.mockInstance;
 
 @QuarkusTest
 class InstitutionControllerTest {
 
     @InjectMock
     InstitutionService institutionService;
+
+    @InjectMock
+    SecurityIdentity securityIdentity;
 
     @Test
     void onboarding() {
@@ -114,8 +118,8 @@ class InstitutionControllerTest {
         info.setId("id");
         info.setExternalId("externalId");
 
-        // Note: Principal mocking in QuarkusTest with RestAssured might need custom SecurityIdentity
-        // if PrincipalUtils expects a specific type. For now, testing basic wiring.
+        SelfCareUser selfCareUser = SelfCareUser.builder("id").build();
+        when(securityIdentity.getPrincipal()).thenReturn(selfCareUser);
 
         when(institutionService.getInstitutions(any(), any()))
                 .thenReturn(List.of(info));
