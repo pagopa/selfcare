@@ -32,7 +32,7 @@ jobs:
       id-token: write
       contents: read
     env:
-      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_CI }}
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
