@@ -4,11 +4,11 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
-import it.pagopa.selfcare.onboarding.service.InstitutionService;
-import it.pagopa.selfcare.onboarding.model.OnboardingProductDto;
 import it.pagopa.selfcare.onboarding.model.CompanyOnboardingDto;
-import it.pagopa.selfcare.onboarding.model.VerifyManagerRequest;
 import it.pagopa.selfcare.onboarding.model.CompanyOnboardingUserDto;
+import it.pagopa.selfcare.onboarding.model.OnboardingProductDto;
+import it.pagopa.selfcare.onboarding.model.VerifyManagerRequest;
+import it.pagopa.selfcare.onboarding.service.InstitutionService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

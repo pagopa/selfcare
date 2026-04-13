@@ -37,8 +37,6 @@ public class ProductV2Controller {
                                       @QueryParam("productId")
                                       String productId) {
         log.trace("getOrigins start");
-...
-
         String productIdSanitized = Encode.forJava(productId);
         log.debug("getOrigins productId = {}", productIdSanitized);
         OriginResult originEntries = productService.getOrigins(productId);

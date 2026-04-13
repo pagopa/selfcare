@@ -7,14 +7,12 @@ import io.restassured.http.ContentType;
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.onboarding.InstitutionUpdate;
 import it.pagopa.selfcare.onboarding.client.model.onboarding.OnboardingData;
+import it.pagopa.selfcare.onboarding.model.ReasonForRejectDto;
 import it.pagopa.selfcare.onboarding.service.TokenService;
 import it.pagopa.selfcare.onboarding.service.UserInstitutionService;
 import it.pagopa.selfcare.onboarding.service.UserService;
-import it.pagopa.selfcare.onboarding.model.ReasonForRejectDto;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-
-import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
@@ -140,7 +138,7 @@ class TokenV2ControllerTest {
 
     @Test
     void getContract() {
-        BinaryData data = new BinaryData("contract".getBytes(), "contract.pdf", "application/pdf");
+        BinaryData data = new BinaryData( "contract.pdf", "contract".getBytes());
         when(tokenService.getContract(anyString()))
                 .thenReturn(data);
 
@@ -167,7 +165,7 @@ class TokenV2ControllerTest {
         when(userInstitutionService.verifyAllowedUserInstitution(anyString(), anyString(), anyString()))
                 .thenReturn(true);
         when(tokenService.getAggregatesCsv(anyString(), anyString()))
-                .thenReturn(new BinaryData("csv".getBytes(), "agg.csv", "text/csv"));
+                .thenReturn(new BinaryData( "agg.csv", "csv".getBytes()));
 
         given()
                 .pathParam("onboardingId", "42")

@@ -45,8 +45,6 @@ public class ProductController {
                                       @QueryParam("institutionType")
                                       Optional<InstitutionType> institutionType) {
         log.trace("getProduct start");
-...
-
         log.debug("getProduct id = {}, institutionType = {}", id, institutionType);
         Product product = productAzureService.getProduct(id, institutionType.orElse(null));
         ProductResource resource = productMapper.toResource(product);
