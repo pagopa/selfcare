@@ -26,9 +26,9 @@
     <quarkus.platform.version>3.31.2</quarkus.platform.version>
     <skipITs>true</skipITs>
     <surefire-plugin.version>3.5.4</surefire-plugin.version>
-    <quarkus-openapi-generator.version>2.13.0</quarkus-openapi-generator.version>
+    <quarkus-openapi-generator.version>2.16.0</quarkus-openapi-generator.version>
     <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
-    <selfcare-cucumber-sdk.version>0.1.0</selfcare-cucumber-sdk.version>
+    <selfcare-cucumber-sdk.version>0.1.1</selfcare-cucumber-sdk.version>
     <security-sdk.version>0.2.3</security-sdk.version>
     <selfcare-onboarding-sdk.version>0.15.5</selfcare-onboarding-sdk.version>
     <mapstruct.lombok.version>0.2.0</mapstruct.lombok.version>
@@ -167,6 +167,12 @@
       <artifactId>openhtmltopdf-svg-support</artifactId>
       <version>${openhtmltopdf.version}</version>
       <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>xml-apis</groupId>
+          <artifactId>xml-apis</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>io.github.openhtmltopdf</groupId>
@@ -178,6 +184,16 @@
       <groupId>xerces</groupId>
       <artifactId>xercesImpl</artifactId>
       <version>2.12.2</version>
+      <exclusions>
+        <!-- xml-apis ships ancient javax.xml.stream / javax.xml.xpath classes that shadow
+             the JDK 17 built-in XML APIs, causing NoSuchMethodError on XMLInputFactory.newFactory()
+             and XPathFactory.newInstance() failures in the container. JDK 17 already provides
+             all these APIs in their correct, modern versions. -->
+        <exclusion>
+          <groupId>xml-apis</groupId>
+          <artifactId>xml-apis</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -235,6 +251,19 @@
       <groupId>it.pagopa.selfcare</groupId>
       <artifactId>selfcare-onboarding-sdk-crypto</artifactId>
       <version>${selfcare-onboarding-sdk.version}</version>
+      <exclusions>
+        <!-- Escludi il vecchio JAXB impl (com.sun.xml.bind) portato transitivamente da sdk-crypto:
+             confligge con org.glassfish.jaxb:jaxb-runtime usato da DSS e Quarkus 3.31.x (Jakarta EE).
+             L'implementazione corretta (glassfish jaxb-runtime) viene già fornita da dss-pki-factory-jaxb. -->
+        <exclusion>
+          <groupId>com.sun.xml.bind</groupId>
+          <artifactId>jaxb-impl</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.xml.bind</groupId>
+          <artifactId>jaxb-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>it.pagopa.selfcare</groupId>
@@ -315,6 +344,12 @@
       <groupId>eu.europa.ec.joinup.sd-dss</groupId>
       <artifactId>dss-test</artifactId>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>eu.europa.ec.joinup.sd-dss</groupId>
@@ -371,12 +406,6 @@
     </dependency>
   </dependencies>
   <build>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>true</filtering>
-      </resource>
-    </resources>
     <plugins>
       <plugin>
         <groupId>${quarkus.platform.group-id}</groupId>
@@ -429,6 +458,7 @@
               <goal>verify</goal>
             </goals>
             <configuration>
+              <skip>${skipITs}</skip>
               <systemPropertyVariables>
                 <native.image.path>${project.build.directory}/${project.build.finalName}-runner
                 </native.image.path>

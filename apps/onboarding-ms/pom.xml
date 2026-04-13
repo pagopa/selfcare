@@ -12,6 +12,7 @@
 
     <artifactId>onboarding-ms</artifactId>
     <version>1.0.0-SNAPSHOT</version>
+
     <properties>
         <compiler-plugin.version>3.11.0</compiler-plugin.version>
         <lombok.version>1.18.36</lombok.version>
@@ -24,12 +25,13 @@
         <quarkus.platform.version>3.11.2</quarkus.platform.version>
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
-        <quarkus-openapi-generator.version>2.4.1</quarkus-openapi-generator.version>
+        <quarkus-openapi-generator.version>2.4.2</quarkus-openapi-generator.version>
         <commons-sdk-version>0.15.5</commons-sdk-version>
         <common-sdk-security-version>0.2.3</common-sdk-security-version>
         <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
         <owasp.encoder.version>1.4.0</owasp.encoder.version>
     </properties>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -55,6 +57,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -93,6 +96,7 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-test-mongodb</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -216,7 +220,6 @@
             <artifactId>dss-xades</artifactId>
         </dependency>
 
-
         <dependency>
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
@@ -242,7 +245,7 @@
             <groupId>com.github.tomakehurst</groupId>
             <artifactId>wiremock-jre8-standalone</artifactId>
             <version>2.35.1</version>
-            <scope>compile</scope>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.owasp.encoder</groupId>
@@ -283,7 +286,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- cucumber dependency -->
         <dependency>
             <groupId>io.quarkiverse.cucumber</groupId>
             <artifactId>quarkus-cucumber</artifactId>
@@ -308,6 +310,7 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>
@@ -375,9 +378,13 @@
                         </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <skip>${skipITs}</skip>
+                </configuration>
             </plugin>
         </plugins>
     </build>
+
     <profiles>
         <profile>
             <id>native</id>

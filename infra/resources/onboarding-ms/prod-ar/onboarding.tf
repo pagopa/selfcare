@@ -2,39 +2,65 @@
 # GLOBAL VARIABLES
 ###############################################################################
 module "local" {
-  source = "../../_modules/local-prod-ar"
+  source = "../../_modules/local-env"
+
+  env       = "prod"
+  env_short = "p"
+  domain    = "ar"
+
+  dns_zone_prefix                = "selfcare"
+  api_dns_zone_prefix            = "api.selfcare"
+  private_dns_name_domain        = "lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-p-cae-002"
+  ca_resource_group_name         = "selc-p-container-app-002-rg"
+  container_app_max_replicas     = 5
+  container_app_desired_replicas = "3"
+  container_app_cpu              = 1.25
+  container_app_memory           = "2.5Gi"
 }
 module "cosmosdb" {
-  source = "../../_modules/cosmosdb"
+  source = "../../_modules/cosmosdb_database"
 
-  resource_group_name = local.mongo_db.mongodb_rg_name
-  account_name        = local.mongo_db.cosmosdb_account_mongodb_name
+  database_name               = "selcOnboarding"
+  resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
+}
 
-  database_name = "selcOnboarding"
+module "collection_onboardings" {
+  source = "../../_modules/cosmosdb_collection"
 
-  collections = [
-    {
-      name      = "onboardings"
-      shard_key = "_id"
-      indexes = [
-        { keys = ["_id"], unique = true },
-        { keys = ["createdAt"], unique = false },
-        { keys = ["origin"], unique = false },
-        { keys = ["originId"], unique = false },
-        { keys = ["taxCode"], unique = false },
-        { keys = ["subunitCode"], unique = false },
-        { keys = ["productId"], unique = false },
-        { keys = ["status"], unique = false }
-      ]
-    },
-    {
-      name      = "tokens"
-      shard_key = "_id"
-      indexes = [
-        { keys = ["_id"], unique = true },
-        { keys = ["createdAt"], unique = false }
-      ]
-    }
+  name                        = "onboardings"
+  resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
+  database_name               = module.cosmosdb.database_name
+
+  lock_enable = true
+
+  indexes = [
+    { keys = ["_id"], unique = true },
+    { keys = ["createdAt"], unique = false },
+    { keys = ["origin"], unique = false },
+    { keys = ["originId"], unique = false },
+    { keys = ["taxCode"], unique = false },
+    { keys = ["subunitCode"], unique = false },
+    { keys = ["productId"], unique = false },
+    { keys = ["status"], unique = false }
+  ]
+}
+
+module "collection_tokens" {
+  source = "../../_modules/cosmosdb_collection"
+
+  name                        = "tokens"
+  resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
+  database_name               = module.cosmosdb.database_name
+
+  lock_enable = true
+
+  indexes = [
+    { keys = ["_id"], unique = true },
+    { keys = ["createdAt"], unique = false }
   ]
 }
 
@@ -45,6 +71,10 @@ resource "random_password" "encryption_key" {
   keepers = {
     version = 1
   }
+
+  lifecycle {
+    ignore_changes = all
+  }
 }
 
 resource "random_password" "encryption_iv" {
@@ -54,6 +84,10 @@ resource "random_password" "encryption_iv" {
   keepers = {
     version = 1
   }
+
+  lifecycle {
+    ignore_changes = all
+  }
 }
 
 resource "azurerm_key_vault_secret" "encryption_iv_secret" {
@@ -61,7 +95,11 @@ resource "azurerm_key_vault_secret" "encryption_iv_secret" {
   value        = random_password.encryption_iv.result
   content_type = "text/plain"
 
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = module.local.key_vault_id
+
+  lifecycle {
+    ignore_changes = all
+  }
 }
 
 resource "azurerm_key_vault_secret" "encryption_key_secret" {
@@ -69,11 +107,15 @@ resource "azurerm_key_vault_secret" "encryption_key_secret" {
   value        = random_password.encryption_key.result
   content_type = "text/plain"
 
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = module.local.key_vault_id
+
+  lifecycle {
+    ignore_changes = all
+  }
 }
 
 locals {
-  onboarding_ms_app_settings = [
+  app_settings_onboarding_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
       value = "-javaagent:applicationinsights-agent.jar"
@@ -88,31 +130,39 @@ locals {
     },
     {
       name  = "ONBOARDING_FUNCTIONS_URL"
-      value = "https://selc-p-onboarding-fn.azurewebsites.net"
+      value = "https://selc-${module.local.config.env_short}-onboarding-fn.azurewebsites.net"
     },
     {
       name  = "STORAGE_CONTAINER_PRODUCT"
-      value = "selc-p-product"
+      value = "selc-${module.local.config.env_short}-product"
     },
     {
       name  = "MS_CORE_URL"
-      value = "http://selc-p-ms-core-ca"
+      value = "http://selc-${module.local.config.env_short}-ms-core-ca"
     },
     {
       name  = "MS_PARTY_REGISTRY_URL"
-      value = "http://selc-p-party-reg-proxy-ca"
+      value = "http://selc-${module.local.config.env_short}-party-reg-proxy-ca"
     },
     {
       name  = "STORAGE_CONTAINER_CONTRACT"
-      value = "sc-p-documents-blob"
+      value = "sc-${module.local.config.env_short}-documents-blob"
     },
     {
       name  = "MS_USER_URL"
-      value = "http://selc-p-user-ms-ca"
+      value = "http://selc-${module.local.config.env_short}-user-ms-ca"
     },
     {
       name  = "ALLOWED_ATECO_CODES"
       value = "47.12.10,47.54.00,47.11.02,47.12.20,47.12.30,47.12.40"
+    },
+    {
+      name  = "PAGOPA_SIGNATURE_SOURCE"
+      value = "namirial"
+    },
+    {
+      name  = "NAMIRIAL_BASE_URL"
+      value = "https://selc-${module.local.config.env_short}-namirial-sws-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "ONBOARDING-UPDATE-USER-REQUESTER"
@@ -131,38 +181,11 @@ locals {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
     "ONBOARDING_DATA_ENCRIPTION_KEY"          = "onboarding-data-encryption-key"
     "ONBOARDING_DATA_ENCRIPTION_IV"           = "onboarding-data-encryption-iv"
+    "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"     = "namirial-sign-service-user"
+    "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
   }
 
-  onboarding_cdc_container_app = {
-    min_replicas = 1
-    max_replicas = 1
-    scale_rules  = []
-    cpu          = 1
-    memory       = "2Gi"
-  }
 
-  onboarding_cdc_app_settings = [
-    {
-      name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
-    },
-    {
-      name  = "APPLICATIONINSIGHTS_ROLE_NAME"
-      value = "onboarding-cdc"
-    },
-    {
-      name  = "ONBOARDING-CDC-MONGODB-WATCH-ENABLED"
-      value = "true"
-    },
-    {
-      name  = "ONBOARDING_FUNCTIONS_URL"
-      value = "https://selc-p-onboarding-fn.azurewebsites.net"
-    },
-    {
-      name  = "ONBOARDING-CDC-MINUTES-THRESHOLD-FOR-UPDATE-NOTIFICATION"
-      value = "5"
-    }
-  ]
 
   onboarding_cdc_secrets_names = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
@@ -176,18 +199,18 @@ locals {
 module "container_app_onboarding_ms" {
   source = "../../_modules/container_app_microservice"
 
-  env_short                      = local.env_short
-  resource_group_name            = local.ca_resource_group_name
-  container_app                  = local.container_app
-  container_app_name             = "selc-${local.env_short}-onboarding-ms"
-  container_app_environment_name = local.container_app_environment_name
+  env_short                      = module.local.config.env_short
+  resource_group_name            = module.local.config.ca_resource_group_name
+  container_app                  = module.local.config.container_app
+  container_app_name             = "selc-${module.local.config.env_short}-onboarding-ms"
+  container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-onboarding-ms"
   image_tag                      = var.image_tag
-  app_settings                   = local.onboarding_ms_app_settings
+  app_settings                   = local.app_settings_onboarding_ms
   secrets_names                  = local.onboarding_ms_secrets_names
-  key_vault_resource_group_name  = local.key_vault_resource_group_name
-  key_vault_name                 = local.key_vault_name
-  probes                         = local.quarkus_health_probes
-  tags                           = local.tags
+  key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
+  key_vault_name                 = module.local.config.key_vault_name
+  probes                         = module.local.config.quarkus_health_probes
+  tags                           = module.local.config.tags
 }
 

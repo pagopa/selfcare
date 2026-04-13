@@ -2,7 +2,18 @@
 # GLOBAL VARIABLES
 ###############################################################################
 module "local" {
-  source = "../../_modules/local-dev-ar"
+  source = "../../_modules/local-env"
+
+  env       = "dev"
+  env_short = "d"
+  domain    = "ar"
+
+  dns_zone_prefix                = "dev.selfcare"
+  api_dns_zone_prefix            = "api.dev.selfcare"
+  private_dns_name_domain        = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-d-cae-002"
+  ca_resource_group_name         = "selc-d-container-app-002-rg"
+  container_app_min_replicas     = 0
 }
 
 ###############################################################################
@@ -28,7 +39,8 @@ locals {
     { name = "PRODUCT_STORAGE_CONTAINER", value = "selc-d-product" },
     { name = "ONBOARDING_FUNCTIONS_URL", value = "https://selc-d-onboarding-fn.azurewebsites.net" },
     { name = "MS_USER_INSTITUTION_URL", value = "http://selc-d-user-ms-ca" },
-    { name = "MS_PRODUCT_URL", value = "http://selc-d-product-ms-ca" }
+    { name = "MS_PRODUCT_URL", value = "http://selc-d-product-ms-ca" },
+    { name = "MS_DOCUMENT_URL", value = "http://selc-d-document-ms-ca" }
   ]
 
   secrets_names_onboarding_bff = {
@@ -49,7 +61,7 @@ module "container_app_onboarding_bff" {
   container_app_name             = "selc-${module.local.config.env_short}-onboarding-bff"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-onboarding-bff"
-  image_tag                      = local.image_tag
+  image_tag                      = var.image_tag
   app_settings                   = local.app_settings_onboarding_bff
   secrets_names                  = local.secrets_names_onboarding_bff
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name

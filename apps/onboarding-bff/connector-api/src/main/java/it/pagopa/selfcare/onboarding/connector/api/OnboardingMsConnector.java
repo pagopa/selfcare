@@ -35,14 +35,6 @@ public interface OnboardingMsConnector {
 
     OnboardingData getOnboardingWithUserInfo(String onboardingId);
 
-    Resource getContract(String onboardingId);
-
-    Resource getTemplateAttachment(String onboardingId, String filename);
-
-    Resource getAttachment(String onboardingId, String filename);
-
-    Resource getAggregatesCsv(String onboardingId, String productId);
-
     void onboardingPaAggregation(OnboardingData onboardingData);
 
     List<OnboardingData> getByFilters(String productId, String taxCode, String origin, String originId, String subunitCode);
@@ -58,8 +50,4 @@ public interface OnboardingMsConnector {
     void onboardingUsersPgFromIcAndAde(OnboardingData onboardingUserPgRequest);
 
     List<OnboardingResult> onboardingWithFilter(String taxCode, String status);
-
-    void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName);
-
-    HttpStatusCode headAttachment(String onboardingId, String filename);
 }

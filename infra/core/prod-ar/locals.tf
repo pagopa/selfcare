@@ -78,6 +78,8 @@ locals {
   # app_gateway
   app_gateway_api_certificate_name      = "api-selfcare-pagopa-it"
   app_gateway_api_pnpg_certificate_name = "api-pnpg-selfcare-pagopa-it"
+  cdn_certificate_name_ar               = "areariservata-pagopa-it"
+
 
   # redis
   redis_sku_name                 = "Standard"
@@ -138,7 +140,7 @@ locals {
   # monitoring
   law_sku               = "PerGB2018"
   law_retention_in_days = 30
-  law_daily_quota_gb    = 2
+  law_daily_quota_gb    = -1
 
   # CosmosDb MongoDb
   cosmosdb_mongodb_extra_capabilities = [] //"EnableServerless", "EnableMongoRoleBasedAccessControl"

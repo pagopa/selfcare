@@ -83,7 +83,16 @@ resource "azurerm_linux_function_app" "fn" {
     }
   }
 
-  app_settings = var.app_settings
+  app_settings = merge(
+    var.app_settings,
+    {
+      AzureWebJobsStorage__accountName     = azurerm_storage_account.fn_storage.name
+      AzureWebJobsStorage__blobServiceUri  = azurerm_storage_account.fn_storage.primary_blob_endpoint
+      AzureWebJobsStorage__queueServiceUri = azurerm_storage_account.fn_storage.primary_queue_endpoint
+      AzureWebJobsStorage__tableServiceUri = azurerm_storage_account.fn_storage.primary_table_endpoint
+      AzureWebJobsSecretStorageType        = "blob"
+    }
+  )
 
   tags = var.tags
 }
@@ -119,6 +128,13 @@ resource "azurerm_key_vault_access_policy" "fn_keyvault_access_policy" {
 data "azurerm_function_app_host_keys" "fn" {
   name                = azurerm_linux_function_app.fn.name
   resource_group_name = azurerm_resource_group.fn_rg.name
+
+  depends_on = [
+    azurerm_linux_function_app.fn,
+    azurerm_role_assignment.fn_storage_blob_data_contributor,
+    azurerm_role_assignment.fn_storage_queue_data_contributor,
+    azurerm_role_assignment.fn_storage_table_data_contributor,
+  ]
 }
 
 resource "azurerm_key_vault_secret" "fn_primary_key" {

@@ -2,19 +2,17 @@ version: '3.8'
 services:
 
   mongodb:
-    image: mongo:latest@sha256:bf5995bcccb65725aa81fd92e68449323c94b96bf1c1fa9f7acbc2a8ad518114
+    image: mongo:latest
     ports:
-      - '27017:27017'
-    volumes:
-      - "./db:/docker-entrypoint-initdb.d"
+      - "27017:27017"
     networks:
       - develop-network
 
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite
+    command: "azurite --blobHost 0.0.0.0 --inMemoryPersistence"
     ports:
       - "10000:10000"
-    command: "azurite --blobHost 0.0.0.0 --inMemoryPersistence"
     environment:
       - AZURITE_ACCOUNTS=devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==
     networks:
@@ -29,7 +27,7 @@ services:
     networks:
       - develop-network
     volumes:
-      - "./blobStorage:/blobStorage"
+      - "./blobStorageInit:/workspace"
     environment:
       - SELFCARE_INFRA_PRIVATE_ENV=dev
 

@@ -2,7 +2,18 @@
 # GLOBAL VARIABLES
 ###############################################################################
 module "local" {
-  source = "../../_modules/local-dev-ar"
+  source = "../../_modules/local-env"
+
+  env       = "dev"
+  env_short = "d"
+  domain    = "ar"
+
+  dns_zone_prefix                = "dev.selfcare"
+  api_dns_zone_prefix            = "api.dev.selfcare"
+  private_dns_name_domain        = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-d-cae-002"
+  ca_resource_group_name         = "selc-d-container-app-002-rg"
+  container_app_min_replicas     = 0
 }
 
 
@@ -102,7 +113,7 @@ locals {
     },
     {
       name  = "AZURE_CLIENT_ID"
-      value = module.container_app_registry_proxy_ms.cae_identity_id
+      value = module.container_app_registry_proxy_ms.cae_identity_client_id
     }
   ]
 
@@ -273,6 +284,41 @@ locals {
   # storage_account_name = 
   # key_vault_id         = try(data.azurerm_key_vault.key_vault.id, null)
   # logs_storage_key     = try(data.azurerm_key_vault_secret.logs_storage_access_key.value, null)
+  probes = [
+    {
+      httpGet = {
+        path   = "actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Liveness"
+      failureThreshold    = 3
+      initialDelaySeconds = 1
+    },
+    {
+      httpGet = {
+        path   = "actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Readiness"
+      failureThreshold    = 30
+      initialDelaySeconds = 30
+    },
+    {
+      httpGet = {
+        path   = "actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      failureThreshold    = 30
+      type                = "Startup"
+      initialDelaySeconds = 60
+    }
+  ]
 }
 
 resource "azurerm_storage_container" "visura" {
@@ -300,7 +346,7 @@ resource "azurerm_container_app_environment_dapr_component" "blob_state" {
 
   metadata {
     name  = "azureClientId"
-    value = module.container_app_registry_proxy_ms.cae_identity_id
+    value = module.container_app_registry_proxy_ms.cae_identity_client_id
   }
 
   scopes = [local.ca_name]
@@ -329,10 +375,9 @@ module "container_app_registry_proxy_ms" {
   workload_profile_name          = "Consumption"
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
-
-  dapr_settings = local.dapr_sidecar_settings
-  probes        = local.spring_boot_health_probes
-  tags          = module.local.config.tags
+  probes                         = local.probes
+  tags                           = module.local.config.tags
+  dapr_settings                  = local.dapr_sidecar_settings
 }
 
 ###############################################################################
@@ -348,7 +393,7 @@ module "dapr" {
 
   cae_name    = "selc-${module.local.config.env_short}-cae-002"
   cae_rg_name = module.local.config.ca_resource_group_name
-  ca_name     = local.ca_name
+  ca_name     = "${local.ca_name}-ca"
   ca_rg_name  = "selc-${module.local.config.env_short}-container-app-002-rg"
 
   key_vault_name                   = "selc-${module.local.config.env_short}-kv"

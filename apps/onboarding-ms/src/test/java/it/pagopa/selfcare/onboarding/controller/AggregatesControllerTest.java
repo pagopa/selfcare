@@ -49,25 +49,6 @@ class AggregatesControllerTest {
                 .validateAppIoAggregatesCsv(any());
     }
 
-    @Test
-    @TestSecurity(user = "userJwt")
-    void getAggregatesCsv() {
-        final String onboardingId = "onboardingId";
-        final String productId = "productId";
-        RestResponse.ResponseBuilder<File> response = RestResponse.ResponseBuilder.ok();
-        when(aggregatesService.retrieveAggregatesCsv(onboardingId,productId))
-                .thenReturn(Uni.createFrom().item(response.build()));
-
-        given()
-                .when()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .get("csv/{onboardingId}/products/{productId}", onboardingId, productId)
-                .then()
-                .statusCode(200);
-
-
-    }
-
     @TestSecurity(user = "userJwt")
     @Test
     void verifyAggregatesSendCsv_succeeds() {

@@ -2,7 +2,21 @@
 # GLOBAL VARIABLES
 ###############################################################################
 module "local" {
-  source = "../../_modules/local-prod-ar"
+  source = "../../_modules/local-env"
+
+  env       = "prod"
+  env_short = "p"
+  domain    = "ar"
+
+  dns_zone_prefix                = "selfcare"
+  api_dns_zone_prefix            = "api.selfcare"
+  private_dns_name_domain        = "lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-p-cae-002"
+  ca_resource_group_name         = "selc-p-container-app-002-rg"
+  container_app_max_replicas     = 5
+  container_app_desired_replicas = "3"
+  container_app_cpu              = 1.25
+  container_app_memory           = "2.5Gi"
 }
 
 ###############################################################################
@@ -28,7 +42,7 @@ locals {
     },
     {
       name  = "PRODUCT-CDC-MONGODB-WATCH-ENABLED"
-      value = true
+      value = false
     },
     {
       name  = "STORAGE_CONTAINER_PRODUCT"
@@ -53,7 +67,7 @@ module "container_app_product_cdc" {
   container_app                  = module.local.config.container_app
   container_app_name             = "${module.local.config.project}-product-cdc"
   container_app_environment_name = module.local.config.container_app_environment_name
-  image_name                     = "selfcare-product-cdc"
+  image_name                     = "selfcare-product-cdc-ms"
   image_tag                      = var.image_tag
   app_settings                   = local.app_settings
   secrets_names                  = local.secrets_names

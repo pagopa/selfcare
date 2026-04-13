@@ -2,7 +2,18 @@
 # GLOBAL VARIABLES
 ###############################################################################
 module "local" {
-  source = "../../_modules/local-dev-ar"
+  source = "../../_modules/local-env"
+
+  env       = "dev"
+  env_short = "d"
+  domain    = "ar"
+
+  dns_zone_prefix                = "dev.selfcare"
+  api_dns_zone_prefix            = "api.dev.selfcare"
+  private_dns_name_domain        = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-d-cae-002"
+  ca_resource_group_name         = "selc-d-container-app-002-rg"
+  container_app_min_replicas     = 0
 }
 
 ###############################################################################
@@ -53,7 +64,7 @@ module "container_app_product_cdc" {
   container_app                  = module.local.config.container_app
   container_app_name             = "${module.local.config.project}-product-cdc"
   container_app_environment_name = module.local.config.container_app_environment_name
-  image_name                     = "selfcare-product-cdc"
+  image_name                     = "selfcare-product-cdc-ms"
   image_tag                      = var.image_tag
   app_settings                   = local.app_settings
   secrets_names                  = local.secrets_names

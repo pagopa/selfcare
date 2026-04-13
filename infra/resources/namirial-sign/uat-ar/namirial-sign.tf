@@ -2,7 +2,17 @@
 # GLOBAL VARIABLES
 ###############################################################################
 module "local" {
-  source = "../../_modules/local-uat-ar"
+  source = "../../_modules/local-env"
+
+  env       = "uat"
+  env_short = "u"
+  domain    = "ar"
+
+  dns_zone_prefix                = "uat.selfcare"
+  api_dns_zone_prefix            = "api.uat.selfcare"
+  private_dns_name_domain        = "mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-u-cae-002"
+  ca_resource_group_name         = "selc-u-container-app-002-rg"
 }
 
 # ###############################################################################

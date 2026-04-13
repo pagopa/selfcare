@@ -2,7 +2,17 @@
 # GLOBAL VARIABLES
 ###############################################################################
 module "local" {
-  source = "../../_modules/local-uat-ar"
+  source = "../../_modules/local-env"
+
+  env       = "uat"
+  env_short = "u"
+  domain    = "ar"
+
+  dns_zone_prefix                = "uat.selfcare"
+  api_dns_zone_prefix            = "api.uat.selfcare"
+  private_dns_name_domain        = "mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-u-cae-002"
+  ca_resource_group_name         = "selc-u-container-app-002-rg"
 }
 
 
@@ -122,44 +132,3 @@ module "apim_api" {
 
   api_operation_policies = []
 }
-
-# <policies>
-#           -     <inbound>
-#           -             <cors allow-credentials="true">
-#           -                     <allowed-origins>
-#           -                             <origin>https://dev.selfcare.pagopa.it</origin>
-#           -                             <origin>https://api.dev.selfcare.pagopa.it</origin>
-#           -                             <origin>http://localhost:3000</origin>
-#           -                     </allowed-origins>
-#           -                     <allowed-methods>
-#           -                             <method>GET</method>
-#           -                             <method>POST</method>
-#           -                             <method>PUT</method>
-#           -                             <method>HEAD</method>
-#           -                             <method>DELETE</method>
-#           -                             <method>OPTIONS</method>
-#           -                     </allowed-methods>
-#           -                     <allowed-headers>
-#           -                             <header>*</header>
-#           -                     </allowed-headers>
-#           -             </cors>
-#           -             <base />
-#           -             <trace source="WEBHOOK" severity="information">
-#           -                     <message>WEBHOOK ECHO</message>
-#           -                     <metadata name="body" value="@(context.Request.Body.As<string>(preserveContent: true))" />
-#           -             </trace>
-#           -             <return-response>
-#           -                     <set-status code="200" reason="OK" />
-#           -                     <set-body>{"status": "received"}</set-body>
-#           -             </return-response>
-#           -     </inbound>
-#           -     <backend>
-#           -             <base />
-#           -     </backend>
-#           -     <outbound>
-#           -             <base />
-#           -     </outbound>
-#           -     <on-error>
-#           -             <base />
-#           -     </on-error>
-#           + <policies>

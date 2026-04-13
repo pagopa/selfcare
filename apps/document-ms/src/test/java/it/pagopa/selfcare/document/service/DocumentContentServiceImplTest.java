@@ -6,6 +6,7 @@ import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.mongodb.MongoTestResource;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
 import it.pagopa.selfcare.document.config.DocumentMsConfig;
@@ -28,6 +29,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.bson.types.ObjectId;
 import org.jboss.resteasy.reactive.RestResponse;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -722,6 +724,22 @@ class DocumentContentServiceImplTest {
         var awaiter = documentContentService.saveVisuraForMerchant(request).await();
 
         assertThrows(InternalException.class, awaiter::indefinitely);
+    }
+
+    // ---- retrieveAggregatesCsv ----
+    @Test
+    void retrieveAggregatesCsv() {
+        final String onboardingId = "onboardingId";
+        final String productId = "productId";
+
+        when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(new File("fileName"));
+
+        UniAssertSubscriber<RestResponse<File>> subscriber = documentContentService.retrieveAggregatesCsv(onboardingId, productId)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        RestResponse<File> actual = subscriber.awaitItem().getItem();
+        Assertions.assertNotNull(actual);
+        Assertions.assertEquals(RestResponse.Status.OK.getStatusCode(), actual.getStatus());
     }
 
     // ---- uploadAggregatesCsv ----

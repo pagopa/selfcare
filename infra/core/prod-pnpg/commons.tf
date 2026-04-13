@@ -202,9 +202,9 @@ module "cosmos_db" {
   cosmosdb_mongodb_enable_free_tier = false
 }
 
-# ###############################################################################
-# # Monitoring
-# ###############################################################################
+###############################################################################
+# Monitoring
+###############################################################################
 data "azurerm_resource_group" "monitor_rg" {
   name = "${local.prefix}-${local.env_short}-monitor-rg"
 }
@@ -214,9 +214,9 @@ data "azurerm_log_analytics_workspace" "log_analytics" {
   resource_group_name = data.azurerm_resource_group.monitor_rg.name
 }
 
-# ###############################################################################
-# # CDN Front Door
-# ###############################################################################
+###############################################################################
+# CDN Front Door
+###############################################################################
 module "cdn" {
   source = "../_modules/cdn"
 
@@ -247,31 +247,10 @@ module "cdn" {
   vnet_name       = module.network.vnet_core.name
   rg_vnet_name    = module.network.vnet_core.resource_group_name
   cidr_subnet_cdn = local.cidr_subnet_cdn
-}
 
-# ###############################################################################
-# # TMP OLD Storage Account
-# ###############################################################################
-
-data "azurerm_storage_account" "old_cdn_storage_account" {
-  name                = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutsa"
-  resource_group_name = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-checkout-fe-rg"
-}
-
-
-resource "null_resource" "cdn_storage_copy" {
-  for_each = toset(["$web", "selc-${local.env_short}-product"])
-
-  provisioner "local-exec" {
-    command = <<EOT
-        az storage blob copy start-batch \
-        --account-name "${module.cdn.storage_name}" \
-        --account-key "${module.cdn.storage_primary_access_key}" \
-        --destination-container '${each.value}' \
-        --source-account-name "${data.azurerm_storage_account.old_cdn_storage_account.name}" \
-        --source-account-key "${data.azurerm_storage_account.old_cdn_storage_account.primary_access_key}" \
-        --source-container '${each.value}'
-    EOT
+  origin_health_probe = {
+    path         = "/health.json"
+    request_type = "HEAD"
   }
 }
 
@@ -331,5 +310,5 @@ resource "azurerm_key_vault_access_policy" "container_app_environment" {
   tenant_id    = module.key_vault.tenant_id
   object_id    = module.container_app_environments.user_assigned_identity.principal_id
 
-  secret_permissions      = ["Get", "List"]
+  secret_permissions = ["Get", "List"]
 }

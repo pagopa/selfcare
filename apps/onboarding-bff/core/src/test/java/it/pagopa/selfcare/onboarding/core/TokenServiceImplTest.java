@@ -1,11 +1,16 @@
 package it.pagopa.selfcare.onboarding.core;
 
 
+import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.onboarding.connector.api.DocumentMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.OnboardingMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.PartyConnector;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.User;
+import it.pagopa.selfcare.product.entity.AttachmentTemplate;
+import it.pagopa.selfcare.product.entity.ContractTemplate;
+import it.pagopa.selfcare.product.entity.Product;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -39,6 +45,12 @@ public class TokenServiceImplTest {
 
     @Mock
     private OnboardingMsConnector onboardingMsConnector;
+
+    @Mock
+    private DocumentMsConnector documentMsConnector;
+
+    @Mock
+    private ProductAzureService productAzureService;
 
 
     @Test
@@ -139,8 +151,20 @@ public class TokenServiceImplTest {
         // when
         tokenService.getContract(onboardingId);
         //then
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        Mockito.verify(documentMsConnector, Mockito.times(1))
                 .getContract(onboardingId);
+    }
+
+    @Test
+    void getAttachment() {
+        // given
+        final String onboardingId = "onboardingId";
+        final String filename = "filename";
+        // when
+        tokenService.getAttachment(onboardingId, filename);
+        // then
+        Mockito.verify(documentMsConnector, Mockito.times(1))
+                .getAttachment(onboardingId, filename);
     }
 
     @Test
@@ -148,12 +172,18 @@ public class TokenServiceImplTest {
         //given
         final String onboardingId = "onboardingId";
         final String filename = "filename";
+        final String templatePath = "templatePath";
+        final String productId = "productId";
+        final OnboardingData onboardingData = mockAttachmentContext(onboardingId, productId, filename, templatePath);
+
         // when
         tokenService.getTemplateAttachment(onboardingId, filename);
+
         //then
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
-                .getTemplateAttachment(onboardingId, filename);
+        Mockito.verify(documentMsConnector, Mockito.times(1))
+                .getTemplateAttachment(onboardingData, filename, templatePath);
     }
+
 
     @Test
     void headAttachmentTest() {
@@ -161,13 +191,13 @@ public class TokenServiceImplTest {
         final String onboardingId = "onboardingId";
         final String filename = "filename";
 
-        when(onboardingMsConnector.headAttachment(onboardingId, filename)).thenReturn(HttpStatusCode.valueOf(204));
+        when(documentMsConnector.headAttachment(onboardingId, filename)).thenReturn(HttpStatusCode.valueOf(204));
 
         // when
         HttpStatusCode result = tokenService.headAttachment(onboardingId, filename);
 
         //then
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        Mockito.verify(documentMsConnector, Mockito.times(1))
                 .headAttachment(eq("onboardingId"), eq("filename"));
         assertTrue(result.is2xxSuccessful());
         assertFalse(result.is4xxClientError());
@@ -180,13 +210,13 @@ public class TokenServiceImplTest {
         final String onboardingId = "onboardingId";
         final String filename = "filename";
 
-        when(onboardingMsConnector.headAttachment(onboardingId, filename)).thenReturn(HttpStatusCode.valueOf(404));
+        when(documentMsConnector.headAttachment(onboardingId, filename)).thenReturn(HttpStatusCode.valueOf(404));
 
         // when
         HttpStatusCode result = tokenService.headAttachment(onboardingId, filename);
 
         //then
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        Mockito.verify(documentMsConnector, Mockito.times(1))
                 .headAttachment(eq("onboardingId"), eq("filename"));
         assertFalse(result.is2xxSuccessful());
         assertTrue(result.is4xxClientError());
@@ -199,13 +229,13 @@ public class TokenServiceImplTest {
         final String onboardingId = "onboardingId";
         final String filename = "filename";
 
-        when(onboardingMsConnector.headAttachment(onboardingId, filename)).thenReturn(HttpStatusCode.valueOf(500));
+        when(documentMsConnector.headAttachment(onboardingId, filename)).thenReturn(HttpStatusCode.valueOf(500));
 
         // when
         HttpStatusCode result = tokenService.headAttachment(onboardingId, filename);
 
         //then
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        Mockito.verify(documentMsConnector, Mockito.times(1))
                 .headAttachment(eq("onboardingId"), eq("filename"));
         assertFalse(result.is2xxSuccessful());
         assertFalse(result.is4xxClientError());
@@ -217,12 +247,16 @@ public class TokenServiceImplTest {
         //given
         final String onboardingId = "onboardingId";
         final String filename = "filename";
+        final String productId = "productId";
+        final String templatePath = "templatePath";
+        mockAttachmentContext(onboardingId, productId, filename, templatePath);
         MockMultipartFile mockMultipartFile = new MockMultipartFile("example", new ByteArrayInputStream("example".getBytes(StandardCharsets.UTF_8)));
         // when
         tokenService.uploadAttachment(onboardingId, mockMultipartFile, filename);
         //then
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
-                .uploadAttachment(onboardingId, mockMultipartFile, filename);
+        Mockito.verify(documentMsConnector, Mockito.times(1))
+                .uploadAttachment(eq(onboardingId), eq(mockMultipartFile), eq(filename), eq(productId),
+                        argThat(template -> templatePath.equals(template.getTemplatePath())));
     }
 
 
@@ -234,7 +268,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.getAggregatesCsv(onboardingId, productId);
         //then
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        Mockito.verify(documentMsConnector, Mockito.times(1))
                 .getAggregatesCsv(onboardingId, productId);
     }
 
@@ -289,5 +323,26 @@ public class TokenServiceImplTest {
         assertFalse(result);
         Mockito.verify(onboardingMsConnector, Mockito.times(1))
             .getOnboardingWithUserInfo(anyString());
+    }
+
+    private OnboardingData mockAttachmentContext(String onboardingId, String productId, String filename, String templatePath) {
+        OnboardingData onboardingData = new OnboardingData();
+        onboardingData.setInstitutionType(InstitutionType.AS);
+        onboardingData.setProductId(productId);
+
+        AttachmentTemplate attachmentTemplate = new AttachmentTemplate();
+        attachmentTemplate.setName(filename);
+        attachmentTemplate.setTemplatePath(templatePath);
+
+        ContractTemplate contractTemplate = new ContractTemplate();
+        contractTemplate.setAttachments(List.of(attachmentTemplate));
+
+        Product product = new Product();
+        product.setId(productId);
+        product.setInstitutionContractMappings(Map.of(InstitutionType.AS.name(), contractTemplate));
+
+        when(onboardingMsConnector.getOnboarding(onboardingId)).thenReturn(onboardingData);
+        when(productAzureService.getProductValid(productId)).thenReturn(product);
+        return onboardingData;
     }
 }

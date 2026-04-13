@@ -2,7 +2,18 @@
 # GLOBAL VARIABLES
 ###############################################################################
 module "local" {
-  source = "../../_modules/local-dev-pnpg"
+  source = "../../_modules/local-env"
+
+  env       = "dev"
+  env_short = "d"
+  domain    = "pnpg"
+
+  dns_zone_prefix                = "pnpg.dev.selfcare"
+  api_dns_zone_prefix            = "api-pnpg.dev.selfcare"
+  private_dns_name_domain        = "blackhill-644148c0.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-d-pnpg-cae-cp"
+  ca_resource_group_name         = "selc-d-container-app-rg"
+  container_app_min_replicas     = 0
 }
 locals {
   # ca_name = "selc-${module.local.config.env_short}-party-reg-proxy-ca"
@@ -53,7 +64,7 @@ locals {
 
   registry_proxy_app_settings = [
     {
-      name = "JAVA_TOOL_OPTIONS"
+      name  = "JAVA_TOOL_OPTIONS"
       value = "-javaagent:applicationinsights-agent.jar -XX:MaxRAMPercentage=75.0"
     },
     {
@@ -139,6 +150,42 @@ locals {
   }
 
   app_settings = local.registry_proxy_app_settings
+
+  probes = [
+    {
+      httpGet = {
+        path   = "actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Liveness"
+      failureThreshold    = 3
+      initialDelaySeconds = 1
+    },
+    {
+      httpGet = {
+        path   = "actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Readiness"
+      failureThreshold    = 30
+      initialDelaySeconds = 30
+    },
+    {
+      httpGet = {
+        path   = "actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      failureThreshold    = 30
+      type                = "Startup"
+      initialDelaySeconds = 60
+    }
+  ]
 }
 
 
@@ -161,6 +208,6 @@ module "container_app_registry_proxy_ms" {
   workload_profile_name          = "Consumption"
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
-  probes                         = local.spring_boot_health_probes
+  probes                         = local.probes
   tags                           = module.local.config.tags
 }

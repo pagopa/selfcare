@@ -2,7 +2,17 @@
 # GLOBAL VARIABLES
 ###############################################################################
 module "local" {
-  source = "../../_modules/local-uat-ar"
+  source = "../../_modules/local-env"
+
+  env       = "uat"
+  env_short = "u"
+  domain    = "ar"
+
+  dns_zone_prefix                = "uat.selfcare"
+  api_dns_zone_prefix            = "api.uat.selfcare"
+  private_dns_name_domain        = "mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-u-cae-002"
+  ca_resource_group_name         = "selc-u-container-app-002-rg"
 }
 
 
@@ -30,8 +40,7 @@ module "apim_api_registry_proxy" {
 # DAPR
 ###############################################################################
 locals {
-  ca_base_name    = "selc-${module.local.config.env_short}-party-reg-proxy"
-  ca_name         = "${local.ca_base_name}-ca"
+  ca_name         = "selc-${module.local.config.env_short}-party-reg-proxy"
   storage_logs    = "selc${module.local.config.env_short}stlogs"
   storage_logs_rg = "selc-${module.local.config.env_short}-logs-storage-rg"
 
@@ -89,7 +98,7 @@ locals {
     },
     {
       name  = "AZURE_CLIENT_ID"
-      value = module.container_app_registry_proxy_ms.cae_identity_id
+      value = module.container_app_registry_proxy_ms.cae_identity_client_id
     }
   ]
 
@@ -103,7 +112,7 @@ locals {
 
   registry_proxy_app_settings = [
     {
-      name = "JAVA_TOOL_OPTIONS"
+      name  = "JAVA_TOOL_OPTIONS"
       value = "-javaagent:applicationinsights-agent.jar -XX:MaxRAMPercentage=75.0"
     },
     {
@@ -260,6 +269,41 @@ locals {
   # storage_account_name = 
   # key_vault_id         = try(data.azurerm_key_vault.key_vault.id, null)
   # logs_storage_key     = try(data.azurerm_key_vault_secret.logs_storage_access_key.value, null)
+  probes = [
+    {
+      httpGet = {
+        path   = "actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Liveness"
+      failureThreshold    = 3
+      initialDelaySeconds = 1
+    },
+    {
+      httpGet = {
+        path   = "actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Readiness"
+      failureThreshold    = 30
+      initialDelaySeconds = 30
+    },
+    {
+      httpGet = {
+        path   = "actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      failureThreshold    = 30
+      type                = "Startup"
+      initialDelaySeconds = 60
+    }
+  ]
 }
 
 resource "azurerm_storage_container" "visura" {
@@ -287,7 +331,7 @@ resource "azurerm_container_app_environment_dapr_component" "blob_state" {
 
   metadata {
     name  = "azureClientId"
-    value = module.container_app_registry_proxy_ms.cae_identity_id
+    value = module.container_app_registry_proxy_ms.cae_identity_client_id
   }
 
   scopes = [local.ca_name]
@@ -316,10 +360,13 @@ module "container_app_registry_proxy_ms" {
   workload_profile_name          = "Consumption"
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
-
-  dapr_settings = local.dapr_sidecar_settings
-  probes        = local.spring_boot_health_probes
-  tags   = module.local.config.tags
+  probes                         = local.probes
+  tags                           = module.local.config.tags
+  dapr_settings = [{
+    app_id       = "party-reg-proxy"
+    app_port     = "8080"
+    app_protocol = "http"
+  }]
 }
 
 ###############################################################################
@@ -335,7 +382,7 @@ module "dapr" {
 
   cae_name    = "selc-${module.local.config.env_short}-cae-002"
   cae_rg_name = module.local.config.ca_resource_group_name
-  ca_name     = local.ca_name
+  ca_name     = "${local.ca_name}-ca"
   ca_rg_name  = "selc-${module.local.config.env_short}-container-app-002-rg"
 
   key_vault_name                   = "selc-${module.local.config.env_short}-kv"

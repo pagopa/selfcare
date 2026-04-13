@@ -238,11 +238,11 @@ public class TokenV2Controller {
                                                 @PathVariable("onboardingId")
                                                 String onboardingId,
                                                         @ApiParam("${swagger.tokens.attachmentName}")
-                                                @RequestParam(name = "name") String filename) throws IOException {
+                                                @RequestParam(name = "attachmentName") String attachmentName) throws IOException {
         log.trace("getTemplateAttachment start");
-        String sanitizedFilename = filename.replaceAll(SANITIZIER, "_");
+        String sanitizedFilename = attachmentName.replaceAll(SANITIZIER, "_");
         log.debug("getTemplateAttachment onboardingId = {}, filename = {}", Encode.forJava(onboardingId), sanitizedFilename);
-        Resource contract = tokenService.getTemplateAttachment(onboardingId, filename);
+        Resource contract = tokenService.getTemplateAttachment(onboardingId, attachmentName);
         return getResponseEntity(contract);
     }
 
@@ -281,7 +281,7 @@ public class TokenV2Controller {
     @PostMapping(value = "/{onboardingId}/attachment")
     public ResponseEntity<Void> uploadAttachment(@ApiParam("${swagger.tokens.onboardingId}")
                                                  @PathVariable(value = "onboardingId") String onboardingId,
-                                                 @RequestParam("name") String attachmentName,
+                                                 @RequestParam("attachmentName") String attachmentName,
                                                  @RequestPart MultipartFile attachment) {
         log.trace("uploadAttachment start");
         FileValidationUtils.validatePdfOrP7m(attachment);

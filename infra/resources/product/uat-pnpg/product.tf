@@ -2,7 +2,18 @@
 # GLOBAL VARIABLES
 ###############################################################################
 module "local" {
-  source = "../../_modules/local-uat-pnpg"
+  source = "../../_modules/local-env"
+
+  env             = "uat"
+  env_short       = "u"
+  domain          = "pnpg"
+  external_domain = "it"
+
+  dns_zone_prefix                = "imprese.uat.notifichedigitali"
+  api_dns_zone_prefix            = "api-pnpg.uat.selfcare"
+  private_dns_name_domain        = "orangeground-0bd2d4dc.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-u-pnpg-cae-001"
+  ca_resource_group_name         = "selc-u-container-app-001-rg"
 }
 
 ###############################################################################
@@ -88,16 +99,16 @@ locals {
     },
     {
       name  = "BLOB_STORAGE_CONTAINER_CONTRACT_TEMPLATE"
-      value = "sc-u-documents-blob"
+      value = "sc-${module.local.config.env_short}-documents-blob"
     }
   ]
 
   secrets_names_product_ms = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"            = "appinsights-connection-string"
-    "SELFCARE_DATA_ENCRIPTION_KEY"                     = "selfcare-data-encryption-key"
-    "SELFCARE_DATA_ENCRIPTION_IV"                      = "selfcare-data-encryption-iv"
-    "MONGODB_CONNECTION_STRING"                        = "mongodb-connection-string"
-    "JWT_PUBLIC_KEY"                                   = "jwt-public-key"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "SELFCARE_DATA_ENCRIPTION_KEY"          = "selfcare-data-encryption-key"
+    "SELFCARE_DATA_ENCRIPTION_IV"           = "selfcare-data-encryption-iv"
+    "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
+    "JWT_PUBLIC_KEY"                        = "jwt-public-key"
     # "BLOB_STORAGE_CONNECTION_STRING_CONTRACT_TEMPLATE" = "documents-storage-connection-string"
   }
 }

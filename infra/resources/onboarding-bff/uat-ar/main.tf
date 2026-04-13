@@ -2,7 +2,17 @@
 # GLOBAL VARIABLES
 ###############################################################################
 module "local" {
-  source = "../../_modules/local-uat-ar"
+  source = "../../_modules/local-env"
+
+  env       = "uat"
+  env_short = "u"
+  domain    = "ar"
+
+  dns_zone_prefix                = "uat.selfcare"
+  api_dns_zone_prefix            = "api.uat.selfcare"
+  private_dns_name_domain        = "mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-u-cae-002"
+  ca_resource_group_name         = "selc-u-container-app-002-rg"
 }
 
 locals {
@@ -12,18 +22,19 @@ locals {
     { name = "APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL", value = "OFF" },
     { name = "B4F_ONBOARDING_LOG_LEVEL", value = "DEBUG" },
     { name = "REST_CLIENT_LOGGER_LEVEL", value = "FULL" },
-    { name = "MS_ONBOARDING_URL", value = "http://selc-u-onboarding-ms-ca" },
-    { name = "MS_CORE_URL", value = "http://selc-u-ms-core-ca" },
-    { name = "USERVICE_PARTY_PROCESS_URL", value = "http://selc-u-ms-core-ca" },
-    { name = "USERVICE_PARTY_REGISTRY_PROXY_URL", value = "http://selc-u-party-reg-proxy-ca" },
+    { name = "MS_ONBOARDING_URL", value = "http://selc-${module.local.config.env_short}-onboarding-ms-ca" },
+    { name = "MS_CORE_URL", value = "http://selc-${module.local.config.env_short}-ms-core-ca" },
+    { name = "USERVICE_PARTY_PROCESS_URL", value = "http://selc-${module.local.config.env_short}-ms-core-ca" },
+    { name = "USERVICE_PARTY_REGISTRY_PROXY_URL", value = "http://selc-${module.local.config.env_short}-party-reg-proxy-ca" },
     { name = "USERVICE_USER_REGISTRY_URL", value = "https://api.uat.pdv.pagopa.it/user-registry/v1" },
     { name = "REST_CLIENT_CONNECT_TIMEOUT", value = "60000" },
     { name = "REST_CLIENT_READ_TIMEOUT", value = "60000" },
-    { name = "MS_USER_URL", value = "http://selc-u-user-ms-ca" },
-    { name = "PRODUCT_STORAGE_CONTAINER", value = "selc-u-product" },
-    { name = "ONBOARDING_FUNCTIONS_URL", value = "https://selc-u-onboarding-fn.azurewebsites.net" },
-    { name = "MS_USER_INSTITUTION_URL", value = "http://selc-u-user-ms-ca" },
-    { name = "MS_PRODUCT_URL", value = "http://selc-u-product-ms-ca" }
+    { name = "MS_USER_URL", value = "http://selc-${module.local.config.env_short}-user-ms-ca" },
+    { name = "PRODUCT_STORAGE_CONTAINER", value = "selc-${module.local.config.env_short}-product" },
+    { name = "ONBOARDING_FUNCTIONS_URL", value = "https://selc-${module.local.config.env_short}-onboarding-fn.azurewebsites.net" },
+    { name = "MS_USER_INSTITUTION_URL", value = "http://selc-${module.local.config.env_short}-user-ms-ca" },
+    { name = "MS_PRODUCT_URL", value = "http://selc-${module.local.config.env_short}-product-ms-ca" },
+    { name = "MS_DOCUMENT_URL", value = "http://selc-${module.local.config.env_short}-document-ms-ca" }
   ]
 
   secrets_names_onboarding_bff = {
@@ -49,7 +60,7 @@ module "container_app_onboarding_bff" {
   container_app_name             = "selc-${module.local.config.env_short}-onboarding-bff"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-onboarding-bff"
-  image_tag                      = "sha-8f9614e" #module.local.config.image_tag_latest
+  image_tag                      = var.image_tag
   app_settings                   = local.app_settings_onboarding_bff
   secrets_names                  = local.secrets_names_onboarding_bff
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name

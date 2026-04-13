@@ -16,10 +16,10 @@ import java.util.List;
 @AllArgsConstructor
 public class DocumentBuilderRequest {
 
-    @NotBlank
+    @NotNull
     private String onboardingId;
 
-    @NotBlank
+    @NotNull
     private String productId;
 
     @NotNull

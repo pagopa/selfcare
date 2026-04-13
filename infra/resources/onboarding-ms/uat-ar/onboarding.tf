@@ -2,7 +2,17 @@
 # GLOBAL VARIABLES
 ###############################################################################
 module "local" {
-  source = "../../_modules/local-uat-ar"
+  source = "../../_modules/local-env"
+
+  env       = "uat"
+  env_short = "u"
+  domain    = "ar"
+
+  dns_zone_prefix                = "uat.selfcare"
+  api_dns_zone_prefix            = "api.uat.selfcare"
+  private_dns_name_domain        = "mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-u-cae-002"
+  ca_resource_group_name         = "selc-u-container-app-002-rg"
 }
 module "cosmosdb" {
   source = "../../_modules/cosmosdb_database"
@@ -116,7 +126,7 @@ locals {
     },
     {
       name  = "ONBOARDING_FUNCTIONS_URL"
-      value = "https://selc-${module.local.config.env_short}-onboarding-fn.azurewebsites.net"
+      value = "https://selc-${module.local.config.env_short}-pnpg-onboarding-fn.azurewebsites.net"
     },
     {
       name  = "STORAGE_CONTAINER_PRODUCT"
@@ -124,11 +134,11 @@ locals {
     },
     {
       name  = "MS_CORE_URL"
-      value = "http://selc-${module.local.config.env_short}-ms-core-ca"
+      value = "http://selc-${module.local.config.env_short}-pnpg-ms-core-ca"
     },
     {
       name  = "MS_PARTY_REGISTRY_URL"
-      value = "http://selc-${module.local.config.env_short}-party-reg-proxy-ca"
+      value = "http://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca"
     },
     {
       name  = "SIGNATURE_VALIDATION_ENABLED"
@@ -140,7 +150,7 @@ locals {
     },
     {
       name  = "MS_USER_URL"
-      value = "http://selc-${module.local.config.env_short}-user-ms-ca"
+      value = "http://selc-${module.local.config.env_short}-pnpg-user-ms-ca"
     },
     {
       name  = "ALLOWED_ATECO_CODES"
@@ -157,7 +167,11 @@ locals {
     {
       name  = "ONBOARDING-UPDATE-USER-REQUESTER"
       value = "true"
-    }
+    },
+    {
+      name  = "ONBOARDING_ALLOWED_INSTITUTIONS_PRODUCTS"
+      value = "prod-pn-pg"
+    },
   ]
 
   onboarding_ms_secrets_names = {
