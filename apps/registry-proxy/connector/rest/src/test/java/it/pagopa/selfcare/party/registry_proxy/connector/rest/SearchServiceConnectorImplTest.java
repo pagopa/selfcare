@@ -11,6 +11,7 @@ import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.AzureSearch
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.SearchServiceInstitutionResponse;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.SearchServiceResponse;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.mapper.SearchServiceMapperImpl;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -389,6 +390,15 @@ public class SearchServiceConnectorImplTest {
     when(azureSearchRestClient.indexOnboarding(any())).thenReturn(new SearchServiceStatus());
     searchServiceConnector.indexOnboarding(new OnboardingIndex());
     verify(azureSearchRestClient, times(1)).indexOnboarding(any());
+  }
+
+  @Test
+  void testSearchOnboarding() {
+    when(azureSearchRestClient.searchOnboarding("search", "filter", true, 15L, 0L, null, "orderBy"))
+            .thenReturn(new SearchServiceIndexResponse<>());
+    searchServiceConnector.searchOnboarding("search", "filter", 15L, 0L, "orderBy");
+    verify(azureSearchRestClient, times(1))
+            .searchOnboarding("search", "filter", true, 15L, 0L, null, "orderBy");
   }
 
 }

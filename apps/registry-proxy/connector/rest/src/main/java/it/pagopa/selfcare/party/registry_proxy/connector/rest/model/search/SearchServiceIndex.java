@@ -9,6 +9,9 @@ import lombok.Setter;
 public abstract class SearchServiceIndex {
 
     @JsonProperty("@search.action")
-    private String action = "mergeOrUpload";
+    private String action;
+
+    @JsonProperty("@search.score")
+    private Double score;
 
 }

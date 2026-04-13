@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.party.registry_proxy.core;
 
 import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndex;
+import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndexSearch;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceInstitution;
 
 import java.util.List;
@@ -14,4 +15,5 @@ public interface SearchService {
   List<SearchServiceInstitution> searchInstitution(String search, List<String> products, List<String> institutionTypes, String taxCode, Integer top, Integer skip, String select, String orderby);
 
   boolean indexOnboarding(OnboardingIndex onboardingIndex);
+  OnboardingIndexSearch searchOnboarding(String searchText, List<String> products, List<String> institutionTypes, List<String> statuses, Long page, Long pageSize, String orderBy);
 }

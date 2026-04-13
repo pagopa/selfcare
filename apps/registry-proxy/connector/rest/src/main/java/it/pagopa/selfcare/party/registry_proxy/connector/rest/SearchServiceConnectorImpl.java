@@ -3,6 +3,7 @@ package it.pagopa.selfcare.party.registry_proxy.connector.rest;
 import io.github.resilience4j.retry.annotation.Retry;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.SearchServiceConnector;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndex;
+import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndexSearch;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceInstitution;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceStatus;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.institution.Institution;
@@ -12,6 +13,7 @@ import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.SearchServic
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.SearchServiceResponse;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexRequest;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.mapper.SearchServiceMapper;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexResponse;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceOnboardingIndex;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -58,8 +60,14 @@ public class SearchServiceConnectorImpl implements SearchServiceConnector {
   @Override
   public SearchServiceStatus indexOnboarding(OnboardingIndex onboardingIndex) {
     final SearchServiceIndexRequest<SearchServiceOnboardingIndex> searchServiceIndexRequest = new SearchServiceIndexRequest<>();
-    searchServiceIndexRequest.getValue().add(searchServiceMapper.toSearchServiceOnboardingIndex(onboardingIndex));
+    searchServiceIndexRequest.setValue(List.of(searchServiceMapper.toSearchServiceOnboardingIndex(onboardingIndex)));
     return azureSearchRestClient.indexOnboarding(searchServiceIndexRequest);
+  }
+
+  @Override
+  public OnboardingIndexSearch searchOnboarding(String search, String filter, Long top, Long skip, String orderBy) {
+    final SearchServiceIndexResponse<SearchServiceOnboardingIndex> response = azureSearchRestClient.searchOnboarding(search, filter, true, top, skip, null, orderBy);
+    return searchServiceMapper.toOnboardingIndexSearch(response);
   }
 
 }
