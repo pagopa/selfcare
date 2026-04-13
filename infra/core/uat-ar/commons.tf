@@ -164,10 +164,10 @@ module "cdn" {
 # TMP OLD Storage Account
 ###############################################################################
 
-data "azurerm_storage_account" "old_cdn_storage_account" {
-  name                = "${local.prefix}${local.env_short}checkoutsa"
-  resource_group_name = "${local.prefix}-${local.env_short}-checkout-fe-rg"
-}
+# data "azurerm_storage_account" "old_cdn_storage_account" {
+#   name                = "${local.prefix}${local.env_short}checkoutsa"
+#   resource_group_name = "${local.prefix}-${local.env_short}-checkout-fe-rg"
+# }
 
 # resource "null_resource" "cdn_storage_copy" {
 #   for_each = toset(["$web", "selc-${local.env_short}-product", "selc-openapi"])
@@ -536,12 +536,12 @@ module "logs_storage" {
 # Spid
 ###############################################################################
 
-module "spid_logs_encryption_keys" {
-  source = "../_modules/spid_logs_encryption_keys"
+# module "spid_logs_encryption_keys" {
+#   source = "../_modules/spid_logs_encryption_keys"
 
-  key_vault_id = module.key_vault.key_vault_id
-  tags         = local.tags
-}
+#   key_vault_id = module.key_vault.key_vault_id
+#   tags         = local.tags
+# }
 
 ###############################################################################
 # Azure DevOps Agent
