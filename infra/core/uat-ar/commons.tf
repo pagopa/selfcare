@@ -161,31 +161,6 @@ module "cdn" {
 
 
 ###############################################################################
-# TMP OLD Storage Account
-###############################################################################
-
-# data "azurerm_storage_account" "old_cdn_storage_account" {
-#   name                = "${local.prefix}${local.env_short}checkoutsa"
-#   resource_group_name = "${local.prefix}-${local.env_short}-checkout-fe-rg"
-# }
-
-# resource "null_resource" "cdn_storage_copy" {
-#   for_each = toset(["$web", "selc-${local.env_short}-product", "selc-openapi"])
-
-#   provisioner "local-exec" {
-#     command = <<EOT
-#         az storage blob copy start-batch \
-#         --account-name "${module.cdn.storage_name}" \
-#         --account-key "${module.cdn.storage_primary_access_key}" \
-#         --destination-container '${each.value}' \
-#         --source-account-name "${data.azurerm_storage_account.old_cdn_storage_account.name}" \
-#         --source-account-key "${data.azurerm_storage_account.old_cdn_storage_account.primary_access_key}" \
-#         --source-container '${each.value}'
-#     EOT
-#   }
-# }
-
-###############################################################################
 # monitor (action groups, web tests, alerts)
 ###############################################################################
 module "monitor" {
