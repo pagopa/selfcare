@@ -32,7 +32,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 @Slf4j
-public class PartyConnectorImpl {
+public class PartyClient {
 
     protected static final String REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE = "An Institution external id is required";
     protected static final String REQUIRED_INSTITUTION_ID_MESSAGE = "An Institution id is required";
@@ -58,7 +58,7 @@ public class PartyConnectorImpl {
         List<org.openapi.quarkus.onboarding_json.model.InstitutionResponse> response = institutionApiClient.getInstitutions(request).await().indefinitely();
         return Objects.isNull(response) ? Map.of() : response.stream().collect(Collectors.toMap(org.openapi.quarkus.onboarding_json.model.InstitutionResponse::getId, Function.identity()));
     }
-    public PartyConnectorImpl(@RestClient PartyProcessRestClient restClient,
+    public PartyClient(@RestClient PartyProcessRestClient restClient,
                               InstitutionMapper institutionMapper,
                               @RestClient UserControllerApi userApiClient,
                               @RestClient InstitutionControllerApi institutionApiClient) {

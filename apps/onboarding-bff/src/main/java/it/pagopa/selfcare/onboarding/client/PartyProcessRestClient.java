@@ -27,7 +27,7 @@ import org.openapi.quarkus.institution_json.api.OnboardingApi;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @RegisterRestClient(configKey = "party_process")
-@RegisterClientHeaders(it.pagopa.selfcare.onboarding.client.auth.AuthenticationPropagationHeadersFactory.class)
+@RegisterClientHeaders(it.pagopa.selfcare.onboarding.security.AuthenticationPropagationHeadersFactory.class)
 public interface PartyProcessRestClient extends OnboardingApi {
 
     @GET

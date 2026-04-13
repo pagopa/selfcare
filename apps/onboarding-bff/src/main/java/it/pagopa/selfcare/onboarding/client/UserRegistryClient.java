@@ -20,11 +20,11 @@ import java.util.UUID;
 
 @Slf4j
 @ApplicationScoped
-public class UserRegistryConnectorImpl {
+public class UserRegistryClient {
 
     private final UserRegistryRestClient restClient;
     public static final String USERS_FIELD_LIST = "fiscalCode,familyName,name,workContacts";
-    public UserRegistryConnectorImpl(@RestClient UserRegistryRestClient restClient) {
+    public UserRegistryClient(@RestClient UserRegistryRestClient restClient) {
         this.restClient = restClient;
     }
     public Optional<User> search(String externalId, EnumSet<User.Fields> fieldList) {

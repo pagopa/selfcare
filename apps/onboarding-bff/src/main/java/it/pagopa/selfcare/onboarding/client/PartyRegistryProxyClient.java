@@ -23,7 +23,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 @Slf4j
-public class PartyRegistryProxyConnectorImpl {
+public class PartyRegistryProxyClient {
 
     protected static final String REQUIRED_FISCAL_CODE_MESSAGE = "An user's fiscal code is required";
     private static final String REQUIRED_EXTERNAL_ID_MESSAGE = "An institution's external id is required";
@@ -31,7 +31,7 @@ public class PartyRegistryProxyConnectorImpl {
     private final PartyRegistryProxyRestClient restClient;
 
     private final RegistryProxyMapper proxyMapper;
-    public PartyRegistryProxyConnectorImpl(@RestClient PartyRegistryProxyRestClient restClient, RegistryProxyMapper proxyMapper) {
+    public PartyRegistryProxyClient(@RestClient PartyRegistryProxyRestClient restClient, RegistryProxyMapper proxyMapper) {
         this.restClient = restClient;
         this.proxyMapper = proxyMapper;
     }

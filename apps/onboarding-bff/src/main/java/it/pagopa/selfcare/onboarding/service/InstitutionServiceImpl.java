@@ -3,10 +3,10 @@ import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.commons.base.utils.Origin;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.onboarding.client.OnboardingMsConnectorImpl;
-import it.pagopa.selfcare.onboarding.client.PartyConnectorImpl;
-import it.pagopa.selfcare.onboarding.client.PartyRegistryProxyConnectorImpl;
-import it.pagopa.selfcare.onboarding.client.UserRegistryConnectorImpl;
+import it.pagopa.selfcare.onboarding.client.OnboardingMsClient;
+import it.pagopa.selfcare.onboarding.client.PartyClient;
+import it.pagopa.selfcare.onboarding.client.PartyRegistryProxyClient;
+import it.pagopa.selfcare.onboarding.client.UserRegistryClient;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.client.model.*;
@@ -62,20 +62,20 @@ class InstitutionServiceImpl implements InstitutionService {
     private static final String ONBOARDING_COMPANY_NOT_ALLOWED = "The selected business does not belong to the user";
     private static final String PROD_PN_PG = "prod-pn-pg";
     static final String DESCRIPTION_TO_REPLACE_REGEX = " - COMUNE";
-    private final OnboardingMsConnectorImpl onboardingMsConnector;
-    private final PartyConnectorImpl partyConnector;
-    private final UserRegistryConnectorImpl userConnector;
+    private final OnboardingMsClient onboardingMsConnector;
+    private final PartyClient partyConnector;
+    private final UserRegistryClient userConnector;
     private final OrganizationApi organizationApi;
-    private final PartyRegistryProxyConnectorImpl partyRegistryProxyConnector;
+    private final PartyRegistryProxyClient partyRegistryProxyConnector;
     private final InstitutionInfoMapper institutionMapper;
     private final PgManagerVerifier pgManagerVerifier;
     private final ProductService productService;
-    InstitutionServiceImpl(OnboardingMsConnectorImpl onboardingMsConnector,
-                           PartyConnectorImpl partyConnector,
+    InstitutionServiceImpl(OnboardingMsClient onboardingMsConnector,
+                           PartyClient partyConnector,
                            ProductService productService,
-                           UserRegistryConnectorImpl userConnector,
+                           UserRegistryClient userConnector,
                            @RestClient OrganizationApi organizationApi,
-                           PartyRegistryProxyConnectorImpl partyRegistryProxyConnector,
+                           PartyRegistryProxyClient partyRegistryProxyConnector,
                            InstitutionInfoMapper institutionMapper,
                            PgManagerVerifier pgManagerVerifier
     ) {

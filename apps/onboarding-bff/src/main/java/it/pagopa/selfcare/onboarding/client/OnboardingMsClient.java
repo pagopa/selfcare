@@ -38,7 +38,7 @@ import java.util.Objects;
 
 @ApplicationScoped
 @Slf4j
-public class OnboardingMsConnectorImpl {
+public class OnboardingMsClient {
 
     public static final String PROD_IO = "prod-io";
     public static final String PROD_PAGOPA = "prod-pagopa";
@@ -52,7 +52,7 @@ public class OnboardingMsConnectorImpl {
     private final InternalV1Api internalV1Api;
     protected static final String REQUIRED_PRODUCT_ID_MESSAGE = "A product Id is required";
 
-    public OnboardingMsConnectorImpl(@RestClient OnboardingControllerApi onboardingApi,
+    public OnboardingMsClient(@RestClient OnboardingControllerApi onboardingApi,
                                      @RestClient BillingPortalApi billingPortalApi,
                                      @RestClient TokenControllerApi tokenApi,
                                      @RestClient SupportApi supportApi,
