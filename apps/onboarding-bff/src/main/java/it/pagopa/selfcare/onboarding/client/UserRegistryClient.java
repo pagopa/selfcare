@@ -1,17 +1,12 @@
 package it.pagopa.selfcare.onboarding.client;
 
 import feign.FeignException;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
-import it.pagopa.selfcare.onboarding.client.model.MutableUserFieldsDto;
-import it.pagopa.selfcare.onboarding.client.model.SaveUserDto;
-import it.pagopa.selfcare.onboarding.client.model.User;
-import it.pagopa.selfcare.onboarding.client.model.UserId;
-import it.pagopa.selfcare.onboarding.client.UserRegistryRestClient;
-import it.pagopa.selfcare.onboarding.client.model.EmbeddedExternalId;
-import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
-import lombok.extern.slf4j.Slf4j;
+import it.pagopa.selfcare.onboarding.client.model.*;
 import jakarta.enterprise.context.ApplicationScoped;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 
 import java.util.Collection;
 import java.util.EnumSet;

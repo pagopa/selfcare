@@ -1,9 +1,8 @@
 package it.pagopa.selfcare.onboarding.client;
 
-import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.client.model.*;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.openapi.quarkus.institution_json.api.OnboardingApi;

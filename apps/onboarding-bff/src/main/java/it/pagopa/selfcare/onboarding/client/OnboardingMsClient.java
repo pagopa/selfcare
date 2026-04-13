@@ -1,28 +1,23 @@
 package it.pagopa.selfcare.onboarding.client;
 
-import org.eclipse.microprofile.faulttolerance.Retry;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
+import it.pagopa.selfcare.onboarding.client.model.BinaryData;
+import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
+import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.common.InstitutionPaSubunitType;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
-import it.pagopa.selfcare.onboarding.client.model.BinaryData;
-import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
-import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
+import jakarta.enterprise.context.ApplicationScoped;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.faulttolerance.Retry;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.openapi.quarkus.onboarding_json.api.*;
+import org.openapi.quarkus.onboarding_json.model.*;
+import org.owasp.encoder.Encode;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import org.openapi.quarkus.onboarding_json.api.AggregatesControllerApi;
-import org.openapi.quarkus.onboarding_json.api.BillingPortalApi;
-import org.openapi.quarkus.onboarding_json.api.InternalV1Api;
-import org.openapi.quarkus.onboarding_json.api.OnboardingControllerApi;
-import org.openapi.quarkus.onboarding_json.api.SupportApi;
-import org.openapi.quarkus.onboarding_json.api.TokenControllerApi;
-import org.openapi.quarkus.onboarding_json.model.*;
-import lombok.extern.slf4j.Slf4j;
-import org.owasp.encoder.Encode;
-import jakarta.enterprise.context.ApplicationScoped;
-
 import java.util.List;
 import java.util.Objects;
 

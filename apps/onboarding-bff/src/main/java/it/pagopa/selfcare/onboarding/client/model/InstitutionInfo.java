@@ -2,7 +2,6 @@ package it.pagopa.selfcare.onboarding.client.model;
 
 import it.pagopa.selfcare.commons.base.security.PartyRole;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.onboarding.client.model.*;
 import lombok.Data;
 
 import java.util.Objects;

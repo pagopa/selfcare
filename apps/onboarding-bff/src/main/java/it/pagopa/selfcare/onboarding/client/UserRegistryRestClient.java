@@ -1,28 +1,17 @@
 package it.pagopa.selfcare.onboarding.client;
 
-import it.pagopa.selfcare.onboarding.client.model.MutableUserFieldsDto;
-import it.pagopa.selfcare.onboarding.client.model.SaveUserDto;
-import it.pagopa.selfcare.onboarding.client.model.User;
-import it.pagopa.selfcare.onboarding.client.model.UserId;
-import it.pagopa.selfcare.onboarding.client.model.EmbeddedExternalId;
-import java.util.EnumSet;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.PATCH;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
+import it.pagopa.selfcare.onboarding.client.model.*;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
+
+import java.util.EnumSet;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RegisterRestClient(configKey = "user_registry_json")
 @ClientHeaderParam(name = "x-api-key", value = "${USERVICE_USER_REGISTRY_API_KEY:api-key}")

@@ -1,23 +1,21 @@
 package it.pagopa.selfcare.onboarding.client;
 
 import it.pagopa.selfcare.onboarding.client.model.*;
-import static it.pagopa.selfcare.onboarding.client.model.RelationshipState.ACTIVE;
-
+import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
 import it.pagopa.selfcare.product.entity.Product;
+import jakarta.enterprise.context.ApplicationScoped;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import it.pagopa.selfcare.commons.base.logging.LogUtils;
-import it.pagopa.selfcare.onboarding.client.PartyProcessRestClient;
-import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
 import org.openapi.quarkus.onboarding_json.api.InstitutionControllerApi;
-import org.openapi.quarkus.user_json.api.UserControllerApi;
 import org.openapi.quarkus.onboarding_json.model.GetInstitutionRequest;
-import lombok.extern.slf4j.Slf4j;
-import jakarta.enterprise.context.ApplicationScoped;
+import org.openapi.quarkus.user_json.api.UserControllerApi;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static it.pagopa.selfcare.onboarding.client.model.RelationshipState.ACTIVE;
 
 @ApplicationScoped
 @Slf4j
