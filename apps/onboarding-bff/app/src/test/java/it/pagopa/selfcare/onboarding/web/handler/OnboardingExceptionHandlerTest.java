@@ -5,9 +5,8 @@ import it.pagopa.selfcare.onboarding.connector.exceptions.*;
 import it.pagopa.selfcare.onboarding.core.exception.InvalidUserFieldsException;
 import it.pagopa.selfcare.onboarding.core.exception.OnboardingNotAllowedException;
 import it.pagopa.selfcare.onboarding.core.exception.UpdateNotAllowedException;
+import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Objects;
@@ -16,16 +15,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.HttpStatus.*;
 
 class OnboardingExceptionHandlerTest {
 
     private static final String DETAIL_MESSAGE = "detail message";
 
-    private final OnboardingExceptionHandler handler;
+    private final OnboardingExceptionMapper handler;
 
     public OnboardingExceptionHandlerTest() {
-        this.handler = new OnboardingExceptionHandler();
+        this.handler = new OnboardingExceptionMapper();
     }
 
 
@@ -36,13 +34,14 @@ class OnboardingExceptionHandlerTest {
         when(exceptionMock.getMessage())
                 .thenReturn(DETAIL_MESSAGE);
         //when
-        ResponseEntity<Problem> responseEntity = handler.handleInvalidRequestException(exceptionMock);
+        Response responseEntity = handler.handleInvalidRequestException(exceptionMock);
         //then
         assertNotNull(responseEntity);
-        assertEquals(BAD_REQUEST, responseEntity.getStatusCode());
-        assertNotNull(responseEntity.getBody());
-        assertEquals(DETAIL_MESSAGE, responseEntity.getBody().getDetail());
-        assertEquals(BAD_REQUEST.value(), responseEntity.getBody().getStatus());
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), responseEntity.getStatus());
+        Problem body = (Problem) responseEntity.getEntity();
+        assertNotNull(body);
+        assertEquals(DETAIL_MESSAGE, body.getDetail());
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), body.getStatus());
     }
 
     @Test
@@ -52,13 +51,14 @@ class OnboardingExceptionHandlerTest {
         when(exceptionMock.getMessage())
                 .thenReturn(DETAIL_MESSAGE);
         //when
-        ResponseEntity<Problem> responseEntity = handler.handleInternalGatewayErrorException(exceptionMock);
+        Response responseEntity = handler.handleInternalGatewayErrorException(exceptionMock);
         //then
         assertNotNull(responseEntity);
-        assertEquals(BAD_GATEWAY, responseEntity.getStatusCode());
-        assertNotNull(responseEntity.getBody());
-        assertEquals(DETAIL_MESSAGE, responseEntity.getBody().getDetail());
-        assertEquals(BAD_GATEWAY.value(), responseEntity.getBody().getStatus());
+        assertEquals(Response.Status.BAD_GATEWAY.getStatusCode(), responseEntity.getStatus());
+        Problem body = (Problem) responseEntity.getEntity();
+        assertNotNull(body);
+        assertEquals(DETAIL_MESSAGE, body.getDetail());
+        assertEquals(Response.Status.BAD_GATEWAY.getStatusCode(), body.getStatus());
     }
 
 
@@ -69,13 +69,14 @@ class OnboardingExceptionHandlerTest {
         when(exceptionMock.getMessage())
                 .thenReturn(DETAIL_MESSAGE);
         //when
-        ResponseEntity<Problem> responseEntity = handler.handleResourceNotFoundException(exceptionMock);
+        Response responseEntity = handler.handleResourceNotFoundException(exceptionMock);
         //then
         assertNotNull(responseEntity);
-        assertEquals(NOT_FOUND, responseEntity.getStatusCode());
-        assertNotNull(responseEntity.getBody());
-        assertEquals(DETAIL_MESSAGE, responseEntity.getBody().getDetail());
-        assertEquals(NOT_FOUND.value(), responseEntity.getBody().getStatus());
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), responseEntity.getStatus());
+        Problem body = (Problem) responseEntity.getEntity();
+        assertNotNull(body);
+        assertEquals(DETAIL_MESSAGE, body.getDetail());
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), body.getStatus());
     }
 
 
@@ -86,13 +87,14 @@ class OnboardingExceptionHandlerTest {
         when(exceptionMock.getMessage())
                 .thenReturn(DETAIL_MESSAGE);
         //when
-        ResponseEntity<Problem> responseEntity = handler.handleProductHasNoRelationshipException(exceptionMock);
+        Response responseEntity = handler.handleProductHasNoRelationshipException(exceptionMock);
         //then
         assertNotNull(responseEntity);
-        assertEquals(INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
-        assertNotNull(responseEntity.getBody());
-        assertEquals(DETAIL_MESSAGE, responseEntity.getBody().getDetail());
-        assertEquals(INTERNAL_SERVER_ERROR.value(), responseEntity.getBody().getStatus());
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), responseEntity.getStatus());
+        Problem body = (Problem) responseEntity.getEntity();
+        assertNotNull(body);
+        assertEquals(DETAIL_MESSAGE, body.getDetail());
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), body.getStatus());
     }
 
 
@@ -103,13 +105,14 @@ class OnboardingExceptionHandlerTest {
         when(mockException.getMessage())
                 .thenReturn(DETAIL_MESSAGE);
         // when
-        ResponseEntity<Problem> responseEntity = handler.handleUpdateNotAllowedException(mockException);
+        Response responseEntity = handler.handleUpdateNotAllowedException(mockException);
         // then
         assertNotNull(responseEntity);
-        assertEquals(CONFLICT, responseEntity.getStatusCode());
-        assertNotNull(responseEntity.getBody());
-        assertEquals(DETAIL_MESSAGE, responseEntity.getBody().getDetail());
-        assertEquals(CONFLICT.value(), responseEntity.getBody().getStatus());
+        assertEquals(Response.Status.CONFLICT.getStatusCode(), responseEntity.getStatus());
+        Problem body = (Problem) responseEntity.getEntity();
+        assertNotNull(body);
+        assertEquals(DETAIL_MESSAGE, body.getDetail());
+        assertEquals(Response.Status.CONFLICT.getStatusCode(), body.getStatus());
     }
 
 
@@ -123,17 +126,18 @@ class OnboardingExceptionHandlerTest {
         when(mockException.getInvalidFields())
                 .thenReturn(List.of(invalidField));
         // when
-        ResponseEntity<Problem> responseEntity = handler.handleInvalidUserFieldsException(mockException);
+        Response responseEntity = handler.handleInvalidUserFieldsException(mockException);
         // then
         assertNotNull(responseEntity);
-        assertEquals(CONFLICT, responseEntity.getStatusCode());
-        assertNotNull(responseEntity.getBody());
-        assertEquals(DETAIL_MESSAGE, responseEntity.getBody().getDetail());
-        assertEquals(CONFLICT.value(), responseEntity.getBody().getStatus());
-        assertNotNull(responseEntity.getBody().getInvalidParams());
-        assertEquals(1, responseEntity.getBody().getInvalidParams().size());
-        assertEquals(invalidField.getName(), responseEntity.getBody().getInvalidParams().get(0).getName());
-        assertEquals(invalidField.getReason(), responseEntity.getBody().getInvalidParams().get(0).getReason());
+        assertEquals(Response.Status.CONFLICT.getStatusCode(), responseEntity.getStatus());
+        Problem body = (Problem) responseEntity.getEntity();
+        assertNotNull(body);
+        assertEquals(DETAIL_MESSAGE, body.getDetail());
+        assertEquals(Response.Status.CONFLICT.getStatusCode(), body.getStatus());
+        assertNotNull(body.getInvalidParams());
+        assertEquals(1, body.getInvalidParams().size());
+        assertEquals(invalidField.getName(), body.getInvalidParams().get(0).getName());
+        assertEquals(invalidField.getReason(), body.getInvalidParams().get(0).getReason());
     }
 
 
@@ -144,13 +148,14 @@ class OnboardingExceptionHandlerTest {
         when(mockException.getMessage())
                 .thenReturn(DETAIL_MESSAGE);
         // when
-        ResponseEntity<Problem> responseEntity = handler.handleOnboardingNotAllowedException(mockException);
+        Response responseEntity = handler.handleOnboardingNotAllowedException(mockException);
         // then
         assertNotNull(responseEntity);
-        assertEquals(FORBIDDEN, responseEntity.getStatusCode());
-        assertNotNull(responseEntity.getBody());
-        assertEquals(DETAIL_MESSAGE, responseEntity.getBody().getDetail());
-        assertEquals(FORBIDDEN.value(), responseEntity.getBody().getStatus());
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), responseEntity.getStatus());
+        Problem body = (Problem) responseEntity.getEntity();
+        assertNotNull(body);
+        assertEquals(DETAIL_MESSAGE, body.getDetail());
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), body.getStatus());
     }
 
     @Test
@@ -160,28 +165,29 @@ class OnboardingExceptionHandlerTest {
         when(mockException.getMessage())
                 .thenReturn(DETAIL_MESSAGE);
         // when
-        ResponseEntity<Problem> responseEntity = handler.handleResourceConflictException(mockException);
+        Response responseEntity = handler.handleResourceConflictException(mockException);
         // then
         assertNotNull(responseEntity);
-        assertEquals(CONFLICT, responseEntity.getStatusCode());
-        assertNotNull(responseEntity.getBody());
-        assertEquals(DETAIL_MESSAGE, responseEntity.getBody().getDetail());
-        assertEquals(CONFLICT.value(), responseEntity.getBody().getStatus());
+        assertEquals(Response.Status.CONFLICT.getStatusCode(), responseEntity.getStatus());
+        Problem body = (Problem) responseEntity.getEntity();
+        assertNotNull(body);
+        assertEquals(DETAIL_MESSAGE, body.getDetail());
+        assertEquals(Response.Status.CONFLICT.getStatusCode(), body.getStatus());
     }
 
     @Test
     void handleCustomSignVerificationException() {
         // given
         CustomVerifyException mockException = mock(CustomVerifyException.class);
-        when(mockException.getStatus()).thenReturn(HttpStatus.BAD_REQUEST.value());
+        when(mockException.getStatus()).thenReturn(Response.Status.BAD_REQUEST.getStatusCode());
         when(mockException.getBody()).thenReturn(DETAIL_MESSAGE);
         // when
-        ResponseEntity<Object> responseEntity = handler.handlePropagatedFrontendException(mockException);
+        Response responseEntity = handler.handlePropagatedFrontendException(mockException);
         // then
         assertNotNull(responseEntity);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertNotNull(responseEntity.getBody());
-        assertEquals(DETAIL_MESSAGE, responseEntity.getBody());
-        assertEquals("application/json", Objects.requireNonNull(responseEntity.getHeaders().getContentType()).toString());
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), responseEntity.getStatus());
+        assertNotNull(responseEntity.getEntity());
+        assertEquals(DETAIL_MESSAGE, responseEntity.getEntity());
+        assertEquals("application/json", Objects.requireNonNull(responseEntity.getMediaType()).toString());
     }
 }

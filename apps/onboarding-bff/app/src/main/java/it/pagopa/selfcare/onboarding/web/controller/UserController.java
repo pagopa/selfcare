@@ -8,12 +8,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.commons.web.model.Problem;
-import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
 import it.pagopa.selfcare.onboarding.connector.model.user.UserId;
 import it.pagopa.selfcare.onboarding.core.UserService;
 import it.pagopa.selfcare.onboarding.web.model.*;
 import it.pagopa.selfcare.onboarding.web.model.mapper.OnboardingResourceMapper;
 import it.pagopa.selfcare.onboarding.web.model.mapper.UserResourceMapper;
+import it.pagopa.selfcare.onboarding.web.utils.PrincipalUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
@@ -22,6 +22,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.security.Principal;
@@ -130,10 +131,9 @@ public class UserController {
     @Path("/onboarding/{onboardingId}/manager")
     @Operation(summary = "${swagger.onboarding.users.api.check-manager}",
             description = "${swagger.onboarding.users.api.check-manager}", operationId = "getManagerInfo")
-    public ManagerInfoResponse getManagerInfo(@PathParam("onboardingId") String onboardingId, Principal principal) {
+    public ManagerInfoResponse getManagerInfo(@PathParam("onboardingId") String onboardingId, @Context Principal principal) {
         log.trace("getManagerInfo start");
-        JwtAuthenticationToken jwtAuthenticationToken = (JwtAuthenticationToken) principal;
-        SelfCareUser selfCareUser = (SelfCareUser) jwtAuthenticationToken.getPrincipal();
+        SelfCareUser selfCareUser = PrincipalUtils.getSelfCareUser(principal);
 
         ManagerInfoResponse managerInfoResponse = userResourceMapper.toManagerInfoResponse(userService.getManagerInfo(onboardingId, selfCareUser.getFiscalCode()));
         log.trace("getManagerInfo end");

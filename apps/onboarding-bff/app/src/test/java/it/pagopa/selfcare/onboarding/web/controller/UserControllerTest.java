@@ -17,7 +17,7 @@ import it.pagopa.selfcare.onboarding.connector.model.user.UserId;
 import it.pagopa.selfcare.onboarding.core.UserService;
 import it.pagopa.selfcare.onboarding.core.exception.InvalidUserFieldsException;
 import it.pagopa.selfcare.onboarding.web.config.WebTestConfig;
-import it.pagopa.selfcare.onboarding.web.handler.OnboardingExceptionHandler;
+import it.pagopa.selfcare.onboarding.web.handler.OnboardingExceptionMapper;
 import it.pagopa.selfcare.onboarding.web.model.UserDataValidationDto;
 import it.pagopa.selfcare.onboarding.web.model.UserTaxCodeDto;
 import it.pagopa.selfcare.onboarding.web.model.mapper.OnboardingResourceMapperImpl;
@@ -43,7 +43,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
         UserController.class,
         OnboardingResourceMapperImpl.class,
         WebTestConfig.class,
-        OnboardingExceptionHandler.class,
+        OnboardingExceptionMapper.class,
         UserResourceMapperImpl.class,
         UserResourceMapperImpl.class
 })

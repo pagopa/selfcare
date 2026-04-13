@@ -13,7 +13,7 @@ import org.mapstruct.Named;
 
 import java.util.UUID;
 
-@Mapper(componentModel = "spring", uses = GeographicTaxonomyMapper.class)
+@Mapper(componentModel = "cdi", uses = GeographicTaxonomyMapper.class)
 public interface OnboardingInstitutionInfoMapper {
     @Mapping(target = "institution", expression = "java(toInstitutionData(model.getInstitution(), model.getAssistanceContacts(), model.getCompanyInformations()))")
     InstitutionOnboardingInfoResource toResource(InstitutionOnboardingData model);

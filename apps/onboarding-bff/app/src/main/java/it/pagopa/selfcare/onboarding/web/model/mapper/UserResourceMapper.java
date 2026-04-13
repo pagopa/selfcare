@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "cdi")
 public interface UserResourceMapper {
 
     User toUser(UserDto model);

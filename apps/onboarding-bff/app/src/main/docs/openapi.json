@@ -483,7 +483,7 @@
             "pattern" : "\\S"
           },
           "role" : {
-            "$ref" : "#/components/schemas/PartyRole"
+            "$ref" : "#/components/schemas/PartyRole1"
           },
           "productRole" : {
             "type" : "string"
@@ -1148,14 +1148,6 @@
           }
         }
       },
-      "Principal" : {
-        "type" : "object",
-        "properties" : {
-          "name" : {
-            "type" : "string"
-          }
-        }
-      },
       "ProductResource" : {
         "type" : "object",
         "properties" : {
@@ -1301,7 +1293,7 @@
             "pattern" : "\\S"
           },
           "role" : {
-            "$ref" : "#/components/schemas/PartyRole1"
+            "$ref" : "#/components/schemas/PartyRole"
           },
           "email" : {
             "type" : "string"
@@ -1454,16 +1446,6 @@
             "type" : "string"
           }
         } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/Principal"
-              }
-            }
-          },
-          "required" : true
-        },
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -1496,8 +1478,13 @@
           "required" : true
         },
         "responses" : {
-          "201" : {
-            "description" : "Created"
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
           },
           "400" : {
             "description" : "Bad Request"
@@ -1509,16 +1496,6 @@
     },
     "/v1/institutions/from-infocamere" : {
       "get" : {
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/Principal"
-              }
-            }
-          },
-          "required" : true
-        },
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -1570,57 +1547,6 @@
       }
     },
     "/v1/institutions/onboarding" : {
-      "get" : {
-        "parameters" : [ {
-          "name" : "institutionId",
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "productId",
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/InstitutionOnboardingInfoResource"
-                }
-              }
-            }
-          }
-        },
-        "summary" : "Get Institution Onboarding Info By Id",
-        "tags" : [ "Institution Controller" ]
-      },
-      "post" : {
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/OnboardingProductDto"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Created"
-          },
-          "400" : {
-            "description" : "Bad Request"
-          }
-        },
-        "summary" : "Onboarding",
-        "tags" : [ "Institution Controller" ]
-      },
       "head" : {
         "parameters" : [ {
           "name" : "institutionType",
@@ -1676,7 +1602,65 @@
           "204" : {
             "description" : "No Content"
           }
-        }
+        },
+        "summary" : "Verify Onboarding",
+        "tags" : [ "Institution Controller" ]
+      },
+      "post" : {
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OnboardingProductDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        },
+        "summary" : "Onboarding",
+        "tags" : [ "Institution Controller" ]
+      },
+      "get" : {
+        "parameters" : [ {
+          "name" : "institutionId",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productId",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InstitutionOnboardingInfoResource"
+                }
+              }
+            }
+          }
+        },
+        "summary" : "Get Institution Onboarding Info By Id",
+        "tags" : [ "Institution Controller" ]
       }
     },
     "/v1/institutions/verification/legal-address" : {
@@ -1791,7 +1775,9 @@
           "204" : {
             "description" : "No Content"
           }
-        }
+        },
+        "summary" : "Verify Onboarding",
+        "tags" : [ "Institution Controller" ]
       }
     },
     "/v1/institutions/{externalInstitutionId}/products/{productId}/onboarded-institution-info" : {
@@ -1947,8 +1933,13 @@
           "required" : true
         },
         "responses" : {
-          "201" : {
-            "description" : "Created"
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
           },
           "400" : {
             "description" : "Bad Request"
@@ -1971,8 +1962,13 @@
           "required" : true
         },
         "responses" : {
-          "201" : {
-            "description" : "Created"
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
           },
           "400" : {
             "description" : "Bad Request"
@@ -1992,16 +1988,6 @@
             "type" : "string"
           }
         } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/Principal"
-              }
-            }
-          },
-          "required" : true
-        },
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -2062,8 +2048,13 @@
           "required" : true
         },
         "responses" : {
-          "201" : {
-            "description" : "Created"
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
           },
           "400" : {
             "description" : "Bad Request"
@@ -2138,8 +2129,13 @@
           "required" : true
         },
         "responses" : {
-          "201" : {
-            "description" : "Created"
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
           },
           "400" : {
             "description" : "Bad Request"
@@ -2193,8 +2189,13 @@
           "required" : true
         },
         "responses" : {
-          "201" : {
-            "description" : "Created"
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
           },
           "400" : {
             "description" : "Bad Request"
@@ -2246,25 +2247,28 @@
     },
     "/v2/institutions/onboarding/aggregation/verification" : {
       "post" : {
-        "parameters" : [ {
-          "name" : "aggregates",
-          "in" : "query",
-          "schema" : {
-            "type" : "object"
-          }
-        }, {
-          "name" : "institutionType",
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "productId",
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "aggregates" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  },
+                  "institutionType" : {
+                    "type" : "string"
+                  },
+                  "productId" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          },
+          "required" : true
+        },
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -2441,37 +2445,6 @@
       }
     },
     "/v2/tokens/{onboardingId}/attachment" : {
-      "get" : {
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "filename",
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/octet-stream" : {
-                "schema" : {
-                  "type" : "string",
-                  "format" : "binary"
-                }
-              }
-            }
-          }
-        },
-        "summary" : "Get Attachment",
-        "tags" : [ "Token V 2 Controller" ]
-      },
       "post" : {
         "parameters" : [ {
           "name" : "onboardingId",
@@ -2487,12 +2460,59 @@
             "type" : "string"
           }
         } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                }
+              }
+            }
+          },
+          "required" : true
+        },
         "responses" : {
-          "201" : {
-            "description" : "Created"
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
           }
         },
         "summary" : "Upload Attachment",
+        "tags" : [ "Token V 2 Controller" ]
+      },
+      "get" : {
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "name",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/octet-stream" : { }
+            }
+          }
+        },
+        "summary" : "Get Attachment",
         "tags" : [ "Token V 2 Controller" ]
       }
     },
@@ -2514,30 +2534,20 @@
           "required" : true
         } ],
         "responses" : {
-          "204" : {
-            "description" : "No Content"
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
           }
-        }
+        },
+        "summary" : "Head Attachment",
+        "tags" : [ "Token V 2 Controller" ]
       }
     },
     "/v2/tokens/{onboardingId}/complete" : {
-      "post" : {
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "201" : {
-            "description" : "Created"
-          }
-        },
-        "summary" : "Complete",
-        "tags" : [ "Token V 2 Controller" ]
-      },
       "delete" : {
         "parameters" : [ {
           "name" : "onboardingId",
@@ -2548,11 +2558,54 @@
           }
         } ],
         "responses" : {
-          "204" : {
-            "description" : "No Content"
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
           }
         },
         "summary" : "Delete Onboarding",
+        "tags" : [ "Token V 2 Controller" ]
+      },
+      "post" : {
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "contract" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          }
+        },
+        "summary" : "Complete",
         "tags" : [ "Token V 2 Controller" ]
       }
     },
@@ -2566,9 +2619,30 @@
             "type" : "string"
           }
         } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "contract" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                }
+              }
+            }
+          },
+          "required" : true
+        },
         "responses" : {
-          "201" : {
-            "description" : "Created"
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
           }
         },
         "summary" : "Complete Onboarding Users",
@@ -2589,12 +2663,7 @@
           "200" : {
             "description" : "OK",
             "content" : {
-              "application/octet-stream" : {
-                "schema" : {
-                  "type" : "string",
-                  "format" : "binary"
-                }
-              }
+              "application/octet-stream" : { }
             }
           }
         },
@@ -2619,26 +2688,11 @@
             "type" : "string"
           }
         } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/Principal"
-              }
-            }
-          },
-          "required" : true
-        },
         "responses" : {
           "200" : {
             "description" : "OK",
             "content" : {
-              "application/octet-stream" : {
-                "schema" : {
-                  "type" : "string",
-                  "format" : "binary"
-                }
-              }
+              "application/octet-stream" : { }
             }
           }
         },
@@ -2688,7 +2742,7 @@
             "type" : "string"
           }
         }, {
-          "name" : "filename",
+          "name" : "name",
           "in" : "query",
           "schema" : {
             "type" : "string"
@@ -2698,12 +2752,7 @@
           "200" : {
             "description" : "OK",
             "content" : {
-              "application/octet-stream" : {
-                "schema" : {
-                  "type" : "string",
-                  "format" : "binary"
-                }
-              }
+              "application/octet-stream" : { }
             }
           }
         },

@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.commons.web.model.Problem;
-import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
 import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.connector.model.OnboardingResult;
 import it.pagopa.selfcare.onboarding.connector.model.UploadedFile;
@@ -18,9 +17,11 @@ import it.pagopa.selfcare.onboarding.web.model.*;
 import it.pagopa.selfcare.onboarding.web.model.mapper.InstitutionResourceMapper;
 import it.pagopa.selfcare.onboarding.web.model.mapper.OnboardingResourceMapper;
 import it.pagopa.selfcare.onboarding.web.utils.FileValidationUtils;
+import it.pagopa.selfcare.onboarding.web.utils.PrincipalUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.io.IOException;
@@ -89,11 +90,10 @@ public class InstitutionV2Controller {
     @Path("/company/onboarding")
     @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.subunit}",
             description = "${swagger.onboarding.institutions.api.onboarding.subunit}", operationId = "institutionOnboardingCompany")
-    public Response onboarding(@Valid CompanyOnboardingDto request, Principal principal) {
+    public Response onboarding(@Valid CompanyOnboardingDto request, @Context Principal principal) {
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", Encode.forJava(request.toString()));
-        JwtAuthenticationToken jwtAuthenticationToken = (JwtAuthenticationToken) principal;
-        SelfCareUser selfCareUser = (SelfCareUser) jwtAuthenticationToken.getPrincipal();
+        SelfCareUser selfCareUser = PrincipalUtils.getSelfCareUser(principal);
         institutionService.onboardingCompanyV2(onboardingResourceMapper.toEntity(request), selfCareUser.getFiscalCode());
         log.trace(ONBOARDING_END);
         return Response.status(Response.Status.CREATED).build();
@@ -157,11 +157,10 @@ public class InstitutionV2Controller {
             description = "${swagger.onboarding.institutions.api.onboarding.verifyManager}", operationId = "verifyManagerUsingPOST")
     public VerifyManagerResponse verifyManager(
             @Valid VerifyManagerRequest request,
-            Principal principal
+            @Context Principal principal
     ) {
         log.trace("verifyManager start");
-        JwtAuthenticationToken jwtAuthenticationToken = (JwtAuthenticationToken) principal;
-        SelfCareUser selfCareUser = (SelfCareUser) jwtAuthenticationToken.getPrincipal();
+        SelfCareUser selfCareUser = PrincipalUtils.getSelfCareUser(principal);
 
         VerifyManagerResponse response = onboardingResourceMapper.toManagerVerification(institutionService.verifyManager(selfCareUser.getFiscalCode(), request.getCompanyTaxCode()));
         log.trace("verifyManager end");

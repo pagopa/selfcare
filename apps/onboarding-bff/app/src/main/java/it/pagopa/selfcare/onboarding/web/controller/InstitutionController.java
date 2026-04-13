@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.commons.web.model.Problem;
-import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
 import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.connector.model.InstitutionLegalAddressData;
 import it.pagopa.selfcare.onboarding.connector.model.InstitutionOnboardingData;
@@ -21,9 +20,11 @@ import it.pagopa.selfcare.onboarding.connector.model.institutions.infocamere.Ins
 import it.pagopa.selfcare.onboarding.core.InstitutionService;
 import it.pagopa.selfcare.onboarding.web.model.*;
 import it.pagopa.selfcare.onboarding.web.model.mapper.*;
+import it.pagopa.selfcare.onboarding.web.utils.PrincipalUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.security.Principal;
@@ -169,10 +170,9 @@ public class InstitutionController {
     public List<InstitutionResource> getInstitutions(@ApiParam("${swagger.onboarding.institutions.model.productFilter}")
                                                      @QueryParam("productId")
                                                      String productId,
-                                                     Principal principal) {
+                                                     @Context Principal principal) {
         log.trace("getInstitutions start");
-        JwtAuthenticationToken jwtAuthenticationToken = (JwtAuthenticationToken) principal;
-        SelfCareUser selfCareUser = (SelfCareUser) jwtAuthenticationToken.getPrincipal();
+        SelfCareUser selfCareUser = PrincipalUtils.getSelfCareUser(principal);
 
         List<InstitutionResource> institutionResources = institutionService.getInstitutions(productId, selfCareUser.getId())
                 .stream()
@@ -251,11 +251,10 @@ public class InstitutionController {
     @Path("/from-infocamere/")
     @Operation(summary = "${swagger.onboarding.institutions.api.getInstitutionsByUser}",
             description = "${swagger.onboarding.institutions.api.getInstitutionsByUser}", operationId = "getInstitutionsFromInfocamereUsingGET")
-    public InstitutionResourceIC getInstitutionsFromInfocamere(Principal principal) {
+    public InstitutionResourceIC getInstitutionsFromInfocamere(@Context Principal principal) {
         log.trace("getInstitutionsFromInfocamere start");
 
-        JwtAuthenticationToken jwtAuthenticationToken = (JwtAuthenticationToken) principal;
-        SelfCareUser selfCareUser = (SelfCareUser) jwtAuthenticationToken.getPrincipal();
+        SelfCareUser selfCareUser = PrincipalUtils.getSelfCareUser(principal);
 
         InstitutionInfoIC institutionInfoIC = institutionService.getInstitutionsByUser(selfCareUser.getFiscalCode());
         InstitutionResourceIC institutionResourceIC = institutionMapper.toResource(institutionInfoIC);

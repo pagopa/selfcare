@@ -6,7 +6,7 @@ import it.pagopa.selfcare.onboarding.web.model.ProductResource;
 import it.pagopa.selfcare.product.entity.Product;
 import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "cdi")
 public interface ProductMapper {
     ProductResource toResource(Product model);
 

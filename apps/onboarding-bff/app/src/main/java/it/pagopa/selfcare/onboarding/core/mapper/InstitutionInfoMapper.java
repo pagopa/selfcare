@@ -7,7 +7,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "cdi")
 public interface InstitutionInfoMapper {
 
     @Mapping(source = "city", target = "institutionLocation.city")
