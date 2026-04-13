@@ -13,9 +13,9 @@
 package it.pagopa.selfcare.onboarding.client.model;
 
 import it.pagopa.selfcare.commons.base.security.PartyRole;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.Billing;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.InstitutionUpdate;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.ProductInfo;
+import it.pagopa.selfcare.onboarding.client.model.Billing;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionUpdate;
+import it.pagopa.selfcare.onboarding.client.model.ProductInfo;
 import lombok.Data;
 
 import java.time.OffsetDateTime;

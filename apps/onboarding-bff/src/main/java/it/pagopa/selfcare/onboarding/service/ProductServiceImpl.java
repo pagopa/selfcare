@@ -1,8 +1,8 @@
 package it.pagopa.selfcare.onboarding.service;
 
-import it.pagopa.selfcare.onboarding.client.model.product.OriginResult;
+import it.pagopa.selfcare.onboarding.client.model.OriginResult;
 import it.pagopa.selfcare.onboarding.common.Origin;
-import it.pagopa.selfcare.onboarding.client.model.product.OriginEntry;
+import it.pagopa.selfcare.onboarding.client.model.OriginEntry;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;

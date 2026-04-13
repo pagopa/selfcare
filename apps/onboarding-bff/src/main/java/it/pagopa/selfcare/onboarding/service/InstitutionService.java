@@ -5,11 +5,11 @@ import it.pagopa.selfcare.onboarding.client.model.InstitutionOnboardingData;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingResult;
 import it.pagopa.selfcare.onboarding.client.model.RecipientCodeStatusResult;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
-import it.pagopa.selfcare.onboarding.client.model.institutions.*;
-import it.pagopa.selfcare.onboarding.client.model.institutions.infocamere.InstitutionInfoIC;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.GeographicTaxonomy;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.OnboardingData;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.User;
+import it.pagopa.selfcare.onboarding.client.model.*;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionInfoIC;
+import it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomy;
+import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
+import it.pagopa.selfcare.onboarding.client.model.User;
 import java.util.List;
 
 public interface InstitutionService {

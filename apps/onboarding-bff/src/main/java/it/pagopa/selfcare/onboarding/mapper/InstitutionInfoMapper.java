@@ -1,8 +1,8 @@
 package it.pagopa.selfcare.onboarding.mapper;
 
-import it.pagopa.selfcare.onboarding.client.model.institutions.Institution;
-import it.pagopa.selfcare.onboarding.client.model.institutions.InstitutionInfo;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.InstitutionUpdate;
+import it.pagopa.selfcare.onboarding.client.model.Institution;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionInfo;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionUpdate;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

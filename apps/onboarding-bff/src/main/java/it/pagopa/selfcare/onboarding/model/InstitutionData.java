@@ -2,9 +2,9 @@ package it.pagopa.selfcare.onboarding.model;
 
 import io.swagger.annotations.ApiModelProperty;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.DataProtectionOfficer;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.GPUData;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.PaymentServiceProvider;
+import it.pagopa.selfcare.onboarding.client.model.DataProtectionOfficer;
+import it.pagopa.selfcare.onboarding.client.model.GPUData;
+import it.pagopa.selfcare.onboarding.client.model.PaymentServiceProvider;
 import lombok.Data;
 
 import jakarta.validation.Valid;

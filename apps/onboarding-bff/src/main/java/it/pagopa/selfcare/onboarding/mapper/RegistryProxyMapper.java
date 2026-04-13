@@ -1,13 +1,13 @@
 package it.pagopa.selfcare.onboarding.mapper;
 
-import it.pagopa.selfcare.onboarding.client.model.registry_proxy.GeographicTaxonomies;
-import it.pagopa.selfcare.onboarding.client.model.registry_proxy.HomogeneousOrganizationalArea;
-import it.pagopa.selfcare.onboarding.client.model.registry_proxy.InstitutionProxyInfo;
-import it.pagopa.selfcare.onboarding.client.model.registry_proxy.OrganizationUnit;
-import it.pagopa.selfcare.onboarding.client.rest.model.AooResponse;
-import it.pagopa.selfcare.onboarding.client.rest.model.GeographicTaxonomiesResponse;
-import it.pagopa.selfcare.onboarding.client.rest.model.ProxyInstitutionResponse;
-import it.pagopa.selfcare.onboarding.client.rest.model.UoResponse;
+import it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomies;
+import it.pagopa.selfcare.onboarding.client.model.HomogeneousOrganizationalArea;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionProxyInfo;
+import it.pagopa.selfcare.onboarding.client.model.OrganizationUnit;
+import it.pagopa.selfcare.onboarding.client.model.AooResponse;
+import it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomiesResponse;
+import it.pagopa.selfcare.onboarding.client.model.ProxyInstitutionResponse;
+import it.pagopa.selfcare.onboarding.client.model.UoResponse;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "jakarta-cdi")

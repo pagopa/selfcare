@@ -3,7 +3,7 @@ package it.pagopa.selfcare.onboarding.service;
 import static org.apache.commons.lang3.StringUtils.*;
 
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.onboarding.client.model.userInstitution.UserInstitutionRequest;
+import it.pagopa.selfcare.onboarding.client.model.UserInstitutionRequest;
 import it.pagopa.selfcare.product.entity.ProductStatus;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;

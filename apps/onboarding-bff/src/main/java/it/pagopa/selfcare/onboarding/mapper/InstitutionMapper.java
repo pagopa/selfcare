@@ -2,10 +2,10 @@ package it.pagopa.selfcare.onboarding.mapper;
 
 
 import it.pagopa.selfcare.commons.base.security.PartyRole;
-import it.pagopa.selfcare.onboarding.client.model.institutions.*;
-import it.pagopa.selfcare.onboarding.client.rest.model.BillingDataResponse;
-import it.pagopa.selfcare.onboarding.client.rest.model.InstitutionResponse;
-import it.pagopa.selfcare.onboarding.client.rest.model.OnboardingResponse;
+import it.pagopa.selfcare.onboarding.client.model.*;
+import it.pagopa.selfcare.onboarding.client.model.BillingDataResponse;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionResponse;
+import it.pagopa.selfcare.onboarding.client.model.OnboardingResponse;
 import org.openapi.quarkus.user_json.model.OnboardedProductResponse;
 import org.openapi.quarkus.user_json.model.OnboardedProductState;
 import org.openapi.quarkus.user_json.model.UserInstitutionResponse;

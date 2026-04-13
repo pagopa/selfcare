@@ -3,7 +3,7 @@ package it.pagopa.selfcare.onboarding.service;
 import it.pagopa.selfcare.onboarding.client.OnboardingMsConnectorImpl;
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.OnboardingData;
+import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;

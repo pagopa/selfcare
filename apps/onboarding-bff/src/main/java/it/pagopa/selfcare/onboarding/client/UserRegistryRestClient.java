@@ -1,10 +1,10 @@
 package it.pagopa.selfcare.onboarding.client;
 
-import it.pagopa.selfcare.onboarding.client.model.user.MutableUserFieldsDto;
-import it.pagopa.selfcare.onboarding.client.model.user.SaveUserDto;
-import it.pagopa.selfcare.onboarding.client.model.user.User;
-import it.pagopa.selfcare.onboarding.client.model.user.UserId;
-import it.pagopa.selfcare.onboarding.client.rest.model.user_registry.EmbeddedExternalId;
+import it.pagopa.selfcare.onboarding.client.model.MutableUserFieldsDto;
+import it.pagopa.selfcare.onboarding.client.model.SaveUserDto;
+import it.pagopa.selfcare.onboarding.client.model.User;
+import it.pagopa.selfcare.onboarding.client.model.UserId;
+import it.pagopa.selfcare.onboarding.client.model.EmbeddedExternalId;
 import java.util.EnumSet;
 import java.util.UUID;
 import java.util.stream.Collectors;

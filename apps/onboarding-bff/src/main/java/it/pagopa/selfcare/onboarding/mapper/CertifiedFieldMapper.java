@@ -1,26 +1,22 @@
 package it.pagopa.selfcare.onboarding.mapper;
 
-import it.pagopa.selfcare.onboarding.client.model.user.Certification;
-import it.pagopa.selfcare.onboarding.client.model.user.CertifiedField;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import it.pagopa.selfcare.onboarding.client.model.Certification;
+import it.pagopa.selfcare.onboarding.client.model.CertifiedField;
+import it.pagopa.selfcare.onboarding.controller.response.CertifiedFieldResource;
+import org.mapstruct.Mapper;
+import org.mapstruct.Named;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class CertifiedFieldMapper {
+@Mapper(componentModel = "jakarta-cdi")
+public interface CertifiedFieldMapper {
 
-    public static String toValue(CertifiedField<String> certifiedField) {
-        return certifiedField != null ? certifiedField.getValue() : null;
-    }
-
-
-    public static <T> CertifiedField<T> map(T certifiedField) {
-        CertifiedField<T> resource = null;
-        if (certifiedField != null) {
-            resource = new CertifiedField<>();
-            resource.setValue(certifiedField);
-            resource.setCertification(Certification.NONE);
+    @Named("toResource")
+    default <T> CertifiedFieldResource<T> toResource(CertifiedField<T> certifiedField) {
+        if (certifiedField == null) {
+            return null;
         }
+        CertifiedFieldResource<T> resource = new CertifiedFieldResource<>();
+        resource.setCertified(Certification.isCertified(certifiedField.getCertification()));
+        resource.setValue(certifiedField.getValue());
         return resource;
     }
-
 }

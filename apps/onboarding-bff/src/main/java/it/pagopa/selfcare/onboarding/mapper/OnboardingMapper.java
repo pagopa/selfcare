@@ -3,9 +3,9 @@ package it.pagopa.selfcare.onboarding.mapper;
 
 import it.pagopa.selfcare.onboarding.client.model.OnboardingResult;
 import it.pagopa.selfcare.onboarding.client.model.RecipientCodeStatusResult;
-import it.pagopa.selfcare.onboarding.client.model.institutions.VerifyAggregateResult;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.*;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.GeographicTaxonomy;
+import it.pagopa.selfcare.onboarding.client.model.VerifyAggregateResult;
+import it.pagopa.selfcare.onboarding.client.model.*;
+import it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomy;
 import org.openapi.quarkus.onboarding_json.model.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

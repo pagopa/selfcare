@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.onboarding.util;
 
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.User;
+import it.pagopa.selfcare.onboarding.client.model.User;
 
 import java.util.List;
 import java.util.Optional;

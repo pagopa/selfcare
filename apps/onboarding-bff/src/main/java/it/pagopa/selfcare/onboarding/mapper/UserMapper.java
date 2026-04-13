@@ -1,9 +1,9 @@
 package it.pagopa.selfcare.onboarding.mapper;
 
-import it.pagopa.selfcare.onboarding.client.model.onboarding.User;
-import it.pagopa.selfcare.onboarding.client.model.user.MutableUserFieldsDto;
-import it.pagopa.selfcare.onboarding.client.model.user.SaveUserDto;
-import it.pagopa.selfcare.onboarding.client.model.user.WorkContact;
+import it.pagopa.selfcare.onboarding.client.model.User;
+import it.pagopa.selfcare.onboarding.client.model.MutableUserFieldsDto;
+import it.pagopa.selfcare.onboarding.client.model.SaveUserDto;
+import it.pagopa.selfcare.onboarding.client.model.WorkContact;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 

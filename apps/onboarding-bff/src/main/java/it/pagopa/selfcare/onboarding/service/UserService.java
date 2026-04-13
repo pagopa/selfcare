@@ -1,9 +1,9 @@
 package it.pagopa.selfcare.onboarding.service;
 
-import it.pagopa.selfcare.onboarding.client.model.onboarding.CheckManagerData;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.OnboardingData;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.User;
-import it.pagopa.selfcare.onboarding.client.model.user.UserId;
+import it.pagopa.selfcare.onboarding.client.model.CheckManagerData;
+import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
+import it.pagopa.selfcare.onboarding.client.model.User;
+import it.pagopa.selfcare.onboarding.client.model.UserId;
 
 public interface UserService {
   void validate(User user);

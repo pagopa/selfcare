@@ -1,9 +1,9 @@
 package it.pagopa.selfcare.onboarding.client.model;
 
-import it.pagopa.selfcare.onboarding.client.model.institutions.AssistanceContacts;
-import it.pagopa.selfcare.onboarding.client.model.institutions.CompanyInformations;
-import it.pagopa.selfcare.onboarding.client.model.institutions.InstitutionInfo;
-import it.pagopa.selfcare.onboarding.client.model.onboarding.GeographicTaxonomy;
+import it.pagopa.selfcare.onboarding.client.model.AssistanceContacts;
+import it.pagopa.selfcare.onboarding.client.model.CompanyInformations;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionInfo;
+import it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomy;
 import lombok.Data;
 
 import java.util.List;

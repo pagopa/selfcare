@@ -13,7 +13,7 @@ import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
 import it.pagopa.selfcare.onboarding.exception.InvalidUserFieldsException;
 import it.pagopa.selfcare.onboarding.exception.OnboardingNotAllowedException;
 import it.pagopa.selfcare.onboarding.exception.UpdateNotAllowedException;
-import it.pagopa.selfcare.onboarding.model.Problem;
+import it.pagopa.selfcare.onboarding.model.error.Problem;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
