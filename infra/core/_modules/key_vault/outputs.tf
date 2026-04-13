@@ -30,14 +30,6 @@ output "subscription_name" {
   value = data.azurerm_subscription.current.display_name
 }
 
-output "adgroup_admin_object_id" {
-  value = data.azuread_group.adgroup_admin.object_id
-}
-
-output "adgroup_developers_object_id" {
-  value = data.azuread_group.adgroup_developers.object_id
-}
-
 # Secrets query outputs
 output "secrets_selfcare_status_dev" {
   value     = var.env_short == "d" ? module.secrets_selfcare_status_dev[0].values : {}
