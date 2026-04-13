@@ -54,7 +54,7 @@ jobs:
     secrets: inherit
     with:
       environment: '${{ inputs.environment }}-${{ inputs.domain }}'
-      base_path: './infra/core'
+      dir: './infra/core'
       # Optional parameters
       env_vars: ""
       use_private_agent: true
