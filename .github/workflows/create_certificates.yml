@@ -19,7 +19,7 @@ on:
         options:
           - dev
           - uat
-          # - prod
+          - prod
         required: true
       target:
         type: choice
