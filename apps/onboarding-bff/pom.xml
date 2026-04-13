@@ -5,9 +5,9 @@
 
     <parent>
         <groupId>it.pagopa.selfcare</groupId>
-        <artifactId>selc-starter-parent</artifactId>
-        <version>0.3.1-SNAPSHOT</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <artifactId>apps</artifactId>
+        <version>0.0.1</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>onboarding-bff</artifactId>
@@ -16,6 +16,9 @@
     <description>SelfCare Onboarding BFF</description>
 
     <properties>
+        <maven.compiler.release>17</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <selc-commons.version>2.9.0</selc-commons.version>
         <sonar.host.url>https://sonarcloud.io/</sonar.host.url>
         <parent-commons-sdk-version>0.15.5</parent-commons-sdk-version>
@@ -26,6 +29,8 @@
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
         <quarkus.platform.version>3.31.2</quarkus.platform.version>
         <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
+        <lombok.version>1.18.42</lombok.version>
+        <feign-core.version>13.3</feign-core.version>
     </properties>
 
     <dependencyManagement>
@@ -120,6 +125,7 @@
         <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-core</artifactId>
+            <version>${feign-core.version}</version>
         </dependency>
         <dependency>
             <groupId>org.openapitools</groupId>
@@ -129,6 +135,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -276,11 +283,6 @@
             <groupId>com.auth0</groupId>
             <artifactId>java-jwt</artifactId>
             <version>4.0.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-contract-wiremock</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
