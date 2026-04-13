@@ -17,6 +17,7 @@ import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -24,15 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "product")
+@RequiredArgsConstructor
 public class ProductController {
 
     private final ProductService productService;
     private final InstitutionMapper productMapper;
-
-    public ProductController(ProductService productService, InstitutionMapper productMapper) {
-        this.productService = productService;
-        this.productMapper = productMapper;
-    }
 
     @GET
     @Path("/v1/product/{id}")

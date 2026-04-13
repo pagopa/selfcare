@@ -11,12 +11,14 @@ import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 import java.util.Objects;
 
 @Slf4j
 @ApplicationScoped
+@RequiredArgsConstructor
 public class TokenServiceImpl implements TokenService {
 
     private final OnboardingMsClient onboardingMsConnector;
@@ -26,16 +28,6 @@ public class TokenServiceImpl implements TokenService {
 
     private static final String ONBOARDING_ID_REQUIRED_MESSAGE = "OnboardingId is required";
     private static final String TOKEN_ID_IS_REQUIRED = "TokenId is required";
-
-    public TokenServiceImpl(OnboardingMsClient onboardingMsConnector,
-                            DocumentMsClient documentMsClient,
-                            ProductService productService,
-                            OnboardingMapper onboardingMapper) {
-        this.onboardingMsConnector = onboardingMsConnector;
-        this.documentMsClient = documentMsClient;
-        this.productService = productService;
-        this.onboardingMapper = onboardingMapper;
-    }
 
     @Override
     public OnboardingData verifyOnboarding(String onboardingId) {

@@ -2,17 +2,17 @@ package it.pagopa.selfcare.onboarding.service.strategy;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
-import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @Slf4j
-@Data
+@Getter
 @ApplicationScoped
 public class UserAllowedValidationStrategyImpl implements UserAllowedValidationStrategy {
 
-  private List<String> userAllowedList;
+  private final List<String> userAllowedList;
 
   public UserAllowedValidationStrategyImpl(
       @ConfigProperty(name = "user-allowed-list", defaultValue = "") String userAllowedListKV) {
@@ -26,7 +26,7 @@ public class UserAllowedValidationStrategyImpl implements UserAllowedValidationS
     log.debug(
         "UserAllowedValidationStrategyImpl = {}",
         userAllowedListKV.isEmpty() ? "Empty String for User Allowed" : userAllowedListKV);
-    setUserAllowedList(validateUserString(userAllowedListKV));
+    this.userAllowedList = validateUserString(userAllowedListKV);
   }
 
   public List<String> validateUserString(String userAllowedListKV) {

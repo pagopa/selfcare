@@ -39,6 +39,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.file.Files;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
@@ -50,6 +51,7 @@ import org.owasp.encoder.Encode;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "tokens")
+@RequiredArgsConstructor
 public class TokenV2Controller {
 
     private static final String ACCESS_CONTROL_EXPOSE_HEADERS = "Access-Control-Expose-Headers";
@@ -61,13 +63,6 @@ public class TokenV2Controller {
 
     @Inject
     SecurityIdentity securityIdentity;
-
-    public TokenV2Controller(TokenService tokenService, UserService userService, UserInstitutionService userInstitutionService, OnboardingMapper onboardingResourceMapper) {
-        this.tokenService = tokenService;
-        this.userService = userService;
-        this.userInstitutionService = userInstitutionService;
-        this.onboardingResourceMapper = onboardingResourceMapper;
-    }
 
     @POST
     @Path("/{onboardingId}/complete")

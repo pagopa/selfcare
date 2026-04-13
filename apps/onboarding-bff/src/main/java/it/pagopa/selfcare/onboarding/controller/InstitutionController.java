@@ -32,6 +32,7 @@ import jakarta.ws.rs.core.Response;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.owasp.encoder.Encode;
@@ -42,6 +43,7 @@ import org.owasp.encoder.Encode;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "institutions")
+@RequiredArgsConstructor
 public class InstitutionController {
 
     private final InstitutionService institutionService;
@@ -53,16 +55,6 @@ public class InstitutionController {
 
     @Inject
     SecurityIdentity securityIdentity;
-
-    public InstitutionController(InstitutionService institutionService,
-                                 OnboardingMapper onboardingMapper,
-                                 InstitutionMapper institutionMapper,
-                                 UserMapper userMapper) {
-        this.institutionService = institutionService;
-        this.onboardingMapper = onboardingMapper;
-        this.institutionMapper = institutionMapper;
-        this.userMapper = userMapper;
-    }
 
     @ApiResponse(responseCode = "403",
             description = "Forbidden",

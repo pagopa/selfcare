@@ -12,6 +12,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 
@@ -20,15 +21,11 @@ import org.owasp.encoder.Encode;
 @Path("/v2/product")
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "product-ms")
+@RequiredArgsConstructor
 public class ProductV2Controller {
 
     private final ProductService productService;
     private final InstitutionMapper productMapper;
-
-    public ProductV2Controller(ProductService productService, InstitutionMapper productMapper) {
-        this.productService = productService;
-        this.productMapper = productMapper;
-    }
 
     @GET
     @Operation(summary = "${swagger.product.ms.api.getOrigins.summary}",

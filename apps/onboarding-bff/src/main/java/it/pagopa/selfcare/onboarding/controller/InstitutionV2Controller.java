@@ -30,6 +30,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.file.Files;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
@@ -45,6 +46,7 @@ import java.util.List;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "institutions")
+@RequiredArgsConstructor
 public class InstitutionV2Controller {
 
     private final InstitutionService institutionService;
@@ -56,16 +58,6 @@ public class InstitutionV2Controller {
 
     @Inject
     SecurityIdentity securityIdentity;
-
-    public InstitutionV2Controller(InstitutionService institutionService,
-                                   UserService userService,
-                                   OnboardingMapper onboardingMapper,
-                                   InstitutionMapper institutionMapper) {
-        this.institutionService = institutionService;
-        this.userService = userService;
-        this.onboardingMapper = onboardingMapper;
-        this.institutionMapper = institutionMapper;
-    }
 
     @ApiResponse(responseCode = "403",
             description = "Forbidden",

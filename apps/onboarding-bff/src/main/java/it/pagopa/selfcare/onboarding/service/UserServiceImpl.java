@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 import java.util.Objects;
@@ -35,6 +36,7 @@ import java.util.UUID;
 
 @Slf4j
 @ApplicationScoped
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private static final EnumSet<User.Fields> FIELD_LIST = EnumSet.of(User.Fields.name, User.Fields.familyName, User.Fields.workContacts);
@@ -44,17 +46,6 @@ public class UserServiceImpl implements UserService {
     private final OnboardingMapper onboardingMapper;
     private final PgManagerVerifier pgManagerVerifier;
     private final UserAllowedValidationStrategy userAllowedValidationStrategy;
-
-    public UserServiceImpl(UserRegistryClient userRegistryConnector,
-                           OnboardingMsClient onboardingMsConnector,
-                           OnboardingMapper onboardingMapper,
-                           PgManagerVerifier pgManagerVerifier, UserAllowedValidationStrategy userAllowedValidationStrategy) {
-        this.userRegistryConnector = userRegistryConnector;
-        this.onboardingMsConnector = onboardingMsConnector;
-        this.onboardingMapper = onboardingMapper;
-        this.pgManagerVerifier = pgManagerVerifier;
-        this.userAllowedValidationStrategy = userAllowedValidationStrategy;
-    }
 
     @Override
     public void validate(User user) {

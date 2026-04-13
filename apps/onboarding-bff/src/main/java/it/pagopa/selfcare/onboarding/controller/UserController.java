@@ -26,6 +26,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 
@@ -35,6 +36,7 @@ import org.owasp.encoder.Encode;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "user")
+@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
@@ -43,14 +45,6 @@ public class UserController {
 
     @Inject
     SecurityIdentity securityIdentity;
-
-    public UserController(UserService userService,
-                          OnboardingMapper onboardingResourceMapper,
-                          UserMapper userResourceMapper) {
-        this.userService = userService;
-        this.onboardingResourceMapper = onboardingResourceMapper;
-        this.userResourceMapper = userResourceMapper;
-    }
 
     @POST
     @Path("/validate")
