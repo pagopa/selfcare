@@ -165,34 +165,9 @@ module "cdn" {
 }
 
 
-# # ###############################################################################
-# # # TMP OLD Storage Account
-# # ###############################################################################
-
-data "azurerm_storage_account" "old_cdn_storage_account" {
-  name                = "${local.prefix}${local.env_short}checkoutsa"
-  resource_group_name = "${local.prefix}-${local.env_short}-checkout-fe-rg"
-}
-
-resource "null_resource" "cdn_storage_copy" {
-  for_each = toset(["$web", "selc-${local.env_short}-product", "selc-openapi"])
-
-  provisioner "local-exec" {
-    command = <<EOT
-        az storage blob copy start-batch \
-        --account-name "${module.cdn.storage_name}" \
-        --account-key "${module.cdn.storage_primary_access_key}" \
-        --destination-container '${each.value}' \
-        --source-account-name "${data.azurerm_storage_account.old_cdn_storage_account.name}" \
-        --source-account-key "${data.azurerm_storage_account.old_cdn_storage_account.primary_access_key}" \
-        --source-container '${each.value}'
-    EOT
-  }
-}
-
-# # ###############################################################################
-# # # monitor (action groups, web tests, alerts)
-# # ###############################################################################
+###############################################################################
+# monitor (action groups, web tests, alerts)
+###############################################################################
 module "monitor" {
   source = "../_modules/monitor"
 
@@ -458,9 +433,9 @@ module "cosmos_db" {
 # }
 
 
-# # ###############################################################################
-# # # assets
-# # ###############################################################################
+###############################################################################
+# assets
+###############################################################################
 
 # module "assets" {
 #   source = "../_modules/assets"
@@ -475,9 +450,9 @@ module "cosmos_db" {
 # }
 
 
-# # ###############################################################################
-# # # one trust
-# # ###############################################################################
+###############################################################################
+# one trust
+###############################################################################
 
 # module "one_trust" {
 #   source = "../_modules/one_trust"
@@ -489,9 +464,9 @@ module "cosmos_db" {
 #   checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
 # }
 
-# # ###############################################################################
-# # # Contract storage
-# # ###############################################################################
+###############################################################################
+# Contract storage
+###############################################################################
 module "contracts_storage" {
   source = "../_modules/storage_account_template"
 

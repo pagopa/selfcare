@@ -9,9 +9,9 @@ on:
         type: choice
         description: API Prefix
         options:
-          - "true"
-          - "false"
-          # - prod
+          - ""
+          - "api"
+          - "api-pnpg"
         required: true
       environment:
         type: choice
@@ -19,7 +19,7 @@ on:
         options:
           - dev
           - uat
-          - prod
+          # - prod
         required: true
       target:
         type: choice
@@ -27,7 +27,7 @@ on:
         options:
           - areariservata
           - selfcare
-          # - pnpg
+          - pnpg
         required: true
         default: areariservata
       force_renewal:
@@ -67,13 +67,11 @@ jobs:
       - name: Set api prefix
         id: api_prefix
         run: |
-          if [[ "${{ inputs.api_prefix }}" == "true" ]]; then
-            echo "value=api." >> "$GITHUB_OUTPUT"
+          if [[ -n "${{ inputs.api_prefix }}" ]]; then
+            echo "value=${{ inputs.api_prefix }}." >> "$GITHUB_OUTPUT"
           else
             echo "value=" >> "$GITHUB_OUTPUT"
           fi
-        env:
-          ENV: ${{ inputs.api_prefix }}
 
   renew-certificate:
     needs: setup
