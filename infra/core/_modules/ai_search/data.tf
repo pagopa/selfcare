@@ -14,14 +14,6 @@ data "azurerm_key_vault" "key_vault" {
   name                = var.key_vault_name
 }
 
-data "azuread_group" "adgroup_admin" {
-  display_name = "${var.prefix}-${var.env_short}-adgroup-admin"
-}
-
-data "azuread_group" "adgroup_developers" {
-  display_name = "${var.prefix}-${var.env_short}-adgroup-developers"
-}
-
 data "azurerm_user_assigned_identity" "managed_identity_infra_ci" {
   name                = "${var.prefix}-${var.env_short}-ms-github-ci-identity"
   resource_group_name = "${var.prefix}-${var.env_short}-identity-rg"

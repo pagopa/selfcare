@@ -756,4 +756,7 @@ module "ai_search" {
   key_vault_resource_group_name = "selc-${local.env_short}-sec-rg"
   public_network_access_enabled = false
   srch_private_endpoint_enabled = true
+
+  adgroup_admin_object_id      = local.adgroup_admin_object_id
+  adgroup_developers_object_id = local.adgroup_developers_object_id
 }
