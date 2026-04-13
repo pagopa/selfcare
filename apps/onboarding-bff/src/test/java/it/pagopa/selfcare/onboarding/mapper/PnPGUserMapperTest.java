@@ -1,8 +1,8 @@
-package it.pagopa.selfcare.onboarding.model.mapper;
+package it.pagopa.selfcare.onboarding.mapper;
 
 import it.pagopa.selfcare.onboarding.client.model.onboarding.User;
-import it.pagopa.selfcare.onboarding.model.UserDataValidationDto;
-import it.pagopa.selfcare.onboarding.model.UserDto;
+import it.pagopa.selfcare.onboarding.controller.request.UserDataValidationDto;
+import it.pagopa.selfcare.onboarding.controller.request.UserDto;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 

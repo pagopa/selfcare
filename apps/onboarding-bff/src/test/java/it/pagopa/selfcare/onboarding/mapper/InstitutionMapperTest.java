@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.onboarding.model.mapper;
+package it.pagopa.selfcare.onboarding.mapper;
 
 import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.*;
@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import it.pagopa.selfcare.commons.utils.TestUtils;
 import it.pagopa.selfcare.onboarding.client.model.institutions.InstitutionInfo;
 import it.pagopa.selfcare.onboarding.client.model.onboarding.Billing;
-import it.pagopa.selfcare.onboarding.model.InstitutionResource;
+import it.pagopa.selfcare.onboarding.controller.response.InstitutionResource;
 import org.junit.jupiter.api.Test;
 
 class InstitutionMapperTest {

@@ -1,8 +1,8 @@
-package it.pagopa.selfcare.onboarding.model.mapper;
+package it.pagopa.selfcare.onboarding.mapper;
 
 import it.pagopa.selfcare.commons.utils.TestUtils;
 import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.onboarding.model.ProductResource;
+import it.pagopa.selfcare.onboarding.controller.response.ProductResource;
 import it.pagopa.selfcare.product.entity.ProductStatus;
 import org.junit.jupiter.api.Test;
 

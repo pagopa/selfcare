@@ -9,8 +9,8 @@ import it.pagopa.selfcare.onboarding.client.model.onboarding.GeographicTaxonomy;
 import it.pagopa.selfcare.onboarding.client.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.client.model.institutions.InstitutionInfo;
 import it.pagopa.selfcare.onboarding.service.InstitutionService;
-import it.pagopa.selfcare.onboarding.model.OnboardingProductDto;
-import it.pagopa.selfcare.onboarding.model.CompanyOnboardingDto;
+import it.pagopa.selfcare.onboarding.controller.request.OnboardingProductDto;
+import it.pagopa.selfcare.onboarding.controller.request.CompanyOnboardingDto;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

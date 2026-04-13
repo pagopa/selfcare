@@ -4,7 +4,7 @@ import it.pagopa.selfcare.onboarding.exception.*;
 import it.pagopa.selfcare.onboarding.exception.InvalidUserFieldsException;
 import it.pagopa.selfcare.onboarding.exception.OnboardingNotAllowedException;
 import it.pagopa.selfcare.onboarding.exception.UpdateNotAllowedException;
-import it.pagopa.selfcare.onboarding.model.Problem;
+import it.pagopa.selfcare.onboarding.model.error.Problem;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 

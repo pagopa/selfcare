@@ -1,13 +1,13 @@
-package it.pagopa.selfcare.onboarding.model.mapper;
+package it.pagopa.selfcare.onboarding.mapper;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import it.pagopa.selfcare.commons.utils.TestUtils;
 import it.pagopa.selfcare.onboarding.client.model.onboarding.User;
 import it.pagopa.selfcare.onboarding.client.model.onboarding.UserInfo;
-import it.pagopa.selfcare.onboarding.model.UserDataValidationDto;
-import it.pagopa.selfcare.onboarding.model.UserDto;
-import it.pagopa.selfcare.onboarding.model.UserResource;
+import it.pagopa.selfcare.onboarding.controller.request.UserDataValidationDto;
+import it.pagopa.selfcare.onboarding.controller.request.UserDto;
+import it.pagopa.selfcare.onboarding.controller.response.UserResource;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

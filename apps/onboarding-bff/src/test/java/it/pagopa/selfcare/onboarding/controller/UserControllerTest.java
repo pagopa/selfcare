@@ -6,10 +6,10 @@ import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import it.pagopa.selfcare.onboarding.client.model.user.UserId;
 import it.pagopa.selfcare.onboarding.service.UserService;
-import it.pagopa.selfcare.onboarding.model.UserDataValidationDto;
-import it.pagopa.selfcare.onboarding.model.OnboardingUserDto;
-import it.pagopa.selfcare.onboarding.model.CheckManagerDto;
-import it.pagopa.selfcare.onboarding.model.UserTaxCodeDto;
+import it.pagopa.selfcare.onboarding.controller.request.UserDataValidationDto;
+import it.pagopa.selfcare.onboarding.controller.request.OnboardingUserDto;
+import it.pagopa.selfcare.onboarding.controller.request.CheckManagerDto;
+import it.pagopa.selfcare.onboarding.controller.request.UserTaxCodeDto;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

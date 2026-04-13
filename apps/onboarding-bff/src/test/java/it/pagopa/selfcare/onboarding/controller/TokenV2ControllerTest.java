@@ -7,7 +7,7 @@ import io.restassured.http.ContentType;
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.onboarding.InstitutionUpdate;
 import it.pagopa.selfcare.onboarding.client.model.onboarding.OnboardingData;
-import it.pagopa.selfcare.onboarding.model.ReasonForRejectDto;
+import it.pagopa.selfcare.onboarding.controller.request.ReasonForRejectDto;
 import it.pagopa.selfcare.onboarding.service.TokenService;
 import it.pagopa.selfcare.onboarding.service.UserInstitutionService;
 import it.pagopa.selfcare.onboarding.service.UserService;
