@@ -73,9 +73,9 @@ locals {
 
   secrets_names_document_ms = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
-    "JWT-PUBLIC-KEY"                          = "jwt-public-key"
-    "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
-    "BLOB-STORAGE-CONTRACT-CONNECTION-STRING" = "documents-storage-connection-string"
+    "JWT_PUBLIC_KEY"                          = "jwt-public-key"
+    "MONGODB_CONNECTION_STRING"               = "mongodb-connection-string"
+    "BLOB_STORAGE_CONTRACT_CONNECTION_STRING" = "documents-storage-connection-string"
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"     = "namirial-sign-service-user"
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
   }
