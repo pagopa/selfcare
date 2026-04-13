@@ -3,7 +3,6 @@ package it.pagopa.selfcare.onboarding.connector;
 import feign.FeignException;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
-import it.pagopa.selfcare.onboarding.connector.api.UserRegistryConnector;
 import it.pagopa.selfcare.onboarding.connector.model.user.MutableUserFieldsDto;
 import it.pagopa.selfcare.onboarding.connector.model.user.SaveUserDto;
 import it.pagopa.selfcare.onboarding.connector.model.user.User;
@@ -22,7 +21,7 @@ import java.util.UUID;
 
 @Slf4j
 @ApplicationScoped
-public class UserRegistryConnectorImpl implements UserRegistryConnector {
+public class UserRegistryConnectorImpl {
 
     private final UserRegistryRestClient restClient;
     public static final String USERS_FIELD_LIST = "fiscalCode,familyName,name,workContacts";
@@ -31,8 +30,6 @@ public class UserRegistryConnectorImpl implements UserRegistryConnector {
         this.restClient = restClient;
         this.userRegistryMapper = userRegistryMapper;
     }
-
-    @Override
     public Optional<User> search(String externalId, EnumSet<User.Fields> fieldList) {
         log.trace("getUserByExternalId start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getUserByExternalId externalId = {}", externalId);
@@ -49,8 +46,6 @@ public class UserRegistryConnectorImpl implements UserRegistryConnector {
 
         return user;
     }
-
-    @Override
     public User getUserByInternalId(String userId, EnumSet<User.Fields> fieldList) {
         log.trace("getUserByInternalId start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getUserByInternalId userId = {}", userId);
@@ -61,8 +56,6 @@ public class UserRegistryConnectorImpl implements UserRegistryConnector {
         log.trace("getUserByInternalId end");
         return result;
     }
-
-    @Override
     public void updateUser(UUID id, MutableUserFieldsDto userDto) {
         log.trace("update start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "update id = {}, userDto = {}}", id, userDto);
@@ -72,8 +65,6 @@ public class UserRegistryConnectorImpl implements UserRegistryConnector {
         restClient.patchUser(id, userDto);
         log.trace("update end");
     }
-
-    @Override
     public UserId saveUser(SaveUserDto dto) {
         log.trace("saveUser start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "saveUser dto = {}}", dto);
@@ -82,8 +73,6 @@ public class UserRegistryConnectorImpl implements UserRegistryConnector {
         log.trace("saveUser end");
         return userId;
     }
-
-    @Override
     public void deleteById(String userId) {
         log.trace("deleteById start");
         log.debug("deleteById id = {}", userId);
@@ -91,8 +80,6 @@ public class UserRegistryConnectorImpl implements UserRegistryConnector {
         restClient.deleteById(UUID.fromString(userId));
         log.trace("deleteById end");
     }
-
-    @Override
     public UserId searchUser(String taxCode) {
         log.trace("searchUser start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "searchUser taxCode = {}}", taxCode);

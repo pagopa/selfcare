@@ -3,7 +3,6 @@ package it.pagopa.selfcare.onboarding.connector;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
-import it.pagopa.selfcare.onboarding.connector.api.PartyRegistryProxyConnector;
 import it.pagopa.selfcare.onboarding.connector.model.InstitutionLegalAddressData;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.MatchInfoResult;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.infocamere.InstitutionInfoIC;
@@ -24,7 +23,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 @Slf4j
-class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
+public class PartyRegistryProxyConnectorImpl {
 
     protected static final String REQUIRED_FISCAL_CODE_MESSAGE = "An user's fiscal code is required";
     private static final String REQUIRED_EXTERNAL_ID_MESSAGE = "An institution's external id is required";
@@ -36,9 +35,6 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
         this.restClient = restClient;
         this.proxyMapper = proxyMapper;
     }
-
-
-    @Override
     public InstitutionInfoIC getInstitutionsByUserFiscalCode(String taxCode) {
         log.trace("getInstitutionsByUserFiscalCode start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionsByUserFiscalCode taxCode = {}", taxCode);
@@ -52,9 +48,6 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
         log.trace("getInstitutionsByUserFiscalCode end");
         return result;
     }
-
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public MatchInfoResult matchInstitutionAndUser(String externalInstitutionId, String taxCode) {
         log.trace("matchInstitutionAndUser start");
@@ -66,8 +59,6 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
         log.trace("matchInstitutionAndUser end");
         return result;
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public InstitutionLegalAddressData getInstitutionLegalAddress(String externalInstitutionId) {
         log.trace("getInstitutionLegalAddress start");
@@ -78,8 +69,6 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
         log.trace("getInstitutionLegalAddress end");
         return result;
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public HomogeneousOrganizationalArea getAooById(String aooCode) {
         log.trace("getAooById start");
@@ -90,8 +79,6 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
         log.trace("getAooById end");
         return result;
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public OrganizationUnit getUoById(String uoCode) {
         log.trace("getUoById start");
@@ -102,8 +89,6 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
         log.trace("getUoById end");
         return result;
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public GeographicTaxonomies getExtById(String code){
         log.trace("getExtById start");
@@ -114,8 +99,6 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
         log.trace("getExtById end");
         return result;
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public InstitutionProxyInfo getInstitutionProxyById(String externalId) {
         log.trace("getInstitutionProxyById start");

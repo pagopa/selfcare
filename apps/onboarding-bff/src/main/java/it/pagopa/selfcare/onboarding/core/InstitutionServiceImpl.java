@@ -3,7 +3,12 @@ import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.commons.base.utils.Origin;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.onboarding.connector.api.*;
+import it.pagopa.selfcare.onboarding.connector.OnboardingFunctionsConnectorImpl;
+import it.pagopa.selfcare.onboarding.connector.OnboardingMsConnectorImpl;
+import it.pagopa.selfcare.onboarding.connector.PartyConnectorImpl;
+import it.pagopa.selfcare.onboarding.connector.PartyRegistryProxyConnectorImpl;
+import it.pagopa.selfcare.onboarding.connector.ProductsConnectorImpl;
+import it.pagopa.selfcare.onboarding.connector.UserRegistryConnectorImpl;
 import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.connector.exceptions.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.connector.model.*;
@@ -57,22 +62,22 @@ class InstitutionServiceImpl implements InstitutionService {
     private static final String ONBOARDING_COMPANY_NOT_ALLOWED = "The selected business does not belong to the user";
     private static final String PROD_PN_PG = "prod-pn-pg";
     static final String DESCRIPTION_TO_REPLACE_REGEX = " - COMUNE";
-    private final OnboardingMsConnector onboardingMsConnector;
-    private final PartyConnector partyConnector;
-    private final ProductsConnector productsConnector;
-    private final UserRegistryConnector userConnector;
-    private final OnboardingFunctionsConnector onboardingFunctionsConnector;
-    private final PartyRegistryProxyConnector partyRegistryProxyConnector;
+    private final OnboardingMsConnectorImpl onboardingMsConnector;
+    private final PartyConnectorImpl partyConnector;
+    private final ProductsConnectorImpl productsConnector;
+    private final UserRegistryConnectorImpl userConnector;
+    private final OnboardingFunctionsConnectorImpl onboardingFunctionsConnector;
+    private final PartyRegistryProxyConnectorImpl partyRegistryProxyConnector;
     private final InstitutionInfoMapper institutionMapper;
     private final PgManagerVerifier pgManagerVerifier;
     private final ProductService productService;
-    InstitutionServiceImpl(OnboardingMsConnector onboardingMsConnector,
-                           PartyConnector partyConnector,
+    InstitutionServiceImpl(OnboardingMsConnectorImpl onboardingMsConnector,
+                           PartyConnectorImpl partyConnector,
                            ProductService productService,
-                           ProductsConnector productsConnector,
-                           UserRegistryConnector userConnector,
-                           OnboardingFunctionsConnector onboardingFunctionsConnector,
-                           PartyRegistryProxyConnector partyRegistryProxyConnector,
+                           ProductsConnectorImpl productsConnector,
+                           UserRegistryConnectorImpl userConnector,
+                           OnboardingFunctionsConnectorImpl onboardingFunctionsConnector,
+                           PartyRegistryProxyConnectorImpl partyRegistryProxyConnector,
                            InstitutionInfoMapper institutionMapper,
                            PgManagerVerifier pgManagerVerifier
     ) {

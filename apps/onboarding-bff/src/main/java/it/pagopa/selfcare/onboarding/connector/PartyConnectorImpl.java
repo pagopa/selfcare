@@ -5,7 +5,6 @@ import static it.pagopa.selfcare.onboarding.connector.model.RelationshipState.AC
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
-import it.pagopa.selfcare.onboarding.connector.api.PartyConnector;
 import it.pagopa.selfcare.onboarding.connector.model.RelationshipInfo;
 import it.pagopa.selfcare.onboarding.connector.model.RelationshipsResponse;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.Institution;
@@ -33,7 +32,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 @Slf4j
-class PartyConnectorImpl implements PartyConnector {
+public class PartyConnectorImpl {
 
     protected static final String REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE = "An Institution external id is required";
     protected static final String REQUIRED_INSTITUTION_ID_MESSAGE = "An Institution id is required";
@@ -68,8 +67,6 @@ class PartyConnectorImpl implements PartyConnector {
         this.userApiClient = userApiClient;
         this.institutionApiClient = institutionApiClient;
     }
-
-    @Override
     public void onboardingOrganization(OnboardingData onboardingData) {
         java.util.Objects.requireNonNull(onboardingData, "Onboarding data is required");
         OnboardingInstitutionRequest onboardingInstitutionRequest = new OnboardingInstitutionRequest();
@@ -124,8 +121,6 @@ class PartyConnectorImpl implements PartyConnector {
 
         restClient.onboardingOrganization(onboardingInstitutionRequest);
     }
-
-    @Override
     public List<InstitutionInfo> getInstitutionsByUser(Product product, String userId) {
         log.trace("getInstitutionsByUser start");
         final String parentProductId = product.getParentId();
@@ -172,8 +167,6 @@ class PartyConnectorImpl implements PartyConnector {
         log.trace("getInstitutionsByUser end");
         return allowedInstitutions;
     }
-
-    @Override
     public RelationshipsResponse getUserInstitutionRelationships(String externalInstitutionId, UserInfo.UserInfoFilter userInfoFilter) {
         log.trace("getUserInstitutionRelationships start");
         log.debug("getUserInstitutionRelationships externalInstitutionId = {}, userInfoFilter = {}", externalInstitutionId, userInfoFilter);
@@ -191,8 +184,6 @@ class PartyConnectorImpl implements PartyConnector {
         log.trace("getUserInstitutionRelationships end");
         return institutionRelationships;
     }
-
-    @Override
     public Collection<UserInfo> getUsers(String externalInstitutionId, UserInfo.UserInfoFilter userInfoFilter) {
         log.trace("getUsers start");
         log.debug("getUsers externalInstitutionId = {}, role = {}, productId = {}, productRoles = {}, userId = {}", externalInstitutionId, userInfoFilter.getRole(), userInfoFilter.getProductId(), userInfoFilter.getProductRoles(), userInfoFilter.getUserId());
@@ -226,8 +217,6 @@ class PartyConnectorImpl implements PartyConnector {
         log.trace("getUsers end");
         return userInfos;
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public List<Institution> getInstitutionsByTaxCodeAndSubunitCode(String taxCode, String subunitCode) {
         log.trace("getInstitution start");
@@ -241,8 +230,6 @@ class PartyConnectorImpl implements PartyConnector {
         log.trace("getInstitution end");
         return result;
     }
-
-    @Override
     public Institution getInstitutionByExternalId(String externalInstitutionId) {
         log.trace("getInstitution start");
         log.debug("getInstitution externalInstitutionId = {}", externalInstitutionId);
@@ -253,8 +240,6 @@ class PartyConnectorImpl implements PartyConnector {
         log.trace("getInstitution end");
         return result;
     }
-
-    @Override
     public Institution getInstitutionById(String institutionId) {
         log.trace("getInstitutionById start");
         log.debug("getInstitutionById institutionId = {}", Encode.forJava(institutionId));
@@ -265,8 +250,6 @@ class PartyConnectorImpl implements PartyConnector {
         log.trace("getInstitutionById end");
         return result;
     }
-
-    @Override
     public List<OnboardingResource> getOnboardings(String institutionId, String productId) {
         log.trace("getOnboardings start");
         log.debug("getOnboardings institutionId = {}", Encode.forJava(institutionId));
@@ -279,8 +262,6 @@ class PartyConnectorImpl implements PartyConnector {
         log.trace("getOnboardings end");
         return onboardingResources;
     }
-
-    @Override
     public Institution createInstitutionFromIpa(String taxCode, String subunitCode, String subunitType) {
         log.trace("createInstitutionFromIpa start");
         log.debug("createInstitutionFromIpa taxCode = {}, subunitCode = {}, subunitType = {}", taxCode, subunitCode, subunitType);
@@ -295,8 +276,6 @@ class PartyConnectorImpl implements PartyConnector {
         log.trace("createInstitutionFromIpa end");
         return result;
     }
-
-    @Override
     public Institution createInstitutionFromANAC(OnboardingData onboardingData) {
         log.trace("createInstitutionFromAnac start");
         java.util.Objects.requireNonNull(onboardingData, "An OnboardingData is required");
@@ -306,8 +285,6 @@ class PartyConnectorImpl implements PartyConnector {
         log.trace("createInstitutionFromAnac end");
         return result;
     }
-
-    @Override
     public Institution createInstitutionFromIVASS(OnboardingData onboardingData) {
         log.trace("createInstitutionFromIVASS start");
         java.util.Objects.requireNonNull(onboardingData, "An OnboardingData is required");
@@ -317,8 +294,6 @@ class PartyConnectorImpl implements PartyConnector {
         log.trace("createInstitutionFromIVASS end");
         return result;
     }
-
-    @Override
     public Institution createInstitutionUsingExternalId(String institutionExternalId) {
         log.trace("createInstitutionUsingExternalId start");
         log.debug("createInstitutionUsingExternalId externalId = {}", institutionExternalId);
@@ -329,8 +304,6 @@ class PartyConnectorImpl implements PartyConnector {
         log.trace("createInstitutionUsingExternalId end");
         return result;
     }
-
-    @Override
     public Institution createInstitutionFromInfocamere(OnboardingData onboardingData) {
         log.trace("createInstitutionFromInfocamere start");
         java.util.Objects.requireNonNull(onboardingData, "An OnboardingData is required");
@@ -340,8 +313,6 @@ class PartyConnectorImpl implements PartyConnector {
         log.trace("createInstitutionFromInfocamere end");
         return result;
     }
-
-    @Override
     public Institution createInstitution(OnboardingData onboardingData) {
         log.trace("createInstitution start");
         java.util.Objects.requireNonNull(onboardingData, "An OnboardingData is required");
@@ -351,8 +322,6 @@ class PartyConnectorImpl implements PartyConnector {
         log.trace("createInstitution end");
         return result;
     }
-
-    @Override
     public UserInfo getInstitutionManager(String externalInstitutionId, String productId) {
         log.trace("getInstitutionManager start");
         log.debug("getInstitutionManager externalId = {}, productId = {}", externalInstitutionId, productId);
@@ -364,8 +333,6 @@ class PartyConnectorImpl implements PartyConnector {
         log.trace("getInstitutionManager end");
         return result;
     }
-
-    @Override
     public InstitutionInfo getInstitutionBillingData(String externalId, String productId) {
         log.trace("getInstitutionBillingData start");
         log.debug("getInstitutionBillingData externalId = {}, productId = {}", externalId, productId);
@@ -377,8 +344,6 @@ class PartyConnectorImpl implements PartyConnector {
         log.trace("getInstitutionBillingData end");
         return result;
     }
-
-    @Override
     public void verifyOnboarding(String externalInstitutionId, String productId) {
         log.trace("verifyOnboarding start");
         log.debug("verifyOnboarding externalInstitutionId = {}, productId = {}", externalInstitutionId, productId);
@@ -387,9 +352,6 @@ class PartyConnectorImpl implements PartyConnector {
         restClient.verifyOnboarding(externalInstitutionId, productId);
         log.trace("verifyOnboarding end");
     }
-
-
-    @Override
     public void verifyOnboarding(String productId, String externalId, String taxCode, String origin, String originId, String subunitCode) {
         log.trace("verifyOnboarding start");
         requireHasText(productId, REQUIRED_PRODUCT_ID_MESSAGE);

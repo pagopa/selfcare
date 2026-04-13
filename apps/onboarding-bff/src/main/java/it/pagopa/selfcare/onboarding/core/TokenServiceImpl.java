@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.onboarding.core;
 
-import it.pagopa.selfcare.onboarding.connector.api.OnboardingMsConnector;
+import it.pagopa.selfcare.onboarding.connector.OnboardingMsConnectorImpl;
 import it.pagopa.selfcare.onboarding.connector.model.BinaryData;
 import it.pagopa.selfcare.onboarding.connector.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
@@ -13,12 +13,12 @@ import java.util.Objects;
 @ApplicationScoped
 public class TokenServiceImpl implements TokenService {
 
-    private final OnboardingMsConnector onboardingMsConnector;
+    private final OnboardingMsConnectorImpl onboardingMsConnector;
 
     private static final String ONBOARDING_ID_REQUIRED_MESSAGE = "OnboardingId is required";
     private static final String TOKEN_ID_IS_REQUIRED = "TokenId is required";
 
-    public TokenServiceImpl(OnboardingMsConnector onboardingMsConnector) {
+    public TokenServiceImpl(OnboardingMsConnectorImpl onboardingMsConnector) {
         this.onboardingMsConnector = onboardingMsConnector;
     }
 

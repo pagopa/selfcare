@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.onboarding.connector;
 
 
-import it.pagopa.selfcare.onboarding.connector.api.UserInstitutionConnector;
 import it.pagopa.selfcare.onboarding.connector.model.userInstitution.UserInstitutionRequest;
 import it.pagopa.selfcare.onboarding.connector.model.userInstitution.UserInstitutionResponse;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -15,14 +14,12 @@ import org.openapi.quarkus.user_json.api.InstitutionControllerApi;
 @ApplicationScoped
 @Slf4j
 @Data
-class MsUserInstitutionConnectorImpl implements UserInstitutionConnector {
+public class MsUserInstitutionConnectorImpl {
 
   private final InstitutionControllerApi userInstitutionApiClient;
     public MsUserInstitutionConnectorImpl(@RestClient InstitutionControllerApi userInstitutionApiClient) {
         this.userInstitutionApiClient = userInstitutionApiClient;
     }
-
-  @Override
   public List<UserInstitutionResponse> getInstitutionUsersByFilter(UserInstitutionRequest userInstitutionRequest) {
     log.trace("getInstitutionUsersByFilter start");
     List<UserInstitutionResponse> userInstitutionResponses = new ArrayList<>();

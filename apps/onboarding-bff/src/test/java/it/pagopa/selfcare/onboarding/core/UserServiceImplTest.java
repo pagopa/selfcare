@@ -7,8 +7,8 @@ import static org.mockito.Mockito.*;
 
 import it.pagopa.selfcare.commons.utils.TestUtils;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.onboarding.connector.api.OnboardingMsConnector;
-import it.pagopa.selfcare.onboarding.connector.api.UserRegistryConnector;
+import it.pagopa.selfcare.onboarding.connector.OnboardingMsConnectorImpl;
+import it.pagopa.selfcare.onboarding.connector.UserRegistryConnectorImpl;
 import it.pagopa.selfcare.onboarding.connector.exceptions.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.ManagerVerification;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.CheckManagerData;
@@ -41,10 +41,10 @@ class UserServiceImplTest {
     private UserServiceImpl userService;
 
     @Mock
-    private UserRegistryConnector userRegistryConnectorMock;
+    private UserRegistryConnectorImpl userRegistryConnectorMock;
 
     @Mock
-    private OnboardingMsConnector onboardingMsConnector;
+    private OnboardingMsConnectorImpl onboardingMsConnector;
 
     @Mock
     private PgManagerVerifier pgManagerVerifierMock;

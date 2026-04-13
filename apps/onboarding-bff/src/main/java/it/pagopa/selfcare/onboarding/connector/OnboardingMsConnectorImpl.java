@@ -4,7 +4,6 @@ import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import it.pagopa.selfcare.onboarding.common.InstitutionPaSubunitType;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.onboarding.connector.api.OnboardingMsConnector;
 import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.connector.model.BinaryData;
 import it.pagopa.selfcare.onboarding.connector.model.OnboardingResult;
@@ -39,7 +38,7 @@ import java.util.Objects;
 
 @ApplicationScoped
 @Slf4j
-public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
+public class OnboardingMsConnectorImpl {
 
     public static final String PROD_IO = "prod-io";
     public static final String PROD_PAGOPA = "prod-pagopa";
@@ -68,8 +67,6 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
         this.onboardingMapper = onboardingMapper;
         this.internalV1Api = internalV1Api;
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void onboarding(OnboardingData onboardingData) {
         if (onboardingData.getInstitutionType() == InstitutionType.PA) {
@@ -80,8 +77,6 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
             onboardingApi.onboarding(onboardingMapper.toOnboardingDefaultRequest(onboardingData)).await().indefinitely();
         }
     }
-
-    @Override
     public VerifyAggregateResult aggregatesVerification(UploadedFile file, String productId) {
         log.info("validateAggregatesCsv for product: {}", productId);
         switch (productId) {
@@ -112,55 +107,38 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
             }
         }
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void onboardingUsers(OnboardingData onboardingData) {
         onboardingApi.onboardingUsers(onboardingMapper.toOnboardingUsersRequest(onboardingData)).await().indefinitely();
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void onboardingUsersAggregator(OnboardingData onboardingData) {
         onboardingApi.onboardingUsersAggregator(onboardingMapper.toOnboardingUsersRequest(onboardingData)).await().indefinitely();
     }
-
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void onboardingCompany(OnboardingData onboardingData) {
         onboardingApi.onboardingPgCompletion(onboardingMapper.toOnboardingPgRequest(onboardingData)).await().indefinitely();
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void onboardingTokenComplete(String onboardingId, UploadedFile contract) {
         InternalV1Api.CompleteOnboardingUsingPUTMultipartForm form = new InternalV1Api.CompleteOnboardingUsingPUTMultipartForm();
         form.contract = toTempFile(contract, "internal-", ".bin");
         internalV1Api.completeOnboardingUsingPUT(form, onboardingId).await().indefinitely();
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void onboardingUsersComplete(String onboardingId, UploadedFile contract) {
         OnboardingControllerApi.CompleteOnboardingUserMultipartForm form = new OnboardingControllerApi.CompleteOnboardingUserMultipartForm();
         form.contract = toTempFile(contract, "onboarding-", ".bin");
         onboardingApi.completeOnboardingUser(form, onboardingId).await().indefinitely();
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void onboardingPending(String onboardingId) {
         onboardingApi.getOnboardingPending(onboardingId).await().indefinitely();
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void approveOnboarding(String onboardingId) {
         onboardingApi.approve(onboardingId).await().indefinitely();
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void rejectOnboarding(String onboardingId, String reason) {
         ReasonRequest reasonForReject = new ReasonRequest();
@@ -169,56 +147,40 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
         }
         onboardingApi.delete(onboardingId, reasonForReject).await().indefinitely();
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public OnboardingData getOnboarding(String onboardingId) {
         OnboardingGet onboardingGet = onboardingApi.getById(onboardingId).await().indefinitely();
         return onboardingMapper.toOnboardingData(onboardingGet);
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public OnboardingData getOnboardingWithUserInfo(String onboardingId) {
         OnboardingGet onboardingGet = onboardingApi.getByIdWithUserInfo(onboardingId).await().indefinitely();
         return onboardingMapper.toOnboardingData(onboardingGet);
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getContract(String onboardingId) {
         File file = tokenApi.getContract(onboardingId).await().indefinitely();
         return toBinaryData(file, file.getName());
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getTemplateAttachment(String onboardingId, String filename) {
         File file = tokenApi.getTemplateAttachment(onboardingId, filename).await().indefinitely();
         return toBinaryData(file, filename);
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getAttachment(String onboardingId, String filename) {
         File file = tokenApi.getAttachment(onboardingId, filename).await().indefinitely();
         return toBinaryData(file, filename);
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getAggregatesCsv(String onboardingId, String productId) {
         File file = aggregatesApi.getAggregatesCsv(onboardingId, productId).await().indefinitely();
         return toBinaryData(file, file.getName());
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void onboardingPaAggregation(OnboardingData onboardingData) {
         onboardingApi.onboardingPaAggregation(onboardingMapper.toOnboardingPaAggregationRequest(onboardingData)).await().indefinitely();
     }
-
-    @Override
     public List<OnboardingData> getByFilters(String productId, String taxCode, String origin, String originId, String subunitCode) {
         List<OnboardingResponse> result = supportApi.onboardingInstitutionUsingGET(origin, originId, OnboardingStatus.COMPLETED, subunitCode, taxCode)
             .await().indefinitely();
@@ -236,15 +198,11 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
                 .map(onboardingMapper::toOnboardingData)
                 .toList() : List.of();
     }
-
-    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public boolean checkManager(CheckManagerData checkManagerData) {
         CheckManagerResponse response = onboardingApi.checkManager(onboardingMapper.toCheckManagerRequest(checkManagerData)).await().indefinitely();
         return Objects.requireNonNull(response).getResponse();
     }
-
-    @Override
     public RecipientCodeStatusResult checkRecipientCode(String originId, String recipientCode) {
         return onboardingMapper.toRecipientCodeStatusResult(billingPortalApi.checkRecipientCode(originId, recipientCode).await().indefinitely());
     }
@@ -258,15 +216,11 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
             .await().indefinitely();
         log.trace("verifyOnboarding end");
     }
-
-    @Override
     public void onboardingUsersPgFromIcAndAde(OnboardingData onboardingData) {
         log.trace("onboardingUsersPgFromIcAndAde start");
         onboardingApi.onboardingUsersPg(onboardingMapper.toOnboardingUserPgRequest(onboardingData)).await().indefinitely();
         log.trace("onboardingUsersPgFromIcAndAde end");
     }
-
-    @Override
     public List<OnboardingResult> onboardingWithFilter(String taxCode, String status) {
         log.trace("onboardingWithFilter start");
         OnboardingGetResponse response = onboardingApi.getOnboardingWithFilter( null,
@@ -286,15 +240,11 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
         log.trace("onboardingWithFilter end");
         return onboardingResults;
     }
-
-    @Override
     public void uploadAttachment(String onboardingId, UploadedFile attachment, String attachmentName) {
         TokenControllerApi.UploadAttachmentMultipartForm form = new TokenControllerApi.UploadAttachmentMultipartForm();
         form._file = toTempFile(attachment, "token-", ".bin");
         tokenApi.uploadAttachment(form, onboardingId, attachmentName).await().indefinitely();
     }
-
-    @Override
     public int headAttachment(String onboardingId, String filename) {
         log.info("headAttachment for onboardingId: {}, filename: {}", Encode.forJava(onboardingId), Encode.forJava(filename));
         int statusCode = tokenApi.headAttachment(onboardingId, filename).await().indefinitely().getStatus();

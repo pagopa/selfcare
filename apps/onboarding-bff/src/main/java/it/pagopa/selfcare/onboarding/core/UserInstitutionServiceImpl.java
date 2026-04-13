@@ -3,7 +3,7 @@ package it.pagopa.selfcare.onboarding.core;
 import static org.apache.commons.lang3.StringUtils.*;
 
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.onboarding.connector.api.UserInstitutionConnector;
+import it.pagopa.selfcare.onboarding.connector.MsUserInstitutionConnectorImpl;
 import it.pagopa.selfcare.onboarding.connector.model.userInstitution.UserInstitutionRequest;
 import it.pagopa.selfcare.onboarding.connector.model.userInstitution.UserInstitutionResponse;
 import it.pagopa.selfcare.product.entity.ProductStatus;
@@ -17,9 +17,9 @@ import org.apache.commons.lang3.StringUtils;
 @ApplicationScoped
 public class UserInstitutionServiceImpl implements UserInstitutionService {
 
-  private final UserInstitutionConnector userInstitutionConnector;
+  private final MsUserInstitutionConnectorImpl userInstitutionConnector;
 
-  public UserInstitutionServiceImpl(UserInstitutionConnector userInstitutionConnector) {
+  public UserInstitutionServiceImpl(MsUserInstitutionConnectorImpl userInstitutionConnector) {
     this.userInstitutionConnector = userInstitutionConnector;
   }
 

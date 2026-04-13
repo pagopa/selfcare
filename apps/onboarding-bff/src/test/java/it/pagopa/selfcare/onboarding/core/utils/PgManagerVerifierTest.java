@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.onboarding.core.utils;
 
 import it.pagopa.selfcare.commons.base.utils.Origin;
-import it.pagopa.selfcare.onboarding.connector.api.PartyRegistryProxyConnector;
+import it.pagopa.selfcare.onboarding.connector.PartyRegistryProxyConnectorImpl;
 import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.ManagerVerification;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.MatchInfoResult;
@@ -26,7 +26,7 @@ class PgManagerVerifierTest {
     private PgManagerVerifier pgManagerVerifier;
 
     @Mock
-    private PartyRegistryProxyConnector partyRegistryProxyConnectorMock;
+    private PartyRegistryProxyConnectorImpl partyRegistryProxyConnectorMock;
 
     @Test
     void verifyManager_userIsManagerOnInfocamere() {

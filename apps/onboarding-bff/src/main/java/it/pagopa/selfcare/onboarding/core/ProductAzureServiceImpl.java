@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.onboarding.core;
 
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.onboarding.connector.api.ProductsConnector;
+import it.pagopa.selfcare.onboarding.connector.ProductsConnectorImpl;
 import it.pagopa.selfcare.onboarding.connector.exceptions.ResourceNotFoundException;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductStatus;
@@ -17,9 +17,9 @@ import java.util.Objects;
 @ApplicationScoped
 public class ProductAzureServiceImpl implements ProductAzureService {
 
-    private final ProductsConnector productsConnector;
+    private final ProductsConnectorImpl productsConnector;
 
-    public ProductAzureServiceImpl(ProductsConnector productsConnector) {
+    public ProductAzureServiceImpl(ProductsConnectorImpl productsConnector) {
         this.productsConnector = productsConnector;
     }
 

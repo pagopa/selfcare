@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.onboarding.connector.api.UserInstitutionConnector;
+import it.pagopa.selfcare.onboarding.connector.MsUserInstitutionConnectorImpl;
 import it.pagopa.selfcare.onboarding.connector.model.userInstitution.UserInstitutionRequest;
 import it.pagopa.selfcare.onboarding.connector.model.userInstitution.UserInstitutionResponse;
 import it.pagopa.selfcare.product.entity.ProductStatus;
@@ -24,7 +24,7 @@ class UserInstitutionServiceImplTest {
 
   @InjectMocks private UserInstitutionServiceImpl userInstitutionService;
 
-  @Mock private UserInstitutionConnector userInstitutionConnector;
+  @Mock private MsUserInstitutionConnectorImpl userInstitutionConnector;
 
   @Test
   void verifyAllowedUserInstitution_shouldReturnEmptyList() {

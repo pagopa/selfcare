@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.onboarding.core;
 
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.onboarding.connector.api.ProductsConnector;
+import it.pagopa.selfcare.onboarding.connector.ProductsConnectorImpl;
 import it.pagopa.selfcare.onboarding.connector.exceptions.ResourceNotFoundException;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductStatus;
@@ -27,7 +27,7 @@ class ProductAzureServiceImplTest {
     private ProductAzureServiceImpl productService;
 
     @Mock
-    private ProductsConnector productsConnectorMock;
+    private ProductsConnectorImpl productsConnectorMock;
 
     @Test
     void getProduct_nullProductId() {

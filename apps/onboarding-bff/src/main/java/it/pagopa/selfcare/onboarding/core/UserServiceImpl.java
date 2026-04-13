@@ -6,8 +6,8 @@ import static it.pagopa.selfcare.onboarding.core.utils.Utils.getManager;
 import static it.pagopa.selfcare.onboarding.core.utils.Utils.isUserAdmin;
 
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
-import it.pagopa.selfcare.onboarding.connector.api.OnboardingMsConnector;
-import it.pagopa.selfcare.onboarding.connector.api.UserRegistryConnector;
+import it.pagopa.selfcare.onboarding.connector.OnboardingMsConnectorImpl;
+import it.pagopa.selfcare.onboarding.connector.UserRegistryConnectorImpl;
 import it.pagopa.selfcare.onboarding.connector.exceptions.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.ManagerVerification;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.CheckManagerData;
@@ -34,13 +34,13 @@ public class UserServiceImpl implements UserService {
 
     private static final EnumSet<it.pagopa.selfcare.onboarding.connector.model.user.User.Fields> FIELD_LIST = EnumSet.of(name, familyName);
     private static final String INVALID_FIELD_REASON = "the value does not match with the certified data";
-    private final UserRegistryConnector userRegistryConnector;
-    private final OnboardingMsConnector onboardingMsConnector;
+    private final UserRegistryConnectorImpl userRegistryConnector;
+    private final OnboardingMsConnectorImpl onboardingMsConnector;
     private final PgManagerVerifier pgManagerVerifier;
     private final UserAllowedValidationStrategy userAllowedValidationStrategy;
 
-    public UserServiceImpl(UserRegistryConnector userRegistryConnector,
-                           OnboardingMsConnector onboardingMsConnector,
+    public UserServiceImpl(UserRegistryConnectorImpl userRegistryConnector,
+                           OnboardingMsConnectorImpl onboardingMsConnector,
                            PgManagerVerifier pgManagerVerifier, UserAllowedValidationStrategy userAllowedValidationStrategy) {
         this.userRegistryConnector = userRegistryConnector;
         this.onboardingMsConnector = onboardingMsConnector;
