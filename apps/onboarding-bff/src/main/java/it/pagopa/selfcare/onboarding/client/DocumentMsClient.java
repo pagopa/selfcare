@@ -2,10 +2,9 @@ package it.pagopa.selfcare.onboarding.client;
 
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
+import it.pagopa.selfcare.onboarding.client.util.FilePayloadUtils;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
@@ -30,7 +29,7 @@ public class DocumentMsClient {
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getContract(String onboardingId) {
         File file = documentContentApi.getContract(onboardingId).await().indefinitely();
-        return toBinaryData(file, file.getName());
+        return FilePayloadUtils.toBinaryData(file, file.getName());
     }
 
     @Retry(maxRetries = 2, delay = 5000)
@@ -42,19 +41,19 @@ public class DocumentMsClient {
         File file = documentContentApi
                 .getTemplateAttachment(onboardingId, institutionDescription, filename, productId, templatePath)
                 .await().indefinitely();
-        return toBinaryData(file, filename);
+        return FilePayloadUtils.toBinaryData(file, filename);
     }
 
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getAttachment(String onboardingId, String filename) {
         File file = documentContentApi.getAttachment(onboardingId, filename).await().indefinitely();
-        return toBinaryData(file, filename);
+        return FilePayloadUtils.toBinaryData(file, filename);
     }
 
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getAggregatesCsv(String onboardingId, String productId) {
         File file = documentContentApi.getAggregatesCsv(onboardingId, productId).await().indefinitely();
-        return toBinaryData(file, file.getName());
+        return FilePayloadUtils.toBinaryData(file, file.getName());
     }
 
     public void uploadAttachment(String onboardingId,
@@ -72,7 +71,7 @@ public class DocumentMsClient {
 
         DocumentContentControllerApi.UploadAttachmentMultipartForm form =
                 new DocumentContentControllerApi.UploadAttachmentMultipartForm();
-        form._file = toTempFile(attachment, "document-attachment-", ".bin");
+        form._file = FilePayloadUtils.toTempFile(attachment, "document-attachment-", ".bin");
         form.request = request;
         documentContentApi.uploadAttachment(form).await().indefinitely();
     }
@@ -81,27 +80,5 @@ public class DocumentMsClient {
         return documentApi.headAttachment(onboardingId, filename)
                 .await().indefinitely()
                 .getStatus();
-    }
-
-    private static BinaryData toBinaryData(File file, String fallbackName) {
-        try {
-            String fileName = fallbackName == null || fallbackName.isBlank() ? file.getName() : fallbackName;
-            return new BinaryData(fileName, Files.readAllBytes(file.toPath()));
-        } catch (IOException e) {
-            throw new IllegalStateException("Cannot read downloaded file", e);
-        }
-    }
-
-    private static File toTempFile(UploadedFile uploadedFile, String prefix, String defaultExtension) {
-        try {
-            String fileName = uploadedFile.fileName();
-            String suffix = (fileName == null || fileName.isBlank()) ? defaultExtension : "-" + fileName;
-            File file = Files.createTempFile(prefix, suffix).toFile();
-            Files.write(file.toPath(), uploadedFile.content());
-            file.deleteOnExit();
-            return file;
-        } catch (IOException e) {
-            throw new IllegalStateException("Cannot convert multipart file", e);
-        }
     }
 }

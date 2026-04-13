@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.client;
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
+import it.pagopa.selfcare.onboarding.client.util.FilePayloadUtils;
 import it.pagopa.selfcare.onboarding.common.InstitutionPaSubunitType;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
@@ -16,8 +17,6 @@ import org.openapi.quarkus.onboarding_json.model.*;
 import org.owasp.encoder.Encode;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Objects;
 
@@ -68,19 +67,19 @@ public class OnboardingMsClient {
             case PROD_IO -> {
                 AggregatesControllerApi.VerifyAppIoAggregatesCsvMultipartForm form =
                     new AggregatesControllerApi.VerifyAppIoAggregatesCsvMultipartForm();
-                form.aggregates = toTempFile(file, "aggregates-", ".csv");
+                form.aggregates = FilePayloadUtils.toTempFile(file, "aggregates-", ".csv");
                 return aggregatesApi.verifyAppIoAggregatesCsv(form).await().indefinitely();
             }
             case PROD_PAGOPA -> {
                 AggregatesControllerApi.VerifyPagoPaAggregatesCsvMultipartForm form =
                     new AggregatesControllerApi.VerifyPagoPaAggregatesCsvMultipartForm();
-                form.aggregates = toTempFile(file, "aggregates-", ".csv");
+                form.aggregates = FilePayloadUtils.toTempFile(file, "aggregates-", ".csv");
                 return aggregatesApi.verifyPagoPaAggregatesCsv(form).await().indefinitely();
             }
             case PROD_PN -> {
                 AggregatesControllerApi.VerifySendAggregatesCsvMultipartForm form =
                     new AggregatesControllerApi.VerifySendAggregatesCsvMultipartForm();
-                form.aggregates = toTempFile(file, "aggregates-", ".csv");
+                form.aggregates = FilePayloadUtils.toTempFile(file, "aggregates-", ".csv");
                 return aggregatesApi.verifySendAggregatesCsv(form).await().indefinitely();
             }
             default -> {
@@ -104,13 +103,13 @@ public class OnboardingMsClient {
     @Retry(maxRetries = 2, delay = 5000)
     public void onboardingTokenComplete(String onboardingId, UploadedFile contract) {
         InternalV1Api.CompleteOnboardingUsingPUTMultipartForm form = new InternalV1Api.CompleteOnboardingUsingPUTMultipartForm();
-        form.contract = toTempFile(contract, "internal-", ".bin");
+        form.contract = FilePayloadUtils.toTempFile(contract, "internal-", ".bin");
         internalV1Api.completeOnboardingUsingPUT(form, onboardingId).await().indefinitely();
     }
     @Retry(maxRetries = 2, delay = 5000)
     public void onboardingUsersComplete(String onboardingId, UploadedFile contract) {
         OnboardingControllerApi.CompleteOnboardingUserMultipartForm form = new OnboardingControllerApi.CompleteOnboardingUserMultipartForm();
-        form.contract = toTempFile(contract, "onboarding-", ".bin");
+        form.contract = FilePayloadUtils.toTempFile(contract, "onboarding-", ".bin");
         onboardingApi.completeOnboardingUser(form, onboardingId).await().indefinitely();
     }
     @Retry(maxRetries = 2, delay = 5000)
@@ -140,22 +139,22 @@ public class OnboardingMsClient {
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getContract(String onboardingId) {
         File file = tokenApi.getContract(onboardingId).await().indefinitely();
-        return toBinaryData(file, file.getName());
+        return FilePayloadUtils.toBinaryData(file, file.getName());
     }
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getTemplateAttachment(String onboardingId, String filename) {
         File file = tokenApi.getTemplateAttachment(onboardingId, filename).await().indefinitely();
-        return toBinaryData(file, filename);
+        return FilePayloadUtils.toBinaryData(file, filename);
     }
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getAttachment(String onboardingId, String filename) {
         File file = tokenApi.getAttachment(onboardingId, filename).await().indefinitely();
-        return toBinaryData(file, filename);
+        return FilePayloadUtils.toBinaryData(file, filename);
     }
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getAggregatesCsv(String onboardingId, String productId) {
         File file = aggregatesApi.getAggregatesCsv(onboardingId, productId).await().indefinitely();
-        return toBinaryData(file, file.getName());
+        return FilePayloadUtils.toBinaryData(file, file.getName());
     }
     @Retry(maxRetries = 2, delay = 5000)
     public void onboardingPaAggregation(OnboardingData onboardingData) {
@@ -219,7 +218,7 @@ public class OnboardingMsClient {
     }
     public void uploadAttachment(String onboardingId, UploadedFile attachment, String attachmentName) {
         TokenControllerApi.UploadAttachmentMultipartForm form = new TokenControllerApi.UploadAttachmentMultipartForm();
-        form._file = toTempFile(attachment, "token-", ".bin");
+        form._file = FilePayloadUtils.toTempFile(attachment, "token-", ".bin");
         tokenApi.uploadAttachment(form, onboardingId, attachmentName).await().indefinitely();
     }
     public int headAttachment(String onboardingId, String filename) {
@@ -227,28 +226,6 @@ public class OnboardingMsClient {
         int statusCode = tokenApi.headAttachment(onboardingId, filename).await().indefinitely().getStatus();
         log.info("headAttachment response status code: {}", statusCode);
         return statusCode;
-    }
-
-    private static BinaryData toBinaryData(File file, String fallbackName) {
-        try {
-            String fileName = fallbackName == null || fallbackName.isBlank() ? file.getName() : fallbackName;
-            return new BinaryData(fileName, Files.readAllBytes(file.toPath()));
-        } catch (IOException e) {
-            throw new IllegalStateException("Cannot read downloaded file", e);
-        }
-    }
-
-    private static File toTempFile(UploadedFile uploadedFile, String prefix, String defaultExtension) {
-        try {
-            String fileName = uploadedFile.fileName();
-            String suffix = (fileName == null || fileName.isBlank()) ? defaultExtension : "-" + fileName;
-            File file = Files.createTempFile(prefix, suffix).toFile();
-            Files.write(file.toPath(), uploadedFile.content());
-            file.deleteOnExit();
-            return file;
-        } catch (IOException e) {
-            throw new IllegalStateException("Cannot convert multipart file", e);
-        }
     }
 
 }
