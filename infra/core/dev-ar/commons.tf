@@ -34,6 +34,11 @@ module "key_vault" {
 
   azdo_sp_tls_cert_enabled                         = local.azdo_sp_tls_cert_enabled
   azuread_service_principal_azure_cdn_frontdoor_id = "f3b3f72f-4770-47a5-8c1e-aa298003be12"
+
+  adgroup_admin_object_id      = local.adgroup_admin_object_id
+  adgroup_developers_object_id = local.adgroup_developers_object_id
+  adgroup_externals_object_id  = local.adgroup_externals_object_id
+  adgroup_security_object_id   = local.adgroup_security_object_id
 }
 
 

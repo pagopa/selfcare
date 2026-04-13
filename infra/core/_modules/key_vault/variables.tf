@@ -43,3 +43,25 @@ variable "soft_delete_retention_days" {
   default     = 15
   description = "(Optional) The number of days that items should be retained for once soft-deleted. This value can be between 7 and 90 (the default) days."
 }
+
+variable "adgroup_admin_object_id" {
+  type        = string
+  description = "Object ID of the Azure AD admin group (e.g. selc-d-adgroup-admin)"
+}
+
+variable "adgroup_developers_object_id" {
+  type        = string
+  description = "Object ID of the Azure AD developers group (e.g. selc-d-adgroup-developers)"
+}
+
+variable "adgroup_externals_object_id" {
+  type        = string
+  description = "Object ID of the Azure AD externals group (e.g. selc-d-adgroup-externals)"
+  default     = null
+}
+
+variable "adgroup_security_object_id" {
+  type        = string
+  description = "Object ID of the Azure AD security group (e.g. selc-d-adgroup-security)"
+  default     = null
+}

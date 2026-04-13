@@ -142,18 +142,6 @@ resource "azurerm_key_vault_access_policy" "key_vault_access_policy_pnpg_identit
   ]
 }
 
-data "azuread_application_published_app_ids" "well_known" {}
-
-data "azuread_service_principal" "msgraph" {
-  client_id = data.azuread_application_published_app_ids.well_known.result["MicrosoftGraph"]
-}
-
-resource "azuread_app_role_assignment" "group_reader" {
-  app_role_id         = data.azuread_service_principal.msgraph.app_role_ids["Group.Read.All"]
-  principal_object_id = module.identity_ci.identity_principal_id
-  resource_object_id  = data.azuread_service_principal.msgraph.object_id
-}
-
 resource "azurerm_role_definition" "container_apps_jobs_reader" {
   name        = "${var.app} ${var.env} ContainerApp Jobs Reader"
   scope       = var.subscription_id
