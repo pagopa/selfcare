@@ -139,9 +139,9 @@ public class SearchServiceImpl implements SearchService {
   @Override
   public OnboardingIndexSearch searchOnboarding(String searchText, List<String> products, List<String> institutionTypes,
                                                 List<String> statuses, Long page, Long pageSize, String orderBy) {
-    page = page != null ? page : 0L;
-    pageSize = pageSize != null ? pageSize : 15L;
-    orderBy = orderBy != null ? orderBy : "description asc";
+    page = page != null && page > 0L ? page : 0L;
+    pageSize = pageSize != null && pageSize > 0L ? pageSize : 15L;
+    orderBy = orderBy != null && !orderBy.isBlank() ? orderBy : "description asc";
     final OnboardingIndexSearch onboardingIndexSearch = searchServiceConnector.searchOnboarding(searchText,
             buildOnboardingFilter(products, institutionTypes, statuses), pageSize, page * pageSize, orderBy);
     onboardingIndexSearch.setPage(page);
