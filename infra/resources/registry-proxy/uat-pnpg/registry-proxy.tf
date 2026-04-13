@@ -2,7 +2,18 @@
 # GLOBAL VARIABLES
 ###############################################################################
 module "local" {
-  source = "../../_modules/local-uat-pnpg"
+  source = "../../_modules/local-env"
+
+  env             = "uat"
+  env_short       = "u"
+  domain          = "pnpg"
+  external_domain = "it"
+
+  dns_zone_prefix                = "imprese.uat.notifichedigitali"
+  api_dns_zone_prefix            = "api-pnpg.uat.selfcare"
+  private_dns_name_domain        = "orangeground-0bd2d4dc.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-u-pnpg-cae-001"
+  ca_resource_group_name         = "selc-u-container-app-001-rg"
 }
 locals {
   # ca_name = "selc-${module.local.config.env_short}-party-reg-proxy-ca"
@@ -53,7 +64,7 @@ locals {
 
   registry_proxy_app_settings = [
     {
-      name = "JAVA_TOOL_OPTIONS"
+      name  = "JAVA_TOOL_OPTIONS"
       value = "-javaagent:applicationinsights-agent.jar -XX:MaxRAMPercentage=75.0"
     },
     {

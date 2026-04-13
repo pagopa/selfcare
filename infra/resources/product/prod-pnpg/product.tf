@@ -2,7 +2,22 @@
 # GLOBAL VARIABLES
 ###############################################################################
 module "local" {
-  source = "../../_modules/local-prod-pnpg"
+  source = "../../_modules/local-env"
+
+  env             = "prod"
+  env_short       = "p"
+  domain          = "pnpg"
+  external_domain = "it"
+
+  dns_zone_prefix                = "imprese.notifichedigitali"
+  api_dns_zone_prefix            = "api-pnpg.selfcare"
+  private_dns_name_domain        = "calmmoss-0be48755.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-p-pnpg-cae-cp"
+  ca_resource_group_name         = "selc-p-container-app-rg"
+  container_app_max_replicas     = 5
+  container_app_desired_replicas = "3"
+  container_app_cpu              = 1.25
+  container_app_memory           = "2.5Gi"
 }
 
 ###############################################################################
