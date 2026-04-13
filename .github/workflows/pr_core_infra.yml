@@ -53,8 +53,9 @@ jobs:
     name: Core Code Review
     secrets: inherit
     with:
-      environment: '${{ inputs.environment }}-${{ inputs.domain }}'
-      dir: './infra/core'
+      environment: '${{ inputs.environment }}'
+      tf_environment: '${{ inputs.environment }}-${{ inputs.domain }}'
+      dir: './infra/core/${{ inputs.environment }}-${{ inputs.domain }}'
       # Optional parameters
       env_vars: ""
       # use_private_agent: true
