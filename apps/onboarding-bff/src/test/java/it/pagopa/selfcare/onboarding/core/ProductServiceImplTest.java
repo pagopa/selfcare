@@ -1,13 +1,16 @@
 package it.pagopa.selfcare.onboarding.core;
 
-import it.pagopa.selfcare.onboarding.connector.api.ProductMsConnector;
 import it.pagopa.selfcare.onboarding.connector.model.product.OriginResult;
+import it.pagopa.selfcare.onboarding.connector.rest.mapper.ProductMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.openapi.quarkus.product_json.api.ProductApi;
+import org.openapi.quarkus.product_json.model.ProductOriginResponse;
 import org.owasp.encoder.Encode;
+import io.smallrye.mutiny.Uni;
 
 import java.util.List;
 
@@ -18,7 +21,10 @@ import static org.mockito.Mockito.*;
 class ProductServiceImplTest {
 
     @Mock
-    private ProductMsConnector productMsConnector;
+    private ProductApi productApi;
+
+    @Mock
+    private ProductMapper productMapper;
 
     @InjectMocks
     private ProductServiceImpl productService;
@@ -29,10 +35,12 @@ class ProductServiceImplTest {
         String productId = "prod-test";
         String sanitized = Encode.forJava(productId);
 
+        ProductOriginResponse apiResponse = new ProductOriginResponse();
         OriginResult originResult = new OriginResult();
         originResult.setOrigins(List.of());
 
-        when(productMsConnector.getOrigins(sanitized)).thenReturn(originResult);
+        when(productApi.getProductOriginsById(sanitized)).thenReturn(Uni.createFrom().item(apiResponse));
+        when(productMapper.toOriginResult(apiResponse)).thenReturn(originResult);
 
         // when
         OriginResult result = productService.getOrigins(productId);
@@ -41,8 +49,9 @@ class ProductServiceImplTest {
         assertNotNull(result);
         assertEquals(originResult, result);
 
-        verify(productMsConnector, times(1)).getOrigins(sanitized);
-        verifyNoMoreInteractions(productMsConnector);
+        verify(productApi, times(1)).getProductOriginsById(sanitized);
+        verify(productMapper, times(1)).toOriginResult(apiResponse);
+        verifyNoMoreInteractions(productApi, productMapper);
     }
 
     @Test
@@ -51,17 +60,20 @@ class ProductServiceImplTest {
         String rawProductId = "<error>";
         String sanitized = Encode.forJava(rawProductId);
 
+        ProductOriginResponse apiResponse = new ProductOriginResponse();
         OriginResult originResult = new OriginResult();
         originResult.setOrigins(List.of());
 
-        when(productMsConnector.getOrigins(sanitized)).thenReturn(originResult);
+        when(productApi.getProductOriginsById(sanitized)).thenReturn(Uni.createFrom().item(apiResponse));
+        when(productMapper.toOriginResult(apiResponse)).thenReturn(originResult);
 
         // when
         OriginResult result = productService.getOrigins(rawProductId);
 
         // then
         assertNotNull(result);
-        verify(productMsConnector).getOrigins(sanitized);
+        verify(productApi).getProductOriginsById(sanitized);
+        verify(productMapper).toOriginResult(apiResponse);
     }
 
     @Test
@@ -70,8 +82,10 @@ class ProductServiceImplTest {
         String productId = "test";
         String sanitized = Encode.forJava(productId);
 
+        ProductOriginResponse apiResponse = new ProductOriginResponse();
         OriginResult originResult = new OriginResult();
-        when(productMsConnector.getOrigins(sanitized)).thenReturn(originResult);
+        when(productApi.getProductOriginsById(sanitized)).thenReturn(Uni.createFrom().item(apiResponse));
+        when(productMapper.toOriginResult(apiResponse)).thenReturn(originResult);
 
         // then
         assertThrows(NullPointerException.class, () -> productService.getOrigins(productId));

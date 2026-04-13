@@ -30,5 +30,4 @@ public class InstitutionUpdate {
     private String supportPhone;
     private Boolean imported;
     private AdditionalInformations additionalInformations;
-
 }
