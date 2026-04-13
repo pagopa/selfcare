@@ -27,7 +27,6 @@ on:
         options:
           - areariservata
           - selfcare
-          - pnpg
         required: true
         default: areariservata
       force_renewal:
