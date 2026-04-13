@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.onboarding.controller.response;
 
 import io.swagger.annotations.ApiModelProperty;
-import it.pagopa.selfcare.commons.base.security.SelfCareAuthority;
+import it.pagopa.selfcare.onboarding.model.UserAuthority;
 import lombok.Data;
 
 import java.util.UUID;
@@ -52,6 +52,6 @@ public class InstitutionResource {
     private String origin;
 
     @ApiModelProperty(value = "${swagger.onboarding.institutions.model.userRole}")
-    private SelfCareAuthority userRole;
+    private UserAuthority userRole;
 
 }

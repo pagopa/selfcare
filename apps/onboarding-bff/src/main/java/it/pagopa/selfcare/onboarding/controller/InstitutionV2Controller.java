@@ -7,8 +7,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import it.pagopa.selfcare.commons.base.logging.LogUtils;
-import it.pagopa.selfcare.commons.base.security.SelfCareUser;
+import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingResult;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
@@ -22,6 +21,7 @@ import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.mapper.UserMapper;
 import it.pagopa.selfcare.onboarding.util.FileValidationUtils;
+import it.pagopa.selfcare.onboarding.util.SecurityIdentityUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -103,8 +103,8 @@ public class InstitutionV2Controller {
     public Response onboarding(@Valid CompanyOnboardingDto request) {
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", Encode.forJava(request.toString()));
-        SelfCareUser selfCareUser = (SelfCareUser) securityIdentity.getPrincipal();
-        institutionService.onboardingCompanyV2(onboardingMapper.toEntity(request), selfCareUser.getFiscalCode());
+        String fiscalCode = SecurityIdentityUtils.getFiscalCode(securityIdentity);
+        institutionService.onboardingCompanyV2(onboardingMapper.toEntity(request), fiscalCode);
         log.trace(ONBOARDING_END);
         return Response.status(Response.Status.CREATED).build();
     }
@@ -169,9 +169,8 @@ public class InstitutionV2Controller {
             @Valid VerifyManagerRequest request
     ) {
         log.trace("verifyManager start");
-        SelfCareUser selfCareUser = (SelfCareUser) securityIdentity.getPrincipal();
-
-        VerifyManagerResponse response = onboardingMapper.toManagerVerification(institutionService.verifyManager(selfCareUser.getFiscalCode(), request.getCompanyTaxCode()));
+        String fiscalCode = SecurityIdentityUtils.getFiscalCode(securityIdentity);
+        VerifyManagerResponse response = onboardingMapper.toManagerVerification(institutionService.verifyManager(fiscalCode, request.getCompanyTaxCode()));
         log.trace("verifyManager end");
         return response;
     }

@@ -7,8 +7,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import it.pagopa.selfcare.commons.base.logging.LogUtils;
-import it.pagopa.selfcare.commons.base.security.SelfCareUser;
+import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
@@ -22,6 +21,7 @@ import it.pagopa.selfcare.onboarding.model.OnboardingVerify;
 import it.pagopa.selfcare.onboarding.controller.request.ReasonForRejectDto;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.util.FileValidationUtils;
+import it.pagopa.selfcare.onboarding.util.SecurityIdentityUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotNull;
@@ -261,13 +261,12 @@ public class TokenV2Controller {
                                      @PathParam("productId")
                                      String productIdInput) {
 
-        SelfCareUser selfCareUser = (SelfCareUser) securityIdentity.getPrincipal();
         log.trace("getAggregatesCsv start");
         String onboardingId = Encode.forJava(onboardingIdInput);
         String productId = Encode.forJava(productIdInput);
         log.debug("getAggregatesCsv onboardingId = {}, productId = {}", onboardingId, productId);
 
-        String userUid = selfCareUser.getId();
+        String userUid = SecurityIdentityUtils.getUid(securityIdentity);
         OnboardingData onboardingWithUserInfo = tokenService.getOnboardingWithUserInfo(onboardingId);
 
         if ((OnboardingStatus.COMPLETED.name().equalsIgnoreCase(onboardingWithUserInfo.getStatus()) && userInstitutionService.verifyAllowedUserInstitution(

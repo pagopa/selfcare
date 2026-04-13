@@ -904,7 +904,7 @@
             "type" : "string"
           },
           "userRole" : {
-            "$ref" : "#/components/schemas/SelfCareAuthority"
+            "$ref" : "#/components/schemas/UserAuthority"
           }
         }
       },
@@ -1531,14 +1531,14 @@
           }
         }
       },
-      "SelfCareAuthority" : {
-        "type" : "string",
-        "enum" : [ "ADMIN", "LIMITED", "ADMIN_EA" ]
-      },
       "UUID" : {
         "type" : "string",
         "format" : "uuid",
         "pattern" : "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+      },
+      "UserAuthority" : {
+        "type" : "string",
+        "enum" : [ "ADMIN", "LIMITED", "ADMIN_EA" ]
       },
       "UserDataValidationDto" : {
         "type" : "object",

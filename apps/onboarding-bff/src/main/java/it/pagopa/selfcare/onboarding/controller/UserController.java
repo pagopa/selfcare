@@ -6,8 +6,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import it.pagopa.selfcare.commons.base.logging.LogUtils;
-import it.pagopa.selfcare.commons.base.security.SelfCareUser;
+import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.onboarding.client.model.UserId;
 import it.pagopa.selfcare.onboarding.service.UserService;
 import it.pagopa.selfcare.onboarding.controller.request.*;
@@ -15,6 +14,7 @@ import it.pagopa.selfcare.onboarding.controller.response.*;
 import it.pagopa.selfcare.onboarding.model.error.Problem;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.mapper.UserMapper;
+import it.pagopa.selfcare.onboarding.util.SecurityIdentityUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -136,9 +136,8 @@ public class UserController {
             description = "${swagger.onboarding.users.api.check-manager}", operationId = "getManagerInfo")
     public ManagerInfoResponse getManagerInfo(@PathParam("onboardingId") String onboardingId) {
         log.trace("getManagerInfo start");
-        SelfCareUser selfCareUser = (SelfCareUser) securityIdentity.getPrincipal();
-
-        ManagerInfoResponse managerInfoResponse = userResourceMapper.toManagerInfoResponse(userService.getManagerInfo(onboardingId, selfCareUser.getFiscalCode()));
+        String fiscalCode = SecurityIdentityUtils.getFiscalCode(securityIdentity);
+        ManagerInfoResponse managerInfoResponse = userResourceMapper.toManagerInfoResponse(userService.getManagerInfo(onboardingId, fiscalCode));
         log.trace("getManagerInfo end");
         return managerInfoResponse;
     }

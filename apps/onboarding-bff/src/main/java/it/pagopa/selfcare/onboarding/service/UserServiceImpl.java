@@ -3,7 +3,7 @@ package it.pagopa.selfcare.onboarding.service;
 import static it.pagopa.selfcare.onboarding.util.Utils.getManager;
 import static it.pagopa.selfcare.onboarding.util.Utils.isUserAdmin;
 
-import it.pagopa.selfcare.commons.base.logging.LogUtils;
+import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.onboarding.client.OnboardingMsClient;
 import it.pagopa.selfcare.onboarding.client.UserRegistryClient;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;

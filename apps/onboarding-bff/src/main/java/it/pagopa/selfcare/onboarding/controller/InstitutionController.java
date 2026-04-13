@@ -10,8 +10,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import it.pagopa.selfcare.commons.base.logging.LogUtils;
-import it.pagopa.selfcare.commons.base.security.SelfCareUser;
+import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.client.model.InstitutionLegalAddressData;
 import it.pagopa.selfcare.onboarding.client.model.InstitutionOnboardingData;
@@ -23,6 +22,7 @@ import it.pagopa.selfcare.onboarding.controller.request.*;
 import it.pagopa.selfcare.onboarding.controller.response.*;
 import it.pagopa.selfcare.onboarding.model.error.Problem;
 import it.pagopa.selfcare.onboarding.mapper.*;
+import it.pagopa.selfcare.onboarding.util.SecurityIdentityUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -169,9 +169,9 @@ public class InstitutionController {
                                                      @QueryParam("productId")
                                                      String productId) {
         log.trace("getInstitutions start");
-        SelfCareUser selfCareUser = (SelfCareUser) securityIdentity.getPrincipal();
+        String uid = SecurityIdentityUtils.getUid(securityIdentity);
 
-        List<InstitutionResource> institutionResources = institutionService.getInstitutions(productId, selfCareUser.getId())
+        List<InstitutionResource> institutionResources = institutionService.getInstitutions(productId, uid)
                 .stream()
                 .map(institutionMapper::toResource)
                 .toList();
@@ -250,10 +250,8 @@ public class InstitutionController {
             description = "${swagger.onboarding.institutions.api.getInstitutionsByUser}", operationId = "getInstitutionsFromInfocamereUsingGET")
     public InstitutionResourceIC getInstitutionsFromInfocamere() {
         log.trace("getInstitutionsFromInfocamere start");
-
-        SelfCareUser selfCareUser = (SelfCareUser) securityIdentity.getPrincipal();
-
-        InstitutionInfoIC institutionInfoIC = institutionService.getInstitutionsByUser(selfCareUser.getFiscalCode());
+        String fiscalCode = SecurityIdentityUtils.getFiscalCode(securityIdentity);
+        InstitutionInfoIC institutionInfoIC = institutionService.getInstitutionsByUser(fiscalCode);
         InstitutionResourceIC institutionResourceIC = institutionMapper.toResource(institutionInfoIC);
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionsFromInfocamere result = {}", institutionResourceIC);
         log.trace("getInstitutionsFromInfocamere end");

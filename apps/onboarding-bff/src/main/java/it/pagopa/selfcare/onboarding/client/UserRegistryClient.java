@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.onboarding.client;
 
 import feign.FeignException;
-import it.pagopa.selfcare.commons.base.logging.LogUtils;
+import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.onboarding.client.model.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;

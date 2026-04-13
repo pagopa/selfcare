@@ -1,9 +1,9 @@
-package it.pagopa.selfcare.commons.base.logging;
+package it.pagopa.selfcare.onboarding.util;
 
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-public abstract class LogUtils {
+public final class LogUtils {
 
     public static final Marker CONFIDENTIAL_MARKER = MarkerFactory.getMarker("CONFIDENTIAL");
 

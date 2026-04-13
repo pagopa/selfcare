@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.onboarding.util;
 
-import it.pagopa.selfcare.commons.base.logging.LogUtils;
+import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.onboarding.common.Origin;
 import it.pagopa.selfcare.onboarding.client.PartyRegistryProxyClient;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
