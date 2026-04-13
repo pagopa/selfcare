@@ -3,7 +3,6 @@ package it.pagopa.selfcare.onboarding.web.handler;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import it.pagopa.selfcare.commons.web.model.Problem;
 import it.pagopa.selfcare.onboarding.connector.exceptions.CustomVerifyException;
 import it.pagopa.selfcare.onboarding.connector.exceptions.InternalGatewayErrorException;
 import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
@@ -14,6 +13,7 @@ import it.pagopa.selfcare.onboarding.connector.exceptions.UnauthorizedUserExcept
 import it.pagopa.selfcare.onboarding.core.exception.InvalidUserFieldsException;
 import it.pagopa.selfcare.onboarding.core.exception.OnboardingNotAllowedException;
 import it.pagopa.selfcare.onboarding.core.exception.UpdateNotAllowedException;
+import it.pagopa.selfcare.onboarding.web.model.Problem;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;

@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
-@Mapper(componentModel = "cdi")
+@Mapper(componentModel = "jakarta-cdi")
 public interface OnboardingMapper {
 
     @Mapping(target = "institution", source = ".", qualifiedByName = "toInstitutionBase")

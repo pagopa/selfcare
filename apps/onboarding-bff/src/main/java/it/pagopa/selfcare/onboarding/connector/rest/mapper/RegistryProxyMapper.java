@@ -10,7 +10,7 @@ import it.pagopa.selfcare.onboarding.connector.rest.model.ProxyInstitutionRespon
 import it.pagopa.selfcare.onboarding.connector.rest.model.UoResponse;
 import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "cdi")
+@Mapper(componentModel = "jakarta-cdi")
 public interface RegistryProxyMapper {
 
     GeographicTaxonomies toGeographicTaxonomies(GeographicTaxonomiesResponse entity);

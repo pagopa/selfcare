@@ -5,7 +5,7 @@ import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "cdi")
+@Mapper(componentModel = "jakarta-cdi")
 public interface UserMapper {
 
     @Mapping(source = "userResource.id", target = "id")

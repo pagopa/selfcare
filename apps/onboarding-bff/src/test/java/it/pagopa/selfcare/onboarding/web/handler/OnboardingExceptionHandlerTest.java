@@ -1,10 +1,10 @@
 package it.pagopa.selfcare.onboarding.web.handler;
 
-import it.pagopa.selfcare.commons.web.model.Problem;
 import it.pagopa.selfcare.onboarding.connector.exceptions.*;
 import it.pagopa.selfcare.onboarding.core.exception.InvalidUserFieldsException;
 import it.pagopa.selfcare.onboarding.core.exception.OnboardingNotAllowedException;
 import it.pagopa.selfcare.onboarding.core.exception.UpdateNotAllowedException;
+import it.pagopa.selfcare.onboarding.web.model.Problem;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 

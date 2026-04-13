@@ -6,7 +6,7 @@ import it.pagopa.selfcare.onboarding.web.model.CertifiedFieldResource;
 import org.mapstruct.Mapper;
 import org.mapstruct.Named;
 
-@Mapper(componentModel = "cdi")
+@Mapper(componentModel = "jakarta-cdi")
 public interface CertifiedFieldMapper {
 
     @Named("toResource")

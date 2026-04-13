@@ -4,7 +4,7 @@ import it.pagopa.selfcare.onboarding.connector.model.onboarding.GeographicTaxono
 import it.pagopa.selfcare.onboarding.web.model.GeographicTaxonomyResource;
 import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "cdi")
+@Mapper(componentModel = "jakarta-cdi")
 public interface GeographicTaxonomyMapper {
     GeographicTaxonomyResource toResource(GeographicTaxonomy model);
 

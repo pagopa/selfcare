@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
-import it.pagopa.selfcare.commons.web.model.Problem;
 import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.connector.model.InstitutionLegalAddressData;
 import it.pagopa.selfcare.onboarding.connector.model.InstitutionOnboardingData;
@@ -19,6 +18,7 @@ import it.pagopa.selfcare.onboarding.connector.model.institutions.MatchInfoResul
 import it.pagopa.selfcare.onboarding.connector.model.institutions.infocamere.InstitutionInfoIC;
 import it.pagopa.selfcare.onboarding.core.InstitutionService;
 import it.pagopa.selfcare.onboarding.web.model.*;
+import it.pagopa.selfcare.onboarding.web.model.Problem;
 import it.pagopa.selfcare.onboarding.web.model.mapper.*;
 import it.pagopa.selfcare.onboarding.web.utils.PrincipalUtils;
 import jakarta.enterprise.context.ApplicationScoped;

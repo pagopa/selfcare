@@ -15,17 +15,17 @@ import it.pagopa.selfcare.onboarding.connector.model.onboarding.GeographicTaxono
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.User;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.UserInfo;
-import it.pagopa.selfcare.onboarding.connector.rest.client.MsOnboardingInstitutionApiClient;
-import it.pagopa.selfcare.onboarding.connector.rest.client.MsUserApiClient;
 import it.pagopa.selfcare.onboarding.connector.rest.client.PartyProcessRestClient;
 import it.pagopa.selfcare.onboarding.connector.rest.mapper.InstitutionMapper;
 import it.pagopa.selfcare.onboarding.connector.rest.model.*;
+import org.openapi.quarkus.onboarding_json.api.InstitutionControllerApi;
 import org.openapi.quarkus.onboarding_json.model.GetInstitutionRequest;
 import it.pagopa.selfcare.product.entity.Product;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.openapi.quarkus.user_json.api.UserControllerApi;
 import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
@@ -41,8 +41,8 @@ class PartyConnectorImpl implements PartyConnector {
     protected static final String REQUIRED_INSTITUTION_TAXCODE_MESSAGE = "An Institution tax code is required";
     private final PartyProcessRestClient restClient;
     private final InstitutionMapper institutionMapper;
-    private final MsUserApiClient userApiClient;
-    private final MsOnboardingInstitutionApiClient institutionApiClient;
+    private final UserControllerApi userApiClient;
+    private final InstitutionControllerApi institutionApiClient;
 
     static final Function<RelationshipInfo, UserInfo> RELATIONSHIP_INFO_TO_USER_INFO_FUNCTION = relationshipInfo -> {
         UserInfo userInfo = new UserInfo();
@@ -56,13 +56,13 @@ class PartyConnectorImpl implements PartyConnector {
     private Map<String, org.openapi.quarkus.onboarding_json.model.InstitutionResponse> buildInstitutionMap(List<InstitutionInfo> result) {
         GetInstitutionRequest request = new GetInstitutionRequest();
         request.setInstitutionIds(result.stream().map(InstitutionInfo::getId).toList());
-        List<org.openapi.quarkus.onboarding_json.model.InstitutionResponse> response = institutionApiClient._getInstitutions(request);
+        List<org.openapi.quarkus.onboarding_json.model.InstitutionResponse> response = institutionApiClient.getInstitutions(request).await().indefinitely();
         return Objects.isNull(response) ? Map.of() : response.stream().collect(Collectors.toMap(org.openapi.quarkus.onboarding_json.model.InstitutionResponse::getId, Function.identity()));
     }
     public PartyConnectorImpl(@RestClient PartyProcessRestClient restClient,
                               InstitutionMapper institutionMapper,
-                              @RestClient MsUserApiClient userApiClient,
-                              @RestClient MsOnboardingInstitutionApiClient institutionApiClient) {
+                              @RestClient UserControllerApi userApiClient,
+                              @RestClient InstitutionControllerApi institutionApiClient) {
         this.restClient = restClient;
         this.institutionMapper = institutionMapper;
         this.userApiClient = userApiClient;
@@ -129,12 +129,16 @@ class PartyConnectorImpl implements PartyConnector {
     public List<InstitutionInfo> getInstitutionsByUser(Product product, String userId) {
         log.trace("getInstitutionsByUser start");
         final String parentProductId = product.getParentId();
-        List<UserInstitutionResponse> userInstitutions = userApiClient._usersGet(null, null, null, Optional.ofNullable(product.getId()).map(List::of).orElse(null), null, 500, List.of(ACTIVE.name()), userId);
+        List<UserInstitutionResponse> userInstitutions = userApiClient.usersGet(null, null, null,
+                Optional.ofNullable(product.getId()).map(List::of).orElse(null),
+                null, 500, List.of(ACTIVE.name()), userId).await().indefinitely();
         List<InstitutionInfo> result;
 
         if (Objects.nonNull(parentProductId)) {
 
-            List<UserInstitutionResponse> parentUserInstitutions = userApiClient._usersGet(null, null, null, Optional.ofNullable(parentProductId).map(List::of).orElse(null), null, 500, List.of(ACTIVE.name()), userId);
+            List<UserInstitutionResponse> parentUserInstitutions = userApiClient.usersGet(null, null, null,
+                    Optional.ofNullable(parentProductId).map(List::of).orElse(null),
+                    null, 500, List.of(ACTIVE.name()), userId).await().indefinitely();
 
             // Get institution identifiers from list linked to the product
             List<String> childInstitutionIds = userInstitutions.stream()

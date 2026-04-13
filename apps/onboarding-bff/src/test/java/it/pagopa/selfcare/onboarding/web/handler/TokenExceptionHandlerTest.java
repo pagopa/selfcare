@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.onboarding.web.handler;
 
-import it.pagopa.selfcare.commons.web.model.Problem;
 import it.pagopa.selfcare.onboarding.connector.exceptions.UnauthorizedUserException;
+import it.pagopa.selfcare.onboarding.web.model.Problem;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import jakarta.ws.rs.core.Response;
