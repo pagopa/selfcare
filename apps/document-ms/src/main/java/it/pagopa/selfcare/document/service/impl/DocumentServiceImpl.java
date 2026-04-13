@@ -189,6 +189,7 @@ public class DocumentServiceImpl implements DocumentService {
         document.setContractFilename(request.getContractFileName());
         document.setCreatedAt(request.getContractCreatedAt());
         document.setUpdatedAt(request.getContractCreatedAt());
+        document.setRootOnboardingId(request.getOnboardingId());
         document.setType(INSTITUTION);
 
         return documentRepository.persist(document)
