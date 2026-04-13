@@ -9,7 +9,7 @@ on:
         type: choice
         description: API Prefix
         options:
-          - ""
+          - "-"
           - "api"
           - "api-pnpg"
         required: true
@@ -66,11 +66,13 @@ jobs:
       - name: Set api prefix
         id: api_prefix
         run: |
-          if [[ -n "${{ inputs.api_prefix }}" ]]; then
-            echo "value=${{ inputs.api_prefix }}." >> "$GITHUB_OUTPUT"
-          else
+          if [[ "$ENV" == "-" ]]; then
             echo "value=" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${{ inputs.api_prefix }}." >> "$GITHUB_OUTPUT"
           fi
+        env:
+          ENV: ${{ inputs.environment }}
 
   renew-certificate:
     needs: setup
