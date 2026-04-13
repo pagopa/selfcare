@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.onboarding.client.model;
 
-import it.pagopa.selfcare.commons.base.utils.Origin;
+import it.pagopa.selfcare.onboarding.common.Origin;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

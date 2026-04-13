@@ -380,7 +380,7 @@ components:
           type: string
           pattern: \S
         role:
-          $ref: "#/components/schemas/PartyRole1"
+          $ref: "#/components/schemas/PartyRole"
         productRole:
           type: string
     DataProtectionOfficer:
@@ -1009,14 +1009,6 @@ components:
       - SUB_DELEGATE
       - OPERATOR
       - ADMIN_EA
-    PartyRole2:
-      type: string
-      enum:
-      - MANAGER
-      - DELEGATE
-      - SUB_DELEGATE
-      - OPERATOR
-      - ADMIN_EA
     PaymentDto:
       type: object
       properties:
@@ -1265,7 +1257,7 @@ components:
         email:
           type: string
         role:
-          $ref: "#/components/schemas/PartyRole2"
+          $ref: "#/components/schemas/PartyRole1"
         productRole:
           type: string
     UserTaxCodeDto:

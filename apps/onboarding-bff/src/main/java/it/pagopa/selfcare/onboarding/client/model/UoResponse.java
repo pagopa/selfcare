@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.onboarding.client.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.pagopa.selfcare.commons.base.utils.Origin;
+import it.pagopa.selfcare.onboarding.common.Origin;
 import lombok.Data;
 
 @Data

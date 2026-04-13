@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.onboarding.service;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
-import it.pagopa.selfcare.commons.base.utils.Origin;
+import it.pagopa.selfcare.onboarding.common.Origin;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.client.OnboardingMsClient;

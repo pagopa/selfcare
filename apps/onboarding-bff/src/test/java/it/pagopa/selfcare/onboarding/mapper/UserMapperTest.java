@@ -2,7 +2,7 @@ package it.pagopa.selfcare.onboarding.mapper;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import it.pagopa.selfcare.commons.base.security.PartyRole;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.client.model.CertifiedField;
 import it.pagopa.selfcare.onboarding.client.model.User;
 import it.pagopa.selfcare.onboarding.client.model.UserInfo;

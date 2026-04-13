@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.onboarding.controller;
 
-import static it.pagopa.selfcare.commons.base.utils.ProductId.PROD_FD;
-import static it.pagopa.selfcare.commons.base.utils.ProductId.PROD_FD_GARANTITO;
+import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_FD;
+import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_FD_GARANTITO;
 
 import io.quarkus.security.identity.SecurityIdentity;
 import io.swagger.v3.oas.annotations.Operation;

@@ -19,7 +19,6 @@
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <selc-commons.version>2.9.0</selc-commons.version>
         <sonar.host.url>https://sonarcloud.io/</sonar.host.url>
         <parent-commons-sdk-version>0.15.5</parent-commons-sdk-version>
         <maven.enforcer.plugin.version>3.5.0</maven.enforcer.plugin.version>
@@ -34,6 +33,7 @@
         <compiler-plugin.version>3.13.0</compiler-plugin.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <mapstruct.lombok.version>0.2.0</mapstruct.lombok.version>
+        <security-sdk.version>0.2.3</security-sdk.version>
     </properties>
 
     <dependencyManagement>
@@ -44,17 +44,6 @@
                 <version>${quarkus.platform.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>it.pagopa.selfcare</groupId>
-                <artifactId>selc-commons-base</artifactId>
-                <version>${selc-commons.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>it.pagopa.selfcare</groupId>
-                <artifactId>selc-commons-base</artifactId>
-                <version>${selc-commons.version}</version>
-                <type>test-jar</type>
             </dependency>
             <dependency>
                 <groupId>jakarta.xml.bind</groupId>
@@ -70,10 +59,6 @@
     </dependencyManagement>
 
     <dependencies>
-        <dependency>
-            <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>selc-commons-base</artifactId>
-        </dependency>
         <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-annotations</artifactId>
@@ -98,6 +83,11 @@
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-onboarding-sdk-azure-storage</artifactId>
             <version>${parent-commons-sdk-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selfcare-sdk-security</artifactId>
+            <version>${security-sdk.version}</version>
         </dependency>
         <dependency>
             <groupId>io.github.openfeign</groupId>
@@ -146,6 +136,10 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-hibernate-validator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
             <artifactId>quarkus-config-yaml</artifactId>
         </dependency>
         <dependency>
@@ -168,12 +162,6 @@
             <version>1.2.3</version>
         </dependency>
 
-        <dependency>
-            <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>selc-commons-base</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-java</artifactId>

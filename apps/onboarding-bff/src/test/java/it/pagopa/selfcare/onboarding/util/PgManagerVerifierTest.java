@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-import it.pagopa.selfcare.commons.base.utils.Origin;
+import it.pagopa.selfcare.onboarding.common.Origin;
 import it.pagopa.selfcare.onboarding.client.PartyRegistryProxyClient;
 import it.pagopa.selfcare.onboarding.client.model.BusinessInfoIC;
 import it.pagopa.selfcare.onboarding.client.model.InstitutionInfoIC;

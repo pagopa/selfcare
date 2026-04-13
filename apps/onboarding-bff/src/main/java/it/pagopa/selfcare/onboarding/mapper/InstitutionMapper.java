@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.onboarding.mapper;
 
-import it.pagopa.selfcare.commons.base.security.PartyRole;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.commons.base.security.SelfCareAuthority;
 import it.pagopa.selfcare.onboarding.client.model.*;
 import it.pagopa.selfcare.onboarding.controller.response.*;
@@ -82,7 +82,7 @@ public interface InstitutionMapper {
     }
 
     @Mapping(target = "id", source = "id", qualifiedByName = "stringToUuid")
-    @Mapping(target = "userRole", source = "userRole.selfCareAuthority")
+    @Mapping(target = "userRole", source = "userRole", qualifiedByName = "toSelfCareAuthority")
     InstitutionResource toResource(InstitutionInfo model);
 
     InstitutionResourceIC toResource(InstitutionInfoIC model);
@@ -134,8 +134,16 @@ public interface InstitutionMapper {
 
     CompanyInformationsResource toResource(CompanyInformations model);
 
+    @Named("toSelfCareAuthority")
     default SelfCareAuthority mapUserRole(PartyRole model) {
-        return model != null ? model.getSelfCareAuthority() : null;
+        if (model == null) {
+            return null;
+        }
+        return switch (model) {
+            case MANAGER, DELEGATE, SUB_DELEGATE -> SelfCareAuthority.ADMIN;
+            case OPERATOR -> SelfCareAuthority.LIMITED;
+            case ADMIN_EA -> SelfCareAuthority.ADMIN_EA;
+        };
     }
 
     default UUID mapId(String id) {
