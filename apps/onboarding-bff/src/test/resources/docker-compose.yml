@@ -78,7 +78,6 @@ services:
       - mock-server
       - azure-cli
 
-
   product-ms:
     image: ghcr.io/pagopa/selfcare-product-ms:latest
     ports:

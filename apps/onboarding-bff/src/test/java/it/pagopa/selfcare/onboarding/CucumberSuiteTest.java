@@ -3,14 +3,16 @@ package it.pagopa.selfcare.onboarding;
 import io.quarkiverse.cucumber.CucumberOptions;
 import io.quarkiverse.cucumber.CucumberQuarkusTest;
 import io.restassured.RestAssured;
-import java.io.File;
-import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.platform.console.ConsoleLauncher;
 import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
+
+import java.io.File;
+import java.time.Duration;
 
 @Slf4j
 @CucumberOptions(
@@ -20,7 +22,11 @@ import org.testcontainers.containers.wait.strategy.Wait;
       "html:target/cucumber-report/cucumber.html",
       "json:target/cucumber-report/cucumber.json"
     })
-public class CucumberSuite extends CucumberQuarkusTest {
+public class CucumberSuiteTest extends CucumberQuarkusTest {
+
+    public static void main(String[] args) {
+        ConsoleLauncher.main(new String[] {"execute", "-c", CucumberSuiteTest.class.getName()});
+    }
 
   @BeforeAll
   static void setup() {
@@ -34,7 +40,7 @@ public class CucumberSuite extends CucumberQuarkusTest {
             .withPull(true)
             .withTailChildContainers(true)
             .withLogConsumer("azure-cli", new Slf4jLogConsumer(log))
-            .waitingFor("mongodb", Wait.forListeningPort())
+            .waitingFor("mongo-db", Wait.forListeningPort())
             .waitingFor("azurite", Wait.forListeningPort())
             .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*", 1))
             .withStartupTimeout(Duration.ofMinutes(5));
