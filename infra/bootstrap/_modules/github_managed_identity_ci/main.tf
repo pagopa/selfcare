@@ -33,6 +33,7 @@ module "identity_ci_ms" {
     resource_groups = merge(var.environment_ci_roles_ms.resource_groups,
       {
         "selc-${var.env_short}-checkout-fe-rg" = ["Storage Blob Data Contributor", "Storage Account Key Operator Service Role", "CDN Endpoint Contributor"]
+        "selc-${var.env_short}-weu-ar-srch-rg" = ["Search Service Contributor"]
     })
   }
 
@@ -139,6 +140,18 @@ resource "azurerm_key_vault_access_policy" "key_vault_access_policy_pnpg_identit
     "Get",
     "List",
   ]
+}
+
+data "azuread_application_published_app_ids" "well_known" {}
+
+data "azuread_service_principal" "msgraph" {
+  client_id = data.azuread_application_published_app_ids.well_known.result["MicrosoftGraph"]
+}
+
+resource "azuread_app_role_assignment" "group_reader" {
+  app_role_id         = data.azuread_service_principal.msgraph.app_role_ids["Group.Read.All"]
+  principal_object_id = module.identity_ci.identity_principal_id
+  resource_object_id  = data.azuread_service_principal.msgraph.object_id
 }
 
 resource "azurerm_role_definition" "container_apps_jobs_reader" {
