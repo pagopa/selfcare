@@ -12,8 +12,6 @@
 
 package it.pagopa.selfcare.onboarding.client.model;
 
-import it.pagopa.selfcare.onboarding.client.model.Billing;
-import it.pagopa.selfcare.onboarding.client.model.User;
 import lombok.Data;
 
 import java.util.List;

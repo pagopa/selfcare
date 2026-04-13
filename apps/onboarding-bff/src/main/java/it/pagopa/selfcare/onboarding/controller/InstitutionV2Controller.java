@@ -13,11 +13,14 @@ import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingResult;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.service.InstitutionService;
+import it.pagopa.selfcare.onboarding.service.UserService;
 import it.pagopa.selfcare.onboarding.controller.request.*;
 import it.pagopa.selfcare.onboarding.controller.response.*;
 import it.pagopa.selfcare.onboarding.model.error.Problem;
-import it.pagopa.selfcare.onboarding.mapper.InstitutionResourceMapper;
-import it.pagopa.selfcare.onboarding.mapper.OnboardingResourceMapper;
+import it.pagopa.selfcare.onboarding.model.RecipientCodeStatus;
+import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
+import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
+import it.pagopa.selfcare.onboarding.mapper.UserMapper;
 import it.pagopa.selfcare.onboarding.util.FileValidationUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -32,6 +35,7 @@ import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.apache.commons.lang3.StringUtils;
 import org.owasp.encoder.Encode;
+import org.openapi.quarkus.onboarding_json.model.OnboardingGetResponse;
 
 import java.util.List;
 
@@ -44,8 +48,9 @@ import java.util.List;
 public class InstitutionV2Controller {
 
     private final InstitutionService institutionService;
-    private final OnboardingResourceMapper onboardingResourceMapper;
-    private final InstitutionResourceMapper institutionMapper;
+    private final UserService userService;
+    private final OnboardingMapper onboardingMapper;
+    private final InstitutionMapper institutionMapper;
     private static final String ONBOARDING_START = "onboarding start";
     private static final String ONBOARDING_END = "onboarding end";
 
@@ -53,10 +58,12 @@ public class InstitutionV2Controller {
     SecurityIdentity securityIdentity;
 
     public InstitutionV2Controller(InstitutionService institutionService,
-                                   OnboardingResourceMapper onboardingResourceMapper,
-                                   InstitutionResourceMapper institutionMapper) {
+                                   UserService userService,
+                                   OnboardingMapper onboardingMapper,
+                                   InstitutionMapper institutionMapper) {
         this.institutionService = institutionService;
-        this.onboardingResourceMapper = onboardingResourceMapper;
+        this.userService = userService;
+        this.onboardingMapper = onboardingMapper;
         this.institutionMapper = institutionMapper;
     }
 
@@ -75,9 +82,9 @@ public class InstitutionV2Controller {
         log.debug("onboarding request = {}", request);
         institutionService.validateOnboardingByProductOrInstitutionTaxCode(request.getTaxCode(), request.getProductId());
         if (Boolean.TRUE.equals(request.getIsAggregator())) {
-            institutionService.onboardingPaAggregator(onboardingResourceMapper.toEntity(request));
+            institutionService.onboardingPaAggregator(onboardingMapper.toEntity(request));
         } else {
-            institutionService.onboardingProductV2(onboardingResourceMapper.toEntity(request));
+            institutionService.onboardingProductV2(onboardingMapper.toEntity(request));
         }
         log.trace(ONBOARDING_END);
         return Response.status(Response.Status.CREATED).build();
@@ -97,7 +104,7 @@ public class InstitutionV2Controller {
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", Encode.forJava(request.toString()));
         SelfCareUser selfCareUser = (SelfCareUser) securityIdentity.getPrincipal();
-        institutionService.onboardingCompanyV2(onboardingResourceMapper.toEntity(request), selfCareUser.getFiscalCode());
+        institutionService.onboardingCompanyV2(onboardingMapper.toEntity(request), selfCareUser.getFiscalCode());
         log.trace(ONBOARDING_END);
         return Response.status(Response.Status.CREATED).build();
     }
@@ -149,7 +156,7 @@ public class InstitutionV2Controller {
 
         UploadedFile uploadedFile = toUploadedFile(file);
         FileValidationUtils.validateAggregatesFile(uploadedFile);
-        VerifyAggregatesResponse response = onboardingResourceMapper.toVerifyAggregatesResponse(institutionService.validateAggregatesCsv(uploadedFile, productId));
+        VerifyAggregatesResponse response = onboardingMapper.toVerifyAggregatesResponse(institutionService.validateAggregatesCsv(uploadedFile, productId));
         log.trace("Verify Aggregates Csv end");
         return response;
     }
@@ -164,7 +171,7 @@ public class InstitutionV2Controller {
         log.trace("verifyManager start");
         SelfCareUser selfCareUser = (SelfCareUser) securityIdentity.getPrincipal();
 
-        VerifyManagerResponse response = onboardingResourceMapper.toManagerVerification(institutionService.verifyManager(selfCareUser.getFiscalCode(), request.getCompanyTaxCode()));
+        VerifyManagerResponse response = onboardingMapper.toManagerVerification(institutionService.verifyManager(selfCareUser.getFiscalCode(), request.getCompanyTaxCode()));
         log.trace("verifyManager end");
         return response;
     }
@@ -183,7 +190,7 @@ public class InstitutionV2Controller {
             throw new InvalidRequestException("taxCode and/or productId must not be blank! ");
         List<InstitutionOnboardingResource> response = institutionService.getActiveOnboarding(taxCode, productId,subunitCode)
                 .stream()
-                .map(onboardingResourceMapper::toOnboardingResource)
+                .map(onboardingMapper::toOnboardingResource)
                 .toList();
         log.debug("getActiveOnboarding result = {}", response);
         log.trace("getActiveOnboarding end");
@@ -198,7 +205,7 @@ public class InstitutionV2Controller {
                                                   @QueryParam("recipientCode") String recipientCode) {
         log.trace("Check recipientCode start");
         log.debug("Check originId start for institution with originId {} and recipientCode {}", originId, recipientCode);
-        RecipientCodeStatus response = onboardingResourceMapper.toRecipientCodeStatus(institutionService.checkRecipientCode(originId, recipientCode));
+        RecipientCodeStatus response = onboardingMapper.toRecipientCodeStatus(institutionService.checkRecipientCode(originId, recipientCode));
         log.trace("Check recipientCode end");
         return response;
     }
@@ -210,7 +217,7 @@ public class InstitutionV2Controller {
     public void onboardingUsers(@Valid CompanyOnboardingUserDto companyOnboardingUserDto) {
         log.trace("onboardingUsersPgFromIcAndAde start");
         log.debug("onboardingUsersPgFromIcAndAde request = {}", Encode.forJava(companyOnboardingUserDto.toString()));
-        institutionService.onboardingUsersPgFromIcAndAde(onboardingResourceMapper.toEntity(companyOnboardingUserDto));
+        institutionService.onboardingUsersPgFromIcAndAde(onboardingMapper.toEntity(companyOnboardingUserDto));
         log.trace("onboardingUsersPgFromIcAndAde end");
     }
 
@@ -218,13 +225,13 @@ public class InstitutionV2Controller {
     @Path("/onboardings")
     @Operation(summary = "${swagger.onboarding.institutions.api.onboardingInfo.summary}",
             description = "${swagger.onboarding.institutions.api.onboardingInfo.description}", operationId = "getOnboardingInfo")
-    public List<OnboardingResult> getOnboardingsInfo(@QueryParam("taxCode") String inputTaxCode,
+    public OnboardingGetResponse getOnboardingsInfo(@QueryParam("taxCode") String inputTaxCode,
                                                      @QueryParam("status") String inputStatus) {
         log.trace("onboardingInfo start");
         String taxCode = Encode.forJava(inputTaxCode);
         String status = Encode.forJava(inputStatus);
         log.debug("onboardingInfo request = {} - {}", taxCode, status);
-        List<OnboardingResult> results = institutionService.getOnboardingWithFilter(taxCode, status);
+        OnboardingGetResponse results = institutionService.getOnboardingWithFilter(taxCode, status);
         log.trace("onboardingInfo end");
         return results;
     }

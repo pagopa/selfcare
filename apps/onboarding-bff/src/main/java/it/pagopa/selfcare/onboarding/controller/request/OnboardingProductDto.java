@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.controller.request;
 import io.swagger.annotations.ApiModelProperty;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.client.model.GPUData;
+import it.pagopa.selfcare.onboarding.model.AggregateInstitution;
 import lombok.Data;
 
 import jakarta.validation.Valid;

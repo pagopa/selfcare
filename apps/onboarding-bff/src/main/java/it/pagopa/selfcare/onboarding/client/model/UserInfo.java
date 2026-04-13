@@ -1,8 +1,6 @@
 package it.pagopa.selfcare.onboarding.client.model;
 
 import it.pagopa.selfcare.commons.base.security.PartyRole;
-import it.pagopa.selfcare.onboarding.client.model.RelationshipState;
-import it.pagopa.selfcare.onboarding.client.model.User;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

@@ -10,21 +10,11 @@ import it.pagopa.selfcare.onboarding.client.UserRegistryClient;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.client.model.*;
-import it.pagopa.selfcare.onboarding.client.model.*;
-import it.pagopa.selfcare.onboarding.client.model.BusinessInfoIC;
-import it.pagopa.selfcare.onboarding.client.model.InstitutionInfoIC;
-import it.pagopa.selfcare.onboarding.client.model.*;
-import it.pagopa.selfcare.onboarding.client.model.User;
-import it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomies;
-import it.pagopa.selfcare.onboarding.client.model.HomogeneousOrganizationalArea;
-import it.pagopa.selfcare.onboarding.client.model.InstitutionProxyInfo;
-import it.pagopa.selfcare.onboarding.client.model.OrganizationUnit;
-import it.pagopa.selfcare.onboarding.client.model.*;
-import it.pagopa.selfcare.onboarding.mapper.CertifiedFieldMapper;
 import it.pagopa.selfcare.onboarding.mapper.UserMapper;
 import it.pagopa.selfcare.onboarding.exception.OnboardingNotAllowedException;
 import it.pagopa.selfcare.onboarding.exception.UpdateNotAllowedException;
-import it.pagopa.selfcare.onboarding.mapper.InstitutionInfoMapper;
+import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
+import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.util.PgManagerVerifier;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
@@ -36,10 +26,11 @@ import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.onboarding_functions_json.api.OrganizationApi;
+import org.openapi.quarkus.onboarding_json.model.*;
 import org.owasp.encoder.Encode;
 import java.util.*;
 import static io.netty.util.internal.StringUtil.isNullOrEmpty;
-import static it.pagopa.selfcare.onboarding.client.model.user.User.Fields.*;
+
 @Slf4j
 @ApplicationScoped
 class InstitutionServiceImpl implements InstitutionService {
@@ -53,7 +44,7 @@ class InstitutionServiceImpl implements InstitutionService {
     protected static final String MORE_THAN_ONE_PRODUCT_ROLE_AVAILABLE = "More than one Product role related to %s Party role is available. Cannot automatically set the Product role";
     protected static final String A_PRODUCT_ID_IS_REQUIRED = "A Product Id is required";
     protected static final String LOCATION_INFO_IS_REQUIRED = "Location infos are required";
-    private static final EnumSet<it.pagopa.selfcare.onboarding.client.model.user.User.Fields> USER_FIELD_LIST = EnumSet.of(name, familyName, workContacts);
+    private static final EnumSet<it.pagopa.selfcare.onboarding.client.model.User.Fields> USER_FIELD_LIST = EnumSet.of(User.Fields.name, User.Fields.familyName, User.Fields.workContacts);
     private static final String ONBOARDING_NOT_ALLOWED_ERROR_MESSAGE_TEMPLATE = "Institution with external id '%s' is not allowed to onboard '%s' product";
     public static final String UNABLE_TO_COMPLETE_THE_ONBOARDING_FOR_INSTITUTION_FOR_PRODUCT_DISMISSED = "Unable to complete the onboarding for institution with taxCode '%s' to product '%s', the product is dismissed.";
     public static final String FIELD_PSP_DATA_IS_REQUIRED_FOR_PSP_INSTITUTION_ONBOARDING = "Field 'pspData' is required for PSP institution onboarding";
@@ -67,7 +58,8 @@ class InstitutionServiceImpl implements InstitutionService {
     private final UserRegistryClient userConnector;
     private final OrganizationApi organizationApi;
     private final PartyRegistryProxyClient partyRegistryProxyConnector;
-    private final InstitutionInfoMapper institutionMapper;
+    private final InstitutionMapper institutionMapper;
+    private final OnboardingMapper onboardingMapper;
     private final PgManagerVerifier pgManagerVerifier;
     private final ProductService productService;
     InstitutionServiceImpl(OnboardingMsClient onboardingMsConnector,
@@ -76,7 +68,8 @@ class InstitutionServiceImpl implements InstitutionService {
                            UserRegistryClient userConnector,
                            @RestClient OrganizationApi organizationApi,
                            PartyRegistryProxyClient partyRegistryProxyConnector,
-                           InstitutionInfoMapper institutionMapper,
+                           InstitutionMapper institutionMapper,
+                           OnboardingMapper onboardingMapper,
                            PgManagerVerifier pgManagerVerifier
     ) {
         this.onboardingMsConnector = onboardingMsConnector;
@@ -86,6 +79,7 @@ class InstitutionServiceImpl implements InstitutionService {
         this.partyRegistryProxyConnector = partyRegistryProxyConnector;
         this.userConnector = userConnector;
         this.institutionMapper = institutionMapper;
+        this.onboardingMapper = onboardingMapper;
         this.pgManagerVerifier = pgManagerVerifier;
     }
     @Override
@@ -141,7 +135,7 @@ class InstitutionServiceImpl implements InstitutionService {
     private void verifyIfUserIsManagerOfBusinessOnAde(String businessTaxCode, String userFiscalCode) {
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "Checking if user with fiscal code {} is manager of business with tax code {} on ADE",
                 userFiscalCode, businessTaxCode);
-        MatchInfoResult matchInfoResult = partyRegistryProxyConnector.matchInstitutionAndUser(businessTaxCode, userFiscalCode);
+        it.pagopa.selfcare.onboarding.client.model.MatchInfoResult matchInfoResult = partyRegistryProxyConnector.matchInstitutionAndUser(businessTaxCode, userFiscalCode);
         if (Objects.isNull(matchInfoResult) || !matchInfoResult.isVerificationResult()) {
             log.error("User is not authorized to onboard business with tax code {}", businessTaxCode);
             throw new OnboardingNotAllowedException(ONBOARDING_COMPANY_NOT_ALLOWED);
@@ -191,14 +185,18 @@ class InstitutionServiceImpl implements InstitutionService {
                 institution = partyConnector.createInstitutionFromInfocamere(onboardingData);
             }
             else if (isInstitutionPresentOnIpa(onboardingData)) {
-                institution = partyConnector.createInstitutionFromIpa(onboardingData.getTaxCode(), onboardingData.getSubunitCode(), onboardingData.getSubunitType());
+                institution = partyConnector.createInstitutionFromIpa(
+                        onboardingData.getTaxCode(),
+                        onboardingData.getSubunitCode(),
+                        onboardingData.getSubunitType() == null ? null : it.pagopa.selfcare.onboarding.common.InstitutionPaSubunitType.valueOf(onboardingData.getSubunitType())
+                );
             } else {
                 institution = partyConnector.createInstitution(onboardingData);
             }
         }
         String finalInstitutionInternalId = institution.getId();
         onboardingData.getUsers().forEach(user -> {
-            final Optional<it.pagopa.selfcare.onboarding.client.model.user.User> searchResult =
+            final Optional<it.pagopa.selfcare.onboarding.client.model.User> searchResult =
                     userConnector.search(user.getTaxCode(), USER_FIELD_LIST);
             searchResult.ifPresentOrElse(foundUser -> {
                 Optional<MutableUserFieldsDto> updateRequest = createUpdateRequest(user, foundUser, finalInstitutionInternalId);
@@ -275,24 +273,25 @@ class InstitutionServiceImpl implements InstitutionService {
                     onboardingData.getProductId()));
         }
     }
-    protected static Optional<MutableUserFieldsDto> createUpdateRequest(User user, it.pagopa.selfcare.onboarding.client.model.user.User foundUser, String institutionInternalId) {
+    protected static Optional<MutableUserFieldsDto> createUpdateRequest(User user, it.pagopa.selfcare.onboarding.client.model.User foundUser, String institutionInternalId) {
         Optional<MutableUserFieldsDto> mutableUserFieldsDto = Optional.empty();
-        if (isFieldToUpdate(foundUser.getName(), user.getName())) {
+        if (isFieldToUpdate(foundUser.getName(), UserMapper.map(user.getName()))) {
             MutableUserFieldsDto dto = new MutableUserFieldsDto();
-            dto.setName(CertifiedFieldMapper.map(user.getName()));
+            dto.setName(user.getName());
             mutableUserFieldsDto = Optional.of(dto);
         }
-        if (isFieldToUpdate(foundUser.getFamilyName(), user.getSurname())) {
+        String familyName = user.getSurname() != null ? user.getSurname() : UserMapper.map(user.getFamilyName());
+        if (isFieldToUpdate(foundUser.getFamilyName(), familyName)) {
             MutableUserFieldsDto dto = mutableUserFieldsDto.orElseGet(MutableUserFieldsDto::new);
-            dto.setFamilyName(CertifiedFieldMapper.map(user.getSurname()));
+            dto.setFamilyName(UserMapper.map(familyName));
             mutableUserFieldsDto = Optional.of(dto);
         }
         if (foundUser.getWorkContacts() == null
                 || !foundUser.getWorkContacts().containsKey(institutionInternalId)
-                || isFieldToUpdate(foundUser.getWorkContacts().get(institutionInternalId).getEmail(), user.getEmail())) {
+                || isFieldToUpdate(foundUser.getWorkContacts().get(institutionInternalId).getEmail(), UserMapper.map(user.getEmail()))) {
             MutableUserFieldsDto dto = mutableUserFieldsDto.orElseGet(MutableUserFieldsDto::new);
             final WorkContact workContact = new WorkContact();
-            workContact.setEmail(CertifiedFieldMapper.map(user.getEmail()));
+            workContact.setEmail(user.getEmail());
             dto.setWorkContacts(Map.of(institutionInternalId, workContact));
             mutableUserFieldsDto = Optional.of(dto);
         }
@@ -388,19 +387,19 @@ class InstitutionServiceImpl implements InstitutionService {
         return institution;
     }
     @Override
-    public List<GeographicTaxonomy> getGeographicTaxonomyList(String externalInstitutionId) {
+    public List<it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomy> getGeographicTaxonomyList(String externalInstitutionId) {
         log.trace("geographicTaxonomyList start");
         log.debug("geographicTaxonomyList externalInstitutionId = {}", externalInstitutionId);
         requireHasText(externalInstitutionId, REQUIRED_INSTITUTION_ID_MESSAGE);
         Institution institution = partyConnector.getInstitutionByExternalId(externalInstitutionId);
-        List<GeographicTaxonomy> result = Optional.ofNullable(institution.getGeographicTaxonomies())
+        List<it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomy> result = Optional.ofNullable(institution.getGeographicTaxonomies())
                 .orElse(Collections.emptyList());
         log.debug("geographicTaxonomyList result = {}", result);
         log.trace("geographicTaxonomyList end");
         return result;
     }
     @Override
-    public List<GeographicTaxonomy> getGeographicTaxonomyList(String taxCode, String subunitCode) {
+    public List<it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomy> getGeographicTaxonomyList(String taxCode, String subunitCode) {
         requireHasText(taxCode, REQUIRED_TAX_CODE_MESSAGE);
         List<Institution> institutions = partyConnector.getInstitutionsByTaxCodeAndSubunitCode(taxCode, subunitCode);
         if(Objects.isNull(institutions) || institutions.isEmpty()) return Collections.emptyList();
@@ -471,7 +470,8 @@ class InstitutionServiceImpl implements InstitutionService {
             onboardingMsConnector.verifyOnboarding(PROD_PN_PG, businessInfoIC.getBusinessTaxId(), null, null, null, null);
             log.debug("Business with tax code {} is already onboarded, checking if user with fiscal code {} is manager",
                     businessInfoIC.getBusinessTaxId(), fiscalCode);
-            boolean isManager = onboardingMsConnector.checkManager(getCheckManagerData(fiscalCode, businessInfoIC));
+            CheckManagerRequest request = onboardingMapper.toCheckManagerRequest(null, businessInfoIC.getBusinessTaxId(), PROD_PN_PG);
+            boolean isManager = onboardingMsConnector.checkManager(request).getResponse();
             log.debug(LogUtils.CONFIDENTIAL_MARKER, "User with fiscal code {} is manager of business with tax code {}",
                     fiscalCode, businessInfoIC.getBusinessTaxId());
             return isManager;
@@ -480,24 +480,16 @@ class InstitutionServiceImpl implements InstitutionService {
             return false;
         }
     }
-    private CheckManagerData getCheckManagerData(String fiscalCode, BusinessInfoIC businessInfoIC) {
-        CheckManagerData checkManagerData = new CheckManagerData();
-        UserId userId = userConnector.searchUser(fiscalCode);
-        checkManagerData.setUserId(userId.getId());
-        checkManagerData.setTaxCode(businessInfoIC.getBusinessTaxId());
-        checkManagerData.setProductId(PROD_PN_PG);
-        return checkManagerData;
-    }
     @Override
     public List<Institution> getByFilters(String productId, String taxCode, String origin, String originId, String subunitCode) {
         log.trace("getByFilters start");
-        List<OnboardingData> result = onboardingMsConnector.getByFilters(productId, taxCode, origin, originId, subunitCode);
+        List<org.openapi.quarkus.onboarding_json.model.OnboardingResponse> result = onboardingMsConnector.getByFilters(productId, taxCode, origin, originId, subunitCode);
         if(Objects.isNull(result) || result.isEmpty()) {
             throw new ResourceNotFoundException();
         }
         log.trace("getByFilters end");
         List<Institution> institutions = result.stream()
-                .map(OnboardingData::getInstitutionUpdate)
+                .map(org.openapi.quarkus.onboarding_json.model.OnboardingResponse::getInstitution)
                 .map(institutionMapper::toInstitution).toList();
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getByFilters result = {}", institutions);
         return institutions;
@@ -521,29 +513,16 @@ class InstitutionServiceImpl implements InstitutionService {
         return result;
     }
     @Override
-    public VerifyAggregateResult validateAggregatesCsv(UploadedFile file, String productId) {
+    public org.openapi.quarkus.onboarding_json.model.VerifyAggregateResponse validateAggregatesCsv(UploadedFile file, String productId) {
         log.trace("validateAggregatesCsv start");
         log.debug("validateAggregatesCsv productId = {}", productId);
-        VerifyAggregateResult verifyAggregateResult = onboardingMsConnector.aggregatesVerification(file, productId);
-        if (isEmptyCollection(verifyAggregateResult.getErrors())) {
-            log.debug("No errors found for {} aggregates:", productId);
-            verifyAggregateResult.setErrors(Collections.emptyList());
-        } else {
-            log.debug("Errors found for {} aggregates: {}", productId, verifyAggregateResult.getErrors());
-            verifyAggregateResult.setAggregates(Collections.emptyList());
-        }
-        log.debug("validateAggregatesCsv result = {}", verifyAggregateResult);
-        log.trace("validateAggregatesCsv end");
-        return verifyAggregateResult;
+        return onboardingMsConnector.aggregatesVerification(file, productId);
     }
     @Override
-    public RecipientCodeStatusResult  checkRecipientCode(String originId, String recipientCode) {
+    public org.openapi.quarkus.onboarding_json.model.RecipientCodeStatus  checkRecipientCode(String originId, String recipientCode) {
         log.trace("checkRecipientCode start");
         log.debug("checkRecipientCode for institution with originId {} and recipientCode {}", originId, recipientCode);
-        RecipientCodeStatusResult result = onboardingMsConnector.checkRecipientCode(originId, recipientCode);
-        log.debug("checkRecipientCode result = {}", result);
-        log.trace("checkRecipientCode end");
-        return result;
+        return onboardingMsConnector.checkRecipientCode(originId, recipientCode);
     }
     @Override
     public void onboardingUsersPgFromIcAndAde(OnboardingData onboardingData) {
@@ -602,26 +581,26 @@ class InstitutionServiceImpl implements InstitutionService {
     private void setLocationInfo(InstitutionInfo institutionInfo){
         if (institutionInfo.getInstitutionLocation().getCity()==null && Origin.IPA.getValue().equals(institutionInfo.getOrigin())){
             try {
-                GeographicTaxonomies geographicTaxonomies;
+                GeographicTaxonomiesResponse geographicTaxonomies;
                 if (institutionInfo.getSubunitType() != null) {
                     geographicTaxonomies = switch (Objects.requireNonNull(institutionInfo.getSubunitType())) {
                         case "UO" -> {
-                            OrganizationUnit organizationUnit = partyRegistryProxyConnector.getUoById(institutionInfo.getSubunitCode());
+                            UoResponse organizationUnit = partyRegistryProxyConnector.getUoById(institutionInfo.getSubunitCode());
                             yield partyRegistryProxyConnector.getExtById(organizationUnit.getMunicipalIstatCode());
                         }
                         case "AOO" -> {
-                            HomogeneousOrganizationalArea homogeneousOrganizationalArea = partyRegistryProxyConnector.getAooById(institutionInfo.getSubunitCode());
+                            AooResponse homogeneousOrganizationalArea = partyRegistryProxyConnector.getAooById(institutionInfo.getSubunitCode());
                             yield partyRegistryProxyConnector.getExtById(homogeneousOrganizationalArea.getMunicipalIstatCode());
                         }
                         default -> {
-                            InstitutionProxyInfo proxyInfo = partyRegistryProxyConnector.getInstitutionProxyById(institutionInfo.getTaxCode());
+                            ProxyInstitutionResponse proxyInfo = partyRegistryProxyConnector.getInstitutionProxyById(institutionInfo.getTaxCode());
                             yield partyRegistryProxyConnector.getExtById(proxyInfo.getIstatCode());
                         }
                     };
                 }
                 else {
-                    InstitutionProxyInfo proxyInfo = partyRegistryProxyConnector.getInstitutionProxyById(institutionInfo.getTaxCode());
-                    geographicTaxonomies= partyRegistryProxyConnector.getExtById(proxyInfo.getIstatCode());
+                    ProxyInstitutionResponse proxyInfo = partyRegistryProxyConnector.getInstitutionProxyById(institutionInfo.getTaxCode());
+                    geographicTaxonomies = partyRegistryProxyConnector.getExtById(proxyInfo.getIstatCode());
                 }
                 if (geographicTaxonomies != null) {
                     institutionInfo.getInstitutionLocation().setCounty(geographicTaxonomies.getProvinceAbbreviation());
@@ -633,12 +612,12 @@ class InstitutionServiceImpl implements InstitutionService {
             }
         }
     }
-    public List<OnboardingResult> getOnboardingWithFilter(String inputTaxCode, String inputStatus) {
+    public OnboardingGetResponse getOnboardingWithFilter(String inputTaxCode, String inputStatus) {
         log.trace("getOnboardingWithFilter start");
         String taxCode = Encode.forJava(inputTaxCode);
         String status = Encode.forJava(inputStatus);
         log.debug("getOnboardingWithFilter with taxCode = {}, stauts = {}", taxCode, status);
-        List<OnboardingResult> result =  onboardingMsConnector.onboardingWithFilter(taxCode, status);
+        OnboardingGetResponse result =  onboardingMsConnector.onboardingWithFilter(taxCode, status);
         log.trace("getOnboardingWithFilter end");
         return result;
     }

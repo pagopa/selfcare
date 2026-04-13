@@ -17,6 +17,7 @@ import it.pagopa.selfcare.onboarding.client.model.InstitutionLegalAddressData;
 import it.pagopa.selfcare.onboarding.client.model.InstitutionOnboardingData;
 import it.pagopa.selfcare.onboarding.client.model.MatchInfoResult;
 import it.pagopa.selfcare.onboarding.client.model.InstitutionInfoIC;
+import it.pagopa.selfcare.onboarding.model.VerifyType;
 import it.pagopa.selfcare.onboarding.service.InstitutionService;
 import it.pagopa.selfcare.onboarding.controller.request.*;
 import it.pagopa.selfcare.onboarding.controller.response.*;
@@ -44,27 +45,21 @@ import org.owasp.encoder.Encode;
 public class InstitutionController {
 
     private final InstitutionService institutionService;
-    private final OnboardingResourceMapper onboardingResourceMapper;
-    private final InstitutionResourceMapper institutionMapper;
-    private final UserResourceMapper userMapper;
-    private final OnboardingInstitutionInfoMapper onboardingInstitutionInfoMapper;
+    private final OnboardingMapper onboardingMapper;
+    private final InstitutionMapper institutionMapper;
+    private final UserMapper userMapper;
     private static final String ONBOARDING_START = "onboarding start";
     private static final String ONBOARDING_END = "onboarding end";
-    private final GeographicTaxonomyMapper geographicTaxonomyMapper;
 
     @Inject
     SecurityIdentity securityIdentity;
 
     public InstitutionController(InstitutionService institutionService,
-                                 OnboardingResourceMapper onboardingResourceMapper,
-                                 OnboardingInstitutionInfoMapper onboardingInstitutionInfoMapper,
-                                 GeographicTaxonomyMapper geographicTaxonomyMapper,
-                                 InstitutionResourceMapper institutionMapper,
-                                 UserResourceMapper userMapper) {
+                                 OnboardingMapper onboardingMapper,
+                                 InstitutionMapper institutionMapper,
+                                 UserMapper userMapper) {
         this.institutionService = institutionService;
-        this.onboardingResourceMapper = onboardingResourceMapper;
-        this.onboardingInstitutionInfoMapper = onboardingInstitutionInfoMapper;
-        this.geographicTaxonomyMapper = geographicTaxonomyMapper;
+        this.onboardingMapper = onboardingMapper;
         this.institutionMapper = institutionMapper;
         this.userMapper = userMapper;
     }
@@ -82,7 +77,7 @@ public class InstitutionController {
     public Response onboarding(@Valid OnboardingProductDto request) {
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", request);
-        institutionService.onboardingProduct(onboardingResourceMapper.toEntity(request));
+        institutionService.onboardingProduct(onboardingMapper.toEntity(request));
         log.trace(ONBOARDING_END);
         return Response.status(Response.Status.CREATED).build();
     }
@@ -100,7 +95,7 @@ public class InstitutionController {
     public Response onboarding(@Valid CompanyOnboardingDto request) {
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", request);
-        institutionService.onboardingProduct(onboardingResourceMapper.toEntity(request));
+        institutionService.onboardingProduct(onboardingMapper.toEntity(request));
         log.trace(ONBOARDING_END);
         return Response.status(Response.Status.CREATED).build();
     }
@@ -118,7 +113,7 @@ public class InstitutionController {
         log.trace("getInstitutionOnboardingInfoById start");
         log.debug("getInstitutionOnboardingInfoById institutionId = {}, productId = {}", Encode.forJava(institutionId), Encode.forJava(productId));
         InstitutionOnboardingData institutionOnboardingData = institutionService.getInstitutionOnboardingDataById(institutionId, productId);
-        InstitutionOnboardingInfoResource result = onboardingInstitutionInfoMapper.toResource(institutionOnboardingData);
+        InstitutionOnboardingInfoResource result = institutionMapper.toResource(institutionOnboardingData);
         log.debug("getInstitutionOnboardingInfoById result = {}", result);
         log.trace("getInstitutionOnboardingInfoById end");
         return result;
@@ -135,7 +130,7 @@ public class InstitutionController {
         log.debug("getInstitutionGeographicTaxonomy institutionId = {}", externalInstitutionId);
         List<GeographicTaxonomyResource> geographicTaxonomies = institutionService.getGeographicTaxonomyList(externalInstitutionId)
                 .stream()
-                .map(geographicTaxonomyMapper::toResource)
+                .map(institutionMapper::toResource)
                 .toList();
         log.debug("getInstitutionGeographicTaxonomy result = {}", geographicTaxonomies);
         log.trace("getInstitutionGeographicTaxonomy end");
@@ -159,7 +154,7 @@ public class InstitutionController {
 
         List<GeographicTaxonomyResource> geographicTaxonomies = institutionService.getGeographicTaxonomyList(taxCode, subunitCode)
                 .stream()
-                .map(geographicTaxonomyMapper::toResource)
+                .map(institutionMapper::toResource)
                 .toList();
         log.debug("getGeographicTaxonomiesByTaxCodeAndSubunitCode result = {}", geographicTaxonomies);
         log.trace("getGeographicTaxonomiesByTaxCodeAndSubunitCode end");
@@ -290,7 +285,7 @@ public class InstitutionController {
         log.trace("getInstitutionLegalAddress start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionLegalAddress institutionId = {}", verificationLegalAddressRequest.getTaxCode());
         InstitutionLegalAddressData institutionLegalAddressData = institutionService.getInstitutionLegalAddress(verificationLegalAddressRequest.getTaxCode());
-        InstitutionLegalAddressResource result = onboardingResourceMapper.toResource(institutionLegalAddressData);
+        InstitutionLegalAddressResource result = onboardingMapper.toResource(institutionLegalAddressData);
         log.debug("getInstitutionLegalAddress result = {}", result);
         log.trace("getInstitutionLegalAddress end");
         return result;
@@ -314,7 +309,7 @@ public class InstitutionController {
         log.trace("getInstitutionOnBoardingInfo start");
         log.debug("getInstitutionOnBoardingInfo institutionId = {}, productId = {}", externalInstitutionId, productId);
         InstitutionOnboardingData institutionOnboardingData = institutionService.getInstitutionOnboardingData(externalInstitutionId, productId);
-        InstitutionOnboardingInfoResource result = onboardingInstitutionInfoMapper.toResource(institutionOnboardingData);
+        InstitutionOnboardingInfoResource result = institutionMapper.toResource(institutionOnboardingData);
         log.debug("getInstitutionOnBoardingInfo result = {}", result);
         log.trace("getInstitutionOnBoardingInfo end");
         return result;

@@ -1,13 +1,6 @@
 package it.pagopa.selfcare.onboarding.client;
 
-import it.pagopa.selfcare.onboarding.client.model.InstitutionLegalAddressData;
-import it.pagopa.selfcare.onboarding.client.model.MatchInfoResult;
-import it.pagopa.selfcare.onboarding.client.model.InstitutionInfoIC;
-import it.pagopa.selfcare.onboarding.client.model.AooResponse;
-import it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomiesResponse;
-import it.pagopa.selfcare.onboarding.client.model.ProxyInstitutionResponse;
-import it.pagopa.selfcare.onboarding.client.model.UoResponse;
-import it.pagopa.selfcare.onboarding.client.model.InstitutionByLegalTaxIdRequest;
+import it.pagopa.selfcare.onboarding.client.model.*;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;

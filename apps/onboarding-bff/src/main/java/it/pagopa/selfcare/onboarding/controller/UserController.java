@@ -13,8 +13,8 @@ import it.pagopa.selfcare.onboarding.service.UserService;
 import it.pagopa.selfcare.onboarding.controller.request.*;
 import it.pagopa.selfcare.onboarding.controller.response.*;
 import it.pagopa.selfcare.onboarding.model.error.Problem;
-import it.pagopa.selfcare.onboarding.mapper.OnboardingResourceMapper;
-import it.pagopa.selfcare.onboarding.mapper.UserResourceMapper;
+import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
+import it.pagopa.selfcare.onboarding.mapper.UserMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -38,15 +38,15 @@ import org.owasp.encoder.Encode;
 public class UserController {
 
     private final UserService userService;
-    private final OnboardingResourceMapper onboardingResourceMapper;
-    private final UserResourceMapper userResourceMapper;
+    private final OnboardingMapper onboardingResourceMapper;
+    private final UserMapper userResourceMapper;
 
     @Inject
     SecurityIdentity securityIdentity;
 
     public UserController(UserService userService,
-                          OnboardingResourceMapper onboardingResourceMapper,
-                          UserResourceMapper userResourceMapper) {
+                          OnboardingMapper onboardingResourceMapper,
+                          UserMapper userResourceMapper) {
         this.userService = userService;
         this.onboardingResourceMapper = onboardingResourceMapper;
         this.userResourceMapper = userResourceMapper;

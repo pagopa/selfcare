@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import it.pagopa.selfcare.onboarding.client.model.OriginResult;
 import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.onboarding.controller.response.OriginResponse;
-import it.pagopa.selfcare.onboarding.mapper.ProductMapper;
+import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -23,9 +23,9 @@ import org.owasp.encoder.Encode;
 public class ProductV2Controller {
 
     private final ProductService productService;
-    private final ProductMapper productMapper;
+    private final InstitutionMapper productMapper;
 
-    public ProductV2Controller(ProductService productService, ProductMapper productMapper) {
+    public ProductV2Controller(ProductService productService, InstitutionMapper productMapper) {
         this.productService = productService;
         this.productMapper = productMapper;
     }

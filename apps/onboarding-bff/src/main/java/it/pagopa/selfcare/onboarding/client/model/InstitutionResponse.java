@@ -1,12 +1,8 @@
 package it.pagopa.selfcare.onboarding.client.model;
 
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.onboarding.client.model.Attribute;
-import it.pagopa.selfcare.onboarding.client.model.DataProtectionOfficer;
-import it.pagopa.selfcare.onboarding.client.model.GPUData;
-import it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomy;
-import it.pagopa.selfcare.onboarding.client.model.PaymentServiceProvider;
 import lombok.Data;
+import org.openapi.quarkus.onboarding_json.model.OnboardingResponse;
 
 import java.util.List;
 

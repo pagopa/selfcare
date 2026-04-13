@@ -1,16 +1,12 @@
 package it.pagopa.selfcare.onboarding.service;
 
-import it.pagopa.selfcare.onboarding.client.model.InstitutionLegalAddressData;
-import it.pagopa.selfcare.onboarding.client.model.InstitutionOnboardingData;
-import it.pagopa.selfcare.onboarding.client.model.OnboardingResult;
-import it.pagopa.selfcare.onboarding.client.model.RecipientCodeStatusResult;
-import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.client.model.*;
-import it.pagopa.selfcare.onboarding.client.model.InstitutionInfoIC;
-import it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomy;
-import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
-import it.pagopa.selfcare.onboarding.client.model.User;
+import it.pagopa.selfcare.onboarding.controller.request.*;
+import it.pagopa.selfcare.onboarding.controller.response.*;
 import java.util.List;
+import org.openapi.quarkus.onboarding_json.model.OnboardingGetResponse;
+import org.openapi.quarkus.onboarding_json.model.RecipientCodeStatus;
+import org.openapi.quarkus.onboarding_json.model.VerifyAggregateResponse;
 
 public interface InstitutionService {
 
@@ -49,15 +45,15 @@ public interface InstitutionService {
 
     List<Institution> getByFilters(String productId, String taxCode, String origin, String originId, String subunitCode);
 
-    VerifyAggregateResult validateAggregatesCsv(UploadedFile file, String productId);
+    VerifyAggregateResponse validateAggregatesCsv(UploadedFile file, String productId);
 
-    RecipientCodeStatusResult checkRecipientCode(String originId, String recipientCode);
+    RecipientCodeStatus checkRecipientCode(String originId, String recipientCode);
 
     void onboardingUsersPgFromIcAndAde(OnboardingData onboardingUserPgRequest);
 
     ManagerVerification verifyManager(String taxCode, String companyTaxCode);
 
-    List<OnboardingResult> getOnboardingWithFilter(String taxCode, String status);
+    OnboardingGetResponse getOnboardingWithFilter(String taxCode, String status);
 
     void validateOnboardingByProductOrInstitutionTaxCode(String taxCode, String productId);
 }

@@ -13,7 +13,6 @@
 package it.pagopa.selfcare.onboarding.client.model;
 
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.onboarding.client.model.Institution;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

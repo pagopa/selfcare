@@ -1,8 +1,10 @@
 package it.pagopa.selfcare.onboarding.model;
 
 import it.pagopa.selfcare.onboarding.common.Origin;
+import it.pagopa.selfcare.onboarding.controller.request.UserDto;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.openapi.quarkus.onboarding_json.model.GeographicTaxonomyDto;
 
 import java.util.List;
 

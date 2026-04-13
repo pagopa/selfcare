@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.onboarding.controller.response.ProductResource;
-import it.pagopa.selfcare.onboarding.mapper.ProductMapper;
+import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
 import it.pagopa.selfcare.product.entity.Product;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.GET;
@@ -27,9 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 public class ProductController {
 
     private final ProductService productService;
-    private final ProductMapper productMapper;
+    private final InstitutionMapper productMapper;
 
-    public ProductController(ProductService productService, ProductMapper productMapper) {
+    public ProductController(ProductService productService, InstitutionMapper productMapper) {
         this.productService = productService;
         this.productMapper = productMapper;
     }

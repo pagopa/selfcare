@@ -1,9 +1,6 @@
 package it.pagopa.selfcare.onboarding.client.model;
 
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.onboarding.client.model.AdditionalInformations;
-import it.pagopa.selfcare.onboarding.client.model.DataProtectionOfficer;
-import it.pagopa.selfcare.onboarding.client.model.PaymentServiceProvider;
 import lombok.Data;
 
 import java.util.List;
@@ -11,6 +8,7 @@ import java.util.List;
 @Data
 public class InstitutionUpdate {
 
+    private String id;
     private InstitutionType institutionType;
     private String description;
     private String digitalAddress;
@@ -22,6 +20,7 @@ public class InstitutionUpdate {
     private String country;
     private PaymentServiceProvider paymentServiceProvider;
     private DataProtectionOfficer dataProtectionOfficer;
+    private List<GeographicTaxonomy> geographicTaxonomies;
     private List<String> geographicTaxonomyCodes;
     private String rea;
     private String shareCapital;
@@ -30,4 +29,8 @@ public class InstitutionUpdate {
     private String supportPhone;
     private Boolean imported;
     private AdditionalInformations additionalInformations;
+    private GPUData gpuData;
+    private String legalForm;
+    private String origin;
+    private String originId;
 }

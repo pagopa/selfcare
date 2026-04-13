@@ -4,6 +4,7 @@ import it.pagopa.selfcare.onboarding.client.OnboardingMsClient;
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
+import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
@@ -14,12 +15,14 @@ import java.util.Objects;
 public class TokenServiceImpl implements TokenService {
 
     private final OnboardingMsClient onboardingMsConnector;
+    private final OnboardingMapper onboardingMapper;
 
     private static final String ONBOARDING_ID_REQUIRED_MESSAGE = "OnboardingId is required";
     private static final String TOKEN_ID_IS_REQUIRED = "TokenId is required";
 
-    public TokenServiceImpl(OnboardingMsClient onboardingMsConnector) {
+    public TokenServiceImpl(OnboardingMsClient onboardingMsConnector, OnboardingMapper onboardingMapper) {
         this.onboardingMsConnector = onboardingMsConnector;
+        this.onboardingMapper = onboardingMapper;
     }
 
     @Override
@@ -27,7 +30,7 @@ public class TokenServiceImpl implements TokenService {
         log.trace("verifyOnboarding start");
         log.debug("verifyOnboarding id = {}", onboardingId);
         Objects.requireNonNull(onboardingId, ONBOARDING_ID_REQUIRED_MESSAGE);
-        OnboardingData onboardingData = onboardingMsConnector.getOnboarding(onboardingId);
+        OnboardingData onboardingData = onboardingMapper.toOnboardingData(onboardingMsConnector.getOnboarding(onboardingId));
         log.debug("verifyOnboarding result = success");
         log.trace("verifyOnboarding end");
         return onboardingData;
@@ -58,7 +61,7 @@ public class TokenServiceImpl implements TokenService {
         log.trace("getOnboardingWithUserInfo start");
         log.debug("getOnboardingWithUserInfo id = {}", onboardingId);
         Objects.requireNonNull(onboardingId, ONBOARDING_ID_REQUIRED_MESSAGE);
-        OnboardingData onboardingData = onboardingMsConnector.getOnboardingWithUserInfo(onboardingId);
+        OnboardingData onboardingData = onboardingMapper.toOnboardingData(onboardingMsConnector.getOnboardingWithUserInfo(onboardingId));
         log.debug("getOnboardingWithUserInfo result = success");
         log.trace("getOnboardingWithUserInfo end");
         return onboardingData;

@@ -6,11 +6,7 @@ import it.pagopa.selfcare.onboarding.common.InstitutionPaSubunitType;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
-import it.pagopa.selfcare.onboarding.client.model.OnboardingResult;
-import it.pagopa.selfcare.onboarding.client.model.RecipientCodeStatusResult;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
-import it.pagopa.selfcare.onboarding.client.model.VerifyAggregateResult;
-import it.pagopa.selfcare.onboarding.client.model.CheckManagerData;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import java.io.File;
@@ -22,13 +18,7 @@ import org.openapi.quarkus.onboarding_json.api.InternalV1Api;
 import org.openapi.quarkus.onboarding_json.api.OnboardingControllerApi;
 import org.openapi.quarkus.onboarding_json.api.SupportApi;
 import org.openapi.quarkus.onboarding_json.api.TokenControllerApi;
-import org.openapi.quarkus.onboarding_json.model.CheckManagerResponse;
-import org.openapi.quarkus.onboarding_json.model.OnboardingGet;
-import org.openapi.quarkus.onboarding_json.model.OnboardingGetResponse;
-import org.openapi.quarkus.onboarding_json.model.OnboardingResponse;
-import org.openapi.quarkus.onboarding_json.model.OnboardingStatus;
-import org.openapi.quarkus.onboarding_json.model.ReasonRequest;
-import org.openapi.quarkus.onboarding_json.model.VerifyAggregateResponse;
+import org.openapi.quarkus.onboarding_json.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -77,29 +67,26 @@ public class OnboardingMsClient {
             onboardingApi.onboarding(onboardingMapper.toOnboardingDefaultRequest(onboardingData)).await().indefinitely();
         }
     }
-    public VerifyAggregateResult aggregatesVerification(UploadedFile file, String productId) {
+    public VerifyAggregateResponse aggregatesVerification(UploadedFile file, String productId) {
         log.info("validateAggregatesCsv for product: {}", productId);
         switch (productId) {
             case PROD_IO -> {
                 AggregatesControllerApi.VerifyAppIoAggregatesCsvMultipartForm form =
                     new AggregatesControllerApi.VerifyAppIoAggregatesCsvMultipartForm();
                 form.aggregates = toTempFile(file, "aggregates-", ".csv");
-                VerifyAggregateResponse response = aggregatesApi.verifyAppIoAggregatesCsv(form).await().indefinitely();
-                return onboardingMapper.toVerifyAggregateResult(response);
+                return aggregatesApi.verifyAppIoAggregatesCsv(form).await().indefinitely();
             }
             case PROD_PAGOPA -> {
                 AggregatesControllerApi.VerifyPagoPaAggregatesCsvMultipartForm form =
                     new AggregatesControllerApi.VerifyPagoPaAggregatesCsvMultipartForm();
                 form.aggregates = toTempFile(file, "aggregates-", ".csv");
-                VerifyAggregateResponse response = aggregatesApi.verifyPagoPaAggregatesCsv(form).await().indefinitely();
-                return onboardingMapper.toVerifyAggregateResult(response);
+                return aggregatesApi.verifyPagoPaAggregatesCsv(form).await().indefinitely();
             }
             case PROD_PN -> {
                 AggregatesControllerApi.VerifySendAggregatesCsvMultipartForm form =
                     new AggregatesControllerApi.VerifySendAggregatesCsvMultipartForm();
                 form.aggregates = toTempFile(file, "aggregates-", ".csv");
-                VerifyAggregateResponse response = aggregatesApi.verifySendAggregatesCsv(form).await().indefinitely();
-                return onboardingMapper.toVerifyAggregateResult(response);
+                return aggregatesApi.verifySendAggregatesCsv(form).await().indefinitely();
             }
             default -> {
                 log.error("Unsupported productId: {}", productId);
@@ -148,14 +135,12 @@ public class OnboardingMsClient {
         onboardingApi.delete(onboardingId, reasonForReject).await().indefinitely();
     }
     @Retry(maxRetries = 2, delay = 5000)
-    public OnboardingData getOnboarding(String onboardingId) {
-        OnboardingGet onboardingGet = onboardingApi.getById(onboardingId).await().indefinitely();
-        return onboardingMapper.toOnboardingData(onboardingGet);
+    public OnboardingGet getOnboarding(String onboardingId) {
+        return onboardingApi.getById(onboardingId).await().indefinitely();
     }
     @Retry(maxRetries = 2, delay = 5000)
-    public OnboardingData getOnboardingWithUserInfo(String onboardingId) {
-        OnboardingGet onboardingGet = onboardingApi.getByIdWithUserInfo(onboardingId).await().indefinitely();
-        return onboardingMapper.toOnboardingData(onboardingGet);
+    public OnboardingGet getOnboardingWithUserInfo(String onboardingId) {
+        return onboardingApi.getByIdWithUserInfo(onboardingId).await().indefinitely();
     }
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getContract(String onboardingId) {
@@ -181,7 +166,7 @@ public class OnboardingMsClient {
     public void onboardingPaAggregation(OnboardingData onboardingData) {
         onboardingApi.onboardingPaAggregation(onboardingMapper.toOnboardingPaAggregationRequest(onboardingData)).await().indefinitely();
     }
-    public List<OnboardingData> getByFilters(String productId, String taxCode, String origin, String originId, String subunitCode) {
+    public List<OnboardingResponse> getByFilters(String productId, String taxCode, String origin, String originId, String subunitCode) {
         List<OnboardingResponse> result = supportApi.onboardingInstitutionUsingGET(origin, originId, OnboardingStatus.COMPLETED, subunitCode, taxCode)
             .await().indefinitely();
         return Objects.nonNull(result) ? result.stream()
@@ -195,16 +180,14 @@ public class OnboardingMsClient {
                     return referenceOnboardingId == null || referenceOnboardingId.isBlank();
                 })
                 .filter(onboardingResponse -> onboardingResponse.getProductId().equals(productId))
-                .map(onboardingMapper::toOnboardingData)
                 .toList() : List.of();
     }
     @Retry(maxRetries = 2, delay = 5000)
-    public boolean checkManager(CheckManagerData checkManagerData) {
-        CheckManagerResponse response = onboardingApi.checkManager(onboardingMapper.toCheckManagerRequest(checkManagerData)).await().indefinitely();
-        return Objects.requireNonNull(response).getResponse();
+    public CheckManagerResponse checkManager(CheckManagerRequest request) {
+        return onboardingApi.checkManager(request).await().indefinitely();
     }
-    public RecipientCodeStatusResult checkRecipientCode(String originId, String recipientCode) {
-        return onboardingMapper.toRecipientCodeStatusResult(billingPortalApi.checkRecipientCode(originId, recipientCode).await().indefinitely());
+    public RecipientCodeStatus checkRecipientCode(String originId, String recipientCode) {
+        return billingPortalApi.checkRecipientCode(originId, recipientCode).await().indefinitely();
     }
 
     public void verifyOnboarding(String productId, String taxCode, String origin, String originId, String subunitCode, String institutionType) {
@@ -221,7 +204,7 @@ public class OnboardingMsClient {
         onboardingApi.onboardingUsersPg(onboardingMapper.toOnboardingUserPgRequest(onboardingData)).await().indefinitely();
         log.trace("onboardingUsersPgFromIcAndAde end");
     }
-    public List<OnboardingResult> onboardingWithFilter(String taxCode, String status) {
+    public OnboardingGetResponse onboardingWithFilter(String taxCode, String status) {
         log.trace("onboardingWithFilter start");
         OnboardingGetResponse response = onboardingApi.getOnboardingWithFilter( null,
                 null,
@@ -236,9 +219,8 @@ public class OnboardingMsClient {
                 taxCode,
                 null,
                 null).await().indefinitely();
-        List<OnboardingResult> onboardingResults = onboardingMapper.toOnboardingWithFilter(response);
         log.trace("onboardingWithFilter end");
-        return onboardingResults;
+        return response;
     }
     public void uploadAttachment(String onboardingId, UploadedFile attachment, String attachmentName) {
         TokenControllerApi.UploadAttachmentMultipartForm form = new TokenControllerApi.UploadAttachmentMultipartForm();

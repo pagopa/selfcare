@@ -44,6 +44,27 @@ components:
           type: string
         otherNote:
           type: string
+    AdditionalInformationsDto1:
+      type: object
+      properties:
+        belongRegulatedMarket:
+          type: boolean
+        regulatedMarketNote:
+          type: string
+        ipa:
+          type: boolean
+        ipaCode:
+          type: string
+        establishedByRegulatoryProvision:
+          type: boolean
+        establishedByRegulatoryProvisionNote:
+          type: string
+        agentOfPublicService:
+          type: boolean
+        agentOfPublicServiceNote:
+          type: string
+        otherNote:
+          type: string
     AggregateInstitution:
       type: object
       required:
@@ -61,7 +82,7 @@ components:
         geographicTaxonomies:
           type: array
           items:
-            $ref: "#/components/schemas/GeographicTaxonomyDto"
+            $ref: "#/components/schemas/GeographicTaxonomyDto1"
         address:
           type: string
         zipCode:
@@ -216,6 +237,15 @@ components:
           type: boolean
         certified:
           type: boolean
+    BillingResponse:
+      type: object
+      properties:
+        vatNumber:
+          type: string
+        recipientCode:
+          type: string
+        publicServices:
+          type: boolean
     BusinessResourceIC:
       type: object
       properties:
@@ -362,6 +392,15 @@ components:
           type: string
         pec:
           type: string
+    DataProtectionOfficerRequest:
+      type: object
+      properties:
+        address:
+          type: string
+        email:
+          type: string
+        pec:
+          type: string
     DpoData:
       type: object
       required:
@@ -427,6 +466,13 @@ components:
         desc:
           type: string
           pattern: \S
+    GeographicTaxonomyDto1:
+      type: object
+      properties:
+        code:
+          type: string
+        desc:
+          type: string
     GeographicTaxonomyResource:
       type: object
       properties:
@@ -562,6 +608,12 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/InstitutionOnboarding"
+    InstitutionPaSubunitType:
+      type: string
+      enum:
+      - AOO
+      - UO
+      - EC
     InstitutionResource:
       type: object
       properties:
@@ -606,6 +658,65 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/BusinessResourceIC"
+    InstitutionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        institutionType:
+          type: string
+        taxCode:
+          type: string
+        taxCodeInvoicing:
+          type: string
+        subunitCode:
+          type: string
+        subunitType:
+          $ref: "#/components/schemas/InstitutionPaSubunitType"
+        origin:
+          $ref: "#/components/schemas/Origin1"
+        originId:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        county:
+          type: string
+        description:
+          type: string
+        digitalAddress:
+          type: string
+        address:
+          type: string
+        zipCode:
+          type: string
+        parentDescription:
+          type: string
+        geographicTaxonomies:
+          type: array
+          items:
+            $ref: "#/components/schemas/GeographicTaxonomyDto1"
+        rea:
+          type: string
+        shareCapital:
+          type: string
+        businessRegisterPlace:
+          type: string
+        supportEmail:
+          type: string
+        supportPhone:
+          type: string
+        paymentServiceProvider:
+          $ref: "#/components/schemas/PaymentServiceProviderRequest"
+        dataProtectionOfficer:
+          $ref: "#/components/schemas/DataProtectionOfficerRequest"
+        atecoCodes:
+          type: array
+          items:
+            type: string
+        legalForm:
+          type: string
     InstitutionType:
       type: string
       enum:
@@ -663,6 +774,59 @@ components:
       format: date-time
       examples:
       - 2022-03-10T12:15:50-04:00
+    OnboardingGet:
+      type: object
+      properties:
+        id:
+          type: string
+        productId:
+          type: string
+        workflowType:
+          type: string
+        institution:
+          $ref: "#/components/schemas/InstitutionResponse"
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserResponse"
+        pricingPlan:
+          type: string
+        billing:
+          $ref: "#/components/schemas/BillingResponse"
+        payment:
+          $ref: "#/components/schemas/PaymentResponse"
+        signContract:
+          type: boolean
+        additionalInformations:
+          $ref: "#/components/schemas/AdditionalInformationsDto1"
+        createdAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        updatedAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        expiringDate:
+          $ref: "#/components/schemas/OffsetDateTime"
+        activatedAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        status:
+          type: string
+        userRequester:
+          $ref: "#/components/schemas/UserRequesterResponse"
+        reasonForReject:
+          type: string
+        attachments:
+          type: array
+          items:
+            type: string
+    OnboardingGetResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          format: int64
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OnboardingGet"
     OnboardingProductDto:
       type: object
       required:
@@ -753,15 +917,6 @@ components:
           type: array
           items:
             type: string
-    OnboardingResult:
-      type: object
-      properties:
-        id:
-          type: string
-        status:
-          type: string
-        productId:
-          type: string
     OnboardingUserDto:
       type: object
       required:
@@ -810,6 +965,18 @@ components:
       - INFOCAMERE
       - IVASS
       - PDND_INFOCAMERE
+    Origin1:
+      type: string
+      enum:
+      - MOCK
+      - IPA
+      - SELC
+      - ANAC
+      - UNKNOWN
+      - ADE
+      - INFOCAMERE
+      - IVASS
+      - PDND_INFOCAMERE
     OriginEntry:
       type: object
       properties:
@@ -842,7 +1009,22 @@ components:
       - SUB_DELEGATE
       - OPERATOR
       - ADMIN_EA
+    PartyRole2:
+      type: string
+      enum:
+      - MANAGER
+      - DELEGATE
+      - SUB_DELEGATE
+      - OPERATOR
+      - ADMIN_EA
     PaymentDto:
+      type: object
+      properties:
+        iban:
+          type: string
+        holder:
+          type: string
+    PaymentResponse:
       type: object
       properties:
         iban:
@@ -864,6 +1046,29 @@ components:
           type: string
         vatNumberGroup:
           type: boolean
+    PaymentServiceProviderRequest:
+      type: object
+      properties:
+        businessRegisterNumber:
+          type: string
+        legalRegisterNumber:
+          type: string
+        legalRegisterName:
+          type: string
+        longTermPayments:
+          type: boolean
+        abiCode:
+          type: string
+        vatNumberGroup:
+          type: boolean
+        providerNames:
+          type: array
+          items:
+            type: string
+        contractType:
+          type: string
+        contractId:
+          type: string
     ProductResource:
       type: object
       properties:
@@ -1039,6 +1244,30 @@ components:
         email:
           type: string
           pattern: \S
+    UserRequesterResponse:
+      type: object
+      properties:
+        userMailUuid:
+          type: string
+        userRequestUid:
+          type: string
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        taxCode:
+          type: string
+        name:
+          type: string
+        surname:
+          type: string
+        email:
+          type: string
+        role:
+          $ref: "#/components/schemas/PartyRole2"
+        productRole:
+          type: string
     UserTaxCodeDto:
       type: object
       required:
@@ -1726,9 +1955,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/OnboardingResult"
+                $ref: "#/components/schemas/OnboardingGetResponse"
       summary: Get Onboardings Info
       tags:
       - Institution V 2 Controller

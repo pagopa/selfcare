@@ -20,7 +20,7 @@ import it.pagopa.selfcare.onboarding.service.UserService;
 import it.pagopa.selfcare.onboarding.controller.response.OnboardingRequestResource;
 import it.pagopa.selfcare.onboarding.model.OnboardingVerify;
 import it.pagopa.selfcare.onboarding.controller.request.ReasonForRejectDto;
-import it.pagopa.selfcare.onboarding.mapper.OnboardingResourceMapper;
+import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.util.FileValidationUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -56,13 +56,13 @@ public class TokenV2Controller {
     private final TokenService tokenService;
     private final UserService userService;
     private final UserInstitutionService userInstitutionService;
-    private final OnboardingResourceMapper onboardingResourceMapper;
+    private final OnboardingMapper onboardingResourceMapper;
     private static final String SANITIZIER = "[^a-zA-Z0-9-_]";
 
     @Inject
     SecurityIdentity securityIdentity;
 
-    public TokenV2Controller(TokenService tokenService, UserService userService, UserInstitutionService userInstitutionService, OnboardingResourceMapper onboardingResourceMapper) {
+    public TokenV2Controller(TokenService tokenService, UserService userService, UserInstitutionService userInstitutionService, OnboardingMapper onboardingResourceMapper) {
         this.tokenService = tokenService;
         this.userService = userService;
         this.userInstitutionService = userInstitutionService;

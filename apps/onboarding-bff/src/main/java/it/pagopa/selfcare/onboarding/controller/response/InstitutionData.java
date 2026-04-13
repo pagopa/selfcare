@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.onboarding.model;
+package it.pagopa.selfcare.onboarding.controller.response;
 
 import io.swagger.annotations.ApiModelProperty;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;

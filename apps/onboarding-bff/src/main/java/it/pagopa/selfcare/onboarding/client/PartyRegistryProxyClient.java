@@ -3,21 +3,7 @@ package it.pagopa.selfcare.onboarding.client;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
-import it.pagopa.selfcare.onboarding.client.model.InstitutionLegalAddressData;
-import it.pagopa.selfcare.onboarding.client.model.MatchInfoResult;
-import it.pagopa.selfcare.onboarding.client.model.InstitutionInfoIC;
-import it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomies;
-import it.pagopa.selfcare.onboarding.client.model.HomogeneousOrganizationalArea;
-import it.pagopa.selfcare.onboarding.client.model.InstitutionProxyInfo;
-import it.pagopa.selfcare.onboarding.client.model.OrganizationUnit;
-import it.pagopa.selfcare.onboarding.client.PartyRegistryProxyRestClient;
-import it.pagopa.selfcare.onboarding.mapper.RegistryProxyMapper;
-import it.pagopa.selfcare.onboarding.client.model.AooResponse;
-import it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomiesResponse;
-import it.pagopa.selfcare.onboarding.client.model.ProxyInstitutionResponse;
-import it.pagopa.selfcare.onboarding.client.model.UoResponse;
-import it.pagopa.selfcare.onboarding.client.model.InstitutionByLegalTaxIdRequest;
-import it.pagopa.selfcare.onboarding.client.model.InstitutionByLegalTaxIdRequestDto;
+import it.pagopa.selfcare.onboarding.client.model.*;
 import lombok.extern.slf4j.Slf4j;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -30,84 +16,69 @@ public class PartyRegistryProxyClient {
 
     private final PartyRegistryProxyRestClient restClient;
 
-    private final RegistryProxyMapper proxyMapper;
-    public PartyRegistryProxyClient(@RestClient PartyRegistryProxyRestClient restClient, RegistryProxyMapper proxyMapper) {
+    public PartyRegistryProxyClient(@RestClient PartyRegistryProxyRestClient restClient) {
         this.restClient = restClient;
-        this.proxyMapper = proxyMapper;
     }
+
     public InstitutionInfoIC getInstitutionsByUserFiscalCode(String taxCode) {
         log.trace("getInstitutionsByUserFiscalCode start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionsByUserFiscalCode taxCode = {}", taxCode);
         requireHasText(taxCode, REQUIRED_FISCAL_CODE_MESSAGE);
-        InstitutionByLegalTaxIdRequestDto institutionByLegalTaxIdRequestDto = new InstitutionByLegalTaxIdRequestDto();
-        institutionByLegalTaxIdRequestDto.setLegalTaxId(taxCode);
-        InstitutionByLegalTaxIdRequest institutionByLegalTaxIdRequest = new InstitutionByLegalTaxIdRequest();
-        institutionByLegalTaxIdRequest.setFilter(institutionByLegalTaxIdRequestDto);
-        InstitutionInfoIC result = restClient.getInstitutionsByUserLegalTaxId(institutionByLegalTaxIdRequest);
+        
+        InstitutionByLegalTaxIdRequestDto filter = new InstitutionByLegalTaxIdRequestDto();
+        filter.setLegalTaxId(taxCode);
+        InstitutionByLegalTaxIdRequest request = new InstitutionByLegalTaxIdRequest();
+        request.setFilter(filter);
+        
+        InstitutionInfoIC result = restClient.getInstitutionsByUserLegalTaxId(request);
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionsByUserFiscalCode result = {}", result);
         log.trace("getInstitutionsByUserFiscalCode end");
         return result;
     }
+
     @Retry(maxRetries = 2, delay = 5000)
     public MatchInfoResult matchInstitutionAndUser(String externalInstitutionId, String taxCode) {
         log.trace("matchInstitutionAndUser start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "matchInstitutionAndUser taxCode = {}", taxCode);
         requireHasText(externalInstitutionId, REQUIRED_EXTERNAL_ID_MESSAGE);
         requireHasText(taxCode, REQUIRED_FISCAL_CODE_MESSAGE);
-        MatchInfoResult result = restClient.matchInstitutionAndUser(externalInstitutionId, taxCode);
-        log.debug(LogUtils.CONFIDENTIAL_MARKER, "matchInstitutionAndUser result = {}", result);
-        log.trace("matchInstitutionAndUser end");
-        return result;
+        return restClient.matchInstitutionAndUser(externalInstitutionId, taxCode);
     }
+
     @Retry(maxRetries = 2, delay = 5000)
     public InstitutionLegalAddressData getInstitutionLegalAddress(String externalInstitutionId) {
         log.trace("getInstitutionLegalAddress start");
         log.debug("getInstitutionLegalAddress externalInstitutionId = {}", externalInstitutionId);
         requireHasText(externalInstitutionId, REQUIRED_EXTERNAL_ID_MESSAGE);
-        InstitutionLegalAddressData result = restClient.getInstitutionLegalAddress(externalInstitutionId);
-        log.debug("getInstitutionLegalAddress result = {}", result);
-        log.trace("getInstitutionLegalAddress end");
-        return result;
+        return restClient.getInstitutionLegalAddress(externalInstitutionId);
     }
+
     @Retry(maxRetries = 2, delay = 5000)
-    public HomogeneousOrganizationalArea getAooById(String aooCode) {
+    public AooResponse getAooById(String aooCode) {
         log.trace("getAooById start");
         log.debug("getAooById aooCode = {}", aooCode);
-        AooResponse aooResponse = restClient.getAooById(aooCode);
-        HomogeneousOrganizationalArea result = proxyMapper.toAOO(aooResponse);
-        log.debug("getAooById result = {}", result);
-        log.trace("getAooById end");
-        return result;
+        return restClient.getAooById(aooCode);
     }
+
     @Retry(maxRetries = 2, delay = 5000)
-    public OrganizationUnit getUoById(String uoCode) {
+    public UoResponse getUoById(String uoCode) {
         log.trace("getUoById start");
         log.debug("getUoById uoCode = {}", uoCode);
-        UoResponse uoResponse = restClient.getUoById(uoCode);
-        OrganizationUnit result = proxyMapper.toUO(uoResponse);
-        log.debug("getUoById result = {}", result);
-        log.trace("getUoById end");
-        return result;
+        return restClient.getUoById(uoCode);
     }
+
     @Retry(maxRetries = 2, delay = 5000)
-    public GeographicTaxonomies getExtById(String code){
+    public GeographicTaxonomiesResponse getExtById(String code){
         log.trace("getExtById start");
         log.debug("getExtById code = {}", code);
-        GeographicTaxonomiesResponse geographicTaxonomiesResponse = restClient.getExtByCode(code);
-        GeographicTaxonomies result = proxyMapper.toGeographicTaxonomies(geographicTaxonomiesResponse);
-        log.debug("getExtById result = {}", result);
-        log.trace("getExtById end");
-        return result;
+        return restClient.getExtByCode(code);
     }
+
     @Retry(maxRetries = 2, delay = 5000)
-    public InstitutionProxyInfo getInstitutionProxyById(String externalId) {
+    public ProxyInstitutionResponse getInstitutionProxyById(String externalId) {
         log.trace("getInstitutionProxyById start");
         log.debug("getInstitutionProxyById externalId = {}", externalId);
-        ProxyInstitutionResponse proxyInstitutionResponse = restClient.getInstitutionById(externalId);
-        InstitutionProxyInfo institutionProxyInfo = proxyMapper.toInstitutionProxyInfo(proxyInstitutionResponse);
-        log.debug("getInstitutionProxyById result = {}", institutionProxyInfo);
-        log.trace("getInstitutionProxyById end");
-        return institutionProxyInfo;
+        return restClient.getInstitutionById(externalId);
     }
 
     private static void requireHasText(String value, String message) {
