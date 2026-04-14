@@ -5,11 +5,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.quarkus.jackson.ObjectMapperCustomizer;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import jakarta.inject.Singleton;
+
+import java.time.OffsetDateTime;
 
 @Singleton
 public class JacksonConfiguration implements ObjectMapperCustomizer {
@@ -22,5 +25,9 @@ public class JacksonConfiguration implements ObjectMapperCustomizer {
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         objectMapper.registerModule(new Jdk8Module());
+
+        SimpleModule dateTimeFallbackModule = new SimpleModule("offset-date-time-fallback");
+        dateTimeFallbackModule.addDeserializer(OffsetDateTime.class, new OffsetDateTimeDeserializer());
+        objectMapper.registerModule(dateTimeFallbackModule);
     }
 }
