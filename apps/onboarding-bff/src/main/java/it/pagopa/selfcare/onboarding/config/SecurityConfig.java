@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.onboarding.security;
+package it.pagopa.selfcare.onboarding.config;
 
 import it.pagopa.selfcare.security.JWTCallerPrincipalFactory;
 import jakarta.annotation.Priority;

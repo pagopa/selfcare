@@ -1776,10 +1776,19 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Get Institutions",
-        "tags" : [ "Institution Controller" ]
+        "tags" : [ "Institution Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/institutions/company/onboarding" : {
@@ -1803,12 +1812,21 @@
               }
             }
           },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
           "400" : {
             "description" : "Bad Request"
           }
         },
         "summary" : "Onboarding",
-        "tags" : [ "Institution Controller" ]
+        "tags" : [ "Institution Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/institutions/from-infocamere" : {
@@ -1823,10 +1841,19 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Get Institutions From Infocamere",
-        "tags" : [ "Institution Controller" ]
+        "tags" : [ "Institution Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/institutions/geographic-taxonomies" : {
@@ -1857,10 +1884,19 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Get Geographic Taxonomies By Tax Code And Subunit Code",
-        "tags" : [ "Institution Controller" ]
+        "tags" : [ "Institution Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/institutions/onboarding" : {
@@ -1918,10 +1954,19 @@
         "responses" : {
           "204" : {
             "description" : "No Content"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Verify Onboarding",
-        "tags" : [ "Institution Controller" ]
+        "tags" : [ "Institution Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       },
       "post" : {
         "requestBody" : {
@@ -1943,12 +1988,21 @@
               }
             }
           },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
           "400" : {
             "description" : "Bad Request"
           }
         },
         "summary" : "Onboarding",
-        "tags" : [ "Institution Controller" ]
+        "tags" : [ "Institution Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       },
       "get" : {
         "parameters" : [ {
@@ -1974,10 +2028,19 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Get Institution Onboarding Info By Id",
-        "tags" : [ "Institution Controller" ]
+        "tags" : [ "Institution Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/institutions/verification/legal-address" : {
@@ -2003,12 +2066,21 @@
               }
             }
           },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
           "400" : {
             "description" : "Bad Request"
           }
         },
         "summary" : "Post Verification Legal Address",
-        "tags" : [ "Institution Controller" ]
+        "tags" : [ "Institution Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/institutions/verification/match" : {
@@ -2034,12 +2106,21 @@
               }
             }
           },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
           "400" : {
             "description" : "Bad Request"
           }
         },
         "summary" : "Post Verification Match",
-        "tags" : [ "Institution Controller" ]
+        "tags" : [ "Institution Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/institutions/{externalInstitutionId}/geographic-taxonomy" : {
@@ -2065,10 +2146,19 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Get Institution Geographic Taxonomy",
-        "tags" : [ "Institution Controller" ]
+        "tags" : [ "Institution Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/institutions/{externalInstitutionId}/products/{productId}" : {
@@ -2091,10 +2181,19 @@
         "responses" : {
           "204" : {
             "description" : "No Content"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Verify Onboarding",
-        "tags" : [ "Institution Controller" ]
+        "tags" : [ "Institution Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/institutions/{externalInstitutionId}/products/{productId}/onboarded-institution-info" : {
@@ -2125,10 +2224,19 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Get Institution Onboarding Info",
-        "tags" : [ "Institution Controller" ]
+        "tags" : [ "Institution Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/product/{id}" : {
@@ -2158,10 +2266,19 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Get Product",
-        "tags" : [ "Product Controller" ]
+        "tags" : [ "Product Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/products" : {
@@ -2179,10 +2296,19 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Get Products",
-        "tags" : [ "Product Controller" ]
+        "tags" : [ "Product Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/products/admin" : {
@@ -2200,10 +2326,19 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Get Products Admin",
-        "tags" : [ "Product Controller" ]
+        "tags" : [ "Product Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/users/check-manager" : {
@@ -2229,12 +2364,21 @@
               }
             }
           },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
           "400" : {
             "description" : "Bad Request"
           }
         },
         "summary" : "Check Manager",
-        "tags" : [ "User Controller" ]
+        "tags" : [ "User Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/users/onboarding" : {
@@ -2258,12 +2402,21 @@
               }
             }
           },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
           "400" : {
             "description" : "Bad Request"
           }
         },
         "summary" : "Onboarding",
-        "tags" : [ "User Controller" ]
+        "tags" : [ "User Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/users/onboarding/aggregator" : {
@@ -2287,12 +2440,21 @@
               }
             }
           },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
           "400" : {
             "description" : "Bad Request"
           }
         },
         "summary" : "Onboarding Aggregator",
-        "tags" : [ "User Controller" ]
+        "tags" : [ "User Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/users/onboarding/{onboardingId}/manager" : {
@@ -2315,10 +2477,19 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Get Manager Info",
-        "tags" : [ "User Controller" ]
+        "tags" : [ "User Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/users/search-user" : {
@@ -2344,12 +2515,21 @@
               }
             }
           },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
           "400" : {
             "description" : "Bad Request"
           }
         },
         "summary" : "Search User",
-        "tags" : [ "User Controller" ]
+        "tags" : [ "User Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v1/users/validate" : {
@@ -2373,12 +2553,21 @@
               }
             }
           },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
           "400" : {
             "description" : "Bad Request"
           }
         },
         "summary" : "Validate",
-        "tags" : [ "User Controller" ]
+        "tags" : [ "User Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/institutions" : {
@@ -2427,10 +2616,19 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Get Institution",
-        "tags" : [ "Institution V 2 Controller" ]
+        "tags" : [ "Institution V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/institutions/company/onboarding" : {
@@ -2454,12 +2652,21 @@
               }
             }
           },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
           "400" : {
             "description" : "Bad Request"
           }
         },
         "summary" : "Onboarding",
-        "tags" : [ "Institution V 2 Controller" ]
+        "tags" : [ "Institution V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/institutions/company/verify-manager" : {
@@ -2485,12 +2692,21 @@
               }
             }
           },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
           "400" : {
             "description" : "Bad Request"
           }
         },
         "summary" : "Verify Manager",
-        "tags" : [ "Institution V 2 Controller" ]
+        "tags" : [ "Institution V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/institutions/onboarding" : {
@@ -2514,12 +2730,21 @@
               }
             }
           },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
           "400" : {
             "description" : "Bad Request"
           }
         },
         "summary" : "Onboarding",
-        "tags" : [ "Institution V 2 Controller" ]
+        "tags" : [ "Institution V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/institutions/onboarding/active" : {
@@ -2556,10 +2781,19 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Get Active Onboarding",
-        "tags" : [ "Institution V 2 Controller" ]
+        "tags" : [ "Institution V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/institutions/onboarding/aggregation/verification" : {
@@ -2596,10 +2830,19 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Verify Aggregates Csv",
-        "tags" : [ "Institution V 2 Controller" ]
+        "tags" : [ "Institution V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/institutions/onboarding/recipient-code/verification" : {
@@ -2627,10 +2870,19 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Check Recipient Code",
-        "tags" : [ "Institution V 2 Controller" ]
+        "tags" : [ "Institution V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/institutions/onboarding/users/pg" : {
@@ -2649,12 +2901,21 @@
           "201" : {
             "description" : "Created"
           },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
           "400" : {
             "description" : "Bad Request"
           }
         },
         "summary" : "Onboarding Users",
-        "tags" : [ "Institution V 2 Controller" ]
+        "tags" : [ "Institution V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/institutions/onboardings" : {
@@ -2682,10 +2943,19 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Get Onboardings Info",
-        "tags" : [ "Institution V 2 Controller" ]
+        "tags" : [ "Institution V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/product" : {
@@ -2707,10 +2977,19 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Get Origins",
-        "tags" : [ "Product V 2 Controller" ]
+        "tags" : [ "Product V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/tokens/{onboardingId}" : {
@@ -2733,10 +3012,19 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Retrieve Onboarding Request",
-        "tags" : [ "Token V 2 Controller" ]
+        "tags" : [ "Token V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/tokens/{onboardingId}/approve" : {
@@ -2752,10 +3040,19 @@
         "responses" : {
           "201" : {
             "description" : "Created"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Approve Onboarding",
-        "tags" : [ "Token V 2 Controller" ]
+        "tags" : [ "Token V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/tokens/{onboardingId}/attachment" : {
@@ -2798,10 +3095,19 @@
                 "schema" : { }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Upload Attachment",
-        "tags" : [ "Token V 2 Controller" ]
+        "tags" : [ "Token V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       },
       "get" : {
         "parameters" : [ {
@@ -2824,10 +3130,19 @@
             "content" : {
               "application/octet-stream" : { }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Get Attachment",
-        "tags" : [ "Token V 2 Controller" ]
+        "tags" : [ "Token V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/tokens/{onboardingId}/attachment/status" : {
@@ -2855,10 +3170,19 @@
                 "schema" : { }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Head Attachment",
-        "tags" : [ "Token V 2 Controller" ]
+        "tags" : [ "Token V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/tokens/{onboardingId}/complete" : {
@@ -2879,10 +3203,19 @@
                 "schema" : { }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Delete Onboarding",
-        "tags" : [ "Token V 2 Controller" ]
+        "tags" : [ "Token V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       },
       "post" : {
         "parameters" : [ {
@@ -2917,10 +3250,19 @@
                 "schema" : { }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Complete",
-        "tags" : [ "Token V 2 Controller" ]
+        "tags" : [ "Token V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/tokens/{onboardingId}/complete-onboarding-users" : {
@@ -2957,10 +3299,19 @@
                 "schema" : { }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Complete Onboarding Users",
-        "tags" : [ "Token V 2 Controller" ]
+        "tags" : [ "Token V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/tokens/{onboardingId}/contract" : {
@@ -2979,10 +3330,19 @@
             "content" : {
               "application/octet-stream" : { }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Get Contract",
-        "tags" : [ "Token V 2 Controller" ]
+        "tags" : [ "Token V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/tokens/{onboardingId}/products/{productId}/aggregates-csv" : {
@@ -3008,10 +3368,19 @@
             "content" : {
               "application/octet-stream" : { }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Get Aggregates Csv",
-        "tags" : [ "Token V 2 Controller" ]
+        "tags" : [ "Token V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/tokens/{onboardingId}/reject" : {
@@ -3038,12 +3407,21 @@
           "201" : {
             "description" : "Created"
           },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          },
           "400" : {
             "description" : "Bad Request"
           }
         },
         "summary" : "Reject Onboarding",
-        "tags" : [ "Token V 2 Controller" ]
+        "tags" : [ "Token V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/tokens/{onboardingId}/template-attachment" : {
@@ -3068,10 +3446,19 @@
             "content" : {
               "application/octet-stream" : { }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Get Template Attachment",
-        "tags" : [ "Token V 2 Controller" ]
+        "tags" : [ "Token V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/v2/tokens/{onboardingId}/verify" : {
@@ -3094,10 +3481,19 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
         },
         "summary" : "Verify Onboarding",
-        "tags" : [ "Token V 2 Controller" ]
+        "tags" : [ "Token V 2 Controller" ],
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     }
   },

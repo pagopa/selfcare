@@ -1341,9 +1341,15 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/InstitutionResource"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Get Institutions
       tags:
       - Institution Controller
+      security:
+      - SecurityScheme: []
   /v1/institutions/company/onboarding:
     post:
       requestBody:
@@ -1358,11 +1364,17 @@ paths:
           content:
             application/json:
               schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
         "400":
           description: Bad Request
       summary: Onboarding
       tags:
       - Institution Controller
+      security:
+      - SecurityScheme: []
   /v1/institutions/from-infocamere:
     get:
       responses:
@@ -1372,9 +1384,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/InstitutionResourceIC"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Get Institutions From Infocamere
       tags:
       - Institution Controller
+      security:
+      - SecurityScheme: []
   /v1/institutions/geographic-taxonomies:
     get:
       parameters:
@@ -1395,9 +1413,15 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/GeographicTaxonomyResource"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Get Geographic Taxonomies By Tax Code And Subunit Code
       tags:
       - Institution Controller
+      security:
+      - SecurityScheme: []
   /v1/institutions/onboarding:
     head:
       parameters:
@@ -1437,9 +1461,15 @@ paths:
       responses:
         "204":
           description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Verify Onboarding
       tags:
       - Institution Controller
+      security:
+      - SecurityScheme: []
     post:
       requestBody:
         content:
@@ -1453,11 +1483,17 @@ paths:
           content:
             application/json:
               schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
         "400":
           description: Bad Request
       summary: Onboarding
       tags:
       - Institution Controller
+      security:
+      - SecurityScheme: []
     get:
       parameters:
       - name: institutionId
@@ -1475,9 +1511,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/InstitutionOnboardingInfoResource"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Get Institution Onboarding Info By Id
       tags:
       - Institution Controller
+      security:
+      - SecurityScheme: []
   /v1/institutions/verification/legal-address:
     post:
       requestBody:
@@ -1493,11 +1535,17 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/InstitutionLegalAddressResource"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
         "400":
           description: Bad Request
       summary: Post Verification Legal Address
       tags:
       - Institution Controller
+      security:
+      - SecurityScheme: []
   /v1/institutions/verification/match:
     post:
       requestBody:
@@ -1513,11 +1561,17 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MatchInfoResultResource"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
         "400":
           description: Bad Request
       summary: Post Verification Match
       tags:
       - Institution Controller
+      security:
+      - SecurityScheme: []
   /v1/institutions/{externalInstitutionId}/geographic-taxonomy:
     get:
       parameters:
@@ -1535,9 +1589,15 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/GeographicTaxonomyResource"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Get Institution Geographic Taxonomy
       tags:
       - Institution Controller
+      security:
+      - SecurityScheme: []
   /v1/institutions/{externalInstitutionId}/products/{productId}:
     head:
       parameters:
@@ -1554,9 +1614,15 @@ paths:
       responses:
         "204":
           description: No Content
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Verify Onboarding
       tags:
       - Institution Controller
+      security:
+      - SecurityScheme: []
   /v1/institutions/{externalInstitutionId}/products/{productId}/onboarded-institution-info:
     get:
       deprecated: true
@@ -1578,9 +1644,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/InstitutionOnboardingInfoResource"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Get Institution Onboarding Info
       tags:
       - Institution Controller
+      security:
+      - SecurityScheme: []
   /v1/product/{id}:
     get:
       parameters:
@@ -1601,9 +1673,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProductResource"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Get Product
       tags:
       - Product Controller
+      security:
+      - SecurityScheme: []
   /v1/products:
     get:
       responses:
@@ -1615,9 +1693,15 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ProductResource"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Get Products
       tags:
       - Product Controller
+      security:
+      - SecurityScheme: []
   /v1/products/admin:
     get:
       responses:
@@ -1629,9 +1713,15 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ProductResource"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Get Products Admin
       tags:
       - Product Controller
+      security:
+      - SecurityScheme: []
   /v1/users/check-manager:
     post:
       requestBody:
@@ -1647,11 +1737,17 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CheckManagerResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
         "400":
           description: Bad Request
       summary: Check Manager
       tags:
       - User Controller
+      security:
+      - SecurityScheme: []
   /v1/users/onboarding:
     post:
       requestBody:
@@ -1666,11 +1762,17 @@ paths:
           content:
             application/json:
               schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
         "400":
           description: Bad Request
       summary: Onboarding
       tags:
       - User Controller
+      security:
+      - SecurityScheme: []
   /v1/users/onboarding/aggregator:
     post:
       requestBody:
@@ -1685,11 +1787,17 @@ paths:
           content:
             application/json:
               schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
         "400":
           description: Bad Request
       summary: Onboarding Aggregator
       tags:
       - User Controller
+      security:
+      - SecurityScheme: []
   /v1/users/onboarding/{onboardingId}/manager:
     get:
       parameters:
@@ -1705,9 +1813,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ManagerInfoResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Get Manager Info
       tags:
       - User Controller
+      security:
+      - SecurityScheme: []
   /v1/users/search-user:
     post:
       requestBody:
@@ -1723,11 +1837,17 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserId"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
         "400":
           description: Bad Request
       summary: Search User
       tags:
       - User Controller
+      security:
+      - SecurityScheme: []
   /v1/users/validate:
     post:
       requestBody:
@@ -1742,11 +1862,17 @@ paths:
           content:
             application/json:
               schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
         "400":
           description: Bad Request
       summary: Validate
       tags:
       - User Controller
+      security:
+      - SecurityScheme: []
   /v2/institutions:
     get:
       parameters:
@@ -1779,9 +1905,15 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/InstitutionResource"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Get Institution
       tags:
       - Institution V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/institutions/company/onboarding:
     post:
       requestBody:
@@ -1796,11 +1928,17 @@ paths:
           content:
             application/json:
               schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
         "400":
           description: Bad Request
       summary: Onboarding
       tags:
       - Institution V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/institutions/company/verify-manager:
     post:
       requestBody:
@@ -1816,11 +1954,17 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/VerifyManagerResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
         "400":
           description: Bad Request
       summary: Verify Manager
       tags:
       - Institution V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/institutions/onboarding:
     post:
       requestBody:
@@ -1835,11 +1979,17 @@ paths:
           content:
             application/json:
               schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
         "400":
           description: Bad Request
       summary: Onboarding
       tags:
       - Institution V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/institutions/onboarding/active:
     get:
       parameters:
@@ -1864,9 +2014,15 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/InstitutionOnboardingResource"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Get Active Onboarding
       tags:
       - Institution V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/institutions/onboarding/aggregation/verification:
     post:
       requestBody:
@@ -1890,9 +2046,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/VerifyAggregatesResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Verify Aggregates Csv
       tags:
       - Institution V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/institutions/onboarding/recipient-code/verification:
     get:
       parameters:
@@ -1911,9 +2073,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RecipientCodeStatus"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Check Recipient Code
       tags:
       - Institution V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/institutions/onboarding/users/pg:
     post:
       requestBody:
@@ -1925,11 +2093,17 @@ paths:
       responses:
         "201":
           description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
         "400":
           description: Bad Request
       summary: Onboarding Users
       tags:
       - Institution V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/institutions/onboardings:
     get:
       parameters:
@@ -1948,9 +2122,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OnboardingGetResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Get Onboardings Info
       tags:
       - Institution V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/product:
     get:
       parameters:
@@ -1965,9 +2145,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OriginResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Get Origins
       tags:
       - Product V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/tokens/{onboardingId}:
     get:
       parameters:
@@ -1983,9 +2169,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OnboardingRequestResource"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Retrieve Onboarding Request
       tags:
       - Token V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/tokens/{onboardingId}/approve:
     post:
       parameters:
@@ -1997,9 +2189,15 @@ paths:
       responses:
         "201":
           description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Approve Onboarding
       tags:
       - Token V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/tokens/{onboardingId}/attachment:
     post:
       parameters:
@@ -2028,9 +2226,15 @@ paths:
           content:
             application/json:
               schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Upload Attachment
       tags:
       - Token V 2 Controller
+      security:
+      - SecurityScheme: []
     get:
       parameters:
       - name: onboardingId
@@ -2047,9 +2251,15 @@ paths:
           description: OK
           content:
             application/octet-stream: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Get Attachment
       tags:
       - Token V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/tokens/{onboardingId}/attachment/status:
     head:
       parameters:
@@ -2069,9 +2279,15 @@ paths:
           content:
             application/json:
               schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Head Attachment
       tags:
       - Token V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/tokens/{onboardingId}/complete:
     delete:
       parameters:
@@ -2086,9 +2302,15 @@ paths:
           content:
             application/json:
               schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Delete Onboarding
       tags:
       - Token V 2 Controller
+      security:
+      - SecurityScheme: []
     post:
       parameters:
       - name: onboardingId
@@ -2112,9 +2334,15 @@ paths:
           content:
             application/json:
               schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Complete
       tags:
       - Token V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/tokens/{onboardingId}/complete-onboarding-users:
     post:
       parameters:
@@ -2139,9 +2367,15 @@ paths:
           content:
             application/json:
               schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Complete Onboarding Users
       tags:
       - Token V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/tokens/{onboardingId}/contract:
     get:
       parameters:
@@ -2155,9 +2389,15 @@ paths:
           description: OK
           content:
             application/octet-stream: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Get Contract
       tags:
       - Token V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/tokens/{onboardingId}/products/{productId}/aggregates-csv:
     get:
       parameters:
@@ -2176,9 +2416,15 @@ paths:
           description: OK
           content:
             application/octet-stream: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Get Aggregates Csv
       tags:
       - Token V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/tokens/{onboardingId}/reject:
     post:
       parameters:
@@ -2196,11 +2442,17 @@ paths:
       responses:
         "201":
           description: Created
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
         "400":
           description: Bad Request
       summary: Reject Onboarding
       tags:
       - Token V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/tokens/{onboardingId}/template-attachment:
     get:
       parameters:
@@ -2218,9 +2470,15 @@ paths:
           description: OK
           content:
             application/octet-stream: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Get Template Attachment
       tags:
       - Token V 2 Controller
+      security:
+      - SecurityScheme: []
   /v2/tokens/{onboardingId}/verify:
     post:
       parameters:
@@ -2236,9 +2494,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OnboardingVerify"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       summary: Verify Onboarding
       tags:
       - Token V 2 Controller
+      security:
+      - SecurityScheme: []
 info:
   title: onboarding-bff
   version: 1.0.0-SNAPSHOT
