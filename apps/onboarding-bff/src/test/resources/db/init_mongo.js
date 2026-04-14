@@ -274,9 +274,7 @@ db.onboardings.insertMany([
   },
   {
   "_id": "5369b559-d2ed-4c79-af12-4a4491fc70f1",
-  "createdAt": {
-    "$date": "2024-10-18T12:24:50.050Z"
-  },
+  "createdAt": ISODate("2024-10-18T12:24:50.050Z"),
   "institution": {
     "address": "sede leg",
     "city": "Milano",
