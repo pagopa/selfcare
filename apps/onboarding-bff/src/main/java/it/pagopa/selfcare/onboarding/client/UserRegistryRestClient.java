@@ -14,7 +14,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RegisterRestClient(configKey = "user_registry_json")
-@ClientHeaderParam(name = "x-api-key", value = "${USERVICE_USER_REGISTRY_API_KEY:api-key}")
+@ClientHeaderParam(name = "x-api-key", value = "${rest-client.user-registry.api-key}")
 public interface UserRegistryRestClient extends UserApi {
 
     @POST
