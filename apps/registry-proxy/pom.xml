@@ -10,7 +10,7 @@
         <groupId>it.pagopa.selfcare</groupId>
         <artifactId>selc-starter-parent</artifactId>
         <version>0.3.1-SNAPSHOT</version>
-        <!-- lookup parent from repository -->
+        <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
     <artifactId>selc-party-registry-proxy</artifactId>

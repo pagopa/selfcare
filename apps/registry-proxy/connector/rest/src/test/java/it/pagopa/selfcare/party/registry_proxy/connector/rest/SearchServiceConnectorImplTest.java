@@ -2,6 +2,7 @@ package it.pagopa.selfcare.party.registry_proxy.connector.rest;
 
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.AzureSearchValue;
+import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceInstitution;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceStatus;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.institution.Institution;
@@ -9,6 +10,8 @@ import it.pagopa.selfcare.party.registry_proxy.connector.model.institution.Onboa
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.AzureSearchRestClient;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.SearchServiceInstitutionResponse;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.SearchServiceResponse;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.mapper.SearchServiceMapperImpl;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 
-@ContextConfiguration(classes = {SearchServiceConnectorImpl.class})
+@ContextConfiguration(classes = {SearchServiceConnectorImpl.class, SearchServiceMapperImpl.class})
 @ExtendWith(SpringExtension.class)
 public class SearchServiceConnectorImplTest {
 
@@ -381,5 +384,22 @@ public class SearchServiceConnectorImplTest {
     response.setLastModified(OffsetDateTime.parse("2023-10-10T17:13:44.263Z"));
     return response;
   }
+
+  @Test
+  void testIndexOnboarding() {
+    when(azureSearchRestClient.indexOnboarding(any())).thenReturn(new SearchServiceStatus());
+    searchServiceConnector.indexOnboarding(new OnboardingIndex());
+    verify(azureSearchRestClient, times(1)).indexOnboarding(any());
+  }
+
+  @Test
+  void testSearchOnboarding() {
+    when(azureSearchRestClient.searchOnboarding("search", "filter", true, 15L, 0L, null, "orderBy"))
+            .thenReturn(new SearchServiceIndexResponse<>());
+    searchServiceConnector.searchOnboarding("search", "filter", 15L, 0L, "orderBy");
+    verify(azureSearchRestClient, times(1))
+            .searchOnboarding("search", "filter", true, 15L, 0L, null, "orderBy");
+  }
+
 }
 

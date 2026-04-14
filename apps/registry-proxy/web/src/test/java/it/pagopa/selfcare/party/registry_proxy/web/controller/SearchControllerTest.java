@@ -1,8 +1,11 @@
 package it.pagopa.selfcare.party.registry_proxy.web.controller;
 
+import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndex;
+import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndexSearch;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceInstitution;
 import it.pagopa.selfcare.party.registry_proxy.core.SearchService;
 import it.pagopa.selfcare.party.registry_proxy.web.config.WebTestConfig;
+import it.pagopa.selfcare.party.registry_proxy.web.model.mapper.OnboardingMapperImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -24,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(value = {SearchController.class}, excludeAutoConfiguration = SecurityAutoConfiguration.class)
-@ContextConfiguration(classes = {SearchController.class, WebTestConfig.class})
+@ContextConfiguration(classes = {SearchController.class, WebTestConfig.class, OnboardingMapperImpl.class})
 public class SearchControllerTest {
   @Autowired
   private MockMvc mockMvc;
@@ -67,4 +70,53 @@ public class SearchControllerTest {
       .andExpect(status().isInternalServerError())
       .andExpect(jsonPath("$", hasSize(0))); // Expecting an empty list as the body
   }
+
+  @Test
+  void searchOnboardingTest() throws Exception {
+    final String searchText = "Test";
+    final List<String> products = List.of("prod-io", "prod-pagopa");
+    final List<String> institutionTypes = List.of("PA", "GSP");
+    final List<String> statuses = List.of("ACTIVE", "PENDING");
+
+    final OnboardingIndexSearch response = new OnboardingIndexSearch();
+    response.setTotalPages(1L);
+    response.setPage(0L);
+    response.setPageSize(15L);
+    response.setTotalElements(1L);
+    final OnboardingIndex onboardingIndex = new OnboardingIndex();
+    onboardingIndex.setOnboardingId("123");
+    onboardingIndex.setDescription("Test Onboarding");
+    response.setOnboardings(List.of(onboardingIndex));
+
+    when(searchService.searchOnboarding(searchText, products, institutionTypes, statuses, 0L, 15L, "description asc"))
+            .thenReturn(response);
+
+    mockMvc.perform(get("/search/onboardings")
+                    .param("searchText", searchText)
+                    .param("products", String.join(",", products))
+                    .param("institutionTypes", String.join(",", institutionTypes))
+                    .param("statuses", String.join(",", statuses))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.totalPages", is(1)))
+            .andExpect(jsonPath("$.page", is(0)))
+            .andExpect(jsonPath("$.pageSize", is(15)))
+            .andExpect(jsonPath("$.totalElements", is(1)))
+            .andExpect(jsonPath("$.onboardings", hasSize(1)))
+            .andExpect(jsonPath("$.onboardings[0].onboardingId", is("123")))
+            .andExpect(jsonPath("$.onboardings[0].description", is("Test Onboarding")));
+  }
+
+  @Test
+  void searchOnboardingTest_internalServerError() throws Exception {
+    when(searchService.searchOnboarding(anyString(), any(), any(), any(), anyLong(), anyLong(), anyString()))
+            .thenThrow(new RuntimeException("Internal service error"));
+
+    mockMvc.perform(get("/search/onboardings")
+                    .param("searchText", "Test")
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isInternalServerError())
+            .andReturn().getResponse().getContentAsString();
+  }
+
 }
