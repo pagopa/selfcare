@@ -110,3 +110,13 @@ variable "sku" {
 variable "tags" {
   type = map(any)
 }
+
+variable "adgroup_admin_object_id" {
+  type        = string
+  description = "Object ID of the Azure AD admin group (e.g. selc-d-adgroup-admin)"
+}
+
+variable "adgroup_developers_object_id" {
+  type        = string
+  description = "Object ID of the Azure AD developers group (e.g. selc-d-adgroup-developers)"
+}

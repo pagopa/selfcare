@@ -223,9 +223,8 @@ module "monitor" {
   # Web test URLs
   dns_a_api_fqdn      = module.dns_public.dns_a_api_fqdn
   dns_a_api_pnpg_fqdn = module.dns_public.dns_a_api_pnpg_fqdn
-  #fixme: these should be outputs from the cdn module, but that would create a cycle since the cdn module needs the monitor for log analytics workspace
-  cdn_fqdn = "dev.selfcare.pagopa.it"
-  # module.cdn.fqdn
+
+  cdn_fqdn = "${local.dns_zone_prefix}.${local.external_domain}"
 
   # Selfcare status secrets (from key_vault secrets query)
   selfcare_status_dev_email = try(module.key_vault.secrets_selfcare_status_dev["alert-selfcare-status-dev-email"].value, "")
@@ -315,8 +314,8 @@ module "storage" {
   location  = local.location
   tags      = local.tags
 
-  adgroup_developers_object_id = module.key_vault.adgroup_developers_object_id
-  adgroup_admin_object_id      = module.key_vault.adgroup_admin_object_id
+  adgroup_developers_object_id = module.key_vault.adgroup_developers_id
+  adgroup_admin_object_id      = module.key_vault.adgroup_admin_id
 }
 
 ###############################################################################
@@ -353,7 +352,7 @@ module "vpn" {
   subscription_name = module.key_vault.subscription_name
   tenant_id         = module.key_vault.tenant_id
 
-
+  vpn_app_client_id = module.key_vault.vpn_app_client_id
 
   sec_workspace_id = local.env_short == "p" ? module.key_vault.secrets_sec_workspace_id : null
   sec_storage_id   = local.env_short == "p" ? module.key_vault.secrets_sec_storage_id : null
@@ -580,6 +579,8 @@ module "azure_devops_agent" {
   key_vault_id      = module.key_vault.key_vault_id
   tenant_id         = module.key_vault.tenant_id
 
+  iac_principal_object_id           = module.key_vault.iac_principal_object_id
+  app_projects_principal_object_id  = module.key_vault.app_projects_principal_object_id
   private_endpoint_network_policies = local.private_endpoint_network_policies
 }
 
@@ -618,13 +619,11 @@ module "container_app_environments" {
   project             = "${local.prefix}-${local.env_short}"
   location            = local.location
   resource_group_name = azurerm_resource_group.selc_cae_rg.name
-  # pnpg_resource_group_name = azurerm_resource_group.selc_container_app_rg.name
 
   subnet_id = module.networking.subnet.id
-  # pnpg_subnet_id = module.networking.subnet_pnpg.id
 
   cae_name = "${local.project}-cae-002"
-  # pnpg_cae_name = "${local.project}-pnpg-cae-cp"
+
   infrastructure_resource_group_name = "ME_selc-d-cae-002_selc-d-container-app-002-rg_westeurope"
   workload_profiles = [
     {
@@ -751,4 +750,7 @@ module "ai_search" {
   key_vault_resource_group_name = "selc-${local.env_short}-sec-rg"
   public_network_access_enabled = false
   srch_private_endpoint_enabled = true
+
+  adgroup_admin_object_id      = module.key_vault.adgroup_admin_id
+  adgroup_developers_object_id = module.key_vault.adgroup_developers_id
 }

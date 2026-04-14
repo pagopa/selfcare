@@ -52,36 +52,24 @@ module "azdoa_li_infra" {
   tags = var.tags
 }
 
-# azure devops policy
-data "azuread_service_principal" "iac_principal" {
-  count        = var.enable_iac_pipeline ? 1 : 0
-  display_name = format("pagopaspa-selfcare-iac-projects-%s", var.subscription_id)
-}
 
 resource "azurerm_key_vault_access_policy" "azdevops_iac_policy" {
   count        = var.enable_iac_pipeline ? 1 : 0
   key_vault_id = var.key_vault_id
   tenant_id    = var.tenant_id
-  object_id    = data.azuread_service_principal.iac_principal[0].object_id
+  object_id    = var.iac_principal_object_id
 
   secret_permissions      = ["Get", "List", "Set", ]
   certificate_permissions = ["SetIssuers", "DeleteIssuers", "Purge", "List", "Get"]
   storage_permissions     = []
 }
 
-# azure devops policy
-data "azuread_service_principal" "app_projects_principal" {
-  count = var.enable_app_projects_pipeline ? 1 : 0
-  ###???
-  # display_name = format("pagopaspa-selfcare-platform-app-projects-%s", var.subscription_id)
-  client_id = "857f30ee-6e15-4b50-a9f3-cfd2ab2d3a29"
-}
 
 resource "azurerm_key_vault_access_policy" "azdevops_app_projects_policy" {
   count        = var.enable_app_projects_pipeline ? 1 : 0
   key_vault_id = var.key_vault_id
   tenant_id    = var.tenant_id
-  object_id    = data.azuread_service_principal.app_projects_principal[0].object_id
+  object_id    = var.app_projects_principal_object_id
 
   secret_permissions      = ["Get", "List"]
   certificate_permissions = []
