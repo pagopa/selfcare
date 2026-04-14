@@ -580,7 +580,7 @@ module "azure_devops_agent" {
   tenant_id         = module.key_vault.tenant_id
 
   iac_principal_object_id           = module.key_vault.iac_principal_object_id
-  app_projects_principal_object_id  = module.key_vault.app_projects_principal_object
+  app_projects_principal_object_id  = module.key_vault.app_projects_principal_object_id
   private_endpoint_network_policies = local.private_endpoint_network_policies
 }
 
