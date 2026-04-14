@@ -5,6 +5,7 @@ import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
+import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -41,7 +42,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public void approveOnboarding(String onboardingId) {
         log.trace("approveOnboarding start");
-        log.debug("approveOnboarding id = {}", onboardingId);
+        log.debug("approveOnboarding id = {}", LogUtils.sanitize(onboardingId));
         Objects.requireNonNull(onboardingId, ONBOARDING_ID_REQUIRED_MESSAGE);
         onboardingMsConnector.approveOnboarding(onboardingId);
         log.debug("approveOnboarding result = success");
@@ -51,7 +52,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public void rejectOnboarding(String onboardingId, String reason) {
         log.trace("rejectOnboarding start");
-        log.debug("rejectOnboarding id = {}", onboardingId);
+        log.debug("rejectOnboarding id = {}", LogUtils.sanitize(onboardingId));
         Objects.requireNonNull(onboardingId, ONBOARDING_ID_REQUIRED_MESSAGE);
         onboardingMsConnector.rejectOnboarding(onboardingId, reason);
         log.debug("rejectOnboarding result = success");
@@ -72,7 +73,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public void completeTokenV2(String onboardingId, UploadedFile contract) {
         log.trace("completeTokenAsync start");
-        log.debug("completeTokenAsync id = {}", onboardingId);
+        log.debug("completeTokenAsync id = {}", LogUtils.sanitize(onboardingId));
         Objects.requireNonNull(onboardingId, TOKEN_ID_IS_REQUIRED);
         onboardingMsConnector.onboardingTokenComplete(onboardingId, contract);
         log.debug("completeTokenAsync result = success");
@@ -82,7 +83,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public void completeOnboardingUsers(String onboardingId, UploadedFile contract) {
         log.trace("completeOnboardingUsersAsync start");
-        log.debug("completeOnboardingUsersAsync id = {}", onboardingId);
+        log.debug("completeOnboardingUsersAsync id = {}", LogUtils.sanitize(onboardingId));
         Objects.requireNonNull(onboardingId, ONBOARDING_ID_REQUIRED_MESSAGE);
         onboardingMsConnector.onboardingUsersComplete(onboardingId, contract);
         log.debug("completeOnboardingUsersAsync result = success");
@@ -92,7 +93,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public BinaryData getContract(String onboardingId) {
         log.trace("getContract start");
-        log.debug("getContract id = {}", onboardingId);
+        log.debug("getContract id = {}", LogUtils.sanitize(onboardingId));
         Objects.requireNonNull(onboardingId, TOKEN_ID_IS_REQUIRED);
         BinaryData resource = documentMsClient.getContract(onboardingId);
         log.debug("getContract result = success");

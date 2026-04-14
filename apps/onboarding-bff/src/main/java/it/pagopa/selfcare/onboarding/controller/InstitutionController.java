@@ -70,7 +70,7 @@ public class InstitutionController {
             description = "${swagger.onboarding.institutions.api.onboarding.subunit}", operationId = "onboardingUsingPOST")
     public Response onboarding(@Valid OnboardingProductDto request) {
         log.trace(ONBOARDING_START);
-        log.debug("onboarding request = {}", request);
+        log.debug("onboarding request = {}", LogUtils.sanitize(request));
         institutionService.onboardingProduct(onboardingMapper.toEntity(request));
         log.trace(ONBOARDING_END);
         return Response.status(Response.Status.CREATED).build();
@@ -88,7 +88,7 @@ public class InstitutionController {
             description = "${swagger.onboarding.institutions.api.onboarding.subunit}", operationId = "onboardingCompanyUsingPOST")
     public Response onboarding(@Valid CompanyOnboardingDto request) {
         log.trace(ONBOARDING_START);
-        log.debug("onboarding request = {}", request);
+        log.debug("onboarding request = {}", LogUtils.sanitize(request));
         institutionService.onboardingProduct(onboardingMapper.toEntity(request));
         log.trace(ONBOARDING_END);
         return Response.status(Response.Status.CREATED).build();
@@ -121,7 +121,7 @@ public class InstitutionController {
                                                                              @PathParam("externalInstitutionId")
                                                                              String externalInstitutionId) {
         log.trace("getInstitutionGeographicTaxonomy start");
-        log.debug("getInstitutionGeographicTaxonomy institutionId = {}", externalInstitutionId);
+        log.debug("getInstitutionGeographicTaxonomy institutionId = {}", LogUtils.sanitize(externalInstitutionId));
         List<GeographicTaxonomyResource> geographicTaxonomies = institutionService.getGeographicTaxonomyList(externalInstitutionId)
                 .stream()
                 .map(institutionMapper::toResource)
@@ -142,7 +142,8 @@ public class InstitutionController {
                                                                                            @QueryParam("subunitCode")
                                                                                            String subunitCode) {
         log.trace("getGeographicTaxonomiesByTaxCodeAndSubunitCode start");
-        log.debug("getGeographicTaxonomiesByTaxCodeAndSubunitCode taxCode = {}, subunitCode = {}", taxCode, subunitCode);
+        log.debug("getGeographicTaxonomiesByTaxCodeAndSubunitCode taxCode = {}, subunitCode = {}",
+                LogUtils.sanitize(taxCode), LogUtils.sanitize(subunitCode));
         if (StringUtils.isBlank(taxCode) || (Objects.nonNull(subunitCode) && StringUtils.isBlank(subunitCode)))
             throw new InvalidRequestException("taxCode and/or subunitCode must not be blank! ");
 
@@ -192,7 +193,8 @@ public class InstitutionController {
                                  @PathParam("productId")
                                  String productId) {
         log.trace("verifyOnboarding start");
-        log.debug("verifyOnboarding externalInstitutionId = {}, productId = {}", externalInstitutionId, productId);
+        log.debug("verifyOnboarding externalInstitutionId = {}, productId = {}",
+                LogUtils.sanitize(externalInstitutionId), LogUtils.sanitize(productId));
         institutionService.verifyOnboarding(externalInstitutionId, productId);
         log.trace("verifyOnboarding end");
     }
@@ -275,7 +277,8 @@ public class InstitutionController {
             description = "${swagger.onboarding.institutions.api.getInstitutionLegalAddress}", operationId = "postVerificationLegalAddressUsingPOST")
     public InstitutionLegalAddressResource postVerificationLegalAddress(@Valid VerificationLegalAddressRequest verificationLegalAddressRequest) {
         log.trace("getInstitutionLegalAddress start");
-        log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionLegalAddress institutionId = {}", verificationLegalAddressRequest.getTaxCode());
+        log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionLegalAddress institutionId = {}",
+                LogUtils.sanitize(verificationLegalAddressRequest.getTaxCode()));
         InstitutionLegalAddressData institutionLegalAddressData = institutionService.getInstitutionLegalAddress(verificationLegalAddressRequest.getTaxCode());
         InstitutionLegalAddressResource result = onboardingMapper.toResource(institutionLegalAddressData);
         log.debug("getInstitutionLegalAddress result = {}", result);
@@ -299,7 +302,8 @@ public class InstitutionController {
                                                                           @PathParam("productId")
                                                                           String productId) {
         log.trace("getInstitutionOnBoardingInfo start");
-        log.debug("getInstitutionOnBoardingInfo institutionId = {}, productId = {}", externalInstitutionId, productId);
+        log.debug("getInstitutionOnBoardingInfo institutionId = {}, productId = {}",
+                LogUtils.sanitize(externalInstitutionId), LogUtils.sanitize(productId));
         InstitutionOnboardingData institutionOnboardingData = institutionService.getInstitutionOnboardingData(externalInstitutionId, productId);
         InstitutionOnboardingInfoResource result = institutionMapper.toResource(institutionOnboardingData);
         log.debug("getInstitutionOnBoardingInfo result = {}", result);

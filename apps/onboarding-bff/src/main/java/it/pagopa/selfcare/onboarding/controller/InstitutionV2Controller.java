@@ -73,7 +73,7 @@ public class InstitutionV2Controller {
             description = "${swagger.onboarding.institutions.api.onboarding.subunit}", operationId = "institutionOnboarding")
     public Response onboarding(@Valid OnboardingProductDto request) {
         log.trace(ONBOARDING_START);
-        log.debug("onboarding request = {}", request);
+        log.debug("onboarding request = {}", LogUtils.sanitize(request));
         institutionService.validateOnboardingByProductOrInstitutionTaxCode(request.getTaxCode(), request.getProductId());
         if (Boolean.TRUE.equals(request.getIsAggregator())) {
             institutionService.onboardingPaAggregator(onboardingMapper.toEntity(request));
@@ -146,7 +146,7 @@ public class InstitutionV2Controller {
                                                         @RestForm("institutionType") String institutionType,
                                                         @RestForm("productId") String productId){
         log.trace("Verify Aggregates Csv start");
-        log.debug("Verify Aggregates Csv start for productId {}", productId);
+        log.debug("Verify Aggregates Csv start for productId {}", LogUtils.sanitize(productId));
 
         UploadedFile uploadedFile = toUploadedFile(file);
         FileValidationUtils.validateAggregatesFile(uploadedFile);
@@ -197,7 +197,8 @@ public class InstitutionV2Controller {
     public RecipientCodeStatus checkRecipientCode(@QueryParam("originId") String originId,
                                                   @QueryParam("recipientCode") String recipientCode) {
         log.trace("Check recipientCode start");
-        log.debug("Check originId start for institution with originId {} and recipientCode {}", originId, recipientCode);
+        log.debug("Check originId start for institution with originId {} and recipientCode {}",
+                LogUtils.sanitize(originId), LogUtils.sanitize(recipientCode));
         RecipientCodeStatus response = onboardingMapper.toRecipientCodeStatus(institutionService.checkRecipientCode(originId, recipientCode));
         log.trace("Check recipientCode end");
         return response;

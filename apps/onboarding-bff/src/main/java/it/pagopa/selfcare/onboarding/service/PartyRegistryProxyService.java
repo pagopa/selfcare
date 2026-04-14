@@ -49,7 +49,7 @@ public class PartyRegistryProxyService {
     @Retry(maxRetries = 2, delay = 5000)
     public InstitutionLegalAddressData getInstitutionLegalAddress(String externalInstitutionId) {
         log.trace("getInstitutionLegalAddress start");
-        log.debug("getInstitutionLegalAddress externalInstitutionId = {}", externalInstitutionId);
+        log.debug("getInstitutionLegalAddress externalInstitutionId = {}", LogUtils.sanitize(externalInstitutionId));
         requireHasText(externalInstitutionId, REQUIRED_EXTERNAL_ID_MESSAGE);
         return restClient.getInstitutionLegalAddress(externalInstitutionId);
     }

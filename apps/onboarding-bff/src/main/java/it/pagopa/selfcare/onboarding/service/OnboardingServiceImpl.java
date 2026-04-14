@@ -8,6 +8,7 @@ import it.pagopa.selfcare.onboarding.common.InstitutionPaSubunitType;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
+import it.pagopa.selfcare.onboarding.util.LogUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.faulttolerance.Retry;
@@ -67,7 +68,7 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     @Override
     public VerifyAggregateResponse aggregatesVerification(UploadedFile file, String productId) {
-        log.info("validateAggregatesCsv for product: {}", productId);
+        log.info("validateAggregatesCsv for product: {}", LogUtils.sanitize(productId));
         switch (productId) {
             case PROD_IO -> {
                 AggregatesControllerApi.VerifyAppIoAggregatesCsvMultipartForm form =
@@ -88,7 +89,7 @@ public class OnboardingServiceImpl implements OnboardingService {
                 return aggregatesApi.verifySendAggregatesCsv(form).await().indefinitely();
             }
             default -> {
-                log.error("Unsupported productId: {}", productId);
+                log.error("Unsupported productId: {}", LogUtils.sanitize(productId));
                 throw new InvalidRequestException("Unsupported productId: " + productId);
             }
         }

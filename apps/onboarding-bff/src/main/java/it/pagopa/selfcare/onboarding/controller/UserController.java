@@ -60,7 +60,7 @@ public class UserController {
             description = "${swagger.onboarding.user.api.validate}", operationId = "validateUsingPOST")
     public Response validate(@Valid UserDataValidationDto request) {
         log.trace("validate start");
-        log.debug(LogUtils.CONFIDENTIAL_MARKER, "validate request = {}", request);
+        log.debug(LogUtils.CONFIDENTIAL_MARKER, "validate request = {}", LogUtils.sanitize(request));
         userService.validate(userResourceMapper.toUser(request));
         log.trace("validate end");
         return Response.noContent().build();
@@ -78,7 +78,7 @@ public class UserController {
             description = "${swagger.onboarding.users.api.onboarding}", operationId = "onboardingUsers")
     public Response onboarding(@Valid OnboardingUserDto request) {
         log.trace("onboarding start");
-        log.debug("onboarding request = {}", request);
+        log.debug("onboarding request = {}", LogUtils.sanitize(request));
         userService.onboardingUsers(onboardingResourceMapper.toEntity(request));
         log.trace("onboarding end");
         return Response.status(Response.Status.CREATED).build();

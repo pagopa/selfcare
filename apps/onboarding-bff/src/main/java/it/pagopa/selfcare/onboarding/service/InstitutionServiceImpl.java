@@ -379,7 +379,7 @@ class InstitutionServiceImpl implements InstitutionService {
     @Override
     public Institution getInstitutionByExternalId(String externalInstitutionId) {
         log.trace("getInstitutionData start");
-        log.debug("getInstitutionData externalInstitutionId = {}", externalInstitutionId);
+        log.debug("getInstitutionData externalInstitutionId = {}", LogUtils.sanitize(externalInstitutionId));
         requireHasText(externalInstitutionId, REQUIRED_INSTITUTION_ID_MESSAGE);
         Institution institution = partyConnector.getInstitutionByExternalId(externalInstitutionId);
         log.debug("getInstitutionData result = {}", institution);
@@ -389,7 +389,7 @@ class InstitutionServiceImpl implements InstitutionService {
     @Override
     public List<it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomy> getGeographicTaxonomyList(String externalInstitutionId) {
         log.trace("geographicTaxonomyList start");
-        log.debug("geographicTaxonomyList externalInstitutionId = {}", externalInstitutionId);
+        log.debug("geographicTaxonomyList externalInstitutionId = {}", LogUtils.sanitize(externalInstitutionId));
         requireHasText(externalInstitutionId, REQUIRED_INSTITUTION_ID_MESSAGE);
         Institution institution = partyConnector.getInstitutionByExternalId(externalInstitutionId);
         List<it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomy> result = Optional.ofNullable(institution.getGeographicTaxonomies())
@@ -409,7 +409,7 @@ class InstitutionServiceImpl implements InstitutionService {
     @Override
     public void verifyOnboarding(String externalInstitutionId, String productId) {
         log.trace("verifyOnboarding start");
-        log.debug("verifyOnboarding externalInstitutionId = {}", externalInstitutionId);
+        log.debug("verifyOnboarding externalInstitutionId = {}", LogUtils.sanitize(externalInstitutionId));
         validateOnboardingByProductOrInstitutionTaxCode(externalInstitutionId, productId);
         partyConnector.verifyOnboarding(externalInstitutionId, productId);
         log.trace("verifyOnboarding end");
@@ -418,7 +418,7 @@ class InstitutionServiceImpl implements InstitutionService {
     public void verifyOnboarding(String productId, String taxCode, String origin, String originId, String subunitCode, String institutionType) {
         log.trace("verifyOnboardingSubunit start");
         validateParameter(taxCode, origin, originId, subunitCode);
-        log.debug("verifyOnboardingSubunit taxCode = {}", taxCode);
+        log.debug("verifyOnboardingSubunit taxCode = {}", LogUtils.sanitize(taxCode));
         validateOnboardingByProductOrInstitutionTaxCode(taxCode, productId);
         onboardingMsConnector.verifyOnboarding(productId, taxCode, origin, originId, subunitCode, institutionType);
         log.trace("verifyOnboardingSubunit end");
@@ -432,13 +432,15 @@ class InstitutionServiceImpl implements InstitutionService {
     @Override
     public void checkOrganization(String productId, String fiscalCode, String vatNumber) {
         log.trace("checkOrganization start");
-        log.debug("checkOrganization productId = {}, fiscalCode = {}, vatNumber = {}", productId, fiscalCode, vatNumber );
+        log.debug("checkOrganization productId = {}, fiscalCode = {}, vatNumber = {}",
+                LogUtils.sanitize(productId), LogUtils.sanitize(fiscalCode), LogUtils.sanitize(vatNumber));
         organizationApi.checkOrganization(fiscalCode, vatNumber).await().indefinitely();
         log.trace("checkOrganization end");
     }
     public void validateOnboardingByProductOrInstitutionTaxCode(String externalInstitutionId, String productId) {
         log.trace("validate start");
-        log.debug("validate productId = {}, externalInstitutionId = {}", productId, externalInstitutionId);
+        log.debug("validate productId = {}, externalInstitutionId = {}",
+                LogUtils.sanitize(productId), LogUtils.sanitize(externalInstitutionId));
         boolean productEnabled = productService.isProductEnabled(productId);
         boolean institutionAllowed = productService.verifyAllowedByInstitutionTaxCode(productId, externalInstitutionId);
         log.debug("validate result = {}", productEnabled || institutionAllowed);
@@ -506,7 +508,7 @@ class InstitutionServiceImpl implements InstitutionService {
     @Override
     public InstitutionLegalAddressData getInstitutionLegalAddress(String externalInstitutionId) {
         log.trace("getInstitutionLegalAddress start");
-        log.debug("getInstitutionLegalAddress externalInstitutionId = {}", externalInstitutionId);
+        log.debug("getInstitutionLegalAddress externalInstitutionId = {}", LogUtils.sanitize(externalInstitutionId));
         InstitutionLegalAddressData result = partyRegistryProxyConnector.getInstitutionLegalAddress(externalInstitutionId);
         log.debug("getInstitutionLegalAddress result = {}", result);
         log.trace("getInstitutionLegalAddress end");
@@ -521,7 +523,8 @@ class InstitutionServiceImpl implements InstitutionService {
     @Override
     public org.openapi.quarkus.onboarding_json.model.RecipientCodeStatus  checkRecipientCode(String originId, String recipientCode) {
         log.trace("checkRecipientCode start");
-        log.debug("checkRecipientCode for institution with originId {} and recipientCode {}", originId, recipientCode);
+        log.debug("checkRecipientCode for institution with originId {} and recipientCode {}",
+                LogUtils.sanitize(originId), LogUtils.sanitize(recipientCode));
         return onboardingMsConnector.checkRecipientCode(originId, recipientCode);
     }
     @Override
@@ -543,7 +546,8 @@ class InstitutionServiceImpl implements InstitutionService {
     @Override
     public InstitutionOnboardingData getInstitutionOnboardingData(String externalInstitutionId, String productId) {
         log.trace("getInstitutionOnboardingData start");
-        log.debug("getInstitutionOnboardingData externalInstitutionId = {}, productId = {}", externalInstitutionId, productId);
+        log.debug("getInstitutionOnboardingData externalInstitutionId = {}, productId = {}",
+                LogUtils.sanitize(externalInstitutionId), LogUtils.sanitize(productId));
         requireHasText(externalInstitutionId, REQUIRED_INSTITUTION_ID_MESSAGE);
         requireHasText(productId, A_PRODUCT_ID_IS_REQUIRED);
         InstitutionOnboardingData result = new InstitutionOnboardingData();

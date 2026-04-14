@@ -138,7 +138,7 @@ public class TokenV2Controller {
             summary = "${swagger.tokens.approveOnboardingRequest}", operationId = "approveOnboardingUsingPOST")
     public void approveOnboarding(@Parameter(description = "${swagger.tokens.onboardingId}")
                                   @PathParam("onboardingId") String onboardingId) {
-        log.debug("approve onboarding identified with {}", onboardingId);
+        log.debug("approve onboarding identified with {}", LogUtils.sanitize(onboardingId));
         tokenService.approveOnboarding(onboardingId);
     }
 
@@ -149,7 +149,7 @@ public class TokenV2Controller {
     public void rejectOnboarding(@Parameter(description = "${swagger.tokens.onboardingId}")
                                  @PathParam("onboardingId") String onboardingId,
                                  ReasonForRejectDto reasonForRejectDto) {
-        log.debug("reject onboarding identified with {}", onboardingId);
+        log.debug("reject onboarding identified with {}", LogUtils.sanitize(onboardingId));
         tokenService.rejectOnboarding(onboardingId, reasonForRejectDto.getReason());
     }
 
@@ -175,7 +175,7 @@ public class TokenV2Controller {
                                 @PathParam("onboardingId")
                                 String onboardingId) {
         log.trace("getContract start");
-        log.debug("getContract onboardingId = {}", onboardingId);
+        log.debug("getContract onboardingId = {}", LogUtils.sanitize(onboardingId));
         BinaryData contract = tokenService.getContract(onboardingId);
         return binaryResponse(contract);
     }
