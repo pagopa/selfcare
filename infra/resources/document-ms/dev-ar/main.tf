@@ -91,6 +91,7 @@ locals {
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
   }
 }
+
 module "container_app_document_ms" {
   source = "../../_modules/container_app_microservice"
 
