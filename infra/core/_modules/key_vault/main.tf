@@ -154,3 +154,13 @@ module "secrets_selfcare_status_uat" {
     "alert-selfcare-status-uat-slack",
   ]
 }
+
+data "azurerm_key_vault_secret" "iac_principal" {
+  name         = "pagopaspa-selfcare-iac-projects"
+  key_vault_id = module.key_vault.id
+}
+
+data "azurerm_key_vault_secret" "app_projects_principal" {
+  name         = "pagopaspa-selfcare-platform-app-projects"
+  key_vault_id = module.key_vault.id
+}

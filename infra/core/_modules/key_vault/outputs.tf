@@ -56,3 +56,11 @@ output "adgroup_externals_id" {
 output "adgroup_security_id" {
   value = data.azurerm_key_vault_secret.adgroup_security.value
 }
+
+output "iac_principal_object_id" {
+  value = data.azurerm_key_vault_secret.iac_principal.value
+}
+
+output "app_projects_principal_object_id" {
+  value = data.azurerm_key_vault_secret.app_projects_principal.value
+}

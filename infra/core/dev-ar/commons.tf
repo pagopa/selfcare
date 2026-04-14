@@ -223,9 +223,8 @@ module "monitor" {
   # Web test URLs
   dns_a_api_fqdn      = module.dns_public.dns_a_api_fqdn
   dns_a_api_pnpg_fqdn = module.dns_public.dns_a_api_pnpg_fqdn
-  #fixme: these should be outputs from the cdn module, but that would create a cycle since the cdn module needs the monitor for log analytics workspace
-  cdn_fqdn = "dev.selfcare.pagopa.it"
-  # module.cdn.fqdn
+
+  cdn_fqdn = "${local.dns_zone_prefix}.${local.external_domain}"
 
   # Selfcare status secrets (from key_vault secrets query)
   selfcare_status_dev_email = try(module.key_vault.secrets_selfcare_status_dev["alert-selfcare-status-dev-email"].value, "")
@@ -580,6 +579,8 @@ module "azure_devops_agent" {
   key_vault_id      = module.key_vault.key_vault_id
   tenant_id         = module.key_vault.tenant_id
 
+  iac_principal_object_id           = module.key_vault.iac_principal_object_id
+  app_projects_principal_object_id  = module.key_vault.app_projects_principal_object
   private_endpoint_network_policies = local.private_endpoint_network_policies
 }
 

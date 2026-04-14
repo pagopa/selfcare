@@ -86,3 +86,13 @@ variable "tenant_id" {
   type        = string
   description = "Azure AD tenant ID for Front Door managed identity access to Key Vault"
 }
+
+variable "iac_principal_object_id" {
+  type        = string
+  description = "Service principal for IAC pipelines"
+}
+
+variable "app_projects_principal_object_id" {
+  type        = string
+  description = "Service principal for App Projects pipelines"
+}
