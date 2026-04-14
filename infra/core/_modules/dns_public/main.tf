@@ -245,10 +245,10 @@ resource "azurerm_dns_ns_record" "dev_areariservata" {
   zone_name           = azurerm_dns_zone.areariservata_public[0].name
   resource_group_name = var.rg_vnet_name
   records = [
-    "ns1-06.azure-dns.com.",
-    "ns2-06.azure-dns.net.",
-    "ns3-06.azure-dns.org.",
-    "ns4-06.azure-dns.info.",
+    "ns1-33.azure-dns.com.",
+    "ns2-33.azure-dns.net.",
+    "ns3-33.azure-dns.org.",
+    "ns4-33.azure-dns.info.",
   ]
   ttl  = var.dns_default_ttl_sec
   tags = var.tags
