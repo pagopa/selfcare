@@ -23,10 +23,30 @@ module "key_vault" {
   soft_delete_retention_days = var.soft_delete_retention_days
 }
 
+data "azurerm_key_vault_secret" "adgroup_admin" {
+  name         = "${var.prefix}-${var.env_short}-adgroup-admin"
+  key_vault_id = module.key_vault.id
+}
+
+data "azurerm_key_vault_secret" "adgroup_developers" {
+  name         = "${var.prefix}-${var.env_short}-adgroup-developers"
+  key_vault_id = module.key_vault.id
+}
+
+data "azurerm_key_vault_secret" "adgroup_externals" {
+  name         = "${var.prefix}-${var.env_short}-adgroup-externals"
+  key_vault_id = module.key_vault.id
+}
+
+data "azurerm_key_vault_secret" "adgroup_security" {
+  name         = "${var.prefix}-${var.env_short}-adgroup-security"
+  key_vault_id = module.key_vault.id
+}
+
 resource "azurerm_key_vault_access_policy" "adgroup_admin_policy" {
   key_vault_id = module.key_vault.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = var.adgroup_admin_object_id
+  object_id    = data.azurerm_key_vault_secret.adgroup_admin.value
 
   key_permissions         = ["Get", "List", "Update", "Create", "Import", "Delete"]
   secret_permissions      = ["Get", "List", "Set", "Delete", "Recover", "Backup", "Restore"]
@@ -37,7 +57,7 @@ resource "azurerm_key_vault_access_policy" "adgroup_admin_policy" {
 resource "azurerm_key_vault_access_policy" "adgroup_developers_policy" {
   key_vault_id = module.key_vault.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = var.adgroup_developers_object_id
+  object_id    = data.azurerm_key_vault_secret.adgroup_developers.value
 
   key_permissions         = var.env_short == "d" ? ["Get", "List", "Update", "Create", "Import", "Delete"] : ["Get", "List", "Update", "Create", "Import"]
   secret_permissions      = var.env_short == "d" ? ["Get", "List", "Set", "Delete", "Restore", "Recover"] : ["Get", "List", "Set"]
@@ -49,7 +69,7 @@ resource "azurerm_key_vault_access_policy" "adgroup_externals_policy" {
   count        = var.env_short == "d" ? 1 : 0
   key_vault_id = module.key_vault.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = var.adgroup_externals_object_id
+  object_id    = data.azurerm_key_vault_secret.adgroup_externals.value
 
   key_permissions         = ["Get", "List", "Update", "Create", "Import", "Delete"]
   secret_permissions      = ["Get", "List", "Set", "Delete"]
@@ -61,7 +81,7 @@ resource "azurerm_key_vault_access_policy" "adgroup_security_policy" {
   count        = var.env_short == "d" ? 1 : 0
   key_vault_id = module.key_vault.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = var.adgroup_security_object_id
+  object_id    = data.azurerm_key_vault_secret.adgroup_security.value
 
   key_permissions         = ["Get", "List", "Update", "Create", "Import", "Delete"]
   secret_permissions      = ["Get", "List", "Set", "Delete"]

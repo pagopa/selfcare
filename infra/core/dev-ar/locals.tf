@@ -113,11 +113,6 @@ locals {
     "node_type" = "user"
   }
 
-  adgroup_admin_object_id      = "bd896cc7-591c-424d-870f-1351c79be348"
-  adgroup_developers_object_id = "6df8e01a-4d7b-4e53-a0a7-1b0a2cf23a31"
-  adgroup_externals_object_id  = "5a906c66-37ab-477a-88b4-d828e7c8f6a8"
-  adgroup_security_object_id   = "6fbc7253-e93e-47b8-a842-811e27e4751e"
-
   #
   # Docker
   #

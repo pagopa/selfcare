@@ -40,3 +40,19 @@ output "secrets_selfcare_status_uat" {
   value     = var.env_short == "u" ? module.secrets_selfcare_status_uat[0].values : {}
   sensitive = true
 }
+
+output "adgroup_admin_id" {
+  value = data.azurerm_key_vault_secret.adgroup_admin.value
+}
+
+output "adgroup_developers_id" {
+  value = data.azurerm_key_vault_secret.adgroup_developers.value
+}
+
+output "adgroup_externals_id" {
+  value = data.azurerm_key_vault_secret.adgroup_externals.value
+}
+
+output "adgroup_security_id" {
+  value = data.azurerm_key_vault_secret.adgroup_security.value
+}
