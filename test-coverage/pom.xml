@@ -74,6 +74,12 @@
             <dependencies>
                 <dependency>
                     <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>apps</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
                     <artifactId>libs</artifactId>
                     <version>0.0.1</version>
                     <type>pom</type>
