@@ -1,4 +1,6 @@
 package it.pagopa.selfcare.onboarding.controller;
+
+import io.quarkus.security.Authenticated;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @ApplicationScoped
+@Authenticated
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "product")

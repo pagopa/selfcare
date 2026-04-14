@@ -1,4 +1,6 @@
 package it.pagopa.selfcare.onboarding.controller;
+
+import io.quarkus.security.Authenticated;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,6 +20,7 @@ import org.owasp.encoder.Encode;
 
 @Slf4j
 @ApplicationScoped
+@Authenticated
 @Path("/v2/product")
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "product-ms")

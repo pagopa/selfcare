@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.controller;
 import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_FD;
 import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_FD_GARANTITO;
 
+import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -39,6 +40,7 @@ import org.owasp.encoder.Encode;
 
 @Slf4j
 @ApplicationScoped
+@Authenticated
 @Path("/v1/institutions")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.controller;
 
+import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -32,6 +33,7 @@ import org.owasp.encoder.Encode;
 
 @Slf4j
 @ApplicationScoped
+@Authenticated
 @Path("/v1/users")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
