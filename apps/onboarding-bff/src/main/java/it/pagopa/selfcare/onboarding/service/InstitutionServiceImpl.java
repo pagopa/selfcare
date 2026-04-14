@@ -517,7 +517,7 @@ class InstitutionServiceImpl implements InstitutionService {
     @Override
     public org.openapi.quarkus.onboarding_json.model.VerifyAggregateResponse validateAggregatesCsv(UploadedFile file, String productId) {
         log.trace("validateAggregatesCsv start");
-        log.debug("validateAggregatesCsv productId = {}", productId);
+        log.debug("validateAggregatesCsv productId = {}", Encode.forJava(productId));
         return onboardingMsConnector.aggregatesVerification(file, productId);
     }
     @Override

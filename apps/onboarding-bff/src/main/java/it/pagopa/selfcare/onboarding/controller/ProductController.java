@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.onboarding.controller.response.ProductResource;
 import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
@@ -22,6 +21,7 @@ import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.owasp.encoder.Encode;
 
 @Slf4j
 @ApplicationScoped
@@ -46,7 +46,9 @@ public class ProductController {
                                       @QueryParam("institutionType")
                                       Optional<InstitutionType> institutionType) {
         log.trace("getProduct start");
-        log.debug("getProduct id = {}, institutionType = {}", LogUtils.sanitize(id), institutionType);
+        log.debug("getProduct id = {}, institutionType = {}",
+                Encode.forJava(id),
+                Encode.forJava(institutionType.map(Enum::name).orElse(null)));
         Product product = productService.getProduct(id, institutionType.orElse(null));
         ProductResource resource = productMapper.toResource(product);
         log.debug("getProduct result = {}", resource);
