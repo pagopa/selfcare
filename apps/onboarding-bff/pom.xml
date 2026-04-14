@@ -34,6 +34,7 @@
         <mapstruct.version>1.6.3</mapstruct.version>
         <mapstruct.lombok.version>0.2.0</mapstruct.lombok.version>
         <security-sdk.version>0.2.3</security-sdk.version>
+        <surefire-plugin.version>3.5.4</surefire-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -317,6 +318,22 @@
                             <version>${mapstruct.lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${surefire-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <excludes>
+                        <exclude>**/CucumberSuiteTest.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
             <plugin>

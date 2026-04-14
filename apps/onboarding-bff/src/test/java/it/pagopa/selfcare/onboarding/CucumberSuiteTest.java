@@ -22,10 +22,10 @@ import java.time.Duration;
       "html:target/cucumber-report/cucumber.html",
       "json:target/cucumber-report/cucumber.json"
     })
-public class CucumberSuite extends CucumberQuarkusTest {
+public class CucumberSuiteTest extends CucumberQuarkusTest {
 
     public static void main(String[] args) {
-        ConsoleLauncher.main(new String[] {"execute", "-c", CucumberSuite.class.getName()});
+        ConsoleLauncher.main(new String[] {"execute", "-c", CucumberSuiteTest.class.getName()});
     }
 
   @BeforeAll
