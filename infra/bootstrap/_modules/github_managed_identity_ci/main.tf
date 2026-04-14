@@ -34,7 +34,7 @@ module "identity_ci_ms" {
       {
         "selc-${var.env_short}-checkout-fe-rg"      = ["Storage Blob Data Contributor", "Storage Account Key Operator Service Role", "CDN Endpoint Contributor"]
         "selc-${var.env_short}-weu-ar-srch-rg"      = ["Search Service Contributor"]
-        "selc-${var.env_short}-cosmosdb-mongodb-rg" = ["Cosmos DB Account Reader Role"]
+        "selc-${var.env_short}-cosmosdb-mongodb-rg" = ["DocumentDB Account Contributor", "Cosmos DB Account Reader Role"]
     })
   }
 
