@@ -32,8 +32,9 @@ module "identity_ci_ms" {
     subscription_roles = concat(var.environment_ci_roles_ms.subscription, ["${var.app} ${var.env} ContainerApp Jobs Reader", "${var.app} ${var.env} APIM Integration Reader"])
     resource_groups = merge(var.environment_ci_roles_ms.resource_groups,
       {
-        "selc-${var.env_short}-checkout-fe-rg" = ["Storage Blob Data Contributor", "Storage Account Key Operator Service Role", "CDN Endpoint Contributor"]
-        "selc-${var.env_short}-weu-ar-srch-rg" = ["Search Service Contributor"]
+        "selc-${var.env_short}-checkout-fe-rg"      = ["Storage Blob Data Contributor", "Storage Account Key Operator Service Role", "CDN Endpoint Contributor"]
+        "selc-${var.env_short}-weu-ar-srch-rg"      = ["Search Service Contributor"]
+        "selc-${var.env_short}-cosmosdb-mongodb-rg" = ["Cosmos DB Account Reader Role"]
     })
   }
 

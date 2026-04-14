@@ -89,17 +89,17 @@ resource "azurerm_key_vault_access_policy" "adgroup_security_policy" {
   certificate_permissions = ["Get", "List", "Update", "Create", "Import", "Delete", "Restore", "Purge", "Recover"]
 }
 
-# Azure DevOps SP
-data "azuread_service_principal" "azdo_sp_tls_cert" {
+data "azurerm_key_vault_secret" "azdo_sp_tls_cert" {
   count        = var.azdo_sp_tls_cert_enabled ? 1 : 0
-  display_name = "azdo-sp-${var.project}-tls-cert"
+  name         = "azdo-sp-tls-cert"
+  key_vault_id = module.key_vault.id
 }
 
 resource "azurerm_key_vault_access_policy" "azdo_sp_tls_cert" {
   count        = var.azdo_sp_tls_cert_enabled ? 1 : 0
   key_vault_id = module.key_vault.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = data.azuread_service_principal.azdo_sp_tls_cert[0].object_id
+  object_id    = data.azurerm_key_vault_secret.azdo_sp_tls_cert[0].value
 
   certificate_permissions = ["Get", "List", "Import"]
 }
@@ -114,14 +114,15 @@ resource "azurerm_key_vault_access_policy" "azure_cdn_frontdoor_policy" {
 }
 
 # azure devops policy
-data "azuread_service_principal" "iac_principal" {
-  display_name = format("pagopaspa-selfcare-iac-projects-%s", data.azurerm_subscription.current.subscription_id)
+data "azurerm_key_vault_secret" "iac_principal" {
+  name         = "pagopaspa-selfcare-iac-projects"
+  key_vault_id = module.key_vault.id
 }
 
 resource "azurerm_key_vault_access_policy" "azdevops_iac_policy" {
   key_vault_id = module.key_vault.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = data.azuread_service_principal.iac_principal.object_id
+  object_id    = data.azurerm_key_vault_secret.iac_principal.value
 
   secret_permissions      = ["Get", "List", "Set", ]
   certificate_permissions = ["SetIssuers", "DeleteIssuers", "Purge", "List", "Get"]
@@ -155,12 +156,12 @@ module "secrets_selfcare_status_uat" {
   ]
 }
 
-data "azurerm_key_vault_secret" "iac_principal" {
-  name         = "pagopaspa-selfcare-iac-projects"
+data "azurerm_key_vault_secret" "app_projects_principal" {
+  name         = "pagopaspa-selfcare-platform-app-projects"
   key_vault_id = module.key_vault.id
 }
 
-data "azurerm_key_vault_secret" "app_projects_principal" {
-  name         = "pagopaspa-selfcare-platform-app-projects"
+data "azurerm_key_vault_secret" "vpn_app" {
+  name         = "${var.prefix}-${var.env_short}-app-vpn"
   key_vault_id = module.key_vault.id
 }

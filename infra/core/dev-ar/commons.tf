@@ -352,7 +352,7 @@ module "vpn" {
   subscription_name = module.key_vault.subscription_name
   tenant_id         = module.key_vault.tenant_id
 
-
+  vpn_app_client_id = module.key_vault.vpn_app_client_id
 
   sec_workspace_id = local.env_short == "p" ? module.key_vault.secrets_sec_workspace_id : null
   sec_storage_id   = local.env_short == "p" ? module.key_vault.secrets_sec_storage_id : null

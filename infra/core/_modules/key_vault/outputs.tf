@@ -64,3 +64,7 @@ output "iac_principal_object_id" {
 output "app_projects_principal_object_id" {
   value = data.azurerm_key_vault_secret.app_projects_principal.value
 }
+
+output "vpn_app_client_id" {
+  value = data.azurerm_key_vault_secret.vpn_app.value
+}

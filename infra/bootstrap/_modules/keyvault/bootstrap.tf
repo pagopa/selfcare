@@ -65,6 +65,10 @@ data "azuread_service_principal" "app_projects_principal" {
   client_id = "857f30ee-6e15-4b50-a9f3-cfd2ab2d3a29"
 }
 
+# Azure DevOps SP
+data "azuread_service_principal" "azdo_sp_tls_cert" {
+  display_name = "azdo-sp-${var.prefix}-${var.env_short}-tls-cert"
+}
 
 resource "azurerm_key_vault_secret" "iac_principal" {
   name         = "pagopaspa-selfcare-iac-projects"
@@ -80,6 +84,28 @@ resource "azurerm_key_vault_secret" "app_projects_principal" {
   content_type = "text/plain"
 
   value_wo         = data.azuread_service_principal.app_projects_principal.object_id
+  value_wo_version = 1
+  key_vault_id     = var.key_vault_id
+}
+
+resource "azurerm_key_vault_secret" "azdo_sp_tls_cert" {
+  name         = "azdo-sp-tls-cert"
+  content_type = "text/plain"
+
+  value_wo         = data.azuread_service_principal.azdo_sp_tls_cert.object_id
+  value_wo_version = 1
+  key_vault_id     = var.key_vault_id
+}
+
+data "azuread_application" "vpn_app" {
+  display_name = "${var.prefix}-${var.env_short}-app-vpn"
+}
+
+resource "azurerm_key_vault_secret" "vpn_app" {
+  name         = "${var.prefix}-${var.env_short}-app-vpn"
+  content_type = "text/plain"
+
+  value_wo         = data.azuread_application.vpn_app.client_id
   value_wo_version = 1
   key_vault_id     = var.key_vault_id
 }
