@@ -3,13 +3,7 @@ package it.pagopa.selfcare.onboarding.service;
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
-import org.openapi.quarkus.onboarding_json.model.CheckManagerRequest;
-import org.openapi.quarkus.onboarding_json.model.CheckManagerResponse;
-import org.openapi.quarkus.onboarding_json.model.OnboardingGet;
-import org.openapi.quarkus.onboarding_json.model.OnboardingGetResponse;
-import org.openapi.quarkus.onboarding_json.model.OnboardingResponse;
-import org.openapi.quarkus.onboarding_json.model.RecipientCodeStatus;
-import org.openapi.quarkus.onboarding_json.model.VerifyAggregateResponse;
+import org.openapi.quarkus.onboarding_json.model.*;
 
 import java.util.List;
 

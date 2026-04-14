@@ -1,36 +1,28 @@
 package it.pagopa.selfcare.onboarding.service;
 
-import static it.pagopa.selfcare.onboarding.util.Utils.getManager;
-import static it.pagopa.selfcare.onboarding.util.Utils.isUserAdmin;
-
-import it.pagopa.selfcare.onboarding.util.LogUtils;
-import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
-import it.pagopa.selfcare.onboarding.client.model.ManagerVerification;
-import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
-import it.pagopa.selfcare.onboarding.client.model.User;
-import it.pagopa.selfcare.onboarding.client.model.Certification;
-import it.pagopa.selfcare.onboarding.client.model.CertifiedField;
-import it.pagopa.selfcare.onboarding.client.model.UserId;
-import it.pagopa.selfcare.onboarding.client.model.MutableUserFieldsDto;
-import it.pagopa.selfcare.onboarding.client.model.WorkContact;
+import it.pagopa.selfcare.onboarding.client.model.*;
 import it.pagopa.selfcare.onboarding.exception.InvalidUserFieldsException;
 import it.pagopa.selfcare.onboarding.exception.OnboardingNotAllowedException;
-import it.pagopa.selfcare.onboarding.service.strategy.UserAllowedValidationStrategy;
-import it.pagopa.selfcare.onboarding.util.PgManagerVerifier;
-import it.pagopa.selfcare.onboarding.mapper.UserMapper;
+import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
-import org.openapi.quarkus.onboarding_json.model.CheckManagerRequest;
-import org.openapi.quarkus.onboarding_json.model.CheckManagerResponse;
+import it.pagopa.selfcare.onboarding.mapper.UserMapper;
+import it.pagopa.selfcare.onboarding.service.strategy.UserAllowedValidationStrategy;
+import it.pagopa.selfcare.onboarding.util.LogUtils;
+import it.pagopa.selfcare.onboarding.util.PgManagerVerifier;
 import jakarta.enterprise.context.ApplicationScoped;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.Optional;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.openapi.quarkus.onboarding_json.model.CheckManagerRequest;
+import org.openapi.quarkus.onboarding_json.model.CheckManagerResponse;
 import org.owasp.encoder.Encode;
+
+import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Objects;
-import java.util.UUID;
+import java.util.Optional;
+
+import static it.pagopa.selfcare.onboarding.util.Utils.getManager;
+import static it.pagopa.selfcare.onboarding.util.Utils.isUserAdmin;
 
 @Slf4j
 @ApplicationScoped

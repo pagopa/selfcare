@@ -4,7 +4,7 @@ import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.client.util.FilePayloadUtils;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
-import java.io.File;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
@@ -12,7 +12,7 @@ import org.openapi.quarkus.document_json.api.DocumentControllerApi;
 import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
 import org.openapi.quarkus.document_json.model.DocumentType;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import java.io.File;
 
 @ApplicationScoped
 public class DocumentService {

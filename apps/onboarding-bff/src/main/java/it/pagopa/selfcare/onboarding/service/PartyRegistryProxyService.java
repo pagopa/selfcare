@@ -1,8 +1,8 @@
 package it.pagopa.selfcare.onboarding.service;
 
-import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.onboarding.client.PartyRegistryProxyRestClient;
 import it.pagopa.selfcare.onboarding.client.model.*;
+import it.pagopa.selfcare.onboarding.util.LogUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.faulttolerance.Retry;

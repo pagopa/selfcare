@@ -1,11 +1,12 @@
 package it.pagopa.selfcare.onboarding.service.strategy;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import java.util.List;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import java.util.List;
 
 @Slf4j
 @Getter

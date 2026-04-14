@@ -1,12 +1,11 @@
 package it.pagopa.selfcare.onboarding.service;
 
 import it.pagopa.selfcare.onboarding.client.model.*;
-import it.pagopa.selfcare.onboarding.controller.request.*;
-import it.pagopa.selfcare.onboarding.controller.response.*;
-import java.util.List;
 import org.openapi.quarkus.onboarding_json.model.OnboardingGetResponse;
 import org.openapi.quarkus.onboarding_json.model.RecipientCodeStatus;
 import org.openapi.quarkus.onboarding_json.model.VerifyAggregateResponse;
+
+import java.util.List;
 
 public interface InstitutionService {
 

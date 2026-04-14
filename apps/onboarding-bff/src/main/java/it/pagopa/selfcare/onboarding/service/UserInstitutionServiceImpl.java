@@ -1,17 +1,18 @@
 package it.pagopa.selfcare.onboarding.service;
 
-import static org.apache.commons.lang3.StringUtils.*;
-
-import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.client.model.UserInstitutionRequest;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.ProductStatus;
 import jakarta.enterprise.context.ApplicationScoped;
-import java.util.List;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_json.api.InstitutionControllerApi;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 @Slf4j
 @ApplicationScoped

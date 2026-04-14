@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.onboarding.service;
 
-import it.pagopa.selfcare.onboarding.client.model.*;
 import it.pagopa.selfcare.onboarding.client.PartyProcessRestClient;
+import it.pagopa.selfcare.onboarding.client.model.*;
 import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
 import it.pagopa.selfcare.product.entity.Product;
 import jakarta.enterprise.context.ApplicationScoped;

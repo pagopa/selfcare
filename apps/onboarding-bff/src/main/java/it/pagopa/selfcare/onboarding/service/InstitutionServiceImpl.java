@@ -1,16 +1,17 @@
 package it.pagopa.selfcare.onboarding.service;
-import it.pagopa.selfcare.onboarding.util.LogUtils;
-import it.pagopa.selfcare.onboarding.common.Origin;
+
+import it.pagopa.selfcare.onboarding.client.model.*;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
+import it.pagopa.selfcare.onboarding.common.Origin;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
-import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
-import it.pagopa.selfcare.onboarding.client.model.*;
-import it.pagopa.selfcare.onboarding.mapper.UserMapper;
 import it.pagopa.selfcare.onboarding.exception.OnboardingNotAllowedException;
+import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.exception.UpdateNotAllowedException;
 import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
+import it.pagopa.selfcare.onboarding.mapper.UserMapper;
+import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.onboarding.util.PgManagerVerifier;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
@@ -22,9 +23,12 @@ import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.onboarding_functions_json.api.OrganizationApi;
-import org.openapi.quarkus.onboarding_json.model.*;
+import org.openapi.quarkus.onboarding_json.model.CheckManagerRequest;
+import org.openapi.quarkus.onboarding_json.model.OnboardingGetResponse;
 import org.owasp.encoder.Encode;
+
 import java.util.*;
+
 import static io.netty.util.internal.StringUtil.isNullOrEmpty;
 
 @Slf4j
