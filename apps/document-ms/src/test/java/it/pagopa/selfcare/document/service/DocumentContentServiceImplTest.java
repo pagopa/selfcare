@@ -65,6 +65,7 @@ class DocumentContentServiceImplTest {
     @InjectMock SignatureService signatureService;
     @InjectMock DocumentService documentService;
     @InjectMock DocumentMsConfig documentMsConfig;
+    @InjectMock DocumentMsTelemetryService telemetryService;
     @Inject DocumentContentService documentContentService;
 
     // ---- retrieveContract ----

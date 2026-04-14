@@ -16,6 +16,7 @@ import it.pagopa.selfcare.document.model.dto.response.CreatePdfResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.document.service.DocumentContentService;
+import it.pagopa.selfcare.document.service.DocumentMsTelemetryService;
 import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.document.service.PdfGenerationService;
 import it.pagopa.selfcare.document.service.SignatureService;
@@ -63,7 +64,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     private final SignatureService signatureService;
     private final DocumentRepository documentRepository;
     private final DocumentService documentService;
-    private final PdfGenerationService pdfGenerationService; // <-- NUOVA INIECTION
+    private final PdfGenerationService pdfGenerationService;
+    private final DocumentMsTelemetryService telemetryService;
 
     @ConfigProperty(name = "document-ms.blob-storage.path-contracts")
     String pathContracts;
@@ -83,32 +85,45 @@ public class DocumentContentServiceImpl implements DocumentContentService {
             DocumentMsConfig documentMsConfig,
             SignatureService signatureService,
             DocumentRepository documentRepository,
-            DocumentService documentService, PdfGenerationService pdfGenerationService) {
+            DocumentService documentService,
+            PdfGenerationService pdfGenerationService,
+            DocumentMsTelemetryService telemetryService) {
         this.azureBlobClient = azureBlobClient;
         this.documentMsConfig = documentMsConfig;
         this.signatureService = signatureService;
         this.documentRepository = documentRepository;
         this.documentService = documentService;
         this.pdfGenerationService = pdfGenerationService;
+        this.telemetryService = telemetryService;
     }
 
     @Override
     public Uni<CreatePdfResponse> createContractPdf(ContractPdfRequest request) {
         log.info("START - createContractPdf for template: {} with onboardingId: {}",
                 sanitize(request.getContractTemplatePath()), sanitize(request.getOnboardingId()));
+        long start = System.currentTimeMillis();
 
         return buildContractContextAsync(request)
                 .chain(ctx -> signPdfContextAsync(ctx, request))
-                .chain(ctx -> uploadAndBuildResponse(ctx, "contract"));
+                .chain(ctx -> uploadAndBuildResponse(ctx, "contract"))
+                .invoke(response -> telemetryService.trackContractPdfCreated(
+                        request.getOnboardingId(),
+                        request.getProductId(),
+                        System.currentTimeMillis() - start));
     }
 
     @Override
     public Uni<CreatePdfResponse> createAttachmentPdf(AttachmentPdfRequest request) {
         log.info("START - createAttachmentPdf for template: {} with onboardingId: {}",
                 sanitize(request.getAttachmentTemplatePath()), sanitize(request.getOnboardingId()));
+        long start = System.currentTimeMillis();
 
         return buildAttachmentContextAsync(request)
-                .chain(ctx -> uploadAndBuildResponse(ctx, "attachment"));
+                .chain(ctx -> uploadAndBuildResponse(ctx, "attachment"))
+                .invoke(response -> telemetryService.trackAttachmentPdfCreated(
+                        request.getOnboardingId(),
+                        request.getAttachmentName(),
+                        System.currentTimeMillis() - start));
     }
 
     @Override
@@ -176,17 +191,15 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 sanitize(request.getOnboardingId()),
                 sanitize(request.getProductId()),
                 sanitize(file.getFileName()));
+        long start = System.currentTimeMillis();
 
         return verifyAttachmentDoesNotExist(request)
                 .emitOn(Infrastructure.getDefaultWorkerPool())
                 .chain(() -> {
                     String uploadedDigest = performSecurityValidationsAndGetDigest(request, file);
                     boolean isP7M = DocumentFileUtils.isP7MFile(file.getFileName());
-
-                    // 1. Salvataggio su DB
                     return persistAttachment(request, uploadedDigest, isP7M);
                 })
-                // 2. Upload asincrono su Azure
                 .call(document -> uploadToAzureReactive(document, file)
                         .onFailure().call(azureError -> {
                             log.error("Upload to Azure failed for attachment {}. Rolling back DB record...", sanitize(request.getAttachmentName()));
@@ -194,6 +207,11 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                                     .onFailure().invoke(e -> log.error("CRITICAL: Rollback failed for DB document {}", document.getId(), e));
                         })
                 )
+                .invoke(ignored -> telemetryService.trackAttachmentUploaded(
+                        request.getOnboardingId(),
+                        request.getProductId(),
+                        request.getAttachmentName(),
+                        System.currentTimeMillis() - start))
                 .replaceWithVoid();
     }
 
@@ -228,6 +246,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                                 return rollbackDeletedAzureFiles(deletedSignedContract, originalSignedPath, deletedContractFile, originalContractPath);
                             });
                 })
+                .invoke(ignored -> telemetryService.trackContractDeleted(onboardingId))
                 .replaceWith("Contract deleted successfully");
     }
 
@@ -246,7 +265,6 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                         azureBlobClient.uploadFile(path, filename, csvFile.readAllBytes());
                     } catch (IOException e) {
                         log.error("Error reading from file {} ", sanitize(path), e);
-                        // Rilanciamo l'errore per far scattare il Retry
                         throw new RuntimeException("Error during Azure upload", e);
                     }
                 })
@@ -259,6 +277,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                             GENERIC_ERROR.getCode(),
                             String.format("Error storing csv aggregate for onboardingId: %s", sanitize(request.getOnboardingId())));
                 })
+                .invoke(ignored -> telemetryService.trackAggregatesCsvUploaded(
+                        request.getOnboardingId(), request.getProductId()))
                 .replaceWithVoid();
     }
 
@@ -299,12 +319,11 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                         azureBlobClient.uploadFile(path, filename, file.readAllBytes());
                     } catch (IOException e) {
                         log.error("Error reading from file {} ", sanitize(path), e);
-                        // Rilanciamo l'errore per far scattare il Retry
                         throw new RuntimeException("Error during Azure upload", e);
                     }
                 })
-                .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)                .onFailure()
-                .transform(e -> {
+                .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)
+                .onFailure().transform(e -> {
                     log.error(
                             "Impossible to store visura document for onboardingId: {}, filename: {}. Error: {}",
                             sanitize(uploadVisuraRequest.getOnboardingId()), sanitize(filename), e.getMessage(), e);
@@ -312,6 +331,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                             GENERIC_ERROR.getCode(),
                             String.format("Error storing visura document for onboardingId: %s", sanitize(uploadVisuraRequest.getOnboardingId())));
                 })
+                .invoke(ignored -> telemetryService.trackVisuraSaved(
+                        uploadVisuraRequest.getOnboardingId(), filename))
                 .replaceWithVoid();
     }
 
@@ -321,6 +342,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
     log.info(
         "START - Uploading and verifying signed contract for onboardingId={}, productId={}", sanitize(onboardingId), sanitize(request.getProductId()));
+    long start = System.currentTimeMillis();
 
     return Uni.createFrom()
         .item(
@@ -352,6 +374,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                                 request.getFiscalCodes(),
                                 skipSignatureVerification))
                     .chain(document -> uploadToAzureAndUpdateDb(document, physicalFile, fileName))
+                    .invoke(ignored -> telemetryService.trackSignedContractUploaded(
+                            onboardingId, System.currentTimeMillis() - start))
                     .onTermination()
                     .invoke(() -> {
                         physicalFile.delete();

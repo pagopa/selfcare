@@ -27,6 +27,7 @@ import it.pagopa.selfcare.document.model.FormItem;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.document.service.SignatureService;
+import it.pagopa.selfcare.document.service.DocumentMsTelemetryService;
 import it.pagopa.selfcare.onboarding.crypto.PadesSignService;
 import it.pagopa.selfcare.onboarding.crypto.entity.SignatureInformation;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -66,13 +67,16 @@ public class SignatureServiceImpl implements SignatureService {
   private final PagoPaSignatureConfig pagoPaSignatureConfig;
   private final TrustedListsCertificateSource trustedListsCertificateSource;
   private final PadesSignService padesSignService;
+  private final DocumentMsTelemetryService telemetryService;
 
   public SignatureServiceImpl(TrustedListsCertificateSource trustedListsCertificateSource,
                               PagoPaSignatureConfig pagoPaSignatureConfig,
-                              PadesSignService padesSignService) {
+                              PadesSignService padesSignService,
+                              DocumentMsTelemetryService telemetryService) {
     this.trustedListsCertificateSource = trustedListsCertificateSource;
     this.pagoPaSignatureConfig = pagoPaSignatureConfig;
     this.padesSignService = padesSignService;
+    this.telemetryService = telemetryService;
   }
 
 
@@ -216,6 +220,7 @@ public class SignatureServiceImpl implements SignatureService {
             return Uni.createFrom().voidItem();
         }
 
+        long start = System.currentTimeMillis();
         return retrieveContractDigest(onboardingId)
                 .onItem()
                 .transformToUni(digest ->
@@ -223,8 +228,11 @@ public class SignatureServiceImpl implements SignatureService {
                                 .voidItem()
                                 .invoke(() -> verifySignature(file, digest, fiscalCodes))
                                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                );
-
+                )
+                .invoke(() -> telemetryService.trackSignatureVerification(
+                        onboardingId, true, System.currentTimeMillis() - start))
+                .onFailure().invoke(err -> telemetryService.trackSignatureVerification(
+                        onboardingId, false, System.currentTimeMillis() - start));
     }
 
     public boolean isSignatureVerificationEnabled() {

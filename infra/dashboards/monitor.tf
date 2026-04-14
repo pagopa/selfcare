@@ -17,3 +17,16 @@ resource "azurerm_portal_dashboard" "monitoring_onboarding_event" {
       prefix          = "${var.prefix}-${var.env_short}"
   })
 }
+
+resource "azurerm_portal_dashboard" "monitoring_document_ms" {
+  name                = "${local.project}-monitoring-document-ms"
+  resource_group_name = azurerm_resource_group.monitor_rg.name
+  location            = azurerm_resource_group.monitor_rg.location
+  tags                = var.tags
+
+  dashboard_properties = templatefile("document-ms-dashboard.json",
+    {
+      subscription_id = data.azurerm_subscription.current.subscription_id
+      prefix          = "${var.prefix}-${var.env_short}"
+  })
+}

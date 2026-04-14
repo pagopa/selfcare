@@ -15,6 +15,7 @@ import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.document.service.DocumentService;
+import it.pagopa.selfcare.document.service.DocumentMsTelemetryService;
 import it.pagopa.selfcare.document.service.SignatureService;
 import it.pagopa.selfcare.document.util.DocumentFileUtils;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -40,15 +41,17 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentRepository documentRepository;
     private final DocumentMsConfig documentMsConfig;
     private final AzureBlobClient azureBlobClient;
+    private final DocumentMsTelemetryService telemetryService;
 
     @Inject
     SignatureService signatureService;
 
     public DocumentServiceImpl(DocumentRepository documentRepository, DocumentMsConfig documentMsConfig,
-                               AzureBlobClient azureBlobClient) {
+                               AzureBlobClient azureBlobClient, DocumentMsTelemetryService telemetryService) {
         this.documentRepository = documentRepository;
         this.documentMsConfig = documentMsConfig;
         this.azureBlobClient = azureBlobClient;
+        this.telemetryService = telemetryService;
     }
 
     @Override
@@ -171,9 +174,14 @@ public class DocumentServiceImpl implements DocumentService {
 
         return documentRepository.persist(document)
                 .replaceWith(document)
-                .onItem().invoke(() ->
-                        log.info("Document persisted for onboardingId: {}, documentType: {}",
-                                sanitize(request.getOnboardingId()), sanitize(String.valueOf(request.getDocumentType()))));
+                .onItem().invoke(() -> {
+                    log.info("Document persisted for onboardingId: {}, documentType: {}",
+                            sanitize(request.getOnboardingId()), sanitize(String.valueOf(request.getDocumentType())));
+                    telemetryService.trackDocumentSaved(
+                            request.getOnboardingId(),
+                            String.valueOf(request.getDocumentType()),
+                            request.getProductId());
+                });
     }
 
     @Override
@@ -194,8 +202,10 @@ public class DocumentServiceImpl implements DocumentService {
 
         return documentRepository.persist(document)
                 .replaceWith(document)
-                .onItem().invoke(() ->
-                        log.info("Document persisted for onboardingId: {}", sanitize(request.getOnboardingId())));
+                .onItem().invoke(() -> {
+                    log.info("Document persisted for onboardingId: {}", sanitize(request.getOnboardingId()));
+                    telemetryService.trackDocumentImported(request.getOnboardingId(), request.getProductId());
+                });
     }
 
     private Document buildDocument(DocumentBuilderRequest request, String digest) {
