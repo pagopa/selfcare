@@ -20,7 +20,6 @@ on:
 permissions:
   contents: read
   packages: read
-  pull-requests: write
 
 jobs:
   code_review:
