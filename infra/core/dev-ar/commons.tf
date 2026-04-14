@@ -619,13 +619,11 @@ module "container_app_environments" {
   project             = "${local.prefix}-${local.env_short}"
   location            = local.location
   resource_group_name = azurerm_resource_group.selc_cae_rg.name
-  # pnpg_resource_group_name = azurerm_resource_group.selc_container_app_rg.name
 
   subnet_id = module.networking.subnet.id
-  # pnpg_subnet_id = module.networking.subnet_pnpg.id
 
   cae_name = "${local.project}-cae-002"
-  # pnpg_cae_name = "${local.project}-pnpg-cae-cp"
+
   infrastructure_resource_group_name = "ME_selc-d-cae-002_selc-d-container-app-002-rg_westeurope"
   workload_profiles = [
     {

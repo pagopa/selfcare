@@ -22,21 +22,3 @@ module "keyvault_pnpg" {
   env_short    = local.env_short
   key_vault_id = data.azurerm_key_vault.key_vault_pnpg.id
 }
-
-# resource "azurerm_role_assignment" "storage_blob_contributor_developers" {
-#   scope                = module.logs_storage.storage_account_id
-#   role_definition_name = "Storage Blob Data Reader"
-#   principal_id         = data.azuread_group.adgroup_developers.object_id
-# }
-
-# resource "azurerm_role_assignment" "storage_blob_contributor_admin" {
-#   scope                = module.logs_storage.storage_account_id
-#   role_definition_name = "Storage Blob Data Reader"
-#   principal_id         = data.azuread_group.adgroup_admin.object_id
-# }
-
-# resource "azurerm_role_assignment" "storage_blob_contributor_externals" {
-#   scope                = module.logs_storage.storage_account_id
-#   role_definition_name = "Storage Blob Data Reader"
-#   principal_id         = data.azuread_group.adgroup_externals.object_id
-# }
