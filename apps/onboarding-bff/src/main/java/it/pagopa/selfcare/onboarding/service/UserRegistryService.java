@@ -1,7 +1,8 @@
-package it.pagopa.selfcare.onboarding.client;
+package it.pagopa.selfcare.onboarding.service;
 
 import feign.FeignException;
 import it.pagopa.selfcare.onboarding.util.LogUtils;
+import it.pagopa.selfcare.onboarding.client.UserRegistryRestClient;
 import it.pagopa.selfcare.onboarding.client.model.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
@@ -15,11 +16,11 @@ import java.util.UUID;
 
 @Slf4j
 @ApplicationScoped
-public class UserRegistryClient {
+public class UserRegistryService {
 
     private final UserRegistryRestClient restClient;
     public static final String USERS_FIELD_LIST = "fiscalCode,familyName,name,workContacts";
-    public UserRegistryClient(@RestClient UserRegistryRestClient restClient) {
+    public UserRegistryService(@RestClient UserRegistryRestClient restClient) {
         this.restClient = restClient;
     }
     public Optional<User> search(String externalId, EnumSet<User.Fields> fieldList) {

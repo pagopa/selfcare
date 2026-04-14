@@ -1,6 +1,7 @@
-package it.pagopa.selfcare.onboarding.client;
+package it.pagopa.selfcare.onboarding.service;
 
 import it.pagopa.selfcare.onboarding.client.model.*;
+import it.pagopa.selfcare.onboarding.client.PartyProcessRestClient;
 import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
 import it.pagopa.selfcare.product.entity.Product;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -19,7 +20,7 @@ import static it.pagopa.selfcare.onboarding.client.model.RelationshipState.ACTIV
 
 @ApplicationScoped
 @Slf4j
-public class PartyClient {
+public class PartyService {
 
 
     private final PartyProcessRestClient restClient;
@@ -42,7 +43,7 @@ public class PartyClient {
         List<org.openapi.quarkus.onboarding_json.model.InstitutionResponse> response = institutionApiClient.getInstitutions(request).await().indefinitely();
         return Objects.isNull(response) ? Map.of() : response.stream().collect(Collectors.toMap(org.openapi.quarkus.onboarding_json.model.InstitutionResponse::getId, Function.identity()));
     }
-    public PartyClient(@RestClient PartyProcessRestClient restClient,
+    public PartyService(@RestClient PartyProcessRestClient restClient,
                               InstitutionMapper institutionMapper,
                               @RestClient UserControllerApi userApiClient,
                               @RestClient InstitutionControllerApi institutionApiClient) {

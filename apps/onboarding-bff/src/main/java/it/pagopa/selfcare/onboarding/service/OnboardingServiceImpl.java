@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.onboarding.client;
+package it.pagopa.selfcare.onboarding.service;
 
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
@@ -12,8 +12,21 @@ import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.openapi.quarkus.onboarding_json.api.*;
-import org.openapi.quarkus.onboarding_json.model.*;
+import org.openapi.quarkus.onboarding_json.api.AggregatesControllerApi;
+import org.openapi.quarkus.onboarding_json.api.BillingPortalApi;
+import org.openapi.quarkus.onboarding_json.api.InternalV1Api;
+import org.openapi.quarkus.onboarding_json.api.OnboardingControllerApi;
+import org.openapi.quarkus.onboarding_json.api.SupportApi;
+import org.openapi.quarkus.onboarding_json.api.TokenControllerApi;
+import org.openapi.quarkus.onboarding_json.model.CheckManagerRequest;
+import org.openapi.quarkus.onboarding_json.model.CheckManagerResponse;
+import org.openapi.quarkus.onboarding_json.model.OnboardingGet;
+import org.openapi.quarkus.onboarding_json.model.OnboardingGetResponse;
+import org.openapi.quarkus.onboarding_json.model.OnboardingResponse;
+import org.openapi.quarkus.onboarding_json.model.OnboardingStatus;
+import org.openapi.quarkus.onboarding_json.model.ReasonRequest;
+import org.openapi.quarkus.onboarding_json.model.RecipientCodeStatus;
+import org.openapi.quarkus.onboarding_json.model.VerifyAggregateResponse;
 import org.owasp.encoder.Encode;
 
 import java.io.File;
@@ -22,11 +35,13 @@ import java.util.Objects;
 
 @ApplicationScoped
 @Slf4j
-public class OnboardingMsClient {
+public class OnboardingServiceImpl implements OnboardingService {
 
     public static final String PROD_IO = "prod-io";
     public static final String PROD_PAGOPA = "prod-pagopa";
     public static final String PROD_PN = "prod-pn";
+    protected static final String REQUIRED_PRODUCT_ID_MESSAGE = "A product Id is required";
+
     private final OnboardingControllerApi onboardingApi;
     private final BillingPortalApi billingPortalApi;
     private final SupportApi supportApi;
@@ -34,15 +49,14 @@ public class OnboardingMsClient {
     private final AggregatesControllerApi aggregatesApi;
     private final OnboardingMapper onboardingMapper;
     private final InternalV1Api internalV1Api;
-    protected static final String REQUIRED_PRODUCT_ID_MESSAGE = "A product Id is required";
 
-    public OnboardingMsClient(@RestClient OnboardingControllerApi onboardingApi,
-                                     @RestClient BillingPortalApi billingPortalApi,
-                                     @RestClient TokenControllerApi tokenApi,
-                                     @RestClient SupportApi supportApi,
-                                     @RestClient AggregatesControllerApi aggregatesApi,
-                                     OnboardingMapper onboardingMapper,
-                                     @RestClient InternalV1Api internalV1Api) {
+    public OnboardingServiceImpl(@RestClient OnboardingControllerApi onboardingApi,
+                                    @RestClient BillingPortalApi billingPortalApi,
+                                    @RestClient TokenControllerApi tokenApi,
+                                    @RestClient SupportApi supportApi,
+                                    @RestClient AggregatesControllerApi aggregatesApi,
+                                    OnboardingMapper onboardingMapper,
+                                    @RestClient InternalV1Api internalV1Api) {
         this.onboardingApi = onboardingApi;
         this.billingPortalApi = billingPortalApi;
         this.tokenApi = tokenApi;
@@ -51,6 +65,8 @@ public class OnboardingMsClient {
         this.onboardingMapper = onboardingMapper;
         this.internalV1Api = internalV1Api;
     }
+
+    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void onboarding(OnboardingData onboardingData) {
         if (onboardingData.getInstitutionType() == InstitutionType.PA) {
@@ -61,24 +77,26 @@ public class OnboardingMsClient {
             onboardingApi.onboarding(onboardingMapper.toOnboardingDefaultRequest(onboardingData)).await().indefinitely();
         }
     }
+
+    @Override
     public VerifyAggregateResponse aggregatesVerification(UploadedFile file, String productId) {
         log.info("validateAggregatesCsv for product: {}", productId);
         switch (productId) {
             case PROD_IO -> {
                 AggregatesControllerApi.VerifyAppIoAggregatesCsvMultipartForm form =
-                    new AggregatesControllerApi.VerifyAppIoAggregatesCsvMultipartForm();
+                        new AggregatesControllerApi.VerifyAppIoAggregatesCsvMultipartForm();
                 form.aggregates = FilePayloadUtils.toTempFile(file, "aggregates-", ".csv");
                 return aggregatesApi.verifyAppIoAggregatesCsv(form).await().indefinitely();
             }
             case PROD_PAGOPA -> {
                 AggregatesControllerApi.VerifyPagoPaAggregatesCsvMultipartForm form =
-                    new AggregatesControllerApi.VerifyPagoPaAggregatesCsvMultipartForm();
+                        new AggregatesControllerApi.VerifyPagoPaAggregatesCsvMultipartForm();
                 form.aggregates = FilePayloadUtils.toTempFile(file, "aggregates-", ".csv");
                 return aggregatesApi.verifyPagoPaAggregatesCsv(form).await().indefinitely();
             }
             case PROD_PN -> {
                 AggregatesControllerApi.VerifySendAggregatesCsvMultipartForm form =
-                    new AggregatesControllerApi.VerifySendAggregatesCsvMultipartForm();
+                        new AggregatesControllerApi.VerifySendAggregatesCsvMultipartForm();
                 form.aggregates = FilePayloadUtils.toTempFile(file, "aggregates-", ".csv");
                 return aggregatesApi.verifySendAggregatesCsv(form).await().indefinitely();
             }
@@ -88,38 +106,54 @@ public class OnboardingMsClient {
             }
         }
     }
+
+    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void onboardingUsers(OnboardingData onboardingData) {
         onboardingApi.onboardingUsers(onboardingMapper.toOnboardingUsersRequest(onboardingData)).await().indefinitely();
     }
+
+    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void onboardingUsersAggregator(OnboardingData onboardingData) {
         onboardingApi.onboardingUsersAggregator(onboardingMapper.toOnboardingUsersRequest(onboardingData)).await().indefinitely();
     }
+
+    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void onboardingCompany(OnboardingData onboardingData) {
         onboardingApi.onboardingPgCompletion(onboardingMapper.toOnboardingPgRequest(onboardingData)).await().indefinitely();
     }
+
+    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void onboardingTokenComplete(String onboardingId, UploadedFile contract) {
         InternalV1Api.CompleteOnboardingUsingPUTMultipartForm form = new InternalV1Api.CompleteOnboardingUsingPUTMultipartForm();
         form.contract = FilePayloadUtils.toTempFile(contract, "internal-", ".bin");
         internalV1Api.completeOnboardingUsingPUT(form, onboardingId).await().indefinitely();
     }
+
+    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void onboardingUsersComplete(String onboardingId, UploadedFile contract) {
         OnboardingControllerApi.CompleteOnboardingUserMultipartForm form = new OnboardingControllerApi.CompleteOnboardingUserMultipartForm();
         form.contract = FilePayloadUtils.toTempFile(contract, "onboarding-", ".bin");
         onboardingApi.completeOnboardingUser(form, onboardingId).await().indefinitely();
     }
+
+    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void onboardingPending(String onboardingId) {
         onboardingApi.getOnboardingPending(onboardingId).await().indefinitely();
     }
+
+    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void approveOnboarding(String onboardingId) {
         onboardingApi.approve(onboardingId).await().indefinitely();
     }
+
+    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void rejectOnboarding(String onboardingId, String reason) {
         ReasonRequest reasonForReject = new ReasonRequest();
@@ -128,43 +162,58 @@ public class OnboardingMsClient {
         }
         onboardingApi.delete(onboardingId, reasonForReject).await().indefinitely();
     }
+
+    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public OnboardingGet getOnboarding(String onboardingId) {
         return onboardingApi.getById(onboardingId).await().indefinitely();
     }
+
+    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public OnboardingGet getOnboardingWithUserInfo(String onboardingId) {
         return onboardingApi.getByIdWithUserInfo(onboardingId).await().indefinitely();
     }
+
+    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getContract(String onboardingId) {
         File file = tokenApi.getContract(onboardingId).await().indefinitely();
         return FilePayloadUtils.toBinaryData(file, file.getName());
     }
+
+    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getTemplateAttachment(String onboardingId, String filename) {
         File file = tokenApi.getTemplateAttachment(onboardingId, filename).await().indefinitely();
         return FilePayloadUtils.toBinaryData(file, filename);
     }
+
+    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getAttachment(String onboardingId, String filename) {
         File file = tokenApi.getAttachment(onboardingId, filename).await().indefinitely();
         return FilePayloadUtils.toBinaryData(file, filename);
     }
+
+    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getAggregatesCsv(String onboardingId, String productId) {
         File file = aggregatesApi.getAggregatesCsv(onboardingId, productId).await().indefinitely();
         return FilePayloadUtils.toBinaryData(file, file.getName());
     }
+
+    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void onboardingPaAggregation(OnboardingData onboardingData) {
         onboardingApi.onboardingPaAggregation(onboardingMapper.toOnboardingPaAggregationRequest(onboardingData)).await().indefinitely();
     }
+
+    @Override
     public List<OnboardingResponse> getByFilters(String productId, String taxCode, String origin, String originId, String subunitCode) {
         List<OnboardingResponse> result = supportApi.onboardingInstitutionUsingGET(origin, originId, OnboardingStatus.COMPLETED, subunitCode, taxCode)
-            .await().indefinitely();
+                .await().indefinitely();
         return Objects.nonNull(result) ? result.stream()
-                // TODO this filter should be into query
                 .filter(onboardingResponse -> {
                     if (Objects.isNull(subunitCode) && Objects.nonNull(onboardingResponse.getInstitution().getSubunitType())) {
                         return !onboardingResponse.getInstitution().getSubunitType().name().equals(InstitutionPaSubunitType.UO.name())
@@ -176,31 +225,41 @@ public class OnboardingMsClient {
                 .filter(onboardingResponse -> onboardingResponse.getProductId().equals(productId))
                 .toList() : List.of();
     }
+
+    @Override
     @Retry(maxRetries = 2, delay = 5000)
     public CheckManagerResponse checkManager(CheckManagerRequest request) {
         return onboardingApi.checkManager(request).await().indefinitely();
     }
+
+    @Override
     public RecipientCodeStatus checkRecipientCode(String originId, String recipientCode) {
         return billingPortalApi.checkRecipientCode(originId, recipientCode).await().indefinitely();
     }
 
+    @Override
     public void verifyOnboarding(String productId, String taxCode, String origin, String originId, String subunitCode, String institutionType) {
         log.trace("verifyOnboarding start");
         if (productId == null || productId.isBlank()) {
             throw new IllegalArgumentException(REQUIRED_PRODUCT_ID_MESSAGE);
         }
         onboardingApi.verifyOnboardingInfoByFilters(institutionType, origin, originId, productId, subunitCode, taxCode)
-            .await().indefinitely();
+                .await().indefinitely();
         log.trace("verifyOnboarding end");
     }
+
+    @Override
     public void onboardingUsersPgFromIcAndAde(OnboardingData onboardingData) {
         log.trace("onboardingUsersPgFromIcAndAde start");
         onboardingApi.onboardingUsersPg(onboardingMapper.toOnboardingUserPgRequest(onboardingData)).await().indefinitely();
         log.trace("onboardingUsersPgFromIcAndAde end");
     }
+
+    @Override
     public OnboardingGetResponse onboardingWithFilter(String taxCode, String status) {
         log.trace("onboardingWithFilter start");
-        OnboardingGetResponse response = onboardingApi.getOnboardingWithFilter( null,
+        OnboardingGetResponse response = onboardingApi.getOnboardingWithFilter(
+                null,
                 null,
                 null,
                 null,
@@ -216,16 +275,19 @@ public class OnboardingMsClient {
         log.trace("onboardingWithFilter end");
         return response;
     }
+
+    @Override
     public void uploadAttachment(String onboardingId, UploadedFile attachment, String attachmentName) {
         TokenControllerApi.UploadAttachmentMultipartForm form = new TokenControllerApi.UploadAttachmentMultipartForm();
         form._file = FilePayloadUtils.toTempFile(attachment, "token-", ".bin");
         tokenApi.uploadAttachment(form, onboardingId, attachmentName).await().indefinitely();
     }
+
+    @Override
     public int headAttachment(String onboardingId, String filename) {
         log.info("headAttachment for onboardingId: {}, filename: {}", Encode.forJava(onboardingId), Encode.forJava(filename));
         int statusCode = tokenApi.headAttachment(onboardingId, filename).await().indefinitely().getStatus();
         log.info("headAttachment response status code: {}", statusCode);
         return statusCode;
     }
-
 }

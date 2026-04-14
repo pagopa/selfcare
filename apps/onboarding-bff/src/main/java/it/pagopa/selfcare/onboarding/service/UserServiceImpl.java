@@ -4,8 +4,6 @@ import static it.pagopa.selfcare.onboarding.util.Utils.getManager;
 import static it.pagopa.selfcare.onboarding.util.Utils.isUserAdmin;
 
 import it.pagopa.selfcare.onboarding.util.LogUtils;
-import it.pagopa.selfcare.onboarding.client.OnboardingMsClient;
-import it.pagopa.selfcare.onboarding.client.UserRegistryClient;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.client.model.ManagerVerification;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
@@ -41,8 +39,8 @@ public class UserServiceImpl implements UserService {
 
     private static final EnumSet<User.Fields> FIELD_LIST = EnumSet.of(User.Fields.name, User.Fields.familyName, User.Fields.workContacts);
     private static final String INVALID_FIELD_REASON = "the value does not match with the certified data";
-    private final UserRegistryClient userRegistryConnector;
-    private final OnboardingMsClient onboardingMsConnector;
+    private final UserRegistryService userRegistryConnector;
+    private final OnboardingService onboardingMsConnector;
     private final OnboardingMapper onboardingMapper;
     private final PgManagerVerifier pgManagerVerifier;
     private final UserAllowedValidationStrategy userAllowedValidationStrategy;

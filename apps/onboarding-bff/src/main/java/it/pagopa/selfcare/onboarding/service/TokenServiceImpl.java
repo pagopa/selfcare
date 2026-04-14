@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.onboarding.service;
 
-import it.pagopa.selfcare.onboarding.client.DocumentMsClient;
-import it.pagopa.selfcare.onboarding.client.OnboardingMsClient;
+import it.pagopa.selfcare.onboarding.service.DocumentService;
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
@@ -21,8 +20,8 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class TokenServiceImpl implements TokenService {
 
-    private final OnboardingMsClient onboardingMsConnector;
-    private final DocumentMsClient documentMsClient;
+    private final OnboardingService onboardingMsConnector;
+    private final DocumentService documentMsClient;
     private final ProductService productService;
     private final OnboardingMapper onboardingMapper;
 

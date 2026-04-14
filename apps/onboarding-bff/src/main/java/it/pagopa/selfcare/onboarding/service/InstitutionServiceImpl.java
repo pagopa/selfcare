@@ -3,10 +3,6 @@ import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.onboarding.common.Origin;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.onboarding.client.OnboardingMsClient;
-import it.pagopa.selfcare.onboarding.client.PartyClient;
-import it.pagopa.selfcare.onboarding.client.PartyRegistryProxyClient;
-import it.pagopa.selfcare.onboarding.client.UserRegistryClient;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.client.model.*;
@@ -53,21 +49,21 @@ class InstitutionServiceImpl implements InstitutionService {
     private static final String ONBOARDING_COMPANY_NOT_ALLOWED = "The selected business does not belong to the user";
     private static final String PROD_PN_PG = "prod-pn-pg";
     static final String DESCRIPTION_TO_REPLACE_REGEX = " - COMUNE";
-    private final OnboardingMsClient onboardingMsConnector;
-    private final PartyClient partyConnector;
-    private final UserRegistryClient userConnector;
+    private final OnboardingService onboardingMsConnector;
+    private final PartyService partyConnector;
+    private final UserRegistryService userConnector;
     private final OrganizationApi organizationApi;
-    private final PartyRegistryProxyClient partyRegistryProxyConnector;
+    private final PartyRegistryProxyService partyRegistryProxyConnector;
     private final InstitutionMapper institutionMapper;
     private final OnboardingMapper onboardingMapper;
     private final PgManagerVerifier pgManagerVerifier;
     private final ProductService productService;
-    InstitutionServiceImpl(OnboardingMsClient onboardingMsConnector,
-                           PartyClient partyConnector,
+    InstitutionServiceImpl(OnboardingService onboardingMsConnector,
+                           PartyService partyConnector,
                            ProductService productService,
-                           UserRegistryClient userConnector,
+                           UserRegistryService userConnector,
                            @RestClient OrganizationApi organizationApi,
-                           PartyRegistryProxyClient partyRegistryProxyConnector,
+                           PartyRegistryProxyService partyRegistryProxyConnector,
                            InstitutionMapper institutionMapper,
                            OnboardingMapper onboardingMapper,
                            PgManagerVerifier pgManagerVerifier

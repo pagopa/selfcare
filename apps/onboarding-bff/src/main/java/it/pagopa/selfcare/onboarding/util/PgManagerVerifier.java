@@ -2,7 +2,7 @@ package it.pagopa.selfcare.onboarding.util;
 
 import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.onboarding.common.Origin;
-import it.pagopa.selfcare.onboarding.client.PartyRegistryProxyClient;
+import it.pagopa.selfcare.onboarding.service.PartyRegistryProxyService;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.client.model.ManagerVerification;
 import it.pagopa.selfcare.onboarding.client.model.MatchInfoResult;
@@ -19,7 +19,7 @@ import java.util.Objects;
 @ApplicationScoped
 @AllArgsConstructor
 public class PgManagerVerifier {
-    private final PartyRegistryProxyClient partyRegistryProxyConnector;
+    private final PartyRegistryProxyService partyRegistryProxyConnector;
 
     public ManagerVerification doVerify(String userTaxCode, String institutionTaxCode) {
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "Checking if user with taxCode {} is manager of institution with taxCode {} on INFOCAMERE", Encode.forJava(userTaxCode), Encode.forJava(institutionTaxCode));

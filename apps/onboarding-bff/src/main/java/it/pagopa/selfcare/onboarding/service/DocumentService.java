@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.onboarding.client;
+package it.pagopa.selfcare.onboarding.service;
 
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
@@ -15,12 +15,12 @@ import org.openapi.quarkus.document_json.model.DocumentType;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
-public class DocumentMsClient {
+public class DocumentService {
 
     private final DocumentContentControllerApi documentContentApi;
     private final DocumentControllerApi documentApi;
 
-    public DocumentMsClient(@RestClient DocumentContentControllerApi documentContentApi,
+    public DocumentService(@RestClient DocumentContentControllerApi documentContentApi,
                             @RestClient DocumentControllerApi documentApi) {
         this.documentContentApi = documentContentApi;
         this.documentApi = documentApi;

@@ -1,6 +1,7 @@
-package it.pagopa.selfcare.onboarding.client;
+package it.pagopa.selfcare.onboarding.service;
 
 import it.pagopa.selfcare.onboarding.util.LogUtils;
+import it.pagopa.selfcare.onboarding.client.PartyRegistryProxyRestClient;
 import it.pagopa.selfcare.onboarding.client.model.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
@@ -9,14 +10,14 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 @ApplicationScoped
 @Slf4j
-public class PartyRegistryProxyClient {
+public class PartyRegistryProxyService {
 
     protected static final String REQUIRED_FISCAL_CODE_MESSAGE = "An user's fiscal code is required";
     private static final String REQUIRED_EXTERNAL_ID_MESSAGE = "An institution's external id is required";
 
     private final PartyRegistryProxyRestClient restClient;
 
-    public PartyRegistryProxyClient(@RestClient PartyRegistryProxyRestClient restClient) {
+    public PartyRegistryProxyService(@RestClient PartyRegistryProxyRestClient restClient) {
         this.restClient = restClient;
     }
 

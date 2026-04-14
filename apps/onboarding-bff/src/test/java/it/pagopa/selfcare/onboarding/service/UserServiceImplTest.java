@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import it.pagopa.selfcare.onboarding.client.OnboardingMsClient;
-import it.pagopa.selfcare.onboarding.client.UserRegistryClient;
 import it.pagopa.selfcare.onboarding.client.model.ManagerVerification;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
 import it.pagopa.selfcare.onboarding.client.model.User;
@@ -33,10 +31,10 @@ class UserServiceImplTest {
     private UserServiceImpl userService;
 
     @Mock
-    private UserRegistryClient userRegistryClient;
+    private UserRegistryService userRegistryClient;
 
     @Mock
-    private OnboardingMsClient onboardingMsClient;
+    private OnboardingService onboardingMsClient;
 
     @Mock
     private OnboardingMapper onboardingMapper;

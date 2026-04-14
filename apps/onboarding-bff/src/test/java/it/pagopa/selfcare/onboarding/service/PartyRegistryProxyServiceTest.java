@@ -1,10 +1,11 @@
-package it.pagopa.selfcare.onboarding.client;
+package it.pagopa.selfcare.onboarding.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import it.pagopa.selfcare.onboarding.client.PartyRegistryProxyRestClient;
 import it.pagopa.selfcare.onboarding.client.model.AooResponse;
 import it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomiesResponse;
 import it.pagopa.selfcare.onboarding.client.model.InstitutionByLegalTaxIdRequest;
@@ -18,10 +19,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class PartyRegistryProxyImplTest {
+class PartyRegistryProxyServiceTest {
 
     @InjectMocks
-    private PartyRegistryProxyClient partyRegistryProxyClient;
+    private PartyRegistryProxyService partyRegistryProxyService;
 
     @Mock
     private PartyRegistryProxyRestClient restClient;
@@ -31,7 +32,7 @@ class PartyRegistryProxyImplTest {
         InstitutionInfoIC expected = new InstitutionInfoIC();
         when(restClient.getInstitutionsByUserLegalTaxId(any())).thenReturn(expected);
 
-        InstitutionInfoIC result = partyRegistryProxyClient.getInstitutionsByUserFiscalCode("AAAABBBB");
+        InstitutionInfoIC result = partyRegistryProxyService.getInstitutionsByUserFiscalCode("AAAABBBB");
 
         assertSame(expected, result);
         ArgumentCaptor<InstitutionByLegalTaxIdRequest> captor = ArgumentCaptor.forClass(InstitutionByLegalTaxIdRequest.class);
@@ -42,7 +43,7 @@ class PartyRegistryProxyImplTest {
     @Test
     void getInstitutionsByUserFiscalCode_whenBlankTaxCode_throwsException() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> partyRegistryProxyClient.getInstitutionsByUserFiscalCode("  "));
+                () -> partyRegistryProxyService.getInstitutionsByUserFiscalCode("  "));
         assertEquals("An user's fiscal code is required", ex.getMessage());
     }
 
@@ -52,7 +53,7 @@ class PartyRegistryProxyImplTest {
         expected.setCodAoo("AOO1");
         when(restClient.getAooById("AOO1")).thenReturn(expected);
 
-        AooResponse result = partyRegistryProxyClient.getAooById("AOO1");
+        AooResponse result = partyRegistryProxyService.getAooById("AOO1");
 
         assertSame(expected, result);
     }
@@ -63,7 +64,7 @@ class PartyRegistryProxyImplTest {
         expected.setUniUoCode("UO1");
         when(restClient.getUoById("UO1")).thenReturn(expected);
 
-        UoResponse result = partyRegistryProxyClient.getUoById("UO1");
+        UoResponse result = partyRegistryProxyService.getUoById("UO1");
 
         assertSame(expected, result);
     }
@@ -74,7 +75,7 @@ class PartyRegistryProxyImplTest {
         expected.setGeotaxId("GEO1");
         when(restClient.getExtByCode("GEO1")).thenReturn(expected);
 
-        GeographicTaxonomiesResponse result = partyRegistryProxyClient.getExtById("GEO1");
+        GeographicTaxonomiesResponse result = partyRegistryProxyService.getExtById("GEO1");
 
         assertSame(expected, result);
     }
