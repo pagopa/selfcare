@@ -40,7 +40,7 @@ jobs:
 
       - name: Run Integration Tests
         id: int_tests
-        run: mvn --projects :onboarding-bff --also-make test -Dtest=it.pagopa.selfcare.onboarding.CucumberSuiteTest -Dsurefire.failIfNoSpecifiedTests=false
+        run: mvn --projects :onboarding-bff --also-make test -Dtest=CucumberSuiteTest -Dsurefire.failIfNoSpecifiedTests=false
         shell: bash
 
       - name: Upload Test Results
