@@ -41,3 +41,17 @@ jobs:
       override_github_environment: ${{ inputs.env }}
       use_labels: true
       override_labels: ${{ inputs.env }}
+
+  release_uat:
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    name: "UAT ${{ inputs.domain }} Selfcare Infra Core Release"
+    if: ${{ inputs.env == 'uat' }}
+    secrets: inherit
+    with:
+      environment: uat-${{ inputs.domain }}
+      base_path: infra/core
+      # env_vars: ""
+      use_private_agent: true
+      override_github_environment: ${{ inputs.env }}
+      use_labels: true
+      override_labels: ${{ inputs.env }}
