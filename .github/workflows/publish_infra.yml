@@ -40,4 +40,4 @@ jobs:
       use_private_agent: true
       override_github_environment: ${{ inputs.env }}
       use_labels: true
-      override_labels: '["self-hosted", "${{ inputs.env }}"]'
+      # override_labels: '["self-hosted", "${{ inputs.env }}"]'
