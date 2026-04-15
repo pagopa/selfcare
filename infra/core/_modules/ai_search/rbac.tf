@@ -6,7 +6,7 @@ resource "azurerm_role_assignment" "admins_group_to_ai_search_reader" {
 
 resource "azurerm_role_assignment" "developers_group_to_ai_search_reader" {
   scope                = azurerm_search_service.srch_service.id
-  role_definition_name = "Search Index Data Reader"
+  role_definition_name = "Search Service Contributor"
   principal_id         = var.adgroup_developers_object_id
 }
 

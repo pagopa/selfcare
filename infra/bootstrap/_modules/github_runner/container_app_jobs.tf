@@ -18,7 +18,7 @@ module "container_app_job" {
   }
 
   job_meta = {
-    repo = "selfcare-infra"
+    repo = "selfcare"
   }
 
   runner_labels = [local.environment[var.env_short]]
