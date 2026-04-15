@@ -56,8 +56,8 @@ public class UserController {
                     @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = Problem.class))
             })
-    @Operation(summary = "${swagger.onboarding.user.api.validate}",
-            description = "${swagger.onboarding.user.api.validate}", operationId = "validateUsingPOST")
+    @Operation(summary = "${openapi.onboarding.user.api.validate}",
+            description = "${openapi.onboarding.user.api.validate}", operationId = "validateUsingPOST")
     public Response validate(@Valid UserDataValidationDto request) {
         log.trace("validate start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "validate request = {}", LogUtils.sanitize(request));
@@ -74,8 +74,8 @@ public class UserController {
             })
     @POST
     @Path("/onboarding")
-    @Operation(summary= "${swagger.onboarding.users.api.onboarding}",
-            description = "${swagger.onboarding.users.api.onboarding}", operationId = "onboardingUsers")
+    @Operation(summary= "${openapi.onboarding.users.api.onboarding}",
+            description = "${openapi.onboarding.users.api.onboarding}", operationId = "onboardingUsers")
     public Response onboarding(@Valid OnboardingUserDto request) {
         log.trace("onboarding start");
         log.debug("onboarding request = {}", LogUtils.sanitize(request));
@@ -93,8 +93,8 @@ public class UserController {
             })
     @POST
     @Path("/onboarding/aggregator")
-    @Operation(summary = "${swagger.onboarding.users.api.onboarding-aggregator}",
-            description = "${swagger.onboarding.users.api.onboarding-aggregator}", operationId = "onboardingAggregatorUsingPOST")
+    @Operation(summary = "${openapi.onboarding.users.api.onboarding-aggregator}",
+            description = "${openapi.onboarding.users.api.onboarding-aggregator}", operationId = "onboardingAggregatorUsingPOST")
     public Response onboardingAggregator(@Valid OnboardingUserDto request) {
         log.trace("onboardingAggregator start");
         log.debug("onboardingAggregator request = {}", Encode.forJava(request.toString()));
@@ -111,8 +111,8 @@ public class UserController {
             })
     @POST
     @Path("/check-manager")
-    @Operation(summary = "${swagger.onboarding.users.api.check-manager}",
-            description = "${swagger.onboarding.users.api.check-manager}", operationId = "checkManager")
+    @Operation(summary = "${openapi.onboarding.users.api.check-manager}",
+            description = "${openapi.onboarding.users.api.check-manager}", operationId = "checkManager")
     public CheckManagerResponse checkManager(@Valid CheckManagerDto request) {
         log.trace("checkManager start");
         boolean checkManager =  userService.checkManager(onboardingResourceMapper.toCheckManagerData(request));
@@ -128,8 +128,8 @@ public class UserController {
             })
     @GET
     @Path("/onboarding/{onboardingId}/manager")
-    @Operation(summary = "${swagger.onboarding.users.api.check-manager}",
-            description = "${swagger.onboarding.users.api.check-manager}", operationId = "getManagerInfo")
+    @Operation(summary = "${openapi.onboarding.users.api.check-manager}",
+            description = "${openapi.onboarding.users.api.check-manager}", operationId = "getManagerInfo")
     public ManagerInfoResponse getManagerInfo(@PathParam("onboardingId") String onboardingId) {
         log.trace("getManagerInfo start");
         String fiscalCode = SecurityIdentityUtils.getFiscalCode(securityIdentity);
@@ -146,8 +146,8 @@ public class UserController {
             })
     @POST
     @Path("/search-user")
-    @Operation(summary = "${swagger.onboarding.users.api.search-user}",
-            description = "${swagger.onboarding.users.api.search-user}", operationId = "searchUserId")
+    @Operation(summary = "${openapi.onboarding.users.api.search-user}",
+            description = "${openapi.onboarding.users.api.search-user}", operationId = "searchUserId")
     public UserId searchUser(@Valid UserTaxCodeDto request) {
         log.trace("searchUser start");
         UserId userId =  userService.searchUser(userResourceMapper.toString(request));

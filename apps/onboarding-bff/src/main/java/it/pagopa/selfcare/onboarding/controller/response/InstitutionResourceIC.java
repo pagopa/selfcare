@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.onboarding.controller.response;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.util.List;
@@ -8,13 +8,13 @@ import java.util.List;
 @Data
 public class InstitutionResourceIC {
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.legalTaxId}")
+    @Schema(description = "${openapi.onboarding.institutions.model.legalTaxId}")
     private String legalTaxId;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.requestDateTime}")
+    @Schema(description = "${openapi.onboarding.institutions.model.requestDateTime}")
     private String requestDateTime;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.businesses}")
+    @Schema(description = "${openapi.onboarding.institutions.model.businesses}")
     private List<BusinessResourceIC> businesses;
 
 }

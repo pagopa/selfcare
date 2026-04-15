@@ -1,12 +1,12 @@
 package it.pagopa.selfcare.onboarding.controller.response;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.util.List;
 
 @Data
 public class GeographicTaxonomyListResource {
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.geographicTaxonomy}")
+    @Schema(description = "${openapi.onboarding.institutions.model.geographicTaxonomy}")
     private List<GeographicTaxonomyResource> geographicTaxonomies;
 }

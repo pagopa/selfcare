@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.onboarding.controller.response;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -8,10 +8,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CertifiedFieldResource<T> {
 
-    @ApiModelProperty(value = "${swagger.model.certifiedField.certified}")
+    @Schema(description = "${openapi.model.certifiedField.certified}")
     private boolean certified;
 
-    @ApiModelProperty(value = "${swagger.model.certifiedField.value}")
+    @Schema(description = "${openapi.model.certifiedField.value}")
     private T value;
 
 }

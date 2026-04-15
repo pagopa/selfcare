@@ -1,28 +1,28 @@
 package it.pagopa.selfcare.onboarding.controller.response;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import it.pagopa.selfcare.product.entity.ProductStatus;
 import lombok.Data;
 
 @Data
 public class ProductResource {
 
-    @ApiModelProperty(value = "${swagger.onboarding.product.model.id}")
+    @Schema(description = "${openapi.onboarding.product.model.id}")
     private String id;
 
-    @ApiModelProperty(value = "${swagger.onboarding.product.model.title}")
+    @Schema(description = "${openapi.onboarding.product.model.title}")
     private String title;
 
-    @ApiModelProperty(value = "${swagger.onboarding.product.model.parentId}")
+    @Schema(description = "${openapi.onboarding.product.model.parentId}")
     private String parentId;
 
-    @ApiModelProperty(value = "${swagger.onboarding.product.model.status}")
+    @Schema(description = "${openapi.onboarding.product.model.status}")
     private ProductStatus status;
 
-    @ApiModelProperty(value = "${swagger.onboarding.product.model.logo}")
+    @Schema(description = "${openapi.onboarding.product.model.logo}")
     private String logo;
 
-    @ApiModelProperty(value = "${swagger.onboarding.product.model.logoBgColor}")
+    @Schema(description = "${openapi.onboarding.product.model.logoBgColor}")
     private String logoBgColor;
 
 }

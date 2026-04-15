@@ -37,12 +37,12 @@ public class ProductController {
 
     @GET
     @Path("/v1/product/{id}")
-    @Operation(summary = "${swagger.onboarding.product.api.getProduct}",
-            description = "${swagger.onboarding.product.api.getProduct}", operationId = "getProductUsingGET")
-    public ProductResource getProduct(@Parameter(description = "${swagger.onboarding.product.model.id}")
+    @Operation(summary = "${openapi.onboarding.product.api.getProduct}",
+            description = "${openapi.onboarding.product.api.getProduct}", operationId = "getProductUsingGET")
+    public ProductResource getProduct(@Parameter(description = "${openapi.onboarding.product.model.id}")
                                       @PathParam("id")
                                       String id,
-                                      @Parameter(description = "${swagger.onboarding.institutions.model.institutionType}")
+                                      @Parameter(description = "${openapi.onboarding.institutions.model.institutionType}")
                                       @QueryParam("institutionType")
                                       Optional<InstitutionType> institutionType) {
         log.trace("getProduct start");
@@ -58,8 +58,8 @@ public class ProductController {
 
     @GET
     @Path("/v1/products")
-    @Operation(summary = "${swagger.onboarding.product.api.getProducts}",
-            description = "${swagger.onboarding.product.api.getProducts}", operationId = "getProducts")
+    @Operation(summary = "${openapi.onboarding.product.api.getProducts}",
+            description = "${openapi.onboarding.product.api.getProducts}", operationId = "getProducts")
     public List<ProductResource> getProducts() {
         log.trace("getProducts start");
         final List<Product> products = productService.getProducts(true);
@@ -73,8 +73,8 @@ public class ProductController {
 
     @GET
     @Path("/v1/products/admin")
-    @Operation(summary = "${swagger.onboarding.product.api.getProductsAdmin}",
-            description = "${swagger.onboarding.product.api.getProductsAdmin}", operationId = "getProductsAdmin")
+    @Operation(summary = "${openapi.onboarding.product.api.getProductsAdmin}",
+            description = "${openapi.onboarding.product.api.getProductsAdmin}", operationId = "getProductsAdmin")
     public List<ProductResource> getProductsAdmin() {
         log.trace("getProductsAdmin start");
         final List<Product> products = productService.getProducts(false);

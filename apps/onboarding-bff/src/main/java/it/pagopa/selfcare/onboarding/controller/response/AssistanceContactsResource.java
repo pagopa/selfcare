@@ -1,15 +1,15 @@
 package it.pagopa.selfcare.onboarding.controller.response;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
 public class AssistanceContactsResource {
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.assistance.supportEmail}")
+    @Schema(description = "${openapi.onboarding.institutions.model.assistance.supportEmail}")
     private String supportEmail;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.assistance.supportPhone}")
+    @Schema(description = "${openapi.onboarding.institutions.model.assistance.supportPhone}")
     private String supportPhone;
 
 }

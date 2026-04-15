@@ -1,11 +1,11 @@
 package it.pagopa.selfcare.onboarding.controller.request;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
 public class ReasonForRejectDto {
 
-    @ApiModelProperty(value = "${swagger.onboarding.institution.model.reason}")
+    @Schema(description = "${openapi.onboarding.institution.model.reason}")
     private String reason;
 }

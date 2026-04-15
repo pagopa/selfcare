@@ -1,15 +1,15 @@
 package it.pagopa.selfcare.onboarding.controller.request;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
 public class PaymentDto {
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.iban}")
+    @Schema(description = "${openapi.onboarding.institutions.model.iban}")
     private String iban;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.holder}")
+    @Schema(description = "${openapi.onboarding.institutions.model.holder}")
     private String holder;
 
 }

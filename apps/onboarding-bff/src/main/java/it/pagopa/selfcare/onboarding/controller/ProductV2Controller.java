@@ -31,9 +31,9 @@ public class ProductV2Controller {
     private final InstitutionMapper productMapper;
 
     @GET
-    @Operation(summary = "${swagger.product.ms.api.getOrigins.summary}",
-            description = "${swagger.product.ms.api.getOrigins.description}", operationId = "getOrigins")
-    public OriginResponse getOrigins(@Parameter(description = "${swagger.onboarding.institutions.model.institutionType}")
+    @Operation(summary = "${openapi.product.ms.api.getOrigins.summary}",
+            description = "${openapi.product.ms.api.getOrigins.description}", operationId = "getOrigins")
+    public OriginResponse getOrigins(@Parameter(description = "${openapi.onboarding.institutions.model.institutionType}")
                                       @QueryParam("productId")
                                       String productId) {
         log.trace("getOrigins start");

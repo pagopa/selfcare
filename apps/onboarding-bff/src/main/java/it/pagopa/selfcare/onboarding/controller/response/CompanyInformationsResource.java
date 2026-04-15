@@ -1,18 +1,18 @@
 package it.pagopa.selfcare.onboarding.controller.response;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
 public class CompanyInformationsResource {
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.companyInformations.rea}")
+    @Schema(description = "${openapi.onboarding.institutions.model.companyInformations.rea}")
     private String rea;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.companyInformations.shareCapital}")
+    @Schema(description = "${openapi.onboarding.institutions.model.companyInformations.shareCapital}")
     private String shareCapital;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.companyInformations.businessRegisterPlace}")
+    @Schema(description = "${openapi.onboarding.institutions.model.companyInformations.businessRegisterPlace}")
     private String businessRegisterPlace;
 
 }

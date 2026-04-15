@@ -66,8 +66,8 @@ public class InstitutionController {
             })
     @POST
     @Path("/onboarding")
-    @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.subunit}",
-            description = "${swagger.onboarding.institutions.api.onboarding.subunit}", operationId = "onboardingUsingPOST")
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
+            description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "onboardingUsingPOST")
     public Response onboarding(@Valid OnboardingProductDto request) {
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", LogUtils.sanitize(request));
@@ -84,8 +84,8 @@ public class InstitutionController {
             })
     @POST
     @Path("/company/onboarding")
-    @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.subunit}",
-            description = "${swagger.onboarding.institutions.api.onboarding.subunit}", operationId = "onboardingCompanyUsingPOST")
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
+            description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "onboardingCompanyUsingPOST")
     public Response onboarding(@Valid CompanyOnboardingDto request) {
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", LogUtils.sanitize(request));
@@ -96,12 +96,12 @@ public class InstitutionController {
 
     @GET
     @Path("/onboarding/")
-    @Operation(summary = "${swagger.onboarding.institutions.api.getInstitutionOnboardingInfo}",
-            description = "${swagger.onboarding.institutions.api.getInstitutionOnboardingInfo}", operationId = "getInstitutionOnboardingInfoUsingGET")
-    public InstitutionOnboardingInfoResource getInstitutionOnboardingInfoById(@Parameter(description = "${swagger.onboarding.institutions.model.id}")
+    @Operation(summary = "${openapi.onboarding.institutions.api.getInstitutionOnboardingInfo}",
+            description = "${openapi.onboarding.institutions.api.getInstitutionOnboardingInfo}", operationId = "getInstitutionOnboardingInfoUsingGET")
+    public InstitutionOnboardingInfoResource getInstitutionOnboardingInfoById(@Parameter(description = "${openapi.onboarding.institutions.model.id}")
                                                                           @QueryParam("institutionId")
                                                                           String institutionId,
-                                                                          @Parameter(description = "${swagger.onboarding.product.model.id}")
+                                                                          @Parameter(description = "${openapi.onboarding.product.model.id}")
                                                                           @QueryParam("productId")
                                                                           String productId) {
         log.trace("getInstitutionOnboardingInfoById start");
@@ -115,9 +115,9 @@ public class InstitutionController {
 
     @GET
     @Path("/{externalInstitutionId}/geographic-taxonomy")
-    @Operation(summary = "${swagger.onboarding.institutions.api.getInstitutionGeographicTaxonomy}",
-            description = "${swagger.onboarding.institutions.api.getInstitutionGeographicTaxonomy}", operationId = "getInstitutionGeographicTaxonomyUsingGET")
-    public List<GeographicTaxonomyResource> getInstitutionGeographicTaxonomy(@Parameter(description = "${swagger.onboarding.institutions.model.externalId}")
+    @Operation(summary = "${openapi.onboarding.institutions.api.getInstitutionGeographicTaxonomy}",
+            description = "${openapi.onboarding.institutions.api.getInstitutionGeographicTaxonomy}", operationId = "getInstitutionGeographicTaxonomyUsingGET")
+    public List<GeographicTaxonomyResource> getInstitutionGeographicTaxonomy(@Parameter(description = "${openapi.onboarding.institutions.model.externalId}")
                                                                              @PathParam("externalInstitutionId")
                                                                              String externalInstitutionId) {
         log.trace("getInstitutionGeographicTaxonomy start");
@@ -133,12 +133,12 @@ public class InstitutionController {
 
     @GET
     @Path("/geographic-taxonomies")
-    @Operation(summary = "${swagger.onboarding.institutions.api.getInstitutionGeographicTaxonomy}",
-            description = "${swagger.onboarding.institutions.api.getInstitutionGeographicTaxonomy}", operationId = "getGeographicTaxonomiesByTaxCodeAndSubunitCodeUsingGET")
-    public List<GeographicTaxonomyResource> getGeographicTaxonomiesByTaxCodeAndSubunitCode(@Parameter(description = "${swagger.onboarding.institutions.model.taxCode}")
+    @Operation(summary = "${openapi.onboarding.institutions.api.getInstitutionGeographicTaxonomy}",
+            description = "${openapi.onboarding.institutions.api.getInstitutionGeographicTaxonomy}", operationId = "getGeographicTaxonomiesByTaxCodeAndSubunitCodeUsingGET")
+    public List<GeographicTaxonomyResource> getGeographicTaxonomiesByTaxCodeAndSubunitCode(@Parameter(description = "${openapi.onboarding.institutions.model.taxCode}")
                                                                                            @QueryParam("taxCode")
                                                                                            String taxCode,
-                                                                                           @Parameter(description = "${swagger.onboarding.institutions.model.subunitCode}")
+                                                                                           @Parameter(description = "${openapi.onboarding.institutions.model.subunitCode}")
                                                                                            @QueryParam("subunitCode")
                                                                                            String subunitCode) {
         log.trace("getGeographicTaxonomiesByTaxCodeAndSubunitCode start");
@@ -158,9 +158,9 @@ public class InstitutionController {
 
     @GET
     @Path("")
-    @Operation(summary = "${swagger.onboarding.institutions.api.getInstitutions}",
-            description = "${swagger.onboarding.institutions.api.getInstitutions}", operationId = "getInstitutionsUsingGET")
-    public List<InstitutionResource> getInstitutions(@Parameter(description = "${swagger.onboarding.institutions.model.productFilter}")
+    @Operation(summary = "${openapi.onboarding.institutions.api.getInstitutions}",
+            description = "${openapi.onboarding.institutions.api.getInstitutions}", operationId = "getInstitutionsUsingGET")
+    public List<InstitutionResource> getInstitutions(@Parameter(description = "${openapi.onboarding.institutions.model.productFilter}")
                                                      @QueryParam("productId")
                                                      String productId) {
         log.trace("getInstitutions start");
@@ -184,12 +184,12 @@ public class InstitutionController {
             })
     @HEAD
     @Path("/{externalInstitutionId}/products/{productId}")
-    @Operation(summary = "${swagger.onboarding.institutions.api.verifyOnboarding}",
-            description = "${swagger.onboarding.institutions.api.verifyOnboarding}", operationId = "verifyOnboardingProductUsingHEAD")
-    public void verifyOnboarding(@Parameter(description = "${swagger.onboarding.institutions.model.externalId}")
+    @Operation(summary = "${openapi.onboarding.institutions.api.verifyOnboarding}",
+            description = "${openapi.onboarding.institutions.api.verifyOnboarding}", operationId = "verifyOnboardingProductUsingHEAD")
+    public void verifyOnboarding(@Parameter(description = "${openapi.onboarding.institutions.model.externalId}")
                                  @PathParam("externalInstitutionId")
                                  String externalInstitutionId,
-                                 @Parameter(description = "${swagger.onboarding.product.model.id}")
+                                 @Parameter(description = "${openapi.onboarding.product.model.id}")
                                  @PathParam("productId")
                                  String productId) {
         log.trace("verifyOnboarding start");
@@ -207,30 +207,30 @@ public class InstitutionController {
             })
     @HEAD
     @Path("/onboarding")
-    @Operation(summary = "${swagger.onboarding.institutions.api.verifyOnboarding}",
-            description = "${swagger.onboarding.institutions.api.verifyOnboarding}", operationId = "verifyOnboardingUsingHEAD")
-    public void verifyOnboarding(@Parameter(description = "${swagger.onboarding.institutions.model.taxCode}")
+    @Operation(summary = "${openapi.onboarding.institutions.api.verifyOnboarding}",
+            description = "${openapi.onboarding.institutions.api.verifyOnboarding}", operationId = "verifyOnboardingUsingHEAD")
+    public void verifyOnboarding(@Parameter(description = "${openapi.onboarding.institutions.model.taxCode}")
                                      @QueryParam("taxCode")
                                      String taxCode,
-                                 @Parameter(description = "${swagger.onboarding.institutions.model.subunitCode}")
+                                 @Parameter(description = "${openapi.onboarding.institutions.model.subunitCode}")
                                      @QueryParam("subunitCode")
                                      String subunitCode,
-                                 @Parameter(description = "${swagger.onboarding.product.model.id}")
+                                 @Parameter(description = "${openapi.onboarding.product.model.id}")
                                      @QueryParam("productId")
                                      String productId,
-                                 @Parameter(description = "${swagger.onboarding.institutions.model.origin}")
+                                 @Parameter(description = "${openapi.onboarding.institutions.model.origin}")
                                      @QueryParam("origin")
                                      String origin,
-                                 @Parameter(description = "${swagger.onboarding.institutions.model.originId}")
+                                 @Parameter(description = "${openapi.onboarding.institutions.model.originId}")
                                      @QueryParam("originId")
                                      String originId,
-                                 @Parameter(description = "${swagger.onboarding.institutions.model.vatNumber}")
+                                 @Parameter(description = "${openapi.onboarding.institutions.model.vatNumber}")
                                      @QueryParam("vatNumber")
                                      Optional<String> vatNumber,
-                                 @Parameter(description = "${swagger.onboarding.institutions.model.institutionType}")
+                                 @Parameter(description = "${openapi.onboarding.institutions.model.institutionType}")
                                      @QueryParam("institutionType")
                                      String institutionType,
-                                 @Parameter(description = "${swagger.onboarding.institutions.model.verifyType}")
+                                 @Parameter(description = "${openapi.onboarding.institutions.model.verifyType}")
                                      @QueryParam("verifyType") VerifyType type) {
         log.trace("verifyOnboarding start");
         if (VerifyType.EXTERNAL.equals(type) && vatNumber.isPresent() && (PROD_FD.getValue().equals(productId) || PROD_FD_GARANTITO.getValue().equals(productId))) {
@@ -242,8 +242,8 @@ public class InstitutionController {
 
     @GET
     @Path("/from-infocamere/")
-    @Operation(summary = "${swagger.onboarding.institutions.api.getInstitutionsByUser}",
-            description = "${swagger.onboarding.institutions.api.getInstitutionsByUser}", operationId = "getInstitutionsFromInfocamereUsingGET")
+    @Operation(summary = "${openapi.onboarding.institutions.api.getInstitutionsByUser}",
+            description = "${openapi.onboarding.institutions.api.getInstitutionsByUser}", operationId = "getInstitutionsFromInfocamereUsingGET")
     public InstitutionResourceIC getInstitutionsFromInfocamere() {
         log.trace("getInstitutionsFromInfocamere start");
         String fiscalCode = SecurityIdentityUtils.getFiscalCode(securityIdentity);
@@ -256,8 +256,8 @@ public class InstitutionController {
 
     @POST
     @Path("/verification/match")
-    @Operation(summary = "${swagger.onboarding.institutions.api.matchInstitutionAndUser}",
-            description = "${swagger.onboarding.institutions.api.matchInstitutionAndUser}", operationId = "postVerificationMatchUsingPOST")
+    @Operation(summary = "${openapi.onboarding.institutions.api.matchInstitutionAndUser}",
+            description = "${openapi.onboarding.institutions.api.matchInstitutionAndUser}", operationId = "postVerificationMatchUsingPOST")
     public MatchInfoResultResource postVerificationMatch(
                                                          @Valid
                                                          VerificationMatchRequest verificationMatchRequest) {
@@ -273,8 +273,8 @@ public class InstitutionController {
 
     @POST
     @Path("/verification/legal-address")
-    @Operation(summary = "${swagger.onboarding.institutions.api.getInstitutionLegalAddress}",
-            description = "${swagger.onboarding.institutions.api.getInstitutionLegalAddress}", operationId = "postVerificationLegalAddressUsingPOST")
+    @Operation(summary = "${openapi.onboarding.institutions.api.getInstitutionLegalAddress}",
+            description = "${openapi.onboarding.institutions.api.getInstitutionLegalAddress}", operationId = "postVerificationLegalAddressUsingPOST")
     public InstitutionLegalAddressResource postVerificationLegalAddress(@Valid VerificationLegalAddressRequest verificationLegalAddressRequest) {
         log.trace("getInstitutionLegalAddress start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionLegalAddress institutionId = {}",
@@ -293,12 +293,12 @@ public class InstitutionController {
     @Deprecated(forRemoval = true)
     @GET
     @Path("/{externalInstitutionId}/products/{productId}/onboarded-institution-info")
-    @Operation(summary = "${swagger.onboarding.institutions.api.getInstitutionOnboardingInfo}",
-            description = "${swagger.onboarding.institutions.api.getInstitutionOnboardingInfo}", operationId = "getInstitutionOnboardingInfoUsingGET_1")
-    public InstitutionOnboardingInfoResource getInstitutionOnboardingInfo(@Parameter(description = "${swagger.onboarding.institutions.model.externalId}")
+    @Operation(summary = "${openapi.onboarding.institutions.api.getInstitutionOnboardingInfo}",
+            description = "${openapi.onboarding.institutions.api.getInstitutionOnboardingInfo}", operationId = "getInstitutionOnboardingInfoUsingGET_1")
+    public InstitutionOnboardingInfoResource getInstitutionOnboardingInfo(@Parameter(description = "${openapi.onboarding.institutions.model.externalId}")
                                                                           @PathParam("externalInstitutionId")
                                                                           String externalInstitutionId,
-                                                                          @Parameter(description = "${swagger.onboarding.product.model.id}")
+                                                                          @Parameter(description = "${openapi.onboarding.product.model.id}")
                                                                           @PathParam("productId")
                                                                           String productId) {
         log.trace("getInstitutionOnBoardingInfo start");

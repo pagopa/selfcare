@@ -69,8 +69,8 @@ public class InstitutionV2Controller {
             })
     @POST
     @Path("/onboarding")
-    @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.subunit}",
-            description = "${swagger.onboarding.institutions.api.onboarding.subunit}", operationId = "institutionOnboarding")
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
+            description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "institutionOnboarding")
     public Response onboarding(@Valid OnboardingProductDto request) {
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", LogUtils.sanitize(request));
@@ -92,8 +92,8 @@ public class InstitutionV2Controller {
             })
     @POST
     @Path("/company/onboarding")
-    @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.subunit}",
-            description = "${swagger.onboarding.institutions.api.onboarding.subunit}", operationId = "institutionOnboardingCompany")
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
+            description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "institutionOnboardingCompany")
     public Response onboarding(@Valid CompanyOnboardingDto request) {
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", Encode.forJava(request.toString()));
@@ -110,21 +110,21 @@ public class InstitutionV2Controller {
                             schema = @Schema(implementation = Problem.class))
             })
     @GET
-    @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.subunit}",
-            description = "${swagger.onboarding.institutions.api.onboarding.subunit}", operationId = "v2GetInstitutionByFilters")
-    public List<InstitutionResource> getInstitution(@Parameter(description = "${swagger.onboarding.institutions.model.productFilter}")
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
+            description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "v2GetInstitutionByFilters")
+    public List<InstitutionResource> getInstitution(@Parameter(description = "${openapi.onboarding.institutions.model.productFilter}")
                                                     @QueryParam("productId")
                                                     String productId,
-                                                    @Parameter(description = "${swagger.onboarding.institutions.model.taxCode}")
+                                                    @Parameter(description = "${openapi.onboarding.institutions.model.taxCode}")
                                                     @QueryParam("taxCode")
                                                     String taxCode,
-                                                    @Parameter(description = "${swagger.onboarding.institutions.model.origin}")
+                                                    @Parameter(description = "${openapi.onboarding.institutions.model.origin}")
                                                     @QueryParam("origin")
                                                     String origin,
-                                                    @Parameter(description = "${swagger.onboarding.institutions.model.originId}")
+                                                    @Parameter(description = "${openapi.onboarding.institutions.model.originId}")
                                                     @QueryParam("originId")
                                                     String originId,
-                                                    @Parameter(description = "${swagger.onboarding.institutions.model.subunitCode}")
+                                                    @Parameter(description = "${openapi.onboarding.institutions.model.subunitCode}")
                                                     @QueryParam("subunitCode")
                                                     String subunitCode) {
         log.trace("getInstitution start");
@@ -140,8 +140,8 @@ public class InstitutionV2Controller {
     @POST
     @Path("/onboarding/aggregation/verification")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",
-            description = "${swagger.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",  operationId = "verifyAggregatesCsvUsingPOST")
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",
+            description = "${openapi.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",  operationId = "verifyAggregatesCsvUsingPOST")
     public VerifyAggregatesResponse verifyAggregatesCsv(@RestForm("aggregates") FileUpload file,
                                                         @RestForm("institutionType") String institutionType,
                                                         @RestForm("productId") String productId){
@@ -157,8 +157,8 @@ public class InstitutionV2Controller {
 
     @POST
     @Path("/company/verify-manager")
-    @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.verifyManager}",
-            description = "${swagger.onboarding.institutions.api.onboarding.verifyManager}", operationId = "verifyManagerUsingPOST")
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.verifyManager}",
+            description = "${openapi.onboarding.institutions.api.onboarding.verifyManager}", operationId = "verifyManagerUsingPOST")
     public VerifyManagerResponse verifyManager(
             @Valid VerifyManagerRequest request
     ) {
@@ -171,8 +171,8 @@ public class InstitutionV2Controller {
 
     @GET
     @Path("/onboarding/active")
-    @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.getActiveOnboarding}",
-            description = "${swagger.onboarding.institutions.api.onboarding.getActiveOnboarding}", operationId = "getActiveOnboardingUsingGET")
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.getActiveOnboarding}",
+            description = "${openapi.onboarding.institutions.api.onboarding.getActiveOnboarding}", operationId = "getActiveOnboardingUsingGET")
     public List<InstitutionOnboardingResource> getActiveOnboarding(@QueryParam("taxCode") String taxCode,
                                                                    @QueryParam("productId") String productId,
                                                                    @QueryParam("subunitCode") String subunitCode
@@ -192,8 +192,8 @@ public class InstitutionV2Controller {
 
     @GET
     @Path("/onboarding/recipient-code/verification")
-    @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.checkRecipientCode}",
-            description = "${swagger.onboarding.institutions.api.onboarding.checkRecipientCode}", operationId = "checkRecipientCodeUsingGET")
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.checkRecipientCode}",
+            description = "${openapi.onboarding.institutions.api.onboarding.checkRecipientCode}", operationId = "checkRecipientCodeUsingGET")
     public RecipientCodeStatus checkRecipientCode(@QueryParam("originId") String originId,
                                                   @QueryParam("recipientCode") String recipientCode) {
         log.trace("Check recipientCode start");
@@ -206,8 +206,8 @@ public class InstitutionV2Controller {
 
     @POST
     @Path("/onboarding/users/pg")
-    @Operation(summary = "${swagger.onboarding.institutions.api.onboardingUsersPg}",
-            description = "${swagger.onboarding.institutions.api.onboardingUsersPg}", operationId = "onboardingUsersPgUsingPOST")
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboardingUsersPg}",
+            description = "${openapi.onboarding.institutions.api.onboardingUsersPg}", operationId = "onboardingUsersPgUsingPOST")
     public void onboardingUsers(@Valid CompanyOnboardingUserDto companyOnboardingUserDto) {
         log.trace("onboardingUsersPgFromIcAndAde start");
         log.debug("onboardingUsersPgFromIcAndAde request = {}", Encode.forJava(companyOnboardingUserDto.toString()));
@@ -217,8 +217,8 @@ public class InstitutionV2Controller {
 
     @GET
     @Path("/onboardings")
-    @Operation(summary = "${swagger.onboarding.institutions.api.onboardingInfo.summary}",
-            description = "${swagger.onboarding.institutions.api.onboardingInfo.description}", operationId = "getOnboardingInfo")
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboardingInfo.summary}",
+            description = "${openapi.onboarding.institutions.api.onboardingInfo.description}", operationId = "getOnboardingInfo")
     public OnboardingGetResponse getOnboardingsInfo(@QueryParam("taxCode") String inputTaxCode,
                                                      @QueryParam("status") String inputStatus) {
         log.trace("onboardingInfo start");

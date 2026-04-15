@@ -1,12 +1,12 @@
 package it.pagopa.selfcare.onboarding.controller.response;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
 public class MatchInfoResultResource {
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.matchResult}")
+    @Schema(description = "${openapi.onboarding.institutions.model.matchResult}")
     private boolean verificationResult;
 
 }

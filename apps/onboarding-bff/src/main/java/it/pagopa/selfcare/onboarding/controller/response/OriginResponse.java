@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.onboarding.controller.response;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import it.pagopa.selfcare.onboarding.client.model.OriginEntry;
 import lombok.Data;
 
@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 public class OriginResponse {
 
-    @ApiModelProperty(value = "${swagger.product.model.id}")
+    @Schema(description = "${openapi.product.model.id}")
     private List<OriginEntry> origins;
 
 }

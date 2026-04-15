@@ -69,8 +69,8 @@ public class TokenV2Controller {
     @POST
     @Path("/{onboardingId}/complete")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Operation(description = "${swagger.tokens.complete}", summary = "${swagger.tokens.complete}", operationId = "completeUsingPOST")
-    public Response complete(@Parameter(description = "${swagger.tokens.onboardingId}")
+    @Operation(description = "${openapi.tokens.complete}", summary = "${openapi.tokens.complete}", operationId = "completeUsingPOST")
+    public Response complete(@Parameter(description = "${openapi.tokens.onboardingId}")
                              @PathParam("onboardingId") String onboardingId,
                              @RestForm("contract") FileUpload contract) {
         log.trace("complete Token start");
@@ -86,9 +86,9 @@ public class TokenV2Controller {
     @POST
     @Path("/{onboardingId}/complete-onboarding-users")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Operation(description = "${swagger.tokens.completeOnboardingUsers}", summary = "${swagger.tokens.completeOnboardingUsers}",
+    @Operation(description = "${openapi.tokens.completeOnboardingUsers}", summary = "${openapi.tokens.completeOnboardingUsers}",
             operationId = "completeOnboardingUsersUsingPOST")
-    public Response completeOnboardingUsers(@Parameter(description = "${swagger.tokens.onboardingId}")
+    public Response completeOnboardingUsers(@Parameter(description = "${openapi.tokens.onboardingId}")
                                             @PathParam("onboardingId") String onboardingId,
                                             @RestForm("contract") FileUpload contract) {
         log.trace("complete Onboarding Users start");
@@ -103,9 +103,9 @@ public class TokenV2Controller {
 
     @POST
     @Path("/{onboardingId}/verify")
-    @Operation(description = "${swagger.tokens.verify}",
-            summary = "${swagger.tokens.verify}", operationId = "verifyOnboardingUsingPOST")
-    public OnboardingVerify verifyOnboarding(@Parameter(description = "${swagger.tokens.onboardingId}") @PathParam("onboardingId") String onboardingId) {
+    @Operation(description = "${openapi.tokens.verify}",
+            summary = "${openapi.tokens.verify}", operationId = "verifyOnboardingUsingPOST")
+    public OnboardingVerify verifyOnboarding(@Parameter(description = "${openapi.tokens.onboardingId}") @PathParam("onboardingId") String onboardingId) {
         String sanitizedOnboardingId = onboardingId.replace("\n", "").replace("\r", "");
         log.debug("Verify token identified with {}", sanitizedOnboardingId);
         final OnboardingData onboardingData = tokenService.verifyOnboarding(sanitizedOnboardingId);
@@ -117,9 +117,9 @@ public class TokenV2Controller {
 
     @GET
     @Path("/{onboardingId}")
-    @Operation(summary = "${swagger.tokens.retrieveOnboardingRequest}",
-            description = "${swagger.tokens.retrieveOnboardingRequest}", operationId = "retrieveOnboardingRequestUsingGET")
-    public OnboardingRequestResource retrieveOnboardingRequest(@Parameter(description = "${swagger.tokens.onboardingId}")
+    @Operation(summary = "${openapi.tokens.retrieveOnboardingRequest}",
+            description = "${openapi.tokens.retrieveOnboardingRequest}", operationId = "retrieveOnboardingRequestUsingGET")
+    public OnboardingRequestResource retrieveOnboardingRequest(@Parameter(description = "${openapi.tokens.onboardingId}")
                                                                @PathParam("onboardingId")
                                                                String onboardingId) {
         log.trace("retrieveOnboardingRequest start");
@@ -134,9 +134,9 @@ public class TokenV2Controller {
 
     @POST
     @Path("/{onboardingId}/approve")
-    @Operation(description = "${swagger.tokens.approveOnboardingRequest}",
-            summary = "${swagger.tokens.approveOnboardingRequest}", operationId = "approveOnboardingUsingPOST")
-    public void approveOnboarding(@Parameter(description = "${swagger.tokens.onboardingId}")
+    @Operation(description = "${openapi.tokens.approveOnboardingRequest}",
+            summary = "${openapi.tokens.approveOnboardingRequest}", operationId = "approveOnboardingUsingPOST")
+    public void approveOnboarding(@Parameter(description = "${openapi.tokens.onboardingId}")
                                   @PathParam("onboardingId") String onboardingId) {
         log.debug("approve onboarding identified with {}", LogUtils.sanitize(onboardingId));
         tokenService.approveOnboarding(onboardingId);
@@ -146,7 +146,7 @@ public class TokenV2Controller {
     @Path("/{onboardingId}/reject")
     @Operation(summary = "Service to reject a specific onboarding request",
             description = "Service to reject a specific onboarding request", operationId = "rejectOnboardingUsingPOST")
-    public void rejectOnboarding(@Parameter(description = "${swagger.tokens.onboardingId}")
+    public void rejectOnboarding(@Parameter(description = "${openapi.tokens.onboardingId}")
                                  @PathParam("onboardingId") String onboardingId,
                                  ReasonForRejectDto reasonForRejectDto) {
         log.debug("reject onboarding identified with {}", LogUtils.sanitize(onboardingId));
@@ -155,9 +155,9 @@ public class TokenV2Controller {
 
     @DELETE
     @Path("/{onboardingId}/complete")
-    @Operation(summary = "${swagger.tokens.complete}",
-            description = "${swagger.tokens.complete}", operationId = "deleteUsingDELETE")
-    public Response deleteOnboarding(@Parameter(description = "${swagger.tokens.tokenId}")
+    @Operation(summary = "${openapi.tokens.complete}",
+            description = "${openapi.tokens.complete}", operationId = "deleteUsingDELETE")
+    public Response deleteOnboarding(@Parameter(description = "${openapi.tokens.tokenId}")
                                      @PathParam("onboardingId") String onboardingId) {
         log.trace("delete Token start");
         String sanitizedOnboardingId = onboardingId.replace("\n", "").replace("\r", "");
@@ -169,9 +169,9 @@ public class TokenV2Controller {
     @GET
     @Path("/{onboardingId}/contract")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Operation(summary = "${swagger.tokens.getContract}",
-            description = "${swagger.tokens.getContract}", operationId = "getContractUsingGET")
-    public Response getContract(@Parameter(description = "${swagger.tokens.onboardingId}")
+    @Operation(summary = "${openapi.tokens.getContract}",
+            description = "${openapi.tokens.getContract}", operationId = "getContractUsingGET")
+    public Response getContract(@Parameter(description = "${openapi.tokens.onboardingId}")
                                 @PathParam("onboardingId")
                                 String onboardingId) {
         log.trace("getContract start");
@@ -183,12 +183,12 @@ public class TokenV2Controller {
     @GET
     @Path("/{onboardingId}/template-attachment")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Operation(summary = "${swagger.tokens.getTemplateAttachment}",
-            description = "${swagger.tokens.getTemplateAttachment}", operationId = "getTemplateAttachmentUsingGET")
-    public Response getTemplateAttachment(@Parameter(description = "${swagger.tokens.onboardingId}")
+    @Operation(summary = "${openapi.tokens.getTemplateAttachment}",
+            description = "${openapi.tokens.getTemplateAttachment}", operationId = "getTemplateAttachmentUsingGET")
+    public Response getTemplateAttachment(@Parameter(description = "${openapi.tokens.onboardingId}")
                                           @PathParam("onboardingId")
                                           String onboardingId,
-                                          @Parameter(description = "${swagger.tokens.attachmentName}")
+                                          @Parameter(description = "${openapi.tokens.attachmentName}")
                                           @QueryParam("name") String filename) {
         log.trace("getTemplateAttachment start");
         String sanitizedFilename = filename.replaceAll(SANITIZIER, "_");
@@ -200,12 +200,12 @@ public class TokenV2Controller {
     @GET
     @Path("/{onboardingId}/attachment")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Operation(summary = "${swagger.tokens.getAttachment}",
-            description = "${swagger.tokens.getAttachment}", operationId = "getAttachmentUsingGET")
-    public Response getAttachment(@Parameter(description = "${swagger.tokens.onboardingId}")
+    @Operation(summary = "${openapi.tokens.getAttachment}",
+            description = "${openapi.tokens.getAttachment}", operationId = "getAttachmentUsingGET")
+    public Response getAttachment(@Parameter(description = "${openapi.tokens.onboardingId}")
                                   @PathParam("onboardingId")
                                   String onboardingId,
-                                  @Parameter(description = "${swagger.tokens.attachmentName}")
+                                  @Parameter(description = "${openapi.tokens.attachmentName}")
                                   @QueryParam("name") String filename) {
         log.trace("getAttachment start");
         String sanitizedFilename = filename.replaceAll(SANITIZIER, "_");
@@ -216,9 +216,9 @@ public class TokenV2Controller {
 
     @HEAD
     @Path("/{onboardingId}/attachment/status")
-    @Operation(summary = "${swagger.tokens.headAttachment}",
-            description = "${swagger.tokens.headAttachment}", operationId = "headAttachmentUsingGET")
-    public Response headAttachment(@Parameter(description = "${swagger.tokens.onboardingId}")
+    @Operation(summary = "${openapi.tokens.headAttachment}",
+            description = "${openapi.tokens.headAttachment}", operationId = "headAttachmentUsingGET")
+    public Response headAttachment(@Parameter(description = "${openapi.tokens.onboardingId}")
                                    @PathParam("onboardingId") String onboardingId,
                                    @NotNull @QueryParam("name") String attachmentName) {
         log.trace("headAttachment start");
@@ -232,8 +232,8 @@ public class TokenV2Controller {
     @POST
     @Path("/{onboardingId}/attachment")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Operation(description = "${swagger.tokens.uploadAttachment}", summary = "${swagger.tokens.uploadAttachment}", operationId = "uploadAttachmentUsingPOST")
-    public Response uploadAttachment(@Parameter(description = "${swagger.tokens.onboardingId}")
+    @Operation(description = "${openapi.tokens.uploadAttachment}", summary = "${openapi.tokens.uploadAttachment}", operationId = "uploadAttachmentUsingPOST")
+    public Response uploadAttachment(@Parameter(description = "${openapi.tokens.onboardingId}")
                                      @PathParam("onboardingId") String onboardingId,
                                      @QueryParam("name") String attachmentName,
                                      @RestForm("file") FileUpload attachment) {
@@ -250,11 +250,11 @@ public class TokenV2Controller {
     @GET
     @Path("/{onboardingId}/products/{productId}/aggregates-csv")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Operation(summary = "${swagger.tokens.getAggregatesCsv}",
-            description = "${swagger.tokens.getAggregatesCsv}", operationId = "getAggregatesCsvUsingGET")
-    public Response getAggregatesCsv(@Parameter(description = "${swagger.tokens.onboardingId}") @PathParam("onboardingId")
+    @Operation(summary = "${openapi.tokens.getAggregatesCsv}",
+            description = "${openapi.tokens.getAggregatesCsv}", operationId = "getAggregatesCsvUsingGET")
+    public Response getAggregatesCsv(@Parameter(description = "${openapi.tokens.onboardingId}") @PathParam("onboardingId")
                                      String onboardingIdInput,
-                                     @Parameter(description = "${swagger.tokens.productId}")
+                                     @Parameter(description = "${openapi.tokens.productId}")
                                      @PathParam("productId")
                                      String productIdInput) {
 
