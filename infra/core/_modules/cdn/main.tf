@@ -85,7 +85,7 @@ data "azurerm_subnet" "cdn_snet" {
 ###############################################################################
 module "cdn_storage_account" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 2.1"
+  version = "~> 2.2"
 
   environment = local.environment
 
@@ -524,7 +524,7 @@ resource "azurerm_key_vault_secret" "selc_web_storage_access_key" {
 #tfsec:ignore:azure-keyvault-ensure-secret-expiry
 resource "azurerm_key_vault_secret" "selc_web_storage_connection_string" {
   name         = "web-storage-connection-string"
-  value        = data.azurerm_storage_account.cdn.primary_access_key
+  value        = module.cdn_storage_account.primary_connection_string
   content_type = "text/plain"
   key_vault_id = var.key_vault_id
   depends_on   = [module.cdn_storage_account]
