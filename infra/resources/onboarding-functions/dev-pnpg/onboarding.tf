@@ -26,8 +26,8 @@ locals {
     always_on                 = false
     service_plan_sku          = "B2"
     service_plan_worker_count = 1
-    nat_resource_group_name   = "selc-d-weu-pnpg-nat-rg"
-    nat_gateway_name          = "selc-d-weu-pnpg-nat_gw"
+    nat_resource_group_name   = module.local.config.nat_rg_name
+    nat_gateway_name          = module.local.config.nat_gw_name
     app_settings = {
       "APPLICATIONINSIGHTS_CONNECTION_STRING"              = "@Microsoft.KeyVault(SecretUri=https://selc-d-pnpg-kv.vault.azure.net/secrets/appinsights-connection-string/)"
       "USER_REGISTRY_URL"                                  = "https://api.uat.pdv.pagopa.it/user-registry/v1"
