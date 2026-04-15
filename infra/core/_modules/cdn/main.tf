@@ -85,7 +85,7 @@ data "azurerm_subnet" "cdn_snet" {
 ###############################################################################
 module "cdn_storage_account" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 2.1"
+  version = "2.1.4"
 
   environment = local.environment
 
