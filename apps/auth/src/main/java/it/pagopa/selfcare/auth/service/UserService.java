@@ -8,5 +8,5 @@ public interface UserService {
 
   Uni<UserClaims> getUserClaimsFromPdv(String userId);
 
-  Uni<String> getUserInfoEmail(UserClaims userClaims);
+  Uni<String> getUserInfoEmail(String userId);
 }

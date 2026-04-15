@@ -99,9 +99,9 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public Uni<String> getUserInfoEmail(UserClaims userClaims) {
+  public Uni<String> getUserInfoEmail(String userId) {
     return externalInternalUserApi
-            .getUserOtpEmailInfo(userClaims.getUid())
+            .getUserOtpEmailInfo(userId)
             .onFailure(GeneralUtils::checkIfIsRetryableException)
             .retry()
             .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))

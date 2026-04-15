@@ -1,5 +1,5 @@
 @OidcOpenLimit
-Feature: Oidc with periodic OTP flow below daily limit
+Feature: Oidc with periodic OTP open
 
   Scenario: Successful OIDC exchange with OTP feature flag set to "NONE"
     And The following request body:
@@ -210,7 +210,7 @@ Feature: Oidc with periodic OTP flow below daily limit
     Then The status code is 200
     And The response body contains:
       | requiresOtpFlow    | true                                 |
-      | maskedEmail        | j*.d*e@regionelazio.it               |
+      | maskedEmail        | r*.b****a@regionelazio.it            |
     And The response body contains field "otpSessionUid"
     And An OTP flow should be created with status "PENDING"
 
@@ -256,7 +256,7 @@ Feature: Oidc with periodic OTP flow below daily limit
     And The response body contains:
       | requiresOtpFlow    | true                                 |
       | otpSessionUid      | 239b58f1-9865-4ef5-b45f-b7f574a0c84c |
-      | maskedEmail        | j*.d*e@regionelazio.it               |
+      | maskedEmail        | r*.b****a@regionelazio.it            |
 
   Scenario: Successful OIDC exchange with OTP feature flag set to "BETA", user in beta list, forced OTP (sameIdp false) and previous valid pending OTP flow found
     Given User login with username "j.doe" and password "test"
@@ -312,8 +312,8 @@ Feature: Oidc with periodic OTP flow below daily limit
     When I send a POST request to "oidc/exchange"
     Then The status code is 200
     And The response body contains:
-      | requiresOtpFlow    | true                   |
-      | maskedEmail        | j*.d*e@regionelazio.it |
+      | requiresOtpFlow    | true                      |
+      | maskedEmail        | r*.b****a@regionelazio.it |
     And The response body contains field "otpSessionUid"
     And An OTP flow should be created with status "PENDING"
 
@@ -332,8 +332,8 @@ Feature: Oidc with periodic OTP flow below daily limit
     When I send a POST request to "oidc/exchange"
     Then The status code is 200
     And The response body contains:
-      | requiresOtpFlow    | true                          |
-      | maskedEmail        | j*.d*e@regionelazio.it |
+      | requiresOtpFlow    | true                      |
+      | maskedEmail        | r*.b****a@regionelazio.it |
     And The response body contains field "otpSessionUid"
     And An OTP flow should be created with status "PENDING"
 
@@ -371,8 +371,8 @@ Feature: Oidc with periodic OTP flow below daily limit
     When I send a POST request to "oidc/exchange"
     Then The status code is 200
     And The response body contains:
-      | requiresOtpFlow    | true                   |
-      | maskedEmail        | j*.d*e@regionelazio.it |
+      | requiresOtpFlow    | true                      |
+      | maskedEmail        | r*.b****a@regionelazio.it |
     And The response body contains field "otpSessionUid"
     And An OTP flow should be created with status "PENDING"
 
@@ -392,4 +392,4 @@ Feature: Oidc with periodic OTP flow below daily limit
     And The response body contains:
       | requiresOtpFlow    | true                                 |
       | otpSessionUid      | 239b58f1-9865-4ef5-b45f-b7f574a0c84c |
-      | maskedEmail        | j*.d*e@regionelazio.it               |
+      | maskedEmail        | r*.b****a@regionelazio.it            |

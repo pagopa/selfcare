@@ -86,7 +86,7 @@ public class UserServiceTest {
     when(internalUserApi.getUserOtpEmailInfo(any()))
         .thenReturn(Uni.createFrom().item(userOtpEmailInfoResponse));
     userService
-        .getUserInfoEmail(claims)
+        .getUserInfoEmail(claims.getUid())
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertCompleted()
@@ -107,7 +107,7 @@ public class UserServiceTest {
     when(internalUserApi.getUserOtpEmailInfo(any()))
         .thenReturn(Uni.createFrom().failure(new WebApplicationException(404)));
     userService
-        .getUserInfoEmail(claims)
+        .getUserInfoEmail(claims.getUid())
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
@@ -128,7 +128,7 @@ public class UserServiceTest {
     when(internalUserApi.getUserOtpEmailInfo(any()))
         .thenReturn(Uni.createFrom().failure(new WebApplicationException(500)));
     userService
-        .getUserInfoEmail(claims)
+        .getUserInfoEmail(claims.getUid())
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
