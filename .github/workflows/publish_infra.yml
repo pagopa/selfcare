@@ -30,14 +30,14 @@ on:
 jobs:
   release_dev:
     uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
-    name: DEV Selfcare Infra Core Release 
+    name: "DEV ${{ inputs.domain }} Selfcare Infra Core Release"
     if: ${{ inputs.env == 'dev' }}
     secrets: inherit
     with:
-      environment: dev
-      base_path: infra/core/dev-${{ inputs.domain }}
+      environment: dev-${{ inputs.domain }}
+      base_path: infra/core
       env_vars: ""
       use_private_agent: true
-      # override_github_environment: pe-prod
+      override_github_environment: ${{ inputs.env }}
       use_labels: true
       override_labels: ""

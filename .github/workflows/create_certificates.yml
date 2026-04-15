@@ -21,6 +21,7 @@ on:
           - uat
           # - prod
         required: true
+        default: dev
       target:
         type: choice
         description: Target type
