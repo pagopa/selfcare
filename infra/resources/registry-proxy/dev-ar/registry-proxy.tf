@@ -393,7 +393,7 @@ module "dapr" {
 
   cae_name    = "selc-${module.local.config.env_short}-cae-002"
   cae_rg_name = module.local.config.ca_resource_group_name
-  ca_name     = "${local.ca_name}-ca"
+  ca_name     = local.ca_name
   ca_rg_name  = "selc-${module.local.config.env_short}-container-app-002-rg"
 
   key_vault_name                   = "selc-${module.local.config.env_short}-kv"
