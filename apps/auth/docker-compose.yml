@@ -64,21 +64,6 @@ services:
       mockserver:
         condition: service_started
 
-  externalms:
-    image: ghcr.io/pagopa/selfcare-external-api-backend:latest
-    platform: linux/amd64
-    ports:
-      - '8082:8082'
-    env_file:
-      - "./src/test/resources/externalenv"
-    networks:
-      - develop-network
-    depends_on:
-      azure-cli:
-        condition: service_completed_successfully
-      mockserver:
-        condition: service_started
-
   institutionms:
     image: ghcr.io/pagopa/selfcare-institution-ms:latest
     platform: linux/amd64
