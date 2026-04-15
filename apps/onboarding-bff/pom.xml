@@ -33,6 +33,7 @@
         <mapstruct.lombok.version>0.2.0</mapstruct.lombok.version>
         <security-sdk.version>0.2.3</security-sdk.version>
         <surefire-plugin.version>3.5.4</surefire-plugin.version>
+        <skipITs>true</skipITs>
     </properties>
 
     <dependencyManagement>
@@ -245,6 +246,11 @@
             <artifactId>quarkus-test-security</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jacoco</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -327,9 +333,42 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <systemPropertyVariables>
+                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                        <user.language>en</user.language>
+                        <user.country>US</user.country>
+                        <user.timezone>GMT</user.timezone>
+                    </systemPropertyVariables>
                     <excludes>
                         <exclude>**/CucumberSuiteTest.java</exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>${surefire-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
+                                <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                                <maven.home>${maven.home}</maven.home>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <skip>${skipITs}</skip>
+                    <systemPropertyVariables>
+                        <user.language>en</user.language>
+                        <user.country>US</user.country>
+                        <user.timezone>GMT</user.timezone>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
             <plugin>
