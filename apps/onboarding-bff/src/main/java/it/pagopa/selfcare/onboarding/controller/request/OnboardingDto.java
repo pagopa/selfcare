@@ -14,8 +14,7 @@ public class OnboardingDto {
 
     @Schema(description = "${openapi.onboarding.institutions.model.users}", required = true)
     @NotEmpty
-    @Valid
-    private List<UserDto> users;
+    private List<@Valid UserDto> users;
 
     @Schema(description = "${openapi.onboarding.institutions.model.billingData}", required = true)
     @NotNull
@@ -37,8 +36,7 @@ public class OnboardingDto {
     private PspDataDto pspData;
 
     @Schema(description = "${openapi.onboarding.institutions.model.geographicTaxonomies}", required = true)
-    @Valid
-    private List<GeographicTaxonomyDto> geographicTaxonomies;
+    private List<@Valid GeographicTaxonomyDto> geographicTaxonomies;
 
     @Schema(description = "${openapi.onboarding.institutions.model.companyInformations}")
     @Valid

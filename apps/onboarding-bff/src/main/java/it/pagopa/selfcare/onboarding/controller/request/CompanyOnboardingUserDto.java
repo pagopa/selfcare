@@ -14,8 +14,7 @@ import java.util.List;
 public class CompanyOnboardingUserDto {
     @Schema(description = "${openapi.onboarding.institutions.model.users}", required = true)
     @NotEmpty
-    @Valid
-    private List<CompanyUserDto> users;
+    private List<@Valid CompanyUserDto> users;
 
     @Schema(description = "${openapi.onboarding.institutions.model.institutionType}", required = true)
     @NotNull
