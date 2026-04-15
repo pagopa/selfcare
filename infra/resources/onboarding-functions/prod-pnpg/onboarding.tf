@@ -31,8 +31,8 @@ locals {
     always_on                 = true
     service_plan_sku          = "P1v3"
     service_plan_worker_count = 1
-    nat_resource_group_name   = "selc-p-weu-pnpg-nat-rg"
-    nat_gateway_name          = "selc-p-weu-pnpg-nat_gw"
+    nat_resource_group_name   = module.local.config.nat_rg_name
+    nat_gateway_name          = module.local.config.nat_gw_name
     app_settings = {
       "APPLICATIONINSIGHTS_CONNECTION_STRING"        = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/appinsights-connection-string/)"
       "USER_REGISTRY_URL"                            = "https://api.pdv.pagopa.it/user-registry/v1"
@@ -100,7 +100,7 @@ module "onboarding_functions" {
 }
 
 data "azurerm_public_ip" "pip_outbound" {
-  resource_group_name = module.local.nat_gw_rg_name
+  resource_group_name = module.local.config.nat_rg_name
   name                = "${module.local.config.project}-${module.local.config.pnpg_suffix}-pip-outbound"
 }
 
