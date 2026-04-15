@@ -18,7 +18,7 @@ on:
 
   workflow_dispatch:
     inputs:
-      environment:
+      env:
         required: true
         type: choice
         description: 'Select the Environment'
@@ -63,7 +63,7 @@ jobs:
     #     # use_labels: true
     #     # override_labels: ""
   
-  release_dev:
+  plan_dev:
     uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
     name: "DEV ${{ inputs.domain }} Selfcare Infra Core Release"
     if: ${{ inputs.env == 'dev' }}
