@@ -14,6 +14,11 @@ on:
         type: string
         required: false
         description: List of environment variables to set up, given in env=value format.
+      runner:
+        type: string
+        required: false
+        default: 'ubuntu-24.04'
+        description: Runner label(s) as JSON array, e.g. 'self-hosted'
 
 env:
   ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
@@ -27,7 +32,7 @@ jobs:
 
   tf_plan:
     name: 'Terraform Plan'
-    runs-on: ubuntu-24.04
+    runs-on: ${{ inputs.runner }}
     environment: ${{ inputs.environment }}-ci
     permissions:
       id-token: write
@@ -123,7 +128,7 @@ jobs:
 
   apply:
     name: 'Terraform Apply'
-    runs-on: ubuntu-24.04
+    runs-on: ['${{ inputs.runner }}', '${{ inputs.environment }}']
     needs: [ tf_plan ]
     environment: ${{ inputs.environment }}-cd
     permissions:
