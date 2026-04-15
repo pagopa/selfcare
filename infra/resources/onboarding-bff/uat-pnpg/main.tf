@@ -40,7 +40,7 @@ locals {
   secrets_names_onboarding_bff = {
     "USERVICE_USER_REGISTRY_API_KEY"         = "user-registry-api-key"
     "APPLICATIONINSIGHTS_CONNECTION_STRING"  = "appinsights-connection-string"
-    "JWT_TOKEN_PUBLIC_KEY"                   = "jwt-public-key"
+    "JWT_PUBLIC_KEY"                         = "jwt-public-key"
     "BLOB_STORAGE_PRODUCT_CONNECTION_STRING" = "blob-storage-product-connection-string"
     "ONBOARDING-FUNCTIONS-API-KEY"           = "fn-onboarding-primary-key"
   }
@@ -66,6 +66,7 @@ module "container_app_onboarding_bff_pnpg" {
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
   tags                           = module.local.config.tags
+  probes                         = module.local.config.quarkus_health_probes
 }
 
 ###############################################################################
