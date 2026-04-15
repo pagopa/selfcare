@@ -39,7 +39,7 @@ jobs:
       env_vars: 
         ACTIONS_RUNNER_FORCED_INTERNAL_NODE_VERSION=node20
         ACTIONS_RUNNER_FORCE_ACTIONS_NODE_VERSION=node20
-      use_private_agent: true
+      use_private_agent: false
       override_github_environment: ${{ inputs.env }}
       use_labels: true
       override_labels: ""
