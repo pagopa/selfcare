@@ -9,6 +9,8 @@ An orchestrator for the onboarding process
 |--------------|-------------------------|-------------|:------------:|
 |quarkus.http.port|B4F_ONBOARDING_SERVER_PORT|<a name= "default property"></a>[default_property](https://github.com/pagopa/selfcare-onboarding-bff/blob/main/src/main/resources/application.properties)| yes |
 |quarkus.log.category.it.pagopa.selfcare.level| B4F_ONBOARDING_LOG_LEVEL |<a name= "default property"></a>[default_property](https://github.com/pagopa/selfcare-onboarding-bff/blob/main/src/main/resources/application.properties)| yes |
+|quarkus.log.level| QUARKUS_LOG_LEVEL |[application.properties](https://github.com/pagopa/selfcare-onboarding-bff/blob/main/src/main/resources/application.properties)| yes |
+
 
 
 #### REST client Configurations

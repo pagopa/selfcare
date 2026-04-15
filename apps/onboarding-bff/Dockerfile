@@ -22,7 +22,7 @@ RUN mvn --global-settings settings.xml -f apps/onboarding-bff/pom.xml \
     -DrepositoryId=${REPO_SELFCARE} -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} \
     clean package -DskipTests
 
-FROM eclipse-temurin:17-jre-alpine AS runtime
+FROM eclipse-temurin:17@sha256:cc8d306395be4a8375277887d83e9e77eae05c26b6eba8ef320e5f0640e3a1fe AS runtime
 
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
 ENV JAVA_OPTIONS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
