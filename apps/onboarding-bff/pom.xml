@@ -7,7 +7,6 @@
         <groupId>it.pagopa.selfcare</groupId>
         <artifactId>apps</artifactId>
         <version>0.0.1</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>onboarding-bff</artifactId>
