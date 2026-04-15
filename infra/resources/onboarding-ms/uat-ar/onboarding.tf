@@ -172,6 +172,10 @@ locals {
       name  = "ONBOARDING_ALLOWED_INSTITUTIONS_PRODUCTS"
       value = "prod-pn-pg"
     },
+    {
+      name  = "MS_DOCUMENT_URL"
+      value = "http://selc-${module.local.config.env_short}-document-ms-ca"
+    }
   ]
 
   onboarding_ms_secrets_names = {
