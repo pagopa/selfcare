@@ -23,8 +23,8 @@ public record WorkflowExecutorConfirmation(ObjectMapper objectMapper,
         String onboardingWorkflowString = getOnboardingWorkflowString(objectMapper, onboardingWorkflow);
         if (!onboardingWorkflow.getOnboarding().getInstitution().getInstitutionType().equals(InstitutionType.PG)) {
             ctx.callActivity(BUILD_CONTRACT_ACTIVITY_NAME, onboardingWorkflowString, optionsRetry, String.class).await();
+            ctx.callActivity(SAVE_TOKEN_WITH_CONTRACT_ACTIVITY_NAME, onboardingWorkflowString, optionsRetry, String.class).await();
         }
-        ctx.callActivity(SAVE_TOKEN_WITH_CONTRACT_ACTIVITY_NAME, onboardingWorkflowString, optionsRetry, String.class).await();
         return Optional.of(OnboardingStatus.PENDING);
     }
 
