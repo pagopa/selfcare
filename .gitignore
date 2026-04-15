@@ -138,3 +138,13 @@ crash.log
 
 ### BFF integration test data ###
 apps/onboarding-bff/src/test/resources/storagedata/**
+
+### Local migration work (onboarding-bff) ###
+apps/onboarding-bff/REFACTOR_PLAN.md
+apps/onboarding-bff/scripts/*.sh
+apps/onboarding-bff/scripts/check-fe-contract.sh
+apps/onboarding-bff/scripts/check-onboarding-openapi-alignment.sh
+apps/onboarding-bff/scripts/export-endpoint-matrix.sh
+apps/onboarding-bff/scripts/init-migration-evidence.sh
+AGENTS.md
+doc/**
