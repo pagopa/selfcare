@@ -67,8 +67,8 @@ jobs:
       uses: azure/login@a65d910e8af852a8061c627c456678983e180302
       with:
         client-id: ${{ secrets.ARM_CLIENT_ID }}
-        tenant-id: ${{ vars.ARM_TENANT_ID }}
-        subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+        tenant-id: ${{ secrets.ARM_TENANT_ID }}
+        subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
     - name: Upload config.json to blob storage
       run: |

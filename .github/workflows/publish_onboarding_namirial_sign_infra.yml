@@ -16,8 +16,8 @@ on:
 
 env:
   dir: infra/resources/${{ inputs.env }}-ar
-  ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
-  ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
@@ -61,8 +61,8 @@ jobs:
         uses: pagopa/terraform-preapply-azure-action@54ded8cda3437c3f6a9f46baf69cb321ce82f5cd
         with:
           client_id: ${{ secrets.ARM_CLIENT_ID }}
-          tenant_id: ${{ vars.ARM_TENANT_ID }}
-          subscription_id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+          tenant_id: ${{ secrets.ARM_TENANT_ID }}
+          subscription_id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           dir: ${{ env.dir }}
           azure_environment: ${{ inputs.env }}-ar
         env:
@@ -100,8 +100,8 @@ jobs:
         uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
         with:
           client-id: ${{ secrets.ARM_CLIENT_ID }}
-          tenant-id: ${{ vars.ARM_TENANT_ID }}
-          subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Download Terraform Plan as Artifact
         uses: pagopa/dx/actions/terraform-plan-download@main
