@@ -49,7 +49,7 @@ public class OtpFlowBetaServiceTest {
   void returnNewOtpFlow_whenNoneOtpFlowExistsForNotForcedBetaUser() {
     UserClaims input = getUserClaims();
     getUserClaims().setFiscalCode("fiscalCode2");
-    when(userService.getUserInfoEmail(any(UserClaims.class)))
+    when(userService.getUserInfoEmail(anyString()))
         .thenReturn(Uni.createFrom().item("test@test.com"));
     when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().voidItem());
@@ -76,7 +76,7 @@ public class OtpFlowBetaServiceTest {
   void returnNewOtpFlow_AndSendMailToForcedEmailForBetaUser() {
     UserClaims input = getUserClaims();
     input.setFiscalCode("fiscalCode3");
-    when(userService.getUserInfoEmail(any(UserClaims.class)))
+    when(userService.getUserInfoEmail(anyString()))
         .thenReturn(Uni.createFrom().item("test@test.com"));
     when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().voidItem());
@@ -104,7 +104,7 @@ public class OtpFlowBetaServiceTest {
   @Test
   void returnNewOtpFlow_whenNoneOtpFlowExists() {
     UserClaims input = getUserClaims();
-    when(userService.getUserInfoEmail(any(UserClaims.class)))
+    when(userService.getUserInfoEmail(anyString()))
         .thenReturn(Uni.createFrom().item("test@test.com"));
     when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().voidItem());
@@ -131,7 +131,7 @@ public class OtpFlowBetaServiceTest {
   void returnNewOtpFlow_whenAnotherCompletedExists() {
     UserClaims input = getUserClaims();
 
-    when(userService.getUserInfoEmail(any(UserClaims.class)))
+    when(userService.getUserInfoEmail(anyString()))
         .thenReturn(Uni.createFrom().item("test@test.com"));
     when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().voidItem());
@@ -160,7 +160,7 @@ public class OtpFlowBetaServiceTest {
   void returnNewOtpFlow_whenAnotherRejectedExists() {
     UserClaims input = getUserClaims();
 
-    when(userService.getUserInfoEmail(any(UserClaims.class)))
+    when(userService.getUserInfoEmail(anyString()))
         .thenReturn(Uni.createFrom().item("test@test.com"));
     when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().voidItem());
@@ -194,7 +194,7 @@ public class OtpFlowBetaServiceTest {
   void returnNewOtpFlow_whenAnotherExpiredExists() {
     UserClaims input = getUserClaims();
 
-    when(userService.getUserInfoEmail(any(UserClaims.class)))
+    when(userService.getUserInfoEmail(anyString()))
         .thenReturn(Uni.createFrom().item("test@test.com"));
     when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().voidItem());
@@ -228,7 +228,7 @@ public class OtpFlowBetaServiceTest {
   void returnExistingOtpFlow_whenUntilValid() {
     UserClaims input = getUserClaims();
 
-    when(userService.getUserInfoEmail(any(UserClaims.class)))
+    when(userService.getUserInfoEmail(anyString()))
         .thenReturn(Uni.createFrom().item("test@test.com"));
     when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().voidItem());
@@ -261,7 +261,7 @@ public class OtpFlowBetaServiceTest {
   @Test
   void returnEmpty_whenUserNotExists() {
     UserClaims input = getUserClaims();
-    when(userService.getUserInfoEmail(any(UserClaims.class)))
+    when(userService.getUserInfoEmail(anyString()))
         .thenReturn(Uni.createFrom().failure(new WebApplicationException(404)));
     Optional<OtpInfo> maybeOtpInfo =
         otpFlowService
@@ -278,7 +278,7 @@ public class OtpFlowBetaServiceTest {
     UserClaims input = getUserClaims();
     input.setFiscalCode("noOtpFiscalCode");
     input.setSameIdp(true);
-    when(userService.getUserInfoEmail(any(UserClaims.class)))
+    when(userService.getUserInfoEmail(anyString()))
         .thenReturn(Uni.createFrom().item("test@test.com"));
     PanacheMock.mock(OtpFlow.class);
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
@@ -302,7 +302,7 @@ public class OtpFlowBetaServiceTest {
     UserClaims input = getUserClaims();
     input.setFiscalCode("noOtpFiscalCode");
     input.setSameIdp(true);
-    when(userService.getUserInfoEmail(any(UserClaims.class)))
+    when(userService.getUserInfoEmail(anyString()))
         .thenReturn(Uni.createFrom().item("test@test.com"));
     PanacheMock.mock(OtpFlow.class);
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
@@ -331,7 +331,7 @@ public class OtpFlowBetaServiceTest {
   void failure_whenAnErrorOccursCallingGetUserInfo() {
     String exceptionDesc = "Cannot get User Info Email on External Internal APIs";
     UserClaims input = getUserClaims();
-    when(userService.getUserInfoEmail(any(UserClaims.class)))
+    when(userService.getUserInfoEmail(anyString()))
         .thenReturn(Uni.createFrom().failure(new WebApplicationException(500)));
     OtpFlow.builder()
         .uuid("uuid")
@@ -352,7 +352,7 @@ public class OtpFlowBetaServiceTest {
   void failure_whenAnErrorOccursWhileFindingLastOtpFlow() {
     String exceptionDesc = "Cannot get Last OtpFlow";
     UserClaims input = getUserClaims();
-    when(userService.getUserInfoEmail(any(UserClaims.class)))
+    when(userService.getUserInfoEmail(anyString()))
         .thenReturn(Uni.createFrom().item("test@test.com"));
     PanacheMock.mock(OtpFlow.class);
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =

@@ -2,7 +2,7 @@ version: '3.8'
 services:
 
   mongodb:
-    image: mongo:latest@sha256:bc0c381d51fb4a316a8f420bf35b6c29ca45167cdea4ec1df4e6e64c9b90022a
+    image: mongo@sha256:bc0c381d51fb4a316a8f420bf35b6c29ca45167cdea4ec1df4e6e64c9b90022a
     ports:
       - '27017:27017'
     volumes:
@@ -48,7 +48,7 @@ services:
       - develop-network
 
   userms:
-    image: ghcr.io/pagopa/selfcare-user-ms:latest@sha256:598b488a44be661792187b94bad56594e437e5636f1287408b247de2b817fbe9
+    image: ghcr.io/pagopa/selfcare-user-ms:latest
     platform: linux/amd64
     ports:
       - '8080:8080'
@@ -64,23 +64,8 @@ services:
       mockserver:
         condition: service_started
 
-  externalms:
-    image: ghcr.io/pagopa/selfcare-external-api-backend:latest@sha256:f3ad8c0b70fdd92455cfb579a0a692de110f1cd0f86a61c5ff644e8baf596bd6
-    platform: linux/amd64
-    ports:
-      - '8082:8082'
-    env_file:
-      - "./src/test/resources/externalenv"
-    networks:
-      - develop-network
-    depends_on:
-      azure-cli:
-        condition: service_completed_successfully
-      mockserver:
-        condition: service_started
-
   institutionms:
-    image: ghcr.io/pagopa/selfcare-institution-ms:latest@sha256:3a350260028708ab24b90e844413cfcfa20815c5eceb6da29a0dfd5895fdde17
+    image: ghcr.io/pagopa/selfcare-institution-ms:latest
     platform: linux/amd64
     ports:
       - '8083:8083'
@@ -97,7 +82,7 @@ services:
         condition: service_started
 
   iamms:
-    image: ghcr.io/pagopa/selfcare-iam-ms:latest@sha256:e68e9928ccbc71964144d818846c61588623fe96a5fc43af789e9fc1b20962db
+    image: ghcr.io/pagopa/selfcare-iam-ms:latest
     platform: linux/amd64
     ports:
       - '8085:8085'

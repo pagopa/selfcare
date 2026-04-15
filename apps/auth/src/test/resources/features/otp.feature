@@ -180,15 +180,15 @@ Feature: Otp
     And The following request body:
       """
       {
-          "otpUuid": "239b58f1-9865-4ef5-b45f-b7f574a0c84c"
+          "otpUuid": "239b58f1-9865-4ef5-b45f-b7f574a0a6f5"
       }
       """
-    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" already exists with status "PENDING" and attempts 3
+    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0a6f5" already exists with status "PENDING" and attempts 3
     When I send a POST request to "otp/resend"
     Then The status code is 500
     And The response body contains:
       | status | 500                     |
-      | detail | Cannot get User Info Email on External Internal APIs:it.pagopa.selfcare.auth.exception.InternalException: Internal server error:Received: 'Internal Server Error, status code 500' when invoking REST Client method: 'org.openapi.quarkus.internal_json.api.UserApi#v2getUserInfoUsingGET' |
+      | detail | Cannot get User Info Email on External Internal APIs:it.pagopa.selfcare.auth.exception.InternalException: Internal server error:Received: 'Internal Server Error, status code 500' when invoking REST Client method: 'org.openapi.quarkus.internal_json.api.UserApi#getUserOtpEmailInfo' |
 
   @RemoveOtpFlow
   Scenario: Successfully resend otp flow
@@ -196,10 +196,10 @@ Feature: Otp
     And The following request body:
       """
       {
-          "otpUuid": "239b58f1-9865-4ef5-b45f-b7f574a0a6f5"
+          "otpUuid": "239b58f1-9865-4ef5-b45f-b7f574a0c84c"
       }
       """
-    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0a6f5" already exists with status "PENDING" and attempts 3
+    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" already exists with status "PENDING" and attempts 3
     When I send a POST request to "otp/resend"
     Then The status code is 200
     And The response body contains:
@@ -207,4 +207,4 @@ Feature: Otp
      | maskedEmail        | r*.b****a@regionelazio.it |
     And The response body contains field "otpSessionUid"
     And An OTP flow should be created with status "PENDING"
-    And The OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0a6f5" has been updated to status "REJECTED"
+    And The OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" has been updated to status "REJECTED"

@@ -71,7 +71,7 @@
     "products": [
       {
         "createdAt": {
-          "$date": "2024-10-28T12:25:53.228+00:00"
+          "$date": "2025-10-28T12:25:53.228+00:00"
         },
         "env": "ROOT",
         "productId": "prod-interop",
@@ -79,11 +79,11 @@
         "role": "OPERATOR",
         "status": "ACTIVE",
         "updatedAt": {
-          "$date": "2024-10-28T12:25:53.228+00:00"
+          "$date": "2025-10-28T12:25:53.228+00:00"
         }
       }
     ],
-    "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+    "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7ccc",
     "userMailUuid": "ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv"
   },
   {
@@ -119,7 +119,7 @@
     "products": [
       {
         "createdAt": {
-          "$date": "2024-10-28T12:25:53.228+00:00"
+          "$date": "2025-10-28T12:25:53.228+00:00"
         },
         "env": "ROOT",
         "productId": "prod-io",
@@ -127,7 +127,7 @@
         "role": "OPERATOR",
         "status": "ACTIVE",
         "updatedAt": {
-          "$date": "2024-10-28T12:25:53.228+00:00"
+          "$date": "2025-10-28T12:25:53.228+00:00"
         }
       }
     ],
