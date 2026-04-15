@@ -9,10 +9,6 @@ module "vpn_snet" {
   private_endpoint_network_policies = var.private_endpoint_network_policies
 }
 
-data "azuread_application" "vpn_app" {
-  display_name = "${var.project}-app-vpn"
-}
-
 module "vpn" {
   source = "github.com/pagopa/terraform-azurerm-v4.git//vpn_gateway?ref=v9.6.1"
 
@@ -27,7 +23,7 @@ module "vpn" {
     {
       address_space         = ["172.16.1.0/24"],
       vpn_client_protocols  = ["OpenVPN"],
-      aad_audience          = data.azuread_application.vpn_app.client_id
+      aad_audience          = var.vpn_app_client_id
       aad_issuer            = format("https://sts.windows.net/%s/", var.tenant_id)
       aad_tenant            = format("https://login.microsoftonline.com/%s", var.tenant_id)
       radius_server_address = null

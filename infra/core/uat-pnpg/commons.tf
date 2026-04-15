@@ -32,27 +32,8 @@ module "network" {
 
 
 ###############################################################################
-# User groups
+# key_vault
 ###############################################################################
-
-
-data "azuread_group" "adgroup_admin" {
-  display_name = "${local.prefix}-${local.env_short}-adgroup-admin"
-}
-
-data "azuread_group" "adgroup_developers" {
-  display_name = "${local.prefix}-${local.env_short}-adgroup-developers"
-}
-
-data "azuread_group" "adgroup_externals" {
-  display_name = "${local.prefix}-${local.env_short}-adgroup-externals"
-}
-
-
-
-# ###############################################################################
-# # key_vault
-# ###############################################################################
 module "key_vault" {
   source = "../_modules/key_vault"
 
@@ -67,9 +48,9 @@ module "key_vault" {
 }
 
 
-# ###############################################################################
-# # redis
-# ###############################################################################
+###############################################################################
+# redis
+###############################################################################
 module "redis" {
   source = "../_modules/redis"
 
@@ -94,9 +75,9 @@ module "redis" {
   redis_version  = local.redis_version
 }
 
-# ###############################################################################
-# # Logs storage
-# ###############################################################################
+###############################################################################
+# Logs storage
+###############################################################################
 
 module "logs_storage" {
   source = "../_modules/storage_account_template"
@@ -126,27 +107,9 @@ module "logs_storage" {
   enable_spid_logs_encryption_keys = true
 }
 
-resource "azurerm_role_assignment" "storage_blob_contributor_developers" {
-  scope                = module.logs_storage.storage_account_id
-  role_definition_name = "Storage Blob Data Reader"
-  principal_id         = data.azuread_group.adgroup_developers.object_id
-}
-
-resource "azurerm_role_assignment" "storage_blob_contributor_admin" {
-  scope                = module.logs_storage.storage_account_id
-  role_definition_name = "Storage Blob Data Reader"
-  principal_id         = data.azuread_group.adgroup_admin.object_id
-}
-
-resource "azurerm_role_assignment" "storage_blob_contributor_externals" {
-  scope                = module.logs_storage.storage_account_id
-  role_definition_name = "Storage Blob Data Reader"
-  principal_id         = data.azuread_group.adgroup_externals.object_id
-}
-
-# ###############################################################################
-# # Spid
-# ###############################################################################
+###############################################################################
+# Spid
+###############################################################################
 
 # module "spid_logs_encryption_keys" {
 #   source = "../_modules/spid_logs_encryption_keys"
@@ -155,9 +118,9 @@ resource "azurerm_role_assignment" "storage_blob_contributor_externals" {
 #   tags         = local.tags
 # }
 
-# ###############################################################################
-# # Spid Test Environment
-# ###############################################################################
+###############################################################################
+# Spid Test Environment
+###############################################################################
 
 module "spid_test_env" {
   source = "../_modules/spid_testenv"
@@ -222,9 +185,9 @@ module "cosmos_db" {
   cosmosdb_mongodb_enable_free_tier = false
 }
 
-# ###############################################################################
-# # Monitoring
-# ###############################################################################
+###############################################################################
+# Monitoring
+###############################################################################
 data "azurerm_resource_group" "monitor_rg" {
   name = "${local.prefix}-${local.env_short}-monitor-rg"
 }
@@ -234,9 +197,9 @@ data "azurerm_log_analytics_workspace" "log_analytics" {
   resource_group_name = data.azurerm_resource_group.monitor_rg.name
 }
 
-# ###############################################################################
-# # CDN Front Door
-# ###############################################################################
+###############################################################################
+# CDN Front Door
+###############################################################################
 module "cdn" {
   source = "../_modules/cdn"
 
@@ -269,9 +232,9 @@ module "cdn" {
   cidr_subnet_cdn = local.cidr_subnet_cdn
 }
 
-# ###############################################################################
-# # Container app environment
-# ###############################################################################
+###############################################################################
+# Container app environment
+###############################################################################
 
 resource "azurerm_resource_group" "selc_container_app_rg" {
   name     = "${local.project}-container-app-001-rg" //prod  "${local.project}-container-app-rg" 

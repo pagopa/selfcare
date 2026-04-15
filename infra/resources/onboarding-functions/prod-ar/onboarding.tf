@@ -102,6 +102,7 @@ locals {
       "JWT_TOKEN_PRIVATE_KEY"                              = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/jwt-private-key/)"
       "JWT_TOKEN_KID"                                      = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/jwt-kid/)"
       "WEBHOOK_BASE_PATH"                                  = "https://selc-p-webhook-ms-ca.lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
+      "MS_DOCUMENT_URL"                                    = "https://selc-p-document-ms-ca.lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
     }
   }
 }

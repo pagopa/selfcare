@@ -1,0 +1,54 @@
+name: Publish Status Page
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # every 15 minutes
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - "Publish core infra"
+      - "Auth - Trigger Release"
+      - "IAM - Trigger Release"
+      - "Product - Trigger Release"
+      - "Product CDC - Trigger Release"
+      - "Onboarding - Trigger Release"
+      - "Onboarding BFF - Trigger Release"
+      - "Release Functions"
+      - "Document MS - Trigger Release"
+      - "Registry Proxy - Trigger Release"
+      - "Webhook - Trigger Release"
+      - "Publish - Identity Infra"
+      - "Publish - Registry Proxy Infra"
+      - "Publish - Hub Spid PNPG Infra"
+      - "Publish - Namirial Sign Infra"
+      - "Publish - Dashboard Events Infra"
+    types:
+      - completed
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+
+      - name: Generate status page
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd .github/status-page
+          python3 generate.py
+          mv index.html ../../index.html
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d231e97723741e509 # v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+          publish_branch: gh-pages
+          include_only: index.html
+          commit_message: "chore: update status page"

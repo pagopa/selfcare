@@ -8,3 +8,17 @@ module "tfstate_access" {
   env_short                   = local.env_short
   storage_role_name           = local.storage_role.name
 }
+
+module "keyvault" {
+  source       = "../_modules/keyvault"
+  prefix       = local.prefix
+  env_short    = local.env_short
+  key_vault_id = data.azurerm_key_vault.key_vault.id
+}
+
+module "keyvault_pnpg" {
+  source       = "../_modules/keyvault"
+  prefix       = local.prefix
+  env_short    = local.env_short
+  key_vault_id = data.azurerm_key_vault.key_vault_pnpg.id
+}

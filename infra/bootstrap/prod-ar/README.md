@@ -6,7 +6,8 @@
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >=1.10.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
+| <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | ~> 3.8 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.64 |
 | <a name="requirement_github"></a> [github](#requirement\_github) | ~> 6.0 |
 
 ## Providers
@@ -26,6 +27,8 @@
 | <a name="module_github_secrets"></a> [github\_secrets](#module\_github\_secrets) | ../_modules/repository_secrets | n/a |
 | <a name="module_identity_cd"></a> [identity\_cd](#module\_identity\_cd) | ../_modules/github_managed_identity_cd | n/a |
 | <a name="module_identity_ci"></a> [identity\_ci](#module\_identity\_ci) | ../_modules/github_managed_identity_ci | n/a |
+| <a name="module_keyvault"></a> [keyvault](#module\_keyvault) | ../_modules/keyvault | n/a |
+| <a name="module_keyvault_pnpg"></a> [keyvault\_pnpg](#module\_keyvault\_pnpg) | ../_modules/keyvault | n/a |
 | <a name="module_tfstate_access"></a> [tfstate\_access](#module\_tfstate\_access) | ../_modules/tfstate_access | n/a |
 
 ## Resources

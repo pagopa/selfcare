@@ -167,6 +167,10 @@ locals {
     {
       name  = "ONBOARDING-UPDATE-USER-REQUESTER"
       value = "true"
+    },
+    {
+      name  = "MS_DOCUMENT_URL"
+      value = "http://selc-${module.local.config.env_short}-document-ms-ca"
     }
   ]
 

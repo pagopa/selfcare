@@ -104,3 +104,7 @@ variable "sec_storage_id" {
   description = "Storage account ID for security logs"
 }
 
+variable "vpn_app_client_id" {
+  type        = string
+  description = "VPN APP client ID"
+}

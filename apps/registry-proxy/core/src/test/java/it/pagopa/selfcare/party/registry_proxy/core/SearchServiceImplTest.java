@@ -5,9 +5,7 @@ import it.pagopa.selfcare.party.registry_proxy.connector.api.InstitutionConnecto
 import it.pagopa.selfcare.party.registry_proxy.connector.api.SearchServiceConnector;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ServiceUnavailableException;
-import it.pagopa.selfcare.party.registry_proxy.connector.model.AzureSearchValue;
-import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceInstitution;
-import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceStatus;
+import it.pagopa.selfcare.party.registry_proxy.connector.model.*;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.institution.Institution;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -258,6 +256,103 @@ public class SearchServiceImplTest {
     assertEquals(mockResponse, result);
 
     verify(searchServiceConnector, times(1)).searchInstitution(search, expectedFilter, products, top, skip, null, null);
+  }
+
+  @Test
+  void indexOnboardingTest() {
+    final SearchServiceStatus status = new SearchServiceStatus();
+    final AzureSearchValue value = new AzureSearchValue();
+    value.setStatus(true);
+    status.setValue(List.of(value));
+    when(searchServiceConnector.indexOnboarding(any(OnboardingIndex.class))).thenReturn(status);
+    assertDoesNotThrow(() -> searchService.indexOnboarding(new OnboardingIndex()));
+    verify(searchServiceConnector, times(1)).indexOnboarding(any(OnboardingIndex.class));
+  }
+
+  @Test
+  void indexOnboardingTest_serviceUnavailable() {
+    final SearchServiceStatus status = new SearchServiceStatus();
+    final AzureSearchValue value = new AzureSearchValue();
+    value.setStatus(false);
+    status.setValue(List.of(value));
+    when(searchServiceConnector.indexOnboarding(any(OnboardingIndex.class))).thenReturn(status);
+    assertThrows(ServiceUnavailableException.class, () -> searchService.indexOnboarding(new OnboardingIndex()));
+    verify(searchServiceConnector, times(1)).indexOnboarding(any(OnboardingIndex.class));
+  }
+
+  @Test
+  void searchOnboardingTest() {
+    final String searchText = "Test";
+    final List<String> products = List.of("prod-io", "prod-pagopa");
+    final List<String> institutionTypes = List.of("PA", "GSP");
+    final List<String> statuses = List.of("ACTIVE", "PENDING");
+    final Long page = 2L;
+    final Long pageSize = 10L;
+    final String orderBy = "createdAt asc";
+    final String filter = "search.in(productId, 'prod-io,prod-pagopa') and search.in(institutionType, 'PA,GSP') and search.in(status, 'ACTIVE,PENDING')";
+    final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
+    mockResponse.setTotalElements(100L);
+    when(searchServiceConnector.searchOnboarding(searchText, filter, pageSize, 20L, orderBy)).thenReturn(mockResponse);
+    final OnboardingIndexSearch onboardingIndexSearch = searchService.searchOnboarding(searchText, products, institutionTypes, statuses, page, pageSize, orderBy);
+    verify(searchServiceConnector, times(1)).searchOnboarding(searchText, filter, pageSize, 20L, orderBy);
+    assertEquals(page, onboardingIndexSearch.getPage());
+    assertEquals(pageSize, onboardingIndexSearch.getPageSize());
+    assertEquals(100L, mockResponse.getTotalElements());
+    assertEquals(10L, onboardingIndexSearch.getTotalPages());
+  }
+
+  @Test
+  void searchOnboardingTest_withoutStatusAndOptionalFields() {
+    final String searchText = "Test";
+    final List<String> products = List.of("prod-io", "prod-pagopa");
+    final List<String> institutionTypes = List.of("PA", "GSP");
+    final List<String> statuses = List.of();
+    final String filter = "search.in(productId, 'prod-io,prod-pagopa') and search.in(institutionType, 'PA,GSP')";
+    final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
+    mockResponse.setTotalElements(100L);
+    when(searchServiceConnector.searchOnboarding(searchText, filter, 15L, 0L, "description asc")).thenReturn(mockResponse);
+    final OnboardingIndexSearch onboardingIndexSearch = searchService.searchOnboarding(searchText, products, institutionTypes, statuses, null, null, null);
+    verify(searchServiceConnector, times(1)).searchOnboarding(searchText, filter, 15L, 0L, "description asc");
+    assertEquals(0L, onboardingIndexSearch.getPage());
+    assertEquals(15L, onboardingIndexSearch.getPageSize());
+    assertEquals(100L, mockResponse.getTotalElements());
+    assertEquals(7L, onboardingIndexSearch.getTotalPages());
+  }
+
+  @Test
+  void searchOnboardingTest_withoutStatusAndInstitutionTypes() {
+    final String searchText = "Test";
+    final List<String> products = List.of("prod-io", "prod-pagopa");
+    final List<String> institutionTypes = null;
+    final List<String> statuses = List.of();
+    final String filter = "search.in(productId, 'prod-io,prod-pagopa')";
+    final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
+    mockResponse.setTotalElements(100L);
+    when(searchServiceConnector.searchOnboarding(searchText, filter, 15L, 0L, "description asc")).thenReturn(mockResponse);
+    final OnboardingIndexSearch onboardingIndexSearch = searchService.searchOnboarding(searchText, products, institutionTypes, statuses, null, null, null);
+    verify(searchServiceConnector, times(1)).searchOnboarding(searchText, filter, 15L, 0L, "description asc");
+    assertEquals(0L, onboardingIndexSearch.getPage());
+    assertEquals(15L, onboardingIndexSearch.getPageSize());
+    assertEquals(100L, mockResponse.getTotalElements());
+    assertEquals(7L, onboardingIndexSearch.getTotalPages());
+  }
+
+  @Test
+  void searchOnboardingTest_withoutStatusInstitutionTypeAndProducts() {
+    final String searchText = "Test";
+    final List<String> products = List.of();
+    final List<String> institutionTypes = null;
+    final List<String> statuses = List.of();
+    final String filter = "";
+    final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
+    mockResponse.setTotalElements(100L);
+    when(searchServiceConnector.searchOnboarding(searchText, filter, 15L, 0L, "description asc")).thenReturn(mockResponse);
+    final OnboardingIndexSearch onboardingIndexSearch = searchService.searchOnboarding(searchText, products, institutionTypes, statuses, null, null, null);
+    verify(searchServiceConnector, times(1)).searchOnboarding(searchText, filter, 15L, 0L, "description asc");
+    assertEquals(0L, onboardingIndexSearch.getPage());
+    assertEquals(15L, onboardingIndexSearch.getPageSize());
+    assertEquals(100L, mockResponse.getTotalElements());
+    assertEquals(7L, onboardingIndexSearch.getTotalPages());
   }
 
 }

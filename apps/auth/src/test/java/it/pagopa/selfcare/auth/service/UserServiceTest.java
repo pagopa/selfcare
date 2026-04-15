@@ -1,8 +1,5 @@
 package it.pagopa.selfcare.auth.service;
 
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
-
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
@@ -13,15 +10,20 @@ import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.auth.model.UserClaims;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
-import java.util.UUID;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
-import org.openapi.quarkus.internal_json.model.UserInfoResource;
+import org.openapi.quarkus.internal_json.model.UserOtpEmailInfoResponse;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.UserId;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
+
+import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 public class UserServiceTest {
@@ -69,11 +71,10 @@ public class UserServiceTest {
   @Test
   void getUserInfoEmailWithValidInputs() {
     UUID userId = UUID.randomUUID();
-    org.openapi.quarkus.internal_json.model.UserResource userResource =
-        org.openapi.quarkus.internal_json.model.UserResource.builder()
-            .lastActiveOnboardingUserEmail("test@test.email")
+    UserOtpEmailInfoResponse userOtpEmailInfoResponse = UserOtpEmailInfoResponse.builder()
+            .userId("userId")
+            .otpEmail("test@test.email")
             .build();
-    UserInfoResource userInfoResource = UserInfoResource.builder().user(userResource).build();
     UserClaims claims =
         UserClaims.builder()
             .uid(userId.toString())
@@ -82,10 +83,10 @@ public class UserServiceTest {
             .familyName("family")
             .sameIdp(true)
             .build();
-    when(internalUserApi.v2getUserInfoUsingGET(any(), any()))
-        .thenReturn(Uni.createFrom().item(userInfoResource));
+    when(internalUserApi.getUserOtpEmailInfo(any()))
+        .thenReturn(Uni.createFrom().item(userOtpEmailInfoResponse));
     userService
-        .getUserInfoEmail(claims)
+        .getUserInfoEmail(claims.getUid())
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertCompleted()
@@ -103,10 +104,10 @@ public class UserServiceTest {
             .familyName("family")
             .sameIdp(true)
             .build();
-    when(internalUserApi.v2getUserInfoUsingGET(any(), any()))
+    when(internalUserApi.getUserOtpEmailInfo(any()))
         .thenReturn(Uni.createFrom().failure(new WebApplicationException(404)));
     userService
-        .getUserInfoEmail(claims)
+        .getUserInfoEmail(claims.getUid())
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
@@ -124,10 +125,10 @@ public class UserServiceTest {
             .familyName("family")
             .sameIdp(true)
             .build();
-    when(internalUserApi.v2getUserInfoUsingGET(any(), any()))
+    when(internalUserApi.getUserOtpEmailInfo(any()))
         .thenReturn(Uni.createFrom().failure(new WebApplicationException(500)));
     userService
-        .getUserInfoEmail(claims)
+        .getUserInfoEmail(claims.getUid())
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()

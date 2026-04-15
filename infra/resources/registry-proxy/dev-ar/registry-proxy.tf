@@ -38,6 +38,19 @@ module "apim_api_registry_proxy" {
 
 
 ###############################################################################
+# AI Search
+###############################################################################
+
+module "ai_search_onboarding" {
+  source                   = "../../_modules/ai_search_onboarding"
+  domain                   = module.local.config.domain
+  search_service_id        = data.azurerm_search_service.srch_service.id
+  srch_service_name        = data.azurerm_search_service.srch_service.name
+  srch_service_primary_key = data.azurerm_search_service.srch_service.primary_key
+}
+
+
+###############################################################################
 # DAPR
 ###############################################################################
 locals {
@@ -380,7 +393,7 @@ module "dapr" {
 
   cae_name    = "selc-${module.local.config.env_short}-cae-002"
   cae_rg_name = module.local.config.ca_resource_group_name
-  ca_name     = "${local.ca_name}-ca"
+  ca_name     = local.ca_name
   ca_rg_name  = "selc-${module.local.config.env_short}-container-app-002-rg"
 
   key_vault_name                   = "selc-${module.local.config.env_short}-kv"

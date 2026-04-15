@@ -60,6 +60,7 @@ class SignatureServiceImplTest {
     private TrustedListsCertificateSource trustedListsCertificateSource;
     private PagoPaSignatureConfig pagoPaSignatureConfig;
     private PadesSignService padesSignService;
+    private DocumentMsTelemetryService telemetryService;
 
     @InjectMock
     DocumentService documentService;
@@ -76,8 +77,9 @@ class SignatureServiceImplTest {
                 .thenReturn(CertificateSourceType.TRUSTED_LIST);
         pagoPaSignatureConfig = Mockito.mock(PagoPaSignatureConfig.class);
         padesSignService = Mockito.mock(PadesSignService.class);
+        telemetryService = Mockito.mock(DocumentMsTelemetryService.class);
 
-        service = new SignatureServiceImpl(trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService);
+        service = new SignatureServiceImpl(trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService, telemetryService);
         setField(service, "isVerifyEnabled", Boolean.TRUE);
         setField(service, "documentService", documentService);
     }
@@ -144,6 +146,18 @@ class SignatureServiceImplTest {
         File file = tempDir.resolve("test-" + System.nanoTime() + ".pdf").toFile();
         Files.writeString(file.toPath(), content);
         return file;
+    }
+
+    /**
+     * Creates a spy of SignatureServiceImpl with all required dependencies,
+     * including the telemetryService mock added after the refactoring.
+     */
+    private SignatureServiceImpl createSpyService() {
+        SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
+                trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService, telemetryService));
+        setField(spyService, "isVerifyEnabled", Boolean.TRUE);
+        setField(spyService, "documentService", documentService);
+        return spyService;
     }
 
     private DSSDocument createMockDocWithDigest(String digestValue) {
@@ -889,10 +903,7 @@ class SignatureServiceImplTest {
                     .thenReturn(mockValidator);
 
             // Create spy to control extractPdfFromSignedContainer and computeDigestOfSignedRevision
-            SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
-                    trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
-            setField(spyService, "isVerifyEnabled", Boolean.TRUE);
-            setField(spyService, "documentService", documentService);
+            SignatureServiceImpl spyService = createSpyService();
 
             doReturn(mockDocument).when(spyService).extractPdfFromSignedContainer(any(), any());
             doReturn(templateDigest).when(spyService).computeDigestOfSignedRevision(any(), any());
@@ -923,10 +934,7 @@ class SignatureServiceImplTest {
             validatorMock.when(() -> SignedDocumentValidator.fromDocument(any(DSSDocument.class)))
                     .thenReturn(mockValidator);
 
-            SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
-                    trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
-            setField(spyService, "isVerifyEnabled", Boolean.TRUE);
-            setField(spyService, "documentService", documentService);
+            SignatureServiceImpl spyService = createSpyService();
 
             doReturn(mockDocument).when(spyService).extractPdfFromSignedContainer(any(), any());
             doReturn(uploadedDigest).when(spyService).computeDigestOfSignedRevision(any(), any());
@@ -956,10 +964,7 @@ class SignatureServiceImplTest {
             validatorMock.when(() -> SignedDocumentValidator.fromDocument(any(DSSDocument.class)))
                     .thenReturn(mockValidator);
 
-            SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
-                    trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
-            setField(spyService, "isVerifyEnabled", Boolean.TRUE);
-            setField(spyService, "documentService", documentService);
+            SignatureServiceImpl spyService = createSpyService();
 
             doReturn(mockDocument).when(spyService).extractPdfFromSignedContainer(any(), any());
             doReturn(uploadedDigest).when(spyService).computeDigestOfSignedRevision(any(), any());
@@ -996,10 +1001,7 @@ class SignatureServiceImplTest {
             validatorMock.when(() -> SignedDocumentValidator.fromDocument(any(DSSDocument.class)))
                     .thenReturn(mockValidator);
 
-            SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
-                    trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
-            setField(spyService, "isVerifyEnabled", Boolean.TRUE);
-            setField(spyService, "documentService", documentService);
+            SignatureServiceImpl spyService = createSpyService();
 
             // Don't mock internal methods - let them run to cover lines 427-448
             // But we need to mock the static validator creation
@@ -1132,10 +1134,7 @@ class SignatureServiceImplTest {
 
     @Test
     void verifySignatureFile_shouldReturnTrueWhenFullValidationChainPasses() throws IOException {
-        SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
-                trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
-        setField(spyService, "isVerifyEnabled", Boolean.TRUE);
-        setField(spyService, "documentService", documentService);
+        SignatureServiceImpl spyService = createSpyService();
 
         File testFile = createTempFile("valid-content");
 
@@ -1194,10 +1193,7 @@ class SignatureServiceImplTest {
     @Test
     void verifySignatureFileChecksumTaxCode_shouldExecuteFullValidationChain() throws IOException {
         // Arrange: create spy to mock createDocumentValidator
-        SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
-                trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
-        setField(spyService, "isVerifyEnabled", Boolean.TRUE);
-        setField(spyService, "documentService", documentService);
+        SignatureServiceImpl spyService = createSpyService();
 
         File testFile = createTempFile("test-content");
         String checksum = "correctChecksum";
@@ -1243,10 +1239,7 @@ class SignatureServiceImplTest {
     @Test
     void verifySignatureFileChecksumTaxCode_shouldThrowWhenSignatureFormInvalid() throws IOException {
         // Arrange: create spy to mock createDocumentValidator
-        SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
-                trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
-        setField(spyService, "isVerifyEnabled", Boolean.TRUE);
-        setField(spyService, "documentService", documentService);
+        SignatureServiceImpl spyService = createSpyService();
 
         File testFile = createTempFile("test-content");
         String checksum = "correctChecksum";
@@ -1277,10 +1270,7 @@ class SignatureServiceImplTest {
     @Test
     void verifySignatureFileChecksumTaxCode_shouldThrowWhenDigestMismatch() throws IOException {
         // Arrange: create spy
-        SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
-                trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
-        setField(spyService, "isVerifyEnabled", Boolean.TRUE);
-        setField(spyService, "documentService", documentService);
+        SignatureServiceImpl spyService = createSpyService();
 
         File testFile = createTempFile("test-content");
         String expectedChecksum = "expectedChecksum";
@@ -1317,10 +1307,7 @@ class SignatureServiceImplTest {
     @Test
     void verifySignatureFileChecksumTaxCode_shouldThrowWhenTaxCodeMismatch() throws IOException {
         // Arrange: create spy
-        SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
-                trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService));
-        setField(spyService, "isVerifyEnabled", Boolean.TRUE);
-        setField(spyService, "documentService", documentService);
+        SignatureServiceImpl spyService = createSpyService();
 
         File testFile = createTempFile("test-content");
         String checksum = "correctChecksum";

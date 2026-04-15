@@ -85,7 +85,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
     Optional<String> maybeForcedEmail = Optional.ofNullable(forcedEmail);
 
     return userService
-            .getUserInfoEmail(userClaims)
+            .getUserInfoEmail(userClaims.getUid())
             .onFailure(GeneralUtils::checkNotFoundException)
             .recoverWithNull()
             .map(Optional::ofNullable)
@@ -312,7 +312,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
         .chain(
             userClaims ->
                 userService
-                    .getUserInfoEmail(userClaims)
+                    .getUserInfoEmail(oldOtpFlow.getUserId())
                     .onFailure(GeneralUtils::checkNotFoundException)
                     .recoverWithNull()
                     .map(Optional::ofNullable)

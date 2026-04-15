@@ -23,27 +23,30 @@ module "key_vault" {
   soft_delete_retention_days = var.soft_delete_retention_days
 }
 
-# Azure AD Groups
-data "azuread_group" "adgroup_admin" {
-  display_name = "${var.prefix}-${var.env_short}-adgroup-admin"
+data "azurerm_key_vault_secret" "adgroup_admin" {
+  name         = "${var.prefix}-${var.env_short}-adgroup-admin"
+  key_vault_id = module.key_vault.id
 }
 
-data "azuread_group" "adgroup_developers" {
-  display_name = "${var.prefix}-${var.env_short}-adgroup-developers"
+data "azurerm_key_vault_secret" "adgroup_developers" {
+  name         = "${var.prefix}-${var.env_short}-adgroup-developers"
+  key_vault_id = module.key_vault.id
 }
 
-data "azuread_group" "adgroup_externals" {
-  display_name = "${var.prefix}-${var.env_short}-adgroup-externals"
+data "azurerm_key_vault_secret" "adgroup_externals" {
+  name         = "${var.prefix}-${var.env_short}-adgroup-externals"
+  key_vault_id = module.key_vault.id
 }
 
-data "azuread_group" "adgroup_security" {
-  display_name = "${var.prefix}-${var.env_short}-adgroup-security"
+data "azurerm_key_vault_secret" "adgroup_security" {
+  name         = "${var.prefix}-${var.env_short}-adgroup-security"
+  key_vault_id = module.key_vault.id
 }
 
 resource "azurerm_key_vault_access_policy" "adgroup_admin_policy" {
   key_vault_id = module.key_vault.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = data.azuread_group.adgroup_admin.object_id
+  object_id    = data.azurerm_key_vault_secret.adgroup_admin.value
 
   key_permissions         = ["Get", "List", "Update", "Create", "Import", "Delete"]
   secret_permissions      = ["Get", "List", "Set", "Delete", "Recover", "Backup", "Restore"]
@@ -54,7 +57,7 @@ resource "azurerm_key_vault_access_policy" "adgroup_admin_policy" {
 resource "azurerm_key_vault_access_policy" "adgroup_developers_policy" {
   key_vault_id = module.key_vault.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = data.azuread_group.adgroup_developers.object_id
+  object_id    = data.azurerm_key_vault_secret.adgroup_developers.value
 
   key_permissions         = var.env_short == "d" ? ["Get", "List", "Update", "Create", "Import", "Delete"] : ["Get", "List", "Update", "Create", "Import"]
   secret_permissions      = var.env_short == "d" ? ["Get", "List", "Set", "Delete", "Restore", "Recover"] : ["Get", "List", "Set"]
@@ -66,7 +69,7 @@ resource "azurerm_key_vault_access_policy" "adgroup_externals_policy" {
   count        = var.env_short == "d" ? 1 : 0
   key_vault_id = module.key_vault.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = data.azuread_group.adgroup_externals.object_id
+  object_id    = data.azurerm_key_vault_secret.adgroup_externals.value
 
   key_permissions         = ["Get", "List", "Update", "Create", "Import", "Delete"]
   secret_permissions      = ["Get", "List", "Set", "Delete"]
@@ -78,7 +81,7 @@ resource "azurerm_key_vault_access_policy" "adgroup_security_policy" {
   count        = var.env_short == "d" ? 1 : 0
   key_vault_id = module.key_vault.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = data.azuread_group.adgroup_security.object_id
+  object_id    = data.azurerm_key_vault_secret.adgroup_security.value
 
   key_permissions         = ["Get", "List", "Update", "Create", "Import", "Delete"]
   secret_permissions      = ["Get", "List", "Set", "Delete"]
@@ -86,17 +89,17 @@ resource "azurerm_key_vault_access_policy" "adgroup_security_policy" {
   certificate_permissions = ["Get", "List", "Update", "Create", "Import", "Delete", "Restore", "Purge", "Recover"]
 }
 
-# Azure DevOps SP
-data "azuread_service_principal" "azdo_sp_tls_cert" {
+data "azurerm_key_vault_secret" "azdo_sp_tls_cert" {
   count        = var.azdo_sp_tls_cert_enabled ? 1 : 0
-  display_name = "azdo-sp-${var.project}-tls-cert"
+  name         = "azdo-sp-tls-cert"
+  key_vault_id = module.key_vault.id
 }
 
 resource "azurerm_key_vault_access_policy" "azdo_sp_tls_cert" {
   count        = var.azdo_sp_tls_cert_enabled ? 1 : 0
   key_vault_id = module.key_vault.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = data.azuread_service_principal.azdo_sp_tls_cert[0].object_id
+  object_id    = data.azurerm_key_vault_secret.azdo_sp_tls_cert[0].value
 
   certificate_permissions = ["Get", "List", "Import"]
 }
@@ -111,14 +114,15 @@ resource "azurerm_key_vault_access_policy" "azure_cdn_frontdoor_policy" {
 }
 
 # azure devops policy
-data "azuread_service_principal" "iac_principal" {
-  display_name = format("pagopaspa-selfcare-iac-projects-%s", data.azurerm_subscription.current.subscription_id)
+data "azurerm_key_vault_secret" "iac_principal" {
+  name         = "pagopaspa-selfcare-iac-projects"
+  key_vault_id = module.key_vault.id
 }
 
 resource "azurerm_key_vault_access_policy" "azdevops_iac_policy" {
   key_vault_id = module.key_vault.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = data.azuread_service_principal.iac_principal.object_id
+  object_id    = data.azurerm_key_vault_secret.iac_principal.value
 
   secret_permissions      = ["Get", "List", "Set", ]
   certificate_permissions = ["SetIssuers", "DeleteIssuers", "Purge", "List", "Get"]
@@ -150,4 +154,14 @@ module "secrets_selfcare_status_uat" {
     "alert-selfcare-status-uat-email",
     "alert-selfcare-status-uat-slack",
   ]
+}
+
+data "azurerm_key_vault_secret" "app_projects_principal" {
+  name         = "pagopaspa-selfcare-platform-app-projects"
+  key_vault_id = module.key_vault.id
+}
+
+data "azurerm_key_vault_secret" "vpn_app" {
+  name         = "${var.prefix}-${var.env_short}-app-vpn"
+  key_vault_id = module.key_vault.id
 }

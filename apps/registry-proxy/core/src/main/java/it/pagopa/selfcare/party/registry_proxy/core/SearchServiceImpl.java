@@ -7,9 +7,7 @@ import it.pagopa.selfcare.party.registry_proxy.connector.api.InstitutionConnecto
 import it.pagopa.selfcare.party.registry_proxy.connector.api.SearchServiceConnector;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ServiceUnavailableException;
-import it.pagopa.selfcare.party.registry_proxy.connector.model.AzureSearchValue;
-import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceInstitution;
-import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceStatus;
+import it.pagopa.selfcare.party.registry_proxy.connector.model.*;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.institution.Institution;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -119,5 +117,65 @@ public class SearchServiceImpl implements SearchService {
 
     return filterBuilder.toString();
   }
+
+  @Override
+  public boolean indexOnboarding(OnboardingIndex onboardingIndex) {
+    final SearchServiceStatus status = searchServiceConnector.indexOnboarding(onboardingIndex);
+
+    if (status == null || status.getValue() == null || status.getValue().isEmpty()) {
+      throw new ServiceUnavailableException();
+    }
+
+    for (AzureSearchValue value : status.getValue()) {
+      log.debug("Indexing status for onboarding {}: {}", onboardingIndex.getOnboardingId(), value.getStatus());
+      if (Boolean.FALSE.equals(value.getStatus())) {
+        throw new ServiceUnavailableException();
+      }
+    }
+
+    return true;
+  }
+
+  @Override
+  public OnboardingIndexSearch searchOnboarding(String searchText, List<String> products, List<String> institutionTypes,
+                                                List<String> statuses, Long page, Long pageSize, String orderBy) {
+    page = page != null && page > 0L && page < Long.MAX_VALUE ? page : 0L;
+    pageSize = pageSize != null && pageSize > 0L && pageSize < Long.MAX_VALUE ? pageSize : 15L;
+    orderBy = orderBy != null && !orderBy.isBlank() ? orderBy : "description asc";
+    final OnboardingIndexSearch onboardingIndexSearch = searchServiceConnector.searchOnboarding(searchText,
+            buildOnboardingFilter(products, institutionTypes, statuses), pageSize, page * pageSize, orderBy);
+    onboardingIndexSearch.setPage(page);
+    onboardingIndexSearch.setPageSize(pageSize);
+    onboardingIndexSearch.setTotalPages((onboardingIndexSearch.getTotalElements() + pageSize - 1) / pageSize);
+    return onboardingIndexSearch;
+  }
+
+  private String buildOnboardingFilter(List<String> products, List<String> institutionTypes, List<String> statuses) {
+    final StringBuilder filter = new StringBuilder();
+
+    if (products != null && !products.isEmpty()) {
+      if (!filter.isEmpty()) {
+        filter.append(" and ");
+      }
+      filter.append("search.in(productId, '").append(String.join(",", products)).append("')");
+    }
+
+    if (institutionTypes != null && !institutionTypes.isEmpty()) {
+      if (!filter.isEmpty()) {
+        filter.append(" and ");
+      }
+      filter.append("search.in(institutionType, '").append(String.join(",", institutionTypes)).append("')");
+    }
+
+    if (statuses != null && !statuses.isEmpty()) {
+      if (!filter.isEmpty()) {
+        filter.append(" and ");
+      }
+      filter.append("search.in(status, '").append(String.join(",", statuses)).append("')");
+    }
+
+    return filter.toString();
+  }
+
 }
 

@@ -126,7 +126,7 @@ locals {
     },
     {
       name  = "ONBOARDING_FUNCTIONS_URL"
-      value = "https://selc-${module.local.config.env_short}-pnpg-onboarding-fn.azurewebsites.net"
+      value = "https://selc-${module.local.config.env_short}-onboarding-fn.azurewebsites.net"
     },
     {
       name  = "STORAGE_CONTAINER_PRODUCT"
@@ -134,11 +134,11 @@ locals {
     },
     {
       name  = "MS_CORE_URL"
-      value = "http://selc-${module.local.config.env_short}-pnpg-ms-core-ca"
+      value = "http://selc-${module.local.config.env_short}-ms-core-ca"
     },
     {
       name  = "MS_PARTY_REGISTRY_URL"
-      value = "http://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca"
+      value = "http://selc-${module.local.config.env_short}-party-reg-proxy-ca"
     },
     {
       name  = "SIGNATURE_VALIDATION_ENABLED"
@@ -150,7 +150,7 @@ locals {
     },
     {
       name  = "MS_USER_URL"
-      value = "http://selc-${module.local.config.env_short}-pnpg-user-ms-ca"
+      value = "http://selc-${module.local.config.env_short}-user-ms-ca"
     },
     {
       name  = "ALLOWED_ATECO_CODES"
@@ -172,6 +172,10 @@ locals {
       name  = "ONBOARDING_ALLOWED_INSTITUTIONS_PRODUCTS"
       value = "prod-pn-pg"
     },
+    {
+      name  = "MS_DOCUMENT_URL"
+      value = "http://selc-${module.local.config.env_short}-document-ms-ca"
+    }
   ]
 
   onboarding_ms_secrets_names = {

@@ -54,6 +54,9 @@ class DocumentServiceImplTest {
     @InjectMock
     SignatureService signatureService;
 
+    @InjectMock
+    DocumentMsTelemetryService telemetryService;
+
     // ---- getDocumentsByOnboardingId ----
 
     @Test
