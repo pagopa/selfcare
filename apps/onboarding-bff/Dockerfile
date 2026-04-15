@@ -2,8 +2,7 @@ FROM maven:3-eclipse-temurin-17@sha256:6ca4f2d4c7a8affa4a7cdec526dd2aa5d433ddd63
 
 WORKDIR /src
 
-COPY --link ./apps/onboarding-bff/pom.xml ./apps/onboarding-bff/pom.xml
-COPY --link ./apps/onboarding-bff/src ./apps/onboarding-bff/src
+COPY --link . .
 
 RUN echo "<settings>\n" \
     "<servers>\n" \
