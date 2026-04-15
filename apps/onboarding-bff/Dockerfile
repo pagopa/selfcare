@@ -1,6 +1,7 @@
-FROM quay.io/quarkus/ubi-quarkus-mandrel-builder-image:23.0-java17 AS builder
+FROM maven:3-eclipse-temurin-17@sha256:6ca4f2d4c7a8affa4a7cdec526dd2aa5d433ddd63f8ed3337a543408136b174e AS builder
 
 WORKDIR /src
+
 COPY --link . .
 
 RUN echo "<settings>\n" \
@@ -18,19 +19,25 @@ ARG REPO_USERNAME
 ARG REPO_PASSWORD
 
 RUN mvn --global-settings settings.xml -f apps/onboarding-bff/pom.xml \
-    -Pnative \
     -DrepositoryId=${REPO_SELFCARE} -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} \
     clean package -DskipTests
 
-FROM registry.access.redhat.com/ubi8/ubi-minimal AS runtime
+FROM eclipse-temurin:17-jre-alpine AS runtime
+
+ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
+ENV JAVA_OPTIONS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
 
 WORKDIR /app
 
-COPY --from=builder /src/apps/onboarding-bff/target/*-runner /app/application
+COPY --from=builder /src/apps/onboarding-bff/target/quarkus-app/lib/ ./lib/
+COPY --from=builder /src/apps/onboarding-bff/target/quarkus-app/*.jar ./
+COPY --from=builder /src/apps/onboarding-bff/target/quarkus-app/app/ ./app/
+COPY --from=builder /src/apps/onboarding-bff/target/quarkus-app/quarkus/ ./quarkus/
 
-RUN chmod 755 /app/application
-USER 1001
+ADD https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.2.11/applicationinsights-agent-3.2.11.jar ./applicationinsights-agent.jar
+RUN chmod 755 ./applicationinsights-agent.jar
 
 EXPOSE 8080
+USER 1001
 
-ENTRYPOINT ["/app/application", "-Dquarkus.http.host=0.0.0.0"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTIONS -jar /app/quarkus-run.jar"]
