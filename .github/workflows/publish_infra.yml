@@ -36,10 +36,8 @@ jobs:
     with:
       environment: dev-${{ inputs.domain }}
       base_path: infra/core
-      env_vars: 
-        ACTIONS_RUNNER_FORCED_INTERNAL_NODE_VERSION=node20
-        ACTIONS_RUNNER_FORCE_ACTIONS_NODE_VERSION=node20
-      use_private_agent: false
+      # env_vars: ""
+      use_private_agent: true
       override_github_environment: ${{ inputs.env }}
       use_labels: true
-      override_labels: ""
+      override_labels: ${{ inputs.env }}
