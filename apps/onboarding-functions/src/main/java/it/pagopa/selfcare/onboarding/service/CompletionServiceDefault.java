@@ -275,9 +275,10 @@ public class CompletionServiceDefault implements CompletionService {
         onboardingRequest.setInstitutionType(InstitutionOnboardingRequest.InstitutionTypeEnum.valueOf(onboarding.getInstitution().getInstitutionType().name()));
         onboardingRequest.setIsAggregator(onboarding.getIsAggregator());
         //If contract exists we send the path of the contract
-        Optional<DocumentResponse> optDocument = documentControllerApi.getDocumentByOnboardingId(onboarding.getId()).stream().findFirst();
-        optDocument.ifPresent(token -> onboardingRequest.setContractPath(token.getContractSigned()));
-
+        if(!onboarding.getInstitution().getInstitutionType().equals(InstitutionType.PG)){
+            Optional<DocumentResponse> optDocument = documentControllerApi.getDocumentByOnboardingId(onboarding.getId()).stream().findFirst();
+            optDocument.ifPresent(document -> onboardingRequest.setContractPath(document.getContractSigned()));
+        }
         institutionApi.onboardingInstitutionUsingPOST(onboarding.getInstitution().getId(), onboardingRequest);
     }
 
