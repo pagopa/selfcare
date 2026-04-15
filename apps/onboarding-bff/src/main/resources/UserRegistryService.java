@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.service;
 
-import feign.FeignException;
+
+import jakarta.ws.rs.WebApplicationException;
 import it.pagopa.selfcare.onboarding.client.UserRegistryRestClient;
 import it.pagopa.selfcare.onboarding.client.model.*;
 import it.pagopa.selfcare.onboarding.util.LogUtils;
@@ -31,8 +32,12 @@ public class UserRegistryService {
         Optional<User> user;
         try {
             user = Optional.of(restClient.search(new EmbeddedExternalId(externalId), fieldList));
-        } catch (FeignException.NotFound e) {
-            user = Optional.empty();
+        } catch (WebApplicationException e) {
+            if (e.getResponse().getStatus() == 404) {
+                user = Optional.empty();
+            } else {
+                throw e;
+            }
         }
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getUserByExternalId result = {}", user);
         log.trace("getUserByExternalId end");

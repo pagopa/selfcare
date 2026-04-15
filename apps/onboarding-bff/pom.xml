@@ -28,7 +28,6 @@
         <quarkus.platform.version>3.31.2</quarkus.platform.version>
         <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
         <lombok.version>1.18.42</lombok.version>
-        <feign-core.version>13.3</feign-core.version>
         <compiler-plugin.version>3.13.0</compiler-plugin.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <mapstruct.lombok.version>0.2.0</mapstruct.lombok.version>
@@ -83,11 +82,6 @@
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-sdk-security</artifactId>
             <version>${security-sdk.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.github.openfeign</groupId>
-            <artifactId>feign-core</artifactId>
-            <version>${feign-core.version}</version>
         </dependency>
         <dependency>
             <groupId>org.openapitools</groupId>
