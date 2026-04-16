@@ -11,7 +11,7 @@ output "checkout_fe_rg_name" {
 }
 
 output "storage_primary_access_key" {
-  value     = ""
+  value     = data.azurerm_storage_account.cdn.primary_access_key
   sensitive = true
 }
 
