@@ -516,6 +516,7 @@
       "WorkflowType": {
         "enum": [
           "CONTRACT_REGISTRATION",
+          "CONTRACT_WITH_COUNTERSIGNATURE",
           "FOR_APPROVE",
           "FOR_APPROVE_PT",
           "FOR_APPROVE_GPU",
