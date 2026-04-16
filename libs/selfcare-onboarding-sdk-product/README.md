@@ -14,7 +14,7 @@ To use this library in your projects, you can add the dependency to your pom.xml
 <dependency>
     <groupId>it.pagopa.selfcare</groupId>
     <artifactId>selfcare-onboarding-sdk-product</artifactId>
-    <version>0.15.5</version>
+    <version>0.15.6</version>
 </dependency>
 ```
 
@@ -22,7 +22,7 @@ If you are using Gradle, you can add the dependency to your build.gradle file:
 
 ```shell script
 dependencies {
-    implementation 'it.pagopa.selfcare:selfcare-onboarding-sdk-product:0.15.5'
+    implementation 'it.pagopa.selfcare:selfcare-onboarding-sdk-product:0.15.6'
 }
 ```
 ## Product JSON Schema
