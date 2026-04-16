@@ -3542,9 +3542,9 @@
     }
   },
   "info" : {
-    "title" : "@project.artifactId@",
-    "version" : "@project.version@",
-    "description" : "@project.description@"
+    "title" : "Onboarding-BFF API",
+    "version" : "1.0.0",
+    "description" : "\"SelfCare Onboarding BFF\""
   },
   "servers" : [ {
     "url" : "http://localhost:8080",
