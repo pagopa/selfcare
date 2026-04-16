@@ -186,11 +186,10 @@ jobs:
   #         artifact-name: terraform-plan
   #         retention-days: 1
 
-  release_dev:
+  release:
     uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
     name: "DEV ${{ inputs.domain }} Selfcare Infra Core Release"
     needs: [build_push_docker, plan]
-    if: ${{ inputs.env == 'dev' }}
     secrets: inherit
     with:
       environment: ${{ inputs.environment }}-${{ inputs.domain }}
