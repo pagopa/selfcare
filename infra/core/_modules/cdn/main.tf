@@ -112,13 +112,13 @@ module "cdn_storage_account" {
 }
 
 # Data source to retrieve access keys (not exposed by pagopa-dx module)
-data "azurerm_storage_account" "cdn" {
-  name                = module.cdn_storage_account.name
-  resource_group_name = module.cdn_storage_account.resource_group_name
-  depends_on = [
-    module.cdn_storage_account
-  ]
-}
+# data "azurerm_storage_account" "cdn" {
+#   name                = module.cdn_storage_account.name
+#   resource_group_name = module.cdn_storage_account.resource_group_name
+#   depends_on = [
+#     module.cdn_storage_account
+#   ]
+# }
 
 # Key Vault certificate for custom domain (apex domain requires custom cert)
 data "azurerm_key_vault_certificate" "cdn" {
@@ -513,30 +513,30 @@ resource "azurerm_cdn_frontdoor_rule" "csp_frame_ancestors_ar" {
 # Key Vault Secrets
 ###############################################################################
 #tfsec:ignore:azure-keyvault-ensure-secret-expiry
-resource "azurerm_key_vault_secret" "selc_web_storage_access_key" {
-  name         = "web-storage-access-key"
-  value        = data.azurerm_storage_account.cdn.primary_access_key
-  content_type = "text/plain"
-  key_vault_id = var.key_vault_id
-  depends_on   = [module.cdn_storage_account]
-}
+# resource "azurerm_key_vault_secret" "selc_web_storage_access_key" {
+#   name         = "web-storage-access-key"
+#   value        = data.azurerm_storage_account.cdn.primary_access_key
+#   content_type = "text/plain"
+#   key_vault_id = var.key_vault_id
+#   depends_on   = [module.cdn_storage_account]
+# }
 
-#tfsec:ignore:azure-keyvault-ensure-secret-expiry
-resource "azurerm_key_vault_secret" "selc_web_storage_connection_string" {
-  name         = "web-storage-connection-string"
-  value        = data.azurerm_storage_account.cdn.primary_connection_string
-  content_type = "text/plain"
-  key_vault_id = var.key_vault_id
-  depends_on   = [module.cdn_storage_account]
-}
+# #tfsec:ignore:azure-keyvault-ensure-secret-expiry
+# resource "azurerm_key_vault_secret" "selc_web_storage_connection_string" {
+#   name         = "web-storage-connection-string"
+#   value        = data.azurerm_storage_account.cdn.primary_connection_string
+#   content_type = "text/plain"
+#   key_vault_id = var.key_vault_id
+#   depends_on   = [module.cdn_storage_account]
+# }
 
-#tfsec:ignore:azure-keyvault-ensure-secret-expiry
-resource "azurerm_key_vault_secret" "selc_web_storage_blob_connection_string" {
-  name         = "web-storage-blob-connection-string"
-  value        = data.azurerm_storage_account.cdn.primary_blob_connection_string
-  content_type = "text/plain"
-  key_vault_id = var.key_vault_id
-  depends_on   = [module.cdn_storage_account]
-}
+# #tfsec:ignore:azure-keyvault-ensure-secret-expiry
+# resource "azurerm_key_vault_secret" "selc_web_storage_blob_connection_string" {
+#   name         = "web-storage-blob-connection-string"
+#   value        = data.azurerm_storage_account.cdn.primary_blob_connection_string
+#   content_type = "text/plain"
+#   key_vault_id = var.key_vault_id
+#   depends_on   = [module.cdn_storage_account]
+# }
 
 
