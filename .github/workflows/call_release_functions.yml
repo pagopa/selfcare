@@ -18,20 +18,20 @@ on:
 
 jobs:
 
-  infra_dev:
-    name: ${{ inputs.target == 'selc' && '[Dev]' || '[Dev-PNPG]' }} - Infra Apply
-    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
-    uses: ./.github/workflows/call_release_infra.yml
-    secrets: inherit
-    with:
-      environment: dev
-      tf_environment: ${{ inputs.target == 'selc' && 'dev-ar' || 'dev-pnpg' }}
-      dir: ${{ inputs.target == 'selc' && 'infra/resources/onboarding-functions/dev-ar' || 'infra/resources/onboarding-functions/dev-pnpg' }}
+#  infra_dev:
+#    name: ${{ inputs.target == 'selc' && '[Dev]' || '[Dev-PNPG]' }} - Infra Apply
+#    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+#    uses: ./.github/workflows/call_release_infra.yml
+#    secrets: inherit
+#    with:
+#      environment: dev
+#      tf_environment: ${{ inputs.target == 'selc' && 'dev-ar' || 'dev-pnpg' }}
+#      dir: ${{ inputs.target == 'selc' && 'infra/resources/onboarding-functions/dev-ar' || 'infra/resources/onboarding-functions/dev-pnpg' }}
 
   release_dev:
     name: ${{ inputs.target == 'selc' && '[Dev]' || '[Dev-PNPG]' }} - ${{ inputs.app }} Release
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
-    needs: [infra_dev]
+#    needs: [infra_dev]
     runs-on: ubuntu-24.04
     environment:
       name: dev-cd
