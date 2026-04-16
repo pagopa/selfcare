@@ -290,13 +290,11 @@ jobs:
           echo "env_short=${env:0:1}" >> $GITHUB_OUTPUT
 
       - name: Upload to blob storage
-        uses: azure/CLI@965c8d7571d2231a54e321ddd07f7b10317f34d9 # v2
-        with:
-          inlineScript: |
-            az storage blob upload \
-              --auth-mode login \
-              --account-name selc${{ steps.extract_env_short.outputs.env_short }}checkoutsa  \
-              -c selc-openapi \
-              -f  ${{ inputs.path_openapi_docs }} \
-              -n ${{ inputs.docker_image_name }}/openapi.json \
-              --overwrite true
+        run: |
+          az storage blob upload \
+            --auth-mode login \
+            --account-name selc${{ steps.extract_env_short.outputs.env_short }}checkoutsa  \
+            -c selc-openapi \
+            -f  ${{ inputs.path_openapi_docs }} \
+            -n ${{ inputs.docker_image_name }}/openapi.json \
+            --overwrite true
