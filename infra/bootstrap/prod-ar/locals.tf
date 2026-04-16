@@ -230,6 +230,9 @@ locals {
       "selc-${local.env_short}-logs-storage-rg" = [
         "Storage Blob Data Contributor"
       ],
+      "selc-${local.env_short}-checkout-fe-rg" = [
+        "Storage Blob Data Contributor"
+      ],
       "selc-${local.env_short}-cosmosdb-mongodb-rg" = [
         "DocumentDB Account Contributor",
         "Cosmos DB Account Reader Role"

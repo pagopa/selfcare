@@ -265,7 +265,7 @@ jobs:
 
   upload_openapi:
     name: ${{ inputs.app }} - Upload OpenAPI
-    runs-on: ubuntu-24.04
+    runs-on: ["self-hosted", "${{ inputs.environment }}"]
     needs: [release]
     if: ${{ inputs.upload_openapi_enabled }}
     environment: ${{ inputs.environment }}-cd
