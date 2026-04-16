@@ -43,6 +43,7 @@ jobs:
     with:
       app: ${{ inputs.app }}
       environment: dev
+      domain: ${{ inputs.target }}
       tf_environment: ${{ inputs.target == 'selc' && 'dev-ar' || 'dev-pnpg' }}
       tf_dir: ${{ inputs.target == 'selc' && format('infra/resources/{0}/dev-ar', inputs.app) || format('infra/resources/{0}/dev-pnpg', inputs.app) }}
       dockerfile_path: ./${{ inputs.APP_PATH }}/Dockerfile
@@ -58,6 +59,7 @@ jobs:
     with:
       app: ${{ inputs.app }}
       environment: uat
+      domain: ${{ inputs.target }}
       tf_environment: ${{ inputs.target == 'selc' && 'uat-ar' || 'uat-pnpg' }}
       tf_dir: ${{ inputs.target == 'selc' && format('infra/resources/{0}/uat-ar', inputs.app) || format('infra/resources/{0}/uat-pnpg', inputs.app) }}
       dockerfile_path: ./${{ inputs.APP_PATH }}/Dockerfile
@@ -73,6 +75,7 @@ jobs:
     with:
       app: ${{ inputs.app }}
       environment: prod
+      domain: ${{ inputs.target }}
       tf_environment: ${{ inputs.target == 'selc' && 'prod-ar' || 'prod-pnpg' }}
       tf_dir: ${{ inputs.target == 'selc' && format('infra/resources/{0}/prod-ar', inputs.app) || format('infra/resources/{0}/prod-pnpg', inputs.app) }}
       dockerfile_path: ./${{ inputs.APP_PATH }}/Dockerfile
