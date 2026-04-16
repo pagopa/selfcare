@@ -1,0 +1,137 @@
+HELP.md
+target/
+**/target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### FILES ###
+**/*.env
+!test**.env
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+**/*.iml
+*.ipr
+.claude
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+.DS_Store
+.identity/.terraform
+
+.settings/
+.project
+.classpath
+.vscode/
+
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+**/.tfsec/*
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+infra/cert/env/bin
+infra/cert/env/lib
+**/pyvenv.cfg
+
+### INTELLIJ RUN CONFIG ###
+.run/**
+
+### Build outputs ###
+bin/
+obj/
+
+### Maven wrapper / build ###
+onboarding-functions/.mvn/
+
+### Node dependencies ###
+**/node_modules/
+
+### Docker ###
+#docker-compose.fn.yml
+#Dockerfile
+
+### Test resources / emulator data ###
+apps/onboarding-functions/src/test/resources/storagedata/
+apps/onboarding-functions/src/test/resources/storagedata/**
+apps/onboarding-functions/src/test/resources/azurite-data/
+apps/onboarding-functions/src/test/resources/azurite-data/**
+apps/onboarding-functions/local.settings.json
+!apps/onboarding-functions/src/test/resources/fn/**
+
+### Project storage ###
+apps/onboarding-functions/storagedata/
+apps/onboarding-functions/storagedata/**
+
+### Node.js ###
+**/dist/
+**/build/
+**/coverage/
+.npm
+.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+### Python ###
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.venv/
+.env/
+bin/
+lib/
+include/
+
+### Log & Temp Files ###
+*.log
+*.tmp
+*.bak
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+### Terraform Extra ###
+.terraform.lock.hcl
+crash.log
+
+### Secrets ###
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/secrets.json

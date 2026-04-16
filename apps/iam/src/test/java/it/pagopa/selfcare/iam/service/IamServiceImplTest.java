@@ -1,0 +1,825 @@
+package it.pagopa.selfcare.iam.service;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import io.quarkus.test.InjectMock;
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.common.QuarkusTestResource;
+import io.quarkus.test.mongodb.MongoTestResource;
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
+import it.pagopa.selfcare.iam.entity.UserClaims;
+import it.pagopa.selfcare.iam.exception.InternalException;
+import it.pagopa.selfcare.iam.exception.InvalidRequestException;
+import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.iam.model.ProductRole;
+import it.pagopa.selfcare.iam.model.ProductRolePermissions;
+import it.pagopa.selfcare.iam.model.ProductRolePermissionsList;
+import it.pagopa.selfcare.iam.model.ProductRoles;
+import it.pagopa.selfcare.iam.model.Role;
+import it.pagopa.selfcare.iam.model.UserPermissions;
+import it.pagopa.selfcare.iam.repository.UserPermissionsRepository;
+import it.pagopa.selfcare.iam.util.DataEncryptionConfig;
+import jakarta.inject.Inject;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+
+@QuarkusTest
+@QuarkusTestResource(value = MongoTestResource.class, restrictToAnnotatedClass = true)
+class IamServiceImplTest {
+
+  @Inject IamServiceImpl service;
+
+  @InjectMock UserPermissionsRepository userPermissionsRepository;
+
+  @Test
+  void ping_shouldReturnOK() {
+    String result = service.ping().await().indefinitely();
+    assertEquals("OK", result);
+  }
+
+  // ========== saveUser Tests ==========
+
+  @Test
+  void saveUser_shouldThrowInvalidRequestException_whenRequestIsNull() {
+    assertThrows(
+        InvalidRequestException.class,
+        () -> service.saveUser(null, "productA").await().indefinitely());
+  }
+
+  @Test
+  void saveUser_shouldThrowInvalidRequestException_whenEmailIsNull() {
+    SaveUserRequest request = new SaveUserRequest();
+    request.setEmail(null);
+    request.setName("John");
+
+    assertThrows(
+        InvalidRequestException.class,
+        () -> service.saveUser(request, "productA").await().indefinitely());
+  }
+
+  @Test
+  void saveUser_shouldThrowInvalidRequestException_whenEmailIsBlank() {
+    SaveUserRequest request = new SaveUserRequest();
+    request.setEmail("   ");
+    request.setName("John");
+
+    assertThrows(
+        InvalidRequestException.class,
+        () -> service.saveUser(request, "productA").await().indefinitely());
+  }
+
+  @Test
+  void saveUser_shouldCreateNewUser_whenUserDoesNotExist() {
+    SaveUserRequest request = new SaveUserRequest();
+    request.setEmail("new@example.com");
+    request.setName("John");
+    request.setFamilyName("Doe");
+    request.setProductRoles(
+        List.of(ProductRoles.builder().productId("productA").roles(List.of("admin")).build()));
+
+    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
+      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
+      mockedStatic
+          .when(() -> UserClaims.findByEmail("new@example.com"))
+          .thenReturn(Uni.createFrom().nullItem());
+
+      UserClaims result = service.saveUser(request, "productA").await().indefinitely();
+
+      assertNotNull(result);
+      assertEquals("new@example.com", result.getEmail());
+      assertEquals("John", result.getName());
+      assertEquals("Doe", result.getFamilyName());
+      assertNotNull(result.getUid());
+      assertEquals(1, result.getProductRoles().size());
+      assertEquals("productA", result.getProductRoles().get(0).getProductId());
+      assertTrue(result.getProductRoles().get(0).getRoles().contains("admin"));
+    }
+  }
+
+  @Test
+  void saveUser_shouldUpdateExistingUser_whenUserExists() {
+    SaveUserRequest request = new SaveUserRequest();
+    request.setEmail("existing@example.com");
+    request.setName("Jane");
+    request.setFamilyName("Smith");
+    request.setProductRoles(
+        List.of(ProductRoles.builder().productId("productA").roles(List.of("operator")).build()));
+
+    String existingUid = UUID.randomUUID().toString();
+    UserClaims existingUser =
+        UserClaims.builder()
+            .email("existing@example.com")
+            .uid(existingUid)
+            .name("OldName")
+            .familyName("OldFamily")
+            .productRoles(
+                List.of(
+                    ProductRoles.builder().productId("productA").roles(List.of("admin")).build()))
+            .build();
+
+    UserClaims spyUser = spy(existingUser);
+
+    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
+      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
+      mockedStatic
+          .when(() -> UserClaims.findByEmail("AEpJ4wSTGoucJLy8OCYfL23M0kSt0WwYo9/cJ9jboUtEgxsJ"))
+          .thenReturn(Uni.createFrom().item(spyUser));
+
+      UserClaims result = service.saveUser(request, "productA").await().indefinitely();
+
+      assertNotNull(result);
+      assertEquals(existingUid, result.getUid());
+      assertEquals("Jane", result.getName());
+      assertEquals("Smith", result.getFamilyName());
+    }
+  }
+
+  @Test
+  void saveUser_shouldMergeProductRoles_whenProductIdProvided() {
+    SaveUserRequest request = new SaveUserRequest();
+    request.setEmail("merge@example.com");
+    request.setName("Bob");
+    request.setProductRoles(
+        List.of(ProductRoles.builder().productId("productB").roles(List.of("viewer")).build()));
+
+    String existingUid = UUID.randomUUID().toString();
+    UserClaims existingUser =
+        UserClaims.builder()
+            .email("CFdS9xW6EZS9LLSxMHgQJS7KuMuQ50MOy5zX05Tjt3L5")
+            .uid(existingUid)
+            .name("Bob")
+            .productRoles(
+                List.of(
+                    ProductRoles.builder().productId("productA").roles(List.of("admin")).build()))
+            .build();
+
+    UserClaims spyUser = spy(existingUser);
+
+    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
+      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
+      mockedStatic
+          .when(() -> UserClaims.findByEmail("CFdS9xW6EZS9LLSxMHgQJS7KuMuQ50MOy5zX05Tjt3L5"))
+          .thenReturn(Uni.createFrom().item(spyUser));
+
+      UserClaims result = service.saveUser(request, "productB").await().indefinitely();
+
+      assertNotNull(result);
+      assertEquals(2, spyUser.getProductRoles().size());
+      assertTrue(
+          spyUser.getProductRoles().stream().anyMatch(pr -> pr.getProductId().equals("productA")));
+      assertTrue(
+          spyUser.getProductRoles().stream().anyMatch(pr -> pr.getProductId().equals("productB")));
+    }
+  }
+
+  @Test
+  void saveUser_shouldReplaceProductRoles_whenProductIdMatchesExisting() {
+    SaveUserRequest request = new SaveUserRequest();
+    request.setEmail("replace@example.com");
+    request.setName("Alice");
+    request.setProductRoles(
+        List.of(ProductRoles.builder().productId("productA").roles(List.of("superadmin")).build()));
+
+    String existingUid = UUID.randomUUID().toString();
+    UserClaims existingUser =
+        UserClaims.builder()
+            .email("replace@example.com")
+            .uid(existingUid)
+            .name("Alice")
+            .productRoles(
+                List.of(
+                    ProductRoles.builder()
+                        .productId("productA")
+                        .roles(List.of("admin", "operator"))
+                        .build()))
+            .build();
+
+    UserClaims spyUser = spy(existingUser);
+
+    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
+      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
+      mockedStatic
+          .when(() -> UserClaims.findByEmail("F1dQ/BGZEay5OaWwJToWZCDA0H9W7CtYk084i1dg1crtqEc="))
+          .thenReturn(Uni.createFrom().item(spyUser));
+
+      service.saveUser(request, "productA").await().indefinitely();
+
+      assertEquals(1, spyUser.getProductRoles().size());
+      assertEquals("productA", spyUser.getProductRoles().get(0).getProductId());
+      assertEquals(1, spyUser.getProductRoles().get(0).getRoles().size());
+      assertTrue(spyUser.getProductRoles().get(0).getRoles().contains("superadmin"));
+    }
+  }
+
+  @Test
+  void saveUser_shouldReplaceAllProductRoles_whenProductIdIsNull() {
+    SaveUserRequest request = new SaveUserRequest();
+    request.setEmail("replaceall@example.com");
+    request.setName("Charlie");
+    request.setProductRoles(
+        List.of(ProductRoles.builder().productId("productC").roles(List.of("newrole")).build()));
+
+    String existingUid = UUID.randomUUID().toString();
+    UserClaims existingUser =
+        UserClaims.builder()
+            .email("replaceall@example.com")
+            .uid(existingUid)
+            .name("Charlie")
+            .productRoles(
+                List.of(
+                    ProductRoles.builder().productId("productA").roles(List.of("admin")).build(),
+                    ProductRoles.builder().productId("productB").roles(List.of("viewer")).build()))
+            .build();
+
+    UserClaims spyUser = spy(existingUser);
+
+    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
+      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
+      mockedStatic
+          .when(
+              () -> UserClaims.findByEmail("F1dQ/BGZEY2wLYS4LTceOi/Kk0rnREus5wvMa9zMPRSkuA26a5Y="))
+          .thenReturn(Uni.createFrom().item(spyUser));
+
+      service.saveUser(request, null).await().indefinitely();
+
+      assertEquals(3, spyUser.getProductRoles().size());
+      assertEquals("productC", spyUser.getProductRoles().get(2).getProductId());
+    }
+  }
+
+  // ========== getUser Tests ==========
+
+  @Test
+  void getUser_shouldReturnUser_whenUserExists() {
+    String userId = "user-123";
+    String productId = "productA";
+
+    UserClaims foundUser =
+        UserClaims.builder()
+            .email("A11V/hS6EZS9LLSxMHgQJS6O1OStWkFnwpbN4fHhy0I6") // found@example.com
+            .uid(userId)
+            .productRoles(
+                List.of(
+                    ProductRoles.builder().productId("productA").roles(List.of("admin")).build(),
+                    ProductRoles.builder().productId("productB").roles(List.of("viewer")).build()))
+            .build();
+
+    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
+      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
+      mockedStatic
+          .when(() -> UserClaims.findByUidAndProductId(userId, productId))
+          .thenReturn(Uni.createFrom().item(foundUser));
+
+      UserClaims result = service.getUser(userId, productId).await().indefinitely();
+
+      assertNotNull(result);
+      assertEquals(userId, result.getUid());
+      assertEquals(1, result.getProductRoles().size());
+      assertEquals("productA", result.getProductRoles().get(0).getProductId());
+    }
+  }
+
+  @Test
+  void getUser_shouldReturnUser_whenUserExists_withProductALL() {
+    String userId = "user-123";
+    String productId = "productA";
+
+    UserClaims foundUser =
+        UserClaims.builder()
+            .email("A11V/hS6EZS9LLSxMHgQJS6O1OStWkFnwpbN4fHhy0I6") // found@example.com
+            .uid(userId)
+            .productRoles(
+                List.of(ProductRoles.builder().productId("ALL").roles(List.of("admin")).build()))
+            .test(false)
+            .build();
+
+    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
+      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
+      mockedStatic
+          .when(() -> UserClaims.findByUidAndProductId(userId, productId))
+          .thenReturn(Uni.createFrom().item(foundUser));
+
+      UserClaims result = service.getUser(userId, productId).await().indefinitely();
+
+      assertNotNull(result);
+      assertEquals(userId, result.getUid());
+      assertEquals(1, result.getProductRoles().size());
+      assertEquals("ALL", result.getProductRoles().get(0).getProductId());
+    }
+  }
+
+  @Test
+  void getUser_shouldThrowResourceNotFoundException_whenUserNotFound() {
+    String userId = "non-existing-user";
+    String productId = "productA";
+
+    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
+      mockedStatic
+          .when(() -> UserClaims.findByUidAndProductId(userId, productId))
+          .thenReturn(Uni.createFrom().nullItem());
+
+      assertThrows(
+          ResourceNotFoundException.class,
+          () -> service.getUser(userId, productId).await().indefinitely());
+    }
+  }
+
+  @Test
+  void getUser_shouldReturnAllProductRoles_whenProductIdIsNull() {
+    String userId = "user-456";
+
+    UserClaims foundUser =
+        UserClaims.builder()
+            .email("BF5M0BWCFYGsLaHzNjker68nsqTr/pizCvinopNUlQ==") // all@example.com
+            .uid(userId)
+            .productRoles(
+                List.of(
+                    ProductRoles.builder().productId("productA").roles(List.of("admin")).build(),
+                    ProductRoles.builder().productId("productB").roles(List.of("viewer")).build()))
+            .build();
+
+    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
+      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
+      mockedStatic
+          .when(() -> UserClaims.findByUidAndProductId(userId, null))
+          .thenReturn(Uni.createFrom().item(foundUser));
+
+      UserClaims result = service.getUser(userId, null).await().indefinitely();
+
+      assertNotNull(result);
+      assertEquals(2, result.getProductRoles().size());
+    }
+  }
+
+  // ========== getUserByEmail Tests ==========
+
+  @Test
+  void getUserByEmail_shouldReturnUser_whenUserExistsAndProductIdMatches() {
+    String email = "found@example.com";
+    String productId = "productA";
+    String encryptedEmail = "encrypted_found@example.com";
+
+    UserClaims foundUser =
+        UserClaims.builder()
+            .email(encryptedEmail)
+            .uid("user-123")
+            .productRoles(
+                List.of(
+                    ProductRoles.builder().productId("productA").roles(List.of("admin")).build(),
+                    ProductRoles.builder().productId("productB").roles(List.of("viewer")).build()))
+            .build();
+
+    try (MockedStatic<UserClaims> mockedUserClaims = Mockito.mockStatic(UserClaims.class);
+        MockedStatic<DataEncryptionConfig> mockedEncryption =
+            Mockito.mockStatic(DataEncryptionConfig.class)) {
+
+      mockedUserClaims.when(UserClaims::builder).thenCallRealMethod();
+
+      mockedEncryption.when(() -> DataEncryptionConfig.encrypt(email)).thenReturn(encryptedEmail);
+      mockedEncryption.when(() -> DataEncryptionConfig.decrypt(encryptedEmail)).thenReturn(email);
+
+      mockedUserClaims
+          .when(() -> UserClaims.findByEmail(encryptedEmail))
+          .thenReturn(Uni.createFrom().item(foundUser));
+
+      UserClaims result = service.getUserByEmail(email, productId).await().indefinitely();
+
+      assertNotNull(result);
+      assertEquals("user-123", result.getUid());
+      assertEquals(email, result.getEmail());
+      assertEquals(1, result.getProductRoles().size());
+      assertEquals("productA", result.getProductRoles().get(0).getProductId());
+    }
+  }
+
+  @Test
+  void getUserByEmail_shouldThrowResourceNotFound_whenProductIdDoesNotMatch() {
+    String email = "found@example.com";
+    String productId = "productC";
+    String encryptedEmail = "encrypted_found@example.com";
+
+    UserClaims foundUser =
+        UserClaims.builder()
+            .email(encryptedEmail)
+            .uid("user-123")
+            .productRoles(
+                List.of(
+                    ProductRoles.builder().productId("productA").roles(List.of("admin")).build()))
+            .build();
+
+    try (MockedStatic<UserClaims> mockedUserClaims = Mockito.mockStatic(UserClaims.class);
+        MockedStatic<DataEncryptionConfig> mockedEncryption =
+            Mockito.mockStatic(DataEncryptionConfig.class)) {
+
+      mockedEncryption.when(() -> DataEncryptionConfig.encrypt(email)).thenReturn(encryptedEmail);
+
+      mockedUserClaims
+          .when(() -> UserClaims.findByEmail(encryptedEmail))
+          .thenReturn(Uni.createFrom().item(foundUser));
+
+      assertThrows(
+          ResourceNotFoundException.class,
+          () -> service.getUserByEmail(email, productId).await().indefinitely());
+    }
+  }
+
+  @Test
+  void getUserByEmail_shouldReturnUser_whenUserHasProductAll() {
+    String email = "found@example.com";
+    String productId = "productC"; // Requested product C
+    String encryptedEmail = "encrypted_found@example.com";
+
+    UserClaims foundUser =
+        UserClaims.builder()
+            .email(encryptedEmail)
+            .uid("user-123")
+            .productRoles(
+                List.of(
+                    ProductRoles.builder().productId("ALL").roles(List.of("super-admin")).build()))
+            .build();
+
+    try (MockedStatic<UserClaims> mockedUserClaims = Mockito.mockStatic(UserClaims.class);
+        MockedStatic<DataEncryptionConfig> mockedEncryption =
+            Mockito.mockStatic(DataEncryptionConfig.class)) {
+
+      mockedUserClaims.when(UserClaims::builder).thenCallRealMethod();
+      mockedEncryption.when(() -> DataEncryptionConfig.encrypt(email)).thenReturn(encryptedEmail);
+      mockedEncryption.when(() -> DataEncryptionConfig.decrypt(encryptedEmail)).thenReturn(email);
+
+      mockedUserClaims
+          .when(() -> UserClaims.findByEmail(encryptedEmail))
+          .thenReturn(Uni.createFrom().item(foundUser));
+
+      UserClaims result = service.getUserByEmail(email, productId).await().indefinitely();
+
+      assertNotNull(result);
+      assertEquals(1, result.getProductRoles().size());
+      assertEquals("ALL", result.getProductRoles().get(0).getProductId());
+    }
+  }
+
+  @Test
+  void getUserByEmail_shouldThrowResourceNotFound_whenUserNotFound() {
+    String email = "missing@example.com";
+    String productId = "productA";
+    String encryptedEmail = "encrypted_missing@example.com";
+
+    try (MockedStatic<UserClaims> mockedUserClaims = Mockito.mockStatic(UserClaims.class);
+        MockedStatic<DataEncryptionConfig> mockedEncryption =
+            Mockito.mockStatic(DataEncryptionConfig.class)) {
+
+      mockedEncryption.when(() -> DataEncryptionConfig.encrypt(email)).thenReturn(encryptedEmail);
+
+      mockedUserClaims
+          .when(() -> UserClaims.findByEmail(encryptedEmail))
+          .thenReturn(Uni.createFrom().nullItem());
+
+      assertThrows(
+          ResourceNotFoundException.class,
+          () -> service.getUserByEmail(email, productId).await().indefinitely());
+    }
+  }
+
+  // ========== setFilteredProductRoles Tests ==========
+
+  @Test
+  void setFilteredProductRoles_shouldReturnOriginalList_whenProductIdIsNull() {
+    List<ProductRoles> roles =
+        List.of(
+            ProductRoles.builder().productId("productA").roles(List.of("admin")).build(),
+            ProductRoles.builder().productId("productB").roles(List.of("viewer")).build());
+
+    List<ProductRoles> result = service.setFilteredProductRoles(roles, null);
+
+    assertSame(roles, result);
+    assertEquals(2, result.size());
+  }
+
+  @Test
+  void setFilteredProductRoles_shouldFilterByProductId() {
+    List<ProductRoles> roles =
+        List.of(
+            ProductRoles.builder().productId("productA").roles(List.of("admin")).build(),
+            ProductRoles.builder().productId("productB").roles(List.of("viewer")).build());
+
+    List<ProductRoles> result = service.setFilteredProductRoles(roles, "productB");
+
+    assertEquals(1, result.size());
+    assertEquals("productB", result.get(0).getProductId());
+  }
+
+  @Test
+  void setFilteredProductRoles_shouldReturnEmptyList_whenNoMatch() {
+    List<ProductRoles> roles =
+        List.of(ProductRoles.builder().productId("productA").roles(List.of("admin")).build());
+
+    List<ProductRoles> result = service.setFilteredProductRoles(roles, "productC");
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void setFilteredProductRoles_shouldReturnEmptyList_whenRolesIsNull() {
+    List<ProductRoles> result = service.setFilteredProductRoles(null, "productA");
+
+    assertTrue(result.isEmpty());
+  }
+
+  // ========== getProductRolePermissionsList Tests ==========
+
+  @Test
+  void getProductRolePermissionsList_shouldReturnProductRolePermissionsList_whenUserExists() {
+    String userId = "user-123";
+    String productId = "productA";
+
+    ProductRolePermissions prp1 =
+        ProductRolePermissions.builder()
+            .productId("productA")
+            .role("admin")
+            .permissions(List.of("read:users", "write:users"))
+            .build();
+
+    List<ProductRolePermissions> productRolePermissions = List.of(prp1);
+
+    ProductRolePermissionsList productRolePermissionsList =
+        new ProductRolePermissionsList(productRolePermissions);
+
+    when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId))
+        .thenReturn(Uni.createFrom().item(productRolePermissions));
+
+    ProductRolePermissionsList result =
+        service.getProductRolePermissionsList(userId, productId).await().indefinitely();
+
+    assertNotNull(result);
+    assertEquals(1, result.getItems().size());
+    assertEquals(productRolePermissionsList, result);
+  }
+
+  @Test
+  void getProductRolePermissionsList_shouldReturnEmptyList_whenNoMatch() {
+    String userId = "user-123";
+    String productId = "productA";
+
+    when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId))
+        .thenReturn(Uni.createFrom().item(Collections.emptyList()));
+
+    ProductRolePermissionsList result =
+        service.getProductRolePermissionsList(userId, productId).await().indefinitely();
+
+    assertNotNull(result);
+    assertTrue(result.getItems().isEmpty());
+  }
+
+  @Test
+  void getProductRolePermissionsList_serviceError_throwsInternalException() {
+    String userId = "user-123";
+    String productId = "productA";
+
+    when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId))
+        .thenReturn(Uni.createFrom().failure(new InternalException("Database error")));
+
+    Uni<ProductRolePermissionsList> result =
+        service.getProductRolePermissionsList(userId, productId);
+
+    result
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .awaitFailure()
+        .assertFailedWith(InternalException.class);
+  }
+
+  // ========== hasPermission Tests ==========
+
+  @Test
+  void hasPermission_shouldReturnTrue_whenUserHasPermission() {
+    String userId = "user-789";
+    String permission = "read:users";
+    String productId = "productA";
+
+    UserPermissions userPermissions =
+        UserPermissions.builder()
+            .email("user@example.com")
+            .uid(userId)
+            .productId(productId)
+            .permissions(List.of("read:users", "write:users"))
+            .build();
+
+    when(userPermissionsRepository.getUserPermissions(userId, permission, List.of(productId)))
+        .thenReturn(Uni.createFrom().item(userPermissions));
+
+    Boolean result =
+        service.hasPermission(userId, permission, productId, null).await().indefinitely();
+
+    assertTrue(result);
+  }
+
+  @Test
+  void hasPermission_shouldReturnFalse_whenUserDoesNotHavePermission() {
+    String userId = "user-101";
+    String permission = "delete:users";
+    String productId = "productA";
+
+    UserPermissions userPermissions =
+        UserPermissions.builder()
+            .email("user@example.com")
+            .uid(userId)
+            .productId(productId)
+            .permissions(List.of("read:users", "write:users"))
+            .build();
+
+    when(userPermissionsRepository.getUserPermissions(userId, permission, List.of(productId)))
+        .thenReturn(Uni.createFrom().item(userPermissions));
+
+    Boolean result =
+        service.hasPermission(userId, permission, productId, null).await().indefinitely();
+
+    assertFalse(result);
+  }
+
+  @Test
+  void hasPermission_shouldReturnFalse_whenPermissionsAreEmpty() {
+    String userId = "user-202";
+    String permission = "read:users";
+    String productId = "productA";
+
+    UserPermissions userPermissions =
+        UserPermissions.builder()
+            .email("user@example.com")
+            .uid(userId)
+            .productId(productId)
+            .permissions(List.of())
+            .build();
+
+    when(userPermissionsRepository.getUserPermissions(userId, permission, List.of(productId)))
+        .thenReturn(Uni.createFrom().item(userPermissions));
+
+    Boolean result =
+        service.hasPermission(userId, permission, productId, null).await().indefinitely();
+
+    assertFalse(result);
+  }
+
+  @Test
+  void getUsers_shouldReturnUsers_whenFound() {
+    String productId = "productA";
+
+    UserClaims u1 =
+        UserClaims.builder()
+            .email("A11V/hS6EZS9LLSxMHgQJS6O1OStWkFnwpbN4fHhy0I6")
+            .uid("u1")
+            .productRoles(
+                List.of(
+                    ProductRoles.builder().productId("productA").roles(List.of("admin")).build(),
+                    ProductRoles.builder().productId("productB").roles(List.of("viewer")).build()))
+            .build();
+
+    UserClaims u2 =
+        UserClaims.builder()
+            .email("BF5M0BWCFYGsLaHzNjker68nsqTr/pizCvinopNUlQ==")
+            .uid("u2")
+            .productRoles(
+                List.of(
+                    ProductRoles.builder()
+                        .productId("productA")
+                        .roles(List.of("operator"))
+                        .build()))
+            .build();
+
+    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
+      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
+      mockedStatic
+          .when(() -> UserClaims.findByProductId(productId))
+          .thenReturn(Uni.createFrom().item(List.of(u1, u2)));
+
+      List<UserClaims> result = service.getUsers(productId).await().indefinitely();
+
+      assertNotNull(result);
+      assertEquals(2, result.size());
+      assertEquals(1, result.get(0).getProductRoles().size());
+      assertEquals("productA", result.get(0).getProductRoles().get(0).getProductId());
+      assertEquals(1, result.get(1).getProductRoles().size());
+      assertEquals("productA", result.get(1).getProductRoles().get(0).getProductId());
+    }
+  }
+
+  // ========== getProductRoles Tests ==========
+
+  @Test
+  void getProductRoles_shouldReturnRoles_whenUserAndProductExist() {
+    String userId = "042b311a-7b99-4eaa-8c7d-9e5b5f6bb9ae";
+    String productId = "product-C";
+
+    Role role = Role.builder().role("CUSTOM").group("CUSTOM").build();
+    ProductRole productRole =
+        ProductRole.builder().productId(productId).roles(List.of(role)).build();
+
+    when(userPermissionsRepository.getUserProductRoles(userId, productId))
+        .thenReturn(Uni.createFrom().item(List.of(productRole)));
+
+    List<ProductRole> result = service.getProductRoles(userId, productId).await().indefinitely();
+
+    assertNotNull(result);
+    assertEquals(1, result.size());
+    assertEquals(productId, result.get(0).getProductId());
+    assertEquals(1, result.get(0).getRoles().size());
+    assertEquals("CUSTOM", result.get(0).getRoles().get(0).getRole());
+    assertEquals("CUSTOM", result.get(0).getRoles().get(0).getGroup());
+  }
+
+  @Test
+  void getProductRoles_shouldReturnMultipleProducts_whenProductIdIsNull() {
+    String userId = "user-multi";
+
+    Role adminRole = Role.builder().role("ADMIN").group("SUPPORT").build();
+    Role operatorRole = Role.builder().role("OPERATOR").group("SUPPORT").build();
+    ProductRole productA =
+        ProductRole.builder().productId("product-A").roles(List.of(adminRole)).build();
+    ProductRole productB =
+        ProductRole.builder().productId("product-B").roles(List.of(operatorRole)).build();
+
+    when(userPermissionsRepository.getUserProductRoles(userId, null))
+        .thenReturn(Uni.createFrom().item(List.of(productA, productB)));
+
+    List<ProductRole> result = service.getProductRoles(userId, null).await().indefinitely();
+
+    assertNotNull(result);
+    assertEquals(2, result.size());
+    assertTrue(result.stream().anyMatch(pr -> pr.getProductId().equals("product-A")));
+    assertTrue(result.stream().anyMatch(pr -> pr.getProductId().equals("product-B")));
+  }
+
+  @Test
+  void getProductRoles_shouldReturnMultipleRolesPerProduct() {
+    String userId = "user-multi-roles";
+    String productId = "product-A";
+
+    Role adminRole = Role.builder().role("ADMIN").group("SUPPORT").build();
+    Role operatorRole = Role.builder().role("OPERATOR").group("SUPPORT").build();
+    ProductRole productRole =
+        ProductRole.builder().productId(productId).roles(List.of(adminRole, operatorRole)).build();
+
+    when(userPermissionsRepository.getUserProductRoles(userId, productId))
+        .thenReturn(Uni.createFrom().item(List.of(productRole)));
+
+    List<ProductRole> result = service.getProductRoles(userId, productId).await().indefinitely();
+
+    assertNotNull(result);
+    assertEquals(1, result.size());
+    assertEquals(2, result.get(0).getRoles().size());
+    assertTrue(result.get(0).getRoles().stream().anyMatch(r -> r.getRole().equals("ADMIN")));
+    assertTrue(result.get(0).getRoles().stream().anyMatch(r -> r.getRole().equals("OPERATOR")));
+  }
+
+  @Test
+  void getProductRoles_shouldReturnEmptyList_whenUserHasNoRoles() {
+    String userId = "user-no-roles";
+
+    when(userPermissionsRepository.getUserProductRoles(userId, null))
+        .thenReturn(Uni.createFrom().item(Collections.emptyList()));
+
+    List<ProductRole> result = service.getProductRoles(userId, null).await().indefinitely();
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void getProductRoles_shouldReturnRoleWithNullGroup_whenRoleNotInRolesCollection() {
+    String userId = "user-unknown-role";
+    String productId = "product-X";
+
+    // role not found in roles collection → group is null (preserved by pipeline)
+    Role unknownRole = Role.builder().role("UNKNOWN").group(null).build();
+    ProductRole productRole =
+        ProductRole.builder().productId(productId).roles(List.of(unknownRole)).build();
+
+    when(userPermissionsRepository.getUserProductRoles(userId, productId))
+        .thenReturn(Uni.createFrom().item(List.of(productRole)));
+
+    List<ProductRole> result = service.getProductRoles(userId, productId).await().indefinitely();
+
+    assertNotNull(result);
+    assertEquals(1, result.size());
+    assertEquals("UNKNOWN", result.get(0).getRoles().get(0).getRole());
+    assertNull(result.get(0).getRoles().get(0).getGroup());
+  }
+
+  @Test
+  void getProductRoles_shouldPropagateFailure_whenRepositoryFails() {
+    String userId = "user-error";
+
+    when(userPermissionsRepository.getUserProductRoles(userId, null))
+        .thenReturn(Uni.createFrom().failure(new InternalException("Database error")));
+
+    assertThrows(
+        InternalException.class,
+        () -> service.getProductRoles(userId, null).await().indefinitely());
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/pdnd-interop-uservice-party-process/0.0.1/external/institutions/externalId1/products/productId/billing"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+      "institutionId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "externalId": "string",
+      "origin": "IPA",
+      "originId": "string",
+      "description": "string",
+      "taxCode": "string",
+      "digitalAddress": "string",
+      "address": "string",
+      "zipCode": "string",
+      "institutionType": "PA",
+      "pricingPlan": "string",
+      "subunitCode": "string",
+      "subunitType": "string",
+      "aooParentCode": "string",
+      "billing": {
+        "vatNumber": "string",
+        "recipientCode": "string",
+        "publicServices": true
+      }
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

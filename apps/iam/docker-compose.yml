@@ -1,0 +1,85 @@
+services:
+
+  mongodb:
+    image: mongo:latest@sha256:bf5995bcccb65725aa81fd92e68449323c94b96bf1c1fa9f7acbc2a8ad518114
+    ports:
+      - '27017:27017'
+    volumes:
+      - "./src/test/resources/db:/docker-entrypoint-initdb.d"
+    networks:
+      - developer-network
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest@sha256:647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    networks:
+      - developer-network
+    environment:
+      - AZURITE_ACCOUNTS=devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==
+    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --inMemoryPersistence"
+
+  azure-cli:
+    build:
+      context: "src/test/resources/"
+      dockerfile: "Dockerfile-azure-cli"
+    depends_on:
+      - azurite
+    volumes:
+      - "./src/test/resources/blobStorageInit/init_azurite.sh:/init_azurite.sh"
+      - "./src/test/resources/blobStorageInit/products.json:/workspace/products.json"
+    environment:
+      - SELFCARE_INFRA_PRIVATE_ENV=dev
+    networks:
+      - developer-network
+
+  mock-server:
+    platform: linux/amd64
+    image: mockserver/mockserver@sha256:adec675a93253dcd503cda331dbc8c88383c1c79ceb2370ec9766ad3f010d255
+    ports:
+      - "1080:1080"
+    networks:
+      - developer-network
+    environment:
+      - MOCKSERVER_INITIALIZATION_JSON_PATH=/config/*.json
+      - MOCKSERVER_ENABLE_CORS_FOR_API="true"
+      - MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES="true"
+    volumes:
+      - "./mock:/config"
+
+  institutionms:
+    platform: linux/amd64
+    image: ghcr.io/pagopa/selfcare-institution-ms:latest@sha256:3a350260028708ab24b90e844413cfcfa20815c5eceb6da29a0dfd5895fdde17
+    ports:
+      - "8082:8082"
+    networks:
+      - developer-network
+    env_file:
+      - ./src/test/resources/test-institution-ms.env
+    depends_on:
+      - mongodb
+      - mock-server
+      - azure-cli
+
+  userms:
+    platform: linux/amd64
+    image: ghcr.io/pagopa/selfcare-user-ms:latest@sha256:598b488a44be661792187b94bad56594e437e5636f1287408b247de2b817fbe9
+    ports:
+      - "8087:8087"
+    env_file:
+      - src/test/resources/test-user-ms.env
+    networks:
+      - developer-network
+    depends_on:
+      - mongodb
+      - mock-server
+      - azure-cli
+
+networks:
+  developer-network:
+    name: selfcare-develop-network
+
+secrets:
+  maven_settings:
+    file: ~/.m2/settings.xml

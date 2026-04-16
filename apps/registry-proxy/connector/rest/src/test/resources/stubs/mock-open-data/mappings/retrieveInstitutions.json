@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/mock/institutions"
+  },
+  "response": {
+    "status": "200",
+    "body": "mock institutions csv content",
+    "headers": {
+      "Content-Type": "plain/text"
+    }
+  }
+}

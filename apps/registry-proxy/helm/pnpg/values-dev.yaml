@@ -1,0 +1,39 @@
+replicaCount: 0
+
+image:
+  repository: selcdcommonacr.azurecr.io/selfcaremspartyregistryproxy
+
+ingress:
+  annotations:
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://imprese.dev.notifichedigitali.it,https://pnpg.dev.selfcare.pagopa.it,http://localhost:3000"
+  tls:
+    - hosts:
+        - dev01.pnpg.internal.dev.selfcare.pagopa.it
+      secretName: dev01-pnpg-internal-dev-selfcare-pagopa-it
+  hosts:
+    - host: "dev01.pnpg.internal.dev.selfcare.pagopa.it"
+      paths:
+        - path: /party-registry-proxy/v1/(.*)
+          pathType: ImplementationSpecific
+
+autoscaling:
+  enabled: false
+  minReplicas: 0
+  maxReplicas: 0
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+configEnvSpecific:
+  JAVA_TOOL_OPTIONS: "-javaagent:/applicationinsights-agent.jar"
+  APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL: "OFF"
+  MS_PARTY_REGISTRY_PROXY_LOG_LEVEL: "DEBUG"
+  MOCK_OPEN_DATA_ENABLED: "true"
+  MOCK_OPEN_DATA_URL: "https://selcdweupnpgcheckoutsa.z6.web.core.windows.net/resources"
+  MOCK_OPEN_DATA_INSTITUTION_ENDPOINT: "/institutions-open-data-mock.csv"
+  MOCK_OPEN_DATA_CATEGORY_ENDPOINT: "/categories-open-data-mock.csv"
+  MOCK_OPEN_DATA_AOO_ENDPOINT: "/aoo-open-data-mock.csv"
+  MOCK_OPEN_DATA_UO_ENDPOINT: "/uo-open-data-mock.csv"
+  INFO_CAMERE_URL: "https://icapiscl.infocamere.it"
+  INFO_CAMERE_INSTITUTIONS_BY_LEGAL_ENDPOINT: "/ic/ce/wspa/wspa/rest/listaLegaleRappresentante/{taxId}"
+  INFO_CAMERE_AUTHENTICATION_ENDPOINT: "/ic/ce/wspa/wspa/rest/authentication"
+  NATIONAL_REGISTRIES_URL: "https://api-selcpg.dev.notifichedigitali.it/national-registries-private"

@@ -1,0 +1,60 @@
+[
+  {
+    "$match": {
+      "_id": "USER_ID_HERE"
+    }
+  },
+  {
+    "$unwind": "$productRoles"
+  },
+  {
+    "$match": {
+      "productRoles.productId": {
+        "$in": ["ALL", "PRODUCT_ID_HERE"]
+      }
+    }
+  },
+  {
+    "$unwind": "$productRoles.roles"
+  },
+  {
+    "$lookup": {
+      "from": "roles",
+      "localField": "productRoles.roles",
+      "foreignField": "_id",
+      "as": "roleDetails"
+    }
+  },
+  {
+    "$unwind": "$roleDetails"
+  },
+  {
+    "$unwind": "$roleDetails.permissions"
+  },
+  {
+    "$match": {
+      "roleDetails.permissions": "PERMISSION_HERE"
+    }
+  },
+  {
+    "$group": {
+      "_id": {
+        "uid": "$_id",
+        "email": "$email",
+        "productId": "$productRoles.productId"
+      },
+      "permissions": {
+        "$addToSet": "$roleDetails.permissions"
+      }
+    }
+  },
+  {
+    "$project": {
+      "_id": 0,
+      "email": "$_id.email",
+      "uid": "$_id.uid",
+      "productId": "$_id.productId",
+      "permissions": "$permissions"
+    }
+  }
+]

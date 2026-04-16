@@ -1,0 +1,67 @@
+## Database subnet
+module "redis_snet" {
+  source                            = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v9.6.1"
+  name                              = "${var.project}-redis-snet"
+  address_prefixes                  = var.cidr_subnet_redis
+  resource_group_name               = var.rg_vnet_name
+  virtual_network_name              = var.vnet_name
+  private_endpoint_network_policies = var.private_endpoint_network_policies
+
+  service_endpoints = [
+    "Microsoft.Web",
+  ]
+}
+
+module "redis" {
+  source                        = "github.com/pagopa/terraform-azurerm-v4.git//redis_cache?ref=v9.6.1"
+  name                          = "${var.project}-redis"
+  resource_group_name           = var.rg_redis
+  location                      = var.location
+  capacity                      = var.redis_capacity
+  redis_version                 = var.redis_version
+  family                        = var.redis_family
+  sku_name                      = var.redis_sku_name
+  public_network_access_enabled = !var.redis_private_endpoint_enabled
+
+  private_endpoint = {
+    enabled              = var.redis_private_endpoint_enabled
+    virtual_network_id   = var.vnet_id
+    subnet_id            = module.redis_snet.id
+    private_dns_zone_ids = var.redis_private_endpoint_enabled ? var.privatelink_redis_cache_windows_net_ids : []
+  }
+
+  // when azure can apply patch?
+  patch_schedules = [
+    {
+      day_of_week    = "Sunday"
+      start_hour_utc = 23
+    },
+    {
+      day_of_week    = "Monday"
+      start_hour_utc = 23
+    },
+    {
+      day_of_week    = "Tuesday"
+      start_hour_utc = 23
+    },
+    {
+      day_of_week    = "Wednesday"
+      start_hour_utc = 23
+    },
+    {
+      day_of_week    = "Thursday"
+      start_hour_utc = 23
+    },
+  ]
+
+  tags = var.tags
+}
+
+#tfsec:ignore:AZU023
+resource "azurerm_key_vault_secret" "redis_primary_access_key" {
+  name         = "redis-primary-access-key"
+  value        = module.redis.primary_access_key
+  content_type = "text/plain"
+
+  key_vault_id = var.key_vault_id
+}

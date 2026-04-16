@@ -1,0 +1,140 @@
+Feature: User Permissions
+  As a system
+  I want to check user permissions
+  So that I can authorize access to resources
+
+  Background:
+    Given the IAM service is running
+
+  Scenario: User has required permission
+    Given a user with UID "d8880750-906a-4c43-8d48-983693fe24a4" has the following permissions for product "product-A":
+      | read:users  |
+      | write:users |
+      | admin       |
+    When I check if user "d8880750-906a-4c43-8d48-983693fe24a4" has permission "read:users" for product "product-A"
+    Then the permission check should return true
+
+  Scenario: User does not have required permission
+    Given a user with UID "a0530f76-3454-418c-9d65-eb3162075495" has the following permissions for product "product-A":
+      | read:users |
+    When I check if user "a0530f76-3454-418c-9d65-eb3162075495" has permission "delete:users" for product "product-A"
+    Then the permission check should return false
+
+  Scenario: User with empty permissions
+    Given a user with UID "042b311a-7b99-4eaa-8c7d-9e5b5f6bb9ae" has no permissions for product "product-A"
+    When I check if user "042b311a-7b99-4eaa-8c7d-9e5b5f6bb9ae" has permission "read:users" for product "product-A"
+    Then the permission check should return false
+
+  Scenario Outline: Check multiple permissions
+    Given a user with UID "a0530f76-3454-418c-9d65-eb3162075495" has the following permissions for product "product-B":
+      | read:users  |
+      | write:users |
+    When I check if user "a0530f76-3454-418c-9d65-eb3162075495" has permission "<permission>" for product "product-B"
+    Then the permission check should return <result>
+
+    Examples:
+      | permission   | result |
+      | read:users   | true   |
+      | write:users  | true   |
+      | delete:users | false  |
+      | admin        | false  |
+
+  Scenario Outline: Check multiple permissions with admin role
+    Given a user with UID "d8880750-906a-4c43-8d48-983693fe24a4" has the following permissions for product "product-A":
+      | read:users  |
+      | write:users |
+    When I check if user "d8880750-906a-4c43-8d48-983693fe24a4" has permission "<permission>" for product "product-A"
+    Then the permission check should return <result>
+
+    Examples:
+      | permission   | result |
+      | read:users   | true   |
+      | write:users  | true   |
+      | delete:users | true   |
+      | admin        | true   |
+
+  Scenario: Check permission with institution filter
+    Given a user with UID "72d4984f-d2bc-4584-a6a7-dd63068b7f48" has permissions for product "product-A" and institution "inst-001"
+    When I check if user "72d4984f-d2bc-4584-a6a7-dd63068b7f48" has permission "read:users" for product "product-A" and institution "inst-001"
+    Then the permission check should return true
+
+  Scenario: Check positive permission with institution filter and custom permission
+    Given User login with username "user-002" and password "test"
+    And The following query params:
+      | institutionId | cdd3d4bb-bae3-4187-af16-53ec40358267 |
+      | productId     | product-B                            |
+    And The following path params:
+      | userId     | a0530f76-3454-418c-9d65-eb3162075495 |
+      | permission | write:users                          |
+    When I send a GET request to "/iam/users/{userId}/permissions/{permission}"
+    Then The status code is 200
+    And The response body contains the string "true"
+
+  Scenario: Check negative permission with institution filter and custom permission
+    Given User login with username "user-002" and password "test"
+    And The following query params:
+      | institutionId | cdd3d4bb-bae3-4187-af16-53ec40358267 |
+      | productId     | product-A                            |
+    And The following path params:
+      | userId     | a0530f76-3454-418c-9d65-eb3162075495 |
+      | permission | write:users                          |
+    When I send a GET request to "/iam/users/{userId}/permissions/{permission}"
+    Then The status code is 200
+    And The response body contains the string "false"
+
+  Scenario: Permission not present with institution filter and custom permission
+    Given User login with username "user-002" and password "test"
+    And The following query params:
+      | institutionId | cdd3d4bb-bae3-4187-af16-53ec40358267 |
+      | productId     | product-C                            |
+    And The following path params:
+      | userId     | a0530f76-3454-418c-9d65-eb3162075495 |
+      | permission | write:users                          |
+    When I send a GET request to "/iam/users/{userId}/permissions/{permission}"
+    Then The status code is 200
+    And The response body contains the string "false"
+
+  Scenario: Check permission with institution filter and no productId
+    Given User login with username "user-002" and password "test"
+    And The following query params:
+      | institutionId | cdd3d4bb-bae3-4187-af16-53ec40358267 |  |
+    And The following path params:
+      | userId     | a0530f76-3454-418c-9d65-eb3162075495 |
+      | permission | read:users                           |
+    When I send a GET request to "/iam/users/{userId}/permissions/{permission}"
+    Then The status code is 200
+    And The response body contains the string "true"
+
+  Scenario: Update user permissions with PATCH
+    Given User login with username "user-002" and password "test"
+    And The following request body:
+          """
+          {
+            "email": "user-001@mail.xyz",
+            "productRoles": [
+              {
+                  "productId": "product-B",
+                  "roles": [
+                      "CUSTOM"
+                  ]
+              }
+            ]
+          }
+          """
+    When I send a PATCH request to "/iam/users" with content type "application/json"
+    Then The status code is 200
+
+  Scenario: Check roles permission with institution filter and custom permission
+    Given User login with username "user-002" and password "test"
+    And The following query params:
+      | productId | product-C |
+    And The following path params:
+      | userId | 042b311a-7b99-4eaa-8c7d-9e5b5f6bb9ae |
+    When I send a GET request to "/iam/users/{userId}/roles"
+    Then The status code is 200
+    And The response body contains the list "[0].roles" of size 1
+    And The response body contains the string "CUSTOM"
+    And The response body contains at path "[0].roles" the following list of objects in any order:
+      | role   |
+      | CUSTOM |
+

@@ -1,0 +1,95 @@
+@startuml Webhook Entity Relationship Diagram
+
+!define ENTITY class
+!define ENUM enum
+
+' Entities
+ENTITY Webhook {
+  + ObjectId id
+  + String name
+  + String description
+  + String url
+  + String httpMethod
+  + Map<String, String> headers
+  + WebhookStatus status
+  + RetryPolicy retryPolicy
+  + LocalDateTime createdAt
+  + LocalDateTime updatedAt
+  + String createdBy
+}
+
+ENTITY WebhookNotification {
+  + ObjectId id
+  + ObjectId webhookId
+  + String payload
+  + NotificationStatus status
+  + Integer attemptCount
+  + String lastError
+  + LocalDateTime createdAt
+  + LocalDateTime lastAttemptAt
+  + LocalDateTime completedAt
+}
+
+ENTITY RetryPolicy {
+  + Integer maxAttempts
+  + Long initialDelayMs
+  + Long maxDelayMs
+  + Double backoffMultiplier
+}
+
+' Enums
+ENUM WebhookStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+ENUM NotificationStatus {
+  PENDING
+  SENDING
+  SUCCESS
+  FAILED
+  RETRY
+}
+
+' Relationships
+Webhook "1" *-- "1" RetryPolicy : contains
+Webhook "1" -- "0..*" WebhookNotification : triggers
+Webhook "1" *-- "1" WebhookStatus : has
+WebhookNotification "1" *-- "1" NotificationStatus : has
+
+' Notes
+note right of Webhook
+  **MongoDB Collection**: webhooks
+  
+  Stores webhook configuration
+  including target URL, HTTP method,
+  custom headers, and retry policy.
+  
+  Status can be ACTIVE, INACTIVE,
+  or SUSPENDED.
+end note
+
+note right of WebhookNotification
+  **MongoDB Collection**: webhook_notifications
+  
+  Tracks individual notification
+  attempts with status, payload,
+  retry count, and error messages.
+  
+  Linked to Webhook via webhookId.
+end note
+
+note bottom of RetryPolicy
+  **Embedded in Webhook**
+  
+  Defines retry behavior:
+  - maxAttempts: max retry count
+  - initialDelayMs: first retry delay
+  - maxDelayMs: maximum delay cap
+  - backoffMultiplier: exponential factor
+  
+  Default: 3 attempts, 1s initial, 10s max, 2.0x multiplier
+end note
+
+@enduml

@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/mock/categories"
+  },
+  "response": {
+    "status": "200",
+    "body": "mock categories csv content",
+    "headers": {
+      "Content-Type": "plain/text"
+    }
+  }
+}

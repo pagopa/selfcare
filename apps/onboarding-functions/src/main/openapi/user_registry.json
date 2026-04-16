@@ -1,0 +1,596 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "pdv-u-user-registry-api",
+    "description" : "User Registry API documentation",
+    "version" : "1.0-SNAPSHOT"
+  },
+  "servers" : [ {
+    "url" : "https://api.uat.pdv.pagopa.it/{basePath}",
+    "variables" : {
+      "basePath" : {
+        "default" : "user-registry/v1"
+      }
+    }
+  } ],
+  "tags" : [ {
+    "name" : "user",
+    "description" : "User operations"
+  } ],
+  "paths" : {
+    "/users" : {
+      "patch" : {
+        "tags" : [ "user" ],
+        "summary" : "Upsert user",
+        "description" : "Update the given subset fields of an existing user by external id, if not present create a new one",
+        "operationId" : "saveUsingPATCH",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SaveUserDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserId"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : { }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Conflict",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : { }
+          }
+        },
+        "security" : [ {
+          "api_key" : [ ]
+        } ]
+      }
+    },
+    "/users/{id}" : {
+      "get" : {
+        "tags" : [ "user" ],
+        "summary" : "Find user",
+        "description" : "Retrieve the user by its internal id",
+        "operationId" : "findByIdUsingGET",
+        "parameters" : [ {
+          "name" : "fl",
+          "in" : "query",
+          "description" : "Field list. Subset of fields to be retrieved for the requested resource",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "id",
+          "in" : "path",
+          "description" : "User internal id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserResource"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : { }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : { }
+          }
+        },
+        "security" : [ {
+          "api_key" : [ ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "user" ],
+        "summary" : "Delete user",
+        "description" : "Delete the user by its internal id",
+        "operationId" : "deleteByIdUsingDELETE",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "User internal id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : { }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content",
+            "content" : { }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : { }
+          }
+        },
+        "security" : [ {
+          "api_key" : [ ]
+        } ]
+      },
+      "patch" : {
+        "tags" : [ "user" ],
+        "summary" : "Update user",
+        "description" : "Update the given subset fields of an existing user by its internal id, if not present an error is returned",
+        "operationId" : "updateUsingPATCH",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "User internal id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MutableUserFieldsDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content",
+            "content" : { }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : { }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : { }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : { }
+          },
+          "409" : {
+            "description" : "Conflict",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api_key" : [ ]
+        } ]
+      }
+    },
+    "/users/search" : {
+      "post" : {
+        "tags" : [ "user" ],
+        "summary" : "Search user",
+        "description" : "Search a user given its fiscal code",
+        "operationId" : "searchUsingPOST",
+        "parameters" : [ {
+          "name" : "fl",
+          "in" : "query",
+          "description" : "Field list. Subset of fields to be retrieved for the requested resource",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UserSearchDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserResource"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : { }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : { }
+          }
+        },
+        "security" : [ {
+          "api_key" : [ ]
+        } ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "UserSearchDto" : {
+        "title" : "UserSearchDto",
+        "required" : [ "fiscalCode" ],
+        "type" : "object",
+        "properties" : {
+          "fiscalCode" : {
+            "type" : "string",
+            "description" : "User fiscal code"
+          }
+        }
+      },
+      "WorkContactResource" : {
+        "title" : "WorkContactResource",
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
+          }
+        }
+      },
+      "CertifiableFieldResourceOfstring" : {
+        "title" : "CertifiableFieldResourceOfstring",
+        "required" : [ "certification", "value" ],
+        "type" : "object",
+        "properties" : {
+          "certification" : {
+            "type" : "string",
+            "description" : "Certified source of information",
+            "enum" : [ "NONE", "SPID" ]
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "Field value"
+          }
+        }
+      },
+      "UserId" : {
+        "title" : "UserId",
+        "required" : [ "id" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "User internal id",
+            "format" : "uuid"
+          }
+        }
+      },
+      "MutableUserFieldsDto" : {
+        "title" : "MutableUserFieldsDto",
+        "type" : "object",
+        "properties" : {
+          "birthDate" : {
+            "$ref" : "#/components/schemas/CertifiableFieldResourceOfLocalDate"
+          },
+          "email" : {
+            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
+          },
+          "familyName" : {
+            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
+          },
+          "name" : {
+            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
+          },
+          "workContacts" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/WorkContactResource"
+            },
+            "description" : "User work contacts"
+          }
+        }
+      },
+      "CertifiableFieldResourceOfLocalDate" : {
+        "title" : "CertifiableFieldResourceOfLocalDate",
+        "required" : [ "certification", "value" ],
+        "type" : "object",
+        "properties" : {
+          "certification" : {
+            "type" : "string",
+            "description" : "Certified source of information",
+            "enum" : [ "NONE", "SPID" ]
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "Field value",
+            "format" : "date"
+          }
+        }
+      },
+      "UserResource" : {
+        "title" : "UserResource",
+        "required" : [ "id" ],
+        "type" : "object",
+        "properties" : {
+          "birthDate" : {
+            "$ref" : "#/components/schemas/CertifiableFieldResourceOfLocalDate"
+          },
+          "email" : {
+            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
+          },
+          "familyName" : {
+            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
+          },
+          "fiscalCode" : {
+            "type" : "string",
+            "description" : "User fiscal code"
+          },
+          "id" : {
+            "type" : "string",
+            "description" : "User internal id",
+            "format" : "uuid"
+          },
+          "name" : {
+            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
+          },
+          "workContacts" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/WorkContactResource"
+            },
+            "description" : "User work contacts"
+          }
+        }
+      },
+      "SaveUserDto" : {
+        "title" : "SaveUserDto",
+        "required" : [ "fiscalCode" ],
+        "type" : "object",
+        "properties" : {
+          "birthDate" : {
+            "$ref" : "#/components/schemas/CertifiableFieldResourceOfLocalDate"
+          },
+          "email" : {
+            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
+          },
+          "familyName" : {
+            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
+          },
+          "fiscalCode" : {
+            "type" : "string",
+            "description" : "User fiscal code"
+          },
+          "name" : {
+            "$ref" : "#/components/schemas/CertifiableFieldResourceOfstring"
+          },
+          "workContacts" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/WorkContactResource"
+            },
+            "description" : "User work contacts"
+          }
+        }
+      },
+      "Problem" : {
+        "title" : "Problem",
+        "required" : [ "status", "title" ],
+        "type" : "object",
+        "properties" : {
+          "detail" : {
+            "type" : "string",
+            "description" : "Human-readable description of this specific problem."
+          },
+          "instance" : {
+            "type" : "string",
+            "description" : "A URI that describes where the problem occurred."
+          },
+          "invalidParams" : {
+            "type" : "array",
+            "description" : "A list of invalid parameters details.",
+            "items" : {
+              "$ref" : "#/components/schemas/InvalidParam"
+            }
+          },
+          "status" : {
+            "type" : "integer",
+            "description" : "The HTTP status code.",
+            "format" : "int32"
+          },
+          "title" : {
+            "type" : "string",
+            "description" : "Short human-readable summary of the problem."
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "A URL to a page with more details regarding the problem."
+          }
+        },
+        "description" : "A \"problem detail\" as a way to carry machine-readable details of errors (https://datatracker.ietf.org/doc/html/rfc7807)"
+      },
+      "InvalidParam" : {
+        "title" : "InvalidParam",
+        "required" : [ "name", "reason" ],
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "description" : "Invalid parameter name."
+          },
+          "reason" : {
+            "type" : "string",
+            "description" : "Invalid parameter reason."
+          }
+        }
+      }
+    },
+    "securitySchemes" : {
+      "api_key" : {
+        "type" : "apiKey",
+        "name" : "x-api-key",
+        "in" : "header"
+      }
+    }
+  }
+}

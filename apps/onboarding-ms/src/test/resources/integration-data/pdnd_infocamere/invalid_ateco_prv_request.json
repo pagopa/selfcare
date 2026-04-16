@@ -1,0 +1,42 @@
+{
+  "productId": "prod-idpay-merchant",
+  "users": [
+    {
+      "taxCode": "GRSGNT71A62C950S",
+      "name": "Gianantonio",
+      "surname": "Grassi",
+      "email": "g.grassi@test.it",
+      "role": "MANAGER"
+    }
+  ],
+  "institution": {
+    "institutionType": "PRV",
+    "taxCode": "15376371000",
+    "origin": "PDND_INFOCAMERE",
+    "originId": "15376371000",
+    "city": "Roccamonfina",
+    "country": "IT",
+    "county": "CE",
+    "description": "PAGOPA S.P.A.",
+    "digitalAddress": "PAGOPASPA@PEC.PAGOPA.IT",
+    "address": "Via Municipio N. 8",
+    "zipCode": "81035",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ],
+    "imported": false,
+    "atecoCodes": ["01.13.00", "01.14.00"]
+  },
+  "billing": {
+    "vatNumber": "00876320409",
+    "recipientCode": "UFR0DM",
+    "publicServices": true
+  },
+  "payment": {
+    "iban": "IT60X0542811101000000123456",
+    "holder": "Antonello Golfini"
+  }
+}

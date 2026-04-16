@@ -1,0 +1,536 @@
+[
+  {
+    "_id": "c9a50656-f345-4c81-84be-5b2474470544",
+    "externalId": "00310810825",
+    "origin": "IPA",
+    "originId": "c_c067",
+    "description": "Comune di Castelbuono",
+    "institutionType": "PA",
+    "digitalAddress": "comune.castelbuono@pec.it",
+    "address": "Via Sant' Anna, 25",
+    "zipCode": "90013",
+    "taxCode": "00310810825",
+    "onboarding": [
+      {
+        "productId": "prod-interop",
+        "tokenId": "cdd3d4bb-bae3-4187-af16-53ec40358267",
+        "status": "ACTIVE",
+        "contract": "parties/docs/81ea93f8-0276-48a7-bdd2-53106c5e8387/App IO_accordo_adesione (3).pdf17362706113579421406.pdf",
+        "billing": {
+          "vatNumber": "80002090928",
+          "recipientCode": "c_i580",
+          "publicServices": false
+        },
+        "createdAt": "2023-05-03T13:18:08.563134Z",
+        "updatedAt": "2023-05-03T13:18:08.563165Z",
+        "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
+        "origin": "IPA",
+        "originId": "c_c067",
+        "institutionType": "PA"
+      },
+      {
+        "productId": "prod-fd",
+        "tokenId": "a3f2d517-b432-4745-ae9b-5bb1f1bcfb79",
+        "status": "ACTIVE",
+        "contract": "parties/docs/a3f2d517-b432-4745-ae9b-5bb1f1bcfb79/Prod Fideiussioni Digitali_accordo_adesione (3).pdf",
+        "billing": {
+          "vatNumber": "00310810825",
+          "recipientCode": "dfhadr",
+          "publicServices": false
+        },
+        "createdAt": "2023-06-22T09:12:45.933504Z",
+        "updatedAt": "2023-06-22T09:16:50.172777Z",
+        "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
+        "isAggregator": "false",
+        "origin": "IPA",
+        "originId": "c_c067",
+        "institutionType": "PA"
+      },
+      {
+        "productId": "prod-io",
+        "tokenId": "5eeaf667-e9c1-4150-bb4b-1fce01df6ab9",
+        "status": "ACTIVE",
+        "contract": "contracts/template/io/2.4.2/io-accordo_di_adesione-v.2.4.2.html",
+        "billing": {
+          "vatNumber": "00017561486",
+          "recipientCode": "000000",
+          "publicServices": false
+        },
+        "createdAt": "2024-06-04T13:06:50.154Z",
+        "isAggregator": true,
+        "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
+        "origin": "IPA",
+        "originId": "c_c067",
+        "institutionType": "PA"
+      },
+      {
+        "productId": "prod-pagopa",
+        "tokenId": "6c4fc5c1-65bb-496c-ae0a-547a4c920bd9",
+        "status": "ACTIVE",
+        "billing": {
+          "vatNumber": "00750840175",
+          "recipientCode": "UF7ECB",
+          "publicServices": true
+        },
+        "createdAt": "2024-07-05T14:43:04.672108422Z",
+        "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
+        "origin": "IPA",
+        "originId": "c_c067",
+        "institutionType": "PA"
+      }
+    ],
+    "geographicTaxonomies": [
+      {
+        "code": "058091",
+        "desc": "ROMA - COMUNE"
+      }
+    ],
+    "attributes": [
+      {
+        "origin": "IPA",
+        "code": "L6",
+        "description": "Comuni e loro Consorzi e Associazioni"
+      }
+    ],
+    "imported": false,
+    "createdAt": "2023-01-18T08:20:44.725Z",
+    "updatedAt": "2024-07-05T14:43:04.860664851Z",
+    "_class": "it.pagopa.selfcare.mscore.connector.dao.model.InstitutionEntity",
+    "supportEmail": "a@l.it"
+  },
+  {
+    "_id": "467ac77d-7faa-47bf-a60e-38ea74bd5fd2",
+    "externalId": "85000870064",
+    "origin": "IPA",
+    "originId": "c_d277",
+    "description": "Comune di Agrigento",
+    "institutionType": "PA",
+    "digitalAddress": "protocollo@pec.comune.dernice.al.it",
+    "address": "Via Roma N.17",
+    "zipCode": "15056",
+    "taxCode": "85000870064",
+    "onboarding": [
+      {
+        "productId": "prod-io",
+        "status": "ACTIVE",
+        "tokenId": "21f73488-d0df-4a3d-9b6f-9adf634780b5",
+        "billing": {
+          "vatNumber": "85000870064",
+          "recipientCode": "c_d277",
+          "publicServices": false
+        },
+        "createdAt": "2022-06-10T13:29:10.462Z",
+        "updatedAt": "2023-06-14T12:25:08.237831Z",
+        "contract": "parties/docs/21f73488-d0df-4a3d-9b6f-9adf634780b5/App IO_accordo_adesione.pdf",
+        "origin": "IPA",
+        "originId": "c_d277",
+        "institutionType": "PA"
+      },
+      {
+        "productId": "prod-pagopa",
+        "tokenId": "string",
+        "status": "DELETED",
+        "contract": "string",
+        "pricingPlan": "string",
+        "billing": {
+          "vatNumber": "string",
+          "taxCodeInvoicing": "string",
+          "recipientCode": "string",
+          "publicServices": true
+        },
+        "createdAt": "2024-07-10T07:38:06.665Z",
+        "isAggregator": true,
+        "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
+        "updatedAt": "2024-07-10T16:53:01.4593709Z",
+        "origin": "IPA",
+        "originId": "c_d277",
+        "institutionType": "PA"
+      },
+      {
+        "productId": "prod-pagopa",
+        "tokenId": "string",
+        "status": "ACTIVE",
+        "contract": "string",
+        "pricingPlan": "string",
+        "billing": {
+          "vatNumber": "string",
+          "taxCodeInvoicing": "string",
+          "recipientCode": "string",
+          "publicServices": true
+        },
+        "createdAt": "2024-07-10T16:48:49.963Z",
+        "isAggregator": true,
+        "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
+        "origin": "IPA",
+        "originId": "c_d277",
+        "institutionType": "PA"
+      },
+      {
+        "productId": "prod-interop",
+        "tokenId": "string",
+        "status": "ACTIVE",
+        "contract": "string",
+        "pricingPlan": "string",
+        "billing": {
+          "vatNumber": "string",
+          "taxCodeInvoicing": "string",
+          "recipientCode": "string",
+          "publicServices": true
+        },
+        "createdAt": "2024-07-10T16:48:49.963Z",
+        "isAggregator": true,
+        "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
+        "origin": "IPA",
+        "originId": "c_d277",
+        "institutionType": "PA"
+      }
+    ],
+    "geographicTaxonomies": [],
+    "attributes": [
+      {
+        "origin": "IPA",
+        "code": "L6",
+        "description": "Comuni e loro Consorzi e Associazioni"
+      }
+    ],
+    "imported": false,
+    "createdAt": "2022-06-10T13:29:09.792Z",
+    "updatedAt": "2024-07-11T09:51:39.8126597Z",
+    "_class": "it.pagopa.selfcare.mscore.connector.dao.model.InstitutionEntity"
+  },
+  {
+    "_id": "0b56686d-3e25-4851-86c8-b9ba0d4fe301",
+    "externalId": "15555555555",
+    "origin": "SELC",
+    "originId": "PSP_15555555555",
+    "description": "Comune di Castel Test",
+    "institutionType": "PSP",
+    "digitalAddress": "test@t.it",
+    "address": "Via Giacomo Matteotti",
+    "zipCode": "11111",
+    "taxCode": "15555555555",
+    "onboarding": [
+      {
+        "productId": "prod-interop",
+        "tokenId": "cdd3d4bb-bae3-4187-af16-53ec40358267",
+        "status": "ACTIVE",
+        "contract": "parties/docs/81ea93f8-0276-48a7-bdd2-53106c5e8387/App IO_accordo_adesione (3).pdf17362706113579421406.pdf",
+        "billing": {
+          "vatNumber": "80002090928",
+          "recipientCode": "c_i580",
+          "publicServices": false
+        },
+        "createdAt": "2023-05-03T13:18:08.563134Z",
+        "updatedAt": "2023-05-03T13:18:08.563165Z",
+        "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
+        "origin": "SELC",
+        "originId": "PSP_15555555555",
+        "institutionType": "PSP"
+      },
+      {
+        "productId": "prod-fd",
+        "tokenId": "a3f2d517-b432-4745-ae9b-5bb1f1bcfb79",
+        "status": "ACTIVE",
+        "contract": "parties/docs/a3f2d517-b432-4745-ae9b-5bb1f1bcfb79/Prod Fideiussioni Digitali_accordo_adesione (3).pdf",
+        "billing": {
+          "vatNumber": "00310810825",
+          "recipientCode": "dfhadr",
+          "publicServices": false
+        },
+        "createdAt": "2023-06-22T09:12:45.933504Z",
+        "updatedAt": "2023-06-22T09:16:50.172777Z",
+        "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
+        "isAggregator": "false",
+        "origin": "SELC",
+        "originId": "PSP_15555555555",
+        "institutionType": "PSP"
+      },
+      {
+        "productId": "prod-io",
+        "tokenId": "5eeaf667-e9c1-4150-bb4b-1fce01df6ab9",
+        "status": "ACTIVE",
+        "contract": "contracts/template/io/2.4.2/io-accordo_di_adesione-v.2.4.2.html",
+        "billing": {
+          "vatNumber": "00017561486",
+          "recipientCode": "000000",
+          "publicServices": false
+        },
+        "createdAt": "2024-06-04T13:06:50.154Z",
+        "isAggregator": true,
+        "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
+        "origin": "SELC",
+        "originId": "PSP_15555555555",
+        "institutionType": "PSP"
+      },
+      {
+        "productId": "prod-pagopa",
+        "tokenId": "6c4fc5c1-65bb-496c-ae0a-547a4c920bd9",
+        "status": "ACTIVE",
+        "billing": {
+          "vatNumber": "00750840175",
+          "recipientCode": "UF7ECB",
+          "publicServices": true
+        },
+        "createdAt": "2024-07-05T14:43:04.672108422Z",
+        "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
+        "origin": "SELC",
+        "originId": "PSP_15555555555",
+        "institutionType": "PSP"
+      }
+    ],
+    "geographicTaxonomies": [],
+    "attributes": [],
+    "paymentServiceProvider": {
+      "abiCode": "11111",
+      "businessRegisterNumber": "12345567890",
+      "legalRegisterName": "12345",
+      "legalRegisterNumber": "11111111111",
+      "vatNumberGroup": false
+    },
+    "dataProtectionOfficer": {
+      "address": "Via Test",
+      "email": "s@s.iy",
+      "pec": "test@test.it"
+    },
+    "imported": false,
+    "createdAt": "2022-11-25T16:39:41.474Z",
+    "updatedAt": "2023-03-27T15:18:54.938048Z",
+    "_class": "it.pagopa.selfcare.mscore.connector.dao.model.InstitutionEntity"
+  },
+  {
+    "_id": "b4705659-3a01-430a-a19b-7bdb4e340223",
+    "externalId": "94076720658#UF5D7W",
+    "origin": "IPA",
+    "originId": "UF5D7W",
+    "description": "Uff_eFatturaPA",
+    "digitalAddress": "saic8bu00x@pec.istruzione.it",
+    "address": "Via San Pietro, 10",
+    "zipCode": "84014",
+    "taxCode": "94076720658",
+    "geographicTaxonomies": [],
+    "attributes": [
+      {
+        "origin": "IPA",
+        "code": "L33",
+        "description": "Istituti di Istruzione Statale di Ogni Ordine e Grado"
+      }
+    ],
+    "imported": false,
+    "createdAt": "2023-06-12T12:42:55.013863Z",
+    "updatedAt": "2023-06-12T12:42:56.446705Z",
+    "subunitCode": "UF5D7W",
+    "subunitType": "UO",
+    "_class": "it.pagopa.selfcare.mscore.connector.dao.model.InstitutionEntity",
+    "onboarding": [
+      {
+        "productId": "prod-io",
+        "tokenId": "703c1652-0fcd-445e-ab6c-ad2f95e55d5a",
+        "status": "PENDING",
+        "contract": "contracts/template/io/2.4.2/io-accordo_di_adesione-v.2.4.2.html",
+        "billing": {
+          "vatNumber": "94076720658",
+          "recipientCode": "c_c040",
+          "publicServices": false
+        },
+        "createdAt": "2023-06-12T12:42:56.446631Z",
+        "updatedAt": "2023-06-12T12:42:56.446635Z",
+        "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
+        "origin": "IPA",
+        "originId": "UF5D7W",
+        "institutionType": "PT"
+      }
+    ]
+  },
+  {
+    "_id": "f94c0589-b07e-4ee7-a509-fda5fe91faa2",
+    "externalId": "01726610056_AVO36EJ",
+    "origin": "IPA",
+    "originId": "AVO36EJ",
+    "description": "COMUNE DI MORANSENGO-TONENGO",
+    "digitalAddress": "comune.moransengotonengo@legalmail.it",
+    "address": "Via VIA AIRALI 9 ",
+    "zipCode": "14023",
+    "taxCode": "01726610056",
+    "geographicTaxonomies": [],
+    "attributes": [
+      {
+        "origin": "IPA",
+        "code": "L6",
+        "description": "Comuni e loro Consorzi e Associazioni"
+      }
+    ],
+    "imported": false,
+    "createdAt": "2023-05-31T13:35:31.001587Z",
+    "updatedAt": "2023-12-06T10:26:57.930267Z",
+    "subunitCode": "AVO36EJ",
+    "subunitType": "AOO",
+    "_class": "it.pagopa.selfcare.mscore.connector.dao.model.InstitutionEntity",
+    "onboarding": [
+      {
+        "productId": "prod-pn",
+        "tokenId": "5cf41352-de89-4bc1-b42a-3c86ba30c9bb",
+        "status": "PENDING",
+        "contract": "contracts/template/pn/1.0.0/pn-accordo_di_adesione-v.1.0.0.html",
+        "billing": {
+          "vatNumber": "01726610056",
+          "recipientCode": "milano",
+          "publicServices": false
+        },
+        "createdAt": "2023-05-31T13:35:57.682148Z",
+        "updatedAt": "2023-05-31T13:35:57.682162Z",
+        "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
+        "origin": "IPA",
+        "originId": "AVO36EJ",
+        "institutionType": "PT"
+      },
+      {
+        "productId": "prod-interop",
+        "tokenId": "7a7bcae7-13f6-4b4c-84f0-adbcfca283b4",
+        "status": "PENDING",
+        "contract": "contracts/template/interop/2.0.0/interop-accordo_di_adesione-v.2.0.0.html",
+        "billing": {
+          "vatNumber": "01726610056",
+          "recipientCode": "jauja",
+          "publicServices": false
+        },
+        "createdAt": "2023-05-31T13:37:56.713352Z",
+        "updatedAt": "2023-05-31T13:37:56.713377Z",
+        "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
+        "origin": "IPA",
+        "originId": "AVO36EJ",
+        "institutionType": "PT"
+      },
+      {
+        "productId": "prod-idpay",
+        "tokenId": "65f7b3f2-9351-4c87-ada6-3205c5660a3d",
+        "status": "PENDING",
+        "contract": "contracts/dummy-accordo_di_adesione.html",
+        "billing": {
+          "vatNumber": "01726610056",
+          "recipientCode": "c_i580",
+          "publicServices": false
+        },
+        "createdAt": "2023-07-20T09:02:01.354188Z",
+        "updatedAt": "2023-07-20T09:02:01.354205Z",
+        "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
+        "origin": "IPA",
+        "originId": "AVO36EJ",
+        "institutionType": "PT"
+      },
+      {
+        "productId": "prod-io",
+        "status": "ACTIVE",
+        "billing": {
+          "vatNumber": "01726610056",
+          "recipientCode": "c_i580",
+          "publicServices": false
+        },
+        "createdAt": "2023-12-06T10:26:57.805095Z",
+        "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
+        "origin": "IPA",
+        "originId": "AVO36EJ",
+        "institutionType": "PT"
+      }
+    ]
+  },
+  {
+    "_id": "067327d3-bdd6-408d-8655-87e8f1960046",
+    "externalId": "99000870064",
+    "origin": "IPA",
+    "originId": "c_d277",
+    "description": "comune di dernice",
+    "institutionType": "PT",
+    "digitalAddress": "protocollo@pec.comune.dernice.al.it",
+    "address": "Via Roma N.17",
+    "zipCode": "15056",
+    "taxCode": "99000870064",
+    "onboarding": [
+      {
+        "productId": "prod-io",
+        "status": "ACTIVE",
+        "tokenId": "21f73488-d0df-4a3d-9b6f-9adf634780b5",
+        "billing": {
+          "vatNumber": "85000870064",
+          "recipientCode": "c_d277",
+          "publicServices": false
+        },
+        "createdAt": "2022-06-10T13:29:10.462Z",
+        "updatedAt": "2023-06-14T12:25:08.237831Z",
+        "contract": "parties/docs/21f73488-d0df-4a3d-9b6f-9adf634780b5/App IO_accordo_adesione.pdf",
+        "origin": "IPA",
+        "originId": "c_d277",
+        "institutionType": "PT"
+      },
+      {
+        "productId": "prod-pagopa",
+        "tokenId": "string",
+        "status": "DELETED",
+        "contract": "string",
+        "pricingPlan": "string",
+        "billing": {
+          "vatNumber": "string",
+          "taxCodeInvoicing": "string",
+          "recipientCode": "string",
+          "publicServices": true
+        },
+        "createdAt": "2024-07-10T07:38:06.665Z",
+        "isAggregator": true,
+        "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
+        "updatedAt": "2024-07-10T16:53:01.4593709Z",
+        "origin": "IPA",
+        "originId": "c_d277",
+        "institutionType": "PT"
+      },
+      {
+        "productId": "prod-pagopa",
+        "tokenId": "string",
+        "status": "ACTIVE",
+        "contract": "string",
+        "pricingPlan": "string",
+        "billing": {
+          "vatNumber": "string",
+          "taxCodeInvoicing": "string",
+          "recipientCode": "string",
+          "publicServices": true
+        },
+        "createdAt": "2024-07-10T16:48:49.963Z",
+        "isAggregator": true,
+        "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
+        "origin": "IPA",
+        "originId": "c_d277",
+        "institutionType": "PT"
+      },
+      {
+        "productId": "prod-interop",
+        "tokenId": "string",
+        "status": "ACTIVE",
+        "contract": "string",
+        "pricingPlan": "string",
+        "billing": {
+          "vatNumber": "string",
+          "taxCodeInvoicing": "string",
+          "recipientCode": "string",
+          "publicServices": true
+        },
+        "createdAt": "2024-07-10T16:48:49.963Z",
+        "isAggregator": true,
+        "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
+        "origin": "IPA",
+        "originId": "c_d277",
+        "institutionType": "PT"
+      }
+    ],
+    "geographicTaxonomies": [],
+    "attributes": [
+      {
+        "origin": "IPA",
+        "code": "L6",
+        "description": "Comuni e loro Consorzi e Associazioni"
+      }
+    ],
+    "imported": false,
+    "createdAt": "2022-06-10T13:29:09.792Z",
+    "updatedAt": "2024-07-11T09:51:39.8126597Z",
+    "_class": "it.pagopa.selfcare.mscore.connector.dao.model.InstitutionEntity"
+  }
+]

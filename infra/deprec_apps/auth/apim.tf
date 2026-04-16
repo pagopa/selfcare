@@ -1,0 +1,112 @@
+locals {
+  apim_name    = "selc-${var.env_short}-apim-v2"
+  apim_rg      = "selc-${var.env_short}-api-v2-rg"
+  api_name     = var.is_pnpg ? "selc-${var.env_short}-pnpg-api-auth" : "selc-${var.env_short}-api-auth"
+  display_name = var.is_pnpg ? "PNPG Auth API" : "Auth API"
+  base_path    = var.is_pnpg ? "imprese/auth" : "auth"
+}
+
+
+resource "azurerm_api_management_api_version_set" "apim_api_auth" {
+  name                = local.api_name
+  resource_group_name = local.apim_rg
+  api_management_name = local.apim_name
+  display_name        = local.display_name
+  versioning_scheme   = "Segment"
+}
+
+
+module "apim_api_auth_ms" {
+  source              = "github.com/pagopa/terraform-azurerm-v4.git//api_management_api?ref=v9.4.0"
+  name                = local.api_name
+  api_management_name = local.apim_name
+  resource_group_name = local.apim_rg
+  version_set_id      = azurerm_api_management_api_version_set.apim_api_auth.id
+
+  description  = local.display_name
+  display_name = local.display_name
+  path         = local.base_path
+  protocols = [
+    "https"
+  ]
+
+  service_url = format("https://%s", var.private_dns_name)
+
+  content_format = "openapi+json"
+  content_value = templatefile("../../../apps/auth/src/main/docs/openapi.json", {
+    url      = format("%s.%s", var.api_dns_zone_prefix, var.external_domain)
+    basePath = local.base_path
+  })
+
+  subscription_required = false
+
+  api_operation_policies = [{
+    operation_id = "loginSaml"
+    xml_content  = <<XML
+      <policies>
+          <inbound>
+              <cors allow-credentials="true">
+                  <allowed-origins>
+                      <origin>https://${var.dns_zone_prefix}.${var.external_domain}</origin>
+                      <origin>https://${var.api_dns_zone_prefix}.${var.external_domain}</origin>
+                      <origin>http://localhost:3000</origin>
+                      <origin>https://accounts.google.com</origin>
+                  </allowed-origins>
+                  <allowed-methods>
+                      <method>POST</method>
+                  </allowed-methods>
+                  <allowed-headers>
+                      <header>*</header>
+                  </allowed-headers>
+              </cors>
+              <base />
+          </inbound>
+          <backend>
+              <base />
+          </backend>
+          <outbound>
+              <base />
+          </outbound>
+          <on-error>
+              <base />
+          </on-error>
+      </policies>
+      XML
+    }
+  ]
+
+  xml_content = <<XML
+<policies>
+    <inbound>
+        <cors allow-credentials="true">
+            <allowed-origins>
+                <origin>https://${var.dns_zone_prefix}.${var.external_domain}</origin>
+                <origin>https://${var.api_dns_zone_prefix}.${var.external_domain}</origin>
+                <origin>http://localhost:3000</origin>
+            </allowed-origins>
+            <allowed-methods>
+                <method>GET</method>
+                <method>POST</method>
+                <method>PUT</method>
+                <method>HEAD</method>
+                <method>DELETE</method>
+                <method>OPTIONS</method>
+            </allowed-methods>
+            <allowed-headers>
+                <header>*</header>
+            </allowed-headers>
+        </cors>
+        <base />
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>
+XML
+}

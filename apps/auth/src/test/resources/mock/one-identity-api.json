@@ -1,0 +1,172 @@
+[
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/one-identity-mock/v1/oidc/token",
+      "headers": {
+        "authorization": [".*"],
+        "content-type": ["application/x-www-form-urlencoded"]
+      },
+      "body": {
+        "type": "PARAMETERS",
+        "parameters": {
+          "grant_type": ["authorization_code"],
+          "code": ["auth_code_123456"],
+          "redirect_uri": ["https://example.com/callback"]
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": ["application/json"]
+      },
+      "body": {
+        "access_token": "test-access-token",
+        "token_type": "Bearer",
+        "expires_in": "3600",
+        "refresh_token": "test-refresh-token",
+        "scope": "openid profile email",
+        "id_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJibGJya2k4MEE0MUg0MDFUIiwibmFtZSI6InJvY2t5IiwiZmFtaWx5TmFtZSI6IkJhbGJvYSIsInNhbWVJZHAiOiJ0cnVlIiwiZW1haWwiOiJ1c2VyQGluc3RpdHV0aW9uLmNvbSIsImlhdCI6MTY0MjQ2NDAwMCwiZXhwIjoxNjQyNDY3NjAwLCJpc3MiOiJ0ZXN0LWlzc3VlciIsImF1ZCI6InRlc3QtYXVkaWVuY2UiLCJmaXNjYWxOdW1iZXIiOiJibGJya2k4MEE0MUg0MDFUIn0.xVHQkHKrKEHWNlL3rZyGKNxMaITnNbcPFVxJQhGqv4A",
+        "id_token_type": "JWT"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/one-identity-mock/v1/oidc/token",
+      "headers": {
+        "authorization": [".*"],
+        "content-type": ["application/x-www-form-urlencoded"]
+      },
+      "body": {
+        "type": "PARAMETERS",
+        "parameters": {
+          "grant_type": ["authorization_code"],
+          "code": ["auth_code_flow_present_123"],
+          "redirect_uri": ["https://example.com/callback"]
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": ["application/json"]
+      },
+      "body": {
+        "access_token": "test-access-token",
+        "token_type": "Bearer",
+        "expires_in": "3600",
+        "refresh_token": "test-refresh-token",
+        "scope": "openid profile email",
+        "id_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJQUlZUTlQ4MEE0MUg0MDFUIiwibmFtZSI6IkpvaG4iLCJmYW1pbHlOYW1lIjoiRG9lIiwic2FtZUlkcCI6InRydWUiLCJlbWFpbCI6InVzZXJAaW5zdGl0dXRpb24uY29tIiwiaWF0IjoxNjQyNDY0MDAwLCJleHAiOjE2NDI0Njc2MDAsImlzcyI6InRlc3QtaXNzdWVyIiwiYXVkIjoidGVzdC1hdWRpZW5jZSIsImZpc2NhbE51bWJlciI6IlBSVlROVDgwQTQxSDQwMVQifQ.xVHQkHKrKEHWNlL3rZyGKNxMaITnNbcPFVxJQhGqv4A",
+        "id_token_type": "JWT"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/one-identity-mock/v1/oidc/token",
+      "headers": {
+        "authorization": [".*"],
+        "content-type": ["application/x-www-form-urlencoded"]
+      },
+      "body": {
+        "type": "PARAMETERS",
+        "parameters": {
+          "grant_type": ["authorization_code"],
+          "code": ["auth_code_bad_token_123"],
+          "redirect_uri": ["https://example.com/callback"]
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": ["application/json"]
+      },
+      "body": {
+        "access_token": "test-access-token",
+        "token_type": "Bearer",
+        "expires_in": "3600",
+        "refresh_token": "test-refresh-token",
+        "scope": "openid profile email",
+        "id_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.",
+        "id_token_type": "JWT"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/one-identity-mock/v1/oidc/token",
+      "headers": {
+        "authorization": [".*"],
+        "content-type": ["application/x-www-form-urlencoded"]
+      },
+      "body": {
+        "type": "PARAMETERS",
+        "parameters": {
+          "grant_type": ["authorization_code"],
+          "code": ["auth_code_mario_rossi_987"],
+          "redirect_uri": ["https://example.com/callback"]
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": ["application/json"]
+      },
+      "body": {
+        "access_token": "test-access-token",
+        "token_type": "Bearer",
+        "expires_in": "3600",
+        "refresh_token": "test-refresh-token",
+        "scope": "openid profile email",
+        "id_token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJQUlZUTlQ4MEE0MUg0MDFUIiwibmFtZSI6Ik1hcmlvIiwiZmFtaWx5TmFtZSI6IlJvc3NpIiwic2FtZUlkcCI6InRydWUiLCJlbWFpbCI6InVzZXJAaW5zdGl0dXRpb24uY29tIiwiaXNzIjoidGVzdC1pc3N1ZXIiLCJhdWQiOiJ0ZXN0LWF1ZGllbmNlIiwiZmlzY2FsTnVtYmVyIjoiUFJWVE5UODBBNDFINDAxVCIsImlhdCI6MTcyMjI2NDAwMCwiZXhwIjoyMDM3ODg3MjAwfQ.xVHQkHKrKEHWNlL3rZyGKNxMaITnNbcPFVxJQhGqv4A",
+        "id_token_type": "JWT"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/one-identity-mock/v1/oidc/token",
+      "headers": {
+        "authorization": [".*"],
+        "content-type": ["application/x-www-form-urlencoded"]
+      },
+      "body": {
+        "type": "PARAMETERS",
+        "parameters": {
+          "grant_type": ["authorization_code"],
+          "code": ["auth_code_mario_verdi_567"],
+          "redirect_uri": ["https://example.com/callback"]
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": ["application/json"]
+      },
+      "body": {
+        "access_token": "test-access-token",
+        "token_type": "Bearer",
+        "expires_in": "3600",
+        "refresh_token": "test-refresh-token",
+        "scope": "openid profile email",
+        "id_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJWUkRNUkEyMlQ3MUYyMDVBIiwibmFtZSI6Ik1hcmlvIiwiZmFtaWx5TmFtZSI6IlJvc3NpIiwic2FtZUlkcCI6InRydWUiLCJlbWFpbCI6InVzZXJAaW5zdGl0dXRpb24uY29tIiwiaXNzIjoidGVzdC1pc3N1ZXIiLCJhdWQiOiJ0ZXN0LWF1ZGllbmNlIiwiZmlzY2FsTnVtYmVyIjoiVlJETVJBMjJUNzFGMjA1QSIsImlhdCI6MTcyMjI2NDAwMCwiZXhwIjoyMDM3ODg3MjAwfQ.xVHQkHKrKEHWNlL3rZyGKNxMaITnNbcPFVxJQhGqv4A",
+        "id_token_type": "JWT"
+      }
+    }
+  }
+]

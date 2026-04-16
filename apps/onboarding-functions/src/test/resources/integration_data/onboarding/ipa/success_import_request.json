@@ -1,0 +1,40 @@
+{
+  "billing": {
+    "publicServices": false,
+    "recipientCode": "c_f688",
+    "vatNumber": "80000000048"
+  },
+  "createdAt": "2024-03-05T15:23:33.861Z",
+  "institution": {
+    "imported": true,
+    "institutionType": "PA",
+    "taxCode": "80000000048",
+    "zipCode": "120220",
+    "digitalAddress": "test@test.it",
+    "address": "Via Mistral",
+    "description": "Comune di Marte",
+    "country": "IT",
+    "city": "Marte",
+    "county": "RM",
+    "origin": "IPA",
+    "originId": "c_fx00",
+    "id": "6bb49a39-b08d-4767-9ebe-7b0dd0e4c28e"
+  },
+  "productId": "prod-io",
+  "status": "PENDING",
+  "userRequester" : {
+    "userRequestUid": "ec7ca4d5-c537-462a-8c06-e102e0c21c44"
+  },
+  "users": [
+    {
+      "id": "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+      "productRole": "admin",
+      "role": "MANAGER",
+      "userMailUuid": "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e21"
+    }
+  ],
+  "workflowType": "IMPORT",
+  "updatedAt": "2025-05-22T18:14:27.008Z",
+  "workflowInstanceId": "ebef3ed9-bf61-4eee-8630-948869fd586f",
+  "id": "89ad7142-24bb-48ad-8504-9c9231137i99"
+}

@@ -1,0 +1,56 @@
+{
+  "alias": "prod-test",
+  "backOfficeEnvironmentConfigurations": {
+    "Locale": {
+      "identityTokenAudience": "locale",
+      "url": "test_url"
+    }
+  },
+  "consumers": [
+    "Standard"
+  ],
+  "createdAt": "2021-12-15T15:54:55.190Z",
+  "createdBy": "example",
+  "delegable": false,
+  "depictImageUrl": "test_url",
+  "description": "test_json",
+  "enabled": true,
+  "id": "prod-test",
+  "identityTokenAudience": "www.google.it",
+  "institutionContractMappings": {
+    "DEFAULT": {
+      "contractTemplatePath": "path_template",
+      "contractTemplateVersion": "1.0.0"
+    }
+  },
+  "invoiceable": true,
+  "logo": "test_url",
+  "logoBgColor": "#00000",
+  "modifiedAt": "2022-11-18T17:59:27.744Z",
+  "modifiedBy": "d0aaccddfdfdfdfdf418f01b130b",
+  "roleMappings": {
+    "OPERATOR": {
+      "multiroleAllowed": false,
+      "phasesAdditionAllowed": [
+        "onboarding"
+      ],
+      "roles": [
+        {
+          "code": "tes",
+          "description": "test",
+          "label": "test"
+        }
+      ]
+    }
+  },
+  "status": "ACTIVE",
+  "title": "prova",
+  "urlBO": "test_url",
+  "urlPublic": "prova",
+  "userContractMappings": {
+    "default": {
+      "contractTemplatePath": "path_test",
+      "contractTemplateVersion": "1.0.0"
+    }
+  }
+}

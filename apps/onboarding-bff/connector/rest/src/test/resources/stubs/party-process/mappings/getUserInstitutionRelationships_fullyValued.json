@@ -1,0 +1,93 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/pdnd-interop-uservice-party-process/0.0.1/external/institutions/institutionId1/relationships"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": [
+      {
+        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "from": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "to": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "role": "MANAGER",
+        "product": {
+          "id": "string",
+          "role": "string",
+          "createdAt": "2022-05-06T09:09:25.136Z"
+        },
+        "state": "PENDING",
+        "pricingPlan": "string",
+        "institutionUpdate": {
+          "id" : "id",
+          "origin": "IPA",
+          "originId": "test",
+          "institutionType": "PA",
+          "description": "AGENCY X",
+          "parentDescription": "test",
+          "digitalAddress": "email@pec.mail.org",
+          "address": "via del campo",
+          "taxCode": "string",
+          "zipCode": "string",
+          "legalForm": "string",
+          "paymentServiceProvider": {
+            "abiCode": "string",
+            "businessRegisterNumber": "string",
+            "legalRegisterName": "string",
+            "legalRegisterNumber": "string",
+            "vatNumberGroup": true
+          },
+          "additionalInformations" : {
+            "belongRegulatedMarket" : true,
+            "regulatedMarketNote" :  "string",
+            "ipa" : true,
+            "ipaCode" : "string",
+            "establishedByRegulatoryProvision" : true,
+            "establishedByRegulatoryProvisionNote" : "string",
+            "agentOfPublicService" : true,
+            "agentOfPublicServiceNote" : "string",
+            "otherNote" : "string"
+          },
+          "gpuData": {
+            "businessRegisterNumber": "string",
+            "legalRegisterName": "string",
+            "legalRegisterNumber": "string",
+            "manager": false,
+            "managerAuthorized": false,
+            "managerEligible": false,
+            "managerProsecution": false,
+            "institutionCourtMeasures": false
+          },
+          "dataProtectionOfficer": {
+            "address": "string",
+            "email": "string",
+            "pec": "string"
+          },
+          "geographicTaxonomies": [
+            {
+              "code": "string",
+              "desc": "string"
+            }
+          ],
+          "rea": "string",
+          "shareCapital": "10000",
+          "businessRegisterPlace": "Rome",
+          "supportEmail": "string",
+          "supportPhone": "string",
+          "imported": true
+        },
+        "billing": {
+          "vatNumber": "string",
+          "recipientCode": "string",
+          "publicServices": true,
+          "taxCodeInvoicing": "string"
+        },
+        "createdAt": "2022-05-06T09:09:25.136Z",
+        "updatedAt": "2022-05-06T09:09:25.136Z"
+      }
+    ],
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

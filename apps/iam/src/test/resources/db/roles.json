@@ -1,0 +1,27 @@
+[
+  {
+    "_id": "ADMIN",
+    "group": "SUPPORT",
+    "permissions": [
+      "admin",
+      "read:users",
+      "write:users",
+      "delete:users"
+    ]
+  },
+  {
+    "_id": "OPERATOR",
+    "group": "SUPPORT",
+    "permissions": [
+      "read:users"
+    ]
+  },
+  {
+    "_id": "SUPPORT",
+    "group": "SUPPORT",
+    "permissions": [
+      "read:users",
+      "write:users"
+    ]
+  }
+]

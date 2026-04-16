@@ -1,0 +1,43 @@
+{
+  "productId": "prod-interop",
+  "users": [
+    {
+      "taxCode": "FRDSMN80A01F205Z",
+      "name": "Sigmund",
+      "surname": "Freud",
+      "email": "s.freud@test.email.it",
+      "role": "MANAGER"
+    },
+    {
+      "taxCode": "CLVTLI80A01F839V",
+      "name": "Italo",
+      "surname": "Calvino",
+      "email": "i.calvino@test.email.it",
+      "role": "DELEGATE"
+    }
+  ],
+  "institution": {
+    "institutionType": "SA",
+    "taxCode": "02130120765",
+    "origin": "ANAC",
+    "originId": "02130120765",
+    "description": "Appconsulting srl",
+    "city": "Milano",
+    "country": "IT",
+    "county": "SA",
+    "digitalAddress": "appconsultingsrl@pec.it",
+    "address": "VIA MACHIAVELLI, 4  34132 TRIESTE",
+    "zipCode": "80046",
+    "geographicTaxonomies": [
+      {
+        "code": "ITA",
+        "desc": "ITALIA"
+      }
+    ],
+    "imported": false
+  },
+  "billing": {
+    "vatNumber": "02130120765",
+    "publicServices": true
+  }
+}

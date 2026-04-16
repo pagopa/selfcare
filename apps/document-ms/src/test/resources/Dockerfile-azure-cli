@@ -1,0 +1,9 @@
+FROM mcr.microsoft.com/azure-cli:2.63.0
+
+WORKDIR /workspace
+
+COPY blobStorageInit /workspace
+
+RUN chmod +x /workspace/init_azurite.sh
+
+CMD ["sh", "/workspace/init_azurite.sh"]
