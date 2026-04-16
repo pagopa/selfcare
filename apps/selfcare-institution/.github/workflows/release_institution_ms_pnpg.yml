@@ -1,0 +1,63 @@
+name: Deploy PNPG - institution-ms
+
+on:
+  push:
+    branches:
+      - main
+      - releases/*
+    paths:
+      - "apps/institution-ms/**"
+      - "infra/container_apps/institution-ms/**"
+      - "apps/pom.xml"
+      - "pom.xml"
+
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options: 
+        - dev
+        - uat
+        - prod
+
+jobs:
+
+  release_dev:
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
+    name: '[Dev] Institution ms Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+      tf_environment: dev-pnpg
+      dir: 'infra/container_apps/institution-ms'
+      dockerfile_path: ./apps/institution-ms/Dockerfile
+      docker_image_name: pagopa/selfcare-institution-ms
+      upload_openapi_enabled: false
+
+  release_uat:
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
+    name: '[UAT] Core ms Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    secrets: inherit
+    with:
+      environment: uat
+      tf_environment: uat-pnpg
+      dir: 'infra/container_apps/institution-ms'
+      dockerfile_path: ./apps/institution-ms/Dockerfile
+      docker_image_name: pagopa/selfcare-institution-ms
+      upload_openapi_enabled: false
+
+  release_prod:
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
+    name: '[Prod] Core ms Release'
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod
+      tf_environment: prod-pnpg
+      dir: 'infra/container_apps/institution-ms'
+      dockerfile_path: ./apps/institution-ms/Dockerfile
+      docker_image_name: pagopa/selfcare-institution-ms
+      upload_openapi_enabled: false

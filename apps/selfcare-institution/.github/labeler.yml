@@ -1,0 +1,14 @@
+libs:
+  - changed-files:
+      - any-glob-to-any-file: ['libs/**']
+
+ops:
+  - changed-files:
+      - any-glob-to-any-file: ['.github/**', 'infra/**', '.identity/**']
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file: ['README.md']
+
+hotfix:
+  - base-branch: ['releases/*']

@@ -1,0 +1,25 @@
+name: Swagger Detect Rules and Conflict
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+    branches:
+      - main
+      - releases/*
+    paths:
+      - "apps/institution-ms/**"
+      
+#  workflow_dispatch:
+permissions:
+  contents: write
+
+jobs:
+  swagger_conflict_update:  
+    runs-on: ubuntu-24.04
+    permissions: write-all
+    name: Swagger Detect Rules and Conflict
+    steps:
+      - id: swagger-detect
+        uses: pagopa/selfcare-commons/github-actions-template/swagger-detect-conflict-spring@main
+        with:
+          path_openapi_docs: apps/institution-ms/app/src/main/docs/openapi.json
+          github_token: ${{ secrets.GITHUB_TOKEN }}

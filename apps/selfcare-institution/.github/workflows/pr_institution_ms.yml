@@ -1,0 +1,32 @@
+name: Code Review institution-ms
+
+on:
+  workflow_dispatch:
+  
+  pull_request:
+    branches:
+      - main
+      - releases/**
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - 'apps/institution-ms/**'
+      - '.github/workflows/pr_institution_ms.yml'
+      - '.github/workflows/call_code_review.yml'
+
+jobs:
+  code_review:
+    uses: ./.github/workflows/call_code_review.yml
+    name: 'institution-ms Code Review'
+    secrets: inherit
+    if: github.event_name == 'pull_request'
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+      source_branch: ${{ github.head_ref }}
+      target_branch: ${{ github.base_ref }}
+      sonar_key: 'pagopa_selfcare-institution'
+      module: 'institution-ms'

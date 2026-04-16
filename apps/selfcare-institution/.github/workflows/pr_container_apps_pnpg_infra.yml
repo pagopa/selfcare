@@ -1,0 +1,58 @@
+name: Code Review PNPG container app infra
+
+on:
+  workflow_dispatch:
+  
+  pull_request:
+    branches:
+      - main
+      - releases/*
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - './infra/container_apps/institution-send-mail-scheduler/env/dev-pnpg'
+      - './infra/container_apps/institution-send-mail-scheduler/env/uat-pnpg'
+      - './infra/container_apps/institution-send-mail-scheduler/env/prod-pnpg'
+      - '!./infra/container_apps/institution-send-mail-scheduler/env/**'
+      - './infra/container_apps/institution-send-mail-scheduler/**'
+      - './.github/workflows/pr_container_apps_infra.yml'
+      - './.github/workflows/call_code_review_infra.yml'
+
+jobs:
+  code_review_dev:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[DEV] PNPG Container Apps Infra Code Review'
+    if: ${{ !startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: dev
+      tf_environment: dev-pnpg
+      dir: ./infra/container_apps/institution-send-mail-scheduler
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+
+  code_review_uat:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[UAT] Container Apps Infra Code Review'
+    secrets: inherit
+    with:
+      environment: uat
+      tf_environment: uat-pnpg
+      dir: ./infra/container_apps/institution-send-mail-scheduler
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+
+  code_review_prod:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[PROD] Container Apps Infra Code Review'
+    secrets: inherit
+    with:
+      environment: prod
+      tf_environment: prod-pnpg
+      dir: ./infra/container_apps/institution-send-mail-scheduler
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
