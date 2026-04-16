@@ -297,5 +297,6 @@ jobs:
               --auth-mode login \
               --account-name selc${{ steps.extract_env_short.outputs.env_short }}checkoutsa  \
               -c selc-openapi \
+              -f  ${{ inputs.path_openapi_docs }} \
               -n ${{ inputs.docker_image_name }}/openapi.json \
               --overwrite true
