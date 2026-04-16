@@ -1327,7 +1327,6 @@ components:
 paths:
   /v1/institutions:
     get:
-      operationId: getInstitutions
       parameters:
       - name: productId
         in: query
@@ -1353,7 +1352,6 @@ paths:
       - SecurityScheme: []
   /v1/institutions/company/onboarding:
     post:
-      operationId: onboarding
       requestBody:
         content:
           application/json:
@@ -1379,7 +1377,6 @@ paths:
       - SecurityScheme: []
   /v1/institutions/from-infocamere:
     get:
-      operationId: getInstitutionsFromInfocamere
       responses:
         "200":
           description: OK
@@ -1398,7 +1395,6 @@ paths:
       - SecurityScheme: []
   /v1/institutions/geographic-taxonomies:
     get:
-      operationId: getGeographicTaxonomiesByTaxCodeAndSubunitCode
       parameters:
       - name: subunitCode
         in: query
@@ -1428,7 +1424,6 @@ paths:
       - SecurityScheme: []
   /v1/institutions/onboarding:
     head:
-      operationId: verifyOnboarding
       parameters:
       - name: institutionType
         in: query
@@ -1476,7 +1471,6 @@ paths:
       security:
       - SecurityScheme: []
     post:
-      operationId: onboarding
       requestBody:
         content:
           application/json:
@@ -1501,7 +1495,6 @@ paths:
       security:
       - SecurityScheme: []
     get:
-      operationId: getInstitutionOnboardingInfoById
       parameters:
       - name: institutionId
         in: query
@@ -1529,7 +1522,6 @@ paths:
       - SecurityScheme: []
   /v1/institutions/verification/legal-address:
     post:
-      operationId: postVerificationLegalAddress
       requestBody:
         content:
           application/json:
@@ -1556,7 +1548,6 @@ paths:
       - SecurityScheme: []
   /v1/institutions/verification/match:
     post:
-      operationId: postVerificationMatch
       requestBody:
         content:
           application/json:
@@ -1583,7 +1574,6 @@ paths:
       - SecurityScheme: []
   /v1/institutions/{externalInstitutionId}/geographic-taxonomy:
     get:
-      operationId: getInstitutionGeographicTaxonomy
       parameters:
       - name: externalInstitutionId
         in: path
@@ -1610,7 +1600,6 @@ paths:
       - SecurityScheme: []
   /v1/institutions/{externalInstitutionId}/products/{productId}:
     head:
-      operationId: verifyOnboarding
       parameters:
       - name: externalInstitutionId
         in: path
@@ -1637,7 +1626,6 @@ paths:
   /v1/institutions/{externalInstitutionId}/products/{productId}/onboarded-institution-info:
     get:
       deprecated: true
-      operationId: getInstitutionOnboardingInfo
       parameters:
       - name: externalInstitutionId
         in: path
@@ -1667,7 +1655,6 @@ paths:
       - SecurityScheme: []
   /v1/product/{id}:
     get:
-      operationId: getProduct
       parameters:
       - name: id
         in: path
@@ -1697,7 +1684,6 @@ paths:
       - SecurityScheme: []
   /v1/products:
     get:
-      operationId: getProducts
       responses:
         "200":
           description: OK
@@ -1718,7 +1704,6 @@ paths:
       - SecurityScheme: []
   /v1/products/admin:
     get:
-      operationId: getProductsAdmin
       responses:
         "200":
           description: OK
@@ -1739,7 +1724,6 @@ paths:
       - SecurityScheme: []
   /v1/users/check-manager:
     post:
-      operationId: checkManager
       requestBody:
         content:
           application/json:
@@ -1766,7 +1750,6 @@ paths:
       - SecurityScheme: []
   /v1/users/onboarding:
     post:
-      operationId: onboarding
       requestBody:
         content:
           application/json:
@@ -1792,7 +1775,6 @@ paths:
       - SecurityScheme: []
   /v1/users/onboarding/aggregator:
     post:
-      operationId: onboardingAggregator
       requestBody:
         content:
           application/json:
@@ -1818,7 +1800,6 @@ paths:
       - SecurityScheme: []
   /v1/users/onboarding/{onboardingId}/manager:
     get:
-      operationId: getManagerInfo
       parameters:
       - name: onboardingId
         in: path
@@ -1843,7 +1824,6 @@ paths:
       - SecurityScheme: []
   /v1/users/search-user:
     post:
-      operationId: searchUser
       requestBody:
         content:
           application/json:
@@ -1870,7 +1850,6 @@ paths:
       - SecurityScheme: []
   /v1/users/validate:
     post:
-      operationId: validate
       requestBody:
         content:
           application/json:
@@ -1896,7 +1875,6 @@ paths:
       - SecurityScheme: []
   /v2/institutions:
     get:
-      operationId: getInstitution
       parameters:
       - name: origin
         in: query
@@ -1938,7 +1916,6 @@ paths:
       - SecurityScheme: []
   /v2/institutions/company/onboarding:
     post:
-      operationId: onboarding
       requestBody:
         content:
           application/json:
@@ -1964,7 +1941,6 @@ paths:
       - SecurityScheme: []
   /v2/institutions/company/verify-manager:
     post:
-      operationId: verifyManager
       requestBody:
         content:
           application/json:
@@ -1991,7 +1967,6 @@ paths:
       - SecurityScheme: []
   /v2/institutions/onboarding:
     post:
-      operationId: onboarding
       requestBody:
         content:
           application/json:
@@ -2017,7 +1992,6 @@ paths:
       - SecurityScheme: []
   /v2/institutions/onboarding/active:
     get:
-      operationId: getActiveOnboarding
       parameters:
       - name: productId
         in: query
@@ -2051,7 +2025,6 @@ paths:
       - SecurityScheme: []
   /v2/institutions/onboarding/aggregation/verification:
     post:
-      operationId: verifyAggregatesCsv
       requestBody:
         content:
           multipart/form-data:
@@ -2084,7 +2057,6 @@ paths:
       - SecurityScheme: []
   /v2/institutions/onboarding/recipient-code/verification:
     get:
-      operationId: checkRecipientCode
       parameters:
       - name: originId
         in: query
@@ -2112,7 +2084,6 @@ paths:
       - SecurityScheme: []
   /v2/institutions/onboarding/users/pg:
     post:
-      operationId: onboardingUsers
       requestBody:
         content:
           application/json:
@@ -2135,7 +2106,6 @@ paths:
       - SecurityScheme: []
   /v2/institutions/onboardings:
     get:
-      operationId: getOnboardingsInfo
       parameters:
       - name: status
         in: query
@@ -2163,7 +2133,6 @@ paths:
       - SecurityScheme: []
   /v2/product:
     get:
-      operationId: getOrigins
       parameters:
       - name: productId
         in: query
@@ -2187,7 +2156,6 @@ paths:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}:
     get:
-      operationId: retrieveOnboardingRequest
       parameters:
       - name: onboardingId
         in: path
@@ -2212,7 +2180,6 @@ paths:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/approve:
     post:
-      operationId: approveOnboarding
       parameters:
       - name: onboardingId
         in: path
@@ -2233,7 +2200,6 @@ paths:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/attachment:
     post:
-      operationId: uploadAttachment
       parameters:
       - name: onboardingId
         in: path
@@ -2270,7 +2236,6 @@ paths:
       security:
       - SecurityScheme: []
     get:
-      operationId: getAttachment
       parameters:
       - name: onboardingId
         in: path
@@ -2297,7 +2262,6 @@ paths:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/attachment/status:
     head:
-      operationId: headAttachment
       parameters:
       - name: onboardingId
         in: path
@@ -2326,7 +2290,6 @@ paths:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/complete:
     delete:
-      operationId: deleteOnboarding
       parameters:
       - name: onboardingId
         in: path
@@ -2349,7 +2312,6 @@ paths:
       security:
       - SecurityScheme: []
     post:
-      operationId: complete
       parameters:
       - name: onboardingId
         in: path
@@ -2383,7 +2345,6 @@ paths:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/complete-onboarding-users:
     post:
-      operationId: completeOnboardingUsers
       parameters:
       - name: onboardingId
         in: path
@@ -2417,7 +2378,6 @@ paths:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/contract:
     get:
-      operationId: getContract
       parameters:
       - name: onboardingId
         in: path
@@ -2440,7 +2400,6 @@ paths:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/products/{productId}/aggregates-csv:
     get:
-      operationId: getAggregatesCsv
       parameters:
       - name: onboardingId
         in: path
@@ -2468,7 +2427,6 @@ paths:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/reject:
     post:
-      operationId: rejectOnboarding
       parameters:
       - name: onboardingId
         in: path
@@ -2497,7 +2455,6 @@ paths:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/template-attachment:
     get:
-      operationId: getTemplateAttachment
       parameters:
       - name: onboardingId
         in: path
@@ -2524,7 +2481,6 @@ paths:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/verify:
     post:
-      operationId: verifyOnboarding
       parameters:
       - name: onboardingId
         in: path
@@ -2548,7 +2504,7 @@ paths:
       security:
       - SecurityScheme: []
 info:
-  title: Onboarding-BFF API
+  title: Onboarding-BFF
   version: 1.0.0
   description: '"SelfCare Onboarding BFF"'
 servers:
