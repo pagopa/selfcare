@@ -16,8 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
@@ -47,9 +45,6 @@ class OnboardingMsConnectorImplTest {
 
     @Mock
     private MsOnboardingBillingApiClient msOnboardingBillingApiClient;
-
-    @Mock
-    private MsOnboardingTokenApiClient msOnboardingTokenApiClient;
 
     @Mock
     private MsOnboardingSupportApiClient msOnboardingSupportApiClient;
