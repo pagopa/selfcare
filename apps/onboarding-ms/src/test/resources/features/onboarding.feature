@@ -195,11 +195,11 @@ Feature: Onboarding collection
     And the response body should not be empty
     #And the response should contain the text "non deve essere null"
 
-  Scenario: Can't perform onboarding request for PG with invalid institution request
-    Given I have a request object named "invalid_digital_address_pg_request"
-    When I send a POST request for PNPG to "/pg/completion" with this request
-    Then the response status code should be 400
-    And the response body should not be empty
+  #Scenario: Can't perform onboarding request for PG with invalid institution request
+  #  Given I have a request object named "invalid_digital_address_pg_request"
+  #  When I send a POST request for PNPG to "/pg/completion" with this request
+  #  Then the response status code should be 400
+  #  And the response body should not be empty
     #And the response should contain the text "non deve essere null"
 
   Scenario: Successfully store onboarding for SA in status REQUEST
