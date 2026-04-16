@@ -12,6 +12,9 @@ on:
       environment:
         type: string
         required: true
+      domain:
+        type: string
+        required: true
       tf_environment:
         type: string
         required: false
