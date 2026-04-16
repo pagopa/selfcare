@@ -16,10 +16,10 @@ on:
         type: choice
         description: Target type
         options:
-          - selc
+          - ar
           - pnpg
         required: true
-        default: selc
+        default: ar
       app:
         type: choice
         description: App name

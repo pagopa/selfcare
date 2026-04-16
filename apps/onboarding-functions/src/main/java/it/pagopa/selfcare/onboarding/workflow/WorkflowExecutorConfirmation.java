@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.workflow;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.durabletask.TaskOptions;
 import com.microsoft.durabletask.TaskOrchestrationContext;
+import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
@@ -20,8 +21,10 @@ public record WorkflowExecutorConfirmation(ObjectMapper objectMapper,
     @Override
     public Optional<OnboardingStatus> executeRequestState(TaskOrchestrationContext ctx, OnboardingWorkflow onboardingWorkflow) {
         String onboardingWorkflowString = getOnboardingWorkflowString(objectMapper, onboardingWorkflow);
-        ctx.callActivity(BUILD_CONTRACT_ACTIVITY_NAME, onboardingWorkflowString, optionsRetry, String.class).await();
-        ctx.callActivity(SAVE_TOKEN_WITH_CONTRACT_ACTIVITY_NAME, onboardingWorkflowString, optionsRetry, String.class).await();
+        if (!onboardingWorkflow.getOnboarding().getInstitution().getInstitutionType().equals(InstitutionType.PG)) {
+            ctx.callActivity(BUILD_CONTRACT_ACTIVITY_NAME, onboardingWorkflowString, optionsRetry, String.class).await();
+            ctx.callActivity(SAVE_TOKEN_WITH_CONTRACT_ACTIVITY_NAME, onboardingWorkflowString, optionsRetry, String.class).await();
+        }
         return Optional.of(OnboardingStatus.PENDING);
     }
 

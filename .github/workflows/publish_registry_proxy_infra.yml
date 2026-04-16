@@ -53,6 +53,7 @@ jobs:
       environment: dev
       dir: infra/resources/registry-proxy/dev-ar
       env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
+      runner: "self-hosted"
 
   release_uat_ar:
     uses: ./.github/workflows/call_release_infra.yml
@@ -64,6 +65,7 @@ jobs:
       environment: uat
       dir: infra/resources/registry-proxy/uat-ar
       env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
+      runner: "self-hosted"
 
   release_prod_ar:
     uses: ./.github/workflows/call_release_infra.yml
@@ -75,6 +77,7 @@ jobs:
       environment: prod
       dir: infra/resources/registry-proxy/prod-ar
       env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
+      runner: "self-hosted"
 
   release_dev_pnpg:
     uses: ./.github/workflows/call_release_infra.yml
@@ -87,6 +90,7 @@ jobs:
       tf_environment: dev-pnpg
       dir: infra/resources/registry-proxy/dev-pnpg
       env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
+      runner: "self-hosted"
 
   release_uat_pnpg:
     uses: ./.github/workflows/call_release_infra.yml
@@ -99,6 +103,7 @@ jobs:
       tf_environment: uat-pnpg
       dir: infra/resources/registry-proxy/uat-pnpg
       env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
+      runner: "self-hosted"
 
   release_prod_pnpg:
     uses: ./.github/workflows/call_release_infra.yml
@@ -111,3 +116,4 @@ jobs:
       tf_environment: prod-pnpg
       dir: infra/resources/registry-proxy/prod-pnpg
       env_vars: ${{ format('TF_VAR_image_tag={0}', needs.prepare.outputs.image_tag) }}
+      runner: "self-hosted"
