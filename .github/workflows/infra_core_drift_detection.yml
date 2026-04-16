@@ -1,0 +1,78 @@
+name: Core Code Review Infra DX
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - ./infra/core/**
+      - ./.github/workflows/call_code_review_infra.yml
+      - ./.github/workflows/pr_core_infra.yml
+
+  workflow_dispatch:
+    inputs:
+      env:
+        required: true
+        type: choice
+        description: 'Select the Environment'
+        default: dev
+        options:
+          - dev
+          - uat
+          - prod
+      domain:
+        required: true
+        type: choice
+        description: 'Select the Domain'
+        default: ar
+        options:
+          - ar
+          - pnpg
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: read
+  pull-requests: write
+  id-token: write
+
+
+jobs:
+    # plan:
+    #   uses: ./.github/workflows/call_code_review_infra.yml
+    #   name: Core Code Review
+    #   secrets: inherit
+    #   with:
+    #     environment: '${{ inputs.environment }}'
+    #     tf_environment: '${{ inputs.environment }}-${{ inputs.domain }}'
+    #     dir: './infra/core/${{ inputs.environment }}-${{ inputs.domain }}'
+    #     # Optional parameters
+    #     env_vars: ""
+    #     # use_private_agent: true
+    #     # # override_github_environment: pe-prod
+    #     # use_labels: true
+    #     # override_labels: ""
+  
+  plan_dev:
+    uses: pagopa/dx/.github/workflows/infra_drift_detection.yaml@main
+    name: "DEV ${{ inputs.domain }} Selfcare Infra Core Release"
+    if: ${{ inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev-${{ inputs.domain }}
+      base_path: infra/core
+      # env_vars: ""
+      use_private_agent: true
+      override_github_environment: ${{ inputs.env }}
+      use_labels: true
+      override_labels: ${{ inputs.env }}  
