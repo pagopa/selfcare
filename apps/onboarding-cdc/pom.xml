@@ -25,7 +25,7 @@
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
         <quarkus-openapi-generator.version>2.4.1</quarkus-openapi-generator.version>
-        <commons-sdk-version>0.15.5</commons-sdk-version>
+        <commons-sdk-version>0.15.6</commons-sdk-version>
     </properties>
     <dependencyManagement>
         <dependencies>
