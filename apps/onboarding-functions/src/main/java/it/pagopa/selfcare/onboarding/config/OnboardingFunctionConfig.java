@@ -10,7 +10,6 @@ import io.vertx.core.json.jackson.DatabindCodec;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.onboarding.crypto.*;
-import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.product.service.ProductServiceCacheable;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -30,8 +29,10 @@ public class OnboardingFunctionConfig {
     public static final String SIGNATURE_SOURCE_NAMIRIAL = "namirial";
     public static final String SIGNATURE_SOURCE_DISABLED = "disabled";
 
-    void onStart(@Observes StartupEvent ev, OnboardingRepository repository) {
-        log.info(String.format("Database %s is starting...", repository.mongoDatabase().getName()));
+    void onStart(@Observes StartupEvent ev) {
+        // Avoid eager Mongo repository initialization during worker bootstrap:
+        // Azure Functions Java worker may timeout while loading function metadata.
+        log.info("Onboarding Functions application startup");
     }
 
     @Produces
