@@ -49,7 +49,8 @@ permissions:
 
 jobs:
   plan:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    # uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: ./.github/workflows/infra_plan.yml
     name: "${{ inputs.env }} ${{ inputs.domain }} Selfcare Infra Core Release"
     secrets: inherit
     with:
