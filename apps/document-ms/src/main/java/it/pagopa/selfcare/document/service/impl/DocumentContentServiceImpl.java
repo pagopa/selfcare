@@ -129,7 +129,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     @Override
     public Uni<RestResponse<File>> retrieveSignedFile(String onboardingId) {
         return documentRepository.findByOnboardingId(onboardingId)
-                .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)                .onItem().transformToUni(document ->
+                .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)
+                .onItem().transformToUni(document ->
                         fetchFileFromAzureAsync(document.getContractSigned())
                                 .emitOn(Infrastructure.getDefaultWorkerPool())
                                 .onItem().transform(contract -> validateAndExtractSignedFile(contract, document.getContractSigned()))
@@ -144,11 +145,19 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
     @Override
     public Uni<RestResponse<File>> retrieveContract(String onboardingId, boolean isSigned) {
-        return documentRepository.findByOnboardingId(onboardingId)
-                .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)                .onItem().transformToUni(document ->
-                        fetchPdfFromAzureAsync(document, onboardingId, isSigned)
-                                .onItem().transform(contractFile -> buildDownloadResponse(contractFile, document, isSigned))
-                );
+    return documentRepository
+        .findByOnboardingId(onboardingId)
+        .onFailure()
+        .retry()
+        .withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff))
+        .atMost(retryMaxAttempts)
+        .onItem()
+        .transformToUni(
+            document ->
+                fetchPdfFromAzureAsync(document, onboardingId, isSigned)
+                    .onItem()
+                    .transform(
+                        contractFile -> buildDownloadResponse(contractFile, document, isSigned)));
     }
 
     @Override
@@ -170,7 +179,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     @Override
     public Uni<RestResponse<File>> retrieveAttachment(String onboardingId, String attachmentName) {
         return documentRepository.findAttachment(onboardingId, ATTACHMENT.name(), attachmentName)
-                .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Attachment with id %s not found", onboardingId)))
+                .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)
+                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Attachment with id %s not found", onboardingId)))
                 .onItem().transformToUni(document ->
                         Uni.createFrom()
                                 .item(() -> azureBlobClient.getFileAsPdf(DocumentFileUtils.buildAttachmentPath(document, documentMsConfig.getContractPath())))
@@ -219,7 +229,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     public Uni<String> deleteContract(String onboardingId) {
         log.info("START - deleteContract for onboardingId: {}", sanitize(onboardingId));
 
-        return documentService.getDocumentInstitutionByOnboardingId(onboardingId)
+        return documentService.getDocumentByOnboardingId(onboardingId)
                 .emitOn(Infrastructure.getDefaultWorkerPool())
                 .chain(document -> {
                     String basePath = documentMsConfig.getContractPath();
@@ -241,7 +251,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                     document.setContractFilename(deletedContractFile);
 
                     return documentService.updateDocumentContractFiles(document)
-                            .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)                            .onFailure().call(dbError -> {
+                            .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)
+                            .onFailure().call(dbError -> {
                                 log.error("DB update failed for onboardingId {}. Triggering Azure Rollback...", onboardingId);
                                 return rollbackDeletedAzureFiles(deletedSignedContract, originalSignedPath, deletedContractFile, originalContractPath);
                             });
