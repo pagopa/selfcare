@@ -265,7 +265,7 @@ jobs:
 
   upload_openapi:
     name: ${{ inputs.app }} - Upload OpenAPI
-    runs-on: ubuntu-24.04
+    runs-on: ["self-hosted", "${{ inputs.environment }}"]
     needs: [release]
     if: ${{ inputs.upload_openapi_enabled }}
     environment: ${{ inputs.environment }}-cd
@@ -280,12 +280,8 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
 
-      - name: Azure Login
-        uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
-        with:
-          client-id: ${{ secrets.ARM_CLIENT_ID }}
-          tenant-id: ${{ secrets.ARM_TENANT_ID }}
-          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
 
       - name: Extract environment short
         id: extract_env_short
@@ -294,7 +290,11 @@ jobs:
           echo "env_short=${env:0:1}" >> $GITHUB_OUTPUT
 
       - name: Upload to blob storage
-        uses: azure/CLI@965c8d7571d2231a54e321ddd07f7b10317f34d9 # v2
-        with:
-          inlineScript: |
-            az storage blob upload --auth-mode key -f  ${{ inputs.path_openapi_docs }} --account-name selc${{ steps.extract_env_short.outputs.env_short }}checkoutsa  -c selc-openapi -n ${{ inputs.docker_image_name }}/openapi.json --overwrite
+        run: |
+          az storage blob upload \
+            --auth-mode login \
+            --account-name selc${{ steps.extract_env_short.outputs.env_short }}checkoutsa  \
+            -c selc-openapi \
+            -f  ${{ inputs.path_openapi_docs }} \
+            -n ${{ inputs.docker_image_name }}/openapi.json \
+            --overwrite true
