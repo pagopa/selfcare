@@ -49,16 +49,25 @@ permissions:
 
 jobs:
   plan:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    # uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    # name: "${{ inputs.env }} ${{ inputs.domain }} Selfcare Infra Core Release"
+    # secrets: inherit
+    # with:
+    #   environment: ${{ inputs.env }}-${{ inputs.domain }}
+    #   base_path: infra/core
+    #   use_private_agent: true
+    #   override_github_environment: ${{ inputs.env }}
+    #   use_labels: true
+    #   override_labels: ${{ inputs.env }}  
+    #   env_vars: |
+    #     ARM_STORAGE_USE_AZUREAD=false
+
+    uses: ./.github/workflows/call_code_review_infra.yml
     name: "${{ inputs.env }} ${{ inputs.domain }} Selfcare Infra Core Release"
     secrets: inherit
     with:
-      environment: ${{ inputs.env }}-${{ inputs.domain }}
-      base_path: infra/core
-      use_private_agent: true
-      override_github_environment: ${{ inputs.env }}
-      use_labels: true
-      override_labels: ${{ inputs.env }}  
+      environment: ${{ inputs.env }}
+      dir: infra/core/${{ inputs.env }}-${{ inputs.domain }}
       env_vars: ""
 
     
