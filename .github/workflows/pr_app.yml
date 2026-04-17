@@ -1,0 +1,69 @@
+name: Code Review - Auth
+
+permissions:
+  contents: read
+  pull-requests: write
+  packages: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        required: true
+        type: choice
+        description: 'Select the Environment'
+        default: dev
+        options:
+          - dev
+          - uat
+          - prod
+      domain:
+        required: true
+        type: choice
+        description: 'Select the Domain'
+        default: ar
+        options:
+          - ar
+          - pnpg
+      app:
+        type: choice
+        description: App name
+        options:
+          - auth
+          - iam
+          - product
+          - product-cdc
+          - webhook
+          - onboarding-ms
+          - onboarding-cdc
+          - registry-proxy
+          - onboarding-bff
+          - document-ms
+        required: true
+
+  pull_request:
+    branches:
+      - main
+      - releases/**
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - 'apps/**'
+      - '.github/workflows/pr_app.yml'
+      - '.github/workflows/call_code_review.yml'
+
+jobs:
+  code_review:
+    uses: ./.github/workflows/call_code_review.yml
+    name: '${{ inputs.env }}-${{ inputs.domain }} ${{ inputs.app }} Code Review'
+    secrets: inherit
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+      source_branch: ${{ github.head_ref }}
+      target_branch: ${{ github.base_ref }}
+      sonar_key: 'pagopa_selfcare'
+      module: ${{ inputs.app }}
