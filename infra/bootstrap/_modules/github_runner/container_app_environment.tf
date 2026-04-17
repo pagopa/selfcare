@@ -20,3 +20,20 @@ resource "azurerm_management_lock" "lock_cae" {
   notes      = "This Container App Environment cannot be deleted"
   scope      = module.container_app_environment_runner.id
 }
+
+
+resource "azurerm_user_assigned_identity" "cae_identity" {
+  name                = "${module.container_app_environment_runner.name}-managed_identity"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg_github_runner.name
+
+  tags = var.tags
+}
+
+resource "azurerm_management_lock" "identity_lock" {
+  name       = azurerm_user_assigned_identity.cae_identity.name
+  scope      = azurerm_user_assigned_identity.cae_identity.id
+  lock_level = "CanNotDelete"
+
+  notes = "Lock for the user-assigned managed identity"
+}

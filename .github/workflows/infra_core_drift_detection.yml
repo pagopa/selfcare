@@ -1,4 +1,4 @@
-name: Core Code Review Infra DX
+name: Core Infra Drift DX
 
 on:
   pull_request:
@@ -43,8 +43,8 @@ concurrency:
 permissions:
   contents: read
   packages: read
-  pull-requests: write
   id-token: write
+  actions: read
 
 
 jobs:
@@ -64,7 +64,7 @@ jobs:
     #     # override_labels: ""
   
   plan_dev:
-    uses: pagopa/dx/.github/workflows/infra_drift_detection.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_drift_detection.yml@main
     name: "DEV ${{ inputs.domain }} Selfcare Infra Core Release"
     if: ${{ inputs.env == 'dev' }}
     secrets: inherit
