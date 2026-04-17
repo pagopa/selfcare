@@ -50,6 +50,7 @@ permissions:
 jobs:
   plan:
     uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    # uses: ./.github/workflows/infra_plan.yaml
     name: "${{ inputs.env }} ${{ inputs.domain }} Selfcare Infra Core Release"
     secrets: inherit
     with:
@@ -59,3 +60,5 @@ jobs:
       override_github_environment: ${{ inputs.env }}
       use_labels: true
       override_labels: ${{ inputs.env }}  
+      env_vars: |
+        ARM_STORAGE_USE_AZUREAD=false

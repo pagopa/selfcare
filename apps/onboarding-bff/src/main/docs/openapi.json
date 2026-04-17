@@ -413,7 +413,7 @@
       },
       "CompanyBillingDataDto" : {
         "type" : "object",
-        "required" : [ "businessName", "taxCode", "certified", "digitalAddress" ],
+        "required" : [ "businessName", "taxCode", "certified" ],
         "properties" : {
           "businessName" : {
             "type" : "string"
@@ -426,8 +426,7 @@
             "type" : "boolean"
           },
           "digitalAddress" : {
-            "type" : "string",
-            "pattern" : "\\S"
+            "type" : "string"
           }
         }
       },

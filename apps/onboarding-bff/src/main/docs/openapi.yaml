@@ -286,7 +286,6 @@ components:
       - businessName
       - taxCode
       - certified
-      - digitalAddress
       properties:
         businessName:
           type: string
@@ -297,7 +296,6 @@ components:
           type: boolean
         digitalAddress:
           type: string
-          pattern: \S
     CompanyInformationsDto:
       type: object
       properties:

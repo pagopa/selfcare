@@ -24,9 +24,7 @@ public class CompanyBillingDataDto {
     @NotNull
     private boolean certified;
 
-    @Schema(description = "${openapi.onboarding.institutions.model.digitalAddress}", required = true)
-    @JsonProperty(required = true)
-    @NotBlank
+    @Schema(description = "${openapi.onboarding.institutions.model.digitalAddress}")
     private String digitalAddress;
 
 }

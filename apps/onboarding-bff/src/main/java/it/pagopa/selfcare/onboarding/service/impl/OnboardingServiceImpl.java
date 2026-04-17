@@ -15,6 +15,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
 import org.openapi.quarkus.onboarding_json.api.*;
 import org.openapi.quarkus.onboarding_json.model.*;
 import org.owasp.encoder.Encode;
@@ -35,6 +36,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     private final OnboardingControllerApi onboardingApi;
     private final BillingPortalApi billingPortalApi;
     private final SupportApi supportApi;
+    private final DocumentContentControllerApi documentContentControllerApi;
     private final TokenControllerApi tokenApi;
     private final AggregatesControllerApi aggregatesApi;
     private final OnboardingMapper onboardingMapper;
@@ -42,6 +44,7 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     public OnboardingServiceImpl(@RestClient OnboardingControllerApi onboardingApi,
                                     @RestClient BillingPortalApi billingPortalApi,
+                                    @RestClient DocumentContentControllerApi documentContentControllerApi,
                                     @RestClient TokenControllerApi tokenApi,
                                     @RestClient SupportApi supportApi,
                                     @RestClient AggregatesControllerApi aggregatesApi,
@@ -49,6 +52,7 @@ public class OnboardingServiceImpl implements OnboardingService {
                                     @RestClient InternalV1Api internalV1Api) {
         this.onboardingApi = onboardingApi;
         this.billingPortalApi = billingPortalApi;
+        this.documentContentControllerApi = documentContentControllerApi;
         this.tokenApi = tokenApi;
         this.supportApi = supportApi;
         this.aggregatesApi = aggregatesApi;
@@ -168,7 +172,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     @Override
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getContract(String onboardingId) {
-        File file = tokenApi.getContract(onboardingId).await().indefinitely();
+        File file = documentContentControllerApi.getContract(onboardingId).await().indefinitely();
         return FilePayloadUtils.toBinaryData(file, file.getName());
     }
 
@@ -182,7 +186,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     @Override
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getAttachment(String onboardingId, String filename) {
-        File file = tokenApi.getAttachment(onboardingId, filename).await().indefinitely();
+        File file = documentContentControllerApi.getAttachment(onboardingId, filename).await().indefinitely();
         return FilePayloadUtils.toBinaryData(file, filename);
     }
 
