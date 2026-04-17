@@ -1,8 +1,8 @@
-* @pagopa/selfcare-admin @pagopa/selfcare-contributors @giampiero-ferrara @giulia-tremolada
+* @pagopa/selfcare-admin @pagopa/selfcare-contributors @giampiero-ferrara @giulia-tremolada @fabiosalamonenttdata
 
-/libs @pagopa/selfcare-admin @pagopa/selfcare-contributors @giampiero-ferrara @giulia-tremolada
-/apps @pagopa/selfcare-admin @pagopa/selfcare-contributors @giampiero-ferrara @giulia-tremolada
-/.opex @pagopa/selfcare-admin @pagopa/selfcare-contributors @giampiero-ferrara @giulia-tremolada
+/libs @pagopa/selfcare-admin @pagopa/selfcare-contributors @giampiero-ferrara @giulia-tremolada @fabiosalamonenttdata
+/apps @pagopa/selfcare-admin @pagopa/selfcare-contributors @giampiero-ferrara @giulia-tremolada @fabiosalamonenttdata
+/.opex @pagopa/selfcare-admin @pagopa/selfcare-contributors @giampiero-ferrara @giulia-tremolada @fabiosalamonenttdata
 
-/.github @pagopa/selfcare-admin @pagopa/selfcare-contributors @giampiero-ferrara @giulia-tremolada
-/infra @pagopa/selfcare-admin @pagopa/selfcare-contributors @giampiero-ferrara @giulia-tremolada
+/.github @pagopa/selfcare-admin @pagopa/selfcare-contributors @giampiero-ferrara @giulia-tremolada @fabiosalamonenttdata
+/infra @pagopa/selfcare-admin @pagopa/selfcare-contributors @giampiero-ferrara @giulia-tremolada @fabiosalamonenttdata
