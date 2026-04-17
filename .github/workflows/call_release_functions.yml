@@ -21,6 +21,10 @@ env:
   ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
+concurrency:
+  group: functions-${{ inputs.env }}-${{ inputs.target }}-${{ inputs.app }}
+  cancel-in-progress: true
+
 jobs:
 
 #  infra_dev:
@@ -54,24 +58,33 @@ jobs:
           java-distribution: 'temurin'
           maven-version: '3.9.5'
           cache-enabled: true
-      - name: Build & Deploy
+      - name: Build Function Package
         shell: bash
         run: |
-          mvn --projects :${{ inputs.app }} --also-make package install -DskipTests \
-            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'd' || 'd-pnpg') }}
+          mvn --projects :${{ inputs.app }} --also-make package -DskipTests
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
-      - name: Deploy Function App
+      - name: Deploy Function App (Zip Deploy)
         shell: bash
         working-directory: apps/${{ inputs.app }}
         run: |
-          mvn -f pom.xml quarkus:deploy \
-            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'd' || 'd-pnpg') }} \
-            -Dquarkus.azure-functions.subscription-id=${{ secrets.ARM_SUBSCRIPTION_ID }} \
-            -Dquarkus.azure-functions.resource-group=${{ format('selc-{0}-onboarding-fn-rg', inputs.target == 'selc' && 'd' || 'd-pnpg') }} \
-            -Dquarkus.azure-functions.region=westeurope \
-            -Dquarkus.azure-functions.app-service-plan-name=${{ format('selc-{0}-onboarding-fn-plan', inputs.target == 'selc' && 'd' || 'd-pnpg') }} \
-            -Dquarkus.azure-functions.runtime.java-version=17
+          APP_NAME="${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'd' || 'd-pnpg') }}"
+          RESOURCE_GROUP="${{ format('selc-{0}-onboarding-fn-rg', inputs.target == 'selc' && 'd' || 'd-pnpg') }}"
+          PKG_DIR="$(find target/azure-functions -mindepth 1 -maxdepth 1 -type d | head -n1)"
+          ZIP_PATH="$(pwd)/target/azure-functions/functionapp.zip"
+
+          if [ -z "$PKG_DIR" ] || [ ! -f "$PKG_DIR/host.json" ]; then
+            echo "Azure Functions package not found or invalid under target/azure-functions"
+            exit 1
+          fi
+
+          rm -f "$ZIP_PATH"
+          (cd "$PKG_DIR" && zip -qr "$ZIP_PATH" .)
+
+          az functionapp deployment source config-zip \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$APP_NAME" \
+            --src "$ZIP_PATH"
 
   infra_uat:
     name: ${{ inputs.target == 'selc' && '[Uat]' || '[Uat-PNPG]' }} - Infra Apply
@@ -104,24 +117,33 @@ jobs:
           java-distribution: 'temurin'
           maven-version: '3.9.5'
           cache-enabled: true
-      - name: Build & Deploy
+      - name: Build Function Package
         shell: bash
         run: |
-          mvn --projects :${{ inputs.app }} --also-make package install -DskipTests \
-            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'u' || 'u-pnpg') }}
+          mvn --projects :${{ inputs.app }} --also-make package -DskipTests
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
-      - name: Deploy Function App
+      - name: Deploy Function App (Zip Deploy)
         shell: bash
         working-directory: apps/${{ inputs.app }}
         run: |
-          mvn -f pom.xml quarkus:deploy \
-            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'u' || 'u-pnpg') }} \
-            -Dquarkus.azure-functions.subscription-id=${{ secrets.ARM_SUBSCRIPTION_ID }} \
-            -Dquarkus.azure-functions.resource-group=${{ format('selc-{0}-onboarding-fn-rg', inputs.target == 'selc' && 'u' || 'u-pnpg') }} \
-            -Dquarkus.azure-functions.region=westeurope \
-            -Dquarkus.azure-functions.app-service-plan-name=${{ format('selc-{0}-onboarding-fn-plan', inputs.target == 'selc' && 'u' || 'u-pnpg') }} \
-            -Dquarkus.azure-functions.runtime.java-version=17
+          APP_NAME="${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'u' || 'u-pnpg') }}"
+          RESOURCE_GROUP="${{ format('selc-{0}-onboarding-fn-rg', inputs.target == 'selc' && 'u' || 'u-pnpg') }}"
+          PKG_DIR="$(find target/azure-functions -mindepth 1 -maxdepth 1 -type d | head -n1)"
+          ZIP_PATH="$(pwd)/target/azure-functions/functionapp.zip"
+
+          if [ -z "$PKG_DIR" ] || [ ! -f "$PKG_DIR/host.json" ]; then
+            echo "Azure Functions package not found or invalid under target/azure-functions"
+            exit 1
+          fi
+
+          rm -f "$ZIP_PATH"
+          (cd "$PKG_DIR" && zip -qr "$ZIP_PATH" .)
+
+          az functionapp deployment source config-zip \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$APP_NAME" \
+            --src "$ZIP_PATH"
 
   infra_prod:
     name: ${{ inputs.target == 'selc' && '[Prod]' || '[Prod-PNPG]' }} - Infra Apply
@@ -154,21 +176,30 @@ jobs:
           java-distribution: 'temurin'
           maven-version: '3.9.5'
           cache-enabled: true
-      - name: Build & Deploy
+      - name: Build Function Package
         shell: bash
         run: |
-          mvn --projects :${{ inputs.app }} --also-make package install -DskipTests \
-            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'p' || 'p-pnpg') }}
+          mvn --projects :${{ inputs.app }} --also-make package -DskipTests
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
-      - name: Deploy Function App
+      - name: Deploy Function App (Zip Deploy)
         shell: bash
         working-directory: apps/${{ inputs.app }}
         run: |
-          mvn -f pom.xml quarkus:deploy \
-            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'p' || 'p-pnpg') }} \
-            -Dquarkus.azure-functions.subscription-id=${{ secrets.ARM_SUBSCRIPTION_ID }} \
-            -Dquarkus.azure-functions.resource-group=${{ format('selc-{0}-onboarding-fn-rg', inputs.target == 'selc' && 'p' || 'p-pnpg') }} \
-            -Dquarkus.azure-functions.region=westeurope \
-            -Dquarkus.azure-functions.app-service-plan-name=${{ format('selc-{0}-onboarding-fn-plan', inputs.target == 'selc' && 'p' || 'p-pnpg') }} \
-            -Dquarkus.azure-functions.runtime.java-version=17
+          APP_NAME="${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'p' || 'p-pnpg') }}"
+          RESOURCE_GROUP="${{ format('selc-{0}-onboarding-fn-rg', inputs.target == 'selc' && 'p' || 'p-pnpg') }}"
+          PKG_DIR="$(find target/azure-functions -mindepth 1 -maxdepth 1 -type d | head -n1)"
+          ZIP_PATH="$(pwd)/target/azure-functions/functionapp.zip"
+
+          if [ -z "$PKG_DIR" ] || [ ! -f "$PKG_DIR/host.json" ]; then
+            echo "Azure Functions package not found or invalid under target/azure-functions"
+            exit 1
+          fi
+
+          rm -f "$ZIP_PATH"
+          (cd "$PKG_DIR" && zip -qr "$ZIP_PATH" .)
+
+          az functionapp deployment source config-zip \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$APP_NAME" \
+            --src "$ZIP_PATH"
