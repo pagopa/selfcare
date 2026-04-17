@@ -62,7 +62,7 @@ jobs:
     #   env_vars: |
     #     ARM_STORAGE_USE_AZUREAD=false
 
-    uses: ./.github/workflows/call_code_review_infra.yaml
+    uses: ./.github/workflows/call_code_review_infra.yml
     name: "${{ inputs.env }} ${{ inputs.domain }} Selfcare Infra Core Release"
     secrets: inherit
     with:
