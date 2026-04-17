@@ -3,8 +3,15 @@
   "functionTimeout": "00:01:00",
   "logging": {
     "logLevel": {
-      "DurableTask.AzureStorage": "Warning",
-      "DurableTask.Core": "Warning"
+      "default": "Information",
+      "Function": "Trace",
+      "Host.Executor": "Trace",
+      "Host.Aggregator": "Trace",
+      "Host.Results": "Information",
+      "DurableTask.Core": "Trace",
+      "DurableTask.AzureStorage": "Trace",
+      "Microsoft": "Information",
+      "Worker": "Information"
     }
   },
   "extensions": {
