@@ -55,7 +55,7 @@ jobs:
     with:
       environment: ${{ inputs.env }}-${{ inputs.domain }}
       base_path: infra/core
-      use_private_agent: true
+      use_private_agent: false
       override_github_environment: ${{ inputs.env }}
       use_labels: true
       override_labels: ${{ inputs.env }}  
