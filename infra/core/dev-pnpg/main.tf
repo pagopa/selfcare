@@ -2,27 +2,11 @@ terraform {
   required_version = ">=1.10.0"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
-    }
-
-    azuread = {
-      source  = "hashicorp/azuread"
-      version = ">= 3.8.0"
-    }
-
-    random = {
-      source  = "hashicorp/random"
-      version = ">= 3.0.0"
-    }
-
-    pkcs12 = {
-      source  = "chilicat/pkcs12"
-      version = "0.0.7"
-    }
-    dx = { source = "pagopa-dx/azure", version = "~> 0.0" }
-
+    azurerm = { source = "hashicorp/azurerm", version = "~> 4.0" }
+    azuread = { source = "hashicorp/azuread", version = ">= 3.8.0" }
+    random  = { source = "hashicorp/random", version = ">= 3.0.0" }
+    pkcs12  = { source = "chilicat/pkcs12", version = "0.0.7" }
+    dx      = { source = "pagopa-dx/azure", version = "~> 0.0" }
   }
 
   backend "azurerm" {
