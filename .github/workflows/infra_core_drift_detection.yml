@@ -1,4 +1,4 @@
-name: Core Code Review Infra DX
+name: Core Infra Drift DX
 
 on:
   pull_request:
