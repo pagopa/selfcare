@@ -64,7 +64,7 @@ jobs:
     #     # override_labels: ""
   
   plan_dev:
-    uses: pagopa/dx/.github/workflows/infra_drift_detection.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_drift_detection.yml@main
     name: "DEV ${{ inputs.domain }} Selfcare Infra Core Release"
     if: ${{ inputs.env == 'dev' }}
     secrets: inherit

@@ -23,3 +23,19 @@ module "github_runner" {
     resource_group_name = "${local.project}-monitor-rg"
   }
 }
+
+resource "azurerm_key_vault_access_policy" "container_app_environment" {
+  key_vault_id = data.azurerm_key_vault.key_vault.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = module.github_runner.user_assigned_identity.principal_id
+
+  secret_permissions = ["Get", "List"]
+}
+
+resource "azurerm_key_vault_access_policy" "container_app_environment_pnpg" {
+  key_vault_id = data.azurerm_key_vault.key_vault_pnpg.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = module.github_runner.user_assigned_identity.principal_id
+
+  secret_permissions = ["Get", "List"]
+}
