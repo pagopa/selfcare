@@ -68,7 +68,10 @@ class SwaggerConfigTest {
     private MsUserApiClient msUserApiClient;
 
     @MockBean
-    private MsOnboardingTokenApiClient msOnboardingTokenApiClient;
+    private MsDocumentApiClient msDocumentApiClient;
+
+    @MockBean
+    private MsDocumentContentApiClient msDocumentContentApiClient;
 
     @MockBean
     private MsOnboardingAggregatesApiClient msOnboardingAggregatesApiClient;
