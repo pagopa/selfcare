@@ -59,3 +59,5 @@ jobs:
       override_github_environment: ${{ inputs.env }}
       use_labels: true
       override_labels: ${{ inputs.env }}  
+      env_vars: |
+        ARM_STORAGE_USE_AZUREAD=false
