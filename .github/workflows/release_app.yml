@@ -34,6 +34,9 @@ on:
           - registry-proxy
           - onboarding-bff
           - document-ms
+          - institution-ms
+          - delegation-cdc
+          - institution-send-mail-scheduler
         required: true
         default: auth
 

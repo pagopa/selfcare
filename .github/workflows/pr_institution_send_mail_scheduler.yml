@@ -15,7 +15,7 @@ on:
       - ready_for_review
     paths:
       - 'apps/institution-send-mail-scheduler/**'
-      - '.github/workflows/pr_scheduler.yml'
+      - '.github/workflows/pr_institution_send_mail_scheduler.yml'
       - '.github/workflows/call_code_review.yml'
 
 jobs:
