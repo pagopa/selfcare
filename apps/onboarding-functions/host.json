@@ -3,15 +3,8 @@
   "functionTimeout": "00:01:00",
   "logging": {
     "logLevel": {
-      "default": "Information",
-      "Function": "Trace",
-      "Host.Executor": "Trace",
-      "Host.Aggregator": "Trace",
-      "Host.Results": "Information",
-      "DurableTask.Core": "Trace",
-      "DurableTask.AzureStorage": "Trace",
-      "Microsoft": "Information",
-      "Worker": "Information"
+      "DurableTask.AzureStorage": "Warning",
+      "DurableTask.Core": "Warning"
     }
   },
   "extensions": {
