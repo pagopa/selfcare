@@ -21,6 +21,7 @@ terraform {
       source  = "chilicat/pkcs12"
       version = "0.0.7"
     }
+    dx = { source = "pagopa-dx/azure", version = "~> 0.0" }
 
   }
 
@@ -44,3 +45,5 @@ provider "azurerm" {
   }
   storage_use_azuread = true
 }
+
+provider "dx" {}
