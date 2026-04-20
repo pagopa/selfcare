@@ -2741,7 +2741,7 @@
         }
       },
       "OnboardingPgRequest" : {
-        "required" : [ "productId", "users", "taxCode", "origin", "digitalAddress" ],
+        "required" : [ "productId", "users", "taxCode", "origin" ],
         "type" : "object",
         "properties" : {
           "productId" : {

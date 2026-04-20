@@ -2000,7 +2000,6 @@ components:
       - users
       - taxCode
       - origin
-      - digitalAddress
       type: object
       properties:
         productId:

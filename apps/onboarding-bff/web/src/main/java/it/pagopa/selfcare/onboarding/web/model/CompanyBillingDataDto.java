@@ -24,9 +24,7 @@ public class CompanyBillingDataDto {
     @NotNull
     private boolean certified;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.digitalAddress}", required = true)
-    @JsonProperty(required = true)
-    @NotBlank
+    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.digitalAddress}")
     private String digitalAddress;
 
 }

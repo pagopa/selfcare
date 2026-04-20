@@ -24,7 +24,6 @@ public class OnboardingPgRequest {
     private String businessName;
     @NotNull
     private Origin origin;
-    @NotNull
     private String digitalAddress;
     private Boolean skipVerifyLegal;
 
