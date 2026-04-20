@@ -94,7 +94,6 @@ module "onboarding_functions" {
   key_vault_id                          = module.local.key_vault_id
   tenant_id                             = module.local.tenant_id
   replication_type                      = "LRS"
-  storage_public_network_access_enabled = false
   app_settings                          = local.onboarding_functions.app_settings
   location                              = module.local.config.location
   tags                                  = module.local.config.tags
