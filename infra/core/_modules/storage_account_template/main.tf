@@ -36,10 +36,18 @@ resource "azurerm_management_lock" "this" {
   notes      = "This items can't be deleted in this subscription!"
 }
 
+data "azurerm_storage_account" "storage_account" {
+  name                = module.storage_account.name
+  resource_group_name = module.storage_account.resource_group_name
+  depends_on = [
+    module.storage_account
+  ]
+}
+
 # tfsec:ignore:AZU023
 resource "azurerm_key_vault_secret" "access_key" {
   name         = "${var.name}-storage-access-key"
-  value        = module.storage_account.primary_access_key
+  value        = data.azurerm_storage_account.storage_account.primary_access_key
   content_type = "text/plain"
 
   key_vault_id = var.key_vault_id
@@ -48,7 +56,7 @@ resource "azurerm_key_vault_secret" "access_key" {
 # tfsec:ignore:azure-keyvault-ensure-secret-expiry
 resource "azurerm_key_vault_secret" "connection_string" {
   name         = "${var.name}-storage-connection-string"
-  value        = module.storage_account.primary_connection_string
+  value        = data.azurerm_storage_account.storage_account.primary_connection_string
   content_type = "text/plain"
 
   key_vault_id = var.key_vault_id
@@ -57,7 +65,7 @@ resource "azurerm_key_vault_secret" "connection_string" {
 # tfsec:ignore:azure-keyvault-ensure-secret-expiry
 resource "azurerm_key_vault_secret" "blob_connection_string" {
   name         = "${var.name}-storage-blob-connection-string"
-  value        = module.storage_account.primary_blob_connection_string
+  value        = data.azurerm_storage_account.storage_account.primary_blob_connection_string
   content_type = "text/plain"
 
   key_vault_id = var.key_vault_id

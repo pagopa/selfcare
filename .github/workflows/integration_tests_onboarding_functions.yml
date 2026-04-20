@@ -15,6 +15,11 @@ on:
       - ".github/workflows/integration_tests_onboarding_functions.yml"
   workflow_dispatch:
 
+env:
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  
 jobs:
   integration_tests_functions_job:
     name: "Integration Tests (onboarding-functions)"
@@ -57,12 +62,8 @@ jobs:
           docker compose down -v --remove-orphans || true
           docker system prune -af || true
 
-      - name: Azure Login
-        uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
-        with:
-          client-id: ${{ secrets.ARM_CLIENT_ID }}
-          tenant-id: ${{ vars.ARM_TENANT_ID }}
-          subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
 
       - name: Download config from blob-storage
         uses: azure/CLI@965c8d7571d2231a54e321ddd07f7b10317f34d9 # v2

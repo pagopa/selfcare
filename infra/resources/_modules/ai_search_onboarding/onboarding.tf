@@ -4,6 +4,10 @@ resource "restapi_object" "search_index" {
   id_attribute = "name"
   path         = "/indexes"
 
+  lifecycle {
+    ignore_changes = [data, api_data, api_response]
+  }
+
   data = jsonencode({
     "name" : "onboarding-index-${var.domain}",
     "analyzers" : [
