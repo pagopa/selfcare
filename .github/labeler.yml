@@ -63,6 +63,18 @@ onboarding-sdk:
   - changed-files:
       - any-glob-to-any-file: ["libs/selfcare-onboarding-sdk-**"]
 
+institution-ms:
+  - changed-files:
+      - any-glob-to-any-file: ["apps/institution-ms/**", "infra/resources/institution-ms/**"]
+
+delegation-cdc:
+  - changed-files:
+      - any-glob-to-any-file: ["apps/delegation-cdc/**", "infra/resources/delegation-cdc/**"]
+
+institution-send-mail-scheduler:
+  - changed-files:
+      - any-glob-to-any-file: ["apps/institution-send-mail-scheduler/**", "infra/resources/institution-send-mail-scheduler/**"]
+
 security-sdk:
   - changed-files:
       - any-glob-to-any-file: ["libs/selfcare-sdk-security/**"]
