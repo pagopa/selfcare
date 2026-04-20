@@ -31,6 +31,7 @@ jobs:
       environment: dev
       tf_environment: ${{ inputs.target == 'selc' && 'dev-ar' || 'dev-pnpg' }}
       dir: ${{ inputs.target == 'selc' && 'infra/resources/onboarding-functions/dev-ar' || 'infra/resources/onboarding-functions/dev-pnpg' }}
+      runner: "self-hosted"
 
   release_dev:
     name: ${{ inputs.target == 'selc' && '[Dev]' || '[Dev-PNPG]' }} - ${{ inputs.app }} Release
@@ -128,6 +129,7 @@ jobs:
       environment: uat
       tf_environment: ${{ inputs.target == 'selc' && 'uat-ar' || 'uat-pnpg' }}
       dir: ${{ inputs.target == 'selc' && 'infra/resources/onboarding-functions/uat-ar' || 'infra/resources/onboarding-functions/uat-pnpg' }}
+      runner: "self-hosted"
 
   release_uat:
     name: ${{ inputs.target == 'selc' && '[Uat]' || '[Uat-PNPG]' }} - ${{ inputs.app }} Release
@@ -225,6 +227,7 @@ jobs:
       environment: prod
       tf_environment: ${{ inputs.target == 'selc' && 'prod-ar' || 'prod-pnpg' }}
       dir: ${{ inputs.target == 'selc' && 'infra/resources/onboarding-functions/prod-ar' || 'infra/resources/onboarding-functions/prod-pnpg' }}
+      runner: "self-hosted"
 
   release_prod:
     name: ${{ inputs.target == 'selc' && '[Prod]' || '[Prod-PNPG]' }} - ${{ inputs.app }} Release
