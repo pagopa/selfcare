@@ -1269,7 +1269,7 @@ class DocumentContentServiceImplTest {
         doc.setContractFilename("contract.pdf");
 
         // 1. Mock DB
-        when(documentService.getDocumentInstitutionByOnboardingId(onboardingId))
+        when(documentService.getDocumentByOnboardingId(onboardingId))
                 .thenReturn(Uni.createFrom().item(doc));
 
         // 2. Mock Config
@@ -1323,7 +1323,7 @@ class DocumentContentServiceImplTest {
         File phantomFile = Files.createTempFile("phantom", ".pdf").toFile();
         phantomFile.delete();
 
-        when(documentService.getDocumentInstitutionByOnboardingId(onboardingId))
+        when(documentService.getDocumentByOnboardingId(onboardingId))
                 .thenReturn(Uni.createFrom().item(doc));
         when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
         when(documentMsConfig.getDeletePath()).thenReturn("/deleted/");
@@ -1346,7 +1346,7 @@ class DocumentContentServiceImplTest {
         String onboardingId = "invalid-onboarding-id";
 
         // Simuliamo che il DB non trovi l'onboarding e restituisca una failure
-        when(documentService.getDocumentInstitutionByOnboardingId(onboardingId))
+        when(documentService.getDocumentByOnboardingId(onboardingId))
                 .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("Document not found")));
 
         // Act & Assert
@@ -1368,7 +1368,7 @@ class DocumentContentServiceImplTest {
         doc.setContractSigned("contracts/test-onboarding-123/signed_contract.pdf");
         doc.setContractFilename("contract.pdf");
 
-        when(documentService.getDocumentInstitutionByOnboardingId(onboardingId))
+        when(documentService.getDocumentByOnboardingId(onboardingId))
                 .thenReturn(Uni.createFrom().item(doc));
         when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
         when(documentMsConfig.getDeletePath()).thenReturn("/deleted/");
@@ -1416,7 +1416,7 @@ class DocumentContentServiceImplTest {
         doc.setContractSigned("contracts/test-onboarding-123/signed_contract.pdf");
         doc.setContractFilename("contract.pdf");
 
-        when(documentService.getDocumentInstitutionByOnboardingId(onboardingId))
+        when(documentService.getDocumentByOnboardingId(onboardingId))
                 .thenReturn(Uni.createFrom().item(doc));
         when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
         when(documentMsConfig.getDeletePath()).thenReturn("/deleted/");
