@@ -39,6 +39,8 @@ module "identity_ci_ms" {
         "selc-${var.env_short}-weu-pnpg-cosmosdb-mongodb-rg" = ["DocumentDB Account Contributor"],
         "selc-${var.env_short}-pnpg-spid-testenv-rg"         = ["Storage Account Key Operator Service Role"],
         "selc-${var.env_short}-weu-pnpg-logs-storage-rg"     = ["Storage Account Key Operator Service Role"],
+        "selc-${var.env_short}-container-app-002-rg"         = ["${var.app} ${var.env} ContainerApp Jobs Reader"],
+        "selc-${var.env_short}-logs-storage-rg"              = ["Storage Account Key Operator Service Role"],
     })
   }
 
