@@ -16,6 +16,57 @@ module "local" {
   container_app_min_replicas     = 0
 }
 
+module "cosmosdb" {
+  source = "../../_modules/cosmosdb_database"
+
+  database_name               = "selcMsCore"
+  resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
+}
+
+module "collection_institution" {
+  source = "../../_modules/cosmosdb_collection"
+
+  name                        = "Institution"
+  resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
+  database_name               = module.cosmosdb.database_name
+
+  lock_enable = true
+
+  indexes = [
+    { keys = ["_id"], unique = true },
+    { keys = ["externalId"], unique = true },
+    { keys = ["geographicTaxonomies.code"], unique = false },
+    { keys = ["onboarding.productId"], unique = false },
+    { keys = ["taxCode"], unique = false }
+  ]
+}
+
+module "collection_delegations" {
+  source = "../../_modules/cosmosdb_collection"
+
+  name                        = "Delegations"
+  resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
+  database_name               = module.cosmosdb.database_name
+
+  lock_enable = true
+
+  indexes = [
+    { keys = ["_id"], unique = true },
+    { keys = ["institutionFromName"], unique = false },
+    { keys = ["from"], unique = false },
+    { keys = ["to"], unique = false },
+    { keys = ["toTaxCode"], unique = false },
+    { keys = ["fromTaxCode"], unique = false },
+    { keys = ["to", "status", "type", "productId", "createdAt"], unique = false },
+    { keys = ["from", "status", "type", "productId", "createdAt"], unique = false },
+    { keys = ["createdAt"], unique = false },
+    { keys = ["updatedAt"], unique = false }
+  ]
+}
+
 ###############################################################################
 # Institution MS
 ###############################################################################
