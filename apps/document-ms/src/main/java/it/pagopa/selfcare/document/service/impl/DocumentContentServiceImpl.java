@@ -313,7 +313,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                   RestResponse.ResponseBuilder.ok(csv, MediaType.APPLICATION_OCTET_STREAM);
               response.header(
                   HttpHeaders.CONTENT_DISPOSITION,
-                  "attachment;filename=" + FILE_NAME_AGGREGATES_CSV);
+                  HTTP_HEADER_VALUE_ATTACHMENT_FILENAME + FILE_NAME_AGGREGATES_CSV);
               return response.build();
             });
     }
@@ -695,10 +695,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
             azureBlobClient.uploadFilePath(originalPath, Files.readAllBytes(temporaryFile.toPath()));
             azureBlobClient.removeFile(currentPath);
         } finally {
-            if (temporaryFile != null && temporaryFile.exists()) {
-                if (!temporaryFile.delete()) {
-                    log.warn("Unable to delete temporary local file during rollback: {}", sanitize(temporaryFile.getAbsolutePath()));
-                }
+            if (temporaryFile != null && temporaryFile.exists() && !temporaryFile.delete()) {
+                log.warn("Unable to delete temporary local file during rollback: {}", sanitize(temporaryFile.getAbsolutePath()));
             }
         }
     }
