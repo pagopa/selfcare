@@ -125,25 +125,6 @@ resource "azurerm_key_vault_access_policy" "fn_keyvault_access_policy" {
   ]
 }
 
-data "azurerm_function_app_host_keys" "fn" {
-  name                = azurerm_linux_function_app.fn.name
-  resource_group_name = azurerm_resource_group.fn_rg.name
-
-  depends_on = [
-    azurerm_linux_function_app.fn,
-    azurerm_role_assignment.fn_storage_blob_data_contributor,
-    azurerm_role_assignment.fn_storage_queue_data_contributor,
-    azurerm_role_assignment.fn_storage_table_data_contributor,
-  ]
-}
-
-resource "azurerm_key_vault_secret" "fn_primary_key" {
-  name         = "fn-onboarding-primary-key"
-  value        = data.azurerm_function_app_host_keys.fn.default_function_key
-  content_type = "text/plain"
-  key_vault_id = var.key_vault_id
-}
-
 data "azurerm_resource_group" "fn_nat_rg" {
   name = var.nat_resource_group_name
 }
