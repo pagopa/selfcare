@@ -160,7 +160,9 @@ resource "azurerm_role_definition" "container_apps_jobs_reader" {
       "microsoft.app/jobs/execution/read",
       "microsoft.app/jobs/executions/read",
       "microsoft.app/containerApps/read",
-      "microsoft.app/containerApps/listSecrets/action"
+      "microsoft.app/containerApps/listSecrets/action",
+      "microsoft.app/managedEnvironments/daprComponents/read",
+      "microsoft.app/managedEnvironments/daprComponents/listSecrets/action"
     ]
   }
 

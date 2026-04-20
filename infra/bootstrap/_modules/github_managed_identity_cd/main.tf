@@ -30,7 +30,10 @@ module "identity_cd_ms" {
 
   cd_rbac_roles = {
     subscription_roles = concat(var.environment_cd_roles_ms.subscription, ["${var.app} ${var.env} ContainerApp Jobs Writer"])
-    resource_groups    = var.environment_cd_roles_ms.resource_groups
+    resource_groups = merge(var.environment_cd_roles_ms.resource_groups,
+      {
+        "selc-${var.env_short}-checkout-fe-rg" = ["Storage Blob Data Contributor", "Storage Account Key Operator Service Role", "CDN Endpoint Contributor"]
+    })
   }
 
   tags = var.tags
