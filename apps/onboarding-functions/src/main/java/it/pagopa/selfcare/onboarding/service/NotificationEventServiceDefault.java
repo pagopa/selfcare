@@ -105,7 +105,7 @@ public class NotificationEventServiceDefault implements NotificationEventService
         context.getLogger().info(() -> String.format("Retrieving institution having ID %s", onboarding.getInstitution().getId()));
         InstitutionResponse institution = institutionApi.retrieveInstitutionByIdUsingGET(onboarding.getInstitution().getId(), onboarding.getProductId());
 
-        DocumentResponse document = documentControllerApi.getDocumentByOnboardingId(onboarding.getId()).stream().findFirst().orElse(null);
+        DocumentResponse document = documentControllerApi.getDocumentByOnboardingId(onboarding.getId());
 
         NotificationsResources notificationsResources = new NotificationsResources(onboarding, institution, document, queueEvent);
         for (String consumer : product.getConsumers()) {
