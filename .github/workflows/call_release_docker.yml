@@ -191,7 +191,7 @@ jobs:
 
   release:
     uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
-    name: "DEV ${{ inputs.domain }} Selfcare Infra Core Release"
+    name: "[${{ inputs.environment }}-${{ inputs.domain }}] ${{ inputs.app }} Infra release"
     needs: [build_push_docker, plan]
     secrets: inherit
     with:
