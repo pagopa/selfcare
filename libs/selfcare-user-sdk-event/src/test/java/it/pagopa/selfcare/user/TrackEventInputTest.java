@@ -3,11 +3,9 @@ package it.pagopa.selfcare.user;
 import it.pagopa.selfcare.user.model.*;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
-import java.util.List;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TrackEventInputTest {
 

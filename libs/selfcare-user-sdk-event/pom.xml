@@ -6,12 +6,13 @@
 
     <parent>
         <groupId>it.pagopa.selfcare</groupId>
-        <artifactId>user-libs</artifactId>
-        <version>0.0.1</version>
+        <artifactId>selfcare-sdk-pom</artifactId>
+        <version>1.0.0</version>
+        <relativePath>../selfcare-sdk-pom</relativePath>
     </parent>
 
-    <artifactId>user-sdk-event</artifactId>
-    <name>user-sdk-event</name>
+    <artifactId>selfcare-user-sdk-event</artifactId>
+    <name>selfcare-user-sdk-event</name>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>

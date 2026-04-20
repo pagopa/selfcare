@@ -7,9 +7,8 @@
     <parent>
         <groupId>it.pagopa.selfcare</groupId>
         <artifactId>selc-starter-parent</artifactId>
-        <version>0.3.2-SNAPSHOT</version>
-        <relativePath/>
-        <!-- lookup parent from repository -->
+        <version>0.3.1-SNAPSHOT</version>
+        <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
     <artifactId>user-group-ms</artifactId>
@@ -70,7 +69,6 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.owasp.encoder</groupId>
             <artifactId>encoder</artifactId>
@@ -80,6 +78,7 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-commons</artifactId>
+            <version>3.3.0</version>
         </dependency>
         <dependency>
             <groupId>io.rest-assured</groupId>
@@ -102,7 +101,6 @@
             <artifactId>xml-path</artifactId>
             <version>5.3.0</version>
         </dependency>
-
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-suite</artifactId>
@@ -128,6 +126,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
+            <version>3.3.0</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>

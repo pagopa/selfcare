@@ -6,12 +6,13 @@
 
     <parent>
         <groupId>it.pagopa.selfcare</groupId>
-        <artifactId>user-libs</artifactId>
-        <version>0.0.1</version>
+        <artifactId>selfcare-sdk-pom</artifactId>
+        <version>1.0.0</version>
+        <relativePath>../selfcare-sdk-pom</relativePath>
     </parent>
 
-    <artifactId>user-sdk-model</artifactId>
-    <name>user-sdk-model</name>
+    <artifactId>selfcare-user-sdk-model</artifactId>
+    <name>selfcare-user-sdk-model</name>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -24,8 +25,8 @@
 
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>onboarding-sdk-common</artifactId>
-            <version>0.6.10</version>
+            <artifactId>selfcare-onboarding-sdk-common</artifactId>
+            <version>0.15.6</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
