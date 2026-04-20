@@ -55,3 +55,17 @@ jobs:
       override_github_environment: ${{ inputs.env }}
       use_labels: true
       override_labels: ${{ inputs.env }}
+  
+  release_prod:
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    name: "PROD ${{ inputs.domain }} Selfcare Infra Core Release"
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod-${{ inputs.domain }}
+      base_path: infra/core
+      # env_vars: ""
+      use_private_agent: true
+      override_github_environment: ${{ inputs.env }}
+      use_labels: true
+      override_labels: ${{ inputs.env }}
