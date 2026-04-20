@@ -115,21 +115,6 @@ module "onboarding_functions" {
   tags                                  = module.local.config.tags
 }
 
-data "azurerm_public_ip" "pip_outbound" {
-  resource_group_name = local.onboarding_functions.nat_resource_group_name
-  name                = "${module.local.config.project}-${module.local.config.pnpg_suffix}-pip-outbound"
-}
-
-data "azurerm_nat_gateway" "onboarding_functions_nat_gateway" {
-  name                = local.onboarding_functions.nat_gateway_name
-  resource_group_name = local.onboarding_functions.nat_resource_group_name
-}
-
-resource "azurerm_nat_gateway_public_ip_association" "functions_pip_nat_gateway" {
-  nat_gateway_id       = data.azurerm_nat_gateway.onboarding_functions_nat_gateway.id
-  public_ip_address_id = data.azurerm_public_ip.pip_outbound.id
-}
-
 # resource "azurerm_resource_group" "onboarding_fn_rg" {
 #   name     = "${local.onboarding_functions.name}-rg"
 #   location = local.location
