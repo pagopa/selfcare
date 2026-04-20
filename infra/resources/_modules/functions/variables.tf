@@ -52,6 +52,12 @@ variable "replication_type" {
   default     = "LRS"
 }
 
+variable "storage_public_network_access_enabled" {
+  type        = bool
+  description = "Whether Storage Account public network access is enabled"
+  default     = false
+}
+
 variable "app_settings" {
   type        = map(string)
   description = "Settings references to be set as app settings in the function app"

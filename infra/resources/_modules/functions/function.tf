@@ -43,15 +43,9 @@ resource "azurerm_storage_account" "fn_storage" {
   account_replication_type = var.replication_type
   access_tier              = "Hot"
 
-  public_network_access_enabled = true
+  public_network_access_enabled = var.storage_public_network_access_enabled
 
   tags = var.tags
-
-  lifecycle {
-    ignore_changes = [
-      public_network_access_enabled,
-    ]
-  }
 }
 
 resource "azurerm_linux_function_app" "fn" {

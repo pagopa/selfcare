@@ -106,7 +106,7 @@ locals {
       "JWT_TOKEN_PRIVATE_KEY"                          = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/jwt-private-key/)"
       "JWT_TOKEN_KID"                                  = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/jwt-kid/)"
       ##WEBHOOK
-      "WEBHOOK_BASE_PATH"                              = "https://selc-u-webhook-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
+      "WEBHOOK_BASE_PATH" = "https://selc-u-webhook-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
 
       ##NAMIRIAL SIGNATURE
       "NAMIRIAL_BASE_URL"                       = "https://selc-u-namirial-sws-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io",
@@ -117,26 +117,42 @@ locals {
       "ONBOARDING_DATA_ENCRIPTION_KEY" = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/onboarding-data-encryption-key/)",
       "ONBOARDING_DATA_ENCRIPTION_IV"  = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/onboarding-data-encryption-iv/)"
 
-      "MS_DOCUMENT_URL"                                    = "https://selc-u-document-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
+      "MS_DOCUMENT_URL" = "https://selc-u-document-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
     }
   }
 }
 module "onboarding_functions" {
   source = "../../_modules/functions"
 
-  functions_name            = local.onboarding_functions.name
-  subnet_cidr               = local.onboarding_functions.subnet_cidr
-  always_on                 = local.onboarding_functions.always_on
-  service_plan_sku          = local.onboarding_functions.service_plan_sku
-  service_plan_worker_count = local.onboarding_functions.service_plan_worker_count
-  nat_resource_group_name   = local.onboarding_functions.nat_resource_group_name
-  nat_gateway_name          = local.onboarding_functions.nat_gateway_name
-  vnet_resource_group_name  = module.local.vnet_resource_group_name
-  vnet_name                 = module.local.vnet_selc_name
-  key_vault_id              = module.local.key_vault_id
-  tenant_id                 = module.local.tenant_id
-  replication_type          = "LRS"
-  app_settings              = local.onboarding_functions.app_settings
-  location                  = module.local.config.location
-  tags                      = module.local.config.tags
+  functions_name                        = local.onboarding_functions.name
+  subnet_cidr                           = local.onboarding_functions.subnet_cidr
+  always_on                             = local.onboarding_functions.always_on
+  service_plan_sku                      = local.onboarding_functions.service_plan_sku
+  service_plan_worker_count             = local.onboarding_functions.service_plan_worker_count
+  nat_resource_group_name               = local.onboarding_functions.nat_resource_group_name
+  nat_gateway_name                      = local.onboarding_functions.nat_gateway_name
+  vnet_resource_group_name              = module.local.vnet_resource_group_name
+  vnet_name                             = module.local.vnet_selc_name
+  key_vault_id                          = module.local.key_vault_id
+  tenant_id                             = module.local.tenant_id
+  replication_type                      = "LRS"
+  storage_public_network_access_enabled = false
+  app_settings                          = local.onboarding_functions.app_settings
+  location                              = module.local.config.location
+  tags                                  = module.local.config.tags
+}
+
+data "azurerm_public_ip" "pip_outbound" {
+  resource_group_name = local.onboarding_functions.nat_resource_group_name
+  name                = "${module.local.config.project}-aksoutbound-pip-01"
+}
+
+data "azurerm_nat_gateway" "onboarding_functions_nat_gateway" {
+  name                = local.onboarding_functions.nat_gateway_name
+  resource_group_name = local.onboarding_functions.nat_resource_group_name
+}
+
+resource "azurerm_nat_gateway_public_ip_association" "functions_pip_nat_gateway" {
+  nat_gateway_id       = data.azurerm_nat_gateway.onboarding_functions_nat_gateway.id
+  public_ip_address_id = data.azurerm_public_ip.pip_outbound.id
 }

@@ -61,6 +61,53 @@ jobs:
             -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'd' || 'd-pnpg') }}
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
+      - name: Wait for Function Storage RBAC propagation
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          APP_NAME="${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'd' || 'd-pnpg') }}"
+          RG_NAME="${{ format('selc-{0}-onboarding-fn-rg', inputs.target == 'selc' && 'd' || 'd-pnpg') }}"
+
+          PRINCIPAL_ID="$(az functionapp identity show --name "$APP_NAME" --resource-group "$RG_NAME" --query principalId -o tsv)"
+          STORAGE_ACCOUNT_NAME="$(az functionapp config appsettings list --name "$APP_NAME" --resource-group "$RG_NAME" --query "[?name=='AzureWebJobsStorage__accountName'].value | [0]" -o tsv)"
+
+          if [ -z "${PRINCIPAL_ID}" ] || [ "${PRINCIPAL_ID}" = "null" ]; then
+            echo "Unable to resolve Function managed identity principalId for ${APP_NAME}"
+            exit 1
+          fi
+          if [ -z "${STORAGE_ACCOUNT_NAME}" ] || [ "${STORAGE_ACCOUNT_NAME}" = "null" ]; then
+            echo "Unable to resolve AzureWebJobsStorage__accountName for ${APP_NAME}"
+            exit 1
+          fi
+
+          STORAGE_ACCOUNT_ID="$(az storage account show --name "$STORAGE_ACCOUNT_NAME" --resource-group "$RG_NAME" --query id -o tsv)"
+          REQUIRED_ROLES=("Storage Blob Data Contributor" "Storage Queue Data Contributor" "Storage Table Data Contributor")
+
+          for attempt in {1..20}; do
+            missing=0
+            for role in "${REQUIRED_ROLES[@]}"; do
+              assigned="$(az role assignment list \
+                --assignee-object-id "$PRINCIPAL_ID" \
+                --scope "$STORAGE_ACCOUNT_ID" \
+                --query "[?roleDefinitionName=='${role}'] | length(@)" -o tsv)"
+              if [ "${assigned}" = "0" ]; then
+                missing=1
+                echo "Attempt ${attempt}/20: role not propagated yet -> ${role}"
+              fi
+            done
+
+            if [ "${missing}" = "0" ]; then
+              echo "All storage data-plane roles are available for ${APP_NAME}"
+              break
+            fi
+
+            if [ "${attempt}" -eq 20 ]; then
+              echo "RBAC propagation timeout for ${APP_NAME}"
+              exit 1
+            fi
+            sleep 15
+          done
       - name: Deploy Function App
         shell: bash
         working-directory: apps/${{ inputs.app }}
@@ -111,6 +158,53 @@ jobs:
             -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'u' || 'u-pnpg') }}
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
+      - name: Wait for Function Storage RBAC propagation
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          APP_NAME="${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'u' || 'u-pnpg') }}"
+          RG_NAME="${{ format('selc-{0}-onboarding-fn-rg', inputs.target == 'selc' && 'u' || 'u-pnpg') }}"
+
+          PRINCIPAL_ID="$(az functionapp identity show --name "$APP_NAME" --resource-group "$RG_NAME" --query principalId -o tsv)"
+          STORAGE_ACCOUNT_NAME="$(az functionapp config appsettings list --name "$APP_NAME" --resource-group "$RG_NAME" --query "[?name=='AzureWebJobsStorage__accountName'].value | [0]" -o tsv)"
+
+          if [ -z "${PRINCIPAL_ID}" ] || [ "${PRINCIPAL_ID}" = "null" ]; then
+            echo "Unable to resolve Function managed identity principalId for ${APP_NAME}"
+            exit 1
+          fi
+          if [ -z "${STORAGE_ACCOUNT_NAME}" ] || [ "${STORAGE_ACCOUNT_NAME}" = "null" ]; then
+            echo "Unable to resolve AzureWebJobsStorage__accountName for ${APP_NAME}"
+            exit 1
+          fi
+
+          STORAGE_ACCOUNT_ID="$(az storage account show --name "$STORAGE_ACCOUNT_NAME" --resource-group "$RG_NAME" --query id -o tsv)"
+          REQUIRED_ROLES=("Storage Blob Data Contributor" "Storage Queue Data Contributor" "Storage Table Data Contributor")
+
+          for attempt in {1..20}; do
+            missing=0
+            for role in "${REQUIRED_ROLES[@]}"; do
+              assigned="$(az role assignment list \
+                --assignee-object-id "$PRINCIPAL_ID" \
+                --scope "$STORAGE_ACCOUNT_ID" \
+                --query "[?roleDefinitionName=='${role}'] | length(@)" -o tsv)"
+              if [ "${assigned}" = "0" ]; then
+                missing=1
+                echo "Attempt ${attempt}/20: role not propagated yet -> ${role}"
+              fi
+            done
+
+            if [ "${missing}" = "0" ]; then
+              echo "All storage data-plane roles are available for ${APP_NAME}"
+              break
+            fi
+
+            if [ "${attempt}" -eq 20 ]; then
+              echo "RBAC propagation timeout for ${APP_NAME}"
+              exit 1
+            fi
+            sleep 15
+          done
       - name: Deploy Function App
         shell: bash
         working-directory: apps/${{ inputs.app }}
@@ -161,6 +255,53 @@ jobs:
             -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'p' || 'p-pnpg') }}
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
+      - name: Wait for Function Storage RBAC propagation
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          APP_NAME="${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'p' || 'p-pnpg') }}"
+          RG_NAME="${{ format('selc-{0}-onboarding-fn-rg', inputs.target == 'selc' && 'p' || 'p-pnpg') }}"
+
+          PRINCIPAL_ID="$(az functionapp identity show --name "$APP_NAME" --resource-group "$RG_NAME" --query principalId -o tsv)"
+          STORAGE_ACCOUNT_NAME="$(az functionapp config appsettings list --name "$APP_NAME" --resource-group "$RG_NAME" --query "[?name=='AzureWebJobsStorage__accountName'].value | [0]" -o tsv)"
+
+          if [ -z "${PRINCIPAL_ID}" ] || [ "${PRINCIPAL_ID}" = "null" ]; then
+            echo "Unable to resolve Function managed identity principalId for ${APP_NAME}"
+            exit 1
+          fi
+          if [ -z "${STORAGE_ACCOUNT_NAME}" ] || [ "${STORAGE_ACCOUNT_NAME}" = "null" ]; then
+            echo "Unable to resolve AzureWebJobsStorage__accountName for ${APP_NAME}"
+            exit 1
+          fi
+
+          STORAGE_ACCOUNT_ID="$(az storage account show --name "$STORAGE_ACCOUNT_NAME" --resource-group "$RG_NAME" --query id -o tsv)"
+          REQUIRED_ROLES=("Storage Blob Data Contributor" "Storage Queue Data Contributor" "Storage Table Data Contributor")
+
+          for attempt in {1..20}; do
+            missing=0
+            for role in "${REQUIRED_ROLES[@]}"; do
+              assigned="$(az role assignment list \
+                --assignee-object-id "$PRINCIPAL_ID" \
+                --scope "$STORAGE_ACCOUNT_ID" \
+                --query "[?roleDefinitionName=='${role}'] | length(@)" -o tsv)"
+              if [ "${assigned}" = "0" ]; then
+                missing=1
+                echo "Attempt ${attempt}/20: role not propagated yet -> ${role}"
+              fi
+            done
+
+            if [ "${missing}" = "0" ]; then
+              echo "All storage data-plane roles are available for ${APP_NAME}"
+              break
+            fi
+
+            if [ "${attempt}" -eq 20 ]; then
+              echo "RBAC propagation timeout for ${APP_NAME}"
+              exit 1
+            fi
+            sleep 15
+          done
       - name: Deploy Function App
         shell: bash
         working-directory: apps/${{ inputs.app }}
