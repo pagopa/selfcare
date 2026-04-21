@@ -19,9 +19,22 @@ module "local" {
   container_app_memory           = "2.5Gi"
 }
 
+data "azurerm_key_vault_secret" "appinsights_connection_string" {
+  name         = "appinsights-connection-string"
+  key_vault_id = module.local.key_vault_id
+}
+
 ###############################################################################
 # ONBOARDING FUNCTIONS
 ###############################################################################
+
+locals {
+  appinsights_connection_string = data.azurerm_key_vault_secret.appinsights_connection_string.value
+  appinsights_instrumentation_key = element([
+    for part in split(";", local.appinsights_connection_string) : trimprefix(part, "InstrumentationKey=")
+    if startswith(part, "InstrumentationKey=")
+  ], 0)
+}
 
 locals {
   onboarding_functions = {
@@ -110,29 +123,36 @@ locals {
 module "onboarding_functions" {
   source = "../../_modules/functions"
 
-  functions_name            = local.onboarding_functions.name
-  subnet_cidr               = local.onboarding_functions.subnet_cidr
-  always_on                 = local.onboarding_functions.always_on
-  service_plan_sku          = local.onboarding_functions.service_plan_sku
-  service_plan_worker_count = local.onboarding_functions.service_plan_worker_count
-  nat_resource_group_name   = local.onboarding_functions.nat_resource_group_name
-  nat_gateway_name          = local.onboarding_functions.nat_gateway_name
-  vnet_resource_group_name  = module.local.vnet_resource_group_name
-  vnet_name                 = module.local.vnet_selc_name
-  key_vault_id              = module.local.key_vault_id
-  tenant_id                 = module.local.tenant_id
-  replication_type          = "LRS"
-  app_settings              = local.onboarding_functions.app_settings
-  location                  = module.local.config.location
-  tags                      = module.local.config.tags
+  functions_name                         = local.onboarding_functions.name
+  subnet_cidr                            = local.onboarding_functions.subnet_cidr
+  always_on                              = local.onboarding_functions.always_on
+  service_plan_sku                       = local.onboarding_functions.service_plan_sku
+  service_plan_worker_count              = local.onboarding_functions.service_plan_worker_count
+  nat_resource_group_name                = local.onboarding_functions.nat_resource_group_name
+  nat_gateway_name                       = local.onboarding_functions.nat_gateway_name
+  vnet_resource_group_name               = module.local.vnet_resource_group_name
+  vnet_name                              = module.local.vnet_selc_name
+  key_vault_id                           = module.local.key_vault_id
+  tenant_id                              = module.local.tenant_id
+  replication_type                       = "LRS"
+  app_settings                           = local.onboarding_functions.app_settings
+  application_insights_connection_string = local.appinsights_connection_string
+  application_insights_key               = local.appinsights_instrumentation_key
+  location                               = module.local.config.location
+  tags                                   = module.local.config.tags
 }
 
 data "azurerm_public_ip" "pip_outbound" {
-  resource_group_name = module.local.vnet_resource_group_name
+  resource_group_name = local.onboarding_functions.nat_resource_group_name
   name                = "${module.local.config.project}-aksoutbound-pip-01"
 }
 
+data "azurerm_nat_gateway" "onboarding_functions_nat_gateway" {
+  name                = local.onboarding_functions.nat_gateway_name
+  resource_group_name = local.onboarding_functions.nat_resource_group_name
+}
+
 resource "azurerm_nat_gateway_public_ip_association" "functions_pip_nat_gateway" {
-  nat_gateway_id       = module.local.nat_gw_id
+  nat_gateway_id       = data.azurerm_nat_gateway.onboarding_functions_nat_gateway.id
   public_ip_address_id = data.azurerm_public_ip.pip_outbound.id
 }

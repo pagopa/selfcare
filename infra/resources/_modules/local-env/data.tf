@@ -13,10 +13,10 @@ data "azurerm_subscription" "current" {}
 data "azurerm_client_config" "current" {}
 
 data "azurerm_resource_group" "nat_rg" {
-  name = local.nat_rg_name
+  name = "${local.project}-nat-rg"
 }
 
 data "azurerm_nat_gateway" "nat_gateway" {
-  name                = local.nat_gw_name
+  name                = "${local.project}-nat_gw"
   resource_group_name = data.azurerm_resource_group.nat_rg.name
 }

@@ -27,9 +27,6 @@ output "config" {
     key_vault_resource_group_name  = local.key_vault_resource_group_name
     key_vault_name                 = local.key_vault_name
     resource_group_name_vnet       = local.resource_group_name_vnet
-    nat_gw_name                    = local.nat_gw_name
-    nat_rg_name                    = local.nat_rg_name
-    nat_pip_outbound_name          = local.nat_pip_outbound_name
   }
 }
 
