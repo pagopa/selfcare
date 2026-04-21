@@ -3,7 +3,6 @@ package it.pagopa.selfcare.product.mapper;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
 import it.pagopa.selfcare.product.entity.ProductStatus;
 import it.pagopa.selfcare.product.model.*;
@@ -144,28 +143,6 @@ public interface ProductMapper {
     };
   }
 
-  @Named("mapWorkflowType")
-  default WorkflowType mapInstitutionType(
-      it.pagopa.selfcare.product.model.enums.WorkflowType workflowType) {
-    return switch (workflowType) {
-      case CONTRACT_REGISTRATION -> WorkflowType.CONTRACT_REGISTRATION;
-      case FOR_APPROVE -> WorkflowType.FOR_APPROVE;
-      case FOR_APPROVE_PT -> WorkflowType.FOR_APPROVE_PT;
-      case FOR_APPROVE_GPU -> WorkflowType.FOR_APPROVE_GPU;
-      case CONFIRMATION -> WorkflowType.CONFIRMATION;
-      case USERS -> WorkflowType.USERS;
-      case USERS_IMPORT -> WorkflowType.USERS_IMPORT;
-      case IMPORT -> WorkflowType.IMPORT;
-      case IMPORT_AGGREGATION -> WorkflowType.IMPORT_AGGREGATION;
-      case CONTRACT_REGISTRATION_AGGREGATOR -> WorkflowType.CONTRACT_REGISTRATION_AGGREGATOR;
-      case CONFIRMATION_AGGREGATE -> WorkflowType.CONFIRMATION_AGGREGATE;
-      case INCREMENT_REGISTRATION_AGGREGATOR -> WorkflowType.INCREMENT_REGISTRATION_AGGREGATOR;
-      case CONFIRMATION_AGGREGATOR -> WorkflowType.CONFIRMATION_AGGREGATOR;
-      case USERS_PG -> WorkflowType.USERS_PG;
-      case USERS_EA -> WorkflowType.USERS_EA;
-    };
-  }
-
   @Mapping(target = "contractTemplatePath", source = "path")
   @Mapping(target = "contractTemplateVersion", source = "version")
   @Mapping(target = "attachments", expression = "java(new ArrayList<>())")
@@ -173,7 +150,6 @@ public interface ProductMapper {
 
   @Mapping(target = "templatePath", source = "path")
   @Mapping(target = "templateVersion", source = "version")
-  @Mapping(target = "workflowType", source = "workflowType", qualifiedByName = "mapWorkflowType")
   @Mapping(
       target = "workflowState",
       source = "workflowState",

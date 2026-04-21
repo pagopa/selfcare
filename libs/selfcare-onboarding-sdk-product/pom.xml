@@ -4,7 +4,7 @@
     <parent>
         <groupId>it.pagopa.selfcare</groupId>
         <artifactId>selfcare-onboarding-sdk-pom</artifactId>
-        <version>0.15.5</version>
+        <version>0.15.6</version>
         <relativePath>../selfcare-onboarding-sdk-pom</relativePath>
     </parent>
     <artifactId>selfcare-onboarding-sdk-product</artifactId>

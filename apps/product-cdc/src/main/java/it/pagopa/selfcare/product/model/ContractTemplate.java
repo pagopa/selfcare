@@ -2,7 +2,7 @@ package it.pagopa.selfcare.product.model;
 
 import it.pagopa.selfcare.product.model.enums.InstitutionType;
 import it.pagopa.selfcare.product.model.enums.OnboardingType;
-import it.pagopa.selfcare.product.model.enums.WorkflowType;
+import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;

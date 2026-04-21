@@ -38,7 +38,7 @@ class DocumentControllerTest {
   @InjectMock DocumentMapper documentMapper;
 
   @Test
-  void getDocumentByOnboardingId_shouldReturnDocuments_whenFound() {
+  void getDocumentByOnboardingId_shouldReturnDocument_whenFound() {
     Document document = new Document();
     document.setId(DOCUMENT_ID);
     document.setOnboardingId(ONBOARDING_ID);
@@ -46,72 +46,13 @@ class DocumentControllerTest {
     DocumentResponse response = new DocumentResponse();
     response.setId(DOCUMENT_ID);
 
-    Mockito.when(documentService.getDocumentsByOnboardingId(ONBOARDING_ID))
-        .thenReturn(Uni.createFrom().item(List.of(document)));
-    Mockito.when(documentMapper.toResponse(document)).thenReturn(response);
-
-    given()
-        .when()
-        .get("/v1/documents/onboarding/" + ONBOARDING_ID)
-        .then()
-        .statusCode(200)
-        .body("$.size()", is(1))
-        .body("[0].id", equalTo(DOCUMENT_ID));
-  }
-
-  @Test
-  void getDocumentByOnboardingId_shouldReturnEmptyList_whenNoDocumentsFound() {
-    Mockito.when(documentService.getDocumentsByOnboardingId(ONBOARDING_ID))
-        .thenReturn(Uni.createFrom().item(Collections.emptyList()));
-
-    given()
-        .when()
-        .get("/v1/documents/onboarding/" + ONBOARDING_ID)
-        .then()
-        .statusCode(200)
-        .body("$.size()", is(0));
-  }
-
-  @Test
-  void getDocumentByOnboardingId_shouldReturnMultipleDocuments_whenMultipleExist() {
-    Document doc1 = new Document();
-    doc1.setId("doc-1");
-    Document doc2 = new Document();
-    doc2.setId("doc-2");
-
-    DocumentResponse resp1 = new DocumentResponse();
-    resp1.setId("doc-1");
-    DocumentResponse resp2 = new DocumentResponse();
-    resp2.setId("doc-2");
-
-    Mockito.when(documentService.getDocumentsByOnboardingId(ONBOARDING_ID))
-        .thenReturn(Uni.createFrom().item(Arrays.asList(doc1, doc2)));
-    Mockito.when(documentMapper.toResponse(doc1)).thenReturn(resp1);
-    Mockito.when(documentMapper.toResponse(doc2)).thenReturn(resp2);
-
-    given()
-        .when()
-        .get("/v1/documents/onboarding/" + ONBOARDING_ID)
-        .then()
-        .statusCode(200)
-        .body("$.size()", is(2));
-  }
-
-  @Test
-  void getDocumentById_shouldReturnDocument_whenFound() {
-    Document document = new Document();
-    document.setId(DOCUMENT_ID);
-
-    DocumentResponse response = new DocumentResponse();
-    response.setId(DOCUMENT_ID);
-
-    Mockito.when(documentService.getDocumentById(DOCUMENT_ID))
+    Mockito.when(documentService.getDocumentByOnboardingId(ONBOARDING_ID))
         .thenReturn(Uni.createFrom().item(document));
     Mockito.when(documentMapper.toResponse(document)).thenReturn(response);
 
     given()
         .when()
-        .get("/v1/documents/" + DOCUMENT_ID)
+        .get("/v1/documents/onboarding/" + ONBOARDING_ID)
         .then()
         .statusCode(200)
         .body("id", equalTo(DOCUMENT_ID));
@@ -350,24 +291,12 @@ class DocumentControllerTest {
 
   @Test
   void getDocumentByOnboardingId_shouldReturnInternalServerError_whenServiceFails() {
-    Mockito.when(documentService.getDocumentsByOnboardingId(ONBOARDING_ID))
-        .thenReturn(Uni.createFrom().failure(new RuntimeException("Database connection error")));
-
-    given()
-        .when()
-        .get("/v1/documents/onboarding/" + ONBOARDING_ID)
-        .then()
-        .statusCode(500);
-  }
-
-  @Test
-  void getDocumentById_shouldReturnInternalServerError_whenServiceFails() {
-    Mockito.when(documentService.getDocumentById(DOCUMENT_ID))
+    Mockito.when(documentService.getDocumentByOnboardingId(ONBOARDING_ID))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Database error")));
 
     given()
         .when()
-        .get("/v1/documents/" + DOCUMENT_ID)
+        .get("/v1/documents/onboarding/" + ONBOARDING_ID)
         .then()
         .statusCode(500);
   }

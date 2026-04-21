@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.document.repository;
 
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoRepositoryBase;
+import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.model.entity.Document;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -33,17 +34,12 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
     }
 
     public Uni<Document> findByOnboardingId(String onboardingId) {
-        return find(ONBOARDING_AND_TYPES_FILTER, onboardingId, CONTRACT_TYPES)
-                .firstResult();
-    }
-
-    public Uni<Document> findDocumentInstitutionByOnboardingId(String onboardingId) {
-        return find(ONBOARDING_AND_TYPES_FILTER, onboardingId, List.of(INSTITUTION.name()))
-                .firstResult();
-    }
-
-    public Uni<List<Document>> findAllByOnboardingId(String onboardingId) {
-        return find(ONBOARDING_ID, onboardingId).list();
+    return find(
+            ONBOARDING_AND_TYPES_FILTER,
+            Sort.by("createdAt").descending(),
+            onboardingId,
+            CONTRACT_TYPES)
+        .firstResult();
     }
 
     public Uni<Long> updateContractSignedByOnboardingId(String onboardingId, String contractSignedPath) {

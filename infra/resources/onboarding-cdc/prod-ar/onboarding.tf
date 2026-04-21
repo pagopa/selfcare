@@ -44,11 +44,16 @@ locals {
     {
       name  = "ONBOARDING-CDC-MINUTES-THRESHOLD-FOR-UPDATE-NOTIFICATION"
       value = "5"
+    },
+    {
+      name  = "PARTY_REGISTRY_PROXY_URL"
+      value = "http://selc-${module.local.config.env_short}-party-reg-proxy-ca"
     }
   ]
 
   onboarding_cdc_secrets_names = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "JWT_BEARER_TOKEN"                    = "jwt-bearer-token-functions"
     "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
     "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
     "NOTIFICATION-FUNCTIONS-API-KEY"        = "fn-onboarding-primary-key"
@@ -56,12 +61,12 @@ locals {
 
   container_app = {
     min_replicas = 1
-    max_replicas = 3
+    max_replicas = 1
     scale_rules = [
       {
         custom = {
           metadata = {
-            "desiredReplicas" = "2"
+            "desiredReplicas" = "1"
             "start"           = "0 8 * * MON-FRI"
             "end"             = "0 19 * * MON-FRI"
             "timezone"        = "Europe/Rome"

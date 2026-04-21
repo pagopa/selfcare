@@ -1,0 +1,85 @@
+name: Code Review - Auth Infra
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        required: true
+        type: choice
+        description: 'Select the Environment'
+        default: dev
+        options:
+          - dev
+          - uat
+          - prod
+      domain:
+        required: true
+        type: choice
+        description: 'Select the Domain'
+        default: ar
+        options:
+          - ar
+          - pnpg
+      app:
+        type: choice
+        description: App name
+        options:
+          - auth
+          - iam
+          - product
+          - product-cdc
+          - webhook
+          - onboarding-ms
+          - onboarding-cdc
+          - registry-proxy
+          - onboarding-bff
+          - document-ms
+        required: true
+
+  pull_request:
+    branches:
+      - main
+      - releases/*
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - 'infra/resources/**'
+      - '.github/workflows/pr_app_infra.yml'
+      # - '.github/workflows/call_code_review_infra.yml'
+
+jobs:
+  # code_review_dev_ar:
+  #   uses: ./.github/workflows/call_code_review_infra.yml
+  #   name: '[${{ inputs.env }}-${{ inputs.domain }}] ${{ inputs.app }} Infra Code Review'
+  #   if: ${{ !startsWith(github.ref_name, 'releases/') }}
+  #   secrets: inherit
+  #   with:
+  #     environment: ${{ inputs.env }}
+  #     dir: "./infra/resources/${{ inputs.app }}/${{ inputs.env }}-${{ inputs.domain }}"
+  #     tf_environment: ${{ inputs.env }}-${{ inputs.domain }}
+  #     env_vars: |
+  #       TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+  
+  plan:
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    name: "[${{ inputs.env }}-${{ inputs.domain }}] ${{ inputs.app }} Core Release"
+    if: ${{ !startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: ${{ inputs.env }}-${{ inputs.domain }}
+      base_path: infra/resources/${{ inputs.app }}
+      use_private_agent: true
+      override_github_environment: ${{ inputs.env }}
+      use_labels: true
+      override_labels: ${{ inputs.env }}  
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})

@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.product.model;
 
-import it.pagopa.selfcare.product.model.enums.OnboardingStatus;
-import it.pagopa.selfcare.product.model.enums.WorkflowType;
+import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
+import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;

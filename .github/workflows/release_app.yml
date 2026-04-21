@@ -16,24 +16,24 @@ on:
         type: choice
         description: Target type
         options:
-          - selc
+          - ar
           - pnpg
         required: true
-        default: selc
+        default: ar
       app:
         type: choice
         description: App name
         options:
           - auth
           - iam
+          - document-ms
+          - onboarding-bff
+          - onboarding-cdc
+          - onboarding-ms
           - product
           - product-cdc
-          - webhook
-          - onboarding-ms
-          - onboarding-cdc
           - registry-proxy
-          - onboarding-bff
-          - document-ms
+          - webhook
         required: true
         default: auth
 
