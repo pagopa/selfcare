@@ -291,6 +291,12 @@ locals {
       io-infra-rg = [
         "Storage Blob Data Contributor"
       ],
+      "selc-${local.env_short}-onboarding-fn-rg" = [
+        "Storage Account Key Operator Service Role"
+      ],
+      "selc-${local.env_short}-pnpg-onboarding-fn-rg" = [
+        "Storage Account Key Operator Service Role"
+      ],
     }
   }
 
