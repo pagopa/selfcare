@@ -38,6 +38,8 @@ COPY --from=builder /src/apps/registry-proxy/target/*-FATJAR.jar ./app.jar
 ADD https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.2.11/applicationinsights-agent-3.2.11.jar ./applicationinsights-agent.jar
 RUN chmod 755 ./applicationinsights-agent.jar
 
+RUN mkdir -p /app/index && chown 1001:0 /app/index
+
 EXPOSE 8080
 USER 1001
 

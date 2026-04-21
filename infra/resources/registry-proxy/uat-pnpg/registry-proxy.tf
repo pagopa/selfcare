@@ -201,7 +201,7 @@ module "container_app_registry_proxy_ms" {
   container_app                  = local.registry_proxy_container_app
   container_app_name             = "selc-${module.local.config.env_short}-pnpg-party-reg-proxy"
   container_app_environment_name = module.local.config.container_app_environment_name
-  image_name                     = "selfcare-ms-party-registry-proxy"
+  image_name                     = "selfcare-registry-proxy-ms"
   image_tag                      = var.image_tag
   app_settings                   = local.app_settings
   secrets_names                  = local.secrets_names
