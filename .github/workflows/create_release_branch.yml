@@ -16,6 +16,10 @@ on:
           - webhook
           - registry-proxy
           - document-ms
+          - user-ms
+          - user-group-ms
+          - user-cdc
+          - user-group-cdc
         required: true
       version-bump:
         type: choice

@@ -47,6 +47,26 @@ onboarding-bff:
   - changed-files:
       - any-glob-to-any-file: ["apps/onboarding-bff/**", "infra/resources/onboarding-bff/**"]
 
+user-ms:
+  - changed-files:
+      - any-glob-to-any-file:
+          ["apps/user-ms/**", "infra/resources/user-ms/**"]
+
+user-group-ms:
+  - changed-files:
+      - any-glob-to-any-file:
+          ["apps/user-group-ms/**", "infra/resources/user-group-ms/**"]
+
+user-cdc:
+  - changed-files:
+      - any-glob-to-any-file:
+          ["apps/user-cdc/**", "infra/resources/user-cdc/**"]
+
+user-group-cdc:
+  - changed-files:
+      - any-glob-to-any-file:
+          ["apps/user-group-cdc/**", "infra/resources/user-group-cdc/**"]
+
 hub-spid-login:
   - changed-files:
       - any-glob-to-any-file: ["infra/apps/hub_spid_login/**", "infra/resources/spid-login/**/hub_spid_login.tf"]
