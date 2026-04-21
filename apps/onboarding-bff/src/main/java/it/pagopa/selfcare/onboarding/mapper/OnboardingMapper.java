@@ -1,36 +1,22 @@
 package it.pagopa.selfcare.onboarding.mapper;
 
-import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
-import it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomy;
-import it.pagopa.selfcare.onboarding.client.model.CheckManagerData;
-import it.pagopa.selfcare.onboarding.client.model.PaymentServiceProvider;
-import it.pagopa.selfcare.onboarding.client.model.DataProtectionOfficer;
-import it.pagopa.selfcare.onboarding.client.model.User;
-import it.pagopa.selfcare.onboarding.client.model.Institution;
-import it.pagopa.selfcare.onboarding.client.model.InstitutionOnboarding;
-import it.pagopa.selfcare.onboarding.client.model.InstitutionLegalAddressData;
-import it.pagopa.selfcare.onboarding.client.model.InstitutionOnboardingData;
-import it.pagopa.selfcare.onboarding.client.model.MatchInfoResult;
-import it.pagopa.selfcare.onboarding.client.model.RecipientCodeStatusResult;
-import it.pagopa.selfcare.onboarding.client.model.VerifyAggregateResult;
-import it.pagopa.selfcare.onboarding.model.AggregateInstitution;
-import it.pagopa.selfcare.onboarding.model.OnboardingVerify;
+import it.pagopa.selfcare.onboarding.client.model.*;
 import it.pagopa.selfcare.onboarding.controller.request.*;
 import it.pagopa.selfcare.onboarding.controller.response.*;
-import org.openapi.quarkus.onboarding_json.model.*;
+import it.pagopa.selfcare.onboarding.model.AggregateInstitution;
+import it.pagopa.selfcare.onboarding.model.OnboardingVerify;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
+import org.openapi.quarkus.onboarding_json.model.*;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @Mapper(componentModel = "jakarta-cdi", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface OnboardingMapper {
@@ -139,6 +125,7 @@ public interface OnboardingMapper {
 
     @Mapping(target = "institutionUpdate", source = "institution")
     @Mapping(target = "institutionUpdate.additionalInformations", source = "additionalInformations")
+    @Mapping(target = "institutionType", source = "institution.institutionType")
     OnboardingData toOnboardingData(OnboardingGet onboardingGet);
 
     @Mapping(target = "institutionUpdate", source = "institution")
