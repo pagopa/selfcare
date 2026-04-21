@@ -6,6 +6,9 @@ import org.mapstruct.Mapping;
 import org.openapi.quarkus.onboarding_functions_json.model.Onboarding;
 import org.openapi.quarkus.party_registry_proxy_json.model.OnboardingIndexResource;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 @Mapper(componentModel = "cdi", imports = UUID.class)
@@ -21,4 +24,8 @@ public interface OnboardingMapper {
     @Mapping(target = "subunitType", source = "institution.subunitType")
     @Mapping(target = "institutionType", source = "institution.institutionType")
     OnboardingIndexResource toIndexResource(it.pagopa.selfcare.onboarding.event.entity.Onboarding model);
+
+    default OffsetDateTime map(LocalDateTime localDateTime) {
+        return localDateTime != null ? localDateTime.atOffset(ZoneOffset.UTC) : null;
+    }
 }
