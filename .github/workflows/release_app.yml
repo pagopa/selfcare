@@ -26,17 +26,17 @@ on:
         options:
           - auth
           - iam
+          - document-ms
+          - onboarding-bff
+          - onboarding-cdc
+          - onboarding-ms
           - product
           - product-cdc
-          - webhook
-          - onboarding-ms
-          - onboarding-cdc
           - registry-proxy
-          - onboarding-bff
-          - document-ms
           - institution-ms
           - delegation-cdc
           - institution-send-mail-scheduler
+          - webhook
         required: true
         default: auth
 
