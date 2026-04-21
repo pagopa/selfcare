@@ -1,4 +1,4 @@
-name: Code Review - Auth
+name: Code Review - App
 
 permissions:
   contents: read
