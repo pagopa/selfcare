@@ -4,10 +4,13 @@
 module "local" {
   source = "../../_modules/local-env"
 
-  env             = "uat"
-  env_short       = "u"
-  domain          = "pnpg"
-  external_domain = "it"
+  env                   = "uat"
+  env_short             = "u"
+  domain                = "pnpg"
+  nat_rg_name           = "selc-u-weu-pnpg-nat-rg"
+  nat_gw_name           = "selc-u-weu-pnpg-nat-gw"
+  nat_pip_outbound_name = "selc-u-weu-pnpg-pip-outbound"
+  external_domain       = "it"
 
   dns_zone_prefix                = "imprese.uat.notifichedigitali"
   api_dns_zone_prefix            = "api-pnpg.uat.selfcare"
@@ -40,8 +43,8 @@ locals {
     always_on                 = true
     service_plan_sku          = "B2"
     service_plan_worker_count = 1
-    nat_resource_group_name   = "selc-u-weu-pnpg-nat-rg"
-    nat_gateway_name          = "selc-u-weu-pnpg-nat_gw"
+    nat_resource_group_name   = module.local.config.nat_rg_name
+    nat_gateway_name          = module.local.config.nat_gw_name
     app_settings = {
       "APPLICATIONINSIGHTS_CONNECTION_STRING"              = "@Microsoft.KeyVault(SecretUri=https://selc-u-pnpg-kv.vault.azure.net/secrets/appinsights-connection-string/)"
       "USER_REGISTRY_URL"                                  = "https://api.uat.pdv.pagopa.it/user-registry/v1"

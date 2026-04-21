@@ -4,9 +4,12 @@
 module "local" {
   source = "../../_modules/local-env"
 
-  env       = "prod"
-  env_short = "p"
-  domain    = "ar"
+  env                   = "prod"
+  env_short             = "p"
+  domain                = "ar"
+  nat_rg_name           = "selc-p-nat-rg"
+  nat_gw_name           = "selc-p-nat_gw"
+  nat_pip_outbound_name = "selc-p-aksoutbound-pip-01"
 
   dns_zone_prefix                = "selfcare"
   api_dns_zone_prefix            = "api.selfcare"
@@ -43,8 +46,8 @@ locals {
     always_on                 = true
     service_plan_sku          = "P1v3"
     service_plan_worker_count = 1
-    nat_resource_group_name   = "selc-p-nat-rg"
-    nat_gateway_name          = "selc-p-nat_gw"
+    nat_resource_group_name   = module.local.config.nat_rg_name
+    nat_gateway_name          = module.local.config.nat_gw_name
     app_settings = {
       "APPLICATIONINSIGHTS_CONNECTION_STRING"              = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/appinsights-connection-string/)"
       "USER_REGISTRY_URL"                                  = "https://api.pdv.pagopa.it/user-registry/v1"
@@ -144,7 +147,7 @@ module "onboarding_functions" {
 
 data "azurerm_public_ip" "pip_outbound" {
   resource_group_name = local.onboarding_functions.nat_resource_group_name
-  name                = "${module.local.config.project}-aksoutbound-pip-01"
+  name                = module.local.config.nat_pip_outbound_name
 }
 
 data "azurerm_nat_gateway" "onboarding_functions_nat_gateway" {
