@@ -491,6 +491,7 @@
           "in" : "query",
           "required" : false,
           "schema" : {
+            "minimum" : 0,
             "type" : "integer",
             "format" : "int64",
             "default" : 0
@@ -2064,10 +2065,10 @@
           "mail3" : {
             "type" : "string"
           },
-          "cap" : {
+          "uriprotocolloInformatico" : {
             "type" : "string"
           },
-          "uriprotocolloInformatico" : {
+          "cap" : {
             "type" : "string"
           }
         }
