@@ -49,19 +49,6 @@ env:
   ARM_STORAGE_USE_AZUREAD: true
 
 jobs:
-  prepare:
-    name: Prepare Image Tag
-    runs-on: ubuntu-24.04
-    outputs:
-      image_tag: ${{ steps.setsha.outputs.short_sha }}
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - name: Set Short Git Commit SHA
-        id: setsha
-        run: |
-          calculatedSha=$(git rev-parse --short ${{ github.sha }})
-          echo "short_sha=sha-$calculatedSha" >> $GITHUB_OUTPUT
-
   build_push_docker:
     name: ${{ inputs.app }} - Build and Push Docker
     runs-on: ubuntu-24.04
@@ -115,7 +102,6 @@ jobs:
 
   plan:
     uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
-    needs: [prepare]
     name: "[${{ inputs.environment }}-${{ inputs.domain }}] ${{ inputs.app }} Infra Plan"
     secrets: inherit
     with:
@@ -126,7 +112,7 @@ jobs:
       use_labels: true
       override_labels: ${{ inputs.env }}
       env_vars: |
-        TF_VAR_image_tag=${{ needs.prepare.outputs.image_tag }}
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
 
   # tf_plan:
   #   name: ${{ inputs.app }} - Terraform Plan
@@ -208,13 +194,13 @@ jobs:
   release:
     uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
     name: "[${{ inputs.environment }}-${{ inputs.domain }}] ${{ inputs.app }} Infra release"
-    needs: [prepare, build_push_docker, plan]
+    needs: [build_push_docker, plan]
     secrets: inherit
     with:
       environment: ${{ inputs.environment }}-${{ inputs.domain }}
       base_path: infra/resources/${{ inputs.app }}
       env_vars: |
-        TF_VAR_image_tag=${{ needs.prepare.outputs.image_tag }}
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
       use_private_agent: true
       override_github_environment: ${{ inputs.env }}
       use_labels: true
