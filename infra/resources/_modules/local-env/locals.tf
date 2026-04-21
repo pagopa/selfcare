@@ -131,6 +131,7 @@ locals {
   cidr_subnet_document_storage = ["10.1.136.0/24"]
 
   # NAT Gateway and Resource Group names differ between ar and pnpg for the RG. PNPG uses dash (-) for GW, AR uses underscore (_)
-  nat_rg_name = local.domain == "pnpg" ? "${local.project}-${local.pnpg_suffix}-nat-rg" : "${local.project}-nat-rg"
-  nat_gw_name = local.domain == "pnpg" ? "${local.project}-${local.pnpg_suffix}-nat-gw" : "${local.project}-nat_gw"
+  nat_rg_name           = local.domain == "pnpg" ? "${local.project}-${local.pnpg_suffix}-nat-rg" : "${local.project}-nat-rg"
+  nat_gw_name           = local.domain == "pnpg" ? "${local.project}-${local.pnpg_suffix}-nat-gw" : "${local.project}-nat_gw"
+  nat_pip_outbound_name = local.domain == "pnpg" ? "${local.project}-${local.pnpg_suffix}-pip-outbound" : "${local.project}-aksoutbound-pip-01"
 }

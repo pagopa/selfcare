@@ -100,8 +100,8 @@ module "onboarding_functions" {
 }
 
 data "azurerm_public_ip" "pip_outbound" {
-  resource_group_name = module.local.config.nat_rg_name
-  name                = "${module.local.config.project}-${module.local.config.pnpg_suffix}-pip-outbound"
+  resource_group_name = local.onboarding_functions.nat_resource_group_name
+  name                = module.local.config.nat_pip_outbound_name
 }
 
 resource "azurerm_nat_gateway_public_ip_association" "functions_pip_nat_gateway" {
