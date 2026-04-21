@@ -57,35 +57,6 @@ class DocumentServiceImplTest {
     @InjectMock
     DocumentMsTelemetryService telemetryService;
 
-    // ---- getDocumentsByOnboardingId ----
-
-    @Test
-    void getDocumentsByOnboardingId_shouldReturnDocumentList() {
-        Document doc = buildDocument();
-        when(documentRepository.findAllByOnboardingId(ONBOARDING_ID))
-                .thenReturn(Uni.createFrom().item(List.of(doc)));
-
-        List<Document> result = documentService.getDocumentsByOnboardingId(ONBOARDING_ID)
-                .await().indefinitely();
-
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals(ONBOARDING_ID, result.get(0).getOnboardingId());
-        verify(documentRepository).findAllByOnboardingId(ONBOARDING_ID);
-    }
-
-    @Test
-    void getDocumentsByOnboardingId_shouldReturnEmptyList() {
-        when(documentRepository.findAllByOnboardingId(ONBOARDING_ID))
-                .thenReturn(Uni.createFrom().item(List.of()));
-
-        List<Document> result = documentService.getDocumentsByOnboardingId(ONBOARDING_ID)
-                .await().indefinitely();
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-    }
-
     // ---- getDocumentById ----
 
     @Test
@@ -107,6 +78,31 @@ class DocumentServiceImplTest {
                 .thenReturn(Uni.createFrom().nullItem());
 
         var awaiter = documentService.getDocumentById(DOCUMENT_ID).await();
+
+        assertThrows(ResourceNotFoundException.class, awaiter::indefinitely);
+    }
+
+    // ---- getDocumentByOnboardingId ----
+
+    @Test
+    void getDocumentByOnboardingId_shouldReturnDocument() {
+        Document doc = buildDocument();
+        when(documentRepository.findByOnboardingId(anyString()))
+                .thenReturn(Uni.createFrom().item(doc));
+
+        Document result = documentService.getDocumentByOnboardingId(DOCUMENT_ID)
+                .await().indefinitely();
+
+        assertNotNull(result);
+        assertEquals(ONBOARDING_ID, result.getOnboardingId());
+    }
+
+    @Test
+    void getDocumentByOnboarding_shouldThrowResourceNotFoundWhenDocumentIsNull() {
+        when(documentRepository.findByOnboardingId(anyString()))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        var awaiter = documentService.getDocumentByOnboardingId(DOCUMENT_ID).await();
 
         assertThrows(ResourceNotFoundException.class, awaiter::indefinitely);
     }

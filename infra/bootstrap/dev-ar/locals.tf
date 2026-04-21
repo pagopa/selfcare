@@ -21,7 +21,7 @@ locals {
   tags = {
     CreatedBy   = "Terraform"
     Environment = "Dev"
-    Owner       = "SelfCare"
+    Owner       = "Selfcare"
     Source      = "https://github.com/pagopa/selfcare"
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
   }
@@ -265,7 +265,13 @@ locals {
       ],
       "io-infra-rg" = [
         "Storage Blob Data Contributor"
-      ]
+      ],
+      "selc-${local.env_short}-logs-storage-rg" = [
+        "Storage Blob Data Contributor"
+      ],
+      "selc-${local.env_short}-checkout-fe-rg" = [
+        "Storage Blob Data Contributor", "Storage Account Key Operator Service Role", "CDN Endpoint Contributor"
+      ],
     }
   }
 
