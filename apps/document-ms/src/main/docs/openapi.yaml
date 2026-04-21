@@ -192,7 +192,11 @@ components:
           type: string
         type:
           $ref: "#/components/schemas/DocumentType"
+        onboardingId:
+          type: string
         productId:
+          type: string
+        attachmentName:
           type: string
         checksum:
           type: string
@@ -202,13 +206,17 @@ components:
           type: string
         contractSigned:
           type: string
+        contractFilename:
+          type: string
+        rootOnboardingId:
+          type: string
         createdAt:
           $ref: "#/components/schemas/LocalDateTime"
         updatedAt:
           $ref: "#/components/schemas/LocalDateTime"
-        closedAt:
-          $ref: "#/components/schemas/LocalDateTime"
         deletedAt:
+          $ref: "#/components/schemas/LocalDateTime"
+        activatedAt:
           $ref: "#/components/schemas/LocalDateTime"
     DocumentType:
       enum:
@@ -979,9 +987,9 @@ paths:
       - SecurityScheme: []
   /v1/documents/onboarding/{onboardingId}:
     get:
-      summary: Retrieves the documents for a given onboarding
-      description: Fetches a list of documents associated with the specified onboarding
-        ID.
+      summary: Retrieves the latest document for a given onboarding
+      description: Fetches the most recent document associated with the specified
+        onboarding ID by filtering for type Institution and User
       operationId: getDocumentByOnboardingId
       tags:
       - Document Controller
@@ -997,9 +1005,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/DocumentResponse"
+                $ref: "#/components/schemas/DocumentResponse"
         "401":
           description: Not Authorized
         "403":

@@ -39,6 +39,8 @@ module "identity_ci_ms" {
         "selc-${var.env_short}-weu-pnpg-cosmosdb-mongodb-rg" = ["DocumentDB Account Contributor"],
         "selc-${var.env_short}-pnpg-spid-testenv-rg"         = ["Storage Account Key Operator Service Role"],
         "selc-${var.env_short}-weu-pnpg-logs-storage-rg"     = ["Storage Account Key Operator Service Role"],
+        "selc-${var.env_short}-container-app-002-rg"         = ["${var.app} ${var.env} ContainerApp Jobs Reader"],
+        "selc-${var.env_short}-logs-storage-rg"              = ["Storage Blob Data Contributor", "Storage Account Key Operator Service Role"],
     })
   }
 
@@ -108,7 +110,8 @@ module "identity_ci_fe" {
     subscription_roles = concat(var.environment_ci_roles_ms.subscription, ["${var.app} ${var.env} ContainerApp Jobs Reader", "${var.app} ${var.env} APIM Integration Reader"])
     resource_groups = merge(var.environment_ci_roles_ms.resource_groups,
       {
-        "selc-${var.env_short}-checkout-fe-rg" = ["Storage Blob Data Contributor", "Storage Account Key Operator Service Role", "CDN Endpoint Contributor"]
+        "selc-${var.env_short}-checkout-fe-rg"  = ["Storage Blob Data Contributor", "Storage Account Key Operator Service Role", "CDN Endpoint Contributor"]
+        "selc-${var.env_short}-logs-storage-rg" = ["Storage Blob Data Contributor", "Storage Account Key Operator Service Role"],
     })
   }
 
@@ -160,7 +163,9 @@ resource "azurerm_role_definition" "container_apps_jobs_reader" {
       "microsoft.app/jobs/execution/read",
       "microsoft.app/jobs/executions/read",
       "microsoft.app/containerApps/read",
-      "microsoft.app/containerApps/listSecrets/action"
+      "microsoft.app/containerApps/listSecrets/action",
+      "microsoft.app/managedEnvironments/daprComponents/read",
+      "microsoft.app/managedEnvironments/daprComponents/listSecrets/action"
     ]
   }
 
