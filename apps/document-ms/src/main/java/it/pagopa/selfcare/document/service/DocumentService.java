@@ -10,10 +10,6 @@ import java.util.List;
 
 public interface DocumentService {
 
-    Uni<List<Document>> getDocumentsByOnboardingId(String onboardingId);
-
-    Uni<Document> getDocumentInstitutionByOnboardingId(String onboardingId);
-
     Uni<Document> getDocumentById(String id);
 
     Uni<Document> getDocumentByOnboardingId(String onboardingId);

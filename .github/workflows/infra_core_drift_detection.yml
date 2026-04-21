@@ -48,28 +48,12 @@ permissions:
 
 
 jobs:
-    # plan:
-    #   uses: ./.github/workflows/call_code_review_infra.yml
-    #   name: Core Code Review
-    #   secrets: inherit
-    #   with:
-    #     environment: '${{ inputs.environment }}'
-    #     tf_environment: '${{ inputs.environment }}-${{ inputs.domain }}'
-    #     dir: './infra/core/${{ inputs.environment }}-${{ inputs.domain }}'
-    #     # Optional parameters
-    #     env_vars: ""
-    #     # use_private_agent: true
-    #     # # override_github_environment: pe-prod
-    #     # use_labels: true
-    #     # override_labels: ""
-  
-  plan_dev:
+  drift_detection:
     uses: pagopa/dx/.github/workflows/infra_drift_detection.yml@main
-    name: "DEV ${{ inputs.domain }} Selfcare Infra Core Release"
-    if: ${{ inputs.env == 'dev' }}
+    name: "[${{ inputs.env }}-${{ inputs.domain }}] Selfcare Infra Core Drift detection"
     secrets: inherit
     with:
-      environment: dev-${{ inputs.domain }}
+      environment: ${{ inputs.env }}-${{ inputs.domain }}
       base_path: infra/core
       # env_vars: ""
       use_private_agent: true

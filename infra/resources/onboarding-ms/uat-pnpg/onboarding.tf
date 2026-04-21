@@ -168,16 +168,6 @@ locals {
     "BLOB-STORAGE-CONTRACT-CONNECTION-STRING" = "blob-storage-contract-connection-string"
     "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
   }
-
-
-
-  onboarding_cdc_secrets_names = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-    "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
-    "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
-    "NOTIFICATION-FUNCTIONS-API-KEY"        = "fn-onboarding-primary-key"
-  }
-
 }
 
 module "container_app_onboarding_ms" {
@@ -198,4 +188,3 @@ module "container_app_onboarding_ms" {
   probes                         = module.local.config.quarkus_health_probes
   tags                           = module.local.config.tags
 }
-
