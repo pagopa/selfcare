@@ -188,16 +188,6 @@ locals {
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"     = "namirial-sign-service-user"
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
   }
-
-
-
-  onboarding_cdc_secrets_names = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-    "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
-    "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
-    "NOTIFICATION-FUNCTIONS-API-KEY"        = "fn-onboarding-primary-key"
-  }
-
 }
 
 module "container_app_onboarding_ms" {
@@ -217,4 +207,3 @@ module "container_app_onboarding_ms" {
   probes                         = module.local.config.quarkus_health_probes
   tags                           = module.local.config.tags
 }
-
