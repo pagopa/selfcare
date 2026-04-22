@@ -1,4 +1,19 @@
 
+data "azurerm_key_vault_secret" "appinsights_connection_string" {
+  count = var.application_insights_connection_string == null ? 1 : 0
+
+  name         = var.application_insights_connection_string_secret_name
+  key_vault_id = var.key_vault_id
+}
+
+locals {
+  resolved_appinsights_connection_string = var.application_insights_connection_string != null ? var.application_insights_connection_string : data.azurerm_key_vault_secret.appinsights_connection_string[0].value
+  resolved_appinsights_key = var.application_insights_key != null ? var.application_insights_key : element([
+    for part in split(";", local.resolved_appinsights_connection_string) : trimprefix(part, "InstrumentationKey=")
+    if startswith(part, "InstrumentationKey=")
+  ], 0)
+}
+
 resource "azurerm_resource_group" "fn_rg" {
   name     = "${var.functions_name}-rg"
   location = var.location
@@ -75,8 +90,8 @@ resource "azurerm_linux_function_app" "fn" {
     always_on                              = var.always_on
     vnet_route_all_enabled                 = true
     http2_enabled                          = true
-    application_insights_connection_string = var.application_insights_connection_string
-    application_insights_key               = var.application_insights_key
+    application_insights_connection_string = local.resolved_appinsights_connection_string
+    application_insights_key               = local.resolved_appinsights_key
 
     application_stack {
       java_version = "17"

@@ -15,22 +15,9 @@ module "local" {
   ca_resource_group_name         = "selc-u-container-app-002-rg"
 }
 
-data "azurerm_key_vault_secret" "appinsights_connection_string" {
-  name         = "appinsights-connection-string"
-  key_vault_id = module.local.key_vault_id
-}
-
 ###############################################################################
 # ONBOARDING FUNCTIONS
 ###############################################################################
-
-locals {
-  appinsights_connection_string = data.azurerm_key_vault_secret.appinsights_connection_string.value
-  appinsights_instrumentation_key = element([
-    for part in split(";", local.appinsights_connection_string) : trimprefix(part, "InstrumentationKey=")
-    if startswith(part, "InstrumentationKey=")
-  ], 0)
-}
 
 locals {
   onboarding_functions = {
@@ -39,8 +26,8 @@ locals {
     always_on                 = true
     service_plan_sku          = "B2"
     service_plan_worker_count = 1
-    nat_resource_group_name   = "selc-u-nat-rg"
-    nat_gateway_name          = "selc-u-nat_gw"
+    nat_resource_group_name   = module.local.config.nat_rg_name
+    nat_gateway_name          = module.local.config.nat_gw_name
     app_settings = {
       "APPLICATIONINSIGHTS_CONNECTION_STRING"              = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/appinsights-connection-string/)",
       "USER_REGISTRY_URL"                                  = "https://api.uat.pdv.pagopa.it/user-registry/v1",
@@ -137,21 +124,19 @@ locals {
 module "onboarding_functions" {
   source = "../../_modules/functions"
 
-  functions_name                         = local.onboarding_functions.name
-  subnet_cidr                            = local.onboarding_functions.subnet_cidr
-  always_on                              = local.onboarding_functions.always_on
-  service_plan_sku                       = local.onboarding_functions.service_plan_sku
-  service_plan_worker_count              = local.onboarding_functions.service_plan_worker_count
-  nat_resource_group_name                = local.onboarding_functions.nat_resource_group_name
-  nat_gateway_name                       = local.onboarding_functions.nat_gateway_name
-  vnet_resource_group_name               = module.local.vnet_resource_group_name
-  vnet_name                              = module.local.vnet_selc_name
-  key_vault_id                           = module.local.key_vault_id
-  tenant_id                              = module.local.tenant_id
-  replication_type                       = "LRS"
-  app_settings                           = local.onboarding_functions.app_settings
-  application_insights_connection_string = local.appinsights_connection_string
-  application_insights_key               = local.appinsights_instrumentation_key
-  location                               = module.local.config.location
-  tags                                   = module.local.config.tags
+  functions_name            = local.onboarding_functions.name
+  subnet_cidr               = local.onboarding_functions.subnet_cidr
+  always_on                 = local.onboarding_functions.always_on
+  service_plan_sku          = local.onboarding_functions.service_plan_sku
+  service_plan_worker_count = local.onboarding_functions.service_plan_worker_count
+  nat_resource_group_name   = local.onboarding_functions.nat_resource_group_name
+  nat_gateway_name          = local.onboarding_functions.nat_gateway_name
+  vnet_resource_group_name  = module.local.vnet_resource_group_name
+  vnet_name                 = module.local.vnet_selc_name
+  key_vault_id              = module.local.key_vault_id
+  tenant_id                 = module.local.tenant_id
+  replication_type          = "LRS"
+  app_settings              = local.onboarding_functions.app_settings
+  location                  = module.local.config.location
+  tags                      = module.local.config.tags
 }
