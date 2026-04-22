@@ -42,7 +42,6 @@ on:
         default: true
 
 env:
-  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
   ARM_USE_OIDC: true
@@ -120,12 +119,12 @@ jobs:
     with:
       environment: ${{ inputs.environment }}-${{ inputs.domain }}
       base_path: infra/resources/${{ inputs.app }}
+      env_vars: TF_VAR_image_tag=${{ needs.prepare.outputs.image_tag }}
       use_private_agent: true
-      override_github_environment: ${{ inputs.environment }}
+      override_github_environment: ${{ inputs.env }}
       use_labels: true
-      override_labels: ${{ inputs.environment }}
-      env_vars: "TF_VAR_image_tag=${{ needs.prepare.outputs.image_tag }}"
-
+      override_labels: ${{ inputs.env }}
+      
   # tf_plan:
   #   name: ${{ inputs.app }} - Terraform Plan
   #   runs-on: ubuntu-24.04
@@ -211,11 +210,11 @@ jobs:
     with:
       environment: ${{ inputs.environment }}-${{ inputs.domain }}
       base_path: infra/resources/${{ inputs.app }}
-      env_vars: "TF_VAR_image_tag=${{ needs.prepare.outputs.image_tag }}"
+      env_vars: TF_VAR_image_tag=${{ needs.prepare.outputs.image_tag }}
       use_private_agent: true
-      override_github_environment: ${{ inputs.environment }}
+      override_github_environment: ${{ inputs.env }}
       use_labels: true
-      override_labels: ${{ inputs.environment }}
+      override_labels: ${{ inputs.env }}
   
   # release:
   #   name: ${{ inputs.app }} - Release
