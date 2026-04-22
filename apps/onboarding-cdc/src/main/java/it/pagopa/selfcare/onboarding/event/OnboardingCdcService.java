@@ -29,6 +29,7 @@ import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.COMPLETED;
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.DELETED;
+import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.REQUEST;
 import static java.util.Arrays.asList;
 
 @Startup
@@ -45,19 +46,23 @@ public class OnboardingCdcService {
     private final String mongodbDatabase;
     private final ReactiveMongoClient mongoClient;
     private final NotificationService notificationService;
+    private final RegistryIndexService registryIndexService;
 
     public OnboardingCdcService(ReactiveMongoClient mongoClient,
                                 @ConfigProperty(name = "quarkus.mongodb.database") String mongodbDatabase,
                                 TelemetryClient telemetryClient,
                                 TableClient tableClient,
-                                NotificationService notificationService) {
+                                NotificationService notificationService,
+                                RegistryIndexService registryIndexService) {
         this.mongoClient = mongoClient;
         this.mongodbDatabase = mongodbDatabase;
         this.telemetryClient = telemetryClient;
         this.tableClient = tableClient;
         this.notificationService = notificationService;
+        this.registryIndexService = registryIndexService;
         telemetryClient.getContext().getOperation().setName(OPERATION_NAME);
         initOrderStream();
+        initRegistryIndexStream();
     }
 
     private void initOrderStream() {
@@ -101,6 +106,31 @@ public class OnboardingCdcService {
         log.info("Completed initOrderStream ... ");
     }
 
+    private void initRegistryIndexStream() {
+        log.info("Starting initRegistryIndexStream ... ");
+
+        ReactiveMongoCollection<Onboarding> dataCollection = getCollection();
+        ChangeStreamOptions options = new ChangeStreamOptions()
+                .fullDocument(FullDocument.UPDATE_LOOKUP);
+
+        Bson match = Aggregates.match(Filters.and(
+                Filters.in("operationType", asList("update", "replace", "insert")),
+                Filters.nin("fullDocument.status", REQUEST.name())));
+        Bson project = Aggregates.project(fields(include("_id", "ns", "documentKey", "fullDocument")));
+        List<Bson> pipeline = Arrays.asList(match, project);
+
+        Multi<ChangeStreamDocument<Onboarding>> publisher = dataCollection.watch(pipeline, Onboarding.class, options);
+        publisher.subscribe().with(
+                this::consumerRegistryIndexEvent,
+                failure -> {
+                    log.error("Error during subscribe registry index collection, exception: {} , message: {}", failure.toString(), failure.getMessage());
+                    constructMapAndTrackEvent(failure.getClass().toString(), "FALSE", ONBOARDING_FAILURE_MECTRICS);
+                    Quarkus.asyncExit();
+                });
+
+        log.info("Completed initRegistryIndexStream ... ");
+    }
+
     private ReactiveMongoCollection<Onboarding> getCollection() {
         return mongoClient
                 .getDatabase(mongodbDatabase)
@@ -126,6 +156,25 @@ public class OnboardingCdcService {
                             constructMapAndTrackEvent(document.getDocumentKey().toJson(), "FALSE", ONBOARDING_FAILURE_MECTRICS);
                         });
         log.info("End consumerOnboardingEvent ... ");
+    }
+
+    protected void consumerRegistryIndexEvent(ChangeStreamDocument<Onboarding> document) {
+        assert document.getFullDocument() != null;
+        assert document.getDocumentKey() != null;
+
+        log.info("Starting consumerRegistryIndexEvent for onboarding id {}", document.getFullDocument().getId());
+
+        registryIndexService.updateIndex(document.getFullDocument())
+                .subscribe().with(
+                        result -> {
+                            log.info("Registry index update for onboarding id: {} successfully sent", document.getDocumentKey().toJson());
+                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), "TRUE", ONBOARDING_SUCCESS_MECTRICS);
+                        },
+                        failure -> {
+                            log.error("Error during registry index update for onboarding id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
+                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), "FALSE", ONBOARDING_FAILURE_MECTRICS);
+                        });
+        log.info("End consumerRegistryIndexEvent ... ");
     }
 
     private void updateLastResumeToken(BsonDocument resumeToken) {

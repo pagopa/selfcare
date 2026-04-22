@@ -45,11 +45,16 @@ locals {
     {
       name  = "ONBOARDING-CDC-MINUTES-THRESHOLD-FOR-UPDATE-NOTIFICATION"
       value = "5"
+    },
+    {
+      name  = "PARTY_REGISTRY_PROXY_URL"
+      value = "http://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca"
     }
   ]
 
   onboarding_cdc_secrets_names = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "JWT_BEARER_TOKEN"                      = "jwt-bearer-token-functions"
     "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
     "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
     "NOTIFICATION-FUNCTIONS-API-KEY"        = "fn-onboarding-primary-key"
