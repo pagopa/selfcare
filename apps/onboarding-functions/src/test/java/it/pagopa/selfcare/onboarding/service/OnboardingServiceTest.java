@@ -399,7 +399,7 @@ class OnboardingServiceTest {
         UserResource userResource = createUserResource();
         DocumentResponse document = createDummyToken();
 
-        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(List.of(document));
+        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(document);
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
 
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
@@ -543,7 +543,7 @@ class OnboardingServiceTest {
 
         Integer expirationDate = 30;
 
-        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(List.of(document));
+        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(document);
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
         when(productService.getProductExpirationDate(onboarding.getProductId())).thenReturn(expirationDate);
 
@@ -580,7 +580,7 @@ class OnboardingServiceTest {
 
         Integer expirationDate = 30;
 
-        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(List.of(document));
+        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(document);
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
         when(productService.getProductExpirationDate(onboarding.getProductId())).thenReturn(expirationDate);
 
@@ -613,10 +613,10 @@ class OnboardingServiceTest {
     }
 
     @Test
-    void sendMailRegistrationWithContract_throwExceptionWhenTokenIsNotPresent() {
+    void sendMailRegistrationWithContract_throwExceptionWhenDocumentIsNotPresent() {
         Onboarding onboarding = createOnboarding();
         OnboardingWorkflow onboardingWorkflow = getOnboardingWorkflowInstitution(onboarding);
-        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(List.of());
+        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenThrow(new RuntimeException("Document not found"));
         assertThrows(
                 GenericOnboardingException.class,
                 () -> onboardingService.sendMailRegistrationForContract(onboardingWorkflow));
@@ -770,9 +770,9 @@ class OnboardingServiceTest {
     }
 
     @Test
-    void sendMailRegistrationApprove_throwExceptionWhenTokenIsNotPresent() {
+    void sendMailRegistrationApprove_throwExceptionWhenDocumentIsNotPresent() {
         Onboarding onboarding = createOnboarding();
-        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(List.of());
+        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenThrow(new RuntimeException("Document not found"));
         assertThrows(
                 GenericOnboardingException.class,
                 () -> onboardingService.sendMailRegistrationApprove(onboarding));
@@ -804,9 +804,9 @@ class OnboardingServiceTest {
     }
 
     @Test
-    void sendMailOnboardingApprove_throwExceptionWhenTokenIsNotPresent() {
+    void sendMailOnboardingApprove_throwExceptionWhenDocumentIsNotPresent() {
         Onboarding onboarding = createOnboarding();
-        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(List.of());
+        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenThrow(new RuntimeException("Document not found"));
         assertThrows(
                 GenericOnboardingException.class,
                 () -> onboardingService.sendMailOnboardingApprove(onboarding));
@@ -899,7 +899,7 @@ class OnboardingServiceTest {
         UserResource userResource = createUserResource();
         DocumentResponse document = createDummyToken();
 
-        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(List.of(document));
+        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(document);
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
 
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))

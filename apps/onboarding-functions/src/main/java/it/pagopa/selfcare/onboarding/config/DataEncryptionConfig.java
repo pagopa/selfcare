@@ -21,6 +21,10 @@ public class DataEncryptionConfig {
 
     @PostConstruct
     void init() {
+        if (StringUtils.isBlank(key) || StringUtils.isBlank(iv)) {
+            throw new IllegalStateException("Encryption key/iv not configured: ONBOARDING_DATA_ENCRIPTION_KEY and ONBOARDING_DATA_ENCRIPTION_IV are required");
+        }
+
         log.info("Adding key from kv size: {} is-empty-string: {}", key.length(), StringUtils.isBlank(key));
         DataEncryptionUtils.setDefaultKey(key);
         log.info("Adding iv from kv size: {} is-empty-string: {}", iv.length(), StringUtils.isBlank(iv));

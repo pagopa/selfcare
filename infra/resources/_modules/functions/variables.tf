@@ -87,3 +87,9 @@ variable "application_insights_key" {
   type        = string
   default     = null
 }
+
+variable "application_insights_connection_string_secret_name" {
+  description = "Key Vault secret name for the Application Insights connection string"
+  type        = string
+  default     = "appinsights-connection-string"
+}

@@ -22,7 +22,6 @@ env:
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
 jobs:
-
   infra_dev:
     name: ${{ inputs.target == 'selc' && '[Dev]' || '[Dev-PNPG]' }} - Infra Apply
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
@@ -32,6 +31,7 @@ jobs:
       environment: dev
       tf_environment: ${{ inputs.target == 'selc' && 'dev-ar' || 'dev-pnpg' }}
       dir: ${{ inputs.target == 'selc' && 'infra/resources/onboarding-functions/dev-ar' || 'infra/resources/onboarding-functions/dev-pnpg' }}
+      runner: "self-hosted"
 
   release_dev:
     name: ${{ inputs.target == 'selc' && '[Dev]' || '[Dev-PNPG]' }} - ${{ inputs.app }} Release
@@ -46,13 +46,13 @@ jobs:
       packages: read
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 #v4
       - name: Setup Maven Action
-        uses: s4u/setup-maven-action@fa2c7e4517ed008b1f73e7e0195a9eecf5582cd4 # v1.11.0
+        uses: s4u/setup-maven-action@fa2c7e4517ed008b1f73e7e0195a9eecf5582cd4 #v1.11.0
         with:
           java-version: 17
-          java-distribution: 'temurin'
-          maven-version: '3.9.5'
+          java-distribution: "temurin"
+          maven-version: "3.9.5"
           cache-enabled: true
       - name: Build & Deploy
         shell: bash
@@ -82,6 +82,7 @@ jobs:
       environment: uat
       tf_environment: ${{ inputs.target == 'selc' && 'uat-ar' || 'uat-pnpg' }}
       dir: ${{ inputs.target == 'selc' && 'infra/resources/onboarding-functions/uat-ar' || 'infra/resources/onboarding-functions/uat-pnpg' }}
+      runner: "self-hosted"
 
   release_uat:
     name: ${{ inputs.target == 'selc' && '[Uat]' || '[Uat-PNPG]' }} - ${{ inputs.app }} Release
@@ -96,13 +97,13 @@ jobs:
       packages: read
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 #v4
       - name: Setup Maven Action
-        uses: s4u/setup-maven-action@fa2c7e4517ed008b1f73e7e0195a9eecf5582cd4 # v1.11.0
+        uses: s4u/setup-maven-action@fa2c7e4517ed008b1f73e7e0195a9eecf5582cd4 #v1.11.0
         with:
           java-version: 17
-          java-distribution: 'temurin'
-          maven-version: '3.9.5'
+          java-distribution: "temurin"
+          maven-version: "3.9.5"
           cache-enabled: true
       - name: Build & Deploy
         shell: bash
@@ -132,6 +133,7 @@ jobs:
       environment: prod
       tf_environment: ${{ inputs.target == 'selc' && 'prod-ar' || 'prod-pnpg' }}
       dir: ${{ inputs.target == 'selc' && 'infra/resources/onboarding-functions/prod-ar' || 'infra/resources/onboarding-functions/prod-pnpg' }}
+      runner: "self-hosted"
 
   release_prod:
     name: ${{ inputs.target == 'selc' && '[Prod]' || '[Prod-PNPG]' }} - ${{ inputs.app }} Release
@@ -146,13 +148,13 @@ jobs:
       packages: read
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 #v4
       - name: Setup Maven Action
-        uses: s4u/setup-maven-action@fa2c7e4517ed008b1f73e7e0195a9eecf5582cd4 # v1.11.0
+        uses: s4u/setup-maven-action@fa2c7e4517ed008b1f73e7e0195a9eecf5582cd4 #v1.11.0
         with:
           java-version: 17
-          java-distribution: 'temurin'
-          maven-version: '3.9.5'
+          java-distribution: "temurin"
+          maven-version: "3.9.5"
           cache-enabled: true
       - name: Build & Deploy
         shell: bash

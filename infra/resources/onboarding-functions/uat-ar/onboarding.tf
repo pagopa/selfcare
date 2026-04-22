@@ -26,8 +26,8 @@ locals {
     always_on                 = true
     service_plan_sku          = "B2"
     service_plan_worker_count = 1
-    nat_resource_group_name   = "selc-u-nat-rg"
-    nat_gateway_name          = "selc-u-nat_gw"
+    nat_resource_group_name   = module.local.config.nat_rg_name
+    nat_gateway_name          = module.local.config.nat_gw_name
     app_settings = {
       "APPLICATIONINSIGHTS_CONNECTION_STRING"              = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/appinsights-connection-string/)",
       "USER_REGISTRY_URL"                                  = "https://api.uat.pdv.pagopa.it/user-registry/v1",
@@ -106,7 +106,7 @@ locals {
       "JWT_TOKEN_PRIVATE_KEY"                          = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/jwt-private-key/)"
       "JWT_TOKEN_KID"                                  = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/jwt-kid/)"
       ##WEBHOOK
-      "WEBHOOK_BASE_PATH"                              = "https://selc-u-webhook-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
+      "WEBHOOK_BASE_PATH" = "https://selc-u-webhook-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
 
       ##NAMIRIAL SIGNATURE
       "NAMIRIAL_BASE_URL"                       = "https://selc-u-namirial-sws-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io",
@@ -117,7 +117,7 @@ locals {
       "ONBOARDING_DATA_ENCRIPTION_KEY" = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/onboarding-data-encryption-key/)",
       "ONBOARDING_DATA_ENCRIPTION_IV"  = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/onboarding-data-encryption-iv/)"
 
-      "MS_DOCUMENT_URL"                                    = "https://selc-u-document-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
+      "MS_DOCUMENT_URL" = "https://selc-u-document-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
     }
   }
 }

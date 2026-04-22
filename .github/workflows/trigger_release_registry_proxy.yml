@@ -39,16 +39,6 @@ jobs:
         run: |
           echo "VERSION=$(echo "${{ inputs.branch }}" | sed 's/.*_//;s/^v//')" >> $GITHUB_ENV
 
-      - name: Trigger Resources Infra Release (AR)
-        run: |
-          gh workflow run publish_registry_proxy_infra.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=ar
-
-      - name: Trigger Resources Infra Release (PNPG)
-        run: |
-          gh workflow run publish_registry_proxy_infra.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg
-
       - name: Trigger Registry Proxy ms Release
         run: |
           gh workflow run release_app.yml \
@@ -58,6 +48,7 @@ jobs:
         run: |
           gh workflow run release_app.yml \
             --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=registry-proxy
+
 
 
   update_uat_variable:
