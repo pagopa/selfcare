@@ -144,13 +144,18 @@ public class InstitutionV2Controller {
             description = "${openapi.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",  operationId = "verifyAggregatesCsvUsingPOST")
     public VerifyAggregatesResponse verifyAggregatesCsv(@RestForm("aggregates") FileUpload file,
                                                         @RestForm("institutionType") String institutionType,
-                                                        @RestForm("productId") String productId){
+                                                        @RestForm("productId") String productId,
+                                                        @QueryParam("institutionType") String legacyInstitutionType,
+                                                        @QueryParam("productId") String legacyProductId){
         log.trace("Verify Aggregates Csv start");
-        log.debug("Verify Aggregates Csv start for productId {}", LogUtils.sanitize(productId));
+        String resolvedInstitutionType = StringUtils.isNotBlank(institutionType) ? institutionType : legacyInstitutionType;
+        String resolvedProductId = StringUtils.isNotBlank(productId) ? productId : legacyProductId;
+        log.debug("Verify Aggregates Csv start for productId {}", LogUtils.sanitize(resolvedProductId));
+        log.debug("Verify Aggregates Csv institutionType = {}", LogUtils.sanitize(resolvedInstitutionType));
 
         UploadedFile uploadedFile = toUploadedFile(file);
         FileValidationUtils.validateAggregatesFile(uploadedFile);
-        VerifyAggregatesResponse response = onboardingMapper.toVerifyAggregatesResponse(institutionService.validateAggregatesCsv(uploadedFile, productId));
+        VerifyAggregatesResponse response = onboardingMapper.toVerifyAggregatesResponse(institutionService.validateAggregatesCsv(uploadedFile, resolvedProductId));
         log.trace("Verify Aggregates Csv end");
         return response;
     }

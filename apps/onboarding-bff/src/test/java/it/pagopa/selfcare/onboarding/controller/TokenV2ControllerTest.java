@@ -2,11 +2,14 @@ package it.pagopa.selfcare.onboarding.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
+import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.controller.request.ReasonForRejectDto;
 import it.pagopa.selfcare.onboarding.controller.response.OnboardingRequestResource;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
@@ -16,11 +19,14 @@ import it.pagopa.selfcare.onboarding.service.UserInstitutionService;
 import it.pagopa.selfcare.onboarding.service.UserService;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 @ExtendWith(MockitoExtension.class)
 class TokenV2ControllerTest {
@@ -95,5 +101,33 @@ class TokenV2ControllerTest {
 
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         assertEquals("attachment; filename=contract.pdf", response.getHeaderString(HttpHeaders.CONTENT_DISPOSITION));
+    }
+
+    @Test
+    void getTemplateAttachment_supportsLegacyAttachmentNameQueryParam() {
+        BinaryData contract = new BinaryData("template.pdf", "content".getBytes());
+        when(tokenService.getTemplateAttachment("42", "legacy-template.pdf")).thenReturn(contract);
+
+        Response response = tokenV2Controller.getTemplateAttachment("42", null, "legacy-template.pdf");
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals("attachment; filename=template.pdf", response.getHeaderString(HttpHeaders.CONTENT_DISPOSITION));
+        verify(tokenService).getTemplateAttachment("42", "legacy-template.pdf");
+    }
+
+    @Test
+    void uploadAttachment_supportsLegacyAttachmentNameQueryParam() throws Exception {
+        Path tempFile = Files.createTempFile("token-upload-", ".pdf");
+        Files.writeString(tempFile, "pdf-content");
+        FileUpload fileUpload = org.mockito.Mockito.mock(FileUpload.class);
+        when(fileUpload.fileName()).thenReturn("contract.pdf");
+        when(fileUpload.contentType()).thenReturn("application/pdf");
+        when(fileUpload.uploadedFile()).thenReturn(tempFile);
+
+        Response response = tokenV2Controller.uploadAttachment("42", null, "legacy-attachment.pdf", fileUpload);
+
+        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
+        verify(tokenService).uploadAttachment(eq("42"), any(UploadedFile.class), eq("legacy-attachment.pdf"));
+        Files.deleteIfExists(tempFile);
     }
 }

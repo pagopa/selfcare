@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
+import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
@@ -189,11 +190,17 @@ public class TokenV2Controller {
                                           @PathParam("onboardingId")
                                           String onboardingId,
                                           @Parameter(description = "${openapi.tokens.attachmentName}")
-                                          @QueryParam("name") String filename) {
+                                          @QueryParam("name") String filename,
+                                          @Parameter(description = "${openapi.tokens.attachmentName}")
+                                          @QueryParam("attachmentName") String legacyAttachmentName) {
         log.trace("getTemplateAttachment start");
-        String sanitizedFilename = filename.replaceAll(SANITIZIER, "_");
+        String resolvedFilename = firstNonBlank(filename, legacyAttachmentName);
+        if (resolvedFilename == null) {
+            throw new InvalidRequestException("attachment name is required");
+        }
+        String sanitizedFilename = resolvedFilename.replaceAll(SANITIZIER, "_");
         log.debug("getTemplateAttachment onboardingId = {}, filename = {}", Encode.forJava(onboardingId), sanitizedFilename);
-        BinaryData contract = tokenService.getTemplateAttachment(onboardingId, filename);
+        BinaryData contract = tokenService.getTemplateAttachment(onboardingId, resolvedFilename);
         return binaryResponse(contract);
     }
 
@@ -236,14 +243,19 @@ public class TokenV2Controller {
     public Response uploadAttachment(@Parameter(description = "${openapi.tokens.onboardingId}")
                                      @PathParam("onboardingId") String onboardingId,
                                      @QueryParam("name") String attachmentName,
+                                     @QueryParam("attachmentName") String legacyAttachmentName,
                                      @RestForm("file") FileUpload attachment) {
         log.trace("uploadAttachment start");
         UploadedFile uploadedFile = toUploadedFile(attachment);
         FileValidationUtils.validatePdfOrP7m(uploadedFile);
+        String resolvedAttachmentName = firstNonBlank(attachmentName, legacyAttachmentName);
+        if (resolvedAttachmentName == null) {
+            throw new InvalidRequestException("attachment name is required");
+        }
         String sanitizedFileName = Encode.forJava(uploadedFile.fileName());
         String sanitizedOnboardingId = onboardingId.replaceAll(SANITIZIER, "");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "upload Attachment tokenId = {}, file = {}", sanitizedOnboardingId, sanitizedFileName);
-        tokenService.uploadAttachment(onboardingId, uploadedFile, attachmentName);
+        tokenService.uploadAttachment(onboardingId, uploadedFile, resolvedAttachmentName);
         return Response.noContent().build();
     }
 
@@ -294,5 +306,15 @@ public class TokenV2Controller {
         } catch (IOException e) {
             throw new IllegalStateException("Cannot read uploaded file", e);
         }
+    }
+
+    private static String firstNonBlank(String value, String fallback) {
+        if (value != null && !value.isBlank()) {
+            return value;
+        }
+        if (fallback != null && !fallback.isBlank()) {
+            return fallback;
+        }
+        return null;
     }
 }
