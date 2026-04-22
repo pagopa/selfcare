@@ -209,7 +209,7 @@
     },
     "/v1/onboarding" : {
       "get" : {
-        "tags" : [ "Onboarding Controller" ],
+        "tags" : [ "Onboarding Controller", "external-v2" ],
         "summary" : "Retrieve paged onboardings with optional filters and sorting.",
         "description" : "The API retrieves paged onboarding using optional filter, order by descending creation date",
         "operationId" : "getOnboardingWithFilter",
@@ -272,7 +272,7 @@
           "name" : "status",
           "in" : "query",
           "schema" : {
-            "type" : "string"
+            "$ref" : "#/components/schemas/OnboardingStatus"
           }
         }, {
           "name" : "subunitCode",
@@ -1291,7 +1291,7 @@
         } ]
       },
       "delete" : {
-        "tags" : [ "internal-v1" ],
+        "tags" : [ "internal-v1", "external-v2" ],
         "summary" : "Perform delete operation of an onboarding request",
         "description" : "Perform delete operation of an onboarding request receiving onboarding id, then invokes async process to set DELETED as status for institution and user onboardings.",
         "operationId" : "deleteOnboarding",
@@ -1357,7 +1357,7 @@
     },
     "/v1/onboarding/{onboardingId}/complete" : {
       "put" : {
-        "tags" : [ "internal-v1" ],
+        "tags" : [ "internal-v1", "external-v2" ],
         "summary" : "Complete onboarding by verifying and uploading contract, then trigger async activities.",
         "description" : "Perform complete operation of an onboarding request receiving onboarding id and contract signed by the institution.It checks the contract's signature and upload the contract on an azure storageAt the end, function triggers async activities related to complete onboarding that consist of create the institution, activate the onboarding and sending data to notification queue.",
         "operationId" : "completeOnboardingUsingPUT",
@@ -1581,7 +1581,7 @@
     },
     "/v1/onboarding/{onboardingId}/reject" : {
       "put" : {
-        "tags" : [ "Onboarding Controller" ],
+        "tags" : [ "external-v2", "Onboarding Controller" ],
         "summary" : "Perform reject operation of an onboarding request",
         "description" : "Perform reject operation of an onboarding request receiving onboarding id.Function change status to REJECT for an onboarding request that is not COMPLETED. ",
         "operationId" : "delete",

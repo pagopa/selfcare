@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.model;
 
+import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,7 +17,7 @@ public class OnboardingGetFilters {
     private String onboardingId;
     private String subunitCode;
     private String taxCode;
-    private String status;
+    private OnboardingStatus status;
     private String from;
     private String to;
     private String userId;

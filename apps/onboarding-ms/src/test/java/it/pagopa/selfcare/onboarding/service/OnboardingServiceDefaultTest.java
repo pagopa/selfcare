@@ -2278,7 +2278,7 @@ class OnboardingServiceDefaultTest {
                 .taxCode("taxCode")
                 .from("2023-12-01")
                 .to("2023-12-31")
-                .status("ACTIVE")
+                .status(OnboardingStatus.COMPLETED)
                 .page(page)
                 .size(size)
                 .build();
@@ -2302,7 +2302,7 @@ class OnboardingServiceDefaultTest {
                 .subunitCode("subunitCode")
                 .from("2023-12-01")
                 .to("2023-12-31")
-                .status("ACTIVE")
+                .status(OnboardingStatus.COMPLETED)
                 .page(page)
                 .size(size)
                 .build();
@@ -2331,7 +2331,7 @@ class OnboardingServiceDefaultTest {
                 .from("2023-12-01")
                 .to("2023-12-31")
                 .productIds(List.of("prod-io"))
-                .status("ACTIVE")
+                .status(OnboardingStatus.COMPLETED)
                 .skipPagination(true)
                 .build();
         UniAssertSubscriber<OnboardingGetResponse> subscriber = onboardingService
@@ -2362,7 +2362,7 @@ class OnboardingServiceDefaultTest {
                 .from("2023-12-01")
                 .to("2023-12-31")
                 .productIds(List.of("prod-io"))
-                .status("ACTIVE")
+                .status(OnboardingStatus.COMPLETED)
                 .skipPagination(true)
                 .build();
         UniAssertSubscriber<OnboardingGetResponse> subscriber = onboardingService
@@ -2374,7 +2374,7 @@ class OnboardingServiceDefaultTest {
         assertNotNull(response);
         assertNotNull(response.getItems());
         assertNotNull(response.getItems().get(0));
-        assertEquals(response.getItems().get(0).getPayment().getIban(), "iban");
+        assertEquals("iban", response.getItems().get(0).getPayment().getIban());
     }
 
 
