@@ -649,7 +649,7 @@ class OnboardingMsConnectorImplTest {
     void onboardingWithFilterTest() {
         // Given
         final String taxCode = "taxCode";
-        final String status = "status";
+        final String status = "COMPLETED";
 
         OnboardingGet onboardingGet = new OnboardingGet();
         onboardingGet.setProductId("prod-test");
