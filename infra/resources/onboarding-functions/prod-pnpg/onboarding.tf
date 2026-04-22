@@ -4,10 +4,13 @@
 module "local" {
   source = "../../_modules/local-env"
 
-  env             = "prod"
-  env_short       = "p"
-  domain          = "pnpg"
-  external_domain = "it"
+  env                   = "prod"
+  env_short             = "p"
+  domain                = "pnpg"
+  nat_rg_name           = "selc-p-weu-pnpg-nat-rg"
+  nat_gw_name           = "selc-p-weu-pnpg-nat-gw"
+  nat_pip_outbound_name = "selc-p-weu-pnpg-pip-outbound"
+  external_domain       = "it"
 
   dns_zone_prefix                = "imprese.notifichedigitali"
   api_dns_zone_prefix            = "api-pnpg.selfcare"
@@ -31,8 +34,8 @@ locals {
     always_on                 = true
     service_plan_sku          = "P1v3"
     service_plan_worker_count = 1
-    nat_resource_group_name   = "selc-p-weu-pnpg-nat-rg"
-    nat_gateway_name          = "selc-p-weu-pnpg-nat_gw"
+    nat_resource_group_name   = module.local.config.nat_rg_name
+    nat_gateway_name          = module.local.config.nat_gw_name
     app_settings = {
       "APPLICATIONINSIGHTS_CONNECTION_STRING"        = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/appinsights-connection-string/)"
       "USER_REGISTRY_URL"                            = "https://api.pdv.pagopa.it/user-registry/v1"
@@ -100,11 +103,16 @@ module "onboarding_functions" {
 }
 
 data "azurerm_public_ip" "pip_outbound" {
-  resource_group_name = module.local.nat_gw_rg_name
-  name                = "${module.local.config.project}-${module.local.config.pnpg_suffix}-pip-outbound"
+  resource_group_name = local.onboarding_functions.nat_resource_group_name
+  name                = module.local.config.nat_pip_outbound_name
+}
+
+data "azurerm_nat_gateway" "onboarding_functions_nat_gateway" {
+  name                = local.onboarding_functions.nat_gateway_name
+  resource_group_name = local.onboarding_functions.nat_resource_group_name
 }
 
 resource "azurerm_nat_gateway_public_ip_association" "functions_pip_nat_gateway" {
-  nat_gateway_id       = module.local.nat_gw_id
+  nat_gateway_id       = data.azurerm_nat_gateway.onboarding_functions_nat_gateway.id
   public_ip_address_id = data.azurerm_public_ip.pip_outbound.id
 }
