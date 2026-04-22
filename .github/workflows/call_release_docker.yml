@@ -122,7 +122,7 @@ jobs:
       use_private_agent: true
       override_github_environment: ${{ inputs.tf_environment != '' && inputs.tf_environment || inputs.environment }}
       use_labels: true
-      override_labels: ${{ inputs.tf_environment != '' && inputs.tf_environment || inputs.environment }}
+      override_labels: ${{ inputs.environment }}
       env_vars: "TF_VAR_image_tag=${{ needs.prepare.outputs.image_tag }}"
 
   # tf_plan:
@@ -214,7 +214,7 @@ jobs:
       use_private_agent: true
       override_github_environment: ${{ inputs.tf_environment != '' && inputs.tf_environment || inputs.environment }}
       use_labels: true
-      override_labels: ${{ inputs.tf_environment != '' && inputs.tf_environment || inputs.environment }}
+      override_labels: ${{ inputs.environment }}
   
   # release:
   #   name: ${{ inputs.app }} - Release
