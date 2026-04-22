@@ -7,8 +7,9 @@ locals {
   key_vault_name                          = var.key_vault_name
   app_name                                = "${var.container_app_name}-ca"
   container_app_environment_dns_zone_name = "azurecontainerapps.io"
-  # Defensive sanitation: DX reusable workflows can occasionally pass image_tag suffixed with "[@]".
-  sanitized_image_tag                     = trimsuffix(trimspace(var.image_tag), "[@]")
+  # Defensive sanitation: DX reusable workflows can occasionally pass image_tag with noisy suffixes
+  # such as [@] (escaped or not). Remove "\" first, then drop anything after "[".
+  sanitized_image_tag                     = split(replace(trimspace(var.image_tag), "\\", ""), "[")[0]
 
   secrets = [for secret in var.secrets_names :
     {
