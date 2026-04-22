@@ -57,6 +57,28 @@ variable "ca_resource_group_name" {
 }
 
 # ==============================================================================
+# Networking — NAT names
+# ==============================================================================
+
+variable "nat_rg_name" {
+  type        = string
+  description = "NAT resource group name. When omitted, defaults to <project>-nat-rg."
+  default     = null
+}
+
+variable "nat_gw_name" {
+  type        = string
+  description = "NAT gateway name. When omitted, defaults to <project>-nat_gw."
+  default     = null
+}
+
+variable "nat_pip_outbound_name" {
+  type        = string
+  description = "Outbound public IP name associated to NAT gateway."
+  default     = null
+}
+
+# ==============================================================================
 # Container App sizing — optional with dev/non-prod defaults
 # ==============================================================================
 

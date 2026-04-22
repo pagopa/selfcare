@@ -29,9 +29,8 @@ public class OnboardingFunctionConfig {
     public static final String SIGNATURE_SOURCE_NAMIRIAL = "namirial";
     public static final String SIGNATURE_SOURCE_DISABLED = "disabled";
 
-    void onStart(@Observes StartupEvent ev) {
-        // Avoid eager Mongo repository initialization during worker bootstrap:
-        // Azure Functions Java worker may timeout while loading function metadata.
+    void onStart(@Observes StartupEvent ev, OnboardingRepository repository) {
+        log.info(String.format("Database %s is starting...", repository.mongoDatabase().getName()));
         log.info("Onboarding Functions application startup");
     }
 
