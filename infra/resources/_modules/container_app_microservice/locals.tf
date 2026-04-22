@@ -7,6 +7,10 @@ locals {
   key_vault_name                          = var.key_vault_name
   app_name                                = "${var.container_app_name}-ca"
   container_app_environment_dns_zone_name = "azurecontainerapps.io"
+  # Defensive sanitation: DX reusable workflows can pass escaped suffixes after sha.
+  # Remove "\" and, for sha tags, keep only "sha-" + 7 chars.
+  cleaned_image_tag                       = replace(trimspace(var.image_tag), "\\", "")
+  sanitized_image_tag                     = length(local.cleaned_image_tag) == 0 ? "latest" : (startswith(local.cleaned_image_tag, "sha-") && length(local.cleaned_image_tag) > 11 ? substr(local.cleaned_image_tag, 0, 11) : local.cleaned_image_tag)
 
   secrets = [for secret in var.secrets_names :
     {
