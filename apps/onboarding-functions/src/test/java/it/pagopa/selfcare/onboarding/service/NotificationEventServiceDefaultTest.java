@@ -63,7 +63,7 @@ public class NotificationEventServiceDefaultTest {
 
     when(productService.getProduct(any())).thenReturn(product);
     mockNotificationMapper(true);
-    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(List.of(new DocumentResponse()));
+    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(new DocumentResponse());
     when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());
     List<UserDataResponse> users = new ArrayList<>();
     when(userApi.retrieveUsers(any(), any(), any(), any(), any(), any(), any()))
@@ -90,7 +90,7 @@ public class NotificationEventServiceDefaultTest {
     final Product product = createProduct();
     when(productService.getProduct(any())).thenReturn(product);
     mockNotificationMapper(true);
-    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(List.of(new DocumentResponse()));
+    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(new DocumentResponse());
     when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());
     ExecutionContext context = mock(ExecutionContext.class);
     doReturn(Logger.getGlobal()).when(context).getLogger();
@@ -114,7 +114,7 @@ public class NotificationEventServiceDefaultTest {
     onboarding.setId("123");
     final Product product = createProduct();
     when(productService.getProduct(any())).thenReturn(product);
-    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(List.of(new DocumentResponse()));
+    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(new DocumentResponse());
     when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());
     mockNotificationMapper(true);
     ExecutionContext context = mock(ExecutionContext.class);
@@ -130,7 +130,7 @@ public class NotificationEventServiceDefaultTest {
     final Onboarding onboarding = createOnboarding();
     final Product product = createProduct();
     when(productService.getProduct(any())).thenReturn(product);
-    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(List.of(new DocumentResponse()));
+    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(new DocumentResponse());
     when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());
     mockNotificationMapper(false);
     ExecutionContext context = mock(ExecutionContext.class);
@@ -147,7 +147,7 @@ public class NotificationEventServiceDefaultTest {
     product.setTestEnvProductIds(List.of("prod-interop-coll", "prod-interop-atst"));
     when(productService.getProduct(any())).thenReturn(product);
     mockNotificationMapper(true);
-    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(List.of(new DocumentResponse()));
+    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(new DocumentResponse());
     when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());
     ExecutionContext context = mock(ExecutionContext.class);
     doReturn(Logger.getGlobal()).when(context).getLogger();
@@ -162,7 +162,7 @@ public class NotificationEventServiceDefaultTest {
     final Onboarding onboarding = createOnboarding();
     final Product product = createProduct();
     when(productService.getProduct(any())).thenReturn(product);
-    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(List.of(new DocumentResponse()));
+    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(new DocumentResponse());
     when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());
     mockNotificationMapper(true);
     doThrow(new NotificationException("Impossible to send notification for object" + onboarding))
@@ -340,7 +340,7 @@ public class NotificationEventServiceDefaultTest {
     final Product product = createProduct();
     when(productService.getProduct(any())).thenReturn(product);
 
-    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(List.of(new DocumentResponse()));
+    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(new DocumentResponse());
     when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());
 
     BaseNotificationBuilder notificationMapper = mock(BaseNotificationBuilder.class);
