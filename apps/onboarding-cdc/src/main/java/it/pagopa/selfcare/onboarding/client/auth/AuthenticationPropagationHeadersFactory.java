@@ -25,9 +25,8 @@ public class AuthenticationPropagationHeadersFactory implements ClientHeadersFac
             return clientOutgoingHeaders;
         }
 
-        log.trace("AuthenticationPropagationHeadersFactory - JWT_BEARER_TOKEN is present, length: {}, starts with: {}",
-                bearerToken.length(),
-                bearerToken.substring(0, Math.min(20, bearerToken.length())));
+        log.trace("AuthenticationPropagationHeadersFactory - JWT_BEARER_TOKEN is present, length: {}",
+                bearerToken.length());
 
         final long periodCount = bearerToken.chars().filter(c -> c == '.').count();
         log.trace("AuthenticationPropagationHeadersFactory - JWT period count (expected 2): {}", periodCount);
