@@ -42,6 +42,7 @@ on:
         default: true
 
 env:
+  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
   ARM_USE_OIDC: true
@@ -120,7 +121,7 @@ jobs:
       environment: ${{ inputs.environment }}-${{ inputs.domain }}
       base_path: infra/resources/${{ inputs.app }}
       use_private_agent: true
-      override_github_environment: ${{ inputs.tf_environment != '' && inputs.tf_environment || inputs.environment }}
+      override_github_environment: ${{ inputs.environment }}
       use_labels: true
       override_labels: ${{ inputs.environment }}
       env_vars: "TF_VAR_image_tag=${{ needs.prepare.outputs.image_tag }}"
@@ -212,7 +213,7 @@ jobs:
       base_path: infra/resources/${{ inputs.app }}
       env_vars: "TF_VAR_image_tag=${{ needs.prepare.outputs.image_tag }}"
       use_private_agent: true
-      override_github_environment: ${{ inputs.tf_environment != '' && inputs.tf_environment || inputs.environment }}
+      override_github_environment: ${{ inputs.environment }}
       use_labels: true
       override_labels: ${{ inputs.environment }}
   
