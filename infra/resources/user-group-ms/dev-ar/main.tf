@@ -95,7 +95,7 @@ module "container_app_user_group_ms" {
   env_short                      = module.local.config.env_short
   resource_group_name            = module.local.config.ca_resource_group_name
   container_app                  = module.local.config.container_app
-  container_app_name             = "selc-${module.local.config.env_short}-user-group-ms"
+  container_app_name             = "selc-${module.local.config.env_short}-user-group"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-user-group-ms"
   image_tag                      = var.image_tag
