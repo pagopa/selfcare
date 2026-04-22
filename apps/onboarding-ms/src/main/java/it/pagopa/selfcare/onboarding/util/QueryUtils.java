@@ -85,7 +85,7 @@ public class QueryUtils {
     Optional.ofNullable(filters.getProductId()).ifPresent(value -> queryParameterMap.put(PRODUCT, value));
     Optional.ofNullable(filters.getTaxCode()).ifPresent(value -> queryParameterMap.put(INSTITUTION_TAX_CODE, value));
     Optional.ofNullable(filters.getSubunitCode()).ifPresent(value -> queryParameterMap.put(INSTITUTION_SUBUNIT_CODE, value));
-    Optional.ofNullable(filters.getStatus()).ifPresent(value -> queryParameterMap.put(STATUS, value));
+    Optional.ofNullable(filters.getStatus()).ifPresent(value -> queryParameterMap.put(STATUS, value.name()));
     Optional.ofNullable(filters.getFrom()).ifPresent(value -> queryParameterMap.put(FROM, value));
     Optional.ofNullable(filters.getTo()).ifPresent(value -> queryParameterMap.put(TO, value));
     Optional.ofNullable(filters.getInstitutionId()).ifPresent(value -> queryParameterMap.put(INSTITUTION_ID, value));
@@ -99,7 +99,7 @@ public class QueryUtils {
   public static Map<String, Object> createMapForInstitutionOnboardingsQueryParameter(String taxCode, String subunitCode, String origin, String originId, OnboardingStatus status, String productId) {
     Map<String, Object> queryParameterMap = new HashMap<>();
     getOptionalForNullableAndEmpty(taxCode).ifPresent(value -> queryParameterMap.put(INSTITUTION_TAX_CODE, value));
-    queryParameterMap.put(INSTITUTION_SUBUNIT_CODE, subunitCode);
+    getOptionalForNullableAndEmpty(subunitCode).ifPresent(value -> queryParameterMap.put(INSTITUTION_SUBUNIT_CODE, subunitCode));
     getOptionalForNullableAndEmpty(origin).ifPresent(value -> queryParameterMap.put(INSTITUTION_ORIGIN, value));
     getOptionalForNullableAndEmpty(originId).ifPresent(value -> queryParameterMap.put(INSTITUTION_ORIGIN_ID, value));
     Optional.ofNullable(status).ifPresent(value -> queryParameterMap.put(STATUS, value.name()));
