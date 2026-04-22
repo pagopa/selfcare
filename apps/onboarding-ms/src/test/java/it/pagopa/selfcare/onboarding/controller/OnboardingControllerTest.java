@@ -515,7 +515,7 @@ class OnboardingControllerTest {
                 .subunitCode("subunitCode")
                 .from("2023-12-01")
                 .to("2023-12-31")
-                .status("ACTIVE")
+                .status(OnboardingStatus.COMPLETED)
                 .build();
         when(onboardingService.onboardingGet(filters))
                 .thenReturn(Uni.createFrom().item(response));

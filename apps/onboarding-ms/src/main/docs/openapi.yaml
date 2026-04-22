@@ -153,6 +153,7 @@ paths:
     get:
       tags:
       - Onboarding Controller
+      - external-v2
       summary: Retrieve paged onboardings with optional filters and sorting.
       description: "The API retrieves paged onboarding using optional filter, order\
         \ by descending creation date"
@@ -199,7 +200,7 @@ paths:
       - name: status
         in: query
         schema:
-          type: string
+          $ref: "#/components/schemas/OnboardingStatus"
       - name: subunitCode
         in: query
         schema:
@@ -934,6 +935,7 @@ paths:
     delete:
       tags:
       - internal-v1
+      - external-v2
       summary: Perform delete operation of an onboarding request
       description: "Perform delete operation of an onboarding request receiving onboarding\
         \ id, then invokes async process to set DELETED as status for institution\
@@ -986,6 +988,7 @@ paths:
     put:
       tags:
       - internal-v1
+      - external-v2
       summary: "Complete onboarding by verifying and uploading contract, then trigger\
         \ async activities."
       description: "Perform complete operation of an onboarding request receiving\
@@ -1163,6 +1166,7 @@ paths:
   /v1/onboarding/{onboardingId}/reject:
     put:
       tags:
+      - external-v2
       - Onboarding Controller
       summary: Perform reject operation of an onboarding request
       description: 'Perform reject operation of an onboarding request receiving onboarding
