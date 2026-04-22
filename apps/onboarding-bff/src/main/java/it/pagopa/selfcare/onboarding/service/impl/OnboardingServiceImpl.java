@@ -252,6 +252,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     @Override
     public OnboardingGetResponse onboardingWithFilter(String taxCode, String status) {
         log.trace("onboardingWithFilter start");
+        OnboardingStatus onboardingStatus = parseOnboardingStatus(status);
         OnboardingGetResponse response = onboardingApi.getOnboardingWithFilter(
                 null,
                 null,
@@ -261,7 +262,7 @@ public class OnboardingServiceImpl implements OnboardingService {
                 null,
                 null,
                 null,
-                status,
+                onboardingStatus,
                 null,
                 taxCode,
                 null,
@@ -283,5 +284,20 @@ public class OnboardingServiceImpl implements OnboardingService {
         int statusCode = tokenApi.headAttachment(onboardingId, filename).await().indefinitely().getStatus();
         log.info("headAttachment response status code: {}", statusCode);
         return statusCode;
+    }
+
+    private OnboardingStatus parseOnboardingStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return null;
+        }
+        try {
+            return OnboardingStatus.fromString(status);
+        } catch (IllegalArgumentException ex) {
+            String allowedValues = java.util.Arrays.stream(OnboardingStatus.values())
+                    .map(OnboardingStatus::value)
+                    .toList()
+                    .toString();
+            throw new InvalidRequestException("Invalid status '" + status + "'. Allowed values: " + allowedValues);
+        }
     }
 }
