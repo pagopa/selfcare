@@ -76,9 +76,6 @@ class InstitutionV2ControllerTest {
         Files.writeString(tempFile, "taxCode;description\n123;demo");
         try {
             FileUpload fileUpload = Mockito.mock(FileUpload.class);
-            when(fileUpload.fileName()).thenReturn("aggregates.csv");
-            when(fileUpload.contentType()).thenReturn("text/csv");
-            when(fileUpload.uploadedFile()).thenReturn(tempFile);
 
             assertThrows(InvalidRequestException.class, () ->
                     institutionV2Controller.verifyAggregatesCsv(fileUpload, "PA", null, null, null));

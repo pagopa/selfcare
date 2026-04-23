@@ -56,7 +56,7 @@ class UserServiceImplTest {
     void validate_validUser_noException() {
         User user = new User();
         user.setTaxCode("TAX");
-        when(userRegistryClient.search(any(), any())).thenReturn(Optional.empty());
+        when(userRegistryClient.search(any(), any())).thenReturn(Optional.of(new User()));
 
         assertDoesNotThrow(() -> userService.validate(user));
     }
