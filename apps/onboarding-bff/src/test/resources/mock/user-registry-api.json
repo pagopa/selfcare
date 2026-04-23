@@ -4,14 +4,10 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "queryStringParameters": {
-        "fl": [
-          "fiscalCode,familyName,email,name,workContacts"
-        ]
+        "fl": ["fiscalCode,familyName,email,name,workContacts"]
       },
       "pathParameters": {
-        "id": [
-          "6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"
-        ]
+        "id": ["6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"]
       }
     },
     "httpResponseTemplate": {
@@ -24,14 +20,10 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "queryStringParameters": {
-        "fl": [
-          "fiscalCode,familyName,name,workContacts"
-        ]
+        "fl": ["fiscalCode,familyName,name,workContacts"]
       },
       "pathParameters": {
-        "id": [
-          "6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"
-        ]
+        "id": ["6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"]
       }
     },
     "httpResponseTemplate": {
@@ -44,14 +36,10 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "queryStringParameters": {
-        "fl": [
-          "fiscalCode,familyName,name,workContacts"
-        ]
+        "fl": ["fiscalCode,familyName,name,workContacts"]
       },
       "pathParameters": {
-        "id": [
-          "ec7ca4d5-c537-462a-8c06-e102e0c21c44"
-        ]
+        "id": ["ec7ca4d5-c537-462a-8c06-e102e0c21c44"]
       }
     },
     "httpResponseTemplate": {
@@ -64,14 +52,10 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "queryStringParameters": {
-        "fl": [
-          "fiscalCode,familyName,name"
-        ]
+        "fl": ["fiscalCode,familyName,name"]
       },
       "pathParameters": {
-        "id": [
-          "ec7ca4d5-c537-462a-8c06-e102e0c21c44"
-        ]
+        "id": ["ec7ca4d5-c537-462a-8c06-e102e0c21c44"]
       }
     },
     "httpResponseTemplate": {
@@ -84,14 +68,10 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "queryStringParameters": {
-        "fl": [
-          "fiscalCode,familyName,name,workContacts"
-        ]
+        "fl": ["fiscalCode,familyName,name,workContacts"]
       },
       "pathParameters": {
-        "id": [
-          "ec7ca4d5-c537-462a-8c06-e102e0c21c44"
-        ]
+        "id": ["ec7ca4d5-c537-462a-8c06-e102e0c21c44"]
       }
     },
     "httpResponseTemplate": {
@@ -104,14 +84,10 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "queryStringParameters": {
-        "fl": [
-          "name,familyName,email,workContacts"
-        ]
+        "fl": ["name,familyName,email,workContacts"]
       },
       "pathParameters": {
-        "id": [
-          "ec7ca4d5-c537-462a-8c06-e102e0c21c44"
-        ]
+        "id": ["ec7ca4d5-c537-462a-8c06-e102e0c21c44"]
       }
     },
     "httpResponseTemplate": {
@@ -124,14 +100,10 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "queryStringParameters": {
-        "fl": [
-          "fiscalCode,familyName,name"
-        ]
+        "fl": ["fiscalCode,familyName,name"]
       },
       "pathParameters": {
-        "id": [
-          "6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"
-        ]
+        "id": ["6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"]
       }
     },
     "httpResponseTemplate": {
@@ -144,14 +116,10 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "queryStringParameters": {
-        "fl": [
-          "name,familyName,email,workContacts"
-        ]
+        "fl": ["name,familyName,email,workContacts"]
       },
       "pathParameters": {
-        "id": [
-          "6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"
-        ]
+        "id": ["6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"]
       }
     },
     "httpResponseTemplate": {
@@ -164,9 +132,7 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "pathParameters": {
-        "id": [
-          "97a511a7-2acc-47b9-afed-2f3c65753b4a"
-        ]
+        "id": ["97a511a7-2acc-47b9-afed-2f3c65753b4a"]
       }
     },
     "httpResponseTemplate": {
@@ -179,14 +145,10 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "queryStringParameters": {
-        "fl": [
-          "name,familyName,email,workContacts"
-        ]
+        "fl": ["name,familyName,email,workContacts"]
       },
       "pathParameters": {
-        "id": [
-          "97a511a7-2acc-47b9-afed-2f3c65753b4a"
-        ]
+        "id": ["97a511a7-2acc-47b9-afed-2f3c65753b4a"]
       }
     },
     "httpResponseTemplate": {
@@ -199,9 +161,7 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "pathParameters": {
-        "id": [
-          "wronguserid"
-        ]
+        "id": ["wronguserid"]
       }
     },
     "httpResponseTemplate": {
@@ -214,14 +174,10 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "queryStringParameters": {
-        "fl": [
-          "wrongfield"
-        ]
+        "fl": ["wrongfield"]
       },
       "pathParameters": {
-        "id": [
-          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
-        ]
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf7"]
       }
     },
     "httpResponseTemplate": {
@@ -234,14 +190,10 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "queryStringParameters": {
-        "fl": [
-          "fiscalCode"
-        ]
+        "fl": ["fiscalCode"]
       },
       "pathParameters": {
-        "id": [
-          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
-        ]
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf7"]
       }
     },
     "httpResponseTemplate": {
@@ -254,14 +206,10 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "queryStringParameters": {
-        "fl": [
-          "fiscalCode"
-        ]
+        "fl": ["fiscalCode"]
       },
       "pathParameters": {
-        "id": [
-          "ec7ca4d5-c537-462a-8c06-e102e0c21c44"
-        ]
+        "id": ["ec7ca4d5-c537-462a-8c06-e102e0c21c44"]
       }
     },
     "httpResponseTemplate": {
@@ -274,14 +222,10 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "queryStringParameters": {
-        "fl": [
-          "familyName"
-        ]
+        "fl": ["familyName"]
       },
       "pathParameters": {
-        "id": [
-          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
-        ]
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf7"]
       }
     },
     "httpResponseTemplate": {
@@ -294,14 +238,10 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "queryStringParameters": {
-        "fl": [
-          "name"
-        ]
+        "fl": ["name"]
       },
       "pathParameters": {
-        "id": [
-          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
-        ]
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf7"]
       }
     },
     "httpResponseTemplate": {
@@ -314,14 +254,10 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "queryStringParameters": {
-        "fl": [
-          "workContracts"
-        ]
+        "fl": ["workContracts"]
       },
       "pathParameters": {
-        "id": [
-          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
-        ]
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf7"]
       }
     },
     "httpResponseTemplate": {
@@ -334,14 +270,10 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "queryStringParameters": {
-        "fl": [
-          "fiscalCode,name"
-        ]
+        "fl": ["fiscalCode,name"]
       },
       "pathParameters": {
-        "id": [
-          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
-        ]
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf7"]
       }
     },
     "httpResponseTemplate": {
@@ -354,14 +286,10 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "queryStringParameters": {
-        "fl": [
-          "fiscalCode,name,familyName"
-        ]
+        "fl": ["fiscalCode,name,familyName"]
       },
       "pathParameters": {
-        "id": [
-          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
-        ]
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf7"]
       }
     },
     "httpResponseTemplate": {
@@ -374,9 +302,7 @@
       "method": "GET",
       "path": "/user-registry-mock/v1/users/{id}",
       "pathParameters": {
-        "id": [
-          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
-        ]
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf7"]
       }
     },
     "httpResponseTemplate": {
@@ -389,9 +315,7 @@
       "method": "POST",
       "path": "/user-registry-mock/v1/users/search",
       "queryStringParameters": {
-        "fl": [
-          "name,familyName,email,workContacts"
-        ]
+        "fl": ["name,familyName,email,workContacts"]
       },
       "body": {
         "type": "JSON",
@@ -411,9 +335,7 @@
       "method": "POST",
       "path": "/user-registry-mock/v1/users/search",
       "queryStringParameters": {
-        "fl": [
-          "fiscalCode,familyName,email,name,workContacts"
-        ]
+        "fl": ["fiscalCode,familyName,email,name,workContacts"]
       },
       "body": {
         "type": "JSON",
@@ -433,9 +355,7 @@
       "method": "POST",
       "path": "/user-registry-mock/v1/users/search",
       "queryStringParameters": {
-        "fl": [
-          "name,familyName,email,workContacts"
-        ]
+        "fl": ["name,familyName,email,workContacts"]
       },
       "body": {
         "type": "JSON",
@@ -455,9 +375,7 @@
       "method": "POST",
       "path": "/user-registry-mock/v1/users/search",
       "queryStringParameters": {
-        "fl": [
-          "name,familyName,email,workContacts"
-        ]
+        "fl": ["name,familyName,email,workContacts"]
       },
       "body": {
         "type": "JSON",
@@ -475,9 +393,7 @@
       "method": "PATCH",
       "path": "/user-registry-mock/v1/users/{id}",
       "pathParameters": {
-        "id": [
-          "97a511a7-2acc-47b9-afed-2f3c65753b4a"
-        ]
+        "id": ["97a511a7-2acc-47b9-afed-2f3c65753b4a"]
       },
       "body": {
         "type": "JSON",
@@ -497,9 +413,7 @@
       "method": "PATCH",
       "path": "/user-registry-mock/v1/users/{id}",
       "pathParameters": {
-        "id": [
-          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
-        ]
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf7"]
       },
       "body": {
         "type": "JSON",
@@ -519,9 +433,7 @@
       "method": "PATCH",
       "path": "/user-registry-mock/v1/users/{id}",
       "pathParameters": {
-        "id": [
-          "6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"
-        ]
+        "id": ["6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"]
       },
       "body": {
         "type": "JSON",
@@ -556,11 +468,26 @@
   {
     "httpRequest": {
       "method": "PATCH",
+      "path": "/user-registry-mock/v1/users",
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "RSSMRA80A01H703Z"
+        },
+        "matchType": "ONLY_MATCHING_FIELDS"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b\"}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "PATCH",
       "path": "/user-registry-mock/v1/users/{id}",
       "pathParameters": {
-        "id": [
-          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
-        ]
+        "id": ["35a78332-d038-4bfa-8e85-2cba7f6b7bf7"]
       },
       "body": {
         "workContacts": {}
@@ -576,12 +503,8 @@
       "method": "POST",
       "path": "/user-registry-mock/v1/users/search",
       "queryStringParameters": {
-        "fl": [
-          "name"
-        ],
-        "fl": [
-          "familyName"
-        ]
+        "fl": ["name"],
+        "fl": ["familyName"]
       },
       "body": {
         "type": "JSON",
@@ -601,16 +524,14 @@
       "method": "POST",
       "path": "/user-registry-mock/v1/users/search",
       "queryStringParameters": {
-        "fl": [
-          "fiscalCode,familyName,name,workContacts"
-        ]
+        "fl": ["fiscalCode,familyName,name,workContacts"]
       },
       "body": {
         "type": "JSON",
         "json": {
           "fiscalCode": "VRDMRA22T71F205A"
         },
-        "matchType": "STRICT"
+        "matchType": "ONLY_MATCHING_FIELDS"
       }
     },
     "httpResponseTemplate": {
@@ -623,15 +544,9 @@
       "method": "POST",
       "path": "/user-registry-mock/v1/users/search",
       "queryStringParameters": {
-        "fl": [
-          "name"
-        ],
-        "fl": [
-          "familyName"
-        ],
-        "fl": [
-          "workContacts"
-        ]
+        "fl": ["name"],
+        "fl": ["familyName"],
+        "fl": ["workContacts"]
       },
       "body": {
         "type": "JSON",
