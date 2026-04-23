@@ -65,7 +65,7 @@ locals {
       "MAIL_USER_CONFIRMATION_LINK"                        = "https://uat.selfcare.pagopa.it/onboarding/confirm?add-user=true&jwt=",
       "MAIL_ONBOARDING_REJECTION_LINK"                     = "https://uat.selfcare.pagopa.it/onboarding/cancel?jwt=",
       "MAIL_ONBOARDING_URL"                                = "https://uat.selfcare.pagopa.it/onboarding/",
-      "MS_CORE_URL"                                        = "https://selc-u-ms-core-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io",
+      "MS_CORE_URL"                                        = "https://selc-u-institution-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io",
       "JWT_BEARER_TOKEN"                                   = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/jwt-bearer-token-functions/)",
       "MS_USER_URL"                                        = "https://selc-u-user-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io",
       "MS_PARTY_REGISTRY_URL"                              = "https://selc-u-party-reg-proxy-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io",

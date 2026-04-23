@@ -70,7 +70,7 @@ locals {
       "MAIL_ONBOARDING_REJECTION_LINK"                     = "https://imprese.dev.notifichedigitali.it/onboarding/cancel?jwt="
       "MAIL_ONBOARDING_URL"                                = "https://imprese.dev.notifichedigitali.it/onboarding/"
       "MS_USER_URL"                                        = "https://selc-d-pnpg-user-ms-ca.victoriousfield-e39534b8.westeurope.azurecontainerapps.io"
-      "MS_CORE_URL"                                        = "https://selc-d-pnpg-ms-core-ca.blackhill-644148c0.westeurope.azurecontainerapps.io"
+      "MS_CORE_URL"                                        = "https://selc-d-pnpg-institution-ms-ca.blackhill-644148c0.westeurope.azurecontainerapps.io"
       "JWT_BEARER_TOKEN"                                   = "@Microsoft.KeyVault(SecretUri=https://selc-d-pnpg-kv.vault.azure.net/secrets/jwt-bearer-token-functions/)"
       "MS_PARTY_REGISTRY_URL"                              = "https://selc-d-pnpg-party-reg-proxy-ca.victoriousfield-e39534b8.westeurope.azurecontainerapps.io"
       "PAGOPA_LOGO_ENABLE"                                 = "false"

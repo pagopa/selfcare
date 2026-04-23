@@ -136,7 +136,7 @@ locals {
     },
     {
       name  = "MS_CORE_URL"
-      value = "http://selc-${module.local.config.env_short}-ms-core-ca"
+      value = "http://selc-${module.local.config.env_short}-institution-ms-ca"
     },
     {
       name  = "MS_PARTY_REGISTRY_URL"
