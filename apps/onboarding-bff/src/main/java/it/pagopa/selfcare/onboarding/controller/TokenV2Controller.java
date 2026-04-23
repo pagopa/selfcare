@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.owasp.encoder.Encode;
@@ -137,21 +138,23 @@ public class TokenV2Controller {
     @Path("/{onboardingId}/approve")
     @Operation(description = "${openapi.tokens.approveOnboardingRequest}",
             summary = "${openapi.tokens.approveOnboardingRequest}", operationId = "approveOnboardingUsingPOST")
-    public void approveOnboarding(@Parameter(description = "${openapi.tokens.onboardingId}")
-                                  @PathParam("onboardingId") String onboardingId) {
+    public Response approveOnboarding(@Parameter(description = "${openapi.tokens.onboardingId}")
+                                      @PathParam("onboardingId") String onboardingId) {
         log.debug("approve onboarding identified with {}", LogUtils.sanitize(onboardingId));
         tokenService.approveOnboarding(onboardingId);
+        return Response.ok().build();
     }
 
     @POST
     @Path("/{onboardingId}/reject")
     @Operation(summary = "Service to reject a specific onboarding request",
             description = "Service to reject a specific onboarding request", operationId = "rejectOnboardingUsingPOST")
-    public void rejectOnboarding(@Parameter(description = "${openapi.tokens.onboardingId}")
-                                 @PathParam("onboardingId") String onboardingId,
-                                 ReasonForRejectDto reasonForRejectDto) {
+    public Response rejectOnboarding(@Parameter(description = "${openapi.tokens.onboardingId}")
+                                     @PathParam("onboardingId") String onboardingId,
+                                     ReasonForRejectDto reasonForRejectDto) {
         log.debug("reject onboarding identified with {}", LogUtils.sanitize(onboardingId));
         tokenService.rejectOnboarding(onboardingId, reasonForRejectDto.getReason());
+        return Response.ok().build();
     }
 
     @DELETE
@@ -194,10 +197,7 @@ public class TokenV2Controller {
                                           @Parameter(description = "${openapi.tokens.attachmentName}")
                                           @QueryParam("attachmentName") String legacyAttachmentName) {
         log.trace("getTemplateAttachment start");
-        String resolvedFilename = firstNonBlank(filename, legacyAttachmentName);
-        if (resolvedFilename == null) {
-            throw new InvalidRequestException("attachment name is required");
-        }
+        String resolvedFilename = resolveAttachmentName(filename, legacyAttachmentName);
         String sanitizedFilename = resolvedFilename.replaceAll(SANITIZIER, "_");
         log.debug("getTemplateAttachment onboardingId = {}, filename = {}", Encode.forJava(onboardingId), sanitizedFilename);
         BinaryData contract = tokenService.getTemplateAttachment(onboardingId, resolvedFilename);
@@ -215,9 +215,10 @@ public class TokenV2Controller {
                                   @Parameter(description = "${openapi.tokens.attachmentName}")
                                   @QueryParam("name") String filename) {
         log.trace("getAttachment start");
-        String sanitizedFilename = filename.replaceAll(SANITIZIER, "_");
+        String resolvedFilename = resolveAttachmentName(filename, null);
+        String sanitizedFilename = resolvedFilename.replaceAll(SANITIZIER, "_");
         log.debug("getAttachment onboardingId = {}, filename = {}", Encode.forJava(onboardingId), sanitizedFilename);
-        BinaryData contract = tokenService.getAttachment(onboardingId, filename);
+        BinaryData contract = tokenService.getAttachment(onboardingId, resolvedFilename);
         return binaryResponse(contract);
     }
 
@@ -248,10 +249,7 @@ public class TokenV2Controller {
         log.trace("uploadAttachment start");
         UploadedFile uploadedFile = toUploadedFile(attachment);
         FileValidationUtils.validatePdfOrP7m(uploadedFile);
-        String resolvedAttachmentName = firstNonBlank(attachmentName, legacyAttachmentName);
-        if (resolvedAttachmentName == null) {
-            throw new InvalidRequestException("attachment name is required");
-        }
+        String resolvedAttachmentName = resolveAttachmentName(attachmentName, legacyAttachmentName);
         String sanitizedFileName = Encode.forJava(uploadedFile.fileName());
         String sanitizedOnboardingId = onboardingId.replaceAll(SANITIZIER, "");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "upload Attachment tokenId = {}, file = {}", sanitizedOnboardingId, sanitizedFileName);
@@ -308,13 +306,11 @@ public class TokenV2Controller {
         }
     }
 
-    private static String firstNonBlank(String value, String fallback) {
-        if (value != null && !value.isBlank()) {
-            return value;
+    private static String resolveAttachmentName(String primaryValue, String legacyValue) {
+        String resolvedValue = StringUtils.firstNonBlank(primaryValue, legacyValue);
+        if (resolvedValue == null) {
+            throw new InvalidRequestException("attachment name is required");
         }
-        if (fallback != null && !fallback.isBlank()) {
-            return fallback;
-        }
-        return null;
+        return resolvedValue;
     }
 }

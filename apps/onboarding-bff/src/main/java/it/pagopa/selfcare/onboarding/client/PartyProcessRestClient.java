@@ -19,7 +19,7 @@ public interface PartyProcessRestClient extends OnboardingApi {
     @GET
     @Path("/external/institutions/{externalId}/relationships")
     @Produces(APPLICATION_JSON)
-    RelationshipsResponse getUserInstitutions(@PathParam("userId") String userId,
+    RelationshipsResponse getUserInstitutions(@PathParam("externalId") String userId,
                                               @QueryParam("role") PartyRole role,
                                               @QueryParam("states") EnumSet<RelationshipState> states,
                                               @QueryParam("products") List<String> products,
@@ -85,7 +85,7 @@ public interface PartyProcessRestClient extends OnboardingApi {
     Institution createInstitutionFromInfocamere(InstitutionSeed institutionSeed);
 
     @POST
-    @Path("/onboarding/organization")
+    @Path("/onboarding/institution")
     @Consumes(APPLICATION_JSON)
     void onboardingOrganization(OnboardingInstitutionRequest onboardingInstitutionRequest);
 

@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.exception.handler;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.WebApplicationException;
 import it.pagopa.selfcare.onboarding.exception.CustomVerifyException;
 import it.pagopa.selfcare.onboarding.exception.InternalGatewayErrorException;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
@@ -92,6 +93,35 @@ public class OnboardingExceptionMapper {
                 .type(MediaType.APPLICATION_JSON)
                 .entity(ex.getBody())
                 .build();
+    }
+
+    @ServerExceptionMapper
+    public Response handleWebApplicationException(WebApplicationException ex) {
+        int status = ex.getResponse() != null ? ex.getResponse().getStatus() : Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
+        Response.Status mappedStatus = Response.Status.fromStatusCode(status);
+        String responseBody = null;
+        if (ex.getResponse() != null && ex.getResponse().hasEntity()) {
+            try {
+                responseBody = ex.getResponse().readEntity(String.class);
+            } catch (Exception ignored) {
+                responseBody = null;
+            }
+        }
+        if (responseBody != null && !responseBody.isBlank()) {
+            log.warn(ex.toString());
+            return Response.status(status)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(responseBody)
+                    .build();
+        }
+        if (mappedStatus == null) {
+            return Response.status(status)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(buildProblem(Response.Status.INTERNAL_SERVER_ERROR, ex.getMessage()))
+                    .build();
+        }
+        log.warn(ex.toString());
+        return problemResponse(mappedStatus, ex.getMessage());
     }
 
     private Response problemResponse(Response.Status status, String message) {

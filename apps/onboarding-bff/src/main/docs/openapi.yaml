@@ -2023,6 +2023,17 @@ paths:
       - SecurityScheme: []
   /v2/institutions/onboarding/aggregation/verification:
     post:
+      parameters:
+      - name: institutionType
+        in: query
+        style: form
+        schema:
+          type: string
+      - name: productId
+        in: query
+        style: form
+        schema:
+          type: string
       requestBody:
         content:
           multipart/form-data:
@@ -2185,8 +2196,11 @@ paths:
         schema:
           type: string
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
         "401":
           description: Not Authorized
         "403":
@@ -2202,6 +2216,10 @@ paths:
       - name: onboardingId
         in: path
         required: true
+        schema:
+          type: string
+      - name: attachmentName
+        in: query
         schema:
           type: string
       - name: name
@@ -2438,8 +2456,11 @@ paths:
               $ref: "#/components/schemas/ReasonForRejectDto"
         required: true
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
         "401":
           description: Not Authorized
         "403":
@@ -2457,6 +2478,10 @@ paths:
       - name: onboardingId
         in: path
         required: true
+        schema:
+          type: string
+      - name: attachmentName
+        in: query
         schema:
           type: string
       - name: name

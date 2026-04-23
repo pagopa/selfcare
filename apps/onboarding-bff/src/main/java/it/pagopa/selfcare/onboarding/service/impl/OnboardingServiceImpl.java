@@ -8,10 +8,14 @@ import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.client.util.FilePayloadUtils;
 import it.pagopa.selfcare.onboarding.common.InstitutionPaSubunitType;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
+import it.pagopa.selfcare.onboarding.exception.InternalGatewayErrorException;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
+import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.onboarding.exception.ResourceConflictException;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.util.LogUtils;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.WebApplicationException;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -21,8 +25,10 @@ import org.openapi.quarkus.onboarding_json.model.*;
 import org.owasp.encoder.Encode;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 @Slf4j
@@ -124,7 +130,14 @@ public class OnboardingServiceImpl implements OnboardingService {
     public void onboardingTokenComplete(String onboardingId, UploadedFile contract) {
         InternalV1Api.CompleteOnboardingUsingPUTMultipartForm form = new InternalV1Api.CompleteOnboardingUsingPUTMultipartForm();
         form.contract = FilePayloadUtils.toTempFile(contract, "internal-", ".bin");
-        internalV1Api.completeOnboardingUsingPUT(form, onboardingId).await().indefinitely();
+        try {
+            internalV1Api.completeOnboardingUsingPUT(form, onboardingId).await().indefinitely();
+        } catch (WebApplicationException e) {
+            if (e.getResponse() != null && e.getResponse().getStatus() == 404) {
+                throw new InvalidRequestException(String.format("Onboarding with id %s not found or it is expired!", onboardingId));
+            }
+            throw e;
+        }
     }
 
     @Override
@@ -132,7 +145,14 @@ public class OnboardingServiceImpl implements OnboardingService {
     public void onboardingUsersComplete(String onboardingId, UploadedFile contract) {
         OnboardingControllerApi.CompleteOnboardingUserMultipartForm form = new OnboardingControllerApi.CompleteOnboardingUserMultipartForm();
         form.contract = FilePayloadUtils.toTempFile(contract, "onboarding-", ".bin");
-        onboardingApi.completeOnboardingUser(form, onboardingId).await().indefinitely();
+        try {
+            onboardingApi.completeOnboardingUser(form, onboardingId).await().indefinitely();
+        } catch (WebApplicationException e) {
+            if (e.getResponse() != null && e.getResponse().getStatus() == 404) {
+                throw new InvalidRequestException(String.format("Onboarding with id %s not found or it is expired!", onboardingId));
+            }
+            throw e;
+        }
     }
 
     @Override
@@ -144,7 +164,17 @@ public class OnboardingServiceImpl implements OnboardingService {
     @Override
     @Retry(maxRetries = 2, delay = 5000)
     public void approveOnboarding(String onboardingId) {
-        onboardingApi.approve(onboardingId).await().indefinitely();
+        try {
+            onboardingApi.approve(onboardingId).await().indefinitely();
+        } catch (WebApplicationException e) {
+            if (e.getResponse() != null && e.getResponse().getStatus() == 404) {
+                throw new InvalidRequestException("Onboarding not found");
+            }
+            if (e.getResponse() != null && e.getResponse().getStatus() == 409) {
+                throw new ResourceConflictException("Onboarding already consumed");
+            }
+            throw e;
+        }
     }
 
     @Override
@@ -154,7 +184,14 @@ public class OnboardingServiceImpl implements OnboardingService {
         if (reason != null && !reason.isBlank()) {
             reasonForReject.setReasonForReject(reason);
         }
-        onboardingApi.delete(onboardingId, reasonForReject).await().indefinitely();
+        try {
+            onboardingApi.delete(onboardingId, reasonForReject).await().indefinitely();
+        } catch (WebApplicationException e) {
+            if (e.getResponse() != null && e.getResponse().getStatus() == 404) {
+                throw new InvalidRequestException("Onboarding not found");
+            }
+            throw e;
+        }
     }
 
     @Override
@@ -172,8 +209,12 @@ public class OnboardingServiceImpl implements OnboardingService {
     @Override
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getContract(String onboardingId) {
-        File file = documentContentControllerApi.getContract(onboardingId).await().indefinitely();
-        return FilePayloadUtils.toBinaryData(file, file.getName());
+        try {
+            File file = documentContentControllerApi.getContract(onboardingId).await().indefinitely();
+            return FilePayloadUtils.toBinaryData(file, file.getName());
+        } catch (Exception e) {
+            throw new InternalGatewayErrorException("Error retrieving contract from document service");
+        }
     }
 
     @Override
@@ -237,8 +278,15 @@ public class OnboardingServiceImpl implements OnboardingService {
         if (productId == null || productId.isBlank()) {
             throw new IllegalArgumentException(REQUIRED_PRODUCT_ID_MESSAGE);
         }
-        onboardingApi.verifyOnboardingInfoByFilters(institutionType, origin, originId, productId, subunitCode, taxCode)
-                .await().indefinitely();
+        try {
+            onboardingApi.verifyOnboardingInfoByFilters(institutionType, origin, originId, productId, subunitCode, taxCode)
+                    .await().indefinitely();
+        } catch (WebApplicationException e) {
+            if (e.getResponse() != null && e.getResponse().getStatus() == 404) {
+                throw new ResourceNotFoundException("Onboarding not found");
+            }
+            throw e;
+        }
         log.trace("verifyOnboarding end");
     }
 
@@ -293,11 +341,13 @@ public class OnboardingServiceImpl implements OnboardingService {
         try {
             return OnboardingStatus.fromString(status);
         } catch (IllegalArgumentException ex) {
-            String allowedValues = java.util.Arrays.stream(OnboardingStatus.values())
+            String allowedValues = Arrays.stream(OnboardingStatus.values())
                     .map(OnboardingStatus::value)
-                    .toList()
-                    .toString();
-            throw new InvalidRequestException("Invalid status '" + status + "'. Allowed values: " + allowedValues);
+                    .collect(Collectors.joining(", ", "[", "]"));
+            throw new InvalidRequestException(String.format(
+                    "Invalid status '%s'. Allowed values: %s",
+                    status,
+                    allowedValues));
         }
     }
 }

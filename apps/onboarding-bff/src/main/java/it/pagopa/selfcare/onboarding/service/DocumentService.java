@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.service;
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.client.util.FilePayloadUtils;
+import it.pagopa.selfcare.onboarding.exception.InternalGatewayErrorException;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.faulttolerance.Retry;
@@ -28,8 +29,12 @@ public class DocumentService {
 
     @Retry(maxRetries = 2, delay = 5000)
     public BinaryData getContract(String onboardingId) {
-        File file = documentContentApi.getContract(onboardingId).await().indefinitely();
-        return FilePayloadUtils.toBinaryData(file, file.getName());
+        try {
+            File file = documentContentApi.getContract(onboardingId).await().indefinitely();
+            return FilePayloadUtils.toBinaryData(file, file.getName());
+        } catch (Exception e) {
+            throw new InternalGatewayErrorException("Error retrieving contract from document service");
+        }
     }
 
     @Retry(maxRetries = 2, delay = 5000)

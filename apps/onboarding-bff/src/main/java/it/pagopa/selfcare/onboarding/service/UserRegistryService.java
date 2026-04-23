@@ -31,7 +31,7 @@ public class UserRegistryService {
         requireNotEmpty(fieldList, "At least one user fields is required");
         Optional<User> user;
         try {
-            user = Optional.of(restClient.search(new EmbeddedExternalId(externalId), fieldList));
+            user = Optional.of(restClient.searchByExternalId(new EmbeddedExternalId(externalId), USERS_FIELD_LIST));
         } catch (WebApplicationException e) {
             if (e.getResponse().getStatus() == 404) {
                 user = Optional.empty();

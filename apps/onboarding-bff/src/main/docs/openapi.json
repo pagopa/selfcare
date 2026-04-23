@@ -2797,6 +2797,21 @@
     },
     "/v2/institutions/onboarding/aggregation/verification" : {
       "post" : {
+        "parameters" : [ {
+          "name" : "institutionType",
+          "in" : "query",
+          "style" : "form",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productId",
+          "in" : "query",
+          "style" : "form",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
         "requestBody" : {
           "content" : {
             "multipart/form-data" : {
@@ -3037,8 +3052,13 @@
           }
         } ],
         "responses" : {
-          "201" : {
-            "description" : "Created"
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
           },
           "401" : {
             "description" : "Not Authorized"
@@ -3060,6 +3080,12 @@
           "name" : "onboardingId",
           "in" : "path",
           "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "attachmentName",
+          "in" : "query",
           "schema" : {
             "type" : "string"
           }
@@ -3403,8 +3429,13 @@
           "required" : true
         },
         "responses" : {
-          "201" : {
-            "description" : "Created"
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
           },
           "401" : {
             "description" : "Not Authorized"
@@ -3429,6 +3460,12 @@
           "name" : "onboardingId",
           "in" : "path",
           "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "attachmentName",
+          "in" : "query",
           "schema" : {
             "type" : "string"
           }

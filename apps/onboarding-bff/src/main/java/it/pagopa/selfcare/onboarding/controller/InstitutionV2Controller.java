@@ -128,6 +128,9 @@ public class InstitutionV2Controller {
                                                     @QueryParam("subunitCode")
                                                     String subunitCode) {
         log.trace("getInstitution start");
+        if (StringUtils.isAllBlank(productId, taxCode, origin, originId, subunitCode)) {
+            throw new InvalidRequestException("At least one filter must be provided");
+        }
         final List<InstitutionResource> institutions = institutionService.getByFilters(productId, taxCode, origin, originId, subunitCode)
                 .stream()
                 .map(institutionMapper::toResource)
@@ -148,8 +151,11 @@ public class InstitutionV2Controller {
                                                         @QueryParam("institutionType") String legacyInstitutionType,
                                                         @QueryParam("productId") String legacyProductId){
         log.trace("Verify Aggregates Csv start");
-        String resolvedInstitutionType = StringUtils.isNotBlank(institutionType) ? institutionType : legacyInstitutionType;
-        String resolvedProductId = StringUtils.isNotBlank(productId) ? productId : legacyProductId;
+        String resolvedInstitutionType = StringUtils.firstNonBlank(institutionType, legacyInstitutionType);
+        String resolvedProductId = StringUtils.firstNonBlank(productId, legacyProductId);
+        if (StringUtils.isBlank(resolvedProductId)) {
+            throw new InvalidRequestException("productId is required");
+        }
         log.debug("Verify Aggregates Csv start for productId {}", LogUtils.sanitize(resolvedProductId));
         log.debug("Verify Aggregates Csv institutionType = {}", LogUtils.sanitize(resolvedInstitutionType));
 

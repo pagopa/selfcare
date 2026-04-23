@@ -46,6 +46,9 @@ public class UserServiceImpl implements UserService {
         Objects.requireNonNull(user, "An user is required");
         final Optional<User> searchResult =
                 userRegistryConnector.search(user.getTaxCode(), FIELD_LIST);
+        if (searchResult.isEmpty()) {
+            throw new ResourceNotFoundException("User not found");
+        }
         searchResult.ifPresent(foundUser -> {
             final ArrayList<InvalidUserFieldsException.InvalidField> invalidFields = new ArrayList<>();
             if (!isValid(UserMapper.map(user.getName()), foundUser.getName())) {

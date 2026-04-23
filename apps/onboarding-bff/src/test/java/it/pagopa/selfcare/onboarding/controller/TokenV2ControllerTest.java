@@ -2,6 +2,7 @@ package it.pagopa.selfcare.onboarding.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.when;
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
+import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.controller.request.ReasonForRejectDto;
 import it.pagopa.selfcare.onboarding.controller.response.OnboardingRequestResource;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
@@ -116,18 +118,42 @@ class TokenV2ControllerTest {
     }
 
     @Test
+    void getAttachment_throwsWhenAttachmentNameMissing() {
+        assertThrows(InvalidRequestException.class, () -> tokenV2Controller.getAttachment("42", null));
+    }
+
+    @Test
+    void uploadAttachment_throwsWhenAttachmentNameMissing() throws Exception {
+        Path tempFile = Files.createTempFile("token-upload-", ".pdf");
+        Files.writeString(tempFile, "pdf-content");
+        try {
+            FileUpload fileUpload = org.mockito.Mockito.mock(FileUpload.class);
+            when(fileUpload.fileName()).thenReturn("contract.pdf");
+            when(fileUpload.contentType()).thenReturn("application/pdf");
+            when(fileUpload.uploadedFile()).thenReturn(tempFile);
+
+            assertThrows(InvalidRequestException.class, () -> tokenV2Controller.uploadAttachment("42", null, null, fileUpload));
+        } finally {
+            Files.deleteIfExists(tempFile);
+        }
+    }
+
+    @Test
     void uploadAttachment_supportsLegacyAttachmentNameQueryParam() throws Exception {
         Path tempFile = Files.createTempFile("token-upload-", ".pdf");
         Files.writeString(tempFile, "pdf-content");
-        FileUpload fileUpload = org.mockito.Mockito.mock(FileUpload.class);
-        when(fileUpload.fileName()).thenReturn("contract.pdf");
-        when(fileUpload.contentType()).thenReturn("application/pdf");
-        when(fileUpload.uploadedFile()).thenReturn(tempFile);
+        try {
+            FileUpload fileUpload = org.mockito.Mockito.mock(FileUpload.class);
+            when(fileUpload.fileName()).thenReturn("contract.pdf");
+            when(fileUpload.contentType()).thenReturn("application/pdf");
+            when(fileUpload.uploadedFile()).thenReturn(tempFile);
 
-        Response response = tokenV2Controller.uploadAttachment("42", null, "legacy-attachment.pdf", fileUpload);
+            Response response = tokenV2Controller.uploadAttachment("42", null, "legacy-attachment.pdf", fileUpload);
 
-        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
-        verify(tokenService).uploadAttachment(eq("42"), any(UploadedFile.class), eq("legacy-attachment.pdf"));
-        Files.deleteIfExists(tempFile);
+            assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
+            verify(tokenService).uploadAttachment(eq("42"), any(UploadedFile.class), eq("legacy-attachment.pdf"));
+        } finally {
+            Files.deleteIfExists(tempFile);
+        }
     }
 }
