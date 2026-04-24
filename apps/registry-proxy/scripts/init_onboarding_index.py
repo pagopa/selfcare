@@ -77,7 +77,7 @@ def main():
     count_skipped = 0
     onboardings = []
     for o in collection.find({}, batch_size=MONGO_BATCH_SIZE):
-        if not o.get("institution") or not o["institution"].get("description") or not o["institution"].get("institutionType") or not o.get("productId") or not o.get("status") or o.get("status") == "REQUEST":
+        if not o.get("institution") or not o["institution"].get("description") or not o["institution"].get("institutionType") or not o.get("productId") or not o.get("status") or o.get("status") in ["REQUEST", "TOBEVALIDATED"]:
             count_skipped += 1
             continue
         onboardings.append(o)
@@ -90,7 +90,7 @@ def main():
         print(f"Updating index: {count}/{total_count} onboardings")
         update_onboarding_index(onboardings)
         onboardings = []
-    print(f"Skipped onboardings: {count_skipped} (missing description, institutionType, productId, status or status is REQUEST)")
+    print(f"Skipped onboardings: {count_skipped} (missing description, institutionType, productId, status or status is REQUEST or TOBEVALIDATED)")
 
 if __name__ == "__main__":
     try:
