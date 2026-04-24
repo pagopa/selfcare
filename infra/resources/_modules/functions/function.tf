@@ -59,6 +59,7 @@ resource "azurerm_storage_account" "fn_storage" {
   access_tier              = "Hot"
 
   public_network_access_enabled = true
+  shared_access_key_enabled     = true
 
   tags = var.tags
 
