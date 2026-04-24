@@ -12,6 +12,7 @@ Before running this script, ensure that the following environment variables are 
 """
 
 import requests
+import sys
 import os
 
 from datetime import datetime, timezone
@@ -27,7 +28,7 @@ ONBOARDING_INDEX_API_KEY = os.environ["ONBOARDING_INDEX_API_KEY"]
 
 # Use it to delete documents from the index if needed, pass a list of onboardingIds to delete
 def delete_onboarding_index(onboarding_ids: list[str]):
-    requests.post(f"{ONBOARDING_INDEX_URL}/indexes/{ONBOARDING_INDEX_NAME}/docs/index?api-version=2023-11-01", headers={"api-key": ONBOARDING_INDEX_API_KEY}, json={
+    response = requests.post(f"{ONBOARDING_INDEX_URL}/indexes/{ONBOARDING_INDEX_NAME}/docs/index?api-version=2023-11-01", headers={"api-key": ONBOARDING_INDEX_API_KEY}, json={
         "value": [
             {
                 "@search.action": "delete",
@@ -36,6 +37,10 @@ def delete_onboarding_index(onboarding_ids: list[str]):
             for _id in onboarding_ids
         ]
     })
+    if response.status_code != 200:
+        print(f"Error deleting from onboarding index: {response.status_code} - {response.text}", file=sys.stderr)
+        return False
+    return True
 
 # Convert datetime to string forcing utc timezone and formatting it in isoformat with only 3 digits for milliseconds
 def get_date_string(dt: datetime) -> str:
@@ -45,7 +50,7 @@ def get_date_string(dt: datetime) -> str:
 
 # Update the onboarding index with the given onboardings, it will merge or upload the documents based on the onboardingId
 def update_onboarding_index(onboardings: list[dict]):
-    requests.post(f"{ONBOARDING_INDEX_URL}/indexes/{ONBOARDING_INDEX_NAME}/docs/index?api-version=2023-11-01", headers={"api-key": ONBOARDING_INDEX_API_KEY}, json={
+    response = requests.post(f"{ONBOARDING_INDEX_URL}/indexes/{ONBOARDING_INDEX_NAME}/docs/index?api-version=2023-11-01", headers={"api-key": ONBOARDING_INDEX_API_KEY}, json={
         "value": [
             {
                 "@search.action": "mergeOrUpload",
@@ -67,6 +72,10 @@ def update_onboarding_index(onboardings: list[dict]):
             for o in onboardings
         ]
     })
+    if response.status_code != 200:
+        print(f"Error updating onboarding index: {response.status_code} - {response.text}", file=sys.stderr)
+        return False
+    return True
 
 def main():
     client = MongoClient(MONGO_HOST)
@@ -75,6 +84,7 @@ def main():
     total_count = collection.count_documents({})
     count = 0
     count_skipped = 0
+    count_errors = 0
     onboardings = []
     for o in collection.find({}, batch_size=MONGO_BATCH_SIZE):
         if not o.get("institution") or not o["institution"].get("description") or not o["institution"].get("institutionType") or not o.get("productId") or not o.get("status") or o.get("status") in ["REQUEST", "TOBEVALIDATED"]:
@@ -84,13 +94,16 @@ def main():
         count += 1
         if len(onboardings) >= MONGO_BATCH_SIZE:
             print(f"Updating index: {count}/{total_count} onboardings", end="\r")
-            update_onboarding_index(onboardings)
+            if not update_onboarding_index(onboardings):
+                count_errors += len(onboardings)
             onboardings = []
     if onboardings:
         print(f"Updating index: {count}/{total_count} onboardings")
-        update_onboarding_index(onboardings)
+        if not update_onboarding_index(onboardings):
+            count_errors += len(onboardings)
         onboardings = []
     print(f"Skipped onboardings: {count_skipped} (missing description, institutionType, productId, status or status is REQUEST or TOBEVALIDATED)")
+    print(f"Errors updating onboardings: {count_errors}")
 
 if __name__ == "__main__":
     try:
