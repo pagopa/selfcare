@@ -19,7 +19,7 @@ onboarding-cdc:
 onboarding-functions:
   - changed-files:
       - any-glob-to-any-file:
-          ["apps/onboarding-functions/**", "infra/resources/onboarding-functions/**", "infra/apps/onboarding-functions/**"]
+          ["apps/onboarding-functions/**", "infra/resources/onboarding-functions/**"]
 
 onboarding-ms:
   - changed-files:
@@ -69,11 +69,11 @@ user-group-cdc:
 
 hub-spid-login:
   - changed-files:
-      - any-glob-to-any-file: ["infra/apps/hub_spid_login/**", "infra/resources/spid-login/**/hub_spid_login.tf"]
+      - any-glob-to-any-file: ["infra/resources/spid-login/**/hub_spid_login.tf"]
 
 namirial-sign:
   - changed-files:
-      - any-glob-to-any-file: ["infra/apps/namirial-sign/**", "infra/resources/registry-proxy/**/namirial-sign.tf"]
+      - any-glob-to-any-file: ["infra/resources/namirial-sign/**"]
 
 cucumber-sdk:
   - changed-files:

@@ -1,4 +1,3 @@
-
 data "azurerm_key_vault_secret" "appinsights_connection_string" {
   count = var.application_insights_connection_string == null ? 1 : 0
 
@@ -59,6 +58,7 @@ resource "azurerm_storage_account" "fn_storage" {
   access_tier              = "Hot"
 
   public_network_access_enabled = true
+  shared_access_key_enabled     = true
 
   tags = var.tags
 
@@ -74,9 +74,9 @@ resource "azurerm_linux_function_app" "fn" {
   location            = azurerm_resource_group.fn_rg.location
   resource_group_name = azurerm_resource_group.fn_rg.name
 
-  service_plan_id            = azurerm_service_plan.fn_plan.id
-  storage_account_name       = azurerm_storage_account.fn_storage.name
-  storage_account_access_key = azurerm_storage_account.fn_storage.primary_access_key
+  service_plan_id              = azurerm_service_plan.fn_plan.id
+  storage_account_name         = azurerm_storage_account.fn_storage.name
+  storage_uses_managed_identity = true
 
   functions_extension_version = "~4"
   virtual_network_subnet_id   = azurerm_subnet.fn_snet.id
@@ -111,6 +111,24 @@ resource "azurerm_key_vault_access_policy" "fn_keyvault_access_policy" {
   secret_permissions = [
     "Get",
   ]
+}
+
+resource "azurerm_role_assignment" "fn_storage_blob_owner" {
+  scope                = azurerm_storage_account.fn_storage.id
+  role_definition_name = "Storage Blob Data Owner"
+  principal_id         = azurerm_linux_function_app.fn.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "fn_storage_queue_contributor" {
+  scope                = azurerm_storage_account.fn_storage.id
+  role_definition_name = "Storage Queue Data Contributor"
+  principal_id         = azurerm_linux_function_app.fn.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "fn_storage_table_contributor" {
+  scope                = azurerm_storage_account.fn_storage.id
+  role_definition_name = "Storage Table Data Contributor"
+  principal_id         = azurerm_linux_function_app.fn.identity[0].principal_id
 }
 
 data "azurerm_function_app_host_keys" "fn" {

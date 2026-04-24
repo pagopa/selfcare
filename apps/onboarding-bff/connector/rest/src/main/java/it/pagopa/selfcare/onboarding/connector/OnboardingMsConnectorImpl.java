@@ -209,7 +209,7 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
                 null,
                 null,
                 null,
-                status,
+                OnboardingStatus.fromValue(status),
                 null,
                 taxCode,
                 null,
