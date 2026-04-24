@@ -137,6 +137,5 @@ module "container_app_user_group_ms" {
   secrets_names                  = local.secrets_names_user_group_ms
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
-  probes                         = module.local.config.quarkus_health_probes
   tags                           = module.local.config.tags
 }
