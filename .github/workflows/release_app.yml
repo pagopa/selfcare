@@ -1,5 +1,5 @@
 name: Release App
-run-name: Release ${{ inputs.app }} (${{ inputs.target }})
+run-name: Release ${{ inputs.app }} (${{ inputs.env }} - ${{ inputs.target }})
 
 on:
   workflow_dispatch:
