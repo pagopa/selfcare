@@ -1584,7 +1584,7 @@
         "tags" : [ "external-v2", "Onboarding Controller" ],
         "summary" : "Perform reject operation of an onboarding request",
         "description" : "Perform reject operation of an onboarding request receiving onboarding id.Function change status to REJECT for an onboarding request that is not COMPLETED. ",
-        "operationId" : "delete",
+        "operationId" : "rejectOnboardingUsingPUT",
         "parameters" : [ {
           "name" : "onboardingId",
           "in" : "path",

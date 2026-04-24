@@ -434,7 +434,8 @@ public class OnboardingController {
 
     @Operation(summary = "Perform reject operation of an onboarding request",
             description = "Perform reject operation of an onboarding request receiving onboarding id." +
-                    "Function change status to REJECT for an onboarding request that is not COMPLETED. ")
+                    "Function change status to REJECT for an onboarding request that is not COMPLETED. ",
+            operationId = "rejectOnboardingUsingPUT")
     @PUT
     @Tag(name = "external-v2")
     @Tag(name = "Onboarding Controller")
