@@ -43,7 +43,7 @@ def get_date_string(dt: datetime) -> str:
     dt = dt.strftime("%Y-%m-%dT%H:%M:%S.") + f"{dt.microsecond // 1000:03d}+00:00"
     return dt
 
-# Update the onboarding index with the given onboardings, it will merge or upload the documents based on the onboardingId
+# Update the onboarding index with the given onboardings, it will merge or upload the documents based on the onboardingId
 def update_onboarding_index(onboardings: list[dict]):
     requests.post(f"{ONBOARDING_INDEX_URL}/indexes/{ONBOARDING_INDEX_NAME}/docs/index?api-version=2023-11-01", headers={"api-key": ONBOARDING_INDEX_API_KEY}, json={
         "value": [
@@ -77,7 +77,7 @@ def main():
     count_skipped = 0
     onboardings = []
     for o in collection.find({}, batch_size=MONGO_BATCH_SIZE):
-        if not o.get("institution") or not o["institution"].get("description") or not o["institution"].get("institutionType") or not o.get("productId") or not o.get("status"):
+        if not o.get("institution") or not o["institution"].get("description") or not o["institution"].get("institutionType") or not o.get("productId") or not o.get("status") or o.get("status") == "REQUEST":
             count_skipped += 1
             continue
         onboardings.append(o)
@@ -90,7 +90,7 @@ def main():
         print(f"Updating index: {count}/{total_count} onboardings")
         update_onboarding_index(onboardings)
         onboardings = []
-    print(f"Skipped onboardings: {count_skipped} (missing description, institutionType, productId or status)")
+    print(f"Skipped onboardings: {count_skipped} (missing description, institutionType, productId, status or status is REQUEST)")
 
 if __name__ == "__main__":
     try:
