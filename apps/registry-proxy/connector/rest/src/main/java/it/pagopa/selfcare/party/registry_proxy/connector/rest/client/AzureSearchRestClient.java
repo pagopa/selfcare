@@ -4,6 +4,7 @@ import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceStat
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.config.AzureSearchRestClientConfig;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.SearchServiceRequest;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.SearchServiceResponse;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.IpaInstitutionIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexRequest;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexResponse;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceOnboardingIndex;
@@ -40,5 +41,16 @@ public interface AzureSearchRestClient {
                                                                             @RequestParam(value = "$skip", required = false) Long skip,
                                                                             @RequestParam(value = "$select", required = false) String select,
                                                                             @RequestParam(value = "$orderby", required = false) String orderby);
+
+  @PostMapping(value = "${rest-client.ai-search.ipa.institution.add.path}", consumes = APPLICATION_JSON_VALUE)
+  @ResponseBody
+  SearchServiceStatus indexIpaInstitutions(@RequestBody SearchServiceIndexRequest<IpaInstitutionIndex> request);
+
+  @GetMapping("${rest-client.ai-search.ipa.institution.search.path}")
+  SearchServiceIndexResponse<IpaInstitutionIndex> searchIpaInstitutions(@RequestParam(value = "search", required = false) String search,
+                                                                        @RequestParam(value = "$select", required = false) String select,
+                                                                        @RequestParam(value = "$count", required = false) Boolean count,
+                                                                        @RequestParam(value = "$top", required = false) Integer top,
+                                                                        @RequestParam(value = "$skip", required = false) Integer skip);
 
 }
