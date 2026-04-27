@@ -78,7 +78,7 @@ jobs:
         shell: bash
         working-directory: ${{ inputs.dir }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT_VARIABLES }}
         run: |
           if [ -f "./terraform.sh" ]; then
             bash ./terraform.sh init ${{ env.TERRAFORM_ENVIRONMENT }}
@@ -104,7 +104,7 @@ jobs:
         shell: bash
         working-directory: ${{ inputs.dir }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT_VARIABLES }}
         run: |
           plan_file="${{ steps.set-plan-file.outputs.plan_file }}"
           if [ -f "./terraform.sh" ]; then
@@ -133,7 +133,7 @@ jobs:
       contents: read
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GH_PAT_VARIABLES }}
 
     steps:
 
