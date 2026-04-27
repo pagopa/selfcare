@@ -2,8 +2,11 @@ package it.pagopa.selfcare.onboarding.service;
 
 import com.microsoft.applicationinsights.TelemetryClient;
 import com.microsoft.applicationinsights.telemetry.SeverityLevel;
+import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
@@ -13,6 +16,8 @@ import java.util.Map;
  */
 @ApplicationScoped
 public class TelemetryService {
+
+    private static final Logger log = LoggerFactory.getLogger(TelemetryService.class);
 
     @Inject
     TelemetryClient telemetryClient;
@@ -51,5 +56,17 @@ public class TelemetryService {
             telemetryClient.trackEvent(eventName, properties, metrics);
         }
     }
-}
 
+    @PreDestroy
+    void shutdown() {
+        if (telemetryClient != null) {
+            telemetryClient.flush();
+            log.debug("Flushed Application Insights telemetry before shutdown");
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+}
