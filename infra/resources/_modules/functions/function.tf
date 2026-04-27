@@ -106,7 +106,7 @@ locals {
     account_replication_type          = var.replication_type
     access_tier                       = "Hot"
     advanced_threat_protection_enable = true
-    use_legacy_defender_version       = true
+    use_legacy_defender_version       = false
     public_network_access_enabled     = false
   }
 }
