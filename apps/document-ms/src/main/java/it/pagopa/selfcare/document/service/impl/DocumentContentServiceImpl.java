@@ -261,15 +261,14 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                                 log.error("DB update failed for onboardingId {}. Triggering Azure Rollback...", onboardingId);
                                 return rollbackDeletedAzureFiles(deletedSignedContract, originalSignedPath, deletedContractFile, originalContractPath);
                             })
-                            .replaceWith("Contract deleted successfully");
+                            .replaceWith("Contract deleted successfully")
+                            .invoke(ignored -> telemetryService.trackContractDeleted(onboardingId));
                 })
                 .onFailure().invoke(error -> {
                     log.error("deleteContract failed for onboardingId {}: {}", sanitize(onboardingId), error.getMessage());
                     telemetryService.trackContractDeleteFailed(onboardingId, error.getMessage());
                 })
-                .invoke(ignored -> telemetryService.trackContractDeleted(onboardingId))
-                .onFailure().recoverWithItem("Contract deletion skipped due to error")
-                .replaceWith("Contract deleted successfully");
+                .onFailure().recoverWithItem("Contract deletion skipped due to error");
     }
 
     @Override
