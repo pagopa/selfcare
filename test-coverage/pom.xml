@@ -125,6 +125,63 @@
             </dependencies>
         </profile>
         <profile>
+            <id>institution-ms</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>institution-ms</artifactId>
+                    <version>1.0-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>delegation-cdc</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>delegation-cdc</artifactId>
+                    <version>1.0.0-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>institution-send-mail-scheduler</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>institution-send-mail-scheduler</artifactId>
+                    <version>1.0.0-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
             <id>onboarding-functions</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
@@ -297,7 +354,7 @@
                 <dependency>
                     <groupId>it.pagopa.selfcare</groupId>
                     <artifactId>selfcare-cucumber-sdk</artifactId>
-                    <version>0.1.0</version>
+                    <version>0.1.1</version>
                 </dependency>
             </dependencies>
         </profile>
