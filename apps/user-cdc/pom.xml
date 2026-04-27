@@ -134,8 +134,8 @@
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>user-sdk-event</artifactId>
-            <version>0.0.1</version>
+            <artifactId>selfcare-user-sdk-event</artifactId>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
