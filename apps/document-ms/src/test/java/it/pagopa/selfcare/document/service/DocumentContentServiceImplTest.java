@@ -1268,16 +1268,12 @@ class DocumentContentServiceImplTest {
         doc.setContractSigned("contracts/test-onboarding-123/signed_contract.pdf");
         doc.setContractFilename("contract.pdf");
 
-        // 1. Mock DB
         when(documentService.getDocumentByOnboardingId(onboardingId))
                 .thenReturn(Uni.createFrom().item(doc));
 
-        // 2. Mock Config
         when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
         when(documentMsConfig.getDeletePath()).thenReturn("/deleted/");
 
-        // 3. Mock Azure: Usiamo thenAnswer per generare un file NUOVO ad ogni chiamata!
-        // Memorizziamo i file creati in una lista per poter verificare dopo che siano stati cancellati.
         List<File> generatedFiles = new ArrayList<>();
         when(azureBlobClient.retrieveFile(anyString())).thenAnswer(invocation -> {
             File newTempFile = createTempPdf(); // Il tuo metodo helper
@@ -1285,7 +1281,6 @@ class DocumentContentServiceImplTest {
             return newTempFile;
         });
 
-        // 4. Mock DB update
         when(documentService.updateDocumentContractFiles(any(Document.class)))
                 .thenReturn(Uni.createFrom().item(1L));
 
@@ -1297,13 +1292,11 @@ class DocumentContentServiceImplTest {
         assertNotNull(result);
         assertEquals("Contract deleted successfully", result);
 
-        // Verifica chiamate ad Azure e DB
         verify(azureBlobClient, Mockito.times(2)).retrieveFile(anyString());
         verify(azureBlobClient, Mockito.times(2)).uploadFilePath(anyString(), any(byte[].class));
         verify(azureBlobClient, Mockito.times(2)).removeFile(anyString());
         verify(documentService).updateDocumentContractFiles(doc);
 
-        // NUOVA ASSERZIONE: Verifichiamo che il blocco finally abbia fatto il suo dovere!
         assertEquals(2, generatedFiles.size(), "2 files should have been processed");
         for (File f : generatedFiles) {
             assertFalse(f.exists(), "temporary file " + f.getName() + "should have been removed from the finally block!");
@@ -1319,7 +1312,6 @@ class DocumentContentServiceImplTest {
         doc.setContractSigned("contracts/test-onboarding-123/signed_contract.pdf");
         doc.setContractFilename("contract.pdf");
 
-        // Creiamo un file e lo cancelliamo subito per far fallire Files.readAllBytes
         File phantomFile = Files.createTempFile("phantom", ".pdf").toFile();
         phantomFile.delete();
 
@@ -1330,7 +1322,7 @@ class DocumentContentServiceImplTest {
 
         when(azureBlobClient.retrieveFile(anyString())).thenReturn(phantomFile);
 
-        // Act - now recovers gracefully instead of throwing
+        // Act
         String result = documentContentService.deleteContract(onboardingId).await().indefinitely();
 
         // Assert
@@ -1347,7 +1339,7 @@ class DocumentContentServiceImplTest {
         when(documentService.getDocumentByOnboardingId(onboardingId))
                 .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("Document not found")));
 
-        // Act - now recovers gracefully
+        // Act
         String result = documentContentService.deleteContract(onboardingId).await().indefinitely();
 
         assertEquals("Contract deleted successfully", result);
