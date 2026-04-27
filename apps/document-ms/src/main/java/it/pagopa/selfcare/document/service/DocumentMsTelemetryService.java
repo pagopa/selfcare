@@ -39,6 +39,7 @@ public class DocumentMsTelemetryService {
     static final String EVENT_DOCUMENT_IMPORTED        = "DOCUMENT-MS-DOCUMENT-IMPORTED";
     static final String EVENT_ATTACHMENT_UPLOADED      = "DOCUMENT-MS-ATTACHMENT-UPLOADED";
     static final String EVENT_CONTRACT_DELETED         = "DOCUMENT-MS-CONTRACT-DELETED";
+    static final String EVENT_CONTRACT_DELETE_FAILED   = "DOCUMENT-MS-CONTRACT-DELETE-FAILED";
     static final String EVENT_AGGREGATES_CSV_UPLOADED  = "DOCUMENT-MS-AGGREGATES-CSV-UPLOADED";
     static final String EVENT_VISURA_SAVED             = "DOCUMENT-MS-VISURA-SAVED";
 
@@ -184,6 +185,20 @@ public class DocumentMsTelemetryService {
         props.put("onboardingId", onboardingId);
 
         track(EVENT_CONTRACT_DELETED, props, new HashMap<>());
+    }
+
+    /**
+     * Tracks a failed contract deletion attempt.
+     *
+     * @param onboardingId onboarding identifier
+     * @param errorMessage error description
+     */
+    public void trackContractDeleteFailed(String onboardingId, String errorMessage) {
+        Map<String, String> props = new HashMap<>();
+        props.put("onboardingId", onboardingId);
+        props.put("errorMessage", errorMessage);
+
+        track(EVENT_CONTRACT_DELETE_FAILED, props, new HashMap<>());
     }
 
     /**

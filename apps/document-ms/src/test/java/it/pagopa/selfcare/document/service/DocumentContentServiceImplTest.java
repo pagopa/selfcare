@@ -1311,7 +1311,7 @@ class DocumentContentServiceImplTest {
     }
 
     @Test
-    void deleteContract_shouldFail_whenAzureThrowsIOException() throws IOException {
+    void deleteContract_shouldRecoverGracefully_whenAzureThrowsIOException() throws IOException {
         // Arrange
         String onboardingId = "test-onboarding-123";
         Document doc = buildDocument();
@@ -1330,33 +1330,71 @@ class DocumentContentServiceImplTest {
 
         when(azureBlobClient.retrieveFile(anyString())).thenReturn(phantomFile);
 
-        // Act & Assert
-        var awaiter = documentContentService.deleteContract(onboardingId).await();
+        // Act - now recovers gracefully instead of throwing
+        String result = documentContentService.deleteContract(onboardingId).await().indefinitely();
 
-        RuntimeException ex = assertThrows(RuntimeException.class, awaiter::indefinitely);
-        assertTrue(ex.getMessage().contains("Error deleting contract files from Azure"));
+        // Assert
+        assertEquals("Contract deleted successfully", result);
+        verify(documentService, Mockito.never()).updateDocumentContractFiles(any());
+        verify(telemetryService).trackContractDeleteFailed(eq(onboardingId), anyString());
+    }
 
-        // Il finally farà "if(phantomFile.exists())", che sarà false, quindi non andrà in NullPointerException
+    @Test
+    void deleteContract_shouldRecoverGracefully_whenDocumentNotFoundInDB() {
+        // Arrange
+        String onboardingId = "invalid-onboarding-id";
+
+        when(documentService.getDocumentByOnboardingId(onboardingId))
+                .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("Document not found")));
+
+        // Act - now recovers gracefully
+        String result = documentContentService.deleteContract(onboardingId).await().indefinitely();
+
+        assertEquals("Contract deleted successfully", result);
+        verify(azureBlobClient, Mockito.never()).retrieveFile(anyString());
+        verify(telemetryService).trackContractDeleteFailed(eq(onboardingId), anyString());
+    }
+
+    @Test
+    void deleteContract_shouldSkip_whenContractSignedIsNull() {
+        // Arrange
+        String onboardingId = "test-onboarding-no-contract";
+        Document doc = buildDocument();
+        doc.setOnboardingId(onboardingId);
+        doc.setContractSigned(null);
+        doc.setContractFilename("contract.pdf");
+
+        when(documentService.getDocumentByOnboardingId(onboardingId))
+                .thenReturn(Uni.createFrom().item(doc));
+
+        // Act
+        String result = documentContentService.deleteContract(onboardingId).await().indefinitely();
+
+        // Assert
+        assertEquals("Contract deleted successfully", result);
+        verify(azureBlobClient, Mockito.never()).retrieveFile(anyString());
         verify(documentService, Mockito.never()).updateDocumentContractFiles(any());
     }
 
     @Test
-    void deleteContract_shouldFail_whenDocumentNotFoundInDB() {
+    void deleteContract_shouldSkip_whenContractSignedIsBlank() {
         // Arrange
-        String onboardingId = "invalid-onboarding-id";
+        String onboardingId = "test-onboarding-blank-contract";
+        Document doc = buildDocument();
+        doc.setOnboardingId(onboardingId);
+        doc.setContractSigned("   ");
+        doc.setContractFilename("contract.pdf");
 
-        // Simuliamo che il DB non trovi l'onboarding e restituisca una failure
         when(documentService.getDocumentByOnboardingId(onboardingId))
-                .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("Document not found")));
+                .thenReturn(Uni.createFrom().item(doc));
 
-        // Act & Assert
-        var awaiter = documentContentService.deleteContract(onboardingId).await();
+        // Act
+        String result = documentContentService.deleteContract(onboardingId).await().indefinitely();
 
-        // Verifichiamo che l'eccezione si propaghi correttamente
-        assertThrows(ResourceNotFoundException.class, awaiter::indefinitely);
-
-        // Se il documento non esiste, Azure non deve MAI essere chiamato
+        // Assert
+        assertEquals("Contract deleted successfully", result);
         verify(azureBlobClient, Mockito.never()).retrieveFile(anyString());
+        verify(documentService, Mockito.never()).updateDocumentContractFiles(any());
     }
 
     @Test
@@ -1432,17 +1470,14 @@ class DocumentContentServiceImplTest {
         when(documentService.updateDocumentContractFiles(any(Document.class)))
                 .thenReturn(Uni.createFrom().failure(new RuntimeException("Fatal DB Error")));
 
-        // Act & Assert
-        var awaiter = documentContentService.deleteContract(onboardingId).await();
+        // Act - now recovers gracefully
+        String result = documentContentService.deleteContract(onboardingId).await().indefinitely();
 
-        // Verifichiamo che l'errore finale arrivi al controller (il 500)
-        RuntimeException ex = assertThrows(RuntimeException.class, awaiter::indefinitely);
-        assertTrue(ex.getMessage().contains("Error deleting contract files from Azure")
-                || ex.getMessage().contains("Fatal DB Error"));
+        // Assert - recovers instead of throwing
+        assertEquals("Contract deleted successfully", result);
+        verify(telemetryService).trackContractDeleteFailed(eq(onboardingId), anyString());
 
         // 🔄 VERIFICA DEL ROLLBACK!
-        // Le operazioni su Azure devono essere esattamente il DOPPIO (4 invece di 2)
-        // perché abbiamo spostato 2 file, e poi li abbiamo rimessi a posto!
         verify(azureBlobClient, Mockito.times(4)).retrieveFile(anyString());
         verify(azureBlobClient, Mockito.times(4)).uploadFilePath(anyString(), any(byte[].class));
         verify(azureBlobClient, Mockito.times(4)).removeFile(anyString());

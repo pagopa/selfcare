@@ -232,6 +232,11 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         return documentService.getDocumentByOnboardingId(onboardingId)
                 .emitOn(Infrastructure.getDefaultWorkerPool())
                 .chain(document -> {
+                    if (Objects.isNull(document.getContractSigned()) || document.getContractSigned().isBlank()) {
+                        log.info("No signed contract found for onboardingId: {}. Skipping deletion.", sanitize(onboardingId));
+                        return Uni.createFrom().item("No contract to delete");
+                    }
+
                     String basePath = documentMsConfig.getContractPath();
                     String originalSignedPath = DocumentFileUtils.buildAndValidateContractFilePath(document.getContractSigned(), basePath, true);
                     String originalContractPath = DocumentFileUtils.buildAndValidateContractFilePath(onboardingId + "/" + document.getContractFilename(), basePath, false);
@@ -255,9 +260,15 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                             .onFailure().call(dbError -> {
                                 log.error("DB update failed for onboardingId {}. Triggering Azure Rollback...", onboardingId);
                                 return rollbackDeletedAzureFiles(deletedSignedContract, originalSignedPath, deletedContractFile, originalContractPath);
-                            });
+                            })
+                            .replaceWith("Contract deleted successfully");
+                })
+                .onFailure().invoke(error -> {
+                    log.error("deleteContract failed for onboardingId {}: {}", sanitize(onboardingId), error.getMessage());
+                    telemetryService.trackContractDeleteFailed(onboardingId, error.getMessage());
                 })
                 .invoke(ignored -> telemetryService.trackContractDeleted(onboardingId))
+                .onFailure().recoverWithItem("Contract deletion skipped due to error")
                 .replaceWith("Contract deleted successfully");
     }
 
