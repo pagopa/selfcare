@@ -6,9 +6,9 @@
 
     <parent>
         <groupId>it.pagopa.selfcare</groupId>
-        <artifactId>selfcare-sdk-pom</artifactId>
+        <artifactId>selfcare-user-sdk-pom</artifactId>
         <version>1.0.0</version>
-        <relativePath>../selfcare-sdk-pom</relativePath>
+        <relativePath>../selfcare-user-sdk-pom</relativePath>
     </parent>
 
     <artifactId>selfcare-user-sdk-event</artifactId>
