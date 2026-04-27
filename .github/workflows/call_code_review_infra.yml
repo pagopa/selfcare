@@ -33,7 +33,7 @@ jobs:
       id-token: write
       contents: read
     env:
-      GITHUB_TOKEN: ${{ secrets.GH_PAT_VARIABLES }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
 
