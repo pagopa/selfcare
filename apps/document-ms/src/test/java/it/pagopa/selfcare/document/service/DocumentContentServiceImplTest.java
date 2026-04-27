@@ -1333,6 +1333,79 @@ class DocumentContentServiceImplTest {
     }
 
     @Test
+    void deleteContract_shouldSucceed_whenUnsignedContractNotFoundOnAzure() throws IOException {
+        // Arrange
+        String onboardingId = "test-onboarding-123";
+        Document doc = buildDocument();
+        doc.setOnboardingId(onboardingId);
+        doc.setContractSigned("contracts/test-onboarding-123/signed_contract.pdf.p7m");
+        doc.setContractFilename("contract.pdf");
+
+        when(documentService.getDocumentByOnboardingId(onboardingId))
+                .thenReturn(Uni.createFrom().item(doc));
+        when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
+        when(documentMsConfig.getDeletePath()).thenReturn("/deleted/");
+
+        // Signed contract retrieveFile succeeds, unsigned contract retrieveFile throws
+        File tempSignedFile = createTempPdf();
+        when(azureBlobClient.retrieveFile(eq("contracts/test-onboarding-123/signed_contract.pdf.p7m")))
+                .thenReturn(tempSignedFile);
+        when(azureBlobClient.retrieveFile(eq("/contracts/test-onboarding-123/contract.pdf")))
+                .thenThrow(new RuntimeException("BlobNotFound: The specified blob does not exist."));
+
+        when(documentService.updateDocumentContractFiles(any(Document.class)))
+                .thenReturn(Uni.createFrom().item(1L));
+
+        // Act
+        String result = documentContentService.deleteContract(onboardingId).await().indefinitely();
+
+        // Assert
+        assertEquals("Contract deleted successfully", result);
+        // Signed contract was moved to deleted path
+        verify(azureBlobClient).uploadFilePath(anyString(), any(byte[].class));
+        verify(azureBlobClient).removeFile(eq("contracts/test-onboarding-123/signed_contract.pdf.p7m"));
+        // Unsigned contract was NOT deleted (it didn't exist)
+        verify(azureBlobClient, never()).removeFile(eq("/contracts/test-onboarding-123/contract.pdf"));
+        // DB was updated and contractFilename kept original value
+        verify(documentService).updateDocumentContractFiles(argThat(d ->
+                "contract.pdf".equals(d.getContractFilename())
+        ));
+        verify(telemetryService).trackContractDeleted(onboardingId);
+        verify(telemetryService, never()).trackContractDeleteFailed(anyString(), anyString());
+    }
+
+    @Test
+    void deleteContract_shouldRecoverGracefully_whenSignedContractNotFoundOnAzure() {
+        // Arrange
+        String onboardingId = "test-onboarding-123";
+        Document doc = buildDocument();
+        doc.setOnboardingId(onboardingId);
+        doc.setContractSigned("contracts/test-onboarding-123/signed_contract.pdf.p7m");
+        doc.setContractFilename("contract.pdf");
+
+        when(documentService.getDocumentByOnboardingId(onboardingId))
+                .thenReturn(Uni.createFrom().item(doc));
+        when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
+        when(documentMsConfig.getDeletePath()).thenReturn("/deleted/");
+
+        // Signed contract retrieveFile throws
+        when(azureBlobClient.retrieveFile(eq("contracts/test-onboarding-123/signed_contract.pdf.p7m")))
+                .thenThrow(new RuntimeException("BlobNotFound: The specified blob does not exist."));
+
+        // Act
+        String result = documentContentService.deleteContract(onboardingId).await().indefinitely();
+
+        // Assert
+        assertEquals("Contract deletion skipped due to error", result);
+        // No file should have been moved or deleted
+        verify(azureBlobClient, never()).uploadFilePath(anyString(), any(byte[].class));
+        verify(azureBlobClient, never()).removeFile(anyString());
+        verify(documentService, never()).updateDocumentContractFiles(any());
+        verify(telemetryService).trackContractDeleteFailed(eq(onboardingId), anyString());
+        verify(telemetryService, never()).trackContractDeleted(anyString());
+    }
+
+    @Test
     void deleteContract_shouldRecoverGracefully_whenDocumentNotFoundInDB() {
         // Arrange
         String onboardingId = "invalid-onboarding-id";
