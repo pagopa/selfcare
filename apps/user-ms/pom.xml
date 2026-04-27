@@ -23,7 +23,6 @@
         <quarkus.platform.version>3.11.1</quarkus.platform.version>
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
-        <user-sdk.version>0.1.3</user-sdk.version>
         <quarkus-openapi-generator.version>2.4.1</quarkus-openapi-generator.version>
         <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
         <cucumber-sdk.version>0.0.7</cucumber-sdk.version>

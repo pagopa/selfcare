@@ -27,7 +27,6 @@
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-onboarding-sdk-common</artifactId>
             <version>0.15.6</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
