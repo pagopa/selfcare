@@ -35,11 +35,11 @@ jobs:
 
       - name: Build with Maven
         shell: bash
-        run: mvn clean install -DskipTests
+        run: mvn --projects :selfcare-sdk-pom --also-make-dependents clean package -DskipTests
 
       - name: Deploy to GitHub Package Registry
         shell: bash
         run: |
-          mvn -pl libs/selfcare-sdk-pom deploy -DskipTests
+          mvn -B deploy -f libs/selfcare-sdk-pom/pom.xml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
