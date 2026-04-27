@@ -1,18 +1,3 @@
-data "azurerm_key_vault_secret" "appinsights_connection_string" {
-  count = var.application_insights_connection_string == null ? 1 : 0
-
-  name         = var.application_insights_connection_string_secret_name
-  key_vault_id = var.key_vault_id
-}
-
-locals {
-  resolved_appinsights_connection_string = var.application_insights_connection_string != null ? var.application_insights_connection_string : data.azurerm_key_vault_secret.appinsights_connection_string[0].value
-  resolved_appinsights_key = var.application_insights_key != null ? var.application_insights_key : element([
-    for part in split(";", local.resolved_appinsights_connection_string) : trimprefix(part, "InstrumentationKey=")
-    if startswith(part, "InstrumentationKey=")
-  ], 0)
-}
-
 resource "azurerm_resource_group" "fn_rg" {
   name     = "${var.functions_name}-rg"
   location = var.location
@@ -32,40 +17,6 @@ resource "azurerm_subnet" "fn_snet" {
       name    = "Microsoft.Web/serverFarms"
       actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
     }
-  }
-}
-
-resource "azurerm_service_plan" "fn_plan" {
-  name                = "${var.functions_name}-plan"
-  location            = azurerm_resource_group.fn_rg.location
-  resource_group_name = azurerm_resource_group.fn_rg.name
-
-  os_type      = "Linux"
-  sku_name     = var.service_plan_sku
-  worker_count = var.service_plan_worker_count
-
-  tags = var.tags
-}
-
-resource "azurerm_storage_account" "fn_storage" {
-  name                = replace("${var.functions_name}-sa", "-", "")
-  location            = azurerm_resource_group.fn_rg.location
-  resource_group_name = azurerm_resource_group.fn_rg.name
-
-  account_kind             = "StorageV2"
-  account_tier             = "Standard"
-  account_replication_type = var.replication_type
-  access_tier              = "Hot"
-
-  public_network_access_enabled = true
-  shared_access_key_enabled     = true
-
-  tags = var.tags
-
-  lifecycle {
-    ignore_changes = [
-      public_network_access_enabled,
-    ]
   }
 }
 
@@ -102,6 +53,72 @@ resource "azurerm_linux_function_app" "fn" {
 
   tags = var.tags
 }
+
+#data "azurerm_function_app_host_keys" "this" {
+#  name                = var.functions_name
+#  resource_group_name = azurerm_resource_group.fn_rg.name
+#  depends_on          = [azurerm_linux_function_app.fn]
+#}
+
+
+resource "azurerm_app_service_virtual_network_swift_connection" "this" {
+  app_service_id = azurerm_linux_function_app.fn.id
+  subnet_id      = azurerm_subnet.fn_snet.id
+}
+
+
+data "azurerm_key_vault_secret" "appinsights_connection_string" {
+  count = var.application_insights_connection_string == null ? 1 : 0
+
+  name         = var.application_insights_connection_string_secret_name
+  key_vault_id = var.key_vault_id
+}
+
+locals {
+  resolved_appinsights_connection_string = var.application_insights_connection_string != null ? var.application_insights_connection_string : data.azurerm_key_vault_secret.appinsights_connection_string[0].value
+  resolved_appinsights_key = var.application_insights_key != null ? var.application_insights_key : element([
+    for part in split(";", local.resolved_appinsights_connection_string) : trimprefix(part, "InstrumentationKey=")
+    if startswith(part, "InstrumentationKey=")
+  ], 0)
+}
+
+
+
+resource "azurerm_service_plan" "fn_plan" {
+  name                = "${var.functions_name}-plan"
+  location            = azurerm_resource_group.fn_rg.location
+  resource_group_name = azurerm_resource_group.fn_rg.name
+
+  os_type      = "Linux"
+  sku_name     = var.service_plan_sku
+  worker_count = var.service_plan_worker_count
+
+  tags = var.tags
+}
+
+resource "azurerm_storage_account" "fn_storage" {
+  name                = replace("${var.functions_name}-sa", "-", "")
+  location            = azurerm_resource_group.fn_rg.location
+  resource_group_name = azurerm_resource_group.fn_rg.name
+
+  account_kind             = "StorageV2"
+  account_tier             = "Standard"
+  account_replication_type = var.replication_type
+  access_tier              = "Hot"
+
+  public_network_access_enabled = true
+  shared_access_key_enabled     = true
+
+  tags = var.tags
+
+  lifecycle {
+    ignore_changes = [
+      public_network_access_enabled,
+    ]
+  }
+}
+
+
 
 resource "azurerm_key_vault_access_policy" "fn_keyvault_access_policy" {
   key_vault_id = var.key_vault_id
