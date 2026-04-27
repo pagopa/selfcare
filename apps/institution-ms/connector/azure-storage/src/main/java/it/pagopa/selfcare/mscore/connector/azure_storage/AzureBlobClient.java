@@ -10,6 +10,7 @@ import it.pagopa.selfcare.mscore.exception.MsCoreException;
 import it.pagopa.selfcare.mscore.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.mscore.model.onboarding.ResourceResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.owasp.encoder.Encode;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
@@ -136,16 +137,16 @@ public class AzureBlobClient implements FileStorageConnector {
     public String uploadContract(String id, MultipartFile contract) {
         log.info("START - uploadContract for token: {}", id);
         String fileName = Paths.get(azureStorageConfig.getContractPath(), id, contract.getOriginalFilename()).toString();
-        log.debug("uploadContract fileName = {}, contentType = {}", fileName, contract.getContentType());
+        log.debug("uploadContract fileName = {}, contentType = {}", Encode.forJava(fileName), Encode.forJava(contract.getContentType()));
         try {
             final CloudBlobContainer blobContainer = blobClient.getContainerReference(azureStorageConfig.getContainer());
             final CloudBlockBlob blob = blobContainer.getBlockBlobReference(fileName);
             blob.getProperties().setContentType(contract.getContentType());
             blob.upload(contract.getInputStream(), contract.getInputStream().available());
-            log.info("Uploaded {}", fileName);
+            log.info("Uploaded {}", Encode.forJava(fileName));
             return fileName;
         } catch (StorageException | URISyntaxException | IOException e) {
-            log.error(String.format(ERROR_DURING_UPLOAD_FILE.getMessage(), fileName), e);
+            log.error(String.format(ERROR_DURING_UPLOAD_FILE.getMessage(), Encode.forJava(fileName)), e);
             throw new MsCoreException(String.format(ERROR_DURING_UPLOAD_FILE.getMessage(), fileName),
                     ERROR_DURING_UPLOAD_FILE.getCode());
         }
@@ -153,7 +154,7 @@ public class AzureBlobClient implements FileStorageConnector {
 
     @Override
     public void removeContract(String fileName, String tokenId) {
-        log.info("START - deleteContract for token: {}", tokenId);
+        log.info("START - deleteContract for token: {}", Encode.forJava(tokenId));
 
         try {
             final CloudBlobContainer blobContainer = blobClient.getContainerReference(azureStorageConfig.getContainer());

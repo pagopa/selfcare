@@ -27,6 +27,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringEscapeUtils;
+import org.owasp.encoder.Encode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -519,7 +520,7 @@ public class InstitutionController {
                                                 @PathVariable("institutionId") String institutionId,
                                                 @Valid @RequestBody CreatedAtRequest createdAtRequest) {
         log.trace("updateCreatedAt start");
-        log.debug("updateCreatedAt institutionId = {}, productId = {}, createdAt = {}", institutionId, createdAtRequest.getProductId(), createdAtRequest.getCreatedAt());
+        log.debug("updateCreatedAt institutionId = {}, productId = {}, createdAt = {}", Encode.forJava(institutionId), Encode.forJava(createdAtRequest.getProductId()), createdAtRequest.getCreatedAt());
         if (createdAtRequest.getCreatedAt().isAfter(OffsetDateTime.now())) {
             throw new ValidationException("Invalid createdAt date: the createdAt date must be prior to the current date.");
         }
@@ -548,7 +549,7 @@ public class InstitutionController {
                                                                              @Parameter(description = "${swagger.mscore.page.size}")
                                                                              @RequestParam(name = "size", defaultValue = "100") Integer size) {
         log.trace("findFromProduct start");
-        log.debug("findFromProduct productId = {}", productId);
+        log.debug("findFromProduct productId = {}", Encode.forJava(productId));
         List<Institution> institutions = institutionService.getInstitutionsByProductId(productId, page, size);
 
         InstitutionOnboardingListResponse institutionListResponse = new InstitutionOnboardingListResponse(
@@ -570,7 +571,7 @@ public class InstitutionController {
                                                             @PathVariable("institutionType")
                                                             InstitutionType institutionType) {
         log.trace("getInstitutionBrokers start");
-        log.debug("productId = {}, institutionType = {}", productId, institutionType);
+        log.debug("productId = {}, institutionType = {}", Encode.forJava(productId), institutionType);
         List<Institution> institutions = institutionService.getInstitutionBrokers(productId, institutionType);
         List<BrokerResponse> result = brokerMapper.toBrokers(institutions);
         log.debug("getInstitutionBrokers result = {}", result);

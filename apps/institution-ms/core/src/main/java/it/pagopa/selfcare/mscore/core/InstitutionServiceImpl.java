@@ -82,7 +82,7 @@ public class InstitutionServiceImpl implements InstitutionService {
         if (opt.isEmpty()) {
             throw new ResourceNotFoundException(String.format(CustomError.INSTITUTION_NOT_FOUND.getMessage(), "UNDEFINED", institutionExternalId), CustomError.INSTITUTION_NOT_FOUND.getCode());
         }
-        log.info("founded institution having externalId: {}", institutionExternalId);
+        log.info("founded institution having externalId: {}", Encode.forJava(institutionExternalId));
         return opt.get();
     }
 
@@ -403,7 +403,7 @@ public class InstitutionServiceImpl implements InstitutionService {
     @Override
     public void updateCreatedAt(String institutionId, String productId, OffsetDateTime createdAt, OffsetDateTime activatedAt) {
         log.trace("updateCreatedAt start");
-        log.debug("updateCreatedAt institutionId = {}, productId = {}, createdAt = {}, activatedAt = {}", institutionId, productId, createdAt, activatedAt);
+        log.debug("updateCreatedAt institutionId = {}, productId = {}, createdAt = {}, activatedAt = {}", Encode.forJava(institutionId), Encode.forJava(productId), createdAt, activatedAt);
         Assert.hasText(institutionId, "An institution ID is required.");
         Assert.hasText(productId, "A product ID is required.");
         Assert.notNull(createdAt, "A createdAt date is required.");
@@ -414,7 +414,7 @@ public class InstitutionServiceImpl implements InstitutionService {
     }
 
     public void checkIfAlreadyExists(String externalId) {
-        log.info("START - check institution {} already exists", externalId);
+        log.info("START - check institution {} already exists", Encode.forJava(externalId));
         Optional<Institution> opt = institutionConnector.findByExternalId(externalId);
         if (opt.isPresent()) {
             throw new ResourceConflictException(String.format(CustomError.CREATE_INSTITUTION_CONFLICT.getMessage(), externalId), CustomError.CREATE_INSTITUTION_CONFLICT.getCode());

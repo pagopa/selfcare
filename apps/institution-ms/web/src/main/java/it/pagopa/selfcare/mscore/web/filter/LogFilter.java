@@ -2,6 +2,7 @@ package it.pagopa.selfcare.mscore.web.filter;
 
 import it.pagopa.selfcare.mscore.utils.MaskDataUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.owasp.encoder.Encode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
@@ -43,11 +44,11 @@ public class LogFilter implements Filter {
 
         chain.doFilter(requestCacheWrapperObject, responseCacheWrapperObject);
         String requestBody = getContentAsString(requestCacheWrapperObject.getContentAsByteArray(), request.getCharacterEncoding(), false);
-        log.info("Request from URI : {} - method: {} - Request body: {}", httpUri, httpMethod, requestBody);
+        log.info("Request from URI : {} - method: {} - Request body: {}", Encode.forJava(httpUri), Encode.forJava(httpMethod), Encode.forJava(requestBody));
 
         Long endTime = System.currentTimeMillis() - startTime;
         String responseBody = getContentAsString(responseCacheWrapperObject.getContentAsByteArray(), response.getCharacterEncoding(), true);
-        log.info("Response from URI : {} - method: {} - status: {} - timelapse: {}ms - Response body: {}", httpUri, httpMethod, httpServletResponse.getStatus(), endTime, responseBody);
+        log.info("Response from URI : {} - method: {} - status: {} - timelapse: {}ms - Response body: {}", Encode.forJava(httpUri), Encode.forJava(httpMethod), httpServletResponse.getStatus(), endTime, Encode.forJava(responseBody));
         responseCacheWrapperObject.copyBodyToResponse();
     }
 

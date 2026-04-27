@@ -5,6 +5,7 @@ import it.pagopa.selfcare.mscore.model.institution.GeographicTaxonomies;
 import it.pagopa.selfcare.mscore.model.institution.Institution;
 import it.pagopa.selfcare.mscore.model.institution.Onboarding;
 import lombok.extern.slf4j.Slf4j;
+import org.owasp.encoder.Encode;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -42,7 +43,7 @@ public class ExternalServiceImpl implements ExternalService {
 
     @Override
     public List<GeographicTaxonomies> retrieveInstitutionGeoTaxonomiesByExternalId(String externalId) {
-        log.info("Retrieving geographic taxonomies for institution having externalId {}", externalId);
+        log.info("Retrieving geographic taxonomies for institution having externalId {}", Encode.forJava(externalId));
         Institution institution = institutionService.retrieveInstitutionByExternalId(externalId);
         return institutionService.retrieveInstitutionGeoTaxonomies(institution);
     }

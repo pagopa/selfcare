@@ -18,6 +18,7 @@ import it.pagopa.selfcare.mscore.model.UnitaOrganizzativa;
 import it.pagopa.selfcare.mscore.model.institution.*;
 import it.pagopa.selfcare.registry_proxy.generated.openapi.v1.dto.InsuranceCompanyResource;
 import lombok.extern.slf4j.Slf4j;
+import org.owasp.encoder.Encode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -85,7 +86,7 @@ public class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnec
         try {
             return restClient.getLegalAddress(taxId);
         } catch (FeignException e) {
-            log.error("LegalAddress not found for taxId {}", taxId);
+            log.error("LegalAddress not found for taxId {}", Encode.forJava(taxId));
             throw new MsCoreException(e.getMessage(), String.valueOf(e.status()));
         }
     }
@@ -150,19 +151,19 @@ public class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnec
 
     @Override
     public AreaOrganizzativaOmogenea getAooById(String aooId) {
-        log.debug("getAooById id = {}", aooId);
+        log.debug("getAooById id = {}", Encode.forJava(aooId));
         Assert.hasText(aooId, CODE_IS_REQUIRED);
         AooResponse result = restClient.getAooById(aooId);
-        log.debug("getAooById id = {}", aooId);
+        log.debug("getAooById id = {}", Encode.forJava(aooId));
         return aooMapper.toEntity(result);
     }
 
     @Override
     public UnitaOrganizzativa getUoById(String uoId) {
-        log.debug("getUoById id = {}", uoId);
+        log.debug("getUoById id = {}", Encode.forJava(uoId));
         Assert.hasText(uoId, CODE_IS_REQUIRED);
         UoResponse result = restClient.getUoById(uoId);
-        log.debug("getUoById id = {}", uoId);
+        log.debug("getUoById id = {}", Encode.forJava(uoId));
         return uoMapper.toEntity(result);
     }
 
