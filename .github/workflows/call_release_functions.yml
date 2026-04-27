@@ -73,21 +73,21 @@ jobs:
             -Dquarkus.azure-functions.app-service-plan-name=${{ format('selc-{0}-onboarding-fn-plan', inputs.target == 'selc' && 'd' || 'd-pnpg') }} \
             -Dquarkus.azure-functions.runtime.java-version=17
 
-  infra_uat:
-    name: ${{ inputs.target == 'selc' && '[Uat]' || '[Uat-PNPG]' }} - Infra Apply
-    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
-    uses: ./.github/workflows/call_release_infra.yml
-    secrets: inherit
-    with:
-      environment: uat
-      tf_environment: ${{ inputs.target == 'selc' && 'uat-ar' || 'uat-pnpg' }}
-      dir: ${{ inputs.target == 'selc' && 'infra/resources/onboarding-functions/uat-ar' || 'infra/resources/onboarding-functions/uat-pnpg' }}
-      runner: "self-hosted"
+  # infra_uat:
+  #   name: ${{ inputs.target == 'selc' && '[Uat]' || '[Uat-PNPG]' }} - Infra Apply
+  #   if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+  #   uses: ./.github/workflows/call_release_infra.yml
+  #   secrets: inherit
+  #   with:
+  #     environment: uat
+  #     tf_environment: ${{ inputs.target == 'selc' && 'uat-ar' || 'uat-pnpg' }}
+  #     dir: ${{ inputs.target == 'selc' && 'infra/resources/onboarding-functions/uat-ar' || 'infra/resources/onboarding-functions/uat-pnpg' }}
+  #     runner: "self-hosted"
 
   release_uat:
     name: ${{ inputs.target == 'selc' && '[Uat]' || '[Uat-PNPG]' }} - ${{ inputs.app }} Release
     if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
-    needs: [infra_uat]
+    #needs: [infra_uat]
     runs-on: ubuntu-24.04
     environment:
       name: uat-cd
