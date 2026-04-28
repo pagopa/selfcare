@@ -8,7 +8,7 @@ module "local" {
   env_short             = "d"
   domain                = "pnpg"
   nat_rg_name           = "selc-d-weu-pnpg-nat-rg"
-  nat_gw_name           = "selc-d-weu-pnpg-nat-gw"
+  nat_gw_name           = "selc-d-weu-pnpg-nat_gw"
   nat_pip_outbound_name = "selc-d-weu-pnpg-pip-outbound"
 
   dns_zone_prefix                = "dev.selfcare"

@@ -202,7 +202,7 @@ resource "azurerm_public_ip" "functions_pip_outbound" {
 }
 
 resource "azurerm_nat_gateway" "nat_gateway" {
-  name                    = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-nat-gw"
+  name                    = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-nat_gw"
   resource_group_name     = azurerm_resource_group.nat_rg.name
   location                = azurerm_resource_group.nat_rg.location
   sku_name                = "Standard"
