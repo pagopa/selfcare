@@ -29,7 +29,7 @@ module "local" {
 
 locals {
   onboarding_functions = {
-    name                      = "selc-p-pnpg-onboarding-fn"
+    name                      = "selc-${module.local.config.env_short}-${module.local.config.domain}-onboarding-fn"
     subnet_cidr               = ["10.1.152.0/24"]
     always_on                 = true
     service_plan_sku          = "P1v3"
