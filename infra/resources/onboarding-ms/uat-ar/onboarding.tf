@@ -134,11 +134,11 @@ locals {
     },
     {
       name  = "MS_CORE_URL"
-      value = "http://selc-${module.local.config.env_short}-ms-core-ca"
+      value = "https://selc-${module.local.config.env_short}-ms-core-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "MS_PARTY_REGISTRY_URL"
-      value = "http://selc-${module.local.config.env_short}-party-reg-proxy-ca"
+      value = "https://selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "SIGNATURE_VALIDATION_ENABLED"
@@ -150,7 +150,7 @@ locals {
     },
     {
       name  = "MS_USER_URL"
-      value = "http://selc-${module.local.config.env_short}-user-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "ALLOWED_ATECO_CODES"
@@ -174,7 +174,7 @@ locals {
     },
     {
       name  = "MS_DOCUMENT_URL"
-      value = "http://selc-${module.local.config.env_short}-document-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-document-ms-ca.${module.local.config.private_dns_name_domain}"
     }
   ]
 
