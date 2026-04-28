@@ -8,6 +8,7 @@ tags:
     with onboardings
 - name: Signature Controller
   description: Endpoints for verifying contract signatures
+- name: external-v2
 - name: internal-v1
 components:
   schemas:
@@ -764,6 +765,7 @@ paths:
       operationId: getContractSigned
       tags:
       - Document Content Controller
+      - external-v2
       parameters:
       - name: onboardingId
         in: path

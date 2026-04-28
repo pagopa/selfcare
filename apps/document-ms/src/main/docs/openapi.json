@@ -10,6 +10,8 @@
     "name" : "Signature Controller",
     "description" : "Endpoints for verifying contract signatures"
   }, {
+    "name" : "external-v2"
+  }, {
     "name" : "internal-v1"
   } ],
   "components" : {
@@ -991,7 +993,7 @@
         "summary" : "Retrieve contract signed for a given onboarding",
         "description" : "Downloads the contract file associated with the specified onboarding ID.",
         "operationId" : "getContractSigned",
-        "tags" : [ "Document Content Controller" ],
+        "tags" : [ "Document Content Controller", "external-v2" ],
         "parameters" : [ {
           "name" : "onboardingId",
           "in" : "path",
