@@ -2,8 +2,10 @@ package it.pagopa.selfcare.party.registry_proxy.connector.rest;
 
 import it.pagopa.selfcare.party.registry_proxy.connector.api.IpaSearchServiceConnector;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.Institution;
+import it.pagopa.selfcare.party.registry_proxy.connector.model.IpaInstitutionSearchResult;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceStatus;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.AzureSearchRestClient;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.mapper.SearchServiceMapper;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.IpaInstitutionIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexRequest;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexResponse;
@@ -21,9 +23,11 @@ public class IpaSearchServiceConnectorImpl implements IpaSearchServiceConnector 
     static final int PAGE_SIZE = 1000;
 
     private final AzureSearchRestClient azureSearchRestClient;
+    private final SearchServiceMapper searchServiceMapper;
 
-    public IpaSearchServiceConnectorImpl(AzureSearchRestClient azureSearchRestClient) {
+    public IpaSearchServiceConnectorImpl(AzureSearchRestClient azureSearchRestClient, SearchServiceMapper searchServiceMapper) {
         this.azureSearchRestClient = azureSearchRestClient;
+        this.searchServiceMapper = searchServiceMapper;
     }
 
     @Override
@@ -47,7 +51,7 @@ public class IpaSearchServiceConnectorImpl implements IpaSearchServiceConnector 
         int skip = 0;
         while (true) {
             SearchServiceIndexResponse<IpaInstitutionIndex> response =
-                    azureSearchRestClient.searchIpaInstitutions("*", "id,updateDate", true, PAGE_SIZE, skip);
+                    azureSearchRestClient.searchIpaInstitutions("*", "id,updateDate", true, PAGE_SIZE, skip, null);
 
             if (response == null || response.getValue() == null || response.getValue().isEmpty()) {
                 break;
@@ -66,6 +70,13 @@ public class IpaSearchServiceConnectorImpl implements IpaSearchServiceConnector 
         }
         log.debug("Fetched {} IPA institution documents from AI Search index", result.size());
         return result;
+    }
+
+    @Override
+    public IpaInstitutionSearchResult searchIpaInstitutions(String search, String filter, Integer top, Integer skip) {
+        SearchServiceIndexResponse<IpaInstitutionIndex> response =
+                azureSearchRestClient.searchIpaInstitutions(search, null, true, top, skip, filter);
+        return searchServiceMapper.toIpaInstitutionSearchResult(response);
     }
 
 }

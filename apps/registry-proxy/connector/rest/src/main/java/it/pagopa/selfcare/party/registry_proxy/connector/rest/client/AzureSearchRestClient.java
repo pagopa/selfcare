@@ -51,6 +51,7 @@ public interface AzureSearchRestClient {
                                                                         @RequestParam(value = "$select", required = false) String select,
                                                                         @RequestParam(value = "$count", required = false) Boolean count,
                                                                         @RequestParam(value = "$top", required = false) Integer top,
-                                                                        @RequestParam(value = "$skip", required = false) Integer skip);
+                                                                        @RequestParam(value = "$skip", required = false) Integer skip,
+                                                                        @RequestParam(value = "$filter", required = false) String filter);
 
 }
