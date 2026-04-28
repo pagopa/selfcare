@@ -53,7 +53,7 @@ variable "replication_type" {
 }
 
 variable "app_settings" {
-  type        = map(string)
+  type        = map(any)
   description = "Settings references to be set as app settings in the function app"
 }
 

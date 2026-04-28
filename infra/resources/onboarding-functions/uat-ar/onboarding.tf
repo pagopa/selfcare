@@ -21,7 +21,7 @@ module "local" {
 
 locals {
   onboarding_functions = {
-    name                      = "selc-u-onboarding-fn"
+    name                      = "selc-${module.local.config.env_short}-onboarding-fn"
     subnet_cidr               = ["10.1.144.0/24"]
     always_on                 = true
     service_plan_sku          = "B2"
@@ -65,10 +65,11 @@ locals {
       "MAIL_USER_CONFIRMATION_LINK"                        = "https://uat.selfcare.pagopa.it/onboarding/confirm?add-user=true&jwt=",
       "MAIL_ONBOARDING_REJECTION_LINK"                     = "https://uat.selfcare.pagopa.it/onboarding/cancel?jwt=",
       "MAIL_ONBOARDING_URL"                                = "https://uat.selfcare.pagopa.it/onboarding/",
-      "MS_CORE_URL"                                        = "https://selc-u-institution-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io",
+      "MS_CORE_URL"                                        = "https://selc-${module.local.config.env_short}-institution-ms-ca.${module.local.config.private_dns_name_domain}",
       "JWT_BEARER_TOKEN"                                   = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/jwt-bearer-token-functions/)",
-      "MS_USER_URL"                                        = "https://selc-u-user-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io",
-      "MS_PARTY_REGISTRY_URL"                              = "https://selc-u-party-reg-proxy-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io",
+      "MS_USER_URL"                                        = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}",
+      "MS_DOCUMENT_URL"                                    = "https://selc-${module.local.config.env_short}-document-ms-ca.${module.local.config.private_dns_name_domain}",
+      "MS_PARTY_REGISTRY_URL"                              = "https://selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}",
       "USER_MS_SEND_MAIL"                                  = "false",
       "EVENT_HUB_BASE_PATH"                                = "https://selc-u-eventhub-ns.servicebus.windows.net",
       "STANDARD_SHARED_ACCESS_KEY_NAME"                    = "selfcare-wo"
@@ -117,7 +118,6 @@ locals {
       "ONBOARDING_DATA_ENCRIPTION_KEY" = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/onboarding-data-encryption-key/)",
       "ONBOARDING_DATA_ENCRIPTION_IV"  = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/onboarding-data-encryption-iv/)"
 
-      "MS_DOCUMENT_URL" = "https://selc-u-document-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
     }
   }
 }

@@ -232,6 +232,11 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         return documentService.getDocumentByOnboardingId(onboardingId)
                 .emitOn(Infrastructure.getDefaultWorkerPool())
                 .chain(document -> {
+                    if (Objects.isNull(document.getContractSigned()) || document.getContractSigned().isBlank()) {
+                        log.info("No signed contract found for onboardingId: {}. Skipping deletion.", sanitize(onboardingId));
+                        return Uni.createFrom().item("No contract to delete");
+                    }
+
                     String basePath = documentMsConfig.getContractPath();
                     String originalSignedPath = DocumentFileUtils.buildAndValidateContractFilePath(document.getContractSigned(), basePath, true);
                     String originalContractPath = DocumentFileUtils.buildAndValidateContractFilePath(onboardingId + "/" + document.getContractFilename(), basePath, false);
@@ -241,24 +246,38 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
                     try {
                         deletedSignedContract = deleteFileFromAzure(originalSignedPath, basePath);
-                        deletedContractFile = deleteFileFromAzure(originalContractPath, basePath);
                     } catch (Exception e) {
-                        log.error("Error deleting contract files from Azure for onboardingId {}: {}", sanitize(onboardingId), e.getMessage());
+                        log.error("Error deleting signed contract from Azure for onboardingId {}: {}", sanitize(onboardingId), e.getMessage());
                         return Uni.createFrom().failure(new RuntimeException("Error deleting contract files from Azure", e));
                     }
 
-                    document.setContractSigned(deletedSignedContract);
-                    document.setContractFilename(deletedContractFile);
+                    try {
+                        deletedContractFile = deleteFileFromAzure(originalContractPath, basePath);
+                    } catch (Exception e) {
+                        log.warn("Unsigned contract file not found on Azure for onboardingId {}. Skipping: {}", sanitize(onboardingId), e.getMessage());
+                        deletedContractFile = document.getContractFilename();
+                    }
+
+                    final String finalDeletedSignedContract = deletedSignedContract;
+                    final String finalDeletedContractFile = deletedContractFile;
+
+                    document.setContractSigned(finalDeletedSignedContract);
+                    document.setContractFilename(finalDeletedContractFile);
 
                     return documentService.updateDocumentContractFiles(document)
                             .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)
                             .onFailure().call(dbError -> {
                                 log.error("DB update failed for onboardingId {}. Triggering Azure Rollback...", onboardingId);
-                                return rollbackDeletedAzureFiles(deletedSignedContract, originalSignedPath, deletedContractFile, originalContractPath);
-                            });
+                                return rollbackDeletedAzureFiles(finalDeletedSignedContract, originalSignedPath, finalDeletedContractFile, originalContractPath);
+                            })
+                            .replaceWith("Contract deleted successfully")
+                            .invoke(ignored -> telemetryService.trackContractDeleted(onboardingId));
                 })
-                .invoke(ignored -> telemetryService.trackContractDeleted(onboardingId))
-                .replaceWith("Contract deleted successfully");
+                .onFailure().invoke(error -> {
+                    log.error("deleteContract failed for onboardingId {}: {}", sanitize(onboardingId), error.getMessage());
+                    telemetryService.trackContractDeleteFailed(onboardingId, error.getMessage());
+                })
+                .onFailure().recoverWithItem("Contract deletion skipped due to error");
     }
 
     @Override
