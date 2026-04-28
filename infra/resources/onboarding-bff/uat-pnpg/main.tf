@@ -23,18 +23,18 @@ locals {
     { name = "APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL", value = "OFF" },
     { name = "B4F_ONBOARDING_LOG_LEVEL", value = "DEBUG" },
     { name = "REST_CLIENT_LOGGER_LEVEL", value = "FULL" },
-    { name = "MS_ONBOARDING_URL", value = "http://selc-${module.local.config.env_short}-pnpg-onboarding-ms-ca" },
-    { name = "MS_CORE_URL", value = "http://selc-${module.local.config.env_short}-pnpg-ms-core-ca" },
-    { name = "USERVICE_PARTY_PROCESS_URL", value = "http://selc-${module.local.config.env_short}-pnpg-ms-core-ca" },
-    { name = "USERVICE_PARTY_REGISTRY_PROXY_URL", value = "http://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca" },
+    { name = "MS_ONBOARDING_URL", value = "https://selc-${module.local.config.env_short}-pnpg-onboarding-ms-ca.${module.local.config.private_dns_name_domain}" },
+    { name = "MS_CORE_URL", value = "https://selc-${module.local.config.env_short}-pnpg-ms-core-ca.${module.local.config.private_dns_name_domain}" },
+    { name = "USERVICE_PARTY_PROCESS_URL", value = "https://selc-${module.local.config.env_short}-pnpg-ms-core-ca.${module.local.config.private_dns_name_domain}" },
+    { name = "USERVICE_PARTY_REGISTRY_PROXY_URL", value = "https://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}" },
     { name = "USERVICE_USER_REGISTRY_URL", value = "https://api.uat.pdv.pagopa.it/user-registry/v1" },
     { name = "REST_CLIENT_CONNECT_TIMEOUT", value = "60000" },
     { name = "REST_CLIENT_READ_TIMEOUT", value = "60000" },
-    { name = "MS_USER_URL", value = "http://selc-${module.local.config.env_short}-pnpg-user-ms-ca" },
+    { name = "MS_USER_URL", value = "https://selc-${module.local.config.env_short}-pnpg-user-ms-ca.${module.local.config.private_dns_name_domain}" },
     { name = "PRODUCT_STORAGE_CONTAINER", value = "selc-${module.local.config.env_short}-product" },
     { name = "ONBOARDING_FUNCTIONS_URL", value = "https://selc-${module.local.config.env_short}-pnpg-onboarding-fn.azurewebsites.net" },
-    { name = "MS_USER_INSTITUTION_URL", value = "https://selc-${module.local.config.env_short}-pnpg-user-ms-ca" },
-    { name = "MS_PRODUCT_URL", value = "http://selc-${module.local.config.env_short}-pnpg-product-ms-ca" }
+    { name = "MS_USER_INSTITUTION_URL", value = "https://selc-${module.local.config.env_short}-pnpg-user-ms-ca.${module.local.config.private_dns_name_domain}" },
+    { name = "MS_PRODUCT_URL", value = "https://selc-${module.local.config.env_short}-pnpg-product-ms-ca.${module.local.config.private_dns_name_domain}" }
   ]
 
   secrets_names_onboarding_bff = {
