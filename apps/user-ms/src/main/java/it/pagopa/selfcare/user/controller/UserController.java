@@ -44,6 +44,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.ResponseStatus;
 import org.openapi.quarkus.user_registry_json.model.Problem;
+import org.owasp.encoder.Encode;
 import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.util.ArrayList;
@@ -193,7 +194,7 @@ public class UserController {
                                           @Schema(description = "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA") @QueryParam(value = "role") String role,
                                           @QueryParam(value = "productRole") String productRole,
                                           @QueryParam(value = "status") OnboardedProductState status) {
-        log.debug("updateProductStatus - userId: {}", userId);
+        log.debug("updateProductStatus - userId: {}", Encode.forJava(userId));
         PartyRole partyRole = StringUtils.isNotBlank(role) ? PartyRole.valueOf(role) : null;
         return userService.updateUserStatusWithOptionalFilter(userId, institutionId, productId, partyRole, productRole, status)
                 .map(ignore -> Response
@@ -500,7 +501,7 @@ public class UserController {
             try {
                 roleList.add(PartyRole.valueOf(role));
             } catch (IllegalArgumentException e) {
-                log.error("Invalid role value: {}", role);
+                log.error("Invalid role value: {}", Encode.forJava(role));
                 throw new InvalidRequestException(String.format("Invalid role value: %s", role));
             }
         }

@@ -156,7 +156,7 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> queryParameter = userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters);
         return userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter)
                 .onItem().ifNull().failWith(() -> {
-                    log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId));
+                    log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), Encode.forJava(userId)));
                     return new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode());
                 })
                 .onItem().transformToUni(userInstitution -> userRegistryService.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
@@ -240,7 +240,7 @@ public class UserServiceImpl implements UserService {
         var fields = StringUtils.isBlank(fieldsToRetrieve) ? USERS_WORKS_FIELD_LIST : fieldsToRetrieve;
         return userInstitutionService.retrieveFirstFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilters))
                 .onItem().ifNull().continueWith(() -> {
-                    log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId));
+                    log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), Encode.forJava(userId)));
                     return new UserInstitution();
                 })
                 .onItem().transformToUni(userInstitution -> userRegistryService.findByIdUsingGET(fields, userId)
@@ -320,7 +320,7 @@ public class UserServiceImpl implements UserService {
         return userInstitutionService.retrieveFirstFilteredUserInstitution(userInstitutionFilters)
                 .onItemOrFailure().transformToUni((userInstitution, throwable) -> {
                     if (throwable != null) {
-                        log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId));
+                        log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), Encode.forJava(userId)));
                         return Uni.createFrom().failure(new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode()));
                     }
                     builder.userInstitution(userInstitution);
@@ -806,7 +806,7 @@ public class UserServiceImpl implements UserService {
                                     .collect().asList()
                                     .replaceWithVoid())
                             .onItem().invoke(() -> trackTelemetryEvent(trackEventInput, EVENTS_USER_INSTITUTION_SUCCESS))
-                            .onFailure().invoke(exception -> log.error("Failed to retrieve UserResource userId:{}", userIdToUse, exception))
+                            .onFailure().invoke(exception -> log.error("Failed to retrieve UserResource userId:{}", Encode.forJava(userIdToUse), exception))
                             .onFailure().invoke(exception -> trackTelemetryEvent(trackEventInput.toBuilder().exception(exception.getMessage()).build(), EVENTS_USER_INSTITUTION_FAILURE))
                             .onFailure().recoverWithNull();
                 })

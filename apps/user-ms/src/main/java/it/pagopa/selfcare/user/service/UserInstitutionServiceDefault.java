@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.owasp.encoder.Encode;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -173,7 +174,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         Map<String, Object> filterMap = userUtils.retrieveMapForFilter(onboardedProductFilterMap, userInstitutionFilterMap);
         Map<String, Object> fieldToUpdateMap = Map.of(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.createdAt.name(), createdAt.toInstant(),
                                                       UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.updatedAt.name(), Instant.now());
-        log.info("Update user institution with filter: {} and field to update: {}", filterMap, fieldToUpdateMap);
+        log.info("Update user institution with filter: {} and field to update: {}", Encode.forJava(filterMap.toString()), Encode.forJava(fieldToUpdateMap.toString()));
         return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
                 .where(queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION));
     }

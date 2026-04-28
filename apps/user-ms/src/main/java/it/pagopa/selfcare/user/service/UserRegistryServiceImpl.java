@@ -24,6 +24,7 @@ import org.openapi.quarkus.user_registry_json.model.UserId;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import org.owasp.encoder.Encode;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -94,7 +95,7 @@ public class UserRegistryServiceImpl implements UserRegistryService {
     @Override
     public Uni<List<UserInstitution>> updateUserRegistry(UpdateUserRequest updateUserRequest, String userId, String institutionId) {
         log.trace("sendUpdateUserNotification start");
-        log.debug("sendUpdateUserNotification userId = {}, institutionId = {}", userId, institutionId);
+        log.debug("sendUpdateUserNotification userId = {}, institutionId = {}", Encode.forJava(userId), Encode.forJava(institutionId));
 
         if (StringUtils.isBlank(updateUserRequest.getEmail()))
             throw new IllegalArgumentException("email updateUserRequest must not be null!");
@@ -107,7 +108,7 @@ public class UserRegistryServiceImpl implements UserRegistryService {
                 .unis(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)
                                 .onItem().ifNotNull().invoke(() -> log.debug("User founded on userRegistry with userId: {}", userId)),
                         userInstitutionService.findAllWithFilter(userInstitutionFilter.constructMap()).collect().asList()
-                                .onItem().ifNotNull().invoke(() -> log.debug("UserInstitution founded for userId: {} and institutionId: {}", userId, institutionId)))
+                                .onItem().ifNotNull().invoke(() -> log.debug("UserInstitution founded for userId: {} and institutionId: {}", Encode.forJava(userId), Encode.forJava(institutionId))))
                 .asTuple()
                 .onItem().transformToMulti(tuple -> findMailUuidAndUpdateUserRegistry(tuple.getItem1(), updateUserRequest)
                         .onItem().transformToMulti(idContacts -> updateUserInstitution(tuple.getItem2(), idContacts)))

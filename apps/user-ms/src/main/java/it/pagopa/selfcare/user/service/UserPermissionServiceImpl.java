@@ -5,6 +5,7 @@ import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.owasp.encoder.Encode;
 
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class UserPermissionServiceImpl implements UserPermissionService {
     @Override
     public Uni<Boolean> hasPermission(String institutionId, String productId, PermissionTypeEnum permission, String userId) {
         log.trace("hasPermission start");
-        log.debug("check permission {} for userId: {}, institutionId: {} and productId: {}", permission, userId, institutionId, productId);
+        log.debug("check permission {} for userId: {}, institutionId: {} and productId: {}", permission, Encode.forJava(userId), Encode.forJava(institutionId), Encode.forJava(productId));
 
         return userInstitutionService.existsValidUserProduct(userId, institutionId, productId, permission, List.of(ACTIVE, PENDING, TOBEVALIDATED));
     }

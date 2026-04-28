@@ -165,7 +165,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     @Override
     public UserGroupOperations getUserGroup(String id) {
         log.trace("getUserGroup start");
-        log.debug("getUserGroup id = {}", id);
+        log.debug("getUserGroup id = {}", Encode.forJava(id));
         Assert.hasText(id, USER_GROUP_ID_REQUIRED_MESSAGE);
         UserGroupOperations foundGroup = findById(id).orElseThrow(ResourceNotFoundException::new);
         log.debug("getUserGroup result = {}", foundGroup);
@@ -279,7 +279,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     private void insertMember(String id, String memberId) {
         log.trace("insertMember start");
-        log.debug("insertMember id = {}, memberId = {}", id, memberId);
+        log.debug("insertMember id = {}, memberId = {}", Encode.forJava(id), memberId);
         UpdateResult updateResult = mongoTemplate.updateFirst(
                 createActiveGroupQuery(id),
                 new Update().push(UserGroupEntity.Fields.members, memberId)
@@ -332,7 +332,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     private void removeMemberFromActiveGroup(String id, String memberId) {
         log.trace("deleteMember start");
-        log.debug("deleteMember id = {}, memberId = {}", id, memberId);
+        log.debug("deleteMember id = {}, memberId = {}", Encode.forJava(id), memberId);
 
         UpdateResult updateResult = mongoTemplate.updateFirst(
                 createActiveGroupQuery(id),
@@ -348,7 +348,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     private void removeMembers(String memberId, String institutionId, String productId) {
         log.trace("deleteMembers start");
-        log.debug("deleteMembers id = {}, institutionId = {}, productId= {}", memberId, institutionId, productId);
+        log.debug("deleteMembers id = {}, institutionId = {}, productId= {}", memberId, Encode.forJava(institutionId), productId);
 
         UpdateResult updateResult = mongoTemplate.updateMulti(
                 Query.query(Criteria.where(UserGroupEntity.Fields.members).is(memberId)
@@ -366,7 +366,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     private Optional<UserGroupOperations> findById(String id) {
         log.trace("findById start");
-        log.debug("findById id = {} ", id);
+        log.debug("findById id = {} ", Encode.forJava(id));
         Optional<UserGroupOperations> result = repository.findById(id).map(Function.identity());
         log.debug("findById result = {}", result);
         log.trace("findById end");
@@ -407,7 +407,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     private void activateById(String id) {
         log.trace("activateById start");
-        log.debug("activateById id = {} ", id);
+        log.debug("activateById id = {} ", Encode.forJava(id));
         updateUserById(id, UserGroupStatus.ACTIVE);
         log.trace("activateById end");
 
@@ -415,21 +415,21 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     private void deleteById(String id) {
         log.trace("deleteById start");
-        log.debug("deleteById id = {} ", id);
+        log.debug("deleteById id = {} ", Encode.forJava(id));
         updateUserById(id, UserGroupStatus.DELETED);
         log.trace("deleteById end");
     }
 
     private void suspendById(String id) {
         log.trace("suspendById start");
-        log.debug("suspendById id = {} ", id);
+        log.debug("suspendById id = {} ", Encode.forJava(id));
         updateUserById(id, UserGroupStatus.SUSPENDED);
         log.trace("suspendById end");
     }
 
     private void updateUserById(String id, UserGroupStatus status) {
         log.trace("updateUserById start");
-        log.debug("updateUserById id = {}, status = {}", id, status);
+        log.debug("updateUserById id = {}, status = {}", Encode.forJava(id), status);
         UpdateResult updateResult = mongoTemplate.updateFirst(
                 Query.query(Criteria.where(UserGroupEntity.Fields.ID).is(id)),
                 Update.update(UserGroupEntity.Fields.status, status)
