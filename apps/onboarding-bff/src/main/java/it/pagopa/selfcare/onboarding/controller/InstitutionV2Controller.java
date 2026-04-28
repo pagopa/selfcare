@@ -1,0 +1,255 @@
+package it.pagopa.selfcare.onboarding.controller;
+
+import io.quarkus.security.Authenticated;
+import io.quarkus.security.identity.SecurityIdentity;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import it.pagopa.selfcare.onboarding.util.LogUtils;
+import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
+import it.pagopa.selfcare.onboarding.client.model.OnboardingResult;
+import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
+import it.pagopa.selfcare.onboarding.service.InstitutionService;
+import it.pagopa.selfcare.onboarding.service.UserService;
+import it.pagopa.selfcare.onboarding.controller.request.*;
+import it.pagopa.selfcare.onboarding.controller.response.*;
+import it.pagopa.selfcare.onboarding.model.error.Problem;
+import it.pagopa.selfcare.onboarding.model.RecipientCodeStatus;
+import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
+import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
+import it.pagopa.selfcare.onboarding.mapper.UserMapper;
+import it.pagopa.selfcare.onboarding.util.FileValidationUtils;
+import it.pagopa.selfcare.onboarding.util.SecurityIdentityUtils;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import java.io.IOException;
+import java.nio.file.Files;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
+import org.apache.commons.lang3.StringUtils;
+import org.owasp.encoder.Encode;
+import org.openapi.quarkus.onboarding_json.model.OnboardingGetResponse;
+
+import java.util.List;
+
+@Slf4j
+@ApplicationScoped
+@Authenticated
+@Path("/v2/institutions")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@Tag(name = "institutions")
+@RequiredArgsConstructor
+public class InstitutionV2Controller {
+
+    private final InstitutionService institutionService;
+    private final UserService userService;
+    private final OnboardingMapper onboardingMapper;
+    private final InstitutionMapper institutionMapper;
+    private static final String ONBOARDING_START = "onboarding start";
+    private static final String ONBOARDING_END = "onboarding end";
+
+    @Inject
+    SecurityIdentity securityIdentity;
+
+    @ApiResponse(responseCode = "403",
+            description = "Forbidden",
+            content = {
+                    @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class))
+            })
+    @POST
+    @Path("/onboarding")
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
+            description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "institutionOnboarding")
+    public Response onboarding(@Valid OnboardingProductDto request) {
+        log.trace(ONBOARDING_START);
+        log.debug("onboarding request = {}", LogUtils.sanitize(request));
+        institutionService.validateOnboardingByProductOrInstitutionTaxCode(request.getTaxCode(), request.getProductId());
+        if (Boolean.TRUE.equals(request.getIsAggregator())) {
+            institutionService.onboardingPaAggregator(onboardingMapper.toEntity(request));
+        } else {
+            institutionService.onboardingProductV2(onboardingMapper.toEntity(request));
+        }
+        log.trace(ONBOARDING_END);
+        return Response.status(Response.Status.CREATED).build();
+    }
+
+    @ApiResponse(responseCode = "403",
+            description = "Forbidden",
+            content = {
+                    @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class))
+            })
+    @POST
+    @Path("/company/onboarding")
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
+            description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "institutionOnboardingCompany")
+    public Response onboarding(@Valid CompanyOnboardingDto request) {
+        log.trace(ONBOARDING_START);
+        log.debug("onboarding request = {}", Encode.forJava(request.toString()));
+        String fiscalCode = SecurityIdentityUtils.getFiscalCode(securityIdentity);
+        institutionService.onboardingCompanyV2(onboardingMapper.toEntity(request), fiscalCode);
+        log.trace(ONBOARDING_END);
+        return Response.status(Response.Status.CREATED).build();
+    }
+
+    @ApiResponse(responseCode = "403",
+            description = "Forbidden",
+            content = {
+                    @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class))
+            })
+    @GET
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
+            description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "v2GetInstitutionByFilters")
+    public List<InstitutionResource> getInstitution(@Parameter(description = "${openapi.onboarding.institutions.model.productFilter}")
+                                                    @QueryParam("productId")
+                                                    String productId,
+                                                    @Parameter(description = "${openapi.onboarding.institutions.model.taxCode}")
+                                                    @QueryParam("taxCode")
+                                                    String taxCode,
+                                                    @Parameter(description = "${openapi.onboarding.institutions.model.origin}")
+                                                    @QueryParam("origin")
+                                                    String origin,
+                                                    @Parameter(description = "${openapi.onboarding.institutions.model.originId}")
+                                                    @QueryParam("originId")
+                                                    String originId,
+                                                    @Parameter(description = "${openapi.onboarding.institutions.model.subunitCode}")
+                                                    @QueryParam("subunitCode")
+                                                    String subunitCode) {
+        log.trace("getInstitution start");
+        if (StringUtils.isAllBlank(productId, taxCode, origin, originId, subunitCode)) {
+            throw new InvalidRequestException("At least one filter must be provided");
+        }
+        final List<InstitutionResource> institutions = institutionService.getByFilters(productId, taxCode, origin, originId, subunitCode)
+                .stream()
+                .map(institutionMapper::toResource)
+                .toList();
+        log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitution result = {}", institutions);
+        log.trace("getInstitution end");
+        return institutions;
+    }
+
+    @POST
+    @Path("/onboarding/aggregation/verification")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",
+            description = "${openapi.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",  operationId = "verifyAggregatesCsvUsingPOST")
+    public VerifyAggregatesResponse verifyAggregatesCsv(@RestForm("aggregates") FileUpload file,
+                                                        @RestForm("institutionType") String institutionType,
+                                                        @RestForm("productId") String productId,
+                                                        @QueryParam("institutionType") String legacyInstitutionType,
+                                                        @QueryParam("productId") String legacyProductId){
+        log.trace("Verify Aggregates Csv start");
+        String resolvedInstitutionType = StringUtils.firstNonBlank(institutionType, legacyInstitutionType);
+        String resolvedProductId = StringUtils.firstNonBlank(productId, legacyProductId);
+        if (StringUtils.isBlank(resolvedProductId)) {
+            throw new InvalidRequestException("productId is required");
+        }
+        log.debug("Verify Aggregates Csv start for productId {}", LogUtils.sanitize(resolvedProductId));
+        log.debug("Verify Aggregates Csv institutionType = {}", LogUtils.sanitize(resolvedInstitutionType));
+
+        UploadedFile uploadedFile = toUploadedFile(file);
+        FileValidationUtils.validateAggregatesFile(uploadedFile);
+        VerifyAggregatesResponse response = onboardingMapper.toVerifyAggregatesResponse(institutionService.validateAggregatesCsv(uploadedFile, resolvedProductId));
+        log.trace("Verify Aggregates Csv end");
+        return response;
+    }
+
+    @POST
+    @Path("/company/verify-manager")
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.verifyManager}",
+            description = "${openapi.onboarding.institutions.api.onboarding.verifyManager}", operationId = "verifyManagerUsingPOST")
+    public VerifyManagerResponse verifyManager(
+            @Valid VerifyManagerRequest request
+    ) {
+        log.trace("verifyManager start");
+        String fiscalCode = SecurityIdentityUtils.getFiscalCode(securityIdentity);
+        VerifyManagerResponse response = onboardingMapper.toManagerVerification(institutionService.verifyManager(fiscalCode, request.getCompanyTaxCode()));
+        log.trace("verifyManager end");
+        return response;
+    }
+
+    @GET
+    @Path("/onboarding/active")
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.getActiveOnboarding}",
+            description = "${openapi.onboarding.institutions.api.onboarding.getActiveOnboarding}", operationId = "getActiveOnboardingUsingGET")
+    public List<InstitutionOnboardingResource> getActiveOnboarding(@QueryParam("taxCode") String taxCode,
+                                                                   @QueryParam("productId") String productId,
+                                                                   @QueryParam("subunitCode") String subunitCode
+    ) {
+        log.trace("getActiveOnboarding start");
+        log.debug("getActiveOnboarding taxCode = {}, productId = {}", Encode.forJava(taxCode), Encode.forJava(productId));
+        if ((StringUtils.isBlank(taxCode) || StringUtils.isBlank(productId)))
+            throw new InvalidRequestException("taxCode and/or productId must not be blank! ");
+        List<InstitutionOnboardingResource> response = institutionService.getActiveOnboarding(taxCode, productId,subunitCode)
+                .stream()
+                .map(onboardingMapper::toOnboardingResource)
+                .toList();
+        log.debug("getActiveOnboarding result = {}", response);
+        log.trace("getActiveOnboarding end");
+        return response;
+    }
+
+    @GET
+    @Path("/onboarding/recipient-code/verification")
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.checkRecipientCode}",
+            description = "${openapi.onboarding.institutions.api.onboarding.checkRecipientCode}", operationId = "checkRecipientCodeUsingGET")
+    public RecipientCodeStatus checkRecipientCode(@QueryParam("originId") String originId,
+                                                  @QueryParam("recipientCode") String recipientCode) {
+        log.trace("Check recipientCode start");
+        log.debug("Check originId start for institution with originId {} and recipientCode {}",
+                LogUtils.sanitize(originId), LogUtils.sanitize(recipientCode));
+        RecipientCodeStatus response = onboardingMapper.toRecipientCodeStatus(institutionService.checkRecipientCode(originId, recipientCode));
+        log.trace("Check recipientCode end");
+        return response;
+    }
+
+    @POST
+    @Path("/onboarding/users/pg")
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboardingUsersPg}",
+            description = "${openapi.onboarding.institutions.api.onboardingUsersPg}", operationId = "onboardingUsersPgUsingPOST")
+    public void onboardingUsers(@Valid CompanyOnboardingUserDto companyOnboardingUserDto) {
+        log.trace("onboardingUsersPgFromIcAndAde start");
+        log.debug("onboardingUsersPgFromIcAndAde request = {}", Encode.forJava(companyOnboardingUserDto.toString()));
+        institutionService.onboardingUsersPgFromIcAndAde(onboardingMapper.toEntity(companyOnboardingUserDto));
+        log.trace("onboardingUsersPgFromIcAndAde end");
+    }
+
+    @GET
+    @Path("/onboardings")
+    @Operation(summary = "${openapi.onboarding.institutions.api.onboardingInfo.summary}",
+            description = "${openapi.onboarding.institutions.api.onboardingInfo.description}", operationId = "getOnboardingInfo")
+    public OnboardingGetResponse getOnboardingsInfo(@QueryParam("taxCode") String inputTaxCode,
+                                                     @QueryParam("status") String inputStatus) {
+        log.trace("onboardingInfo start");
+        String taxCode = Encode.forJava(inputTaxCode);
+        String status = Encode.forJava(inputStatus);
+        log.debug("onboardingInfo request = {} - {}", taxCode, status);
+        OnboardingGetResponse results = institutionService.getOnboardingWithFilter(taxCode, status);
+        log.trace("onboardingInfo end");
+        return results;
+    }
+
+    private static UploadedFile toUploadedFile(FileUpload fileUpload) {
+        if (fileUpload == null) {
+            return null;
+        }
+        try {
+            return new UploadedFile(fileUpload.fileName(), fileUpload.contentType(), Files.readAllBytes(fileUpload.uploadedFile()));
+        } catch (IOException e) {
+            throw new IllegalStateException("Cannot read uploaded file", e);
+        }
+    }
+
+}
