@@ -41,6 +41,8 @@ module "identity_ci_ms" {
         "selc-${var.env_short}-weu-pnpg-logs-storage-rg"     = ["Storage Account Key Operator Service Role"],
         "selc-${var.env_short}-container-app-002-rg"         = ["${var.app} ${var.env} ContainerApp Jobs Reader"],
         "selc-${var.env_short}-logs-storage-rg"              = ["Storage Blob Data Contributor", "Storage Account Key Operator Service Role"],
+        "selc-${var.env_short}-onboarding-fn-rg"             = ["Storage Account Key Operator Service Role"],
+        "selc-${var.env_short}-pnpg-onboarding-fn-rg"        = ["Storage Account Key Operator Service Role"],
     })
   }
 
