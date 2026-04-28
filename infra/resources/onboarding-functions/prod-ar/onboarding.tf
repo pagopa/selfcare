@@ -142,7 +142,7 @@ module "onboarding_functions" {
 }
 
 data "azurerm_public_ip" "pip_outbound" {
-  resource_group_name = local.onboarding_functions.nat_resource_group_name
+  resource_group_name = module.local.config.resource_group_name_vnet
   name                = module.local.config.nat_pip_outbound_name
 }
 
