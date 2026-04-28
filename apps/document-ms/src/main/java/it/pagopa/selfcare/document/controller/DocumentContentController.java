@@ -121,6 +121,8 @@ public class DocumentContentController {
     )
     @GET
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Tag(name = "Document Content Controller")
+    @Tag(name = "external-v2")
     @Path("/{onboardingId}/contract-signed")
     public Uni<RestResponse<File>> getContractSigned(@PathParam(value = "onboardingId") String onboardingId) {
         return documentContentService.retrieveSignedFile(onboardingId);
