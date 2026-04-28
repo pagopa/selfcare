@@ -130,17 +130,50 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     public Uni<Document> handleContractDocument(DocumentBuilderRequest request) {
+        return handleContractDocument(request, 1);
+    }
+
+    @Override
+    public Uni<Document> handleContractDocument(DocumentBuilderRequest request, int signingStep) {
         String onboardingId = request.getOnboardingId();
 
-        return documentRepository.findByOnboardingId(onboardingId)
-                .onItem().ifNull().switchTo(() -> {
-                    Document document = new Document();
-                    setContractFileName(request, document);
-                    String contractNotSignedPath = DocumentFileUtils.getContractNotSigned(
-                            onboardingId, documentMsConfig.getContractPath(), document.getContractFilename());
+        if (signingStep > 1) {
+            // Multi-signature: always create a new document record for step > 1
+            return createNewContractDocument(request, signingStep);
+        }
 
-                    return calculateDigestFromAzureFile(contractNotSignedPath, onboardingId, "Contract")
-                            .chain(digest -> persistDocument(request, digest));
+        // Step 1: standard behavior - reuse existing or create new
+        return documentRepository.findByOnboardingId(onboardingId)
+                .onItem().ifNotNull().transform(existing -> {
+                    if (existing.getSigningStep() == null) {
+                        existing.setSigningStep(1);
+                    }
+                    return existing;
+                })
+                .onItem().ifNull().switchTo(() -> createNewContractDocument(request, 1));
+    }
+
+    private Uni<Document> createNewContractDocument(DocumentBuilderRequest request, int signingStep) {
+        String onboardingId = request.getOnboardingId();
+        Document document = new Document();
+        setContractFileName(request, document);
+        String contractNotSignedPath = DocumentFileUtils.getContractNotSigned(
+                onboardingId, documentMsConfig.getContractPath(), document.getContractFilename());
+
+        return calculateDigestFromAzureFile(contractNotSignedPath, onboardingId, "Contract")
+                .chain(digest -> {
+                    Document doc = buildDocument(request, digest);
+                    doc.setSigningStep(signingStep);
+                    return documentRepository.persist(doc)
+                            .replaceWith(doc)
+                            .onItem().invoke(() -> {
+                                log.info("Document persisted for onboardingId: {}, signingStep: {}",
+                                        sanitize(request.getOnboardingId()), signingStep);
+                                telemetryService.trackDocumentSaved(
+                                        request.getOnboardingId(),
+                                        String.valueOf(request.getDocumentType()),
+                                        request.getProductId());
+                            });
                 });
     }
 

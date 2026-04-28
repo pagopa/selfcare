@@ -1571,7 +1571,9 @@ class DocumentContentServiceImplTest {
         Document mockDocument = buildDocument(); // Usa il tuo helper esistente
         mockDocument.setContractFilename("original_contract.pdf");
 
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().nullItem());
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), anyInt()))
                 .thenReturn(Uni.createFrom().item(mockDocument));
         when(signatureService.verifyContractSignature(eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), eq(skipVerification)))
                 .thenReturn(Uni.createFrom().voidItem());
@@ -1600,7 +1602,9 @@ class DocumentContentServiceImplTest {
 
         Document mockDocument = buildDocument();
 
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().nullItem());
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), anyInt()))
                 .thenReturn(Uni.createFrom().item(mockDocument));
 
         // Simuliamo il fallimento della firma
@@ -1629,7 +1633,9 @@ class DocumentContentServiceImplTest {
 
         Document mockDocument = buildDocument();
 
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().nullItem());
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), anyInt()))
                 .thenReturn(Uni.createFrom().item(mockDocument));
         when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean()))
                 .thenReturn(Uni.createFrom().voidItem());
@@ -1661,7 +1667,9 @@ class DocumentContentServiceImplTest {
         InputStream mockFile = new ByteArrayInputStream("dummy content".getBytes());
         Document mockDocument = buildDocument();
 
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().nullItem());
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), anyInt()))
                 .thenReturn(Uni.createFrom().item(mockDocument));
         when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean()))
                 .thenReturn(Uni.createFrom().voidItem());

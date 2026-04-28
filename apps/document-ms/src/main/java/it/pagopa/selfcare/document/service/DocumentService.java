@@ -46,4 +46,15 @@ public interface DocumentService {
 
     Uni<Document> handleContractDocument(DocumentBuilderRequest request);
 
+    /**
+     * Handles a contract document for multi-signature flows.
+     * When signingStep > 1, always creates a new document record.
+     * When signingStep == 1, behaves like the standard single-signature flow.
+     *
+     * @param request the document builder request
+     * @param signingStep the signing step (1-based)
+     * @return the document (existing or newly created)
+     */
+    Uni<Document> handleContractDocument(DocumentBuilderRequest request, int signingStep);
+
 }

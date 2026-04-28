@@ -370,52 +370,74 @@ public class DocumentContentServiceImpl implements DocumentContentService {
   public Uni<String> uploadSignedContract(String onboardingId, DocumentBuilderRequest request, boolean skipSignatureVerification,
       InputStream fileUpload, String fileName) {
 
-    log.info(
-        "START - Uploading and verifying signed contract for onboardingId={}, productId={}", sanitize(onboardingId), sanitize(request.getProductId()));
+    log.info("START - Uploading and verifying signed contract for onboardingId={}, productId={}",
+        sanitize(onboardingId), sanitize(request.getProductId()));
     long start = System.currentTimeMillis();
 
-    return Uni.createFrom()
-        .item(
-            () -> {
-              try (fileUpload) {
+    return saveInputStreamToTempFile(fileUpload, fileName)
+        .chain(physicalFile ->
+            resolveNextSigningStep(onboardingId)
+                .chain(nextStep -> handleSignedContractUpload(onboardingId, request, skipSignatureVerification, physicalFile, fileName, nextStep))
+                .invoke(ignored -> telemetryService.trackSignedContractUploaded(onboardingId, System.currentTimeMillis() - start))
+                .onTermination().invoke(() -> cleanupTempFile(physicalFile, onboardingId, request.getProductId()))
+        );
+  }
+
+    private Uni<File> saveInputStreamToTempFile(InputStream fileUpload, String fileName) {
+        return Uni.createFrom().item(() -> {
+            try (fileUpload) {
                 Path tempPath = Files.createTempFile("signed-", "-" + fileName);
                 Files.copy(fileUpload, tempPath, StandardCopyOption.REPLACE_EXISTING);
                 return tempPath.toFile();
-              } catch (IOException e) {
+            } catch (IOException e) {
                 throw new RuntimeException("Error during signed file creation", e);
-              }
-            })
-        .runSubscriptionOn(
-            Infrastructure.getDefaultWorkerPool())
-        .chain(
-            physicalFile ->
-                documentService
-                    .handleContractDocument(request)
-                    .onFailure()
-                    .retry()
-                    .withBackOff(
-                        Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff))
-                    .atMost(retryMaxAttempts)
-                    .call(
-                        document ->
-                            signatureService.verifyContractSignature(
-                                onboardingId,
-                                physicalFile,
-                                request.getFiscalCodes(),
-                                skipSignatureVerification))
-                    .chain(document -> uploadToAzureAndUpdateDb(document, physicalFile, fileName))
-                    .invoke(ignored -> telemetryService.trackSignedContractUploaded(
-                            onboardingId, System.currentTimeMillis() - start))
-                    .onTermination()
-                    .invoke(() -> {
-                        physicalFile.delete();
-                        log.info(
-                                "END - Uploading and verifying signed contract for onboardingId={}, productId={}",
-                                sanitize(onboardingId),
-                                sanitize(request.getProductId())
-                        );
-                    }));
-  }
+            }
+        }).runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+    }
+
+    private Uni<String> handleSignedContractUpload(String onboardingId, DocumentBuilderRequest request,
+            boolean skipSignatureVerification, File physicalFile, String fileName, int nextStep) {
+
+        return documentService.handleContractDocument(request, nextStep)
+            .onFailure().retry()
+                .withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff))
+                .atMost(retryMaxAttempts)
+            .invoke(document -> document.setSigningStep(nextStep))
+            .call(document -> signatureService.verifyContractSignature(
+                    onboardingId, physicalFile, request.getFiscalCodes(), skipSignatureVerification))
+            .chain(document -> {
+                String signedName = buildSignedFileName(document, fileName, onboardingId, nextStep);
+                return uploadToAzureAndUpdateDb(document, physicalFile, signedName);
+            });
+    }
+
+    private String buildSignedFileName(Document document, String originalFileName, String onboardingId, int signingStep) {
+        String extension = DocumentFileUtils.getFileExtension(originalFileName);
+        String baseName = Optional.ofNullable(document.getContractFilename()).orElse(onboardingId);
+        String stepSuffix = (signingStep > 1) ? "_step" + signingStep : "";
+        return "signed" + stepSuffix + "_" + DocumentFileUtils.replaceFileExtension(baseName, extension);
+    }
+
+    private void cleanupTempFile(File physicalFile, String onboardingId, String productId) {
+        physicalFile.delete();
+        log.info("END - Uploading and verifying signed contract for onboardingId={}, productId={}",
+                sanitize(onboardingId), sanitize(productId));
+    }
+
+    /**
+     * Determina il prossimo signingStep interrogando il repository.
+     * Sfrutta findByOnboardingId già esistente (createdAt DESC).
+     * - Se non esiste documento o signingStep è null → 1 (primo upload)
+     * - Se esiste con signingStep = N → N + 1
+     */
+    private Uni<Integer> resolveNextSigningStep(String onboardingId) {
+        return documentRepository.findByOnboardingId(onboardingId)
+            .onItem().transform(latestDoc ->
+                (latestDoc == null || latestDoc.getSigningStep() == null)
+                    ? 1
+                    : latestDoc.getSigningStep() + 1
+            );
+    }
 
     // ==================== Private Reactive I/O isolation methods ====================
 
@@ -654,15 +676,17 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
     /**
      * Helper per gestire l'upload fisico su Azure, l'aggiornamento su Mongo e l'eventuale Rollback.
+     *
+     * @param document     il documento da aggiornare
+     * @param physicalFile il file firmato da caricare
+     * @param signedName   il nome finale del file su Azure (pre-calcolato dal chiamante)
      */
-    private Uni<String> uploadToAzureAndUpdateDb(Document document, File physicalFile, String originalFileName) {
+    private Uni<String> uploadToAzureAndUpdateDb(Document document, File physicalFile, String signedName) {
         String onboardingId = document.getOnboardingId();
+        String baseName = Optional.ofNullable(document.getContractFilename()).orElse(onboardingId);
 
         DocumentFileUtils.validateUploadedFile(physicalFile);
 
-        String extension = DocumentFileUtils.getFileExtension(originalFileName);
-        String baseName = Optional.ofNullable(document.getContractFilename()).orElse(onboardingId);
-        String signedName = "signed_" + DocumentFileUtils.replaceFileExtension(baseName, extension);
         String azurePath = documentMsConfig.getContractPath() + onboardingId;
 
         return Uni.createFrom().item(() -> {

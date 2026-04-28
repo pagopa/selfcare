@@ -25,4 +25,5 @@ public class DocumentResponse {
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
     private LocalDateTime activatedAt;
+    private Integer signingStep;
 }
