@@ -14,6 +14,10 @@ module "local" {
   private_dns_name_domain        = "orangeground-0bd2d4dc.westeurope.azurecontainerapps.io"
   container_app_environment_name = "selc-u-pnpg-cae-001"
   ca_resource_group_name         = "selc-u-container-app-001-rg"
+  container_app_max_replicas     = 1
+  container_app_desired_replicas = "1"
+  container_app_cpu              = 1
+  container_app_memory           = "2Gi"
 }
 
 ###############################################################################
@@ -21,27 +25,6 @@ module "local" {
 ###############################################################################
 
 locals {
-  container_app_user_cdc = {
-    min_replicas = 1
-    max_replicas = 1
-    scale_rules = [
-      {
-        custom = {
-          metadata = {
-            "desiredReplicas" = "1"
-            "start"           = "0 8 * * MON-FRI"
-            "end"             = "0 19 * * MON-FRI"
-            "timezone"        = "Europe/Rome"
-          }
-          type = "cron"
-        }
-        name = "cron-scale-rule"
-      }
-    ]
-    cpu    = 1
-    memory = "2Gi"
-  }
-
   app_settings_user_cdc = [
     {
       name  = "JAVA_TOOL_OPTIONS"
