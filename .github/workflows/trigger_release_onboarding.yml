@@ -40,7 +40,7 @@ jobs:
       - name: Trigger Functions Release
         run: |
           gh workflow run release_functions.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=selc -f app=onboarding-functions
+            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=ar -f app=onboarding-functions
 
       - name: Trigger Onboarding ms Release
         run: |
