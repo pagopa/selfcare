@@ -16,6 +16,62 @@ module "local" {
   ca_resource_group_name         = "selc-u-container-app-001-rg"
 }
 
+
+###############################################################################
+# COSMOS DB
+###############################################################################
+
+
+module "cosmosdb" {
+  source = "../../_modules/cosmosdb_database"
+
+  database_name               = "selcUserGroup"
+  resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
+}
+
+module "collection_user_groups" {
+  source = "../../_modules/cosmosdb_collection"
+
+  name                        = "UserGroups"
+  resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
+  database_name               = module.cosmosdb.database_name
+
+  lock_enable = true
+
+  indexes = [
+    {
+      keys   = ["_id"]
+      unique = true
+    },
+    {
+      keys   = ["institutionId"]
+      unique = false
+    },
+    {
+      keys   = ["parentInstitutionId"]
+      unique = false
+    },
+    {
+      keys   = ["productId"]
+      unique = false
+    },
+    {
+      keys   = ["members"]
+      unique = false
+    },
+    {
+      keys   = ["name"]
+      unique = false
+    }
+  ]
+}
+
+###############################################################################
+# Container App
+###############################################################################
+
 locals {
   container_app_user_group_ms = {
     min_replicas = 1
@@ -63,10 +119,6 @@ locals {
     "JWT_TOKEN_PUBLIC_KEY"                  = "jwt-public-key"
   }
 }
-
-###############################################################################
-# Onboarding BFF
-###############################################################################
 
 module "container_app_user_group_ms" {
   source = "../../_modules/container_app_microservice"
