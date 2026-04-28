@@ -48,7 +48,7 @@ locals {
     },
     {
       name  = "PARTY_REGISTRY_PROXY_URL"
-      value = "http://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
     }
   ]
 
@@ -79,4 +79,3 @@ module "container_app_onboarding_cdc" {
   probes                         = module.local.config.quarkus_health_probes
   tags                           = module.local.config.tags
 }
-

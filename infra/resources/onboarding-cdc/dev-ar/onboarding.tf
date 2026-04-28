@@ -32,7 +32,7 @@ locals {
     },
     {
       name  = "ONBOARDING_FUNCTIONS_URL"
-      value = "https://selc-d-onboarding-fn.azurewebsites.net"
+      value = "https://selc-${module.local.config.env_short}-onboarding-fn.azurewebsites.net"
     },
     {
       name  = "STORAGE_CONTAINER_PRODUCT"
@@ -40,11 +40,11 @@ locals {
     },
     {
       name  = "MS_CORE_URL"
-      value = "http://selc-d-ms-core-ca"
+      value = "https://selc-${module.local.config.env_short}-ms-core-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "MS_PARTY_REGISTRY_URL"
-      value = "http://selc-d-party-reg-proxy-ca"
+      value = "https://selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "SIGNATURE_VALIDATION_ENABLED"
@@ -52,7 +52,7 @@ locals {
     },
     {
       name  = "MS_USER_URL"
-      value = "http://selc-d-user-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "ALLOWED_ATECO_CODES"
@@ -64,7 +64,7 @@ locals {
     },
     {
       name  = "NAMIRIAL_BASE_URL"
-      value = "https://selc-d-namirial-sws-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+      value = "https://selc-${module.local.config.env_short}-namirial-sws-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "ONBOARDING-UPDATE-USER-REQUESTER"
@@ -83,7 +83,7 @@ locals {
     },
     {
       name  = "ONBOARDING_FUNCTIONS_URL"
-      value = "https://selc-d-onboarding-fn.azurewebsites.net"
+      value = "https://selc-${module.local.config.env_short}-onboarding-fn.azurewebsites.net"
     },
     {
       name  = "ONBOARDING-CDC-MONGODB-WATCH-ENABLED"
@@ -95,7 +95,7 @@ locals {
     },
     {
       name  = "PARTY_REGISTRY_PROXY_URL"
-      value = "http://selc-${module.local.config.env_short}-party-reg-proxy-ca"
+      value = "https://selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
     }
   ]
 

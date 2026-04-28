@@ -31,7 +31,7 @@ locals {
     },
     {
       name  = "ONBOARDING_FUNCTIONS_URL"
-      value = "https://selc-d-pnpg-onboarding-fn.azurewebsites.net"
+      value = "https://selc-${module.local.config.env_short}-pnpg-onboarding-fn.azurewebsites.net"
     },
     {
       name  = "STORAGE_CONTAINER_PRODUCT"
@@ -39,11 +39,11 @@ locals {
     },
     {
       name  = "MS_CORE_URL"
-      value = "http://selc-d-pnpg-ms-core-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-ms-core-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "MS_PARTY_REGISTRY_URL"
-      value = "http://selc-d-pnpg-party-reg-proxy-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "SIGNATURE_VALIDATION_ENABLED"
@@ -51,7 +51,7 @@ locals {
     },
     {
       name  = "MS_USER_URL"
-      value = "http://selc-d-pnpg-user-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "JWT_BEARER_TOKEN"
@@ -109,11 +109,11 @@ locals {
     },
     {
       name  = "ONBOARDING_FUNCTIONS_URL"
-      value = "https://selc-d-pnpg-onboarding-fn.azurewebsites.net"
+      value = "https://selc-${module.local.config.env_short}-pnpg-onboarding-fn.azurewebsites.net"
     },
     {
       name  = "PARTY_REGISTRY_PROXY_URL"
-      value = "http://selc-${module.local.config.env_short}-party-reg-proxy-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
     }
   ]
 
