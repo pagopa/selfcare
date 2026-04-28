@@ -46,15 +46,16 @@ locals {
       value = "selfcare-wo"
     },
     {
-      name = "USER_GROUP_CDC_SEND_EVENTS_WATCH_ENABLED"
+      name  = "USER_GROUP_CDC_SEND_EVENTS_WATCH_ENABLED"
       value = "true"
     }
   ]
 
   secrets_names_user_group_cdc = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-    "MONGODB_CONNECTION_URI"                = "mongodb-connection-string"
-    "JWT_TOKEN_PUBLIC_KEY"                  = "jwt-public-key"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING"      = "appinsights-connection-string"
+    "MONGODB-CONNECTION-STRING"                  = "mongodb-connection-string"
+    "STORAGE_CONNECTION_STRING"                  = "blob-storage-product-connection-string"
+    "EVENTHUB-SC-USER-GROUPS-SELFCARE-WO-KEY-LC" = "eventhub-sc-usergroups-selfcare-wo-key-lc"
   }
 }
 
