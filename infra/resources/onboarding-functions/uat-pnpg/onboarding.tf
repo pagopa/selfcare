@@ -8,7 +8,7 @@ module "local" {
   env_short             = "u"
   domain                = "pnpg"
   nat_rg_name           = "selc-u-weu-pnpg-nat-rg"
-  nat_gw_name           = "selc-u-weu-pnpg-nat-gw"
+  nat_gw_name           = "selc-u-weu-pnpg-nat_gw"
   nat_pip_outbound_name = "selc-u-weu-pnpg-pip-outbound"
   external_domain       = "it"
 
