@@ -14,29 +14,13 @@ module "local" {
   container_app_environment_name = "selc-d-cae-002"
   ca_resource_group_name         = "selc-d-container-app-002-rg"
   container_app_min_replicas     = 0
+  container_app_max_replicas     = 1
+  container_app_desired_replicas = "1"
+  container_app_cpu              = 1
+  container_app_memory           = "2Gi"
 }
 
 locals {
-  container_app_user_group_cdc = {
-    min_replicas = 0
-    max_replicas = 1
-    scale_rules = [
-      {
-        custom = {
-          metadata = {
-            "desiredReplicas" = "1"
-            "start"           = "0 8 * * MON-FRI"
-            "end"             = "0 19 * * MON-FRI"
-            "timezone"        = "Europe/Rome"
-          }
-          type = "cron"
-        }
-        name = "cron-scale-rule"
-      }
-    ]
-    cpu    = 1
-    memory = "2Gi"
-  }
 
   app_settings_user_group_cdc = [
     {
