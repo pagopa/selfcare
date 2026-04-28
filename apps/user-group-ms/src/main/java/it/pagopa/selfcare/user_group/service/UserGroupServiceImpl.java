@@ -348,7 +348,8 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     private void removeMembers(String memberId, String institutionId, String productId) {
         log.trace("deleteMembers start");
-        log.debug("deleteMembers id = {}, institutionId = {}, productId= {}", memberId, Encode.forJava(institutionId), productId);
+        log.debug("deleteMembers id = {}, institutionId = {}, productId= {}",
+                Encode.forJava(memberId), Encode.forJava(institutionId), Encode.forJava(productId));
 
         UpdateResult updateResult = mongoTemplate.updateMulti(
                 Query.query(Criteria.where(UserGroupEntity.Fields.members).is(memberId)
