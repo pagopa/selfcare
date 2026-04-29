@@ -105,7 +105,7 @@ public class UserRegistryServiceImpl implements UserRegistryService {
                 .institutionId(StringUtils.isNotBlank(institutionId) ? institutionId : null).build();
 
         return Uni.combine().all()
-                .unis(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)
+                .unis(findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)
                                 .onItem().ifNotNull().invoke(() -> log.debug("User founded on userRegistry with userId: {}", userId)),
                         userInstitutionService.findAllWithFilter(userInstitutionFilter.constructMap()).collect().asList()
                                 .onItem().ifNotNull().invoke(() -> log.debug("UserInstitution founded for userId: {} and institutionId: {}", Encode.forJava(userId), Encode.forJava(institutionId))))
