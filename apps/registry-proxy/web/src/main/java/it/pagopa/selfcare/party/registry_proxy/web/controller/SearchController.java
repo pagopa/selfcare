@@ -4,10 +4,14 @@ import io.swagger.annotations.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import it.pagopa.selfcare.party.registry_proxy.connector.model.IpaInstitutionSearchResult;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndexSearch;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceInstitution;
 import it.pagopa.selfcare.party.registry_proxy.core.SearchService;
+import it.pagopa.selfcare.party.registry_proxy.web.model.InstitutionsResource;
 import it.pagopa.selfcare.party.registry_proxy.web.model.OnboardingIndexSearchResource;
+import it.pagopa.selfcare.party.registry_proxy.web.model.mapper.InstitutionMapper;
+import it.pagopa.selfcare.party.registry_proxy.web.model.mapper.InstitutionsMapper;
 import it.pagopa.selfcare.party.registry_proxy.web.model.mapper.OnboardingMapper;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -21,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -85,6 +90,42 @@ public class SearchController {
     final OnboardingIndexSearch onboardingIndexSearch = searchService.searchOnboarding(searchText, products,
             institutionTypes, statuses, page, pageSize, orderBy);
     return onboardingMapper.toOnboardingIndexSearchResource(onboardingIndexSearch);
+  }
+
+  @Tag(name = "external-v2")
+  @Tag(name = "support")
+  @Tag(name = "institution")
+  @GetMapping("/ipa-institutions")
+  @PreAuthorize("hasPermission(new it.pagopa.selfcare.party.registry_proxy.web.security.FilterAuthorityDomain('PAGOPA'), 'Selc:SearchInstitutions')")
+  @Operation(summary = "${swagger.api.search.ipa-institutions.summary}",
+    description = "${swagger.api.search.ipa-institutions.notes}",
+    operationId = "searchIpaInstitutionsOnSearchEngine"
+  )
+  public ResponseEntity<InstitutionsResource> searchIpaInstitutions(
+    @Parameter(description = "${swagger.model.*.searchText}")
+    @RequestParam(defaultValue = "*") String searchText,
+    @Parameter(description = "${swagger.model.*.categories}")
+    @RequestParam(required = false) String category,
+    @Parameter(description = "${swagger.model.*.page}")
+    @RequestParam(defaultValue = "0") @PositiveOrZero Integer page,
+    @Parameter(description = "${swagger.model.*.limit}")
+    @RequestParam(defaultValue = "50") @Positive Integer pageSize) {
+
+    try {
+      IpaInstitutionSearchResult result = searchService.searchIpaInstitutions(searchText, category, page, pageSize);
+
+      InstitutionsResource resource = InstitutionsMapper.toResource(
+        result.getInstitutions().stream()
+          .map(InstitutionMapper::toResource)
+          .collect(Collectors.toList()),
+        result.getTotalElements()
+      );
+
+      return ResponseEntity.ok(resource);
+    } catch (Exception e) {
+      log.error("Error searching IPA institutions", e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    }
   }
 
 }
