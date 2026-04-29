@@ -1,0 +1,7 @@
+{
+  "id": "prod-signing-empty",
+  "alias": "prod-signing-empty",
+  "signingConfiguration": null,
+  "managingInstitutions": []
+}
+
