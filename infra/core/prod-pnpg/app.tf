@@ -225,17 +225,3 @@ resource "azurerm_nat_gateway" "nat_gateway" {
 #   checkout_cdn_storage_primary_access_key = module.cdn.storage_primary_access_key
 #   checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
 # }
-
-###############################################################################
-# one trust
-###############################################################################
-
-module "one_trust" {
-  source = "../_modules/one_trust"
-
-  env                                     = local.env
-  checkout_cdn_name                       = module.cdn.storage_name
-  checkout_endpoint_name                  = module.cdn.name
-  checkout_cdn_storage_primary_access_key = module.cdn.storage_primary_access_key
-  checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
-}
