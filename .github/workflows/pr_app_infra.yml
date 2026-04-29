@@ -1,4 +1,4 @@
-name: Code Review - Auth Infra
+name: Code Review - App Infra
 
 permissions:
   contents: read

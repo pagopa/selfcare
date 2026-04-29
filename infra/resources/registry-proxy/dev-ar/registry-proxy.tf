@@ -49,6 +49,14 @@ module "ai_search_onboarding" {
   srch_service_primary_key = data.azurerm_search_service.srch_service.primary_key
 }
 
+module "ai_search_ipa" {
+  source                   = "../../_modules/ai_search_ipa"
+  domain                   = module.local.config.domain
+  search_service_id        = data.azurerm_search_service.srch_service.id
+  srch_service_name        = data.azurerm_search_service.srch_service.name
+  srch_service_primary_key = data.azurerm_search_service.srch_service.primary_key
+}
+
 
 ###############################################################################
 # DAPR
@@ -233,6 +241,22 @@ locals {
     {
       name  = "AZURE_SEARCH_INSTITUTION_INDEX"
       value = "institution-index-ar"
+    },
+    {
+      name  = "AZURE_SEARCH_IPA_INSTITUTION_INDEX"
+      value = module.ai_search_ipa.institution_index_name
+    },
+    {
+      name  = "AZURE_SEARCH_IPA_AOO_INDEX"
+      value = module.ai_search_ipa.aoo_index_name
+    },
+    {
+      name  = "AZURE_SEARCH_IPA_UO_INDEX"
+      value = module.ai_search_ipa.uo_index_name
+    },
+    {
+      name  = "AZURE_SEARCH_IPA_CATEGORY_INDEX"
+      value = module.ai_search_ipa.category_index_name
     },
     {
       name  = "ANAC_FTP_MODE"

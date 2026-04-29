@@ -543,6 +543,80 @@
         } ]
       }
     },
+    "/search/ipa-institutions" : {
+      "get" : {
+        "tags" : [ "institution", "external-v2", "support" ],
+        "summary" : "Retrieve IPA institutions",
+        "description" : "Retrieves a list of IPA institutions from the Azure AI Search index with optional text search and category filter",
+        "operationId" : "searchIpaInstitutionsOnSearchEngine",
+        "parameters" : [ {
+          "name" : "searchText",
+          "in" : "query",
+          "description" : "Search text pattern",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "*"
+          }
+        }, {
+          "name" : "category",
+          "in" : "query",
+          "description" : "Filter from origin category",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Desired page number for result pagination. It is optional, and the default value is 1 when not specified",
+          "required" : false,
+          "schema" : {
+            "minimum" : 0,
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "description" : "Maximum number of items per page. It is optional, and the default value is 10 when not specified",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InstitutionsResource"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request"
+          },
+          "401" : {
+            "description" : "Unauthorized"
+          },
+          "404" : {
+            "description" : "Not Found"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
     "/search/institutions" : {
       "get" : {
         "tags" : [ "institution", "external-v2", "support" ],
@@ -1750,6 +1824,70 @@
           }
         }
       },
+      "InstitutionResource" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "originId" : {
+            "type" : "string"
+          },
+          "o" : {
+            "type" : "string"
+          },
+          "ou" : {
+            "type" : "string"
+          },
+          "aoo" : {
+            "type" : "string"
+          },
+          "taxCode" : {
+            "type" : "string"
+          },
+          "category" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "digitalAddress" : {
+            "type" : "string"
+          },
+          "address" : {
+            "type" : "string"
+          },
+          "zipCode" : {
+            "type" : "string"
+          },
+          "origin" : {
+            "type" : "string",
+            "enum" : [ "static", "IPA", "ANAC", "IVASS", "INFOCAMERE" ]
+          },
+          "istatCode" : {
+            "type" : "string"
+          },
+          "updateDate" : {
+            "type" : "string"
+          }
+        }
+      },
+      "InstitutionsResource" : {
+        "required" : [ "count", "items" ],
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/InstitutionResource"
+            }
+          },
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
       "SearchServiceInstitution" : {
         "type" : "object",
         "properties" : {
@@ -1875,67 +2013,6 @@
           "origin" : {
             "type" : "string",
             "enum" : [ "static", "IPA", "ANAC", "IVASS", "INFOCAMERE" ]
-          }
-        }
-      },
-      "InstitutionResource" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "originId" : {
-            "type" : "string"
-          },
-          "o" : {
-            "type" : "string"
-          },
-          "ou" : {
-            "type" : "string"
-          },
-          "aoo" : {
-            "type" : "string"
-          },
-          "taxCode" : {
-            "type" : "string"
-          },
-          "category" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "digitalAddress" : {
-            "type" : "string"
-          },
-          "address" : {
-            "type" : "string"
-          },
-          "zipCode" : {
-            "type" : "string"
-          },
-          "origin" : {
-            "type" : "string",
-            "enum" : [ "static", "IPA", "ANAC", "IVASS", "INFOCAMERE" ]
-          },
-          "istatCode" : {
-            "type" : "string"
-          }
-        }
-      },
-      "InstitutionsResource" : {
-        "required" : [ "count", "items" ],
-        "type" : "object",
-        "properties" : {
-          "items" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/InstitutionResource"
-            }
-          },
-          "count" : {
-            "type" : "integer",
-            "format" : "int64"
           }
         }
       },
@@ -2065,10 +2142,10 @@
           "mail3" : {
             "type" : "string"
           },
-          "uriprotocolloInformatico" : {
+          "cap" : {
             "type" : "string"
           },
-          "cap" : {
+          "uriprotocolloInformatico" : {
             "type" : "string"
           }
         }
