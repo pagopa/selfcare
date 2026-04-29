@@ -364,7 +364,7 @@ module "container_app_registry_proxy_ms" {
   env_short                      = module.local.config.env_short
   resource_group_name            = module.local.config.ca_resource_group_name
   container_app                  = local.registry_proxy_container_app
-  container_app_name             = local.ca_base_name
+  container_app_name             = local.ca_name
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-registry-proxy-ms"
   image_tag                      = var.image_tag
