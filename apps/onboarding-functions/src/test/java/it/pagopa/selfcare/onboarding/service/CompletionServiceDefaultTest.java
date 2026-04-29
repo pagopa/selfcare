@@ -695,7 +695,7 @@ public class CompletionServiceDefaultTest {
         DocumentResponse document = new DocumentResponse();
         document.setContractSigned("contract-signed-path");
         when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId()))
-                .thenReturn(List.of(document));
+                .thenReturn(document);
 
         mockOnboardingUpdateWhenPersistOnboarding(onboarding);
 
@@ -724,7 +724,7 @@ public class CompletionServiceDefaultTest {
         DocumentResponse document = new DocumentResponse();
         document.setContractSigned("contract-signed-path");
         when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId()))
-                .thenReturn(List.of(document));
+                .thenReturn(document);
 
         mockOnboardingUpdateWhenPersistOnboarding(onboarding);
 

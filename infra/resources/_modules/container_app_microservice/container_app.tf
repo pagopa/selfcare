@@ -52,7 +52,7 @@ resource "azurerm_container_app" "container_app" {
     # Container configuration
     container {
       name   = var.container_app_name
-      image  = "ghcr.io/pagopa/${var.image_name}:${var.image_tag}"
+      image  = "ghcr.io/pagopa/${var.image_name}:${local.sanitized_image_tag}"
       cpu    = var.container_app.cpu
       memory = var.container_app.memory
 

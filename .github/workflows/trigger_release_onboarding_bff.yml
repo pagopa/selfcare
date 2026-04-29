@@ -42,7 +42,7 @@ jobs:
           gh workflow run release_app.yml \
             --ref ${{ inputs.branch }} \
             -f env=${{ inputs.env }} \
-            -f target=selc \
+            -f target=ar \
             -f app=onboarding-bff
 
       - name: Trigger Onboarding BFF Release (PNPG)

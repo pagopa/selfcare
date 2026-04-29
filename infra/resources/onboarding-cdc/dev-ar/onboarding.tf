@@ -72,42 +72,6 @@ locals {
     }
   ]
 
-  secrets_names_onboarding_ms = {
-    "JWT-PUBLIC-KEY"                          = "jwt-public-key"
-    "JWT_BEARER_TOKEN"                        = "jwt-bearer-token-functions"
-    "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
-    "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
-    "ONBOARDING-FUNCTIONS-API-KEY"            = "fn-onboarding-primary-key"
-    "BLOB-STORAGE-PRODUCT-CONNECTION-STRING"  = "blob-storage-product-connection-string"
-    "BLOB-STORAGE-CONTRACT-CONNECTION-STRING" = "documents-storage-connection-string"
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
-    "ONBOARDING_DATA_ENCRIPTION_KEY"          = "onboarding-data-encryption-key"
-    "ONBOARDING_DATA_ENCRIPTION_IV"           = "onboarding-data-encryption-iv"
-    "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"     = "namirial-sign-service-user"
-    "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
-  }
-
-  container_app_onboarding_cdc = {
-    min_replicas = 0
-    max_replicas = 1
-    scale_rules = [
-      {
-        custom = {
-          metadata = {
-            "desiredReplicas" = "1"
-            "start"           = "0 8 * * MON-FRI"
-            "end"             = "0 19 * * MON-FRI"
-            "timezone"        = "Europe/Rome"
-          }
-          type = "cron"
-        }
-        name = "cron-scale-rule"
-      }
-    ]
-    cpu    = 1
-    memory = "2Gi"
-  }
-
   app_settings_onboarding_cdc = [
     {
       name  = "JAVA_TOOL_OPTIONS"
@@ -128,11 +92,16 @@ locals {
     {
       name  = "ONBOARDING-CDC-MINUTES-THRESHOLD-FOR-UPDATE-NOTIFICATION"
       value = "5"
+    },
+    {
+      name  = "PARTY_REGISTRY_PROXY_URL"
+      value = "http://selc-${module.local.config.env_short}-party-reg-proxy-ca"
     }
   ]
 
   secrets_names_onboarding_cdc = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "JWT_BEARER_TOKEN"                      = "jwt-bearer-token-functions"
     "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
     "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
     "NOTIFICATION-FUNCTIONS-API-KEY"        = "fn-onboarding-primary-key"

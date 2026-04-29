@@ -53,7 +53,7 @@ variable "replication_type" {
 }
 
 variable "app_settings" {
-  type        = map(string)
+  type        = map(any)
   description = "Settings references to be set as app settings in the function app"
 }
 
@@ -86,4 +86,10 @@ variable "application_insights_key" {
   description = "Application Insights instrumentation key"
   type        = string
   default     = null
+}
+
+variable "application_insights_connection_string_secret_name" {
+  description = "Key Vault secret name for the Application Insights connection string"
+  type        = string
+  default     = "appinsights-connection-string"
 }

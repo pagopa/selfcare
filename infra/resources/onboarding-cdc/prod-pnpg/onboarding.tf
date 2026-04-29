@@ -45,11 +45,16 @@ locals {
     {
       name  = "ONBOARDING-CDC-MINUTES-THRESHOLD-FOR-UPDATE-NOTIFICATION"
       value = "5"
+    },
+    {
+      name  = "PARTY_REGISTRY_PROXY_URL"
+      value = "http://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca"
     }
   ]
 
   onboarding_cdc_secrets_names = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "JWT_BEARER_TOKEN"                      = "jwt-bearer-token-functions"
     "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
     "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
     "NOTIFICATION-FUNCTIONS-API-KEY"        = "fn-onboarding-primary-key"
@@ -63,7 +68,7 @@ module "container_app_onboarding_cdc" {
   env_short                      = module.local.config.env_short
   resource_group_name            = module.local.config.ca_resource_group_name
   container_app                  = module.local.config.container_app
-  container_app_name             = "selc-${module.local.config.env_short}-onboarding-cdc"
+  container_app_name             = "selc-${module.local.config.env_short}-pnpg-onboarding-cdc"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-onboarding-cdc"
   image_tag                      = var.image_tag

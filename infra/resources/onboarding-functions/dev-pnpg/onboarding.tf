@@ -4,9 +4,12 @@
 module "local" {
   source = "../../_modules/local-env"
 
-  env       = "dev"
-  env_short = "d"
-  domain    = "ar"
+  env                   = "dev"
+  env_short             = "d"
+  domain                = "pnpg"
+  nat_rg_name           = "selc-d-weu-pnpg-nat-rg"
+  nat_gw_name           = "selc-d-weu-pnpg-nat_gw"
+  nat_pip_outbound_name = "selc-d-weu-pnpg-pip-outbound"
 
   dns_zone_prefix                = "dev.selfcare"
   api_dns_zone_prefix            = "api.dev.selfcare"
@@ -21,13 +24,13 @@ module "local" {
 ###############################################################################
 locals {
   onboarding_functions = {
-    name                      = "selc-d-pnpg-onboarding-fn"
+    name                      = "selc-${module.local.config.env_short}-${module.local.config.domain}-onboarding-fn"
     subnet_cidr               = ["10.1.152.0/24"]
     always_on                 = false
     service_plan_sku          = "B2"
     service_plan_worker_count = 1
-    nat_resource_group_name   = "selc-d-weu-pnpg-nat-rg"
-    nat_gateway_name          = "selc-d-weu-pnpg-nat_gw"
+    nat_resource_group_name   = module.local.config.nat_rg_name
+    nat_gateway_name          = module.local.config.nat_gw_name
     app_settings = {
       "APPLICATIONINSIGHTS_CONNECTION_STRING"              = "@Microsoft.KeyVault(SecretUri=https://selc-d-pnpg-kv.vault.azure.net/secrets/appinsights-connection-string/)"
       "USER_REGISTRY_URL"                                  = "https://api.uat.pdv.pagopa.it/user-registry/v1"
@@ -66,10 +69,11 @@ locals {
       "MAIL_USER_CONFIRMATION_LINK"                        = "https://imprese.dev.notifichedigitali.it/onboarding/confirm?add-user=true&jwt="
       "MAIL_ONBOARDING_REJECTION_LINK"                     = "https://imprese.dev.notifichedigitali.it/onboarding/cancel?jwt="
       "MAIL_ONBOARDING_URL"                                = "https://imprese.dev.notifichedigitali.it/onboarding/"
-      "MS_USER_URL"                                        = "https://selc-d-pnpg-user-ms-ca.victoriousfield-e39534b8.westeurope.azurecontainerapps.io"
-      "MS_CORE_URL"                                        = "https://selc-d-pnpg-ms-core-ca.blackhill-644148c0.westeurope.azurecontainerapps.io"
+      "MS_USER_URL"                                        = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-user-ms-ca.${module.local.config.private_dns_name_domain}"
+      "MS_CORE_URL"                                        = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-ms-core-ca.${module.local.config.private_dns_name_domain}"
+      "MS_DOCUMENT_URL"                                    = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-document-ms-ca.${module.local.config.private_dns_name_domain}"
       "JWT_BEARER_TOKEN"                                   = "@Microsoft.KeyVault(SecretUri=https://selc-d-pnpg-kv.vault.azure.net/secrets/jwt-bearer-token-functions/)"
-      "MS_PARTY_REGISTRY_URL"                              = "https://selc-d-pnpg-party-reg-proxy-ca.victoriousfield-e39534b8.westeurope.azurecontainerapps.io"
+      "MS_PARTY_REGISTRY_URL"                              = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
       "PAGOPA_LOGO_ENABLE"                                 = "false"
       "USER_MS_SEND_MAIL"                                  = "false"
       "FORCE_INSTITUTION_PERSIST"                          = "true"
@@ -112,6 +116,21 @@ module "onboarding_functions" {
   app_settings              = local.onboarding_functions.app_settings
   location                  = module.local.config.location
   tags                      = module.local.config.tags
+}
+
+data "azurerm_public_ip" "pip_outbound" {
+  resource_group_name = local.onboarding_functions.nat_resource_group_name
+  name                = module.local.config.nat_pip_outbound_name
+}
+
+data "azurerm_nat_gateway" "onboarding_functions_nat_gateway" {
+  name                = local.onboarding_functions.nat_gateway_name
+  resource_group_name = local.onboarding_functions.nat_resource_group_name
+}
+
+resource "azurerm_nat_gateway_public_ip_association" "functions_pip_nat_gateway" {
+  nat_gateway_id       = data.azurerm_nat_gateway.onboarding_functions_nat_gateway.id
+  public_ip_address_id = data.azurerm_public_ip.pip_outbound.id
 }
 
 # resource "azurerm_resource_group" "onboarding_fn_rg" {

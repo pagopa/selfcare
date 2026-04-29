@@ -110,11 +110,16 @@ locals {
     {
       name  = "ONBOARDING_FUNCTIONS_URL"
       value = "https://selc-d-pnpg-onboarding-fn.azurewebsites.net"
+    },
+    {
+      name  = "PARTY_REGISTRY_PROXY_URL"
+      value = "http://selc-${module.local.config.env_short}-party-reg-proxy-ca"
     }
   ]
 
   onboarding_cdc_secrets_names = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "JWT_BEARER_TOKEN"                      = "jwt-bearer-token-functions"
     "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
     "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
     "NOTIFICATION-FUNCTIONS-API-KEY"        = "fn-onboarding-primary-key"

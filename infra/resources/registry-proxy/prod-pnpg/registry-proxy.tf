@@ -24,9 +24,9 @@ module "local" {
 locals {
 
   registry_proxy_container_app = {
-    min_replicas = local.container_app.min_replicas
-    max_replicas = local.container_app.max_replicas
-    scale_rules  = local.container_app.scale_rules
+    min_replicas = module.local.config.container_app.min_replicas
+    max_replicas = module.local.config.container_app.max_replicas
+    scale_rules  = module.local.config.container_app.scale_rules
     cpu          = 1.0
     memory       = "2Gi"
   }
@@ -206,7 +206,7 @@ module "container_app_registry_proxy_ms" {
   container_app                  = module.local.config.container_app
   container_app_name             = "selc-${module.local.config.env_short}-pnpg-party-reg-proxy"
   container_app_environment_name = module.local.config.container_app_environment_name
-  image_name                     = "selfcare-ms-party-registry-proxy"
+  image_name                     = "selfcare-registry-proxy-ms"
   image_tag                      = var.image_tag
   app_settings                   = local.app_settings
   secrets_names                  = local.secrets_names

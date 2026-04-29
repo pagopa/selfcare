@@ -333,6 +333,7 @@ public class OnboardingController {
     @PUT
     @Path("/{onboardingId}/complete")
     @Tag(name = "internal-v1")
+    @Tag(name = "external-v2")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Uni<Response> complete(@PathParam(value = "onboardingId") String onboardingId, @NotNull @RestForm("contract") File file, @Context ResteasyReactiveRequestContext ctx) {
         return onboardingService.complete(onboardingId, retrieveContractFromFormData(ctx.getFormData(), file))
@@ -398,6 +399,8 @@ public class OnboardingController {
     )
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @Tag(name = "Onboarding Controller")
+    @Tag(name = "external-v2")
     public Uni<OnboardingGetResponse> getOnboardingWithFilter(@QueryParam(value = "productId") String productId,
                                                               @QueryParam(value = "taxCode") String taxCode,
                                                               @QueryParam(value = "institutionId") String institutionId,
@@ -405,7 +408,7 @@ public class OnboardingController {
                                                               @QueryParam(value = "subunitCode") String subunitCode,
                                                               @QueryParam(value = "from") String from,
                                                               @QueryParam(value = "to") String to,
-                                                              @QueryParam(value = "status") String status,
+                                                              @QueryParam(value = "status") OnboardingStatus status,
                                                               @QueryParam(value = "userId") String userId,
                                                               @QueryParam(value = "productIds") List<String> productIds,
                                                               @QueryParam(value = "page") @DefaultValue("0") Integer page,
@@ -431,8 +434,11 @@ public class OnboardingController {
 
     @Operation(summary = "Perform reject operation of an onboarding request",
             description = "Perform reject operation of an onboarding request receiving onboarding id." +
-                    "Function change status to REJECT for an onboarding request that is not COMPLETED. ")
+                    "Function change status to REJECT for an onboarding request that is not COMPLETED. ",
+            operationId = "rejectOnboardingUsingPUT")
     @PUT
+    @Tag(name = "external-v2")
+    @Tag(name = "Onboarding Controller")
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{onboardingId}/reject")
     public Uni<Response> delete(@PathParam(value = "onboardingId") String onboardingId, @Valid ReasonRequest reason) {
@@ -488,7 +494,7 @@ public class OnboardingController {
     @Tag(name = "Onboarding")
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/institutionOnboardings")
-    public Uni<List<OnboardingResponse>> getOnboardingPending(@QueryParam(value = "taxCode") String taxCode,
+    public Uni<List<OnboardingResponse>> getOnboardings(@QueryParam(value = "taxCode") String taxCode,
                                                               @QueryParam(value = "subunitCode") String subunitCode,
                                                               @QueryParam(value = "origin") String origin,
                                                               @QueryParam(value = "originId") String originId,
@@ -664,6 +670,7 @@ public class OnboardingController {
                     "then invokes async process to set DELETED as status for institution and user onboardings.")
     @DELETE
     @Tag(name = "internal-v1")
+    @Tag(name = "external-v2")
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{onboardingId}")
     public Uni<Response> deleteOnboarding(@PathParam(value = "onboardingId") String onboardingId) {

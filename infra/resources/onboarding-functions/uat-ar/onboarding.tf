@@ -21,13 +21,13 @@ module "local" {
 
 locals {
   onboarding_functions = {
-    name                      = "selc-u-onboarding-fn"
+    name                      = "selc-${module.local.config.env_short}-onboarding-fn"
     subnet_cidr               = ["10.1.144.0/24"]
     always_on                 = true
     service_plan_sku          = "B2"
     service_plan_worker_count = 1
-    nat_resource_group_name   = "selc-u-nat-rg"
-    nat_gateway_name          = "selc-u-nat_gw"
+    nat_resource_group_name   = module.local.config.nat_rg_name
+    nat_gateway_name          = module.local.config.nat_gw_name
     app_settings = {
       "APPLICATIONINSIGHTS_CONNECTION_STRING"              = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/appinsights-connection-string/)",
       "USER_REGISTRY_URL"                                  = "https://api.uat.pdv.pagopa.it/user-registry/v1",
@@ -65,10 +65,11 @@ locals {
       "MAIL_USER_CONFIRMATION_LINK"                        = "https://uat.selfcare.pagopa.it/onboarding/confirm?add-user=true&jwt=",
       "MAIL_ONBOARDING_REJECTION_LINK"                     = "https://uat.selfcare.pagopa.it/onboarding/cancel?jwt=",
       "MAIL_ONBOARDING_URL"                                = "https://uat.selfcare.pagopa.it/onboarding/",
-      "MS_CORE_URL"                                        = "https://selc-u-ms-core-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io",
+      "MS_CORE_URL"                                        = "https://selc-${module.local.config.env_short}-ms-core-ca.${module.local.config.private_dns_name_domain}",
       "JWT_BEARER_TOKEN"                                   = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/jwt-bearer-token-functions/)",
-      "MS_USER_URL"                                        = "https://selc-u-user-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io",
-      "MS_PARTY_REGISTRY_URL"                              = "https://selc-u-party-reg-proxy-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io",
+      "MS_USER_URL"                                        = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}",
+      "MS_DOCUMENT_URL"                                    = "https://selc-${module.local.config.env_short}-document-ms-ca.${module.local.config.private_dns_name_domain}",
+      "MS_PARTY_REGISTRY_URL"                              = "https://selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}",
       "USER_MS_SEND_MAIL"                                  = "false",
       "EVENT_HUB_BASE_PATH"                                = "https://selc-u-eventhub-ns.servicebus.windows.net",
       "STANDARD_SHARED_ACCESS_KEY_NAME"                    = "selfcare-wo"
@@ -106,7 +107,7 @@ locals {
       "JWT_TOKEN_PRIVATE_KEY"                          = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/jwt-private-key/)"
       "JWT_TOKEN_KID"                                  = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/jwt-kid/)"
       ##WEBHOOK
-      "WEBHOOK_BASE_PATH"                              = "https://selc-u-webhook-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
+      "WEBHOOK_BASE_PATH" = "https://selc-u-webhook-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
 
       ##NAMIRIAL SIGNATURE
       "NAMIRIAL_BASE_URL"                       = "https://selc-u-namirial-sws-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io",
@@ -117,7 +118,6 @@ locals {
       "ONBOARDING_DATA_ENCRIPTION_KEY" = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/onboarding-data-encryption-key/)",
       "ONBOARDING_DATA_ENCRIPTION_IV"  = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/onboarding-data-encryption-iv/)"
 
-      "MS_DOCUMENT_URL"                                    = "https://selc-u-document-ms-ca.mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
     }
   }
 }

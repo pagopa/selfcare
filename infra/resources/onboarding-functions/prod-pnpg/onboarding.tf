@@ -4,10 +4,13 @@
 module "local" {
   source = "../../_modules/local-env"
 
-  env             = "prod"
-  env_short       = "p"
-  domain          = "pnpg"
-  external_domain = "it"
+  env                   = "prod"
+  env_short             = "p"
+  domain                = "pnpg"
+  nat_rg_name           = "selc-p-weu-pnpg-nat-rg"
+  nat_gw_name           = "selc-p-weu-pnpg-nat_gw"
+  nat_pip_outbound_name = "selc-p-weu-pnpg-pip-outbound"
+  external_domain       = "it"
 
   dns_zone_prefix                = "imprese.notifichedigitali"
   api_dns_zone_prefix            = "api-pnpg.selfcare"
@@ -26,55 +29,79 @@ module "local" {
 
 locals {
   onboarding_functions = {
-    name                      = "selc-p-pnpg-onboarding-fn"
+    name                      = "selc-${module.local.config.env_short}-${module.local.config.domain}-onboarding-fn"
     subnet_cidr               = ["10.1.152.0/24"]
     always_on                 = true
     service_plan_sku          = "P1v3"
     service_plan_worker_count = 1
-    nat_resource_group_name   = "selc-p-weu-pnpg-nat-rg"
-    nat_gateway_name          = "selc-p-weu-pnpg-nat_gw"
+    nat_resource_group_name   = module.local.config.nat_rg_name
+    nat_gateway_name          = module.local.config.nat_gw_name
     app_settings = {
-      "APPLICATIONINSIGHTS_CONNECTION_STRING"        = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/appinsights-connection-string/)"
-      "USER_REGISTRY_URL"                            = "https://api.pdv.pagopa.it/user-registry/v1"
-      "MONGODB_CONNECTION_URI"                       = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/mongodb-connection-string/)"
-      "USER_REGISTRY_API_KEY"                        = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/user-registry-api-key/)"
-      "BLOB_STORAGE_CONN_STRING_PRODUCT"             = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/blob-storage-product-connection-string/)"
-      "STORAGE_CONTAINER_PRODUCT"                    = "selc-p-product"
-      "BLOB_STORAGE_CONN_STRING_CONTRACT"            = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/blob-storage-contract-connection-string/)"
-      "STORAGE_CONTAINER_CONTRACT"                   = "$web"
-      "MAIL_DESTINATION_TEST"                        = "false"
-      "MAIL_DESTINATION_TEST_ADDRESS"                = "pectest@pec.pagopa.it"
-      "MAIL_SENDER_ADDRESS"                          = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/smtp-usr/)"
-      "MAIL_SERVER_USERNAME"                         = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/smtp-usr/)"
-      "MAIL_SERVER_PASSWORD"                         = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/smtp-psw/)"
-      "MAIL_SERVER_HOST"                             = "smtps.pec.aruba.it"
-      "MAIL_SERVER_PORT"                             = "465"
-      "MAIL_TEMPLATE_COMPLETE_PATH"                  = "resources/templates/email/onboarding_1.0.0.json"
-      "MS_USER_URL"                                  = "https://selc-p-pnpg-user-ms-ca.calmmoss-0be48755.westeurope.azurecontainerapps.io"
-      "MS_CORE_URL"                                  = "https://selc-p-pnpg-ms-core-ca.calmmoss-0be48755.westeurope.azurecontainerapps.io"
-      "JWT_BEARER_TOKEN"                             = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-bearer-token-functions/)"
-      "MS_PARTY_REGISTRY_URL"                        = "https://selc-p-pnpg-party-reg-proxy-ca.calmmoss-0be48755.westeurope.azurecontainerapps.io"
-      "PAGOPA_LOGO_ENABLE"                           = "false"
-      "RETRY_MAX_ATTEMPTS"                           = "3"
-      "FIRST_RETRY_INTERVAL"                         = "5"
-      "BACKOFF_COEFFICIENT"                          = "1"
-      "EVENT_HUB_BASE_PATH"                          = "https://selc-p-eventhub-ns.servicebus.windows.net"
-      "STANDARD_SHARED_ACCESS_KEY_NAME"              = "selfcare-wo"
-      "EVENTHUB_SC_CONTRACTS_SELFCARE_WO_KEY_LC"     = "string"
-      "STANDARD_TOPIC_NAME"                          = "SC-Contracts"
-      "SAP_SHARED_ACCESS_KEY_NAME"                   = "external-interceptor-wo"
-      "EVENTHUB_SC_CONTRACTS_SAP_SELFCARE_WO_KEY_LC" = "string"
-      "SAP_TOPIC_NAME"                               = "SC-Contracts-SAP"
-      "FD_SHARED_ACCESS_KEY_NAME"                    = "external-interceptor-wo"
-      "EVENTHUB_SC_CONTRACTS_FD_SELFCARE_WO_KEY_LC"  = "string"
-      "FD_TOPIC_NAME"                                = "Selfcare-FD"
-      "SAP_ALLOWED_INSTITUTION_TYPE"                 = "PA,GSP,SA,AS,SCP"
-      "SAP_ALLOWED_ORIGINS"                          = "IPA,SELC"
-      "MINUTES_THRESHOLD_FOR_UPDATE_NOTIFICATION"    = "5"
-      "EMAIL_SERVICE_AVAILABLE"                      = "true"
-      "JWT_TOKEN_ISSUER"                             = "SPID"
-      "JWT_TOKEN_PRIVATE_KEY"                        = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-private-key/)"
-      "JWT_TOKEN_KID"                                = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-kid/)"
+      "APPLICATIONINSIGHTS_CONNECTION_STRING"              = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/appinsights-connection-string/)"
+      "USER_REGISTRY_URL"                                  = "https://api.pdv.pagopa.it/user-registry/v1"
+      "MONGODB_CONNECTION_URI"                             = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/mongodb-connection-string/)"
+      "USER_REGISTRY_API_KEY"                              = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/user-registry-api-key/)"
+      "BLOB_STORAGE_CONN_STRING_PRODUCT"                   = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/blob-storage-product-connection-string/)"
+      "STORAGE_CONTAINER_PRODUCT"                          = "selc-p-product"
+      "BLOB_STORAGE_CONN_STRING_CONTRACT"                  = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/blob-storage-contract-connection-string/)"
+      "STORAGE_CONTAINER_CONTRACT"                         = "$web"
+      "MAIL_DESTINATION_TEST"                              = "false"
+      "MAIL_DESTINATION_TEST_ADDRESS"                      = "pectest@pec.pagopa.it"
+      "MAIL_SENDER_ADDRESS"                                = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/smtp-usr/)"
+      "MAIL_SERVER_USERNAME"                               = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/smtp-usr/)"
+      "MAIL_SERVER_PASSWORD"                               = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/smtp-psw/)"
+      "MAIL_SERVER_HOST"                                   = "smtps.pec.aruba.it"
+      "MAIL_SERVER_PORT"                                   = "465"
+      "MAIL_TEMPLATE_COMPLETE_PATH"                        = "resources/templates/email/onboarding_1.0.0.json"
+      "MS_USER_URL"                                        = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-user-ms-ca.${module.local.config.private_dns_name_domain}"
+      "MS_CORE_URL"                                        = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-ms-core-ca.${module.local.config.private_dns_name_domain}"
+      "MS_DOCUMENT_URL"                                    = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-document-ms-ca.${module.local.config.private_dns_name_domain}"
+      "JWT_BEARER_TOKEN"                                   = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-bearer-token-functions/)"
+      "MS_PARTY_REGISTRY_URL"                              = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
+      "PAGOPA_LOGO_ENABLE"                                 = "false"
+      "RETRY_MAX_ATTEMPTS"                                 = "3"
+      "FIRST_RETRY_INTERVAL"                               = "5"
+      "BACKOFF_COEFFICIENT"                                = "1"
+      "EVENT_HUB_BASE_PATH"                                = "https://selc-p-eventhub-ns.servicebus.windows.net"
+      "STANDARD_SHARED_ACCESS_KEY_NAME"                    = "selfcare-wo"
+      "EVENTHUB_SC_CONTRACTS_SELFCARE_WO_KEY_LC"           = "string"
+      "STANDARD_TOPIC_NAME"                                = "SC-Contracts"
+      "SAP_SHARED_ACCESS_KEY_NAME"                         = "external-interceptor-wo"
+      "EVENTHUB_SC_CONTRACTS_SAP_SELFCARE_WO_KEY_LC"       = "string"
+      "SAP_TOPIC_NAME"                                     = "SC-Contracts-SAP"
+      "FD_SHARED_ACCESS_KEY_NAME"                          = "external-interceptor-wo"
+      "EVENTHUB_SC_CONTRACTS_FD_SELFCARE_WO_KEY_LC"        = "string"
+      "FD_TOPIC_NAME"                                      = "Selfcare-FD"
+      "SAP_ALLOWED_INSTITUTION_TYPE"                       = "PA,GSP,SA,AS,SCP"
+      "SAP_ALLOWED_ORIGINS"                                = "IPA,SELC"
+      "MINUTES_THRESHOLD_FOR_UPDATE_NOTIFICATION"          = "5"
+      "MAIL_TEMPLATE_REGISTRATION_REQUEST_PT_PATH"         = "contracts/template/mail/registration-request-pt/1.0.0.json"
+      "MAIL_TEMPLATE_REGISTRATION_NOTIFICATION_ADMIN_PATH" = "contracts/template/mail/registration-notification-admin/1.0.0.json"
+      "MAIL_TEMPLATE_NOTIFICATION_PATH"                    = "contracts/template/mail/onboarding-notification/1.0.0.json"
+      "ADDRESS_EMAIL_NOTIFICATION_ADMIN"                   = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/portal-admin-operator-email/)"
+      "MAIL_TEMPLATE_FD_COMPLETE_NOTIFICATION_PATH"        = "contracts/template/mail/onboarding-complete-fd/1.0.0.json"
+      "MAIL_TEMPLATE_AGGREGATE_COMPLETE_PATH"              = "contracts/template/mail/onboarding-complete-aggregate/1.0.0.json"
+      "MAIL_TEMPLATE_AUTOCOMPLETE_PATH"                    = "contracts/template/mail/import-massivo-io/1.0.0.json"
+      "MAIL_TEMPLATE_DELEGATION_NOTIFICATION_PATH"         = "contracts/template/mail/delegation-notification/1.0.0.json"
+      "MAIL_TEMPLATE_REGISTRATION_PATH"                    = "contracts/template/mail/onboarding-request/1.0.1.json"
+      "MAIL_TEMPLATE_REGISTRATION_AGGREGATOR_PATH"         = "contracts/template/mail/onboarding-request-aggregator/1.0.1.json"
+      "MAIL_TEMPLATE_REJECT_PATH"                          = "contracts/template/mail/onboarding-refused/1.0.0.json"
+      "MAIL_TEMPLATE_PT_COMPLETE_PATH"                     = "contracts/template/mail/registration-complete-pt/1.0.0.json"
+      "MAIL_TEMPLATE_REGISTRATION_USER_PATH"               = "contracts/template/mail/onboarding-request-admin/1.0.0.json"
+      "MAIL_TEMPLATE_USER_COMPLETE_NOTIFICATION_PATH"      = "contracts/template/mail/onboarding-complete-user/1.0.0.json"
+      "MAIL_TEMPLATE_REGISTRATION_USER_NEW_MANAGER_PATH"   = "contracts/template/mail/onboarding-request-manager/1.0.0.json"
+      "SELFCARE_ADMIN_NOTIFICATION_URL"                    = "https://imprese.notifichedigitali.it/dashboard/admin/onboarding/"
+      "SELFCARE_URL"                                       = "https://imprese.notifichedigitali.it"
+      "MAIL_ONBOARDING_CONFIRMATION_LINK"                  = "https://imprese.notifichedigitali.it/onboarding/confirm?jwt="
+      "MAIL_USER_CONFIRMATION_LINK"                        = "https://imprese.notifichedigitali.it/onboarding/confirm?jwt=%s#add-user=true"
+      "MAIL_ONBOARDING_REJECTION_LINK"                     = "https://imprese.notifichedigitali.it/onboarding/cancel?jwt="
+      "MAIL_ONBOARDING_URL"                                = "https://imprese.notifichedigitali.it/onboarding/"
+      "USER_MS_SEND_MAIL"                                  = "false"
+      "FORCE_INSTITUTION_PERSIST"                          = "true"
+      "EMAIL_SERVICE_AVAILABLE"                            = "true"
+      "JWT_TOKEN_ISSUER"                                   = "SPID"
+      "JWT_TOKEN_PRIVATE_KEY"                              = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-private-key/)"
+      "JWT_TOKEN_KID"                                      = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-kid/)"
     }
   }
 }
@@ -100,11 +127,16 @@ module "onboarding_functions" {
 }
 
 data "azurerm_public_ip" "pip_outbound" {
-  resource_group_name = module.local.nat_gw_rg_name
-  name                = "${module.local.config.project}-${module.local.config.pnpg_suffix}-pip-outbound"
+  resource_group_name = local.onboarding_functions.nat_resource_group_name
+  name                = module.local.config.nat_pip_outbound_name
+}
+
+data "azurerm_nat_gateway" "onboarding_functions_nat_gateway" {
+  name                = local.onboarding_functions.nat_gateway_name
+  resource_group_name = local.onboarding_functions.nat_resource_group_name
 }
 
 resource "azurerm_nat_gateway_public_ip_association" "functions_pip_nat_gateway" {
-  nat_gateway_id       = module.local.nat_gw_id
+  nat_gateway_id       = data.azurerm_nat_gateway.onboarding_functions_nat_gateway.id
   public_ip_address_id = data.azurerm_public_ip.pip_outbound.id
 }

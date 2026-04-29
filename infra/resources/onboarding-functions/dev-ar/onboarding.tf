@@ -16,32 +16,19 @@ module "local" {
   container_app_min_replicas     = 0
 }
 
-data "azurerm_key_vault_secret" "appinsights_connection_string" {
-  name         = "appinsights-connection-string"
-  key_vault_id = module.local.key_vault_id
-}
-
 ###############################################################################
 # ONBOARDING FUNCTIONS
 ###############################################################################
 
 locals {
-  appinsights_connection_string = data.azurerm_key_vault_secret.appinsights_connection_string.value
-  appinsights_instrumentation_key = element([
-    for part in split(";", local.appinsights_connection_string) : trimprefix(part, "InstrumentationKey=")
-    if startswith(part, "InstrumentationKey=")
-  ], 0)
-}
-
-locals {
   onboarding_functions = {
-    name                      = "selc-d-onboarding-fn"
+    name                      = "selc-${module.local.config.env_short}-onboarding-fn"
     subnet_cidr               = ["10.1.144.0/24"]
     always_on                 = false
     service_plan_sku          = "B2"
     service_plan_worker_count = 1
-    nat_resource_group_name   = "selc-d-nat-rg"
-    nat_gateway_name          = "selc-d-nat_gw"
+    nat_resource_group_name   = module.local.config.nat_rg_name
+    nat_gateway_name          = module.local.config.nat_gw_name
     app_settings = {
       "APPLICATIONINSIGHTS_CONNECTION_STRING"              = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/appinsights-connection-string/)"
       "USER_REGISTRY_URL"                                  = "https://api.uat.pdv.pagopa.it/user-registry/v1"
@@ -80,11 +67,11 @@ locals {
       "MAIL_USER_CONFIRMATION_LINK"                        = "https://dev.selfcare.pagopa.it/onboarding/confirm?add-user=true&jwt="
       "MAIL_ONBOARDING_REJECTION_LINK"                     = "https://dev.selfcare.pagopa.it/onboarding/cancel?jwt="
       "MAIL_ONBOARDING_URL"                                = "https://dev.selfcare.pagopa.it/onboarding/"
-      "MS_USER_URL"                                        = "https://selc-d-user-ms-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
-      "MS_CORE_URL"                                        = "https://selc-d-ms-core-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
-      "MS_DOCUMENT_URL"                                    = "https://selc-d-document-ms-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+      "MS_USER_URL"                                        = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}"
+      "MS_CORE_URL"                                        = "https://selc-${module.local.config.env_short}-ms-core-ca.${module.local.config.private_dns_name_domain}"
+      "MS_DOCUMENT_URL"                                    = "https://selc-${module.local.config.env_short}-document-ms-ca.${module.local.config.private_dns_name_domain}"
       "JWT_BEARER_TOKEN"                                   = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/jwt-bearer-token-functions/)"
-      "MS_PARTY_REGISTRY_URL"                              = "https://selc-d-party-reg-proxy-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+      "MS_PARTY_REGISTRY_URL"                              = "https://selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
       "USER_MS_SEND_MAIL"                                  = "false"
       "EVENT_HUB_BASE_PATH"                                = "https://selc-d-eventhub-ns.servicebus.windows.net"
       "STANDARD_SHARED_ACCESS_KEY_NAME"                    = "selfcare-wo"
@@ -115,7 +102,6 @@ locals {
       "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD"            = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/namirial-sign-service-psw/)"
       "ONBOARDING_DATA_ENCRIPTION_KEY"                     = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/onboarding-data-encryption-key/)"
       "ONBOARDING_DATA_ENCRIPTION_IV"                      = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/onboarding-data-encryption-iv/)"
-      "MS_DOCUMENT_URL"                                    = "https://selc-d-document-ms-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
     }
   }
 }
@@ -123,21 +109,19 @@ locals {
 module "onboarding_functions" {
   source = "../../_modules/functions"
 
-  functions_name                         = local.onboarding_functions.name
-  subnet_cidr                            = local.onboarding_functions.subnet_cidr
-  always_on                              = local.onboarding_functions.always_on
-  service_plan_sku                       = local.onboarding_functions.service_plan_sku
-  service_plan_worker_count              = local.onboarding_functions.service_plan_worker_count
-  nat_resource_group_name                = local.onboarding_functions.nat_resource_group_name
-  nat_gateway_name                       = local.onboarding_functions.nat_gateway_name
-  vnet_resource_group_name               = module.local.vnet_resource_group_name
-  vnet_name                              = module.local.vnet_selc_name
-  key_vault_id                           = module.local.key_vault_id
-  tenant_id                              = module.local.tenant_id
-  replication_type                       = "LRS"
-  app_settings                           = local.onboarding_functions.app_settings
-  application_insights_connection_string = local.appinsights_connection_string
-  application_insights_key               = local.appinsights_instrumentation_key
-  location                               = module.local.config.location
-  tags                                   = module.local.config.tags
+  functions_name            = local.onboarding_functions.name
+  subnet_cidr               = local.onboarding_functions.subnet_cidr
+  always_on                 = local.onboarding_functions.always_on
+  service_plan_sku          = local.onboarding_functions.service_plan_sku
+  service_plan_worker_count = local.onboarding_functions.service_plan_worker_count
+  nat_resource_group_name   = local.onboarding_functions.nat_resource_group_name
+  nat_gateway_name          = local.onboarding_functions.nat_gateway_name
+  vnet_resource_group_name  = module.local.vnet_resource_group_name
+  vnet_name                 = module.local.vnet_selc_name
+  key_vault_id              = module.local.key_vault_id
+  tenant_id                 = module.local.tenant_id
+  replication_type          = "LRS"
+  app_settings              = local.onboarding_functions.app_settings
+  location                  = module.local.config.location
+  tags                      = module.local.config.tags
 }
