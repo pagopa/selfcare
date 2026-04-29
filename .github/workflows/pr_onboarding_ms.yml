@@ -28,6 +28,8 @@ on:
 jobs:
   code_review:
     permissions:
+      contents: read
+      pull-requests: write
       packages: read
     uses: ./.github/workflows/call_code_review.yml
     name: Onboarding ms Code Review
