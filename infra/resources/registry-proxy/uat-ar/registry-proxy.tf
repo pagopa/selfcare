@@ -53,7 +53,8 @@ module "ai_search_onboarding" {
 # DAPR
 ###############################################################################
 locals {
-  ca_name         = "selc-${module.local.config.env_short}-party-reg-proxy"
+  ca_base_name    = "selc-${module.local.config.env_short}-party-reg-proxy"
+  ca_name         = "${local.ca_base_name}-ca"
   storage_logs    = "selc${module.local.config.env_short}stlogs"
   storage_logs_rg = "selc-${module.local.config.env_short}-logs-storage-rg"
 
@@ -395,7 +396,7 @@ module "dapr" {
 
   cae_name    = "selc-${module.local.config.env_short}-cae-002"
   cae_rg_name = module.local.config.ca_resource_group_name
-  ca_name     = "${local.ca_name}-ca"
+  ca_name     = local.ca_name
   ca_rg_name  = "selc-${module.local.config.env_short}-container-app-002-rg"
 
   key_vault_name                   = "selc-${module.local.config.env_short}-kv"
