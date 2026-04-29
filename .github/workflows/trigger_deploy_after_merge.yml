@@ -7,6 +7,8 @@ on:
 
 jobs:
   detect_changes:
+    permissions:
+      contents: read
     runs-on: ubuntu-24.04
     outputs:
       onboarding: ${{ steps.filter.outputs.onboarding }}
