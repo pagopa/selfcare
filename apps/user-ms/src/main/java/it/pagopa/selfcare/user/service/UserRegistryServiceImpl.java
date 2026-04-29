@@ -10,6 +10,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
+import java.net.SocketException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -88,7 +89,8 @@ public class UserRegistryServiceImpl implements UserRegistryService {
 
     private boolean checkIfIsRetryableException(Throwable throwable) {
         return throwable instanceof TimeoutException ||
-                (throwable instanceof WebApplicationException webApplicationException && webApplicationException.getResponse().getStatus() == 429);
+            throwable instanceof SocketException ||
+            (throwable instanceof WebApplicationException webApplicationException && webApplicationException.getResponse().getStatus() == 429);
     }
 
 
