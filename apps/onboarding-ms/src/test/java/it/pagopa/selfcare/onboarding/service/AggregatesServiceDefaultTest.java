@@ -8,7 +8,6 @@ import io.quarkus.test.junit.TestProfile;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
-import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.model.Aggregate;
 import it.pagopa.selfcare.onboarding.model.AggregateUser;
@@ -64,8 +63,6 @@ class AggregatesServiceDefaultTest {
     @InjectMock
     UoApi uoApi;
 
-    @InjectMock
-    AzureBlobClient azureBlobClient;
 
     @Test
     @RunOnVertxContext
