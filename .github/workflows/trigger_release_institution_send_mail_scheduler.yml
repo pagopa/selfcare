@@ -34,7 +34,7 @@ jobs:
     uses: ./.github/workflows/call_release_app.yml
     with:
       env: ${{ inputs.env }}
-      target: selc
+      target: ar
       app: institution-send-mail-scheduler
       APP_PATH: apps/institution-send-mail-scheduler
       APPS_POM: apps/pom.xml
