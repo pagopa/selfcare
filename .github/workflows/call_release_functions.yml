@@ -23,24 +23,24 @@ env:
 
 jobs:
   infra_dev:
-    name: ${{ inputs.target == 'selc' && '[Dev]' || '[Dev-PNPG]' }} - Infra Apply
+    name: ${{ inputs.target == 'ar' && '[Dev]' || '[Dev-PNPG]' }} - Infra Apply
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     uses: ./.github/workflows/call_release_infra.yml
     secrets: inherit
     with:
       environment: dev
-      tf_environment: ${{ inputs.target == 'selc' && 'dev-ar' || 'dev-pnpg' }}
-      dir: ${{ inputs.target == 'selc' && 'infra/resources/onboarding-functions/dev-ar' || 'infra/resources/onboarding-functions/dev-pnpg' }}
+      tf_environment: ${{ inputs.target == 'ar' && 'dev-ar' || 'dev-pnpg' }}
+      dir: ${{ inputs.target == 'ar' && 'infra/resources/onboarding-functions/dev-ar' || 'infra/resources/onboarding-functions/dev-pnpg' }}
       runner: "self-hosted"
 
   release_dev:
-    name: ${{ inputs.target == 'selc' && '[Dev]' || '[Dev-PNPG]' }} - ${{ inputs.app }} Release
+    name: ${{ inputs.target == 'ar' && '[Dev]' || '[Dev-PNPG]' }} - ${{ inputs.app }} Release
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     needs: [infra_dev]
     runs-on: ubuntu-24.04
     environment:
       name: dev-cd
-      url: ${{ format('https://selc-{0}-onboarding-fn.azurewebsites.net', inputs.target == 'selc' && 'd' || 'd-pnpg') }}
+      url: ${{ format('https://selc-{0}-onboarding-fn.azurewebsites.net', inputs.target == 'ar' && 'd' || 'd-pnpg') }}
     permissions:
       id-token: write
       packages: read
@@ -58,7 +58,7 @@ jobs:
         shell: bash
         run: |
           mvn --projects :${{ inputs.app }} --also-make package install -DskipTests \
-            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'd' || 'd-pnpg') }}
+            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'ar' && 'd' || 'd-pnpg') }}
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
       - name: Deploy Function App
@@ -66,32 +66,32 @@ jobs:
         working-directory: apps/${{ inputs.app }}
         run: |
           mvn -f pom.xml quarkus:deploy \
-            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'd' || 'd-pnpg') }} \
+            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'ar' && 'd' || 'd-pnpg') }} \
             -Dquarkus.azure-functions.subscription-id=${{ secrets.ARM_SUBSCRIPTION_ID }} \
-            -Dquarkus.azure-functions.resource-group=${{ format('selc-{0}-onboarding-fn-rg', inputs.target == 'selc' && 'd' || 'd-pnpg') }} \
+            -Dquarkus.azure-functions.resource-group=${{ format('selc-{0}-onboarding-fn-rg', inputs.target == 'ar' && 'd' || 'd-pnpg') }} \
             -Dquarkus.azure-functions.region=westeurope \
-            -Dquarkus.azure-functions.app-service-plan-name=${{ format('selc-{0}-onboarding-fn-plan', inputs.target == 'selc' && 'd' || 'd-pnpg') }} \
+            -Dquarkus.azure-functions.app-service-plan-name=${{ format('selc-{0}-onboarding-fn-plan', inputs.target == 'ar' && 'd' || 'd-pnpg') }} \
             -Dquarkus.azure-functions.runtime.java-version=17
 
   infra_uat:
-    name: ${{ inputs.target == 'selc' && '[Uat]' || '[Uat-PNPG]' }} - Infra Apply
+    name: ${{ inputs.target == 'ar' && '[Uat]' || '[Uat-PNPG]' }} - Infra Apply
     if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
     uses: ./.github/workflows/call_release_infra.yml
     secrets: inherit
     with:
       environment: uat
-      tf_environment: ${{ inputs.target == 'selc' && 'uat-ar' || 'uat-pnpg' }}
-      dir: ${{ inputs.target == 'selc' && 'infra/resources/onboarding-functions/uat-ar' || 'infra/resources/onboarding-functions/uat-pnpg' }}
+      tf_environment: ${{ inputs.target == 'ar' && 'uat-ar' || 'uat-pnpg' }}
+      dir: ${{ inputs.target == 'ar' && 'infra/resources/onboarding-functions/uat-ar' || 'infra/resources/onboarding-functions/uat-pnpg' }}
       runner: "self-hosted"
 
   release_uat:
-    name: ${{ inputs.target == 'selc' && '[Uat]' || '[Uat-PNPG]' }} - ${{ inputs.app }} Release
+    name: ${{ inputs.target == 'ar' && '[Uat]' || '[Uat-PNPG]' }} - ${{ inputs.app }} Release
     if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
     needs: [infra_uat]
     runs-on: ubuntu-24.04
     environment:
       name: uat-cd
-      url: ${{ format('https://selc-{0}-onboarding-fn.azurewebsites.net', inputs.target == 'selc' && 'u' || 'u-pnpg') }}
+      url: ${{ format('https://selc-{0}-onboarding-fn.azurewebsites.net', inputs.target == 'ar' && 'u' || 'u-pnpg') }}
     permissions:
       id-token: write
       packages: read
@@ -109,7 +109,7 @@ jobs:
         shell: bash
         run: |
           mvn --projects :${{ inputs.app }} --also-make package install -DskipTests \
-            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'u' || 'u-pnpg') }}
+            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'ar' && 'u' || 'u-pnpg') }}
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
       - name: Deploy Function App
@@ -117,32 +117,32 @@ jobs:
         working-directory: apps/${{ inputs.app }}
         run: |
           mvn -f pom.xml quarkus:deploy \
-            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'u' || 'u-pnpg') }} \
+            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'ar' && 'u' || 'u-pnpg') }} \
             -Dquarkus.azure-functions.subscription-id=${{ secrets.ARM_SUBSCRIPTION_ID }} \
-            -Dquarkus.azure-functions.resource-group=${{ format('selc-{0}-onboarding-fn-rg', inputs.target == 'selc' && 'u' || 'u-pnpg') }} \
+            -Dquarkus.azure-functions.resource-group=${{ format('selc-{0}-onboarding-fn-rg', inputs.target == 'ar' && 'u' || 'u-pnpg') }} \
             -Dquarkus.azure-functions.region=westeurope \
-            -Dquarkus.azure-functions.app-service-plan-name=${{ format('selc-{0}-onboarding-fn-plan', inputs.target == 'selc' && 'u' || 'u-pnpg') }} \
+            -Dquarkus.azure-functions.app-service-plan-name=${{ format('selc-{0}-onboarding-fn-plan', inputs.target == 'ar' && 'u' || 'u-pnpg') }} \
             -Dquarkus.azure-functions.runtime.java-version=17
 
   infra_prod:
-    name: ${{ inputs.target == 'selc' && '[Prod]' || '[Prod-PNPG]' }} - Infra Apply
+    name: ${{ inputs.target == 'ar' && '[Prod]' || '[Prod-PNPG]' }} - Infra Apply
     if: ${{ inputs.env == 'prod' }}
     uses: ./.github/workflows/call_release_infra.yml
     secrets: inherit
     with:
       environment: prod
-      tf_environment: ${{ inputs.target == 'selc' && 'prod-ar' || 'prod-pnpg' }}
-      dir: ${{ inputs.target == 'selc' && 'infra/resources/onboarding-functions/prod-ar' || 'infra/resources/onboarding-functions/prod-pnpg' }}
+      tf_environment: ${{ inputs.target == 'ar' && 'prod-ar' || 'prod-pnpg' }}
+      dir: ${{ inputs.target == 'ar' && 'infra/resources/onboarding-functions/prod-ar' || 'infra/resources/onboarding-functions/prod-pnpg' }}
       runner: "self-hosted"
 
   release_prod:
-    name: ${{ inputs.target == 'selc' && '[Prod]' || '[Prod-PNPG]' }} - ${{ inputs.app }} Release
+    name: ${{ inputs.target == 'ar' && '[Prod]' || '[Prod-PNPG]' }} - ${{ inputs.app }} Release
     if: ${{ inputs.env == 'prod' }}
     needs: [infra_prod]
     runs-on: ubuntu-24.04
     environment:
       name: prod-cd
-      url: ${{ format('https://selc-{0}-onboarding-fn.azurewebsites.net', inputs.target == 'selc' && 'p' || 'p-pnpg') }}
+      url: ${{ format('https://selc-{0}-onboarding-fn.azurewebsites.net', inputs.target == 'ar' && 'p' || 'p-pnpg') }}
     permissions:
       id-token: write
       packages: read
@@ -160,7 +160,7 @@ jobs:
         shell: bash
         run: |
           mvn --projects :${{ inputs.app }} --also-make package install -DskipTests \
-            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'p' || 'p-pnpg') }}
+            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'ar' && 'p' || 'p-pnpg') }}
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
       - name: Deploy Function App
@@ -168,9 +168,9 @@ jobs:
         working-directory: apps/${{ inputs.app }}
         run: |
           mvn -f pom.xml quarkus:deploy \
-            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'selc' && 'p' || 'p-pnpg') }} \
+            -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'ar' && 'p' || 'p-pnpg') }} \
             -Dquarkus.azure-functions.subscription-id=${{ secrets.ARM_SUBSCRIPTION_ID }} \
-            -Dquarkus.azure-functions.resource-group=${{ format('selc-{0}-onboarding-fn-rg', inputs.target == 'selc' && 'p' || 'p-pnpg') }} \
+            -Dquarkus.azure-functions.resource-group=${{ format('selc-{0}-onboarding-fn-rg', inputs.target == 'ar' && 'p' || 'p-pnpg') }} \
             -Dquarkus.azure-functions.region=westeurope \
-            -Dquarkus.azure-functions.app-service-plan-name=${{ format('selc-{0}-onboarding-fn-plan', inputs.target == 'selc' && 'p' || 'p-pnpg') }} \
+            -Dquarkus.azure-functions.app-service-plan-name=${{ format('selc-{0}-onboarding-fn-plan', inputs.target == 'ar' && 'p' || 'p-pnpg') }} \
             -Dquarkus.azure-functions.runtime.java-version=17
