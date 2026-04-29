@@ -29,7 +29,7 @@ jobs:
     uses: ./.github/workflows/call_release_app.yml
     with:
       env: ${{ inputs.env }}
-      target: selc
+      target: ar
       app: auth
       APP_PATH: apps/auth
       APPS_POM: apps/pom.xml

@@ -28,7 +28,7 @@ module "local" {
 
 locals {
   onboarding_functions = {
-    name                      = "selc-p-onboarding-fn"
+    name                      = "selc-${module.local.config.env_short}-onboarding-fn"
     subnet_cidr               = ["10.1.144.0/24"]
     always_on                 = true
     service_plan_sku          = "P1v3"
@@ -73,10 +73,11 @@ locals {
       "MAIL_USER_CONFIRMATION_LINK"                        = "https://selfcare.pagopa.it/onboarding/confirm?add-user=true&jwt="
       "MAIL_ONBOARDING_REJECTION_LINK"                     = "https://selfcare.pagopa.it/onboarding/cancel?jwt="
       "MAIL_ONBOARDING_URL"                                = "https://selfcare.pagopa.it/onboarding/"
-      "MS_CORE_URL"                                        = "https://selc-p-ms-core-ca.lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
+      "MS_CORE_URL"                                        = "https://selc-${module.local.config.env_short}-institution-ms-ca.${module.local.config.private_dns_name_domain}"
       "JWT_BEARER_TOKEN"                                   = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/jwt-bearer-token-functions/)"
-      "MS_USER_URL"                                        = "https://selc-p-user-ms-ca.lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
-      "MS_PARTY_REGISTRY_URL"                              = "https://selc-p-party-reg-proxy-ca.lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
+      "MS_USER_URL"                                        = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}"
+      "MS_DOCUMENT_URL"                                    = "https://selc-${module.local.config.env_short}-document-ms-ca.${module.local.config.private_dns_name_domain}"
+      "MS_PARTY_REGISTRY_URL"                              = "https://selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
       "USER_MS_SEND_MAIL"                                  = "true"
       "EVENT_HUB_BASE_PATH"                                = "https://selc-p-eventhub-ns.servicebus.windows.net"
       "STANDARD_SHARED_ACCESS_KEY_NAME"                    = "selfcare-wo"
@@ -97,15 +98,25 @@ locals {
       "FD_TOKEN_CLIENT_ID"                                 = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/prod-fd-client-id/)"
       "FD_TOKEN_CLIENT_SECRET"                             = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/prod-fd-client-secret/)"
       "PAGOPA_SIGNATURE_SOURCE"                            = "namirial"
+      "ARUBA_SIGN_SERVICE_IDENTITY_TYPE_OTP_AUTH"          = "faPagoPa"
+      "ARUBA_SIGN_SERVICE_IDENTITY_OTP_PWD"                = "dsign"
+      "ARUBA_SIGN_SERVICE_IDENTITY_USER"                   = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/aruba-sign-service-user/)"
+      "ARUBA_SIGN_SERVICE_IDENTITY_DELEGATED_USER"         = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/aruba-sign-service-delegated-user/)"
+      "ARUBA_SIGN_SERVICE_IDENTITY_DELEGATED_PASSWORD"     = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/aruba-sign-service-delegated-psw/)"
+      "ARUBA_SIGN_SERVICE_IDENTITY_DELEGATED_DOMAIN"       = "faPagoPa"
+      "ARUBA_SIGN_SERVICE_BASE_URL"                        = "https://asbr-pagopa.arubapec.it/ArubaSignService/ArubaSignService"
+      "ARUBA_SIGN_SERVICE_REQUEST_TIMEOUT_MS"              = "60000"
+      "ARUBA_SIGN_SERVICE_CONNECT_TIMEOUT_MS"              = "60000"
       "NAMIRIAL_BASE_URL"                                  = "https://selc-p-namirial-sws-ca.lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
       "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"                = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/namirial-sign-service-user/)"
       "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD"            = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/namirial-sign-service-psw/)"
+      "ONBOARDING_DATA_ENCRIPTION_KEY"                     = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/onboarding-data-encryption-key/)"
+      "ONBOARDING_DATA_ENCRIPTION_IV"                      = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/onboarding-data-encryption-iv/)"
       "EMAIL_SERVICE_AVAILABLE"                            = "true"
       "JWT_TOKEN_ISSUER"                                   = "SPID"
       "JWT_TOKEN_PRIVATE_KEY"                              = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/jwt-private-key/)"
       "JWT_TOKEN_KID"                                      = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/jwt-kid/)"
       "WEBHOOK_BASE_PATH"                                  = "https://selc-p-webhook-ms-ca.lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
-      "MS_DOCUMENT_URL"                                    = "https://selc-p-document-ms-ca.lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
     }
   }
 }
@@ -131,7 +142,7 @@ module "onboarding_functions" {
 }
 
 data "azurerm_public_ip" "pip_outbound" {
-  resource_group_name = local.onboarding_functions.nat_resource_group_name
+  resource_group_name = module.local.config.resource_group_name_vnet
   name                = module.local.config.nat_pip_outbound_name
 }
 

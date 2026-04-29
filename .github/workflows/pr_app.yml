@@ -1,4 +1,4 @@
-name: Code Review - Auth
+name: Code Review - App
 
 permissions:
   contents: read
@@ -43,6 +43,9 @@ on:
           - user-group-ms
           - user-cdc
           - user-group-cdc
+          - institution-ms
+          - delegation-cdc
+          - institution-send-mail-scheduler
         required: true
 
   pull_request:

@@ -1291,7 +1291,7 @@
         } ]
       },
       "delete" : {
-        "tags" : [ "internal-v1", "external-v2" ],
+        "tags" : [ "internal-v1", "external-v2", "Onboarding Controller" ],
         "summary" : "Perform delete operation of an onboarding request",
         "description" : "Perform delete operation of an onboarding request receiving onboarding id, then invokes async process to set DELETED as status for institution and user onboardings.",
         "operationId" : "deleteOnboarding",
@@ -1357,7 +1357,7 @@
     },
     "/v1/onboarding/{onboardingId}/complete" : {
       "put" : {
-        "tags" : [ "internal-v1", "external-v2" ],
+        "tags" : [ "internal-v1", "external-v2", "Onboarding Controller" ],
         "summary" : "Complete onboarding by verifying and uploading contract, then trigger async activities.",
         "description" : "Perform complete operation of an onboarding request receiving onboarding id and contract signed by the institution.It checks the contract's signature and upload the contract on an azure storageAt the end, function triggers async activities related to complete onboarding that consist of create the institution, activate the onboarding and sending data to notification queue.",
         "operationId" : "completeOnboardingUsingPUT",

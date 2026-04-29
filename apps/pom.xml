@@ -182,6 +182,36 @@
             </activation>
             <modules>
                 <module>user-ms</module>
+            <id>delegation-cdc</id>
+            <activation>
+                <file>
+                    <exists>delegation-cdc/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>delegation-cdc</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>institution-ms</id>
+            <activation>
+                <file>
+                    <exists>institution-ms/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>institution-ms</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>institution-send-mail-scheduler</id>
+            <activation>
+                <file>
+                    <exists>institution-send-mail-scheduler/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>institution-send-mail-scheduler</module>
             </modules>
         </profile>
     </profiles>
