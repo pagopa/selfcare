@@ -139,6 +139,30 @@ locals {
     {
       name  = "REDIS_PORT"
       value = "6380"
+    },
+    {
+      name  = "LUCENE_INDEX_INSTITUTIONS_FOLDER"
+      value = "index/institutions"
+    },
+    {
+      name  = "LUCENE_INDEX_CATEGORIES_FOLDER"
+      value = "index/categories"
+    },
+    {
+      name  = "LUCENE_INDEX_AOOS_FOLDER"
+      value = "index/aoos"
+    },
+    {
+      name  = "LUCENE_INDEX_UOS_FOLDER"
+      value = "index/uos"
+    },
+    {
+      name  = "LUCENE_INDEX_ANAC_FOLDER"
+      value = "index/anac"
+    },
+    {
+      name  = "LUCENE_INDEX_IVASS_FOLDER"
+      value = "index/ivass"
     }
   ]
 
