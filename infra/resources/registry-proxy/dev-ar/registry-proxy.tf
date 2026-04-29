@@ -224,7 +224,7 @@ locals {
     },
     {
       name  = "SELC_INSTITUTION_URL"
-      value = "https://selc-${module.local.config.env_short}-ms-core-ca.${module.local.config.private_dns_name_domain}"
+      value = "https://selc-${module.local.config.env_short}-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "AZURE_SEARCH_URL"
