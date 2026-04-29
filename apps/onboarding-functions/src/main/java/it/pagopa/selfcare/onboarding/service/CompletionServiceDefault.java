@@ -39,6 +39,7 @@ import org.openapi.quarkus.user_registry_json.api.UserApi;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.REJECTED;
@@ -51,6 +52,8 @@ import static org.openapi.quarkus.core_json.model.DelegationResponse.StatusEnum.
 @ApplicationScoped
 @SuppressWarnings({"java:S6813", "java:S107"})
 public class CompletionServiceDefault implements CompletionService {
+
+    private static final Logger log = Logger.getLogger(CompletionServiceDefault.class.getName());
 
     @RestClient
     @Inject
@@ -188,6 +191,10 @@ public class CompletionServiceDefault implements CompletionService {
     @Override
     public void sendCompletedEmail(OnboardingWorkflow onboardingWorkflow) {
         Onboarding onboarding = onboardingWorkflow.getOnboarding();
+        if (Objects.isNull(onboarding.getInstitution().getDigitalAddress())) {
+            log.warning(String.format("Digital address is null for onboarding %s, skipping completed email notification", onboarding.getId()));
+            return;
+        }
         List<String> destinationMails = getDestinationMails(onboarding);
         destinationMails.add(onboarding.getInstitution().getDigitalAddress());
         Product product = productService.getProductIsValid(onboarding.getProductId());
