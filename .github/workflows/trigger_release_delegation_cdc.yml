@@ -34,7 +34,7 @@ jobs:
     uses: ./.github/workflows/call_release_app.yml
     with:
       env: ${{ inputs.env }}
-      target: selc
+      target: ar
       app: delegation-cdc
       APP_PATH: apps/delegation-cdc
       APPS_POM: apps/pom.xml
