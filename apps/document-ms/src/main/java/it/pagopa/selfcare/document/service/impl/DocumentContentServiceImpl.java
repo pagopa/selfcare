@@ -419,7 +419,9 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     }
 
     private void cleanupTempFile(File physicalFile, String onboardingId, String productId) {
-        physicalFile.delete();
+        if (!physicalFile.delete()) {
+            log.warn("Unable to delete temporary file: {}", sanitize(physicalFile.getAbsolutePath()));
+        }
         log.info("END - Uploading and verifying signed contract for onboardingId={}, productId={}",
                 sanitize(onboardingId), sanitize(productId));
     }
