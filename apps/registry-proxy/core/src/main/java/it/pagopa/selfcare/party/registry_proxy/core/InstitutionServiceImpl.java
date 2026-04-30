@@ -11,16 +11,14 @@ import it.pagopa.selfcare.party.registry_proxy.connector.model.Institution.Field
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.OpenDataRestClient;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.IPAOpenDataInstitution;
 import it.pagopa.selfcare.party.registry_proxy.core.exception.TooManyResourceFoundException;
+import java.io.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
-import java.io.*;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Supplier;
 
 @Slf4j
 @Service
@@ -114,10 +112,8 @@ class InstitutionServiceImpl implements InstitutionService {
             return;
         }
 
-        Map<String, String> currentIndex = ipaSearchServiceConnector.fetchAllInstitutionDataAggiornamento();
-
         List<Institution> toIndex = institutions.stream()
-                .filter(institution -> needsUpdate(institution, currentIndex))
+                .filter(this::needsUpdate)
                 .toList();
 
         if (toIndex.isEmpty()) {
@@ -129,21 +125,21 @@ class InstitutionServiceImpl implements InstitutionService {
         int batchSize = 1000;
         for (int i = 0; i < toIndex.size(); i += batchSize) {
             List<Institution> batch = toIndex.subList(i, Math.min(i + batchSize, toIndex.size()));
-            ipaSearchServiceConnector.indexInstitutions(batch);
+            ipaSearchServiceConnector.index(batch);
         }
         log.trace("doInstitutionsIndex end");
     }
 
-    private boolean needsUpdate(Institution institution, Map<String, String> currentIndex) {
-        String currentDataAggiornamento = currentIndex.get(institution.getId());
-        if (currentDataAggiornamento == null) {
+    private boolean needsUpdate(Institution institution) {
+        String currentUpdateDate = ipaSearchServiceConnector.fetchById(institution.getId());
+        if (currentUpdateDate == null) {
             return true;
         }
-        String csvDataAggiornamento = institution.getUpdateDate();
-        if (csvDataAggiornamento == null || csvDataAggiornamento.isBlank()) {
+        String csvUpdateDate = institution.getUpdateDate();
+        if (csvUpdateDate == null || csvUpdateDate.isBlank()) {
             return true;
         }
-        return !currentDataAggiornamento.equals(csvDataAggiornamento);
+        return !currentUpdateDate.equals(csvUpdateDate);
     }
 
     private List<Institution> getInstitutions() {
