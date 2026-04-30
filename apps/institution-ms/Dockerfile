@@ -23,7 +23,7 @@ RUN echo "<settings>\n" \
          "</servers>\n" \
          "</settings>\n" > settings.xml
 
-ARG REPO_ONBOARDING
+ARG REPO_SELFCARE
 ARG REPO_USERNAME
 ARG REPO_PASSWORD
 
