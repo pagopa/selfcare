@@ -41,12 +41,4 @@
         </dependency>
     </dependencies>
 
-    <repositories>
-        <repository>
-            <id>selfcare-onboarding</id>
-            <name>Selfcare Onboarding SDK</name>
-            <url>https://maven.pkg.github.com/pagopa/selfcare-onboarding</url>
-        </repository>
-    </repositories>
-
 </project>
