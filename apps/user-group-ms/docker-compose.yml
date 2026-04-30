@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+
+  mongodb:
+    image: mongo@sha256:1cb283500219e8fc0b61b328ea5a199a395a753d88b17351c58874fb425223cb
+    ports:
+      - '27017:27017'
+    networks:
+      - develop-network
+
+networks:
+  develop-network:
+    name: selfcare-develop-network
