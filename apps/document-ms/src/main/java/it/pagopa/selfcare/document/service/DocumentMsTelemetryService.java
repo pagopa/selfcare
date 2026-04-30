@@ -6,6 +6,7 @@ import io.quarkus.runtime.Startup;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
+import lombok.NoArgsConstructor;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ import java.util.Map;
 @Slf4j
 @ApplicationScoped
 @Startup
+@NoArgsConstructor
 public class DocumentMsTelemetryService {
 
     static final String EVENT_PDF_CONTRACT_CREATED     = "DOCUMENT-MS-PDF-CONTRACT-CREATED";
@@ -53,10 +55,6 @@ public class DocumentMsTelemetryService {
 
     @Inject
     ManagedExecutor managedExecutor;
-
-    public DocumentMsTelemetryService() {
-        // TelemetryClient initialization is performed asynchronously at startup.
-    }
 
     void onStart(@Observes StartupEvent event) {
         managedExecutor.runAsync(() -> this.telemetryClient = new TelemetryClient());
