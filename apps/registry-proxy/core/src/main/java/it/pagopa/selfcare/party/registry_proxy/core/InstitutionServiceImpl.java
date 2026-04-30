@@ -4,6 +4,7 @@ import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.IndexSearchService;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.IndexWriterService;
+import it.pagopa.selfcare.party.registry_proxy.connector.api.IpaSearchServiceConnector;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.*;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.Institution.Field;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -27,11 +29,16 @@ class InstitutionServiceImpl implements InstitutionService {
     private final IndexSearchService<Institution> indexSearchService;
     private final OpenDataRestClient openDataRestClient;
     private final IndexWriterService<Institution> institutionIndexWriterService;
+    private final IpaSearchServiceConnector ipaSearchServiceConnector;
 
     @Autowired
-    InstitutionServiceImpl(IndexSearchService<Institution> indexSearchService, OpenDataRestClient openDataRestClient, IndexWriterService<Institution> institutionIndexWriterService) {
+    InstitutionServiceImpl(IndexSearchService<Institution> indexSearchService,
+                           OpenDataRestClient openDataRestClient,
+                           IndexWriterService<Institution> institutionIndexWriterService,
+                           IpaSearchServiceConnector ipaSearchServiceConnector) {
         this.openDataRestClient = openDataRestClient;
         this.institutionIndexWriterService = institutionIndexWriterService;
+        this.ipaSearchServiceConnector = ipaSearchServiceConnector;
         log.trace("Initializing {}", InstitutionServiceImpl.class.getSimpleName());
         this.indexSearchService = indexSearchService;
     }
@@ -96,6 +103,47 @@ class InstitutionServiceImpl implements InstitutionService {
             institutionIndexWriterService.adds(institutions);
         }
         log.trace("updated Institutions IPA index end");
+    }
+
+    @Scheduled(cron = "0 0 2 * * *")
+    void doInstitutionsIndex() {
+        log.trace("doInstitutionsIndex start");
+        List<Institution> institutions = getInstitutions();
+        if (institutions.isEmpty()) {
+            log.warn("doInstitutionsIndex: no institutions retrieved from IPA open data, skipping AI Search index update");
+            return;
+        }
+
+        Map<String, String> currentIndex = ipaSearchServiceConnector.fetchAllInstitutionDataAggiornamento();
+
+        List<Institution> toIndex = institutions.stream()
+                .filter(institution -> needsUpdate(institution, currentIndex))
+                .toList();
+
+        if (toIndex.isEmpty()) {
+            log.info("doInstitutionsIndex: AI Search IPA institution index is already up to date");
+            return;
+        }
+
+        log.info("doInstitutionsIndex: indexing {} institutions (new or updated)", toIndex.size());
+        int batchSize = 1000;
+        for (int i = 0; i < toIndex.size(); i += batchSize) {
+            List<Institution> batch = toIndex.subList(i, Math.min(i + batchSize, toIndex.size()));
+            ipaSearchServiceConnector.indexInstitutions(batch);
+        }
+        log.trace("doInstitutionsIndex end");
+    }
+
+    private boolean needsUpdate(Institution institution, Map<String, String> currentIndex) {
+        String currentDataAggiornamento = currentIndex.get(institution.getId());
+        if (currentDataAggiornamento == null) {
+            return true;
+        }
+        String csvDataAggiornamento = institution.getUpdateDate();
+        if (csvDataAggiornamento == null || csvDataAggiornamento.isBlank()) {
+            return true;
+        }
+        return !currentDataAggiornamento.equals(csvDataAggiornamento);
     }
 
     private List<Institution> getInstitutions() {

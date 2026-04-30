@@ -115,7 +115,7 @@ locals {
     },
     {
       name  = "INSTITUTION_API_URL"
-      value = "https://selc-${module.local.config.env_short}-ms-core-ca.${module.local.config.private_dns_name_domain}"
+      value = "https://selc-${module.local.config.env_short}-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     }
   ]
 

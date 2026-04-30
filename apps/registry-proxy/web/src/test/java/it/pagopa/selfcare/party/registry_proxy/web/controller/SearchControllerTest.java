@@ -1,7 +1,10 @@
 package it.pagopa.selfcare.party.registry_proxy.web.controller;
 
+import it.pagopa.selfcare.party.registry_proxy.connector.model.IpaInstitution;
+import it.pagopa.selfcare.party.registry_proxy.connector.model.IpaInstitutionSearchResult;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndexSearch;
+import it.pagopa.selfcare.party.registry_proxy.connector.model.Origin;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceInstitution;
 import it.pagopa.selfcare.party.registry_proxy.core.SearchService;
 import it.pagopa.selfcare.party.registry_proxy.web.config.WebTestConfig;
@@ -117,6 +120,61 @@ public class SearchControllerTest {
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isInternalServerError())
             .andReturn().getResponse().getContentAsString();
+  }
+
+  @Test
+  void searchIpaInstitutions_shouldReturnOk() throws Exception {
+    IpaInstitution institution = new IpaInstitution();
+    institution.setId("ipa-1");
+    institution.setDescription("Comune di Roma");
+    institution.setTaxCode("00100000001");
+    institution.setOrigin(Origin.IPA);
+    institution.setCategory("L6");
+
+    IpaInstitutionSearchResult result = new IpaInstitutionSearchResult();
+    result.setInstitutions(List.of(institution));
+    result.setTotalElements(1L);
+
+    when(searchService.searchIpaInstitutions(anyString(), isNull(), anyInt(), anyInt()))
+            .thenReturn(result);
+
+    mockMvc.perform(get("/search/ipa-institutions")
+                    .param("searchText", "Roma")
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.count", is(1)))
+            .andExpect(jsonPath("$.items", hasSize(1)))
+            .andExpect(jsonPath("$.items[0].id", is("ipa-1")))
+            .andExpect(jsonPath("$.items[0].description", is("Comune di Roma")));
+  }
+
+  @Test
+  void searchIpaInstitutions_withCategory_shouldReturnOk() throws Exception {
+    IpaInstitutionSearchResult result = new IpaInstitutionSearchResult();
+    result.setInstitutions(List.of());
+    result.setTotalElements(0L);
+
+    when(searchService.searchIpaInstitutions(anyString(), eq("L6"), anyInt(), anyInt()))
+            .thenReturn(result);
+
+    mockMvc.perform(get("/search/ipa-institutions")
+                    .param("searchText", "Test")
+                    .param("category", "L6")
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.count", is(0)))
+            .andExpect(jsonPath("$.items", hasSize(0)));
+  }
+
+  @Test
+  void searchIpaInstitutions_shouldReturnInternalServerError_onException() throws Exception {
+    when(searchService.searchIpaInstitutions(anyString(), any(), anyInt(), anyInt()))
+            .thenThrow(new RuntimeException("Internal service error"));
+
+    mockMvc.perform(get("/search/ipa-institutions")
+                    .param("searchText", "Test")
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isInternalServerError());
   }
 
 }

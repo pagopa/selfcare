@@ -136,7 +136,7 @@ locals {
     },
     {
       name  = "MS_CORE_URL"
-      value = "http://selc-d-pnpg-ms-core-ca"
+      value = "http://selc-d-pnpg-institution-ms-ca"
     },
     {
       name  = "MS_PARTY_REGISTRY_URL"

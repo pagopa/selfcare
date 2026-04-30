@@ -33,6 +33,9 @@ on:
           - product
           - product-cdc
           - registry-proxy
+          - institution-ms
+          - delegation-cdc
+          - institution-send-mail-scheduler
           - webhook
         required: true
         default: auth
