@@ -1,7 +1,15 @@
 package it.pagopa.selfcare.document.service;
 
 import com.microsoft.applicationinsights.TelemetryClient;
+import com.microsoft.applicationinsights.TelemetryConfiguration;
 import com.microsoft.applicationinsights.telemetry.EventTelemetry;
+import io.quarkus.runtime.Startup;
+import io.quarkus.runtime.StartupEvent;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
+import lombok.NoArgsConstructor;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.context.ManagedExecutor;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,6 +36,8 @@ import java.util.Map;
  */
 @Slf4j
 @ApplicationScoped
+@Startup
+@NoArgsConstructor
 public class DocumentMsTelemetryService {
 
     static final String EVENT_PDF_CONTRACT_CREATED     = "DOCUMENT-MS-PDF-CONTRACT-CREATED";
@@ -43,21 +53,31 @@ public class DocumentMsTelemetryService {
     static final String EVENT_AGGREGATES_CSV_UPLOADED  = "DOCUMENT-MS-AGGREGATES-CSV-UPLOADED";
     static final String EVENT_VISURA_SAVED             = "DOCUMENT-MS-VISURA-SAVED";
 
-    private final TelemetryClient telemetryClient;
+    private volatile TelemetryClient telemetryClient;
 
-    public DocumentMsTelemetryService() {
-        this.telemetryClient = new TelemetryClient();
+    @ConfigProperty(name = "document-ms.appinsights.connection-string")
+    String appInsightsConnectionString;
+
+    @Inject
+    ManagedExecutor managedExecutor;
+
+    void onStart(@Observes StartupEvent event) {
+    managedExecutor.runAsync(
+        () -> {
+          TelemetryConfiguration telemetryConfiguration = TelemetryConfiguration.createDefault();
+          telemetryConfiguration.setConnectionString(appInsightsConnectionString);
+          this.telemetryClient = new TelemetryClient(telemetryConfiguration);
+        });
     }
 
-
-    /**
-     * Tracks the successful generation and upload of a contract PDF.
-     *
-     * @param onboardingId onboarding identifier
-     * @param productId    product identifier
-     * @param durationMs   end-to-end duration in milliseconds
-     */
-    public void trackContractPdfCreated(String onboardingId, String productId, long durationMs) {
+  /**
+   * Tracks the successful generation and upload of a contract PDF.
+   *
+   * @param onboardingId onboarding identifier
+   * @param productId product identifier
+   * @param durationMs end-to-end duration in milliseconds
+   */
+  public void trackContractPdfCreated(String onboardingId, String productId, long durationMs) {
         Map<String, String> props = new HashMap<>();
         props.put("onboardingId", onboardingId);
         props.put("productId", productId);
@@ -232,20 +252,19 @@ public class DocumentMsTelemetryService {
     // -------------------------------------------------------------------------
 
     private void track(String eventName, Map<String, String> properties, Map<String, Double> metrics) {
+        TelemetryClient client = telemetryClient;
+        if (client == null) {
+            log.debug("Telemetry client not initialized yet, skipping event '{}'", eventName);
+            return;
+        }
         try {
             EventTelemetry telemetry = new EventTelemetry(eventName);
             telemetry.getProperties().putAll(properties);
             telemetry.getMetrics().putAll(metrics);
-            telemetryClient.trackEvent(telemetry);
+            client.trackEvent(telemetry);
         } catch (Exception e) {
             // Telemetry must never affect business logic
             log.warn("Failed to track telemetry event '{}': {}", eventName, e.getMessage());
         }
     }
 }
-
-
-
-
-
-
