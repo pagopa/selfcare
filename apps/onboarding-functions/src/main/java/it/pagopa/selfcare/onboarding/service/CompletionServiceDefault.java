@@ -41,6 +41,8 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.REJECTED;
 import static it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER;
 import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_PN;
@@ -48,9 +50,11 @@ import static it.pagopa.selfcare.onboarding.common.WorkflowType.*;
 import static jakarta.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 import static org.openapi.quarkus.core_json.model.DelegationResponse.StatusEnum.ACTIVE;
 
+@Slf4j
 @ApplicationScoped
 @SuppressWarnings({"java:S6813", "java:S107"})
 public class CompletionServiceDefault implements CompletionService {
+
 
     @RestClient
     @Inject
@@ -188,6 +192,10 @@ public class CompletionServiceDefault implements CompletionService {
     @Override
     public void sendCompletedEmail(OnboardingWorkflow onboardingWorkflow) {
         Onboarding onboarding = onboardingWorkflow.getOnboarding();
+        if (Objects.isNull(onboarding.getInstitution().getDigitalAddress())) {
+            log.warn("Digital address is null for onboarding {}, skipping completed email notification", onboarding.getId());
+            return;
+        }
         List<String> destinationMails = getDestinationMails(onboarding);
         destinationMails.add(onboarding.getInstitution().getDigitalAddress());
         Product product = productService.getProductIsValid(onboarding.getProductId());

@@ -750,13 +750,14 @@ public class CompletionServiceDefaultTest {
 
         Product product = createDummyProduct();
         Onboarding onboarding = createOnboarding();
+        onboarding.getInstitution().setDigitalAddress("test@pec.it");
         OnboardingWorkflow onboardingWorkflow = new OnboardingWorkflowInstitution(onboarding, "INSTITUTION");
         User user = createDummyUser(onboarding);
 
         ExecutionContext context = mock(ExecutionContext.class);
         doReturn(Logger.getGlobal()).when(context).getLogger();
 
-        when(productService.getProduct(onboarding.getProductId()))
+        when(productService.getProductIsValid(onboarding.getProductId()))
                 .thenReturn(product);
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, user.getId()))
                 .thenReturn(userResource);
@@ -766,6 +767,21 @@ public class CompletionServiceDefaultTest {
 
         Mockito.verify(notificationService, times(1))
                 .sendCompletedEmail(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void sendCompletedEmail_shouldSkipWhenDigitalAddressIsNull() {
+
+        Onboarding onboarding = createOnboarding();
+        // digitalAddress is null by default
+        OnboardingWorkflow onboardingWorkflow = new OnboardingWorkflowInstitution(onboarding, "INSTITUTION");
+
+        completionServiceDefault.sendCompletedEmail(onboardingWorkflow);
+
+        Mockito.verify(notificationService, times(0))
+                .sendCompletedEmail(any(), any(), any(), any(), any());
+        Mockito.verify(productService, times(0))
+                .getProductIsValid(any());
     }
 
     @Test
