@@ -6,6 +6,7 @@
         <artifactId>institution-ms</artifactId>
         <groupId>it.pagopa.selfcare</groupId>
         <version>1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>selc-ms-core-connector-api</artifactId>
