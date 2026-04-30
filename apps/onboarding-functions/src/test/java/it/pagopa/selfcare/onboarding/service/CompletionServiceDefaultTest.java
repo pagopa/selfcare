@@ -713,6 +713,30 @@ public class CompletionServiceDefaultTest {
     }
 
     @Test
+    void persistOnboarding_documentNotFound_shouldSkipContractPath() {
+        Onboarding onboarding = createOnboarding();
+        onboarding.getInstitution().setOrigin(Origin.SELC);
+        onboarding.getInstitution().setOriginId("originId");
+        onboarding.getInstitution().setInstitutionType(InstitutionType.PRV);
+
+        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId()))
+                .thenThrow(new WebApplicationException(Response.status(404).build()));
+        when(institutionApi.onboardingInstitutionUsingPOST(any(), any()))
+                .thenReturn(new InstitutionResponse());
+
+        mockOnboardingUpdateWhenPersistOnboarding(onboarding);
+
+        completionServiceDefault.persistOnboarding(onboarding);
+
+        ArgumentCaptor<InstitutionOnboardingRequest> captor = ArgumentCaptor.forClass(InstitutionOnboardingRequest.class);
+        verify(institutionApi, times(1))
+                .onboardingInstitutionUsingPOST(any(), captor.capture());
+
+        InstitutionOnboardingRequest actual = captor.getValue();
+        assertNull(actual.getContractPath());
+    }
+
+    @Test
     void persistOnboarding() {
         Onboarding onboarding = createOnboarding();
         onboarding.getInstitution().setOrigin(Origin.SELC);
