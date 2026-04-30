@@ -31,6 +31,7 @@ module "cosmosdb" {
   database_name               = "selcUserGroup"
   resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
   cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
+  max_throughput = 1000
 }
 
 module "collection_user_groups" {
