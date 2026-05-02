@@ -1,10 +1,7 @@
 package it.pagopa.selfcare.registry.proxy.runner.scheduler;
 
 import io.quarkus.scheduler.Scheduled;
-import it.pagopa.selfcare.registry.proxy.runner.model.IpaAoo;
-import it.pagopa.selfcare.registry.proxy.runner.model.IpaCategory;
-import it.pagopa.selfcare.registry.proxy.runner.model.IpaInstitution;
-import it.pagopa.selfcare.registry.proxy.runner.model.IpaUo;
+import it.pagopa.selfcare.registry.proxy.runner.model.*;
 import it.pagopa.selfcare.registry.proxy.runner.service.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -15,45 +12,57 @@ import lombok.extern.slf4j.Slf4j;
 @ApplicationScoped
 public class IpaIndexScheduler {
 
-    @Inject
-    IpaOpenDataService ipaOpenDataService;
+  @Inject IpaOpenDataService ipaOpenDataService;
 
-    @Inject
-    InstitutionIndexWriterService institutionIndexWriterService;
+  @Inject AnacDataService anacDataService;
 
-    @Inject
-    CategoryIndexWriterService categoryIndexWriterService;
+  @Inject IvassDataService ivassDataService;
 
-    @Inject
-    AooIndexWriterService aooIndexWriterService;
+  @Inject InstitutionIndexWriterService institutionIndexWriterService;
 
-    @Inject
-    UoIndexWriterService uoIndexWriterService;
+  @Inject CategoryIndexWriterService categoryIndexWriterService;
 
-    /**
-     * Runs 4 times a day (every 6 hours) to feed AI Search indexes
-     * with IPA data (institutions, categories, AOOs, UOs) from open data.
-     */
-    @Scheduled(cron = "{scheduler.ipa-index.cron}")
-    void feedAiSearchIndex() {
-        log.info("Starting scheduled IPA AI Search index update");
-        try {
-            List<IpaInstitution> institutions = ipaOpenDataService.fetchInstitutions();
-            institutionIndexWriterService.index(institutions);
+  @Inject AooIndexWriterService aooIndexWriterService;
 
-            List<IpaCategory> categories = ipaOpenDataService.fetchCategories();
-            categoryIndexWriterService.index(categories);
+  @Inject UoIndexWriterService uoIndexWriterService;
 
-            List<IpaAoo> aoos = ipaOpenDataService.fetchAOOs();
-            aooIndexWriterService.index(aoos);
+  @Inject StationIndexWriterService stationIndexWriterService;
 
-            // UOs are enriched with codiceFiscaleSfe from the SFE endpoint
-            List<IpaUo> uos = ipaOpenDataService.fetchUOs();
-            uoIndexWriterService.index(uos);
+  @Inject InsuranceCompanyIndexWriterService insuranceCompanyIndexWriterService;
 
-            log.info("Completed scheduled IPA AI Search index update");
-        } catch (Exception e) {
-            log.error("Error during scheduled IPA AI Search index update", e);
-        }
+  /**
+   * Runs 4 times a day (every 6 hours) to feed AI Search indexes with IPA, ANAC and IVASS data from
+   * open data sources.
+   */
+  @Scheduled(cron = "{scheduler.ipa-index.cron}")
+  void feedAiSearchIndex() {
+    log.info("Starting scheduled AI Search index update");
+    try {
+      // IPA indexes
+      List<IpaInstitution> institutions = ipaOpenDataService.fetchInstitutions();
+      institutionIndexWriterService.index(institutions);
+
+      List<IpaCategory> categories = ipaOpenDataService.fetchCategories();
+      categoryIndexWriterService.index(categories);
+
+      List<IpaAoo> aoos = ipaOpenDataService.fetchAOOs();
+      aooIndexWriterService.index(aoos);
+
+      // UOs enriched with codiceFiscaleSfe from the SFE endpoint
+      List<IpaUo> uos = ipaOpenDataService.fetchUOs();
+      uoIndexWriterService.index(uos);
+
+      // ANAC stations
+      List<AnacStation> stations = anacDataService.fetchStations();
+      stationIndexWriterService.index(stations);
+
+      // IVASS insurance companies
+      List<IvassInsuranceCompany> insuranceCompanies = ivassDataService.fetchInsuranceCompanies();
+      insuranceCompanyIndexWriterService.index(insuranceCompanies);
+
+      log.info("Completed scheduled AI Search index update");
+    } catch (Exception e) {
+      log.error("Error during scheduled AI Search index update", e);
     }
+  }
 }
