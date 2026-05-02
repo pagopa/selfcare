@@ -2,8 +2,6 @@ package it.pagopa.selfcare.registry.proxy.runner.service;
 
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
-import it.pagopa.selfcare.registry.proxy.runner.client.DataSourceRestClient;
-import jakarta.inject.Inject;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
@@ -11,12 +9,9 @@ import java.io.Reader;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 @Slf4j
 public abstract class AbstractIpaOpenDataService<T> {
-
-  @Inject @RestClient protected DataSourceRestClient<T> ipaOpenDataRestClient;
 
   public abstract List<T> fetch();
 
