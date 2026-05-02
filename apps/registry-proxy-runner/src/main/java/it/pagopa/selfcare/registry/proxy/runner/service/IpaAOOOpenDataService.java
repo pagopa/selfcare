@@ -10,7 +10,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 @Slf4j
 @ApplicationScoped
-public class IpaAooOpenDataService extends AbstractIpaOpenDataService<IpaAoo> {
+public class IpaAOOOpenDataService extends AbstractIpaOpenDataService<IpaAoo> {
 
   @Inject @RestClient IpaAOOOpenDataRestClient restClient;
 

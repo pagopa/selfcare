@@ -28,7 +28,7 @@ class AnacDataServiceTest {
             + "IPA1,12345678902,Station 2,pec2@test.it,false,false\n"
             + " ,12345678903,Station 3,pec3@test.it,true,false\n";
 
-    when(anacRestClient.retrieveStations()).thenReturn(csv);
+    when(anacRestClient.retrieveDataSource()).thenReturn(csv);
 
     List<AnacStation> stations = anacDataService.fetch();
 
@@ -39,7 +39,7 @@ class AnacDataServiceTest {
 
   @Test
   void fetch_error() {
-    when(anacRestClient.retrieveStations()).thenThrow(new RuntimeException("Error"));
+    when(anacRestClient.retrieveDataSource()).thenThrow(new RuntimeException("Error"));
     List<AnacStation> stations = anacDataService.fetch();
     assertTrue(stations.isEmpty());
   }

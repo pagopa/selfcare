@@ -14,7 +14,7 @@ public class IpaUORegistryProxyScheduler {
 
   @Inject IpaUoOpenDataService ipaUoOpenDataService;
 
-  @Inject UoIndexWriterService uoIndexWriterService;
+  @Inject IpaUOIndexWriterService ipaUOIndexWriterService;
 
   /**
    * Runs 4 times a day (every 6 hours) to feed AI Search indexes with IPA, ANAC and IVASS data from
@@ -27,7 +27,7 @@ public class IpaUORegistryProxyScheduler {
       // IPA indexes
       // UOs enriched with codiceFiscaleSfe from the SFE endpoint
       List<IpaUo> uos = ipaUoOpenDataService.fetch();
-      uoIndexWriterService.index(uos);
+      ipaUOIndexWriterService.index(uos);
 
       log.info("Completed scheduled AI Search index update");
     } catch (Exception e) {

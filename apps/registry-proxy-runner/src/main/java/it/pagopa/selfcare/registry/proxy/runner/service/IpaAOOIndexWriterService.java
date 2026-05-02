@@ -1,8 +1,8 @@
 package it.pagopa.selfcare.registry.proxy.runner.service;
 
 import it.pagopa.selfcare.registry.proxy.runner.client.AzureSearchRestClient;
-import it.pagopa.selfcare.registry.proxy.runner.model.IpaUo;
-import it.pagopa.selfcare.registry.proxy.runner.model.IpaUoIndex;
+import it.pagopa.selfcare.registry.proxy.runner.model.IpaAoo;
+import it.pagopa.selfcare.registry.proxy.runner.model.IpaAooIndex;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.util.function.Function;
@@ -10,32 +10,32 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 @ApplicationScoped
-public class UoIndexWriterService extends AbstractIndexWriterService<IpaUo, IpaUoIndex> {
+public class IpaAOOIndexWriterService extends AbstractIndexWriterService<IpaAoo, IpaAooIndex> {
 
-  @ConfigProperty(name = "azure-ai-search.uo.index-name")
+  @ConfigProperty(name = "azure-ai-search.aoo.index-name")
   String indexName;
 
   @ConfigProperty(name = "azure-ai-search.api-version")
   String apiVersion;
 
   @Inject
-  public UoIndexWriterService(@RestClient AzureSearchRestClient azureSearchRestClient) {
+  public IpaAOOIndexWriterService(@RestClient AzureSearchRestClient azureSearchRestClient) {
     super(azureSearchRestClient);
   }
 
   @Override
-  protected String getId(IpaUo item) {
+  protected String getId(IpaAoo item) {
     return item.getId();
   }
 
   @Override
-  protected String getUpdateDate(IpaUo item) {
+  protected String getUpdateDate(IpaAoo item) {
     return item.getDataAggiornamento();
   }
 
   @Override
-  protected Function<IpaUo, IpaUoIndex> toDocument() {
-    return IpaUoIndex::fromUo;
+  protected Function<IpaAoo, IpaAooIndex> toDocument() {
+    return IpaAooIndex::fromAoo;
   }
 
   @Override
@@ -50,6 +50,6 @@ public class UoIndexWriterService extends AbstractIndexWriterService<IpaUo, IpaU
 
   @Override
   protected String getEntityName() {
-    return "UO";
+    return "AOO";
   }
 }

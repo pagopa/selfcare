@@ -12,9 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 @ApplicationScoped
 public class IpaAOORegistryProxyScheduler {
 
-  @Inject IpaAooOpenDataService ipaAooOpenDataService;
+  @Inject IpaAOOOpenDataService ipaAooOpenDataService;
 
-  @Inject AooIndexWriterService aooIndexWriterService;
+  @Inject IpaAOOIndexWriterService ipaAOOIndexWriterService;
 
   /**
    * Runs 4 times a day (every 6 hours) to feed AI Search indexes with IPA, ANAC and IVASS data from
@@ -26,7 +26,7 @@ public class IpaAOORegistryProxyScheduler {
     try {
       // IPA indexes
       List<IpaAoo> aoos = ipaAooOpenDataService.fetch();
-      aooIndexWriterService.index(aoos);
+      ipaAOOIndexWriterService.index(aoos);
 
       log.info("Completed scheduled AI Search index update");
     } catch (Exception e) {

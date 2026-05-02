@@ -55,7 +55,7 @@ class IvassDataServiceTest {
 
     byte[] zipBytes = baos.toByteArray();
 
-    when(ivassRestClient.retrieveInsurancesZip()).thenReturn(zipBytes);
+    when(ivassRestClient.retrieveDataSource()).thenReturn(zipBytes);
 
     List<IvassInsuranceCompany> companies = ivassDataService.fetch();
 
@@ -66,7 +66,7 @@ class IvassDataServiceTest {
 
   @Test
   void fetch_error() {
-    when(ivassRestClient.retrieveInsurancesZip()).thenThrow(new RuntimeException("Error"));
+    when(ivassRestClient.retrieveDataSource()).thenThrow(new RuntimeException("Error"));
     List<IvassInsuranceCompany> companies = ivassDataService.fetch();
     assertTrue(companies.isEmpty());
   }
