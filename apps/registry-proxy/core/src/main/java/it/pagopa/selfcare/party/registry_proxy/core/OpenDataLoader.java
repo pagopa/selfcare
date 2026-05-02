@@ -59,7 +59,7 @@ public class OpenDataLoader implements CommandLineRunner {
         openDataConnector -> {
           List<? extends Institution> institutions = openDataConnector.getInstitutions();
           institutionIndexWriterService.adds(institutions);
-          aiSearchInstitutionIndexWriterService.adds(institutions);
+          // aiSearchInstitutionIndexWriterService.adds(institutions);
           categoryIndexWriterService.adds(openDataConnector.getCategories());
           aooIndexWriterService.adds(openDataConnector.getAOOs());
           uoIndexWriterService.adds(openDataConnector.getUOs());
