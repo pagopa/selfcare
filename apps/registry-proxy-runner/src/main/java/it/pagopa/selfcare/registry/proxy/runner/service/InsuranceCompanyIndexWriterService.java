@@ -18,6 +18,10 @@ public class InsuranceCompanyIndexWriterService extends AbstractIndexWriterServi
     @ConfigProperty(name = "azure-ai-search.api-version")
     String apiVersion;
 
+    InsuranceCompanyIndexWriterService() {
+        super(null);
+    }
+
     @Inject
     public InsuranceCompanyIndexWriterService(@RestClient AzureSearchRestClient azureSearchRestClient) {
         super(azureSearchRestClient);

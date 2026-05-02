@@ -18,6 +18,10 @@ public class IpaAOOIndexWriterService extends AbstractIndexWriterService<IpaAoo,
   @ConfigProperty(name = "azure-ai-search.api-version")
   String apiVersion;
 
+  IpaAOOIndexWriterService() {
+    super(null);
+  }
+
   @Inject
   public IpaAOOIndexWriterService(@RestClient AzureSearchRestClient azureSearchRestClient) {
     super(azureSearchRestClient);

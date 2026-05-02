@@ -19,6 +19,10 @@ public class StationIndexWriterService
   @ConfigProperty(name = "azure-ai-search.api-version")
   String apiVersion;
 
+  StationIndexWriterService() {
+    super(null);
+  }
+
   @Inject
   public StationIndexWriterService(@RestClient AzureSearchRestClient azureSearchRestClient) {
     super(azureSearchRestClient);

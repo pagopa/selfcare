@@ -19,6 +19,10 @@ public class CategoryIndexWriterService
   @ConfigProperty(name = "azure-ai-search.api-version")
   String apiVersion;
 
+  CategoryIndexWriterService() {
+    super(null);
+  }
+
   @Inject
   public CategoryIndexWriterService(@RestClient AzureSearchRestClient azureSearchRestClient) {
     super(azureSearchRestClient);
