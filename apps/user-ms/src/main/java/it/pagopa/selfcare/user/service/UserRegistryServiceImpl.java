@@ -88,9 +88,18 @@ public class UserRegistryServiceImpl implements UserRegistryService {
     }
 
     private boolean checkIfIsRetryableException(Throwable throwable) {
-        return throwable instanceof TimeoutException ||
+        if (throwable instanceof TimeoutException ||
             throwable instanceof SocketException ||
-            (throwable instanceof WebApplicationException webApplicationException && webApplicationException.getResponse().getStatus() == 429);
+            (throwable instanceof WebApplicationException webApplicationException && webApplicationException.getResponse().getStatus() == 429)) {
+          return true;
+        }
+
+        // Check cause chain for wrapped exceptions (e.g. Netty wrapping SocketException)
+        Throwable cause = throwable.getCause();
+        if (cause != null && cause != throwable) {
+          return checkIfIsRetryableException(cause);
+        }
+        return false;
     }
 
 
