@@ -16,33 +16,33 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 @ApplicationScoped
 public class AnacDataService {
 
-    @Inject
-    @RestClient
-    AnacRestClient anacRestClient;
+  @Inject @RestClient AnacRestClient anacRestClient;
 
-    /**
-     * Fetches ANAC stations from open data and filters out records
-     * that have an originId (same logic as the existing ANACServiceImpl).
-     */
-    public List<AnacStation> fetchStations() {
-        log.info("Fetching ANAC stations...");
-        try {
-            String csv = anacRestClient.retrieveStations();
-            try (Reader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(csv.getBytes())))) {
-                CsvToBean<AnacStation> csvToBean = new CsvToBeanBuilder<AnacStation>(reader)
-                        .withType(AnacStation.class)
-                        .withIgnoreLeadingWhiteSpace(true)
-                        .build();
-                List<AnacStation> stations = csvToBean.parse()
-                        .stream()
-                        .filter(station -> station.getOriginId() == null || station.getOriginId().isBlank())
-                        .toList();
-                log.info("Fetched {} ANAC stations (after filtering)", stations.size());
-                return stations;
-            }
-        } catch (Exception e) {
-            log.error("Error fetching ANAC stations", e);
-            return Collections.emptyList();
-        }
+  /**
+   * Fetches ANAC stations from open data and filters out records that have an originId (same logic
+   * as the existing ANACServiceImpl).
+   */
+  public List<AnacStation> fetch() {
+    log.info("Fetching ANAC stations...");
+    try {
+      String csv = anacRestClient.retrieveDataSource();
+      try (Reader reader =
+          new BufferedReader(new InputStreamReader(new ByteArrayInputStream(csv.getBytes())))) {
+        CsvToBean<AnacStation> csvToBean =
+            new CsvToBeanBuilder<AnacStation>(reader)
+                .withType(AnacStation.class)
+                .withIgnoreLeadingWhiteSpace(true)
+                .build();
+        List<AnacStation> stations =
+            csvToBean.parse().stream()
+                .filter(station -> station.getOriginId() == null || station.getOriginId().isBlank())
+                .toList();
+        log.info("Fetched {} ANAC stations (after filtering)", stations.size());
+        return stations;
+      }
+    } catch (Exception e) {
+      log.error("Error fetching ANAC stations", e);
+      return Collections.emptyList();
     }
+  }
 }

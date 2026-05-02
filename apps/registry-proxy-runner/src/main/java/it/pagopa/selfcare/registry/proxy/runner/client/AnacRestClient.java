@@ -8,10 +8,10 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 @RegisterRestClient(configKey = "anac")
 @Path("/")
-public interface AnacRestClient {
+public interface AnacRestClient extends DataSourceRestClient<String> {
 
   @GET
   @Path("${anac.data-path}")
   @Produces(MediaType.TEXT_PLAIN)
-  String retrieveStations();
+  String retrieveDataSource();
 }

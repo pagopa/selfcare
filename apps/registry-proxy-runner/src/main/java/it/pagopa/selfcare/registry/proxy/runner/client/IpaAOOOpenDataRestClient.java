@@ -6,12 +6,12 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
-@RegisterRestClient(configKey = "ivass")
+@RegisterRestClient(configKey = "ipa-open-data")
 @Path("/")
-public interface IvassRestClient extends DataSourceRestClient<byte[]> {
+public interface IpaAOOOpenDataRestClient extends DataSourceRestClient<String> {
 
   @GET
-  @Path("${ivass.data-path}")
-  @Produces(MediaType.APPLICATION_OCTET_STREAM)
-  byte[] retrieveDataSource();
+  @Path("${ipa-open-data.aoos-path}")
+  @Produces(MediaType.TEXT_PLAIN)
+  String retrieveDataSource();
 }

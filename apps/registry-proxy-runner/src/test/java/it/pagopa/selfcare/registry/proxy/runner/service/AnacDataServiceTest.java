@@ -21,7 +21,7 @@ class AnacDataServiceTest {
   @InjectMocks AnacDataService anacDataService;
 
   @Test
-  void fetchStations() {
+  void fetch() {
     String csv =
         "codiceIPA,codiceFiscaleGestore,denominazioneGestore,PEC,ANAC_incaricato,ANAC_abilitato\n"
             + ",12345678901,Station 1,pec1@test.it,true,true\n"
@@ -30,7 +30,7 @@ class AnacDataServiceTest {
 
     when(anacRestClient.retrieveStations()).thenReturn(csv);
 
-    List<AnacStation> stations = anacDataService.fetchStations();
+    List<AnacStation> stations = anacDataService.fetch();
 
     assertEquals(2, stations.size());
     assertEquals("12345678901", stations.get(0).getTaxCode());
@@ -38,9 +38,9 @@ class AnacDataServiceTest {
   }
 
   @Test
-  void fetchStations_error() {
+  void fetch_error() {
     when(anacRestClient.retrieveStations()).thenThrow(new RuntimeException("Error"));
-    List<AnacStation> stations = anacDataService.fetchStations();
+    List<AnacStation> stations = anacDataService.fetch();
     assertTrue(stations.isEmpty());
   }
 }

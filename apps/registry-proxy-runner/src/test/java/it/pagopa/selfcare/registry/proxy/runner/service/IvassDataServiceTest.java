@@ -22,57 +22,60 @@ import org.springframework.test.util.ReflectionTestUtils;
 @ExtendWith(MockitoExtension.class)
 class IvassDataServiceTest {
 
-    @Mock
-    IvassRestClient ivassRestClient;
+  @Mock IvassRestClient ivassRestClient;
 
-    @InjectMocks
-    IvassDataService ivassDataService;
+  @InjectMocks IvassDataService ivassDataService;
 
-    @BeforeEach
-    void setUp() {
-        ReflectionTestUtils.setField(ivassDataService, "registryTypesAdmitted", Arrays.asList("ElencoI", "SezioneI"));
-        ReflectionTestUtils.setField(ivassDataService, "workTypesAdmitted", Arrays.asList("VITA", "MISTA"));
+  @BeforeEach
+  void setUp() {
+    ReflectionTestUtils.setField(
+        ivassDataService, "registryTypesAdmitted", Arrays.asList("ElencoI", "SezioneI"));
+    ReflectionTestUtils.setField(
+        ivassDataService, "workTypesAdmitted", Arrays.asList("VITA", "MISTA"));
+  }
+
+  @Test
+  void fetch() throws Exception {
+    String csvContent =
+        "CODICE_IVASS;CODICE_FISCALE;DENOMINAZIONE_IMPRESA;PEC;TIPO_LAVORO;TIPO_ALBO;INDIRIZZO_SEDE_LEGALE_RAPPRESENTANZA_IN_ITALIA\n"
+            + "IV1;12345;Company 1;pec1@test.it;VITA;Elenco I - test;Address 1\n"
+            + "IV2;23456;Company 2;pec2@test.it;DANNI;Elenco I - test;Address 2\n"
+            + // Filtered by work type
+            "IV3;34567;Company 3;pec3@test.it;MISTA;Sezione II - test;Address 3\n"
+            + // Filtered by register type
+            "IV4;45678;Company 4;;VITA;Elenco I - test;Address 4\n"; // Filtered by empty PEC
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+      ZipEntry entry = new ZipEntry("test.csv");
+      zos.putNextEntry(entry);
+      zos.write(csvContent.getBytes());
+      zos.closeEntry();
     }
 
-    @Test
-    void fetchInsuranceCompanies() throws Exception {
-        String csvContent = "CODICE_IVASS;CODICE_FISCALE;DENOMINAZIONE_IMPRESA;PEC;TIPO_LAVORO;TIPO_ALBO;INDIRIZZO_SEDE_LEGALE_RAPPRESENTANZA_IN_ITALIA\n" +
-                "IV1;12345;Company 1;pec1@test.it;VITA;Elenco I - test;Address 1\n" +
-                "IV2;23456;Company 2;pec2@test.it;DANNI;Elenco I - test;Address 2\n" + // Filtered by work type
-                "IV3;34567;Company 3;pec3@test.it;MISTA;Sezione II - test;Address 3\n" + // Filtered by register type
-                "IV4;45678;Company 4;;VITA;Elenco I - test;Address 4\n"; // Filtered by empty PEC
+    byte[] zipBytes = baos.toByteArray();
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ZipOutputStream zos = new ZipOutputStream(baos)) {
-            ZipEntry entry = new ZipEntry("test.csv");
-            zos.putNextEntry(entry);
-            zos.write(csvContent.getBytes());
-            zos.closeEntry();
-        }
+    when(ivassRestClient.retrieveInsurancesZip()).thenReturn(zipBytes);
 
-        byte[] zipBytes = baos.toByteArray();
+    List<IvassInsuranceCompany> companies = ivassDataService.fetch();
 
-        when(ivassRestClient.retrieveInsurancesZip()).thenReturn(zipBytes);
+    assertEquals(1, companies.size());
+    assertEquals("IV1", companies.get(0).getOriginId());
+    assertEquals("00000012345", companies.get(0).getTaxCode());
+  }
 
-        List<IvassInsuranceCompany> companies = ivassDataService.fetchInsuranceCompanies();
+  @Test
+  void fetch_error() {
+    when(ivassRestClient.retrieveInsurancesZip()).thenThrow(new RuntimeException("Error"));
+    List<IvassInsuranceCompany> companies = ivassDataService.fetch();
+    assertTrue(companies.isEmpty());
+  }
 
-        assertEquals(1, companies.size());
-        assertEquals("IV1", companies.get(0).getOriginId());
-        assertEquals("00000012345", companies.get(0).getTaxCode());
-    }
-
-    @Test
-    void fetchInsuranceCompanies_error() {
-        when(ivassRestClient.retrieveInsurancesZip()).thenThrow(new RuntimeException("Error"));
-        List<IvassInsuranceCompany> companies = ivassDataService.fetchInsuranceCompanies();
-        assertTrue(companies.isEmpty());
-    }
-
-    @Test
-    void testRemoveUtf8Bom() {
-        byte[] csv = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF, 'a', 'b', 'c'};
-        byte[] result = ivassDataService.removeUtf8Bom(csv);
-        assertEquals(3, result.length);
-        assertEquals('a', result[0]);
-    }
+  @Test
+  void testRemoveUtf8Bom() {
+    byte[] csv = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF, 'a', 'b', 'c'};
+    byte[] result = ivassDataService.removeUtf8Bom(csv);
+    assertEquals(3, result.length);
+    assertEquals('a', result[0]);
+  }
 }
