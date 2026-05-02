@@ -1,0 +1,53 @@
+name: User Group MS - Trigger Release
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options: [dev, uat, prod]
+        required: true
+      branch:
+        type: string
+        description: Branch name (e.g. releases/user-group-ms_1.0.0)
+        required: true
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.extract.outputs.VERSION }}
+    steps:
+      - id: extract
+        run: |
+          VERSION=$(echo "${{ inputs.branch }}" | sed 's/.*_//;s/^v//')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+  release_user_group_ms:
+    needs: prepare
+    uses: ./.github/workflows/call_release_app.yml
+    with:
+      env: ${{ inputs.env }}
+      target: selc
+      app: user-group-ms
+      APP_PATH: apps/user-group-ms
+      APPS_POM: apps/pom.xml
+      POM: pom.xml
+    secrets: inherit
+
+  update_prod_variable:
+    name: "Update PROD Version Variable"
+    needs: [prepare, release_user_group_ms]
+    if: inputs.env == 'prod'
+    uses: ./.github/workflows/call_update_gh_variable.yml
+    with:
+      domain: user-group-ms
+      env: prod
+      version: ${{ needs.prepare.outputs.version }}
+    secrets: inherit

@@ -39,6 +39,10 @@ on:
           - registry-proxy
           - onboarding-bff
           - document-ms
+          - user-ms
+          - user-group-ms
+          - user-cdc
+          - user-group-cdc
           - institution-ms
           - delegation-cdc
           - institution-send-mail-scheduler
