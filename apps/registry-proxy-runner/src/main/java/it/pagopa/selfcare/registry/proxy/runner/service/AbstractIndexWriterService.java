@@ -45,20 +45,19 @@ public abstract class AbstractIndexWriterService<T, D> implements IndexWriterSer
             .toList();
 
     if (toIndex.isEmpty()) {
-      log.info("[{}] AI Search index is already up to date", getEntityName());
-      return;
-    }
-
-    log.info("[{}] Indexing {} items (new or updated)", getEntityName(), toIndex.size());
-    for (int i = 0; i < toIndex.size(); i += BATCH_SIZE) {
-      List<D> batch =
-          toIndex.subList(i, Math.min(i + BATCH_SIZE, toIndex.size())).stream()
-              .map(toDocument())
-              .toList();
-      SearchServiceIndexRequest request = new SearchServiceIndexRequest();
-      request.setValue(batch);
-      azureSearchRestClient.index(getIndexName(), getApiVersion(), request);
-      log.debug("[{}] Indexed batch of {} documents", getEntityName(), batch.size());
+      log.info("[{}] No items to upsert, AI Search index is already up to date", getEntityName());
+    } else {
+      log.info("[{}] Indexing {} items (new or updated)", getEntityName(), toIndex.size());
+      for (int i = 0; i < toIndex.size(); i += BATCH_SIZE) {
+        List<D> batch =
+            toIndex.subList(i, Math.min(i + BATCH_SIZE, toIndex.size())).stream()
+                .map(toDocument())
+                .toList();
+        SearchServiceIndexRequest request = new SearchServiceIndexRequest();
+        request.setValue(batch);
+        azureSearchRestClient.index(getIndexName(), getApiVersion(), request);
+        log.debug("[{}] Indexed batch of {} documents", getEntityName(), batch.size());
+      }
     }
 
     // Delete documents that are no longer present in the source data
