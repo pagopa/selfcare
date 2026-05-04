@@ -17,12 +17,12 @@ module "local" {
 }
 
 ###############################################################################
-# Institution Send Mail Scheduler Container App Job
+# Registry Proxy Runner Container App Job
 ###############################################################################
 locals {
   image_tag = var.image_tag
 
-  app_settings_institution_send_mail_scheduler = [
+  app_settings = [
     {
       name  = "JAVA_TOOL_OPTIONS"
       value = "-javaagent:applicationinsights-agent.jar",
@@ -37,13 +37,13 @@ locals {
     }
   ]
 
-  secrets_names_institution_send_mail_scheduler = {
+  secrets = {
     "AZURE_SEARCH_API_KEY"          = "azure-search-api-key"
     "APPINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
   }
 }
 
-module "container_app_job_institution_send_mail_scheduler" {
+module "container_app" {
   source = "../../_modules/container_app_job"
 
   env_short                      = module.local.config.env_short
@@ -53,8 +53,8 @@ module "container_app_job_institution_send_mail_scheduler" {
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-registry-proxy-runner"
   image_tag                      = var.image_tag
-  app_settings                   = local.app_settings_institution_send_mail_scheduler
-  secrets_names                  = local.secrets_names_institution_send_mail_scheduler
+  app_settings                   = local.app_settings
+  secrets_names                  = local.secrets
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
   tags                           = module.local.config.tags
