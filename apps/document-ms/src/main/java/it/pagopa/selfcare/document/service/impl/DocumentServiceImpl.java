@@ -118,6 +118,16 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
+    public Uni<Long> updateDocumentContractFilesById(Document document) {
+        return documentRepository.updateContractFilesById(
+                document.getId(),
+                document.getContractSigned(),
+                document.getContractFilename(),
+                document.getSigningStep()
+        );
+    }
+
+    @Override
     public Uni<Document> saveDocument(DocumentBuilderRequest request) {
         log.info("Saving document for onboarding: {}, documentType: {}",
                 sanitize(request.getOnboardingId()), sanitize(String.valueOf(request.getDocumentType())));
@@ -130,30 +140,26 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     public Uni<Document> handleContractDocument(DocumentBuilderRequest request) {
-        return handleContractDocument(request, 1);
+        return handleContractDocument(request, null);
     }
 
     @Override
-    public Uni<Document> handleContractDocument(DocumentBuilderRequest request, int signingStep) {
+    public Uni<Document> handleContractDocument(DocumentBuilderRequest request, Integer signingStep) {
         String onboardingId = request.getOnboardingId();
 
-        if (signingStep > 1) {
+        if (signingStep != null && signingStep > 1) {
             // Multi-signature: always create a new document record for step > 1
             return createNewContractDocument(request, signingStep);
         }
 
-        // Step 1: standard behavior - reuse existing or create new
+        // Standard behavior - reuse existing or create new
+        // signingStep is NOT set here; it will be set only during uploadSignedContract
         return documentRepository.findByOnboardingId(onboardingId)
-                .onItem().ifNotNull().transform(existing -> {
-                    if (existing.getSigningStep() == null) {
-                        existing.setSigningStep(1);
-                    }
-                    return existing;
-                })
-                .onItem().ifNull().switchTo(() -> createNewContractDocument(request, 1));
+                .onItem().ifNotNull().transform(existing -> existing)
+                .onItem().ifNull().switchTo(() -> createNewContractDocument(request, signingStep));
     }
 
-    private Uni<Document> createNewContractDocument(DocumentBuilderRequest request, int signingStep) {
+    private Uni<Document> createNewContractDocument(DocumentBuilderRequest request, Integer signingStep) {
         String onboardingId = request.getOnboardingId();
         Document document = new Document();
         setContractFileName(request, document);
@@ -163,7 +169,9 @@ public class DocumentServiceImpl implements DocumentService {
         return calculateDigestFromAzureFile(contractNotSignedPath, onboardingId, "Contract")
                 .chain(digest -> {
                     Document doc = buildDocument(request, digest);
-                    doc.setSigningStep(signingStep);
+                    if (signingStep != null) {
+                        doc.setSigningStep(signingStep);
+                    }
                     return documentRepository.persist(doc)
                             .replaceWith(doc)
                             .onItem().invoke(() -> {

@@ -33,6 +33,12 @@ public interface DocumentService {
     Uni<Long> updateDocumentContractFiles(Document document);
 
     /**
+     * Updates contract files and signingStep for a specific document by its ID.
+     * Used during uploadSignedContract to avoid updating all documents with the same onboardingId.
+     */
+    Uni<Long> updateDocumentContractFilesById(Document document);
+
+    /**
      * Saves a document (contract or attachment) based on the DocumentType in the request.
      * For INSTITUTION/USER types, saves a contract document.
      * For ATTACHMENT type, saves an attachment document.
@@ -55,6 +61,6 @@ public interface DocumentService {
      * @param signingStep the signing step (1-based)
      * @return the document (existing or newly created)
      */
-    Uni<Document> handleContractDocument(DocumentBuilderRequest request, int signingStep);
+    Uni<Document> handleContractDocument(DocumentBuilderRequest request, Integer signingStep);
 
 }

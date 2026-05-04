@@ -705,7 +705,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                     document.setContractSigned(uploadedPath);
                     document.setContractFilename(baseName);
 
-                    return documentService.updateDocumentContractFiles(document)
+                    return documentService.updateDocumentContractFilesById(document)
                             .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)
                             .onFailure().call(dbError -> {
                                 log.error("DB update failed for onboardingId {}. Rolling back Azure upload: {}",
