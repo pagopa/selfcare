@@ -23,6 +23,7 @@ on:
           - institution-ms
           - delegation-cdc
           - institution-send-mail-scheduler
+          - dashboard-bff
         required: true
       version-bump:
         type: choice

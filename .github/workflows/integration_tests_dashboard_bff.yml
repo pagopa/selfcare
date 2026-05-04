@@ -1,4 +1,4 @@
-name: "Integration Tests (selfcare-dashboard-backend)"
+name: "Integration Tests (Dashboard BFF)"
 
 permissions:
   contents: read
@@ -10,16 +10,12 @@ on:
       - main
       - releases/*
     paths:
-      - 'infra/**'
-      - 'integration-test-config/**'
-      - "src/**"
-      - 'docker-compose.yml'
-      - 'pom.xml'
+      - 'apps/dashboard-bff/**'
   workflow_dispatch:
 
 jobs:
-  integration_tests_ms:
-    name: 'Integration Tests (selfcare-dashboard-backend)'
+  integration_tests_dashboard_bff:
+    name: 'Integration Tests (Dashboard BFF)'
     runs-on: ubuntu-24.04
 
     steps:

@@ -46,6 +46,7 @@ on:
           - institution-ms
           - delegation-cdc
           - institution-send-mail-scheduler
+          - dashboard-bff
         required: true
 
   pull_request:

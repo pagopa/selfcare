@@ -41,6 +41,7 @@ on:
           - delegation-cdc
           - institution-send-mail-scheduler
           - webhook
+          - dashboard-bff
         required: true
         default: auth
 
