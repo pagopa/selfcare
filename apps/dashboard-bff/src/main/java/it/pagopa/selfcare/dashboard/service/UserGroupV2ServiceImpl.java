@@ -300,19 +300,20 @@ public class UserGroupV2ServiceImpl implements UserGroupV2Service {
     @Override
     public void deleteMembersByUserId(String userId, String institutionId, String productId) {
         log.trace("deleteMembersByUserId start");
-        log.debug("deleteMembersByUserId userId = {}", userId);
+        log.debug("deleteMembersByUserId userId = {}", Encode.forJava(userId));
         List<UserInstitution> userInstitutionList = retrieveFilteredUser(userId, institutionId, productId);
         if (CollectionUtils.isEmpty(userInstitutionList)) {
-            log.debug("User not found, deleting members for userId = {}", userId);
+            log.debug("User not found, deleting members for userId = {}", Encode.forJava(userId));
             userGroupRestClient._deleteMemberFromUserGroupsUsingDELETE(UUID.fromString(userId), institutionId, productId);
         } else {
-            log.debug("User found, not deleting members for userId = {}", userId);
+            log.debug("User found, not deleting members for userId = {}", Encode.forJava(userId));
         }
     }
 
     private List<UserInstitution> retrieveFilteredUser(String userId, String institutionId, String productId) {
         log.trace("retrieveFilteredUser start");
-        log.debug("retrieveFilteredUser userId = {}, institutionId = {}, productId = {}", userId, institutionId, productId);
+        log.debug("retrieveFilteredUser userId = {}, institutionId = {}, productId = {}",
+                Encode.forJava(userId), Encode.forJava(institutionId), Encode.forJava(productId));
         List<UserInstitutionResponse> institutionResponses = userInstitutionApiRestClient._retrieveUserInstitutions(institutionId, null, List.of(productId), null, getValidUserStates(), userId).getBody();
         if (!CollectionUtils.isEmpty(institutionResponses)) {
             log.info("retrieveFilteredUser institutionResponses size = {}", institutionResponses.size());
