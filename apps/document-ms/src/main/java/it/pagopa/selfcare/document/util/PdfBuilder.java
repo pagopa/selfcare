@@ -2,6 +2,7 @@ package it.pagopa.selfcare.document.util;
 
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import com.openhtmltopdf.svgsupport.BatikSVGDrawer;
+import com.openhtmltopdf.util.XRLog;
 import it.pagopa.selfcare.document.exception.PdfBuilderException;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -24,6 +25,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.logging.Level;
 
 /**
  * Utility class for generating PDF documents from HTML templates.
@@ -59,12 +61,17 @@ public class PdfBuilder {
             FileAttribute<Set<PosixFilePermission>> dirAttr =
                     PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------"));
 
-            temporaryDirectory = Files.createTempDirectory("pdfgen-", dirAttr);
+            try {
+                temporaryDirectory = Files.createTempDirectory("pdfgen-", dirAttr);
 
-            FileAttribute<Set<PosixFilePermission>> fileAttr =
-                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------"));
+                FileAttribute<Set<PosixFilePermission>> fileAttr =
+                        PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------"));
 
-            temporaryPdfFile = Files.createTempFile(temporaryDirectory, nameFile, ".pdf", fileAttr);
+                temporaryPdfFile = Files.createTempFile(temporaryDirectory, nameFile, ".pdf", fileAttr);
+            } catch (UnsupportedOperationException e) {
+                // Fallback for non-POSIX systems (e.g., Windows)
+                temporaryPdfFile = createFallbackTempFile(nameFile).toPath();
+            }
 
             String htmlContent = StringSubstitutor.replace(documentTemplate, content);
 
@@ -78,10 +85,6 @@ public class PdfBuilder {
             }
 
             return temporaryPdfFile.toFile();
-
-        } catch (UnsupportedOperationException e) {
-            // Fallback for non-POSIX systems (e.g., Windows)
-            return createFallbackTempFile(nameFile);
         } catch (Exception e) {
             log.error("Error while generating PDF", e);
             cleanupTempFiles(temporaryPdfFile, temporaryDirectory);
@@ -90,13 +93,14 @@ public class PdfBuilder {
     }
 
     private static File createFallbackTempFile(String nameFile) throws IOException {
-        File f = Files.createTempFile(nameFile, ".pdf").toFile();
+        Path temporaryDirectory = Files.createTempDirectory("pdfgen-");
+        File f = Files.createTempFile(temporaryDirectory, nameFile, ".pdf").toFile();
 
         boolean readable = f.setReadable(true, true);
         boolean writable = f.setWritable(true, true);
         boolean executable = f.setExecutable(false);
 
-        if (!readable || !writable || !executable) {
+        if (!readable || !writable || executable) {
             log.warn("Could not set restricted permissions on temporary file: {}", f.getAbsolutePath());
         }
         return f;
@@ -125,5 +129,12 @@ public class PdfBuilder {
         builder.useSVGDrawer(new BatikSVGDrawer());
         builder.withW3cDocument(dom, null);
         return builder;
+    }
+
+    static {
+        XRLog.setLevel(XRLog.CSS_PARSE, Level.SEVERE);
+        XRLog.setLevel(XRLog.GENERAL, Level.SEVERE);
+        XRLog.setLevel(XRLog.LOAD, Level.SEVERE);
+        XRLog.setLevel(XRLog.MATCH, Level.SEVERE);
     }
 }
