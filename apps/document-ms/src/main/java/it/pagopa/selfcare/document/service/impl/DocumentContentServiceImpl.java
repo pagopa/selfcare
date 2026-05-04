@@ -398,15 +398,24 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     private Uni<String> handleSignedContractUpload(String onboardingId, DocumentBuilderRequest request,
             boolean skipSignatureVerification, File physicalFile, String fileName, int nextStep) {
 
+        log.info("handleSignedContractUpload: onboardingId={}, nextStep={}, fileName={}",
+                sanitize(onboardingId), nextStep, sanitize(fileName));
+
         return documentService.handleContractDocument(request, nextStep)
             .onFailure().retry()
                 .withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff))
                 .atMost(retryMaxAttempts)
-            .invoke(document -> document.setSigningStep(nextStep))
+            .invoke(document -> {
+                document.setSigningStep(nextStep);
+                log.info("Document id={} for onboardingId={}: signingStep set to {}",
+                        sanitize(document.getId()), sanitize(onboardingId), nextStep);
+            })
             .call(document -> signatureService.verifyContractSignature(
                     onboardingId, physicalFile, request.getFiscalCodes(), skipSignatureVerification))
             .chain(document -> {
                 String signedName = buildSignedFileName(document, fileName, onboardingId, nextStep);
+                log.info("Uploading signed contract for onboardingId={}, signingStep={}, blobFileName={}",
+                        sanitize(onboardingId), nextStep, sanitize(signedName));
                 return uploadToAzureAndUpdateDb(document, physicalFile, signedName);
             });
     }
@@ -434,11 +443,17 @@ public class DocumentContentServiceImpl implements DocumentContentService {
      */
     private Uni<Integer> resolveNextSigningStep(String onboardingId) {
         return documentRepository.findByOnboardingId(onboardingId)
-            .onItem().transform(latestDoc ->
-                (latestDoc == null || latestDoc.getSigningStep() == null)
-                    ? 1
-                    : latestDoc.getSigningStep() + 1
-            );
+            .onItem().transform(latestDoc -> {
+                if (latestDoc == null || latestDoc.getSigningStep() == null) {
+                    log.info("resolveNextSigningStep for onboardingId={}: no previous signingStep found, nextStep=1",
+                            sanitize(onboardingId));
+                    return 1;
+                }
+                int nextStep = latestDoc.getSigningStep() + 1;
+                log.info("resolveNextSigningStep for onboardingId={}: latest signingStep={}, nextStep={}",
+                        sanitize(onboardingId), latestDoc.getSigningStep(), nextStep);
+                return nextStep;
+            });
     }
 
     // ==================== Private Reactive I/O isolation methods ====================
