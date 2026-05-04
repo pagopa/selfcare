@@ -40,7 +40,7 @@ locals {
     },
     {
       name  = "MS_CORE_URL"
-      value = "http://selc-d-ms-core-ca"
+      value = "http://selc-d-institution-ms-ca"
     },
     {
       name  = "MS_PARTY_REGISTRY_URL"

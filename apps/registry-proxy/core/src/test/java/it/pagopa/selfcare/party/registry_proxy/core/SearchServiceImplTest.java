@@ -2,6 +2,7 @@ package it.pagopa.selfcare.party.registry_proxy.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.InstitutionConnector;
+import it.pagopa.selfcare.party.registry_proxy.connector.api.IpaSearchServiceConnector;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.SearchServiceConnector;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ServiceUnavailableException;
@@ -33,6 +34,9 @@ public class SearchServiceImplTest {
 
   @Mock
   private SearchServiceConnector searchServiceConnector;
+
+  @Mock
+  private IpaSearchServiceConnector ipaSearchServiceConnector;
 
   @InjectMocks
   private SearchServiceImpl searchService;
@@ -353,6 +357,57 @@ public class SearchServiceImplTest {
     assertEquals(15L, onboardingIndexSearch.getPageSize());
     assertEquals(100L, mockResponse.getTotalElements());
     assertEquals(7L, onboardingIndexSearch.getTotalPages());
+  }
+
+  @Test
+  void searchIpaInstitutions_shouldCallConnector() {
+    IpaInstitutionSearchResult mockResult = new IpaInstitutionSearchResult();
+    IpaInstitution institution = new IpaInstitution();
+    institution.setId("ipa-1");
+    institution.setDescription("Comune di Roma");
+    mockResult.setInstitutions(List.of(institution));
+    mockResult.setTotalElements(1L);
+
+    when(ipaSearchServiceConnector.searchIpaInstitutions("Roma", null, 50, 0))
+            .thenReturn(mockResult);
+
+    IpaInstitutionSearchResult result = searchService.searchIpaInstitutions("Roma", null, 0, 50);
+
+    assertNotNull(result);
+    assertEquals(1L, result.getTotalElements());
+    assertEquals("ipa-1", result.getInstitutions().get(0).getId());
+    verify(ipaSearchServiceConnector, times(1)).searchIpaInstitutions("Roma", null, 50, 0);
+  }
+
+  @Test
+  void searchIpaInstitutions_withCategory_shouldBuildFilter() {
+    IpaInstitutionSearchResult mockResult = new IpaInstitutionSearchResult();
+    mockResult.setInstitutions(List.of());
+    mockResult.setTotalElements(0L);
+
+    when(ipaSearchServiceConnector.searchIpaInstitutions("*", "category eq 'L6'", 50, 0))
+            .thenReturn(mockResult);
+
+    IpaInstitutionSearchResult result = searchService.searchIpaInstitutions(null, "L6", 0, 50);
+
+    assertNotNull(result);
+    assertEquals(0L, result.getTotalElements());
+    verify(ipaSearchServiceConnector, times(1)).searchIpaInstitutions("*", "category eq 'L6'", 50, 0);
+  }
+
+  @Test
+  void searchIpaInstitutions_withDefaultPagination() {
+    IpaInstitutionSearchResult mockResult = new IpaInstitutionSearchResult();
+    mockResult.setInstitutions(List.of());
+    mockResult.setTotalElements(0L);
+
+    when(ipaSearchServiceConnector.searchIpaInstitutions("*", null, 50, 0))
+            .thenReturn(mockResult);
+
+    IpaInstitutionSearchResult result = searchService.searchIpaInstitutions(null, null, null, null);
+
+    assertNotNull(result);
+    verify(ipaSearchServiceConnector, times(1)).searchIpaInstitutions("*", null, 50, 0);
   }
 
 }

@@ -936,6 +936,7 @@ paths:
       tags:
       - internal-v1
       - external-v2
+      - Onboarding Controller
       summary: Perform delete operation of an onboarding request
       description: "Perform delete operation of an onboarding request receiving onboarding\
         \ id, then invokes async process to set DELETED as status for institution\
@@ -989,6 +990,7 @@ paths:
       tags:
       - internal-v1
       - external-v2
+      - Onboarding Controller
       summary: "Complete onboarding by verifying and uploading contract, then trigger\
         \ async activities."
       description: "Perform complete operation of an onboarding request receiving\

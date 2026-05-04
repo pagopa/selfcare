@@ -1,0 +1,2653 @@
+[
+  {
+    "alias": "prod-io",
+    "backOfficeEnvironmentConfigurations": {
+      "Locale": {
+        "identityTokenAudience": "locale",
+        "url": "https://mock.url/prod-io/bo-env"
+      }
+    },
+    "consumers": [
+      "Standard",
+      "SAP"
+    ],
+    "createdAt": "2021-12-15T15:54:55.190Z",
+    "createdBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8",
+    "delegable": false,
+    "depictImageUrl": "https://mock.url/prod-io/depict-image",
+    "description": "Offri ai cittadini i servizi del tuo ente in un unico canale",
+    "enabled": true,
+    "id": "prod-io",
+    "identityTokenAudience": "api.io.selfcare.pagopa.it",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/io/2.4.5/io-accordo_di_adesione-v.2.4.5.html",
+        "contractTemplateVersion": "2.4.5",
+        "attachments": []
+      }
+    },
+    "institutionAggregatorContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/io/2.4.5/io-accordo_di_adesione-v.2.4.5.html",
+        "contractTemplateVersion": "2.4.5",
+        "attachments": []
+      }
+    },
+    "invoiceable": true,
+    "logo": "https://mock.url/prod-io/logo",
+    "logoBgColor": "#0B3EE3",
+    "modifiedAt": "2022-11-18T17:59:27.744Z",
+    "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "referente operativo",
+            "description": "Operatore",
+            "label": "Operatore"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard-async",
+          "dashboard-aggregator"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "ADMIN_EA": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "title": "IO",
+    "urlBO": "https://mock.url/prod-io/bo",
+    "urlPublic": "https://mock.url/prod-io/public",
+    "userContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/io/user/1.0.0/io-aggiunta-amministratore-v.1.0.html",
+        "contractTemplateVersion": "1.0.0"
+      }
+    },
+    "userAggregatorContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/io/user/1.0.0/io-aggiunta-amministratore-v.1.0.html",
+        "contractTemplateVersion": "1.0.0"
+      }
+    }
+  },
+  {
+    "alias": "prod-pn",
+    "backOfficeEnvironmentConfigurations": {
+      "Collaudo": {
+        "identityTokenAudience": "api.platform.pn-test.it",
+        "url": "https://mock.url/prod-pn/bo-env"
+      },
+      "TEST-SVIL": {
+        "identityTokenAudience": "api.platform.pn-test-svil.it",
+        "url": "https://mock.url/prod-pn/bo-env"
+      }
+    },
+    "consumers": [
+      "Standard",
+      "SAP"
+    ],
+    "createdAt": "2021-12-15T15:55:08.009392Z",
+    "depictImageUrl": "https://mock.url/prod-pn/depict-image",
+    "description": "Digitalizza e semplifica la gestione delle comunicazioni a valore legale",
+    "enabled": true,
+    "id": "prod-pn",
+    "identityTokenAudience": "portale-pa.dev.pn.pagopa.it",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/pn/2.0.0/pn-accordo_di_adesione-v.2.0.0.html",
+        "contractTemplateVersion": "2.0.0",
+        "attachments": []
+      }
+    },
+    "institutionAggregatorContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/pn/aggregator/1.0.0/pn-accordo_di_adesione-aggregatore-v.1.0.0.html",
+        "contractTemplateVersion": "1.0.0",
+        "attachments": []
+      }
+    },
+    "invoiceable": true,
+    "logo": "https://mock.url/prod-pn/logo",
+    "logoBgColor": "#0066CC",
+    "modifiedAt": "2022-11-14T14:59:12.392Z",
+    "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Stipula il contratto e identifica gli amministratori",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": true,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "operator",
+            "description": "Gestisce l'integrazione tecnologica e/o l'operatività dei servizi",
+            "label": "Gestore Notifiche"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "title": "SEND - Servizio Notifiche Digitali",
+    "urlBO": "https://mock.url/prod-pn/bo",
+    "urlPublic": "https://mock.url/prod-pn/public",
+    "userContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/pn/user/1.0.0/pn-aggiunta-amministratore-v.1.0.html",
+        "contractTemplateVersion": "1.0.0"
+      }
+    }
+  },
+  {
+    "alias": "prod-pagopa",
+    "backOfficeEnvironmentConfigurations": {
+      "Collaudo": {
+        "identityTokenAudience": "api.platform.pagopa.it",
+        "url": "https://mock.url/prod-pagopa/bo-env"
+      }
+    },
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2021-12-15T15:55:18.096Z",
+    "createdBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "delegable": true,
+    "depictImageUrl": "https://mock.url/prod-pagopa/depict-image",
+    "description": "Gestisci gli incassi in modo centralizzato, efficiente e immediato",
+    "enabled": true,
+    "id": "prod-pagopa",
+    "identityTokenAudience": "api.platform.pagopa.it",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/pagopa/1.0.0/pagopa-accordo_di_adesione_ec-v.1.0.0.html",
+        "contractTemplateVersion": "1.0.0",
+        "attachments": []
+      },
+      "PA": {
+        "contractTemplatePath": "contracts/template/pagopa/1.0.0/pagopa-accordo_di_adesione_ec-v.1.0.0.html",
+        "contractTemplateVersion": "1.0.0",
+        "attachments": []
+      },
+      "PRV": {
+        "contractTemplatePath": "contracts/template/pagopa/1.0.5/pagopa-accordo_di_adesione_prv-v.1.0.5.html",
+        "contractTemplateVersion": "1.0.5",
+        "attachments": []
+      },
+      "PSP": {
+        "contractTemplatePath": "contracts/template/pagopa/1.0.0/pagopa-accordo_di_adesione_psp-v.1.0.0.html",
+        "contractTemplateVersion": "1.0.0",
+        "attachments": []
+      },
+      "GPU": {
+        "contractTemplatePath": "contracts/template/pagopa/1.0.5/pagopa-accordo_di_adesione_prv-v.1.0.5.html",
+        "contractTemplateVersion": "1.0.5",
+        "attachments": [
+          {
+            "name": "Dichiarazione_sostitutiva_certificazione",
+            "mandatory": true,
+            "templatePath": "contracts/template/pagopa/attachments/1.0.0/pagopa-checklist-v1.0.0.html",
+            "templateVersion": "1.0.0",
+            "workflowType": [
+              "FOR_APPROVE_GPU"
+            ],
+            "workflowState": "REQUEST",
+            "order": 1,
+            "generated": true
+          }
+        ]
+      }
+    },
+    "institutionAggregatorContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/pagopa/1.0.5/pagopa-accordo_di_adesione_prv-v.1.0.5.html",
+        "contractTemplateVersion": "1.0.5",
+        "attachments": []
+      }
+    },
+    "invoiceable": true,
+    "logo": "https://mock.url/prod-pagopa/logo",
+    "logoBgColor": "#0066CC",
+    "modifiedAt": "2022-11-14T14:59:17.767Z",
+    "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "roleMappings": {
+      "ADMIN_EA": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Referente dei Pagamenti",
+            "productLabel": "Amministratore"
+          }
+        ]
+      },
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Referente dei Pagamenti",
+            "productLabel": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Stipula il contratto e identifica gli amministratori",
+            "label": "Referente dei Pagamenti",
+            "productLabel": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "operator",
+            "description": "Gestisce l’integrazione tecnologica e/o l'operatività dei servizi",
+            "label": "Operatore",
+            "productLabel": "Referente Tecnico"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Referente dei Pagamenti",
+            "productLabel": "Amministratore"
+          }
+        ]
+      }
+    },
+    "roleMappingsByInstitutionType": {
+      "PSP": {
+        "DELEGATE": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "onboarding"
+          ],
+          "roles": [
+            {
+              "code": "admin-psp",
+              "description": "Ha tutti i permessi e gestisce gli utenti",
+              "label": "Amministratore"
+            }
+          ]
+        },
+        "MANAGER": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "onboarding"
+          ],
+          "roles": [
+            {
+              "code": "admin-psp",
+              "description": "Stipula il contratto e identifica gli amministratori",
+              "label": "Amministratore"
+            }
+          ]
+        },
+        "OPERATOR": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "dashboard"
+          ],
+          "roles": [
+            {
+              "code": "operator-psp",
+              "description": "Gestisce l’integrazione tecnologica e/o l'operatività dei servizi",
+              "label": "Operatore",
+              "productLabel": "Responsabile Tecnico"
+            }
+          ]
+        },
+        "SUB_DELEGATE": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "dashboard-async"
+          ],
+          "roles": [
+            {
+              "code": "admin-psp",
+              "description": "Ha tutti i permessi e gestisce gli utenti. Possono essere al massimo 4.",
+              "label": "Amministratore"
+            }
+          ]
+        },
+        "ADMIN_EA": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "onboarding"
+          ],
+          "roles": [
+            {
+              "code": "admin-psp",
+              "description": "Ha tutti i permessi e gestisce gli utenti",
+              "label": "Amministratore"
+            }
+          ]
+        }
+      },
+      "PA": {
+        "ADMIN_EA": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "onboarding"
+          ],
+          "roles": [
+            {
+              "code": "admin",
+              "description": "Ha tutti i permessi e gestisce gli utenti",
+              "label": "Referente dei Pagamenti"
+            }
+          ]
+        },
+        "DELEGATE": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "onboarding"
+          ],
+          "roles": [
+            {
+              "code": "admin",
+              "description": "Ha tutti i permessi e gestisce gli utenti",
+              "label": "Referente dei Pagamenti"
+            }
+          ]
+        },
+        "MANAGER": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "onboarding"
+          ],
+          "roles": [
+            {
+              "code": "admin",
+              "description": "Stipula il contratto e identifica gli amministratori",
+              "label": "Referente dei Pagamenti"
+            }
+          ]
+        },
+        "OPERATOR": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "dashboard"
+          ],
+          "roles": [
+            {
+              "code": "operator",
+              "description": "Gestisce l’integrazione tecnologica e/o l'operatività dei servizi",
+              "label": "Operatore",
+              "productLabel": "Referente Tecnico"
+            }
+          ]
+        },
+        "SUB_DELEGATE": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "dashboard-async"
+          ],
+          "roles": [
+            {
+              "code": "admin",
+              "description": "Ha tutti i permessi e gestisce gli utenti",
+              "label": "Referente dei Pagamenti"
+            }
+          ]
+        }
+      },
+      "GSP": {
+        "ADMIN_EA": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "onboarding"
+          ],
+          "roles": [
+            {
+              "code": "admin",
+              "description": "Ha tutti i permessi e gestisce gli utenti",
+              "label": "Referente dei Pagamenti"
+            }
+          ]
+        },
+        "DELEGATE": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "onboarding"
+          ],
+          "roles": [
+            {
+              "code": "admin",
+              "description": "Ha tutti i permessi e gestisce gli utenti",
+              "label": "Referente dei Pagamenti"
+            }
+          ]
+        },
+        "MANAGER": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "onboarding"
+          ],
+          "roles": [
+            {
+              "code": "admin",
+              "description": "Stipula il contratto e identifica gli amministratori",
+              "label": "Referente dei Pagamenti"
+            }
+          ]
+        },
+        "OPERATOR": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "dashboard"
+          ],
+          "roles": [
+            {
+              "code": "operator",
+              "description": "Gestisce l’integrazione tecnologica e/o l'operatività dei servizi",
+              "label": "Operatore",
+              "productLabel": "Referente Tecnico"
+            }
+          ]
+        },
+        "SUB_DELEGATE": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "dashboard-async"
+          ],
+          "roles": [
+            {
+              "code": "admin",
+              "description": "Ha tutti i permessi e gestisce gli utenti",
+              "label": "Referente dei Pagamenti"
+            }
+          ]
+        }
+      },
+      "GPU": {
+        "ADMIN_EA": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "onboarding"
+          ],
+          "roles": [
+            {
+              "code": "admin",
+              "description": "Ha tutti i permessi e gestisce gli utenti",
+              "label": "Referente dei Pagamenti"
+            }
+          ]
+        },
+        "DELEGATE": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "onboarding"
+          ],
+          "roles": [
+            {
+              "code": "admin",
+              "description": "Ha tutti i permessi e gestisce gli utenti",
+              "label": "Referente dei Pagamenti"
+            }
+          ]
+        },
+        "MANAGER": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "onboarding"
+          ],
+          "roles": [
+            {
+              "code": "admin",
+              "description": "Stipula il contratto e identifica gli amministratori",
+              "label": "Referente dei Pagamenti"
+            }
+          ]
+        },
+        "OPERATOR": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "dashboard"
+          ],
+          "roles": [
+            {
+              "code": "operator",
+              "description": "Gestisce l’integrazione tecnologica e/o l'operatività dei servizi",
+              "label": "Operatore",
+              "productLabel": "Referente Tecnico"
+            }
+          ]
+        },
+        "SUB_DELEGATE": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "dashboard-async"
+          ],
+          "roles": [
+            {
+              "code": "admin",
+              "description": "Ha tutti i permessi e gestisce gli utenti",
+              "label": "Referente dei Pagamenti"
+            }
+          ]
+        }
+      },
+      "PRV": {
+        "ADMIN_EA": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "onboarding"
+          ],
+          "roles": [
+            {
+              "code": "admin",
+              "description": "Ha tutti i permessi e gestisce gli utenti",
+              "label": "Referente dei Pagamenti"
+            }
+          ]
+        },
+        "DELEGATE": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "onboarding"
+          ],
+          "roles": [
+            {
+              "code": "admin",
+              "description": "Ha tutti i permessi e gestisce gli utenti",
+              "label": "Referente dei Pagamenti"
+            }
+          ]
+        },
+        "MANAGER": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "onboarding"
+          ],
+          "roles": [
+            {
+              "code": "admin",
+              "description": "Stipula il contratto e identifica gli amministratori",
+              "label": "Referente dei Pagamenti"
+            }
+          ]
+        },
+        "OPERATOR": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "dashboard"
+          ],
+          "roles": [
+            {
+              "code": "operator",
+              "description": "Gestisce l’integrazione tecnologica e/o l'operatività dei servizi",
+              "label": "Operatore",
+              "productLabel": "Referente Tecnico"
+            }
+          ]
+        },
+        "SUB_DELEGATE": {
+          "multiroleAllowed": false,
+          "phasesAdditionAllowed": [
+            "dashboard-async",
+            "dashboard-aggregator"
+          ],
+          "roles": [
+            {
+              "code": "admin",
+              "description": "Ha tutti i permessi e gestisce gli utenti",
+              "label": "Referente dei Pagamenti"
+            }
+          ]
+        }
+      }
+    },
+    "status": "ACTIVE",
+    "title": "Pagamenti pagoPA",
+    "urlBO": "https://mock.url/prod-pagopa/bo",
+    "urlPublic": "https://mock.url/prod-pagopa/public",
+    "userContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/pagopa/user/1.0.0/pagopa-aggiunta-amministratore-v.1.0.html",
+        "contractTemplateVersion": "1.0.0"
+      },
+      "PSP": {
+        "contractTemplatePath": "contracts/template/pagopa/user/psp/1.1.0/pagopa-aggiunta-amministratore-psp-v.1.1.0.html",
+        "contractTemplateVersion": "1.1.0"
+      }
+    },
+    "userAggregatorContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/pagopa/user-aggregator/1.0.0/pagopa-aggiunta-amministratore-aggregatore-v.1.0.0.html",
+        "contractTemplateVersion": "1.0.0"
+      }
+    }
+  },
+  {
+    "alias": "prod-dashboard-psp",
+    "backOfficeEnvironmentConfigurations": {
+      "Collaudo": {
+        "identityTokenAudience": "api.platform.pagopa.it",
+        "url": "https://mock.url/prod-dashboard-psp/bo-env"
+      }
+    },
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2022-11-03T09:50:03.478Z",
+    "createdBy": "0cda0324-056c-4651-8815-2ee3f17712f1",
+    "delegable": true,
+    "depictImageUrl": "https://mock.url/prod-dashboard-psp/depict-image",
+    "description": "Ottimizza al meglio la gestione delle tue attività su pagoPA: accedi ai dati transazionali della piattaforma e analizzali con una dashboard dinamica, intuitiva e aggiornata quotidianamente.",
+    "enabled": false,
+    "id": "prod-dashboard-psp",
+    "identityTokenAudience": "api.platform.pagopa.it",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/pagopa-insights/1.0.0/pagopa-insights-accordo-di-adesione-v.1.0.0.html",
+        "contractTemplateVersion": "1.0.0"
+      }
+    },
+    "institutionTypesAllowed": [
+      "PSP"
+    ],
+    "logo": "https://mock.url/prod-dashboard-psp/logo",
+    "logoBgColor": "#0066CC",
+    "modifiedAt": "2022-11-03T09:50:03.478Z",
+    "modifiedBy": "0cda0324-056c-4651-8815-2ee3f17712f1",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Referente dei Pagamenti",
+            "productLabel": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "skipUserCreation": true,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Stipula il contratto e identifica gli amministratori",
+            "label": "Referente dei Pagamenti",
+            "productLabel": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "operator",
+            "description": "Gestisce l’integrazione tecnologica e/o l'operatività dei servizi",
+            "label": "Operatore",
+            "productLabel": "Referente Tecnico"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Referente dei Pagamenti",
+            "productLabel": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "title": "pagoPA Insights",
+    "parentId": "prod-pagopa",
+    "urlBO": "https://mock.url/prod-dashboard-psp/bo",
+    "userContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/pagopa/user/psp/1.1.0/pagopa-aggiunta-amministratore-psp-v.1.1.0.html",
+        "contractTemplateVersion": "1.1.0"
+      }
+    }
+  },
+  {
+    "alias": "prod-ciban",
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2021-12-15T15:55:26.790225Z",
+    "depictImageUrl": "https://mock.url/prod-ciban/depict-image",
+    "description": "Valida l'IBAN abbinato al Codice Fiscale fornito da un cittadino o da un'impresa",
+    "enabled": true,
+    "id": "prod-ciban",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/dummy-accordo_di_adesione.html",
+        "contractTemplateVersion": "1.0.0",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/prod-ciban/logo",
+    "logoBgColor": "#008CA8",
+    "modifiedAt": "2022-11-14T14:59:30.172Z",
+    "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "roleManagementURL": "string",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Descrizione Referente Amministrativo",
+            "label": "Referente Amministrativo"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Descrizione Referente Amministrativo",
+            "label": "Referente Amministrativo"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "referente operativo",
+            "description": "Descrizione Referente Operativo",
+            "label": "Referente Operativo"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Descrizione Referente Amministrativo",
+            "label": "Referente Amministrativo"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "title": "Check IBAN",
+    "urlBO": "https://mock.url/prod-ciban/bo",
+    "urlPublic": "https://mock.url/prod-ciban/public"
+  },
+  {
+    "alias": "prod-cgn",
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2021-12-15T15:55:35.379813Z",
+    "depictImageUrl": "https://mock.url/prod-cgn/depict-image",
+    "description": "Diventa partner e offri sconti e agevolazioni ai giovani tra i 18 e 35 anni",
+    "enabled": true,
+    "id": "prod-cgn",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/dummy-accordo_di_adesione.html",
+        "contractTemplateVersion": "1.0.0",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/prod-cgn/logo",
+    "modifiedAt": "2022-11-14T14:59:33.381Z",
+    "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "roleManagementURL": "string",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Descrizione Referente Amministrativo",
+            "label": "Referente Amministrativo"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Descrizione Referente Amministrativo",
+            "label": "Referente Amministrativo"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "referente operativo",
+            "description": "Descrizione Referente Operativo",
+            "label": "Referente Operativo"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Descrizione Referente Amministrativo",
+            "label": "Referente Amministrativo"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "title": "Carta Giovani",
+    "urlBO": "https://mock.url/prod-cgn/bo",
+    "urlPublic": "https://mock.url/prod-cgn/public"
+  },
+  {
+    "alias": "prod-interop",
+    "backOfficeEnvironmentConfigurations": {
+      "Test": {
+        "identityTokenAudience": "test",
+        "url": "https://mock.url/prod-interop/bo-env"
+      }
+    },
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2021-12-15T15:55:42.891Z",
+    "createdBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "depictImageUrl": "https://mock.url/prod-interop/depict-image",
+    "description": "Scambia informazioni con altri enti in modo semplice e sicuro",
+    "enabled": true,
+    "id": "prod-interop",
+    "identityTokenAudience": "api.interop.selfcare.pagopa.it",
+    "institutionContractMappings": {
+      "AS": {
+        "contractTemplatePath": "contracts/template/interop/ivass/2.1.1/interop-accordo_di_adesione_as-v.2.1.1.html",
+        "contractTemplateVersion": "2.1.1",
+        "attachments": []
+      },
+      "default": {
+        "contractTemplatePath": "contracts/template/interop/2.3.2/interop-accordo_di_adesione-v.2.3.2.html",
+        "contractTemplateVersion": "2.3.2",
+        "attachments": []
+      },
+      "PRV": {
+        "contractTemplatePath": "contracts/template/interop/prv/1.0.2/interop-accordo_di_adesione_prv-v.1.0.2.html",
+        "contractTemplateVersion": "1.0.2",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/prod-interop/logo",
+    "logoBgColor": "#0066CC",
+    "modifiedAt": "2022-11-21T11:41:12.158Z",
+    "modifiedBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Stipula il contratto e identifica gli amministratori",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": true,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "api",
+            "description": "Gestisce il ciclo di vita degli e-service",
+            "label": "Operatore API"
+          },
+          {
+            "code": "security",
+            "description": "Gestisce il ciclo di vita dei client di connessione",
+            "label": "Operatore Sicurezza"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard-async"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "testEnvProductIds": [
+      "prod-interop-coll",
+      "prod-interop-atst"
+    ],
+    "title": "Interoperabilità",
+    "urlBO": "https://mock.url/prod-interop/bo",
+    "urlPublic": "https://mock.url/prod-interop/public",
+    "userContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/interop/user/2.0.1/interop-aggiunta-amministratore-v.2.0.1.html",
+        "contractTemplateVersion": "2.0.1"
+      }
+    }
+  },
+  {
+    "alias": "prod-io-premium",
+    "consumers": [
+      "Standard",
+      "SAP"
+    ],
+    "createdAt": "2022-05-03T13:46:58.893Z",
+    "createdBy": "760df42e-f513-4d94-9e3a-a0dda884ed92",
+    "depictImageUrl": "https://mock.url/prod-io-premium/depict-image",
+    "description": "Accedi alle funzionalità avanzate per i messaggi dell'app IO",
+    "enabled": true,
+    "id": "prod-io-premium",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/io-premium/1.1.1/io-premium-accordo_di_adesione-v.1.1.1.html",
+        "contractTemplateVersion": "1.1.1",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/prod-io-premium/logo",
+    "logoBgColor": "#0B3EE3",
+    "modifiedAt": "2023-05-10T10:34:15.664Z",
+    "modifiedBy": "760df42e-f513-4d94-9e3a-a0dda884ed92",
+    "parentId": "prod-io",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Referente Amministrativo",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Referente Amministrativo",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "operator",
+            "description": "Referente Operativo",
+            "label": "Operatore"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "title": "IO Premium",
+    "urlPublic": "https://mock.url/prod-io-premium/public",
+    "userContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/io/user/1.0.0/io-aggiunta-amministratore-v.1.0.html",
+        "contractTemplateVersion": "1.0.0"
+      }
+    }
+  },
+  {
+    "alias": "prod-pn-premium",
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2022-05-03T15:19:39.021021Z",
+    "enabled": true,
+    "id": "prod-pn-premium",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/pn-premium/0.0.1/pn-premium-accordo_di_adesione-v.0.0.1.html",
+        "contractTemplateVersion": "0.0.1",
+        "attachments": []
+      }
+    },
+    "modifiedAt": "2022-11-14T15:00:15.639Z",
+    "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "parentId": "prod-pn",
+    "status": "ACTIVE",
+    "title": "Premium"
+  },
+  {
+    "alias": "prod-idpay",
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2022-06-30T09:05:50.091934Z",
+    "depictImageUrl": "https://mock.url/prod-idpay/depict-image",
+    "description": "Crea e gestisci iniziative di welfare e supporto alla spesa",
+    "enabled": true,
+    "id": "prod-idpay",
+    "identityTokenAudience": "idpay.welfare.pagopa.it",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/dummy-accordo_di_adesione.html",
+        "contractTemplateVersion": "1.0.0",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/prod-idpay/logo",
+    "modifiedAt": "2022-11-14T15:00:24.421Z",
+    "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Stipula il contratto e identifica gli amministratori",
+            "label": "Responsabile"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "ope_base",
+            "description": "Gestisce l'integrazione tecnologica e/o l'operatività dei servizi",
+            "label": "Operatore"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "title": "Portale Bonus",
+    "urlBO": "https://mock.url/prod-idpay/bo",
+    "urlPublic": "https://mock.url/prod-idpay/public"
+  },
+  {
+    "alias": "test-product",
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2022-11-17T10:01:22.070Z",
+    "createdBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "depictImageUrl": "https://mock.url/test-product/depict-image",
+    "description": "string",
+    "enabled": true,
+    "id": "test-product",
+    "identityTokenAudience": "string",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "string",
+        "contractTemplateVersion": "string",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/test-product/logo",
+    "modifiedAt": "2022-11-17T10:14:36.626Z",
+    "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "roleMappings": {
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "string",
+            "description": "string",
+            "label": "string"
+          }
+        ]
+      }
+    },
+    "status": "TESTING",
+    "title": "test_prod2",
+    "urlBO": "https://mock.url/test-product/bo"
+  },
+  {
+    "alias": "test-test",
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2022-07-12T11:05:04.6830879Z",
+    "depictImageUrl": "https://mock.url/test-test/depict-image",
+    "description": "string",
+    "enabled": false,
+    "id": "test-test",
+    "identityTokenAudience": "string",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "string",
+        "contractTemplateVersion": "string",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/test-test/logo",
+    "logoBgColor": "#FF2343",
+    "modifiedAt": "2022-11-18T17:45:06.530Z",
+    "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "roleManagementURL": "string",
+    "roleMappings": {
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "string",
+            "description": "string",
+            "label": "string"
+          }
+        ]
+      }
+    },
+    "status": "INACTIVE",
+    "title": "string",
+    "urlBO": "https://mock.url/test-test/bo",
+    "urlPublic": "https://mock.url/test-test/public",
+    "userContractMappings": {
+      "default": {}
+    }
+  },
+  {
+    "alias": "test-product2",
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2022-11-17T10:08:45.982Z",
+    "createdBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "depictImageUrl": "https://mock.url/test-product2/depict-image",
+    "description": "string",
+    "enabled": true,
+    "id": "test-product2",
+    "identityTokenAudience": "string",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "string",
+        "contractTemplateVersion": "string",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/test-product2/logo",
+    "modifiedAt": "2022-11-17T10:09:19.148Z",
+    "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "roleMappings": {
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "string",
+            "description": "string",
+            "label": "string"
+          }
+        ]
+      }
+    },
+    "status": "PHASE_OUT",
+    "title": "test_prod2",
+    "urlBO": "https://mock.url/test-product2/bo"
+  },
+  {
+    "alias": "test-product-sub",
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2022-11-17T10:10:59.043Z",
+    "createdBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "enabled": true,
+    "id": "test-product-sub",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "string",
+        "contractTemplateVersion": "string",
+        "attachments": []
+      }
+    },
+    "modifiedAt": "2022-11-17T10:15:01.998Z",
+    "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "parentId": "test-product",
+    "status": "INACTIVE",
+    "title": "string"
+  },
+  {
+    "alias": "prod-pagopa-5",
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2022-06-30T09:05:50.091934Z",
+    "depictImageUrl": "https://mock.url/prod-pagopa-5/depict-image",
+    "description": "La piattaforma TEST",
+    "enabled": true,
+    "id": "prod-pagopa-5",
+    "identityTokenAudience": "idpay.welfare.pagopa.it",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/dummy-accordo_di_adesione.html",
+        "contractTemplateVersion": "1.0.0",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/prod-pagopa-5/logo",
+    "modifiedAt": "2022-11-21T11:42:03.320Z",
+    "modifiedBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Stipula il contratto e identifica gli amministratori",
+            "label": "Responsabile"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "ope_base",
+            "description": "Gestisce l'integrazione tecnologica e/o l'operatività dei servizi",
+            "label": "Operatore"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "TESTING",
+    "title": "Test APZ",
+    "urlBO": "https://mock.url/prod-pagopa-5/bo",
+    "urlPublic": "https://mock.url/prod-pagopa-5/public"
+  },
+  {
+    "alias": "prod-pagopa-ec",
+    "backOfficeEnvironmentConfigurations": {
+      "Test": {
+        "identityTokenAudience": "api.platform.pagopa.it",
+        "url": "https://mock.url/prod-pagopa-ec/bo-env"
+      }
+    },
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2022-12-23T18:32:00.205Z",
+    "createdBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8",
+    "depictImageUrl": "https://mock.url/prod-pagopa-ec/depict-image",
+    "description": "Gestisci gli incassi in modo centralizzato ed efficiente, risparmiando.",
+    "enabled": true,
+    "id": "prod-pagopa-ec",
+    "identityTokenAudience": "api.platform.pagopa.it",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/pagopa/1.0.0/pagopa-accordo_di_adesione_ec-v.1.0.0.html",
+        "contractTemplateVersion": "1.0.0",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/prod-pagopa-ec/logo",
+    "logoBgColor": "#0066CC",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Stipula il contratto e identifica gli amministratori",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "operator",
+            "description": "Gestisce l’integrazione tecnologica e/o l'operatività dei servizi",
+            "label": "Operatore"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "TESTING",
+    "title": "Pagamenti pagoPA EC",
+    "urlBO": "https://mock.url/prod-pagopa-ec/bo",
+    "urlPublic": "https://mock.url/prod-pagopa-ec/public"
+  },
+  {
+    "alias": "prod-test-1",
+    "backOfficeEnvironmentConfigurations": {
+      "Collaudo": {
+        "identityTokenAudience": "collaudo",
+        "url": "https://mock.url/prod-test-1/bo-env"
+      },
+      "Test": {
+        "identityTokenAudience": "test",
+        "url": "https://mock.url/prod-test-1/bo-env"
+      }
+    },
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2023-01-04T09:45:49.463Z",
+    "createdBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "depictImageUrl": "https://mock.url/prod-test-1/depict-image",
+    "description": "App TEST description",
+    "enabled": true,
+    "id": "prod-test-1",
+    "identityTokenAudience": "api.io.selfcare.pagopa.it",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/io/2.3.2/io-accordo_di_adesione-v.2.3.2.html",
+        "contractTemplateVersion": "2.3.2",
+        "attachments": []
+      },
+      "GSP": {
+        "contractTemplatePath": "test path GSP",
+        "contractTemplateVersion": "2.3.3",
+        "attachments": []
+      },
+      "PA": {
+        "contractTemplatePath": "test path",
+        "contractTemplateVersion": "2.3.2",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/prod-test-1/logo",
+    "logoBgColor": "#0073E6",
+    "modifiedAt": "2023-01-09T15:28:16.771Z",
+    "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "referente operativo",
+            "description": "Operatore",
+            "label": "Operatore"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "TESTING",
+    "title": "App TEST",
+    "urlBO": "https://mock.url/prod-test-1/bo",
+    "urlPublic": "https://mock.url/prod-test-1/public"
+  },
+  {
+    "alias": "prod-idpay-gi",
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2023-01-31T15:58:33.795Z",
+    "createdBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8",
+    "depictImageUrl": "https://mock.url/prod-idpay-gi/depict-image",
+    "description": "La piattaforma IDPay si pone l'obiettivo di fornire una soluzione centralizzata, e flessibile, riusabile con effort limitato da parte degli stakeholder coinvolti, per l'erogazione dei programmi di welfare (es. sconti, bonus, etc.) promossi dalle amministrazioni pubbliche centrali o locali a favore degli utenti beneficiari.",
+    "enabled": true,
+    "id": "prod-idpay-gi",
+    "identityTokenAudience": "idpay.welfare.pagopa.it",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/dummy-accordo_di_adesione.html",
+        "contractTemplateVersion": "1.0.0",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/prod-idpay-gi/logo",
+    "logoBgColor": "#000000",
+    "modifiedAt": "2023-01-31T16:00:31.345Z",
+    "modifiedBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "pagopa_admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "pagopa_admin",
+            "description": "Stipula il contratto e identifica gli amministratori",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "ope_base",
+            "description": "Gestisce l'integrazione tecnologica e/o l'operatività dei servizi",
+            "label": "Operatore"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "pagopa_admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "TESTING",
+    "title": "IDPay - Gestione iniziative",
+    "urlBO": "https://mock.url/prod-idpay-gi/bo",
+    "urlPublic": "https://mock.url/prod-idpay-gi/public"
+  },
+  {
+    "alias": "prod-io-sign",
+    "consumers": [
+      "Standard",
+      "SAP"
+    ],
+    "createdAt": "2023-02-23T15:38:39.605Z",
+    "createdBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8",
+    "depictImageUrl": "https://mock.url/prod-io-sign/depict-image",
+    "description": "Consenti ai cittadini di firmare digitalmente documenti tramite l’app IO",
+    "enabled": true,
+    "id": "prod-io-sign",
+    "identityTokenAudience": "firmaconio.selfcare.pagopa.it",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/io-sign/1.0.4/io_sign-accordo_di_adesione-v.1.0.4.html",
+        "contractTemplateVersion": "1.0.4",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/prod-io-sign/logo",
+    "logoBgColor": "#0B3EE3",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Stipula il contratto e identifica gli amministratori",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "operator",
+            "description": "Gestisce l'integrazione tecnologica e/o l'operatività dei servizi",
+            "label": "Operatore"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "title": "Firma con IO",
+    "urlBO": "https://mock.url/prod-io-sign/bo",
+    "urlPublic": "https://mock.url/prod-io-sign/public",
+    "userContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/io-sign/user/1.0.1/io_sign-aggiunta-amministratore-v.1.0.1.html",
+        "contractTemplateVersion": "1.0.1"
+      }
+    }
+  },
+  {
+    "alias": "prod-interop-coll",
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2023-02-24T16:43:38.910Z",
+    "createdBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8",
+    "depictImageUrl": "https://mock.url/prod-interop-coll/depict-image",
+    "description": "Scambia informazioni con altri enti in modo semplice e sicuro",
+    "enabled": true,
+    "id": "prod-interop-coll",
+    "identityTokenAudience": "api.interop.selfcare.pagopa.it",
+    "institutionContractMappings": {
+      "AS": {
+        "contractTemplatePath": "contracts/template/interop/ivass/2.1.0/interop-accordo_di_adesione_as-v.2.1.0.html",
+        "contractTemplateVersion": "2.1.0",
+        "attachments": []
+      },
+      "default": {
+        "contractTemplatePath": "contracts/template/interop/2.0.0/interop-accordo_di_adesione-v.2.0.0.html",
+        "contractTemplateVersion": "2.0.0",
+        "attachments": []
+      },
+      "PRV": {
+        "contractTemplatePath": "contracts/template/interop/prv/1.0.0/interop-accordo_di_adesione_prv-v.1.0.0.html",
+        "contractTemplateVersion": "1.0.0",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/prod-interop-coll/logo",
+    "logoBgColor": "#0066CC",
+    "modifiedAt": "2023-02-24T16:43:38.911Z",
+    "modifiedBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Stipula il contratto e identifica gli amministratori",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": true,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "api",
+            "description": "Gestisce il ciclo di vita degli e-service",
+            "label": "Operatore API"
+          },
+          {
+            "code": "security",
+            "description": "Gestisce il ciclo di vita dei client di connessione",
+            "label": "Operatore Sicurezza"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "TESTING",
+    "title": "Interoperabilità Collaudo",
+    "urlBO": "https://mock.url/prod-interop-coll/bo",
+    "urlPublic": "https://mock.url/prod-interop-coll/public"
+  },
+  {
+    "alias": "prod-interop-atst",
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2024-03-05T13:49:21.307Z",
+    "createdBy": "d35dc17c-affa-4ed9-a68c-547dfa27850d",
+    "delegable": false,
+    "depictImageUrl": "https://mock.url/prod-interop-atst/depict-image",
+    "description": "Scambia informazioni con altri enti in modo semplice e sicuro",
+    "id": "prod-interop-atst",
+    "identityTokenAudience": "api.interop.selfcare.pagopa.it",
+    "institutionContractMappings": {
+      "AS": {
+        "contractTemplatePath": "contracts/template/interop/ivass/2.1.0/interop-accordo_di_adesione_as-v.2.1.0.html",
+        "contractTemplateVersion": "2.1.0",
+        "attachments": []
+      },
+      "default": {
+        "contractTemplatePath": "contracts/template/interop/2.0.0/interop-accordo_di_adesione-v.2.0.0.html",
+        "contractTemplateVersion": "2.0.0",
+        "attachments": []
+      },
+      "PRV": {
+        "contractTemplatePath": "contracts/template/interop/prv/1.0.0/interop-accordo_di_adesione_prv-v.1.0.0.html",
+        "contractTemplateVersion": "1.0.0",
+        "attachments": []
+      }
+    },
+    "invoiceable": false,
+    "logo": "https://mock.url/prod-interop-atst/logo",
+    "logoBgColor": "#0066CC",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Stipula il contratto e identifica gli amministratori",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": true,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "api",
+            "description": "Gestisce il ciclo di vita degli e-service",
+            "label": "Operatore API"
+          },
+          {
+            "code": "security",
+            "description": "Gestisce il ciclo di vita dei client di connessione",
+            "label": "Operatore Sicurezza"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "TESTING",
+    "title": "Interoperabilità Attestazioni",
+    "urlBO": "https://mock.url/prod-interop-atst/bo",
+    "urlPublic": "https://mock.url/prod-interop-atst/public"
+  },
+  {
+    "alias": "prod-pn-coll",
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2023-02-27T09:13:41.903Z",
+    "createdBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8",
+    "depictImageUrl": "https://mock.url/prod-pn-coll/depict-image",
+    "description": "SEND - Servizio Notifiche Digitali description",
+    "enabled": true,
+    "id": "prod-pn-coll",
+    "identityTokenAudience": "portale-pa.dev.pn.pagopa.it",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/pn/1.0.0/pn-accordo_di_adesione-v.1.0.0.html",
+        "contractTemplateVersion": "1.0.0",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/prod-pn-coll/logo",
+    "logoBgColor": "#0066CC",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Stipula il contratto e identifica gli amministratori",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": true,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "operator",
+            "description": "Gestisce l'integrazione tecnologica e/o l'operatività dei servizi",
+            "label": "Gestore Notifiche"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "TESTING",
+    "title": "SEND - Servizio Notifiche Digitali Collaudo",
+    "urlBO": "https://mock.url/prod-pn-coll/bo",
+    "urlPublic": "https://mock.url/prod-pn-coll/public"
+  },
+  {
+    "alias": "prod-idpay-merchant",
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2023-05-19T09:04:52.512Z",
+    "createdBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "depictImageUrl": "https://mock.url/prod-idpay-merchant/depict-image",
+    "description": "La piattaforma IDPay Esercenti si pone l’obiettivo di fornire una soluzione centralizzata e riutilizzabile dai merchant coinvolti su iniziative di welfare (es. sconti, bonus, etc.) promosse dalle amministrazioni pubbliche centrali o locali a favore degli utenti beneficiari.",
+    "enabled": true,
+    "id": "prod-idpay-merchant",
+    "identityTokenAudience": "idpay.merchant.welfare.pagopa.it",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/dummy-accordo_di_adesione.html",
+        "contractTemplateVersion": "1.0.0",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/prod-idpay-merchant/logo",
+    "logoBgColor": "#000000",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi sul prodotto IDPay - Esercenti, ha la responsabilità di calcolare il premio e generare QRCode o deep link. Inoltre gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Stipula il contratto e identifica gli amministratori",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "TESTING",
+    "title": "IDPay - Esercenti",
+    "urlBO": "https://mock.url/prod-idpay-merchant/bo",
+    "urlPublic": "https://mock.url/prod-idpay-merchant/public"
+  },
+  {
+    "alias": "prod-fd",
+    "consumers": [
+      "Standard",
+      "SAP"
+    ],
+    "createdAt": "2023-06-12T11:36:41.553Z",
+    "createdBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "depictImageUrl": "https://mock.url/prod-fd/depict-image",
+    "description": "Fideiussioni Digitali",
+    "enabled": true,
+    "id": "prod-fd",
+    "identityTokenAudience": "fid00001fe.siachain.sv.sia.eu",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/fd/1.0.0/Regolamento di Piattaforma Garantito e Contraente PA_Cetif Advisory_FD_v. 1.0.pdf",
+        "contractTemplateVersion": "v.1.0.0",
+        "attachments": []
+      },
+      "PA": {
+        "contractTemplatePath": "contracts/template/fd/1.0.0/Regolamento di Piattaforma Garantito e Contraente PA_Cetif Advisory_FD_v. 1.0.pdf",
+        "contractTemplateVersion": "v.1.0.0",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/prod-fd/logo",
+    "logoBgColor": "#000000",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "ORG_ADMIN",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "ORG_ADMIN",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "ORG_OPERATOR",
+            "description": "Operatore",
+            "label": "Operatore"
+          },
+          {
+            "code": "READ_ONLY",
+            "description": "Read Only",
+            "label": "read only"
+          },
+          {
+            "code": "ARCHIVER",
+            "description": "Archiviatore",
+            "label": "archiviatore"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "ORG_ADMIN",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "title": "Prod Fideiussioni Digitali",
+    "urlBO": "https://mock.url/prod-fd/bo",
+    "urlPublic": "https://mock.url/prod-fd/public"
+  },
+  {
+    "alias": "testpp",
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2023-06-12T11:36:41.553Z",
+    "createdBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "depictImageUrl": "https://mock.url/testpp/depict-image",
+    "description": "Fideiussioni Digitali",
+    "enabled": true,
+    "id": "testpp",
+    "identityTokenAudience": "string",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/fd/1.2.0/CetifAdvisory_FideiussioniDigitali_Contrattod_v1.2.0.html",
+        "contractTemplateVersion": "v.1.2.0",
+        "attachments": []
+      },
+      "PA": {
+        "contractTemplatePath": "contracts/template/fd/1.2.0/CetifAdvisory_FideiussioniDigitali_Contrattod_v1.2.0.html",
+        "contractTemplateVersion": "v.1.2.0",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/testpp/logo",
+    "logoBgColor": "test",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "ORG_ADMIN",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "USER_MANAGER",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "ORG_OPERATOR",
+            "description": "Operatore",
+            "label": "Operatore"
+          },
+          {
+            "code": "READ_ONLY",
+            "description": "Read Only",
+            "label": "read only"
+          },
+          {
+            "code": "ARCHIVER",
+            "description": "Archiviatore",
+            "label": "archiviatore"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "ORG_ADMIN",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "INACTIVE",
+    "title": "",
+    "urlBO": "https://mock.url/testpp/bo",
+    "urlPublic": "https://mock.url/testpp/public"
+  },
+  {
+    "alias": "prod-fd-garantito",
+    "consumers": [
+      "Standard",
+      "SAP"
+    ],
+    "createdAt": "2023-09-08T15:18:45.559Z",
+    "createdBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "depictImageUrl": "https://mock.url/prod-fd-garantito/depict-image",
+    "description": "Fideiussioni Digitali Garantito",
+    "enabled": true,
+    "id": "prod-fd-garantito",
+    "identityTokenAudience": "fid00001fe.siachain.sv.sia.eu",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/fd/1.0.0/Regolamento di Piattaforma Garantito e Contraente PA_Cetif Advisory_FD_v. 1.0.pdf",
+        "contractTemplateVersion": "v.1.0.0",
+        "attachments": []
+      },
+      "PA": {
+        "contractTemplatePath": "contracts/template/fd/1.0.0/Regolamento di Piattaforma Garantito e Contraente PA_Cetif Advisory_FD_v. 1.0.pdf",
+        "contractTemplateVersion": "v.1.0.0",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/prod-fd-garantito/logo",
+    "logoBgColor": "#000000",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "ORG_ADMIN",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "ORG_ADMIN",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "ORG_OPERATOR",
+            "description": "Operatore",
+            "label": "Operatore"
+          },
+          {
+            "code": "READ_ONLY",
+            "description": "Read Only",
+            "label": "read only"
+          },
+          {
+            "code": "ARCHIVER",
+            "description": "Archiviatore",
+            "label": "archiviatore"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "ORG_ADMIN",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "title": "Prod Fideiussioni Digitali Garantito",
+    "urlBO": "https://mock.url/prod-fd-garantito/bo",
+    "urlPublic": "https://mock.url/prod-fd-garantito/public"
+  },
+  {
+    "alias": "prod-sendino",
+    "backOfficeEnvironmentConfigurations": {
+      "Collaudo": {
+        "identityTokenAudience": "api.platform.pn-test.it",
+        "url": "https://mock.url/prod-sendino/bo-env"
+      },
+      "TEST-SVIL": {
+        "identityTokenAudience": "api.platform.pn-test-svil.it",
+        "url": "https://mock.url/prod-sendino/bo-env"
+      }
+    },
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2024-01-22T15:00:49.624Z",
+    "createdBy": "760df42e-f513-4d94-9e3a-a0dda884ed92",
+    "delegable": false,
+    "depictImageUrl": "https://mock.url/prod-sendino/depict-image",
+    "description": "Sendino",
+    "enabled": true,
+    "id": "prod-sendino",
+    "identityTokenAudience": "portale-pa.dev.pn.pagopa.it",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/pn/2.0.0/pn-accordo_di_adesione-v.2.0.0.html",
+        "contractTemplateVersion": "2.0.0",
+        "attachments": []
+      }
+    },
+    "invoiceable": true,
+    "logo": "https://mock.url/prod-sendino/logo",
+    "logoBgColor": "#0066CC",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Stipula il contratto e identifica gli amministratori",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": true,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "operator",
+            "description": "Gestisce l'integrazione tecnologica e/o l'operatività dei servizi",
+            "label": "Gestore Notifiche"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "TESTING",
+    "title": "SEND - Servizio Notifiche Digitaliino",
+    "urlBO": "https://mock.url/prod-sendino/bo",
+    "urlPublic": "https://mock.url/prod-sendino/public"
+  },
+  {
+    "alias": "prod-piattaforma-unitaria",
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2024-05-14T08:30:55.815Z",
+    "createdBy": "c5ae981f-c651-45f9-bb7f-589297c88416",
+    "delegable": false,
+    "depictImageUrl": "https://mock.url/prod-piattaforma-unitaria/depict-image",
+    "description": "La piattaforma offre agli Enti regionali un sistema per gestire i pagamenti dei cittadini e delle imprese. Ha un front office per i pagamenti elettronici e un back office per la gestione delle posizioni debitorie. Inoltre, fornisce servizi tecnologici agli Enti Creditori delle regioni per collegarsi e scambiare flussi con la piattaforma PagoPA.",
+    "enabled": true,
+    "id": "prod-piattaforma-unitaria",
+    "identityTokenAudience": "dev.piattaformaunitaria.pagopa.it",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/dummy-accordo_di_adesione.html",
+        "contractTemplateVersion": "1.0.0",
+        "attachments": []
+      }
+    },
+    "invoiceable": false,
+    "logo": "https://mock.url/prod-piattaforma-unitaria/logo",
+    "logoBgColor": "#0073E6",
+    "roleMappings": {
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "ROLE_ADMIN",
+            "description": "L'amministratore dell'ente (con ruolo di Gestore del BackOffice dell'Ente) ha accesso, oltre alle funzioni Gestione flussi e alla Gestione Dovuti, anche al BackOffice per la gestione del proprio Ente.",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "ROLE_ADMIN",
+            "description": "L'amministratore firmatario è la persona che firma il contratto di adesione. Avrà anche il ruolo di Amministratore e potrà eseguire le sue stesse operazioni.",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "ROLE_OPER",
+            "description": "Avrà accesso solo alla Gestione flussi e alla Gestione Dovuti relative al proprio Ente",
+            "label": "Operatore"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "ROLE_ADMIN",
+            "description": "L'amministratore dell'ente (con ruolo di Gestore del BackOffice dell'Ente) ha accesso, oltre alle funzioni Gestione flussi e alla Gestione Dovuti, anche al BackOffice per la gestione del proprio Ente.",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "title": "Piattaforma Unitaria",
+    "urlBO": "https://mock.url/prod-piattaforma-unitaria/bo",
+    "urlPublic": "https://mock.url/prod-piattaforma-unitaria/public"
+  }
+]

@@ -27,6 +27,9 @@ public interface Institution {
     Origin getOrigin();
     String getIstatCode();
 
+    default String getUpdateDate() {
+        return null;
+    }
 
     enum Field implements SearchField {
         ID("id"),
@@ -43,7 +46,8 @@ public interface Institution {
         ORIGIN("origin"),
 
         DESCRIPTIONFULL("descriptionfull"),
-        ISTAT_CODE("istatCode");
+        ISTAT_CODE("istatCode"),
+        UPDATE_DATE("updateDate");
 
         private final String name;
 

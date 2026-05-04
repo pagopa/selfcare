@@ -73,7 +73,7 @@ locals {
       "MAIL_USER_CONFIRMATION_LINK"                        = "https://selfcare.pagopa.it/onboarding/confirm?add-user=true&jwt="
       "MAIL_ONBOARDING_REJECTION_LINK"                     = "https://selfcare.pagopa.it/onboarding/cancel?jwt="
       "MAIL_ONBOARDING_URL"                                = "https://selfcare.pagopa.it/onboarding/"
-      "MS_CORE_URL"                                        = "https://selc-${module.local.config.env_short}-ms-core-ca.${module.local.config.private_dns_name_domain}"
+      "MS_CORE_URL"                                        = "https://selc-${module.local.config.env_short}-institution-ms-ca.${module.local.config.private_dns_name_domain}"
       "JWT_BEARER_TOKEN"                                   = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/jwt-bearer-token-functions/)"
       "MS_USER_URL"                                        = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}"
       "MS_DOCUMENT_URL"                                    = "https://selc-${module.local.config.env_short}-document-ms-ca.${module.local.config.private_dns_name_domain}"

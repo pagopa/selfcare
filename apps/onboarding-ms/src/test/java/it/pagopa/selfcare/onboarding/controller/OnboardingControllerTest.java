@@ -1108,7 +1108,7 @@ class OnboardingControllerTest {
         queryParameterMap.put("taxCode", "taxCode");
         queryParameterMap.put("from", "2023-12-01");
         queryParameterMap.put("to", "2023-12-31");
-        queryParameterMap.put("status", "ACTIVE");
+        queryParameterMap.put("status", "COMPLETED");
         return queryParameterMap;
     }
 
@@ -1134,7 +1134,7 @@ class OnboardingControllerTest {
     private static OnboardingGet dummyOnboardingGet() {
         OnboardingGet onboarding = new OnboardingGet();
         onboarding.setId("id");
-        onboarding.setStatus("ACTIVE");
+        onboarding.setStatus("COMPLETED");
         onboarding.setProductId("prod-io");
         InstitutionResponse institutionResponse = new InstitutionResponse();
         institutionResponse.setTaxCode("taxCode");

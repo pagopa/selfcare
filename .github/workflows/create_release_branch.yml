@@ -16,6 +16,13 @@ on:
           - webhook
           - registry-proxy
           - document-ms
+          - user-ms
+          - user-group-ms
+          - user-cdc
+          - user-group-cdc
+          - institution-ms
+          - delegation-cdc
+          - institution-send-mail-scheduler
         required: true
       version-bump:
         type: choice

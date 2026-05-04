@@ -70,7 +70,7 @@ locals {
       "MAIL_ONBOARDING_REJECTION_LINK"                     = "https://imprese.dev.notifichedigitali.it/onboarding/cancel?jwt="
       "MAIL_ONBOARDING_URL"                                = "https://imprese.dev.notifichedigitali.it/onboarding/"
       "MS_USER_URL"                                        = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-user-ms-ca.${module.local.config.private_dns_name_domain}"
-      "MS_CORE_URL"                                        = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-ms-core-ca.${module.local.config.private_dns_name_domain}"
+      "MS_CORE_URL"                                        = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-institution-ms-ca.${module.local.config.private_dns_name_domain}"
       "MS_DOCUMENT_URL"                                    = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-document-ms-ca.${module.local.config.private_dns_name_domain}"
       "JWT_BEARER_TOKEN"                                   = "@Microsoft.KeyVault(SecretUri=https://selc-d-pnpg-kv.vault.azure.net/secrets/jwt-bearer-token-functions/)"
       "MS_PARTY_REGISTRY_URL"                              = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"

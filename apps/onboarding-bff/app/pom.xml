@@ -16,6 +16,7 @@
         <commmon-cucumber-sdk.version>0.1.1</commmon-cucumber-sdk.version>
         <cucumber.version>7.20.1</cucumber.version>
         <cucumber-spring.version>7.19.0</cucumber-spring.version>
+        <testcontainers.version>2.0.3</testcontainers.version>
     </properties>
 
     <dependencies>
@@ -101,6 +102,12 @@
             <groupId>com.auth0</groupId>
             <artifactId>java-jwt</artifactId>
             <version>4.0.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

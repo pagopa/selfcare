@@ -334,6 +334,7 @@ public class OnboardingController {
     @Path("/{onboardingId}/complete")
     @Tag(name = "internal-v1")
     @Tag(name = "external-v2")
+    @Tag(name = "Onboarding Controller")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Uni<Response> complete(@PathParam(value = "onboardingId") String onboardingId, @NotNull @RestForm("contract") File file, @Context ResteasyReactiveRequestContext ctx) {
         return onboardingService.complete(onboardingId, retrieveContractFromFormData(ctx.getFormData(), file))
@@ -671,6 +672,7 @@ public class OnboardingController {
     @DELETE
     @Tag(name = "internal-v1")
     @Tag(name = "external-v2")
+    @Tag(name = "Onboarding Controller")
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{onboardingId}")
     public Uni<Response> deleteOnboarding(@PathParam(value = "onboardingId") String onboardingId) {

@@ -42,6 +42,13 @@ APPS = [
     ("document-ms",         "trigger_release_document_ms.yml", [(e, "ar")   for e in ENVS]),
     ("registry-proxy",      "trigger_release_registry_proxy.yml", [(e, d) for e in ENVS for d in DOMAINS]),
     ("webhook",             "trigger_release_webhook.yml",     [(e, "ar")   for e in ENVS]),
+    ("user-ms",             "trigger_release_user_ms.yml",      [(e, d) for e in ENVS for d in DOMAINS]),
+    ("user-cdc",            "trigger_release_user_cdc.yml",     [(e, d) for e in ENVS for d in DOMAINS]),
+    ("user-group-ms",       "trigger_release_user_group_ms.yml", [(e, d) for e in ENVS for d in DOMAINS]),
+    ("user-group-cdc",      "trigger_release_user_group_cdc.yml", [(e, d) for e in ENVS for d in DOMAINS]),
+    ("institution-ms",                  "trigger_release_institution_ms.yml",                  [(e, d) for e in ENVS for d in DOMAINS]),
+    ("institution-send-mail-scheduler", "trigger_release_institution_send_mail_scheduler.yml", [(e, "ar") for e in ENVS]),
+    ("delegation-cdc",                  "trigger_release_delegation_cdc.yml",                  [(e, "ar") for e in ENVS]),
 ]
 
 INFRA_RESOURCES = [
@@ -55,6 +62,13 @@ INFRA_RESOURCES = [
     ("onboarding-functions", "pr_onboarding_infra_functions.yml", [(e, "ar") for e in ENVS]),
     ("document-ms",          "pr_document_ms_infra.yml",       [(e, "ar")   for e in ENVS]),
     ("registry-proxy",       "pr_registry_proxy_ms.yml",       [(e, "ar")   for e in ENVS]),
+    ("user-ms",              "pr_user_ms_infra.yml",            [(e, "ar")   for e in ENVS]),
+    ("user-cdc",             "pr_user_cdc_infra.yml",           [(e, "ar")   for e in ENVS]),
+    ("user-group-ms",        "pr_user_group_ms_infra.yml",      [(e, "ar")   for e in ENVS]),
+    ("user-group-cdc",       "pr_user_group_cdc_infra.yml",     [(e, "ar")   for e in ENVS]),
+    ("institution-ms",                  "pr_onboarding_infra_functions.yml",            [(e, "ar") for e in ENVS]),
+    ("institution-send-mail-scheduler", "pr_institution_send_mail_scheduler_infra.yml", [(e, "ar") for e in ENVS]),
+    ("delegation-cdc",                  "pr_registry_proxy_ms.yml",                     [(e, "ar") for e in ENVS]),
 ]
 
 

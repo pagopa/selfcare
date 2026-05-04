@@ -13,3 +13,9 @@ variable "database_name" {
   type        = string
   description = "The name of the Cosmos DB Mongo Database in which the Cosmos DB Mongo Collection is created. Changing this forces a new resource to be created."
 }
+
+variable "max_throughput" {
+  type        = number
+  description = "The maximum throughput of the MongoDB database (autoscale). Set to null to leave unmanaged."
+  default     = null
+}

@@ -464,8 +464,9 @@ public class OnboardingFunctions {
       Supplier<String> messageSupplier,
       Map<String, String> properties) {
     if (!ctx.getIsReplaying()) {
-      telemetryService.trackFunction(
-          fCtx.getFunctionName(), messageSupplier.get(), severityLevel, properties);
+      String message = messageSupplier.get();
+      fCtx.getLogger().info(message);
+      telemetryService.trackFunction(fCtx.getFunctionName(), message, severityLevel, properties);
     }
   }
 
@@ -476,6 +477,7 @@ public class OnboardingFunctions {
       String message,
       Map<String, String> properties) {
     if (!ctx.getIsReplaying()) {
+      fCtx.getLogger().info(message);
       telemetryService.trackFunction(fCtx.getFunctionName(), message, severityLevel, properties);
     }
   }

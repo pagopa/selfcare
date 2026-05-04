@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.InstitutionConnector;
+import it.pagopa.selfcare.party.registry_proxy.connector.api.IpaSearchServiceConnector;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.SearchServiceConnector;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ServiceUnavailableException;
@@ -26,6 +27,7 @@ public class SearchServiceImpl implements SearchService {
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final InstitutionConnector institutionConnector;
   private final SearchServiceConnector searchServiceConnector;
+  private final IpaSearchServiceConnector ipaSearchServiceConnector;
 
   @Value("${dapr.queue.binding-name}")
   private String queueBindingName;
@@ -34,9 +36,11 @@ public class SearchServiceImpl implements SearchService {
   private String kafkaTopic;
 
   @Autowired
-  public SearchServiceImpl(InstitutionConnector institutionConnector, SearchServiceConnector searchServiceConnector) {
+  public SearchServiceImpl(InstitutionConnector institutionConnector, SearchServiceConnector searchServiceConnector,
+                           IpaSearchServiceConnector ipaSearchServiceConnector) {
     this.institutionConnector = institutionConnector;
     this.searchServiceConnector = searchServiceConnector;
+    this.ipaSearchServiceConnector = ipaSearchServiceConnector;
     objectMapper.registerModule(new JavaTimeModule());
     objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
   }
@@ -175,6 +179,21 @@ public class SearchServiceImpl implements SearchService {
     }
 
     return filter.toString();
+  }
+
+  @Override
+  public IpaInstitutionSearchResult searchIpaInstitutions(String searchText, String category, Integer page, Integer pageSize) {
+    page = page != null && page >= 0 ? page : 0;
+    pageSize = pageSize != null && pageSize > 0 ? pageSize : 50;
+
+    String search = searchText != null && !searchText.isBlank() ? searchText : "*";
+
+    String filter = null;
+    if (category != null && !category.isBlank()) {
+      filter = "category eq '" + category + "'";
+    }
+
+    return ipaSearchServiceConnector.searchIpaInstitutions(search, filter, pageSize, page * pageSize);
   }
 
 }

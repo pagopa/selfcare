@@ -713,6 +713,30 @@ public class CompletionServiceDefaultTest {
     }
 
     @Test
+    void persistOnboarding_documentNotFound_shouldSkipContractPath() {
+        Onboarding onboarding = createOnboarding();
+        onboarding.getInstitution().setOrigin(Origin.SELC);
+        onboarding.getInstitution().setOriginId("originId");
+        onboarding.getInstitution().setInstitutionType(InstitutionType.PRV);
+
+        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId()))
+                .thenThrow(new WebApplicationException(Response.status(404).build()));
+        when(institutionApi.onboardingInstitutionUsingPOST(any(), any()))
+                .thenReturn(new InstitutionResponse());
+
+        mockOnboardingUpdateWhenPersistOnboarding(onboarding);
+
+        completionServiceDefault.persistOnboarding(onboarding);
+
+        ArgumentCaptor<InstitutionOnboardingRequest> captor = ArgumentCaptor.forClass(InstitutionOnboardingRequest.class);
+        verify(institutionApi, times(1))
+                .onboardingInstitutionUsingPOST(any(), captor.capture());
+
+        InstitutionOnboardingRequest actual = captor.getValue();
+        assertNull(actual.getContractPath());
+    }
+
+    @Test
     void persistOnboarding() {
         Onboarding onboarding = createOnboarding();
         onboarding.getInstitution().setOrigin(Origin.SELC);
@@ -750,13 +774,14 @@ public class CompletionServiceDefaultTest {
 
         Product product = createDummyProduct();
         Onboarding onboarding = createOnboarding();
+        onboarding.getInstitution().setDigitalAddress("test@pec.it");
         OnboardingWorkflow onboardingWorkflow = new OnboardingWorkflowInstitution(onboarding, "INSTITUTION");
         User user = createDummyUser(onboarding);
 
         ExecutionContext context = mock(ExecutionContext.class);
         doReturn(Logger.getGlobal()).when(context).getLogger();
 
-        when(productService.getProduct(onboarding.getProductId()))
+        when(productService.getProductIsValid(onboarding.getProductId()))
                 .thenReturn(product);
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, user.getId()))
                 .thenReturn(userResource);
@@ -766,6 +791,21 @@ public class CompletionServiceDefaultTest {
 
         Mockito.verify(notificationService, times(1))
                 .sendCompletedEmail(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void sendCompletedEmail_shouldSkipWhenDigitalAddressIsNull() {
+
+        Onboarding onboarding = createOnboarding();
+        // digitalAddress is null by default
+        OnboardingWorkflow onboardingWorkflow = new OnboardingWorkflowInstitution(onboarding, "INSTITUTION");
+
+        completionServiceDefault.sendCompletedEmail(onboardingWorkflow);
+
+        Mockito.verify(notificationService, times(0))
+                .sendCompletedEmail(any(), any(), any(), any(), any());
+        Mockito.verify(productService, times(0))
+                .getProductIsValid(any());
     }
 
     @Test
