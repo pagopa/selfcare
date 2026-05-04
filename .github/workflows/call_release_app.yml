@@ -47,13 +47,12 @@ jobs:
       tf_environment: ${{ inputs.target == 'ar' && 'dev-ar' || 'dev-pnpg' }}
       tf_dir: ${{ inputs.target == 'ar' && format('infra/resources/{0}/dev-ar', inputs.app) || format('infra/resources/{0}/dev-pnpg', inputs.app) }}
       dockerfile_path: ./${{ inputs.APP_PATH }}/Dockerfile
-      docker_image_name: ${{
-        inputs.app == 'onboarding-bff' && format('pagopa/selfcare-{0}', inputs.app)
+      docker_image_name: >-
+        ${{  inputs.app == 'onboarding-bff' && format('pagopa/selfcare-{0}', inputs.app)
         || endsWith(inputs.app, '-cdc') && format('pagopa/selfcare-{0}', inputs.app)
         || endsWith(inputs.app, '-scheduler') && format('pagopa/selfcare-{0}', inputs.app)
         || endsWith(inputs.app, '-ms') && format('pagopa/selfcare-{0}', inputs.app)
-        || format('pagopa/selfcare-{0}-ms', inputs.app)
-      }}
+        || format('pagopa/selfcare-{0}-ms', inputs.app) }}
       path_openapi_docs: >-
         ${{ inputs.app == 'registry-proxy' && format('./{0}/app/src/main/resources/swagger/api-docs.json', inputs.APP_PATH)
         || inputs.app == 'institution-ms' && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH)
