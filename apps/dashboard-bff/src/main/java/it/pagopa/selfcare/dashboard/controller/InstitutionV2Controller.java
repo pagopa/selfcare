@@ -246,14 +246,14 @@ public class InstitutionV2Controller {
                                                                 String productId) {
 
         log.trace("getInstitutionOnboardingPending start");
-        log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionOnboardingPending productId = {}", productId);
+        log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionOnboardingPending productId = {}", Encode.forJava(productId));
         Boolean result = institutionV2Service.verifyIfExistsPendingOnboarding(taxCode, subunitCode, productId);
         if (Boolean.FALSE.equals(result)) {
-            log.debug("Pending onboarding not found for and productId = {}", productId);
+            log.debug("Pending onboarding not found for and productId = {}", Encode.forJava(productId));
             log.trace("getInstitutionOnboardingPending end");
             return ResponseEntity.noContent().build();
         } else {
-            log.debug("Pending onboarding found for and productId = {}", productId);
+            log.debug("Pending onboarding found for and productId = {}", Encode.forJava(productId));
             log.trace("getInstitutionOnboardingPending end");
             return ResponseEntity.ok().build();
         }
