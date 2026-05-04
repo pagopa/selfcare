@@ -91,11 +91,6 @@ public class SignatureServiceImpl implements SignatureService {
       DSSDocument document = new InMemoryDocument(bytes);
       SignedDocumentValidator documentValidator = SignedDocumentValidator.fromDocument(document);
       documentValidator.setCertificateVerifier(certificateVerifier);
-      documentValidator.getSignatures().forEach(sig ->
-        log.info("Detected signature id='{}', form={}, signingCertificate={}",
-          sig.getId(), sig.getSignatureForm(),
-          sig.getSigningCertificateToken() != null ? sig.getSigningCertificateToken().getDSSIdAsString() + " issuer=" + sig.getSigningCertificateToken().getIssuer().getRFC2253() : "N/A")
-      );
       return documentValidator;
     } catch (Exception e) {
       log.error("Error message: {}", e.getMessage(), e);
