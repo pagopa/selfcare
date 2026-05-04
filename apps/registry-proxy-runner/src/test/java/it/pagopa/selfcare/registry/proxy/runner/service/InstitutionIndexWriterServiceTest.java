@@ -54,7 +54,7 @@ class InstitutionIndexWriterServiceTest {
     idx2.setUpdateDate("2023-01-01");
     resp2.setValue(List.of(idx2));
 
-    when(azureSearchRestClient.searchIpaInstitutions(
+    when(azureSearchRestClient.search(
             eq("ipa-inst-idx"),
             eq("2023-11-01"),
             any(),
@@ -64,7 +64,7 @@ class InstitutionIndexWriterServiceTest {
             eq(0),
             eq("id eq 'ID1'")))
         .thenReturn(resp1);
-    when(azureSearchRestClient.searchIpaInstitutions(
+    when(azureSearchRestClient.search(
             eq("ipa-inst-idx"),
             eq("2023-11-01"),
             any(),
@@ -81,7 +81,7 @@ class InstitutionIndexWriterServiceTest {
     ArgumentCaptor<SearchServiceIndexRequest> captor =
         ArgumentCaptor.forClass(SearchServiceIndexRequest.class);
     verify(azureSearchRestClient, times(1))
-        .indexIpaInstitutions(eq("ipa-inst-idx"), eq("2023-11-01"), captor.capture());
+        .index(eq("ipa-inst-idx"), eq("2023-11-01"), captor.capture());
 
     List<?> values = captor.getValue().getValue();
     assertEquals(1, values.size());

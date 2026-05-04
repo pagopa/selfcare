@@ -4,9 +4,11 @@ import it.pagopa.selfcare.registry.proxy.runner.model.SearchServiceIndexRequest;
 import it.pagopa.selfcare.registry.proxy.runner.model.SearchServiceIndexResponse;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 @RegisterRestClient(configKey = "azure-ai-search")
+@RegisterClientHeaders(AzureSearchHeadersFactory.class)
 @Path("/")
 public interface AzureSearchRestClient {
 
@@ -14,7 +16,7 @@ public interface AzureSearchRestClient {
   @Path("indexes/{indexName}/docs/index")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  Object indexIpaInstitutions(
+  Object index(
       @PathParam("indexName") String indexName,
       @QueryParam("api-version") String apiVersion,
       SearchServiceIndexRequest request);
@@ -22,7 +24,7 @@ public interface AzureSearchRestClient {
   @GET
   @Path("indexes/{indexName}/docs")
   @Produces(MediaType.APPLICATION_JSON)
-  SearchServiceIndexResponse searchIpaInstitutions(
+  SearchServiceIndexResponse search(
       @PathParam("indexName") String indexName,
       @QueryParam("api-version") String apiVersion,
       @QueryParam("search") String search,

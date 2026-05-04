@@ -37,7 +37,7 @@ class CategoryIndexWriterServiceTest {
     IpaCategory cat = new IpaCategory();
     cat.setCode("CAT1");
 
-    when(azureSearchRestClient.searchIpaInstitutions(
+    when(azureSearchRestClient.search(
             eq("cat-idx"),
             eq("1.0"),
             any(),
@@ -51,6 +51,6 @@ class CategoryIndexWriterServiceTest {
     service.index(List.of(cat));
 
     verify(azureSearchRestClient, times(1))
-        .indexIpaInstitutions(eq("cat-idx"), eq("1.0"), any(SearchServiceIndexRequest.class));
+        .index(eq("cat-idx"), eq("1.0"), any(SearchServiceIndexRequest.class));
   }
 }
