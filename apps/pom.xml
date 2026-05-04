@@ -217,6 +217,17 @@
                 <module>institution-send-mail-scheduler</module>
             </modules>
         </profile>
+        <profile>
+            <id>dashboard-bff</id>
+            <activation>
+                <file>
+                    <exists>dashboard-bff/pom.xml</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>dashboard-bff</module>
+            </modules>
+        </profile>
     </profiles>
 
 </project>
