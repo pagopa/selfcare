@@ -1,0 +1,61 @@
+{
+  "MANAGER": {
+    "prod-pagopa": [
+      "Selc:UploadLogo",
+      "Selc:ViewBilling",
+      "Selc:RequestProductAccess",
+      "Selc:ViewContract"
+    ],
+    "default": [
+      "Selc:UploadLogo",
+      "Selc:ViewBilling",
+      "Selc:RequestProductAccess"
+    ]
+  },
+  "DELEGATE": {
+    "prod-io": [
+      "Selc:UploadLogo",
+      "Selc:ViewBilling",
+      "Selc:RequestProductAccess",
+      "Selc:ViewContract"
+    ],
+    "default": [
+      "Selc:UploadLogo",
+      "Selc:ViewBilling",
+      "Selc:RequestProductAccess"
+    ]
+  },
+  "SUB_DELEGATE": {
+    "prod-interop": [
+      "Selc:UploadLogo",
+      "Selc:ViewBilling",
+      "Selc:RequestProductAccess",
+      "Selc:ViewContract"
+    ],
+    "default": [
+      "Selc:UploadLogo",
+      "Selc:ViewBilling",
+      "Selc:RequestProductAccess"
+    ]
+  },
+  "ADMIN_EA": {
+    "prod-io": [
+      "Selc:UploadLogo",
+      "Selc:ViewBilling"
+    ],
+    "prod-pagopa": [
+      "Selc:ViewBilling",
+      "Selc:RequestProductAccess"
+    ],
+    "default": [
+      "Selc:UploadLogo",
+      "Selc:ViewBilling",
+      "Selc:RequestProductAccess"
+    ]
+  },
+  "OPERATOR": {
+    "default": [
+      "Selc:ViewBilling"
+    ]
+  }
+}

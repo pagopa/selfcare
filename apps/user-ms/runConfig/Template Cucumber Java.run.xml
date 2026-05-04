@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="true" type="CucumberJavaRunConfigurationType" factoryName="Cucumber java">
+    <option name="MAIN_CLASS_NAME" value="it.pagopa.selfcare.user.integration_test.CucumberSuite" />
+    <module name="user-ms" />
+    <shortenClasspath name="ARGS_FILE" />
+    <option name="WORKING_DIRECTORY" value="$MODULE_WORKING_DIR$" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

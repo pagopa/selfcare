@@ -368,6 +368,13 @@ resource "azurerm_cdn_frontdoor_rule" "content_security_policy_fonts" {
   order                     = 2 + length(var.spa) + 6
   behavior_on_match         = "Continue"
 
+  conditions {
+    host_name_condition {
+      operator     = "Equal"
+      match_values = [var.host_name]
+    }
+  }
+
   actions {
     response_header_action {
       header_action = "Append"
@@ -452,6 +459,13 @@ resource "azurerm_cdn_frontdoor_rule" "content_security_policy_fonts_ar" {
   order                     = 2 + length(var.spa) + 10
   behavior_on_match         = "Continue"
 
+  conditions {
+    host_name_condition {
+      operator     = "Equal"
+      match_values = ["${var.dns_zone_prefix_ar}.${var.external_domain}"]
+    }
+  }
+
   actions {
     response_header_action {
       header_action = "Append"
@@ -467,6 +481,13 @@ resource "azurerm_cdn_frontdoor_rule" "content_security_policy_io_ar" {
   cdn_frontdoor_rule_set_id = module.checkout_cdn.rule_set_id
   order                     = 2 + length(var.spa) + 11
   behavior_on_match         = "Continue"
+
+  conditions {
+    host_name_condition {
+      operator     = "Equal"
+      match_values = ["${var.dns_zone_prefix_ar}.${var.external_domain}"]
+    }
+  }
 
   actions {
     response_header_action {
@@ -484,9 +505,17 @@ resource "azurerm_cdn_frontdoor_rule" "content_security_policy_mixpanel_ar" {
   order                     = 2 + length(var.spa) + 12
   behavior_on_match         = "Continue"
 
+  conditions {
+    host_name_condition {
+      operator     = "Equal"
+      match_values = ["${var.dns_zone_prefix_ar}.${var.external_domain}"]
+    }
+  }
+
+  # action should be Overwrite after domain migration
   actions {
     response_header_action {
-      header_action = "Overwrite"
+      header_action = "Append"
       header_name   = "Content-Security-Policy-Report-Only"
       value         = "default-src 'self'; object-src 'none'; connect-src 'self' https://${var.prefix_api}.${var.dns_zone_prefix_ar}.${var.external_domain}/ https://api-eu.mixpanel.com/track/; "
     }
@@ -499,6 +528,13 @@ resource "azurerm_cdn_frontdoor_rule" "csp_frame_ancestors_ar" {
   cdn_frontdoor_rule_set_id = module.checkout_cdn.rule_set_id
   order                     = 2 + length(var.spa) + 13
   behavior_on_match         = "Continue"
+
+  conditions {
+    host_name_condition {
+      operator     = "Equal"
+      match_values = ["${var.dns_zone_prefix_ar}.${var.external_domain}"]
+    }
+  }
 
   actions {
     response_header_action {

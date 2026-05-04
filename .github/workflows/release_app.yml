@@ -33,6 +33,10 @@ on:
           - product
           - product-cdc
           - registry-proxy
+          - user-ms
+          - user-group-ms
+          - user-cdc
+          - user-group-cdc
           - institution-ms
           - delegation-cdc
           - institution-send-mail-scheduler
