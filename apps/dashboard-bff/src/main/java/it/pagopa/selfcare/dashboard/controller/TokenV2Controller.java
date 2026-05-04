@@ -56,7 +56,7 @@ public class TokenV2Controller {
         identityToken.setToken(token);
 
 
-        log.debug(LogUtils.CONFIDENTIAL_MARKER, "exchange result = {}", identityToken);
+        log.debug("exchange completed successfully");
         log.trace("exchange end");
 
         return identityToken;
