@@ -6,7 +6,9 @@ import it.pagopa.selfcare.registry.proxy.runner.model.SearchServiceIndexResponse
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -59,8 +61,41 @@ public abstract class AbstractIndexWriterService<T, D> implements IndexWriterSer
       log.debug("[{}] Indexed batch of {} documents", getEntityName(), batch.size());
     }
 
-    // TODO: consider deleting documents that are no longer present in the source data (not in
-    // itemsIndexed)
+    // Delete documents that are no longer present in the source data
+    Set<String> sourceIds =
+        items.stream()
+            .map(this::getId)
+            .filter(id -> id != null && !id.isBlank())
+            .collect(Collectors.toSet());
+
+    List<String> toDelete =
+        itemsIndexed.keySet().stream().filter(id -> !sourceIds.contains(id)).toList();
+
+    if (!toDelete.isEmpty()) {
+      log.info(
+          "[{}] Deleting {} documents no longer present in source",
+          getEntityName(),
+          toDelete.size());
+      for (int i = 0; i < toDelete.size(); i += BATCH_SIZE) {
+        List<Map<String, Object>> batch =
+            toDelete.subList(i, Math.min(i + BATCH_SIZE, toDelete.size())).stream()
+                .map(
+                    id -> {
+                      Map<String, Object> doc = new HashMap<>();
+                      doc.put("@search.action", "delete");
+                      doc.put("id", id);
+                      return doc;
+                    })
+                .toList();
+        SearchServiceIndexRequest request = new SearchServiceIndexRequest();
+        request.setValue(batch);
+        azureSearchRestClient.index(getIndexName(), getApiVersion(), request);
+        for (Map<String, Object> itemToDelete : batch) {
+          log.debug("[{}] Deleted document with id '{}'", getEntityName(), itemToDelete.get("id"));
+        }
+        log.debug("[{}] Deleted batch of {} documents", getEntityName(), batch.size());
+      }
+    }
   }
 
   /**
