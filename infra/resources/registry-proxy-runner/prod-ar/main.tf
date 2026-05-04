@@ -4,15 +4,15 @@
 module "local" {
   source = "../../_modules/local-env"
 
-  env       = "dev"
-  env_short = "d"
+  env       = "prod"
+  env_short = "p"
   domain    = "ar"
 
-  dns_zone_prefix                = "dev.selfcare"
-  api_dns_zone_prefix            = "api.dev.selfcare"
-  private_dns_name_domain        = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
-  container_app_environment_name = "selc-d-cae-002"
-  ca_resource_group_name         = "selc-d-container-app-002-rg"
+  dns_zone_prefix                = "selfcare"
+  api_dns_zone_prefix            = "api.selfcare"
+  private_dns_name_domain        = "lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-p-cae-002"
+  ca_resource_group_name         = "selc-p-container-app-002-rg"
   container_app_min_replicas     = 0
 }
 
