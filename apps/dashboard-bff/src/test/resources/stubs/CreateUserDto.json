@@ -1,0 +1,19 @@
+{
+  "institutionId": "123e4567-e89b-12d3-a456-426614174000",
+  "user": {
+    "birthDate": null,
+    "familyName": "Doe",
+    "name": "Name",
+    "fiscalCode": "Tax Code",
+    "institutionEmail": "jane.doe@example.org"
+  },
+  "product": {
+    "productId": "productId",
+    "role": "MANAGER",
+    "tokenId": null,
+    "productRoles": ["admin"]
+  },
+  "institutionDescription": "description",
+  "institutionRootName": "rootDescription",
+  "hasToSendEmail": null
+}

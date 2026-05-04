@@ -1,0 +1,41 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/products/tree"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": [
+      {
+        "node": {
+          "logo": "products logo",
+          "logoBgColor": "#FF54BC",
+          "depictImageUrl": "string",
+          "title": "products title",
+          "description": "products description",
+          "urlPublic": "urlPublic",
+          "status": "ACTIVE",
+          "urlBO": "urlBO",
+          "activationDateTime": "2021-10-29T12:51:11.104Z",
+          "identityTokenAudience": "string"
+        },
+        "children": [
+          {
+            "logo": "products logo",
+            "depictImageUrl": "string",
+            "title": "products title",
+            "description": "products description",
+            "status": "ACTIVE",
+            "urlPublic": "urlPublic",
+            "urlBO": "urlBO",
+            "activationDateTime": "2021-10-29T12:51:11.104Z",
+            "identityTokenAudience": "string"
+          }
+        ]
+      }
+    ],
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

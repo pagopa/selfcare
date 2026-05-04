@@ -1,0 +1,13 @@
+{
+  "id": "12345678-abcd-90ab-cdef-1234567890ab",
+  "institutionId": "institution-1234",
+  "productId": "product-5678",
+  "name": "Group Name",
+  "description": "Group Description",
+  "status": "ACTIVE",
+  "membersCount": 10,
+  "createdAt": "2023-06-12T10:15:30Z",
+  "createdBy": "c8b70220-dbe2-4e33-925e-92b96f8b65e6",
+  "modifiedAt": "2024-06-12T10:15:30Z",
+  "modifiedBy": "d9c80330-ecf3-5f44-a66f-13d97b7a75e7"
+}

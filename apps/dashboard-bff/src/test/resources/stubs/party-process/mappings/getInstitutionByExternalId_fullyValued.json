@@ -1,0 +1,49 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/pdnd-interop-uservice-party-process/0.0.1/external/institutions/institutionId1"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+      "id": "97c0f418-bcb3-48d4-825a-fe8b29ae68e5",
+      "externalId": "c_f205",
+      "originId": "c_f205",
+      "description": "AGENCY X",
+      "category": "category",
+      "onboarding": [],
+      "billing": {},
+      "subunitCode": "subunitCode",
+      "aooParentCode": "aooParentCode",
+      "subunitType": "subunitType",
+      "rootParent": {
+        "description": "rootParentDescription"
+      },
+      "paymentServiceProvider": {},
+      "dataProtectionOfficer": {},
+      "supportContact": {},
+      "digitalAddress": "email@pec.mail.org",
+      "address": "via del campo",
+      "zipCode": "20100",
+      "taxCode": "string",
+      "origin": "IPA",
+      "institutionType": "PA",
+      "attributes": [
+        {
+          "origin": "string",
+          "code": "string",
+          "description": "string"
+        }
+      ],
+      "geographicTaxonomies": [
+        {
+          "code": "string",
+          "desc": "string"
+        }
+      ]
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

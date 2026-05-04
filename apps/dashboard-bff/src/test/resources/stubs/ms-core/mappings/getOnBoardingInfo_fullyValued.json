@@ -1,0 +1,71 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/ms-core/v1/onboarding/info",
+    "queryParameters": {
+      "institutionId": {
+        "equalTo": "institutionId1"
+      }
+    }
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+      "getUserId": "string",
+      "institutions": [
+        {
+          "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "externalId": "string",
+          "originId": "string",
+          "description": "string",
+          "taxCode": "string",
+          "digitalAddress": "string",
+          "address": "string",
+          "zipCode": "string",
+          "state": "PENDING",
+          "role": "MANAGER",
+          "productInfo": {
+            "id": "string",
+            "role": "string",
+            "createdAt": "2022-05-04T10:47:33.699Z"
+          },
+          "institutionType": "PA",
+          "pricingPlan": "string",
+          "billing": {
+            "vatNumber": "string",
+            "recipientCode": "string",
+            "publicServices": true
+          },
+          "supportContact": {
+            "supportEmail": "string",
+            "supportPhone": "string"
+          },
+          "paymentServiceProvider": {
+            "abiCode": "string",
+            "businessRegisterNumber": "string",
+            "legalRegisterName": "string",
+            "legalRegisterNumber": "string",
+            "vatNumberGroup": true
+          },
+          "origin": "IPA",
+          "attributes": [
+            {
+              "origin": "string",
+              "code": "string",
+              "description": "string"
+            }
+          ],
+          "geographicTaxonomies": [
+            {
+              "code": "string",
+              "desc": "string"
+            }
+          ]
+        }
+      ]
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

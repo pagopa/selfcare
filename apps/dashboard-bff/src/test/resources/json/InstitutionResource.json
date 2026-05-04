@@ -1,0 +1,65 @@
+{
+    "id": "123",
+    "externalId": "ext123",
+    "originId": "orig123",
+    "origin": "origin",
+    "institutionType": "SCP",
+    "name": "A description",
+    "category": "description1",
+    "categoryCode": "code1",
+    "fiscalCode": "tax123",
+    "mailAddress": "digital@address.com",
+    "address": "123 Street",
+    "zipCode": "12345",
+    "recipientCode": "rec123",
+    "geographicTaxonomies": [
+        {
+            "code": "code1",
+            "desc": "desc1"
+        },
+        {
+            "code": "code2",
+            "desc": "desc2"
+        }
+    ],
+    "vatNumberGroup": true,
+    "supportContact": {
+        "supportEmail": "support@address.com",
+        "supportPhone": "1234567890"
+    },
+    "vatNumber": "vat123",
+    "subunitCode": "sub123",
+    "subunitType": "type123",
+    "aooParentCode": "aoo123",
+    "parentDescription": "description",
+    "products": [
+        {
+            "productId": "prod123",
+            "userRole": "role123",
+            "productOnBoardingStatus": "ACTIVE",
+            "tokenId": "id1",
+            "billing": {
+                "vatNumber": "vat123",
+                "recipientCode": "rec123",
+                "publicServices": true
+            },
+            "createdAt": "2023-06-12T10:15:30Z"
+        },
+        {
+            "productId": "prod456",
+            "userRole": "role456",
+            "productOnBoardingStatus": "PENDING",
+            "tokenId": "id2",
+            "billing": {
+                "vatNumber": "vat456",
+                "recipientCode": "rec456",
+                "publicServices": false
+            },
+            "createdAt": "2024-05-13T12:15:30Z"
+        }
+    ],
+    "city": "City",
+    "country": "Country",
+    "county": "County",
+    "delegation": true
+}

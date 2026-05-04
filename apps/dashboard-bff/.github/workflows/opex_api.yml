@@ -1,0 +1,54 @@
+name: Opex Dashboard
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'api-spec/api-pagopa-proxy.yaml'
+      - '.github/workflows/opex_api.yml'
+      - '.opex/api-selfcare-dashboard/**'
+  workflow_dispatch:
+
+env:
+  TEMPLATE_DIR: azure-dashboard
+  API_NAME: api-selfcare-dashboard
+  DOCKER_IMAGE_TAG: sha256:04d8ead53c772d23b094c2a395292dc159e6f2905e1b13b5f828f31eac6eb27f
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    environment: 'prod-cd'
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Read terraform version
+        id: read-version
+        shell: bash
+        run: |
+          echo "TERRAFORM_VERSION=`cat .terraform-version`" >> $GITHUB_ENV
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@69c00852f1304c321337f45a105731218c2d5544
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - uses: pagopa/opex-dashboard-azure-action@3ad80a5e4a2d5a8f342615637072f21b687320ce
+        with:
+          environment: prod
+          api-name: ${{ env.API_NAME }}
+          config: .opex/${{ env.API_NAME }}/env/prod/config.yaml
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ vars.ARM_TENANT_ID }}
+          subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+          docker-version: ${{ env.DOCKER_IMAGE_TAG }}

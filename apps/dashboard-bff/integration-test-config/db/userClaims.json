@@ -1,0 +1,73 @@
+[
+  {
+    "_id": "35a78332-d038-4bfa-8e85-2cba7f6b7bf8",
+    "email": "EEFF4l3KRN2cJKm8PDpdMjrVeWG00GeYY6JCbxHlcAPSpQ==",
+    "productRoles": [{
+      "productId": "prod-interop",
+      "roles": [
+        "SUPPORT"
+      ]
+    }]
+  },
+  {
+    "_id": "9f2b6b54-6c2b-4b36-8d83-4cd1d6fcf3e8",
+    "email": "EEFF4l3KRN2cJKm8PDpdMjrVeWG00GeYY6JCbxHlcAPSpQ==",
+    "productRoles": [{
+      "productId": "prod-interop",
+      "roles": [
+        "OPERATOR"
+      ]},
+      {
+        "productId": "ALL",
+        "roles": [
+          "SUPPORT"
+        ]
+      }]
+  },
+  {
+    "_id": "a0530f76-3454-418c-9d65-eb3162075495",
+    "email": "EEFF4l3KRN6cJKm8PDpdMjrVx7KTMZG/p/OjXGPw8gHYAg==",
+    "name": "user-002",
+    "productRoles": [
+      {
+        "productId": "product-A",
+        "roles": [
+          "ADMIN"
+        ]
+      },
+      {
+        "productId": "product-B",
+        "roles": [
+          "OPERATOR",
+          "SUPPORT"
+        ]
+      }
+    ]
+  },
+  {
+    "_id": "042b311a-7b99-4eaa-8c7d-9e5b5f6bb9ae",
+    "email": "EEFF4l3KRN+cJKm8PDpdMjrVrfxxkTxdG8MDsrIDjAAhnw==",
+    "name": "user-003",
+    "productRoles": []
+  },
+  {
+    "_id": "72d4984f-d2bc-4584-a6a7-dd63068b7f48",
+    "email": "EEFF4l3KRNicJKm8PDpdMjrVeBTc8n3wL1BhOofb9gXNTQ==",
+    "name": "user-004",
+    "productRoles": [
+      {
+        "productId": "product-A",
+        "roles": [
+          "OPERATOR"
+        ]
+      },
+      {
+        "productId": "product-B",
+        "roles": [
+          "OPERATOR",
+          "SUPPORT"
+        ]
+      }
+    ]
+  }
+]

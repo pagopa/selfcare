@@ -1,0 +1,5 @@
+{
+  "redirectUrl": "https://example.com/redirect",
+  "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "actionUrl": "https://example.com/action"
+}

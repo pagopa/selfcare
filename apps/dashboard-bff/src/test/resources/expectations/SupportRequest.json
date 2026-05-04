@@ -1,0 +1,10 @@
+{
+  "email": "example@example.com",
+  "productId": "productId",
+  "userId": "userId",
+  "institutionId": "institutionId",
+  "name": "John Doe",
+  "userFields": {
+    "aux_data": "auxiliaryData"
+  }
+}

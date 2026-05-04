@@ -1,0 +1,73 @@
+{
+  "address": "setAddress",
+  "aooParentCode": "setAooParentCode",
+  "attributes": [
+    {
+      "code": "setCode",
+      "description": "setDescription",
+      "origin": "setOrigin"
+    }
+  ],
+  "businessRegisterPlace": "setBusinessRegisterPlace",
+  "city": "setCity",
+  "country": "setCountry",
+  "county": "setCounty",
+  "createdAt": "2024-06-11T10:09:30.154695400+02:00",
+  "dataProtectionOfficer": {
+    "address": "setAddress",
+    "email": "setEmail",
+    "pec": "setPec"
+  },
+  "delegation": true,
+  "description": "setDescription",
+  "digitalAddress": "setDigitalAddress",
+  "externalId": "setExternalId",
+  "geographicTaxonomies": [
+    {
+      "code": "setCode",
+      "desc": "setDesc"
+    }
+  ],
+  "id": "institutionId",
+  "imported": true,
+  "institutionType": "AS",
+  "onboarding": [
+    {
+      "productId": "productId",
+      "isAggregator": true,
+      "tokenId": "id1",
+      "status": "ACTIVE",
+      "createdAt": "2024-06-11T10:09:30.154695400+02:00",
+      "billing": {
+        "publicServices": false,
+        "recipientCode": "setRecipientCode",
+        "vatNumber": "setVatNumber"
+      },
+      "origin": "setOrigin",
+      "originId": "setOriginId",
+      "institutionType": "AS"
+    }
+  ],
+  "origin": "setOrigin",
+  "originId": "setOriginId",
+  "paymentServiceProvider": {
+    "abiCode": "setAbiCode",
+    "businessRegisterNumber": "setBusinessRegisterNumber",
+    "legalRegisterName": "setLegalRegisterName",
+    "legalRegisterNumber": "setLegalRegisterNumber",
+    "vatNumberGroup": true
+  },
+  "rea": "setRea",
+  "rootParent": {
+    "description": "setDescription",
+    "id": "setId"
+  },
+  "shareCapital": "setShareCapital",
+  "subunitCode": "setSubunitCode",
+  "subunitType": "setSubunitType",
+  "supportEmail": "setSupportEmail",
+  "supportPhone": "setSupportPhone",
+  "taxCode": "setTaxCode",
+  "updatedAt": "2024-06-11T10:09:30.153694300+02:00",
+  "zipCode": "setZipCode"
+}

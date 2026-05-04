@@ -1,0 +1,37 @@
+{
+  "id": "groupId",
+  "institutionId": "institutionId",
+  "productId": "productId",
+  "description": "groupDescription",
+  "name": "groupName",
+  "status": "ACTIVE",
+  "members": [
+    {
+      "id": "895b4af3-7fa7-4442-8a0d-a2b05c6c719f",
+      "user": null,
+      "role": null,
+      "products": null,
+      "status": null,
+      "institutionId": null,
+      "userMailUuid": null
+    }
+  ],
+  "createdAt": "2022-01-01T00:00:00Z",
+  "createdBy": {
+    "id": "creatorId",
+    "fiscalCode": null,
+    "name": null,
+    "familyName": null,
+    "email": null,
+    "workContacts": null
+  },
+  "modifiedAt": "2022-01-01T00:00:00Z",
+  "modifiedBy": {
+    "id": "modifierId",
+    "fiscalCode": null,
+    "name": null,
+    "familyName": null,
+    "email": null,
+    "workContacts": null
+  }
+}

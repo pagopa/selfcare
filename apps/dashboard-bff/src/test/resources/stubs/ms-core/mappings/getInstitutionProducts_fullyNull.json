@@ -1,0 +1,14 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/ms-core/v1/institutions/institutionId2/products"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

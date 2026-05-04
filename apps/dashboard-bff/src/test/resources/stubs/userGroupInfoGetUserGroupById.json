@@ -1,0 +1,46 @@
+{
+  "id": "groupId",
+  "institutionId": "institutionId",
+  "productId": "productId",
+  "description": "groupDescription",
+  "name": "groupName",
+  "status": "ACTIVE",
+  "members": [
+    {
+      "id": "memberId1",
+      "user": null,
+      "role": null,
+      "products": null,
+      "status": null,
+      "institutionId": null,
+      "userMailUuid": null
+    },
+    {
+      "id": "memberId2",
+      "user": null,
+      "role": null,
+      "products": null,
+      "status": null,
+      "institutionId": null,
+      "userMailUuid": null
+    }
+  ],
+  "createdAt": "2022-01-01T00:00:00Z",
+  "createdBy": {
+    "id": "creatorId",
+    "fiscalCode": null,
+    "name": null,
+    "familyName": null,
+    "email": null,
+    "workContacts": null
+  },
+  "modifiedAt": "2022-01-01T00:00:00Z",
+  "modifiedBy": {
+    "id": "modifierId",
+    "fiscalCode": null,
+    "name": null,
+    "familyName": null,
+    "email": null,
+    "workContacts": null
+  }
+}
