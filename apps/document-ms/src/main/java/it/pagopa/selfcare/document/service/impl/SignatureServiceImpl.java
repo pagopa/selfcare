@@ -145,9 +145,24 @@ public class SignatureServiceImpl implements SignatureService {
     if (reports.getEtsiValidationReportJaxb() != null) {
       signatureValidationReportTypes = reports.getEtsiValidationReportJaxb().getSignatureValidationReport();
     }
-    if (signatureValidationReportTypes.isEmpty()
-      || (!signatureValidationReportTypes.stream().allMatch(s -> s.getSignatureValidationStatus() != null
-      && Indication.TOTAL_PASSED == s.getSignatureValidationStatus().getMainIndication()))) {
+    if (signatureValidationReportTypes.isEmpty()) {
+      log.warn("No signature validation reports found in ETSI validation report");
+      throw new InvalidRequestException(INVALID_DOCUMENT_SIGNATURE.getMessage(), INVALID_DOCUMENT_SIGNATURE.getCode());
+    }
+
+    List<SignatureValidationReportType> failedSignatures = signatureValidationReportTypes.stream()
+      .filter(s -> s.getSignatureValidationStatus() == null
+        || Indication.TOTAL_PASSED != s.getSignatureValidationStatus().getMainIndication())
+      .toList();
+
+    if (!failedSignatures.isEmpty()) {
+      failedSignatures.forEach(s -> {
+        Indication indication = s.getSignatureValidationStatus() != null
+          ? s.getSignatureValidationStatus().getMainIndication() : null;
+        var subIndication = s.getSignatureValidationStatus() != null
+          ? s.getSignatureValidationStatus().getSubIndication() : null;
+        log.warn("Signature validation failed - indication: {}, subIndication: {}", indication, subIndication);
+      });
       throw new InvalidRequestException(INVALID_DOCUMENT_SIGNATURE.getMessage(), INVALID_DOCUMENT_SIGNATURE.getCode());
     }
   }

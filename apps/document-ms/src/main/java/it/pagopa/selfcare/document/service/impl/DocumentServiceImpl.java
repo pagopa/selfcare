@@ -118,6 +118,16 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
+    public Uni<Long> updateDocumentContractFilesById(Document document) {
+        return documentRepository.updateContractFilesById(
+                document.getId(),
+                document.getContractSigned(),
+                document.getContractFilename(),
+                document.getSigningStep()
+        );
+    }
+
+    @Override
     public Uni<Document> saveDocument(DocumentBuilderRequest request) {
         log.info("Saving document for onboarding: {}, documentType: {}",
                 sanitize(request.getOnboardingId()), sanitize(String.valueOf(request.getDocumentType())));
@@ -130,17 +140,53 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     public Uni<Document> handleContractDocument(DocumentBuilderRequest request) {
+        return handleContractDocument(request, null);
+    }
+
+    @Override
+    public Uni<Document> handleContractDocument(DocumentBuilderRequest request, Integer signingStep) {
         String onboardingId = request.getOnboardingId();
 
         return documentRepository.findByOnboardingId(onboardingId)
-                .onItem().ifNull().switchTo(() -> {
-                    Document document = new Document();
-                    setContractFileName(request, document);
-                    String contractNotSignedPath = DocumentFileUtils.getContractNotSigned(
-                            onboardingId, documentMsConfig.getContractPath(), document.getContractFilename());
+                .chain(existing -> {
+                    if (existing == null) {
+                        log.info("No document found for onboardingId={}. Creating new document record.",
+                                sanitize(onboardingId));
+                        return createNewContractDocument(request);
+                    }
+                    if (existing.getSigningStep() != null) {
+                        log.info("Document found for onboardingId={} with signingStep={}. " +
+                                "Document already signed, creating NEW document record for next signing step.",
+                                sanitize(onboardingId), existing.getSigningStep());
+                        return createNewContractDocument(request);
+                    }
+                    log.info("Document found for onboardingId={} with signingStep=null (not yet signed). " +
+                            "Reusing existing document id={}.",
+                            sanitize(onboardingId), sanitize(existing.getId()));
+                    return Uni.createFrom().item(existing);
+                });
+    }
 
-                    return calculateDigestFromAzureFile(contractNotSignedPath, onboardingId, "Contract")
-                            .chain(digest -> persistDocument(request, digest));
+    private Uni<Document> createNewContractDocument(DocumentBuilderRequest request) {
+        String onboardingId = request.getOnboardingId();
+        Document document = new Document();
+        setContractFileName(request, document);
+        String contractNotSignedPath = DocumentFileUtils.getContractNotSigned(
+                onboardingId, documentMsConfig.getContractPath(), document.getContractFilename());
+
+        return calculateDigestFromAzureFile(contractNotSignedPath, onboardingId, "Contract")
+                .chain(digest -> {
+                    Document doc = buildDocument(request, digest);
+                    return documentRepository.persist(doc)
+                            .replaceWith(doc)
+                            .onItem().invoke(() -> {
+                                log.info("Contract document persisted for onboardingId={}, documentId={}",
+                                        sanitize(request.getOnboardingId()), doc.getId());
+                                telemetryService.trackDocumentSaved(
+                                        request.getOnboardingId(),
+                                        String.valueOf(request.getDocumentType()),
+                                        request.getProductId());
+                            });
                 });
     }
 
