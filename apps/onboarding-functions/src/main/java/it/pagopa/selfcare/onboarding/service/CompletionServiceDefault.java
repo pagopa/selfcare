@@ -284,8 +284,15 @@ public class CompletionServiceDefault implements CompletionService {
         onboardingRequest.setIsAggregator(onboarding.getIsAggregator());
         //If contract exists we send the path of the contract
         if(!onboarding.getInstitution().getInstitutionType().equals(InstitutionType.PG)) {
-            DocumentResponse document = documentControllerApi.getDocumentByOnboardingId(onboarding.getId());
-            onboardingRequest.setContractPath(document.getContractSigned());
+            try {
+                DocumentResponse document = documentControllerApi.getDocumentByOnboardingId(onboarding.getId());
+                onboardingRequest.setContractPath(document.getContractSigned());
+            } catch (WebApplicationException e) {
+                if (e.getResponse().getStatus() != 404) {
+                    throw e;
+                }
+                log.warn("Document not found for onboarding {}, skipping contract path", onboarding.getId());
+            }
         }
         institutionApi.onboardingInstitutionUsingPOST(onboarding.getInstitution().getId(), onboardingRequest);
     }

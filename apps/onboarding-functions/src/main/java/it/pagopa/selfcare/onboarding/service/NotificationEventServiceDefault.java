@@ -17,6 +17,7 @@ import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.api.InstitutionApi;
 import org.openapi.quarkus.core_json.model.InstitutionResponse;
@@ -105,7 +106,15 @@ public class NotificationEventServiceDefault implements NotificationEventService
         context.getLogger().info(() -> String.format("Retrieving institution having ID %s", onboarding.getInstitution().getId()));
         InstitutionResponse institution = institutionApi.retrieveInstitutionByIdUsingGET(onboarding.getInstitution().getId(), onboarding.getProductId());
 
-        DocumentResponse document = documentControllerApi.getDocumentByOnboardingId(onboarding.getId());
+        DocumentResponse document = null;
+        try {
+            document = documentControllerApi.getDocumentByOnboardingId(onboarding.getId());
+        } catch (WebApplicationException e) {
+            if (e.getResponse().getStatus() != 404) {
+                throw e;
+            }
+            context.getLogger().warning(() -> String.format("Document not found for onboarding %s, proceeding without contract path", onboarding.getId()));
+        }
 
         NotificationsResources notificationsResources = new NotificationsResources(onboarding, institution, document, queueEvent);
         for (String consumer : product.getConsumers()) {

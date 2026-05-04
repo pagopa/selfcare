@@ -10,6 +10,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
+import java.net.SocketException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -87,8 +88,18 @@ public class UserRegistryServiceImpl implements UserRegistryService {
     }
 
     private boolean checkIfIsRetryableException(Throwable throwable) {
-        return throwable instanceof TimeoutException ||
-                (throwable instanceof WebApplicationException webApplicationException && webApplicationException.getResponse().getStatus() == 429);
+        if (throwable instanceof TimeoutException ||
+            throwable instanceof SocketException ||
+            (throwable instanceof WebApplicationException webApplicationException && webApplicationException.getResponse().getStatus() == 429)) {
+          return true;
+        }
+
+        // Check cause chain for wrapped exceptions (e.g. Netty wrapping SocketException)
+        Throwable cause = throwable.getCause();
+        if (cause != null && cause != throwable) {
+          return checkIfIsRetryableException(cause);
+        }
+        return false;
     }
 
 
@@ -105,7 +116,7 @@ public class UserRegistryServiceImpl implements UserRegistryService {
                 .institutionId(StringUtils.isNotBlank(institutionId) ? institutionId : null).build();
 
         return Uni.combine().all()
-                .unis(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)
+                .unis(findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)
                                 .onItem().ifNotNull().invoke(() -> log.debug("User founded on userRegistry with userId: {}", userId)),
                         userInstitutionService.findAllWithFilter(userInstitutionFilter.constructMap()).collect().asList()
                                 .onItem().ifNotNull().invoke(() -> log.debug("UserInstitution founded for userId: {} and institutionId: {}", Encode.forJava(userId), Encode.forJava(institutionId))))

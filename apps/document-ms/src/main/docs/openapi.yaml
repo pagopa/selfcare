@@ -157,6 +157,9 @@ components:
           $ref: "#/components/schemas/LocalDateTime"
         activatedAt:
           $ref: "#/components/schemas/LocalDateTime"
+        signingStep:
+          format: int32
+          type: integer
     DocumentBuilderRequest:
       required:
       - onboardingId
@@ -219,6 +222,9 @@ components:
           $ref: "#/components/schemas/LocalDateTime"
         activatedAt:
           $ref: "#/components/schemas/LocalDateTime"
+        signingStep:
+          format: int32
+          type: integer
     DocumentType:
       enum:
       - INSTITUTION
