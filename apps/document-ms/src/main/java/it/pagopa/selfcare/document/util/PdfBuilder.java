@@ -100,7 +100,7 @@ public class PdfBuilder {
         boolean writable = f.setWritable(true, true);
         boolean executable = f.setExecutable(false);
 
-        if (!readable || !writable || executable) {
+        if (!readable || !writable || !executable) {
             log.warn("Could not set restricted permissions on temporary file: {}", f.getAbsolutePath());
         }
         return f;
