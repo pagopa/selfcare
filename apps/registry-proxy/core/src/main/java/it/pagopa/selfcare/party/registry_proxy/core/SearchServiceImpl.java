@@ -10,15 +10,14 @@ import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFo
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ServiceUnavailableException;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.*;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.institution.Institution;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -193,7 +192,7 @@ public class SearchServiceImpl implements SearchService {
       filter = "category eq '" + category + "'";
     }
 
-    return ipaSearchServiceConnector.searchIpaInstitutions(search, filter, pageSize, page * pageSize);
+    return ipaSearchServiceConnector.search(search, filter, pageSize, page * pageSize);
   }
 
 }
