@@ -1,0 +1,103 @@
+name: Drift Detection Core Infra
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "00 08 * * *" # Run at 08:00 every day
+
+jobs:
+  drift_detection_dev_ar:
+    uses: pagopa/dx/.github/workflows/infra_drift_detection.yml@main
+    name: Drift Detection - DEV AR
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    secrets: inherit
+    with:
+      environment: "dev-ar"
+      override_github_environment: "dev"
+      base_path: "infra/core"
+      use_private_agent: true
+      use_labels: true
+      override_labels: "dev"
+  
+  drift_detection_dev_pnpg:
+    uses: pagopa/dx/.github/workflows/infra_drift_detection.yml@main
+    name: Drift Detection - DEV PNPG
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    secrets: inherit
+    with:
+      environment: "dev-pnpg"
+      override_github_environment: "dev"
+      base_path: "infra/core"
+      use_private_agent: true
+      use_labels: true
+      override_labels: "dev"
+
+  drift_detection_uat_ar:
+    uses: pagopa/dx/.github/workflows/infra_drift_detection.yml@main
+    name: Drift Detection - UAT AR
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    secrets: inherit
+    with:
+      environment: "uat-ar"
+      override_github_environment: "uat"
+      base_path: "infra/core"
+      use_private_agent: true
+      use_labels: true
+      override_labels: "uat"
+  
+  drift_detection_uat_pnpg:
+    uses: pagopa/dx/.github/workflows/infra_drift_detection.yml@main
+    name: Drift Detection - UAT PNPG
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    secrets: inherit
+    with:
+      environment: "uat-pnpg"
+      override_github_environment: "uat"
+      base_path: "infra/core"
+      use_private_agent: true
+      use_labels: true
+      override_labels: "uat"
+
+  drift_detection_prod_ar:
+    uses: pagopa/dx/.github/workflows/infra_drift_detection.yml@main
+    name: Drift Detection - PROD AR
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    secrets: inherit
+    with:
+      environment: "prod-ar"
+      override_github_environment: "prod"
+      base_path: "infra/core"
+      use_private_agent: true
+      use_labels: true
+      override_labels: "prod"
+  
+  drift_detection_prod_pnpg:
+    uses: pagopa/dx/.github/workflows/infra_drift_detection.yml@main
+    name: Drift Detection - PROD PNPG
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    secrets: inherit
+    with:
+      environment: "prod-pnpg"
+      override_github_environment: "prod"
+      base_path: "infra/core"
+      use_private_agent: true
+      use_labels: true
+      override_labels: "prod"
