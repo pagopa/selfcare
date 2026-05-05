@@ -413,4 +413,61 @@ public class ProductTest {
     assertNotNull(result);
     assertTrue(result.isEmpty());
   }
+
+  @Test
+  @DisplayName("Test signing configuration and managing institutions deserialization")
+  void testSigningConfigurationDeserialization() {
+    Product product = readProductFromFile("src/test/resources/product.json");
+
+    assertNotNull(product);
+    assertNotNull(product.getSigningConfiguration());
+    assertEquals(2, product.getSigningConfiguration().getRequiredSignatures());
+    assertTrue(product.getSigningConfiguration().isSkipSignerIdentityCheck());
+    assertNotNull(product.getSigningConfiguration().getSteps());
+    assertEquals(2, product.getSigningConfiguration().getSteps().size());
+    assertEquals(1, product.getSigningConfiguration().getSteps().get(0).getOrder());
+    assertFalse(product.getSigningConfiguration().getSteps().get(0).isFinal());
+    assertEquals(2, product.getSigningConfiguration().getSteps().get(1).getOrder());
+    assertTrue(product.getSigningConfiguration().getSteps().get(1).isFinal());
+
+    assertNotNull(product.getManagingInstitutions());
+    assertEquals(2, product.getManagingInstitutions().size());
+    assertEquals("inst-1", product.getManagingInstitutions().get(0).getInstitutionId());
+    assertEquals(1, product.getManagingInstitutions().get(0).getSigningStep());
+    assertEquals("inst-2", product.getManagingInstitutions().get(1).getInstitutionId());
+    assertEquals(2, product.getManagingInstitutions().get(1).getSigningStep());
+  }
+
+  @Test
+  @DisplayName("Test signing configuration and managing institutions null handling")
+  void testSigningConfigurationNullDeserialization() {
+    Product product = readProductFromFile("src/test/resources/product-signing-null.json");
+
+    assertNotNull(product);
+    assertNull(product.getSigningConfiguration());
+    assertNull(product.getManagingInstitutions());
+  }
+
+  @Test
+  @DisplayName("Test managing institutions empty list handling")
+  void testManagingInstitutionsEmptyListDeserialization() {
+    Product product = readProductFromFile("src/test/resources/product-signing-empty.json");
+
+    assertNotNull(product);
+    assertNull(product.getSigningConfiguration());
+    assertNotNull(product.getManagingInstitutions());
+    assertTrue(product.getManagingInstitutions().isEmpty());
+  }
+
+  private Product readProductFromFile(String path) {
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.registerModule(new JavaTimeModule());
+    try {
+      return objectMapper.readValue(new File(path), Product.class);
+    } catch (IOException e) {
+      log.error("Failed to read product json", e);
+      fail("Failed to read product json: " + path);
+      return null;
+    }
+  }
 }

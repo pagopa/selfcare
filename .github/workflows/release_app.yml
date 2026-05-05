@@ -26,20 +26,21 @@ on:
         options:
           - auth
           - iam
+          - delegation-cdc
           - document-ms
+          - institution-ms
+          - institution-send-mail-scheduler
           - onboarding-bff
           - onboarding-cdc
           - onboarding-ms
           - product
           - product-cdc
           - registry-proxy
-          - user-ms
-          - user-group-ms
+          - registry-proxy-runner
           - user-cdc
           - user-group-cdc
-          - institution-ms
-          - delegation-cdc
-          - institution-send-mail-scheduler
+          - user-group-ms
+          - user-ms
           - webhook
           - dashboard-bff
         required: true

@@ -59,7 +59,7 @@ jobs:
         || inputs.app == 'institution-ms' && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH)
         || endsWith(inputs.app, '-bff') && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH)
         || format('./{0}/src/main/docs/openapi.json', inputs.APP_PATH) }}
-      upload_openapi_enabled: ${{ inputs.target == 'ar' && !endsWith(inputs.app, '-cdc') }}
+      upload_openapi_enabled: ${{ inputs.target == 'ar' && !endsWith(inputs.app, '-cdc') && !endsWith(inputs.app, '-runner') }}
 
   release_uat:
     uses: ./.github/workflows/call_release_docker.yml
@@ -85,7 +85,7 @@ jobs:
         || inputs.app == 'institution-ms' && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH)
         || endsWith(inputs.app, '-bff') && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH)
         || format('./{0}/src/main/docs/openapi.json', inputs.APP_PATH) }}
-      upload_openapi_enabled: ${{ inputs.target == 'ar' && !endsWith(inputs.app, '-cdc') }}
+      upload_openapi_enabled: ${{ inputs.target == 'ar' && !endsWith(inputs.app, '-cdc') && !endsWith(inputs.app, '-runner') }}
 
   release_prod:
     uses: ./.github/workflows/call_release_docker.yml
@@ -111,4 +111,4 @@ jobs:
         || inputs.app == 'institution-ms' && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH)
         || endsWith(inputs.app, '-bff') && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH)
         || format('./{0}/src/main/docs/openapi.json', inputs.APP_PATH) }}
-      upload_openapi_enabled: ${{ inputs.target == 'ar' && !endsWith(inputs.app, '-cdc') }}
+      upload_openapi_enabled: ${{ inputs.target == 'ar' && !endsWith(inputs.app, '-cdc') && !endsWith(inputs.app, '-runner') }}

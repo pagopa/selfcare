@@ -1571,14 +1571,16 @@ class DocumentContentServiceImplTest {
         Document mockDocument = buildDocument(); // Usa il tuo helper esistente
         mockDocument.setContractFilename("original_contract.pdf");
 
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().nullItem());
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), anyInt()))
                 .thenReturn(Uni.createFrom().item(mockDocument));
         when(signatureService.verifyContractSignature(eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), eq(skipVerification)))
                 .thenReturn(Uni.createFrom().voidItem());
         when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
         when(azureBlobClient.uploadFile(anyString(), anyString(), any(byte[].class)))
                 .thenReturn("/contracts/" + ONBOARDING_ID + "/signed_original_contract.pdf");
-        when(documentService.updateDocumentContractFiles(any(Document.class)))
+        when(documentService.updateDocumentContractFilesById(any(Document.class)))
                 .thenReturn(Uni.createFrom().item(1L));
 
         // Act
@@ -1589,7 +1591,7 @@ class DocumentContentServiceImplTest {
         // Assert
         assertDoesNotThrow(awaiter::indefinitely);
         verify(azureBlobClient).uploadFile(eq("/contracts/" + ONBOARDING_ID), anyString(), any(byte[].class));
-        verify(documentService).updateDocumentContractFiles(any(Document.class));
+        verify(documentService).updateDocumentContractFilesById(any(Document.class));
     }
 
     @Test
@@ -1600,7 +1602,9 @@ class DocumentContentServiceImplTest {
 
         Document mockDocument = buildDocument();
 
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().nullItem());
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), anyInt()))
                 .thenReturn(Uni.createFrom().item(mockDocument));
 
         // Simuliamo il fallimento della firma
@@ -1618,7 +1622,7 @@ class DocumentContentServiceImplTest {
 
         // Azure e DB non devono essere mai chiamati
         verify(azureBlobClient, Mockito.never()).uploadFile(anyString(), anyString(), any(byte[].class));
-        verify(documentService, Mockito.never()).updateDocumentContractFiles(any());
+        verify(documentService, Mockito.never()).updateDocumentContractFilesById(any());
     }
 
     @Test
@@ -1629,7 +1633,9 @@ class DocumentContentServiceImplTest {
 
         Document mockDocument = buildDocument();
 
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().nullItem());
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), anyInt()))
                 .thenReturn(Uni.createFrom().item(mockDocument));
         when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean()))
                 .thenReturn(Uni.createFrom().voidItem());
@@ -1650,7 +1656,7 @@ class DocumentContentServiceImplTest {
         assertTrue(ex.getMessage().contains("Azure timeout"));
 
         // Il DB non deve essere toccato
-        verify(documentService, Mockito.never()).updateDocumentContractFiles(any());
+        verify(documentService, Mockito.never()).updateDocumentContractFilesById(any());
     }
 
     @Test
@@ -1661,7 +1667,9 @@ class DocumentContentServiceImplTest {
         InputStream mockFile = new ByteArrayInputStream("dummy content".getBytes());
         Document mockDocument = buildDocument();
 
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().nullItem());
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), anyInt()))
                 .thenReturn(Uni.createFrom().item(mockDocument));
         when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean()))
                 .thenReturn(Uni.createFrom().voidItem());
@@ -1672,7 +1680,7 @@ class DocumentContentServiceImplTest {
                 .thenReturn(uploadedPath);
 
         // Il DB fallisce!
-        when(documentService.updateDocumentContractFiles(any(Document.class)))
+        when(documentService.updateDocumentContractFilesById(any(Document.class)))
                 .thenReturn(Uni.createFrom().failure(new RuntimeException("Mongo DB is down")));
 
         // Act

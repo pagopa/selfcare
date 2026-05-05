@@ -7,22 +7,24 @@ on:
         type: choice
         description: "Domain to release"
         options:
-          - onboarding
-          - onboarding-bff
           - auth
           - iam
+          - delegation-cdc
+          - document-ms
+          - institution-ms
+          - institution-send-mail-scheduler
+          - onboarding-bff
+          - onboarding-cdc
+          - onboarding-ms
           - product
           - product-cdc
-          - webhook
           - registry-proxy
-          - document-ms
-          - user-ms
-          - user-group-ms
+          - registry-proxy-runner
           - user-cdc
           - user-group-cdc
-          - institution-ms
-          - delegation-cdc
-          - institution-send-mail-scheduler
+          - user-group-ms
+          - user-ms
+          - webhook
           - dashboard-bff
         required: true
       version-bump:
