@@ -1,8 +1,5 @@
 package it.pagopa.selfcare.onboarding.service.util;
 
-import static it.pagopa.selfcare.onboarding.constants.CustomError.*;
-import static jakarta.ws.rs.core.Response.Status.Family.SUCCESSFUL;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.mutiny.Uni;
@@ -12,33 +9,38 @@ import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.model.FormItem;
+import it.pagopa.selfcare.onboarding.service.ProxyRegistryService;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
-import java.util.List;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
 import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
-import org.openapi.quarkus.party_registry_proxy_json.api.UoApi;
 import org.openapi.quarkus.party_registry_proxy_json.model.UOResource;
+
+import java.util.List;
+import java.util.Objects;
+
+import static it.pagopa.selfcare.onboarding.constants.CustomError.*;
+import static jakarta.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
 @Slf4j
 @ApplicationScoped
 public class OnboardingUtils {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    @RestClient
-    @Inject
-    UoApi uoApi;
+    private final ProxyRegistryService proxyRegistryService;
+
+    public OnboardingUtils(ProxyRegistryService proxyRegistryService) {
+        this.proxyRegistryService = proxyRegistryService;
+    }
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public Uni<UOResource> getUoFromRecipientCode(String recipientCode) {
-        return uoApi.findByUnicodeUsingGET1(recipientCode, null)
+        return proxyRegistryService.findUoByRecipientCode(recipientCode, null)
                 .onFailure(WebApplicationException.class)
                 .recoverWithUni(ex -> ((WebApplicationException) ex).getResponse().getStatus() == 404
                         ? Uni.createFrom().failure(new ResourceNotFoundException(
@@ -133,7 +135,7 @@ public class OnboardingUtils {
         log.warn("Document service call failed: operation={}, onboardingId={}, body={}", operation, onboardingId, body);
 
         try {
-            JsonNode root = OBJECT_MAPPER.readTree(body);
+            JsonNode root = objectMapper.readTree(body);
             if (root.has("title") && root.has("detail")) {
                 String errorCode = root.get("title").asText(null);
                 String errorDetail = root.get("detail").asText(null);

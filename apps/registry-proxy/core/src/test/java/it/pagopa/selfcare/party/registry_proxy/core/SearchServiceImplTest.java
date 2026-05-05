@@ -1,5 +1,8 @@
 package it.pagopa.selfcare.party.registry_proxy.core;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.InstitutionConnector;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.IpaSearchServiceConnector;
@@ -8,6 +11,9 @@ import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFo
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ServiceUnavailableException;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.*;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.institution.Institution;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,13 +23,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ContextConfiguration(classes = {SearchServiceImplTest.class})
 @ExtendWith(MockitoExtension.class)
@@ -369,7 +368,7 @@ public class SearchServiceImplTest {
     mockResult.setInstitutions(List.of(institution));
     mockResult.setTotalElements(1L);
 
-    when(ipaSearchServiceConnector.searchIpaInstitutions("Roma", null, 50, 0))
+    when(ipaSearchServiceConnector.search("Roma", null, 50, 0))
             .thenReturn(mockResult);
 
     IpaInstitutionSearchResult result = searchService.searchIpaInstitutions("Roma", null, 0, 50);
@@ -377,7 +376,7 @@ public class SearchServiceImplTest {
     assertNotNull(result);
     assertEquals(1L, result.getTotalElements());
     assertEquals("ipa-1", result.getInstitutions().get(0).getId());
-    verify(ipaSearchServiceConnector, times(1)).searchIpaInstitutions("Roma", null, 50, 0);
+    verify(ipaSearchServiceConnector, times(1)).search("Roma", null, 50, 0);
   }
 
   @Test
@@ -386,14 +385,14 @@ public class SearchServiceImplTest {
     mockResult.setInstitutions(List.of());
     mockResult.setTotalElements(0L);
 
-    when(ipaSearchServiceConnector.searchIpaInstitutions("*", "category eq 'L6'", 50, 0))
+    when(ipaSearchServiceConnector.search("*", "category eq 'L6'", 50, 0))
             .thenReturn(mockResult);
 
     IpaInstitutionSearchResult result = searchService.searchIpaInstitutions(null, "L6", 0, 50);
 
     assertNotNull(result);
     assertEquals(0L, result.getTotalElements());
-    verify(ipaSearchServiceConnector, times(1)).searchIpaInstitutions("*", "category eq 'L6'", 50, 0);
+    verify(ipaSearchServiceConnector, times(1)).search("*", "category eq 'L6'", 50, 0);
   }
 
   @Test
@@ -402,13 +401,13 @@ public class SearchServiceImplTest {
     mockResult.setInstitutions(List.of());
     mockResult.setTotalElements(0L);
 
-    when(ipaSearchServiceConnector.searchIpaInstitutions("*", null, 50, 0))
+    when(ipaSearchServiceConnector.search("*", null, 50, 0))
             .thenReturn(mockResult);
 
     IpaInstitutionSearchResult result = searchService.searchIpaInstitutions(null, null, null, null);
 
     assertNotNull(result);
-    verify(ipaSearchServiceConnector, times(1)).searchIpaInstitutions("*", null, 50, 0);
+    verify(ipaSearchServiceConnector, times(1)).search("*", null, 50, 0);
   }
 
 }

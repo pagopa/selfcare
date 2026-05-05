@@ -48,4 +48,9 @@ public class Product {
   private List<String> testEnvProductIds;
 
   private ProductMetadata metadata;
+
+  private SigningConfiguration signingConfiguration;
+
+  private List<ManagingInstitution> managingInstitutions;
+
 }

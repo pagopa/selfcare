@@ -33,8 +33,6 @@ public class SearchServiceImpl implements SearchService {
   @Value("${dapr.queue.topic}")
   private String kafkaTopic;
 
-  private static final Set<String> ALLOWED_DIRECTIONS = Set.of("asc", "desc");
-
   @Autowired
   public SearchServiceImpl(InstitutionConnector institutionConnector, SearchServiceConnector searchServiceConnector,
                            IpaSearchServiceConnector ipaSearchServiceConnector) {
@@ -194,7 +192,7 @@ public class SearchServiceImpl implements SearchService {
       filter = "category eq '" + category + "'";
     }
 
-    return ipaSearchServiceConnector.searchIpaInstitutions(search, filter, pageSize, page * pageSize);
+    return ipaSearchServiceConnector.search(search, filter, pageSize, page * pageSize);
   }
 
   public String buildOrderBy(List<String> orderBy) {
