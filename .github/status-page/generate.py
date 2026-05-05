@@ -61,7 +61,7 @@ INFRA_RESOURCES = [
     ("onboarding-cdc",                  "pr_onboarding_infra_cdc.yml",                  [(e, "ar") for e in ENVS]),
     ("onboarding-functions",            "pr_onboarding_infra_functions.yml",            [(e, "ar") for e in ENVS]),
     ("document-ms",                     "pr_document_ms_infra.yml",                     [(e, "ar") for e in ENVS]),
-    ("registry-proxy",                  "pr_registry_proxy_ms.yml",                     [(e, "ar") for e in ENVS]),
+    ("registry-proxy",                  "pr_registry_proxy_infra.yml",                     [(e, "ar") for e in ENVS]),
     ("user-ms",                         "pr_user_ms_infra.yml",                         [(e, "ar") for e in ENVS]),
     ("user-cdc",                        "pr_user_cdc_infra.yml",                        [(e, "ar") for e in ENVS]),
     ("user-group-ms",                   "pr_user_group_ms_infra.yml",                   [(e, "ar") for e in ENVS]),
