@@ -114,7 +114,7 @@ public class SearchControllerTest {
 
   @Test
   void searchOnboardingTest_internalServerError() throws Exception {
-    when(searchService.searchOnboarding(anyString(), any(), any(), any(), anyLong(), anyLong(), anyList()))
+    when(searchService.searchOnboarding(anyString(), any(), any(), any(), anyLong(), anyLong(), any()))
             .thenThrow(new RuntimeException("Internal service error"));
 
     mockMvc.perform(get("/search/onboardings")
