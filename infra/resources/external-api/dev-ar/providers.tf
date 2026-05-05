@@ -6,6 +6,11 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
     }
+
+    github = {
+      source  = "integrations/github"
+      version = "~> 6.0"
+    }
   }
 
   backend "azurerm" {
@@ -21,5 +26,9 @@ terraform {
 provider "azurerm" {
   features {}
   storage_use_azuread = true
+}
+
+provider "github" {
+  owner = "pagopa"
 }
 
