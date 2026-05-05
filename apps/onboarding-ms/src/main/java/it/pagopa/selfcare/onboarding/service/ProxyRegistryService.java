@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.onboarding.service.integration;
+package it.pagopa.selfcare.onboarding.service;
 
 import io.smallrye.mutiny.Uni;
 import org.openapi.quarkus.party_registry_proxy_json.model.UOResource;

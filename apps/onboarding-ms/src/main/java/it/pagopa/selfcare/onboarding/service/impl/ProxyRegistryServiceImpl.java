@@ -1,7 +1,7 @@
-package it.pagopa.selfcare.onboarding.service.integration.impl;
+package it.pagopa.selfcare.onboarding.service.impl;
 
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.onboarding.service.integration.ProxyRegistryService;
+import it.pagopa.selfcare.onboarding.service.ProxyRegistryService;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.party_registry_proxy_json.api.UoApi;

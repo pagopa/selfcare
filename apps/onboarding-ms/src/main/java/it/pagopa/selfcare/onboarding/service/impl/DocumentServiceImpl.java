@@ -1,7 +1,7 @@
-package it.pagopa.selfcare.onboarding.service.integration.impl;
+package it.pagopa.selfcare.onboarding.service.impl;
 
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.onboarding.service.integration.DocumentService;
+import it.pagopa.selfcare.onboarding.service.DocumentService;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.document_json.api.DocumentControllerApi;

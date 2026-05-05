@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.onboarding.service.integration.impl;
+package it.pagopa.selfcare.onboarding.service;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.mock;
@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.onboarding.service.impl.DocumentServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.document_json.api.DocumentControllerApi;
 import org.openapi.quarkus.document_json.model.DocumentResponse;

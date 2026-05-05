@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.onboarding.service.integration.impl;
+package it.pagopa.selfcare.onboarding.service;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.eq;
@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.onboarding.service.impl.ProxyRegistryServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.party_registry_proxy_json.api.UoApi;
 import org.openapi.quarkus.party_registry_proxy_json.model.UOResource;
