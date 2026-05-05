@@ -1,4 +1,10 @@
-name: Code Review - Registry Proxy
+name: Code Review - Registry Proxy Runner
+
+permissions:
+  contents: read
+  pull-requests: write
+  packages: read
+
 on:
   workflow_dispatch:
 
@@ -13,23 +19,18 @@ on:
       - reopened
       - ready_for_review
     paths:
-      - "apps/registry-proxy/**"
-      - ".github/workflows/pr_registry_proxy_ms.yml"
-      - ".github/workflows/call_code_review.yml"
+      - 'apps/iam/**'
+      - '.github/workflows/pr_registry_proxy_runner.yml'
+      - '.github/workflows/call_code_review.yml'
 
 jobs:
   code_review:
     uses: ./.github/workflows/call_code_review.yml
-    name: "Code Review"
-    permissions:
-      contents: read
-      pull-requests: write
-      packages: read
+    name: IAM Code Review
     secrets: inherit
-    if: github.base_ref == 'main' && github.event_name == 'pull_request'
     with:
       pr_number: ${{ github.event.pull_request.number }}
       source_branch: ${{ github.head_ref }}
       target_branch: ${{ github.base_ref }}
-      sonar_key: "pagopa_selfcare"
-      module: "registry-proxy"
+      sonar_key: 'pagopa_selfcare'
+      module: 'registry_proxy_runner'
