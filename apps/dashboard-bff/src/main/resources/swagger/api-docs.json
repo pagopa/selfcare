@@ -1,7 +1,7 @@
 {
   "openapi" : "3.0.1",
   "info" : {
-    "title" : "${openapi_title}",
+    "title" : "Dashboard BFF API",
     "description" : "Self Care Dashboard API documentation",
     "version" : "0.0.1-SNAPSHOT"
   },

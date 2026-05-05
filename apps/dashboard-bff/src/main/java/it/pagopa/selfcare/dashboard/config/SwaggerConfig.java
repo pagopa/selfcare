@@ -60,7 +60,7 @@ public class SwaggerConfig {
     public OpenAPI swaggerSpringPlugin() {
         return (new OpenAPI(SpecVersion.V30))
                 .info(new Info()
-                        .title("${openapi_title}")
+                        .title("Dashboard BFF API")
                         .description(environment.getProperty("swagger.description", "Api and Models"))
                         .version(environment.getProperty("swagger.version", environment.getProperty("spring.application.version")))
                 )
