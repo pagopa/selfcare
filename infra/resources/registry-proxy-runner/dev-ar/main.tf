@@ -49,7 +49,7 @@ module "container_app" {
   env_short                      = module.local.config.env_short
   resource_group_name            = module.local.config.ca_resource_group_name
   container_app                  = module.local.config.container_app
-  container_app_name             = "selc-${module.local.config.env_short}-registry-proxy-runner"
+  container_app_name             = "selc-${module.local.config.env_short}-reg-proxy-runner"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-registry-proxy-runner"
   image_tag                      = var.image_tag

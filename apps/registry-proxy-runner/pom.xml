@@ -27,7 +27,6 @@
     <skipITs>true</skipITs>
     <surefire-plugin.version>3.5.4</surefire-plugin.version>
     <opencsv.version>5.9</opencsv.version>
-    <quarkus-openapi-generator.version>2.16.0</quarkus-openapi-generator.version>
   </properties>
 
   <dependencyManagement>
@@ -55,11 +54,6 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-rest-client-jackson</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkiverse.openapi.generator</groupId>
-      <artifactId>quarkus-openapi-generator</artifactId>
-      <version>${quarkus-openapi-generator.version}</version>
     </dependency>
 
     <!-- CSV parsing -->
