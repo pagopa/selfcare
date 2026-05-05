@@ -2,36 +2,30 @@
 # Common analyzers/tokenizers locals
 ###############################################################################
 locals {
-  autocomplete_analyzers = jsondecode(<<-JSON
-    [
-      {
-        "name": "autocomplete_analyzer",
-        "@odata.type": "#Microsoft.Azure.Search.CustomAnalyzer",
-        "tokenizer": "autocomplete_tokenizer",
-        "tokenFilters": ["lowercase", "asciifolding"]
-      },
-      {
-        "name": "autocomplete_search_analyzer",
-        "@odata.type": "#Microsoft.Azure.Search.CustomAnalyzer",
-        "tokenizer": "lowercase",
-        "tokenFilters": ["lowercase", "asciifolding"]
-      }
-    ]
-  JSON
-  )
+  autocomplete_analyzers = [
+    {
+      "name"         = "autocomplete_analyzer"
+      "@odata.type"  = "#Microsoft.Azure.Search.CustomAnalyzer"
+      "tokenizer"    = "autocomplete_tokenizer"
+      "tokenFilters" = ["lowercase", "asciifolding"]
+    },
+    {
+      "name"         = "autocomplete_search_analyzer"
+      "@odata.type"  = "#Microsoft.Azure.Search.CustomAnalyzer"
+      "tokenizer"    = "lowercase"
+      "tokenFilters" = ["lowercase", "asciifolding"]
+    }
+  ]
 
-  autocomplete_tokenizers = jsondecode(<<-JSON
-    [
-      {
-        "name": "autocomplete_tokenizer",
-        "@odata.type": "#Microsoft.Azure.Search.EdgeNGramTokenizer",
-        "minGram": 3,
-        "maxGram": 10,
-        "tokenChars": ["letter", "digit"]
-      }
-    ]
-  JSON
-  )
+  autocomplete_tokenizers = [
+    {
+      "name"        = "autocomplete_tokenizer"
+      "@odata.type" = "#Microsoft.Azure.Search.EdgeNGramTokenizer"
+      "minGram"     = 3
+      "maxGram"     = 10
+      "tokenChars"  = ["letter", "digit"]
+    }
+  ]
 }
 
 ###############################################################################
