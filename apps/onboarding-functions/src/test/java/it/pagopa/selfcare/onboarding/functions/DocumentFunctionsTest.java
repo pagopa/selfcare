@@ -7,15 +7,19 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.dto.EntityFilter;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
-import it.pagopa.selfcare.onboarding.service.OnboardingService;
+import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
+import org.openapi.quarkus.document_json.api.DocumentControllerApi;
+import org.openapi.quarkus.document_json.model.DocumentResponse;
 
 import java.util.logging.Logger;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @QuarkusTest
@@ -24,10 +28,9 @@ public class DocumentFunctionsTest {
   @Inject
   DocumentFunctions function;
 
-  @RestClient
-  @InjectMock
-  DocumentContentControllerApi documentContentControllerApi;
+  @RestClient @InjectMock DocumentContentControllerApi documentContentControllerApi;
 
+  @RestClient @InjectMock DocumentControllerApi documentControllerApi;
 
   @Inject
   ObjectMapper objectMapper;
@@ -55,8 +58,38 @@ public class DocumentFunctionsTest {
     String params = objectMapper.writeValueAsString(entity);
     when(documentContentControllerApi.deleteContract("123")).thenReturn(Response.status(500).build());
 
-    org.junit.jupiter.api.Assertions.assertThrows(
-        GenericOnboardingException.class,
-        () -> function.deleteContract(params, executionContext));
+    assertThrows(
+        GenericOnboardingException.class, () -> function.deleteContract(params, executionContext));
+  }
+
+  @Test
+  void getLatestDocument_success() throws JsonProcessingException {
+    Onboarding onboarding = new Onboarding();
+    onboarding.setId("onb-1");
+    onboarding.setProductId("prod-1");
+    String onboardingString = objectMapper.writeValueAsString(onboarding);
+
+    DocumentResponse response = DocumentResponse.builder().signingStep(2).build();
+    when(documentControllerApi.getDocumentByOnboardingId("onb-1")).thenReturn(response);
+
+    DocumentResponse result = function.getLatestDocument(onboardingString, executionContext);
+
+    assertNotNull(result);
+    assertEquals(2, result.getSigningStep());
+    verify(documentControllerApi, times(1)).getDocumentByOnboardingId("onb-1");
+  }
+
+  @Test
+  void getLatestDocument_shouldThrowWhenDocumentServiceFails() throws JsonProcessingException {
+    Onboarding onboarding = new Onboarding();
+    onboarding.setId("onb-2");
+    onboarding.setProductId("prod-2");
+    String onboardingString = objectMapper.writeValueAsString(onboarding);
+
+    when(documentControllerApi.getDocumentByOnboardingId("onb-2"))
+        .thenThrow(new WebApplicationException(Response.status(500).build()));
+
+    assertThrows(
+        WebApplicationException.class, () -> function.getLatestDocument(onboardingString, executionContext));
   }
 }

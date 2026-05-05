@@ -29,6 +29,10 @@ public interface WorkflowExecutor {
 
     Optional<OnboardingStatus> executePendingState(TaskOrchestrationContext ctx, OnboardingWorkflow onboardingWorkflow);
 
+    default Optional<OnboardingStatus>  executePendingInReviewState(TaskOrchestrationContext ctx, OnboardingWorkflow onboardingWorkflow) {
+        return Optional.empty();
+    }
+
     OnboardingWorkflow createOnboardingWorkflow(Onboarding onboarding);
 
     ObjectMapper objectMapper();
@@ -41,6 +45,7 @@ public interface WorkflowExecutor {
             case REQUEST -> executeRequestState(ctx, onboardingWorkflow);
             case TOBEVALIDATED -> executeToBeValidatedState(ctx, onboardingWorkflow);
             case PENDING -> executePendingState(ctx, onboardingWorkflow);
+            case PENDING_IN_REVIEW -> executePendingInReviewState(ctx, onboardingWorkflow);
             case REJECTED -> executeRejectedState(ctx, onboardingWorkflow);
             default -> Optional.empty();
         };

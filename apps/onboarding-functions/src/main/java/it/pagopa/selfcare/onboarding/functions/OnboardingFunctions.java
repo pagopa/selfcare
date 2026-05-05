@@ -29,6 +29,7 @@ import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.utils.InstitutionUtils;
 import it.pagopa.selfcare.onboarding.workflow.*;
 import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.product.entity.SigningConfiguration;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
@@ -318,6 +319,8 @@ public class OnboardingFunctions {
             workflowExecutor =
                 new WorkflowExecutorContractRegistrationAggregator(
                     objectMapper, optionsRetry, onboardingMapper);
+        case CONTRACT_WITH_COUNTERSIGNATURE ->
+            workflowExecutor = new WorkflowExecutorContractWithCountersignature(objectMapper, optionsRetry, onboardingMapper);
         case FOR_APPROVE ->
             workflowExecutor = new WorkflowExecutorForApprove(objectMapper, optionsRetry, onboardingMapper);
         case FOR_APPROVE_PT ->
@@ -329,9 +332,7 @@ public class OnboardingFunctions {
         case CONFIRMATION_AGGREGATE ->
             workflowExecutor = new WorkflowExecutorConfirmAggregate(objectMapper, optionsRetry);
         case CONFIRMATION_AGGREGATOR ->
-                workflowExecutor =
-                        new WorkflowExecutorConfirmationAggregator(
-                                objectMapper, optionsRetry, onboardingMapper);
+            workflowExecutor = new WorkflowExecutorConfirmationAggregator(objectMapper, optionsRetry, onboardingMapper);
         case IMPORT -> workflowExecutor = new WorkflowExecutorImport(objectMapper, optionsRetry);
         case IMPORT_AGGREGATION -> workflowExecutor = new WorkflowExecutorImportAggregation(objectMapper, optionsRetry, onboardingMapper);
         case USERS -> workflowExecutor = new WorkflowExecutorForUsers(objectMapper, optionsRetry);
@@ -984,5 +985,23 @@ public class OnboardingFunctions {
             "onboardingId", onboarding.getId(),
             "productId", onboarding.getProductId()));
     service.updateOnboardingExpiringDate(onboarding);
+  }
+
+  @FunctionName(GET_SIGNING_CONFIGURATION_ACTIVITY)
+  public SigningConfiguration getSigningConfiguration(
+      @DurableActivityTrigger(name = "onboardingString") String onboardingString,
+      final ExecutionContext context) {
+    Onboarding onboarding = readOnboardingValue(objectMapper, onboardingString);
+    telemetryService.trackFunction(
+        GET_SIGNING_CONFIGURATION_ACTIVITY,
+        String.format(
+            FORMAT_LOGGER_ONBOARDING_STRING,
+            GET_SIGNING_CONFIGURATION_ACTIVITY,
+            onboardingString),
+        SeverityLevel.Information,
+        Map.of(
+            "onboardingId", onboarding.getId(),
+            "productId", onboarding.getProductId()));
+    return productService.getProductIsValid(onboarding.getProductId()).getSigningConfiguration();
   }
 }
