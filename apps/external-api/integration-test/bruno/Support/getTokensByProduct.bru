@@ -1,0 +1,38 @@
+meta {
+  name: getTokensByProduct
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{apiBaseUrl}}/external/support/v1/tokens/products/{{productId}}?page={{page}}&size={{size}}&status={{tokenStatus}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  ~page: {{page}}
+  ~size: {{size}}
+  ~status: {{tokenStatus}}
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeySupport}}
+}
+
+script:post-response {
+  test("getTokensByProduct ok", function() {
+    const status = res.getStatus();
+    expect([200, 204, 404]).to.include(status);
+
+    if (status === 200) {
+      const jsonData = res.getBody();
+      // tokens resource may be object with fields like content/pagination - be permissive
+      expect(jsonData).to.be.an('object');
+    }
+  });
+}
+
+settings {
+  encodeUrl: true
+}

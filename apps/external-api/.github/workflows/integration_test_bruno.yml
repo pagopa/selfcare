@@ -1,0 +1,63 @@
+name: Integration test (Bruno)
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+      - releases/*
+
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        required: true
+        default: dev
+        options:
+          - dev
+          - uat
+
+jobs:
+  setup_env:
+    name: "Current Environment"
+    runs-on: 'ubuntu-latest'
+    outputs:
+      environ: ${{ steps.set-env.outputs.environ }}
+    steps:
+      - name: Set Environment Variable
+        id: set-env
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "environ=${{ github.event.inputs.env }}" >> $GITHUB_OUTPUT
+          else
+            if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+              echo "environ=dev" >> $GITHUB_OUTPUT
+            else
+              echo "environ=uat" >> $GITHUB_OUTPUT
+            fi
+          fi
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Current env
+        run: echo "env ${{ steps.set-env.outputs.environ }}"
+
+  test_dev:
+    uses: ./.github/workflows/call_integration_test_bruno.yml
+    name: "[DEV] Integration test (Bruno)"
+    needs: setup_env
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && needs.setup_env.outputs.environ == null) || needs.setup_env.outputs.environ == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+
+  test_uat:
+    uses: ./.github/workflows/call_integration_test_bruno.yml
+    name: "[UAT] Integration test (Bruno)"
+    needs: setup_env
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && needs.setup_env.outputs.environ == null) == false && needs.setup_env.outputs.environ == 'uat' }}
+    secrets: inherit
+    with:
+      environment: uat

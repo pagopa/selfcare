@@ -1,0 +1,39 @@
+name: APIM PNPG Internal - Detect Conflict and Update
+on:
+  pull_request:
+    branches:
+      - main
+      - releases/**
+    paths:
+      - "infra/apim_v2/api_pnpg/internal_api_for_pnpg/v1/**"
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+
+permissions:
+  contents: write
+
+jobs:
+  pnpg_detect_internal_dev:
+    uses: ./.github/workflows/call_detect_openapi.yml
+    name: "[DEV] PNPG Internal - Detect Rules and Conflict"
+    secrets: inherit
+    with:
+      path_openapi_docs: infra/apim_v2/api_pnpg/internal_api_for_pnpg/v1/openapi.dev.json
+
+  pnpg_detect_internal_uat:
+    uses: ./.github/workflows/call_detect_openapi.yml
+    name: "[UAT] PNPG Internal - Detect Rules and Conflict"
+    secrets: inherit
+    with:
+      path_openapi_docs: infra/apim_v2/api_pnpg/internal_api_for_pnpg/v1/openapi.uat.json
+
+  pnpg_detect_internal_prod:
+    uses: ./.github/workflows/call_detect_openapi.yml
+    name: "[PROD] PNPG Internal - Detect Rules and Conflict"
+    secrets: inherit
+    with:
+      path_openapi_docs: infra/apim_v2/api_pnpg/internal_api_for_pnpg/v1/openapi.prod.json

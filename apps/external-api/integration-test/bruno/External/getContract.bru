@@ -1,0 +1,29 @@
+meta {
+  name: getContract
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{apiBaseUrl}}/external/v2/institutions/{{institutionId}}/contract?productId={{productId}}
+  body: json
+  auth: inherit
+}
+
+params:query {
+  productId: {{productId}}
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeyPN}}
+}
+
+script:post-response {
+  test("getContract ok", function () {
+  expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}

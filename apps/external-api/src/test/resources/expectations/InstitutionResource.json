@@ -1,0 +1,100 @@
+[
+  {
+    "id": "07532a3f-1cf9-4d60-8b15-e2c146b7273a",
+    "description": "example_description",
+    "externalId": "example_external_id",
+    "originId": "example_origin_id",
+    "institutionType": "PA",
+    "digitalAddress": "example_digital_address",
+    "status": "example_status",
+    "address": "example_address",
+    "zipCode": "example_zip_code",
+    "taxCode": "example_tax_code",
+    "origin": "example_origin",
+    "userProductRoles": [
+      "role1",
+      "role2"
+    ],
+    "recipientCode": "example_recipient_code",
+    "companyInformations": {
+      "rea": "example_business_type",
+      "shareCapital": "example_share_capital",
+      "businessRegisterPlace": "example_business_register_place"
+    },
+    "assistanceContacts": {
+      "supportEmail": "example_support_email",
+      "supportPhone": "example_support_phone"
+    },
+    "pspData": {
+      "businessRegisterNumber": "example_business_register_number",
+      "legalRegisterName": "example_legal_register_name",
+      "legalRegisterNumber": "example_legal_register_number",
+      "abiCode": "example_abi_code",
+      "vatNumberGroup": false
+    },
+    "dpoData": {
+      "address": "example_dpo_address",
+      "pec": "example_dpo_pec",
+      "email": "example_dpo_email"
+    },
+    "subunitCode": "example_subunit_code",
+    "subunitType": "example_subunit_type",
+    "rootParent": {
+      "id": "example_parent_id",
+      "description": "example_parent_description"
+    },
+    "aooParentCode": "example_aoo_parent_code",
+    "country": "example_country",
+    "county": "example_county",
+    "city": "example_city"
+  },
+  {
+    "id": "07532a3f-1cf9-4d60-8b15-e2c146b7273b",
+    "description": "example_description",
+    "externalId": "example_external_id",
+    "originId": "example_origin_id",
+    "institutionType": "PA",
+    "digitalAddress": "example_digital_address",
+    "status": "example_status",
+    "address": "example_address",
+    "zipCode": "example_zip_code",
+    "taxCode": "example_tax_code",
+    "origin": "example_origin",
+    "userProductRoles": [
+      "role1",
+      "role2"
+    ],
+    "recipientCode": "example_recipient_code",
+    "companyInformations": {
+      "rea": "example_business_type",
+      "shareCapital": "example_share_capital",
+      "businessRegisterPlace": "example_business_register_place"
+    },
+    "assistanceContacts": {
+      "supportEmail": "example_support_email",
+      "supportPhone": "example_support_phone"
+    },
+    "pspData": {
+      "businessRegisterNumber": "example_business_register_number",
+      "legalRegisterName": "example_legal_register_name",
+      "legalRegisterNumber": "example_legal_register_number",
+      "abiCode": "example_abi_code",
+      "vatNumberGroup": false
+    },
+    "dpoData": {
+      "address": "example_dpo_address",
+      "pec": "example_dpo_pec",
+      "email": "example_dpo_email"
+    },
+    "subunitCode": "example_subunit_code",
+    "subunitType": "example_subunit_type",
+    "rootParent": {
+      "id": "example_parent_id",
+      "description": "example_parent_description"
+    },
+    "aooParentCode": "example_aoo_parent_code",
+    "country": "example_country",
+    "county": "example_county",
+    "city": "example_city"
+  }
+]

@@ -1,0 +1,17 @@
+{
+  "businessName": "string",
+  "recipientCode": "string",
+  "taxCode": "string",
+  "vatNumber": "string",
+  "zipCode": "string",
+  "productId": "string",
+  "users": [
+    {
+      "email": "email@example.com",
+      "name": "string",
+      "role": "DELEGATE",
+      "surname": "string",
+      "taxCode": "string"
+    }
+  ]
+}

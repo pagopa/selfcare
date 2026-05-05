@@ -1,0 +1,43 @@
+meta {
+  name: getContract
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{apiBaseUrl}}/external/v2/institutions/{{institutionId}}/contract?productId={{productId}}
+  body: json
+  auth: inherit
+}
+
+params:query {
+  productId: {{productId}}
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeyPN}}
+}
+
+script:post-response {
+  test("getContract ok", () => {
+    // Check that the status code is 200
+    expect(res.status).to.equal(200);
+  
+    // Get the response body as a Buffer
+    const buffer = res.body;
+  
+    // Check that the buffer is not empty
+    expect(buffer.length).to.be.greaterThan(0);
+  
+    // Read the first 5 bytes and convert to ASCII string
+    const firstFiveChars = buffer.slice(0, 5).toString('ascii');
+  
+    // Assert the PDF signature at the start
+    expect(firstFiveChars).to.equal("%PDF-");
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

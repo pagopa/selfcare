@@ -1,0 +1,11 @@
+{
+  "userId":"123e4567-e89b-12d3-a456-426614174000",
+  "institutionId":"123e4567-e89b-12d3-a456-426614174000",
+  "productDetails":{
+    "productId":"product1",
+    "role":"DELEGATE",
+    "roles":[
+      "admin"
+    ]
+  }
+}

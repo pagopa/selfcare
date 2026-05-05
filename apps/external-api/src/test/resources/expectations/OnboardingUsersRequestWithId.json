@@ -1,0 +1,31 @@
+{
+  "productId": "productId",
+  "users": [
+    {
+      "id": null,
+      "taxCode": "taxCode",
+      "name": "name",
+      "surname": "surname",
+      "email": "email",
+      "roleLabel": "roleLabel",
+      "productRole": "admin",
+      "role": "MANAGER",
+      "env": "ROOT"
+    },
+    {
+      "id": "userId",
+      "name": "name",
+      "surname": "surname",
+      "email": "email",
+      "roleLabel": "roleLabel",
+      "productRole": "operator",
+      "role": "MANAGER",
+      "env": "ROOT"
+    }
+  ],
+  "institutionId": "instId",
+  "institutionTaxCode": "instTaxCode",
+  "institutionSubunitCode": "instSubunitCode",
+  "sendCreateUserNotificationEmail": true,
+  "toAddOnAggregates" : true
+}

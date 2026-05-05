@@ -1,0 +1,40 @@
+name: Terraform action for integration test
+
+on:
+  push:
+    branches:
+      - main
+      - releases/*
+
+    paths:
+      - "./infra/integration-test/**"
+
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        default: dev
+        options:
+          - dev
+          - uat
+        required: true
+
+jobs:
+  apply_dev:
+    uses: ./.github/workflows/call_release_infra.yml
+    name: "[Dev] Release to Infra Integration Test"
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+      dir: ./infra/integration-test
+
+  apply_uat:
+    uses: ./.github/workflows/call_release_infra.yml
+    name: "[UAT] Release to Infra Integration Test"
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    secrets: inherit
+    with:
+      environment: uat
+      dir: ./infra/integration-test

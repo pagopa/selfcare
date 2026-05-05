@@ -1,0 +1,93 @@
+[
+  {
+    "id": "07532a3f-1cf9-4d60-8b15-e2c146b7273a",
+    "externalId": "example_external_id",
+    "originId": "example_origin_id",
+    "description": "example_description",
+    "origin": "example_origin",
+    "institutionType": "PA",
+    "digitalAddress": "example_digital_address",
+    "address": "example_address",
+    "zipCode": "example_zip_code",
+    "taxCode": "example_tax_code",
+    "recipientCode": "example_recipient_code",
+    "taxCodeInvoicing": "example_tax_code_invoicing",
+    "status": "ACTIVE",
+    "userProductRoles": [
+      "admin",
+      "manager"
+    ],
+    "subunitCode": "example_subunit_code",
+    "subunitType": "example_subunit_type",
+    "aooParentCode": "example_aoo_parent_code",
+    "city": "example_city",
+    "country": "example_country",
+    "county": "example_county",
+    "paymentServiceProvider": {
+      "abiCode": "example_abi_code",
+      "businessRegisterNumber": "example_business_register_number",
+      "legalRegisterName": "example_legal_register_name",
+      "legalRegisterNumber": "example_legal_register_number",
+      "vatNumberGroup": false
+    },
+    "supportEmail": "example_support_email",
+    "supportPhone": "example_support_phone",
+    "rea": "example_business_type",
+    "shareCapital": "example_share_capital",
+    "businessRegisterPlace": "example_business_register_place",
+    "dataProtectionOfficer": {
+      "address": "example_dpo_address",
+      "email": "example_dpo_email",
+      "pec": "example_dpo_pec"
+    },
+    "rootParent": {
+      "id": "example_parent_id",
+      "description": "example_parent_description"
+    }
+  },
+  {
+    "id": "07532a3f-1cf9-4d60-8b15-e2c146b7273b",
+    "externalId": "example_external_id",
+    "originId": "example_origin_id",
+    "description": "example_description",
+    "origin": "example_origin",
+    "institutionType": "PA",
+    "digitalAddress": "example_digital_address",
+    "address": "example_address",
+    "zipCode": "example_zip_code",
+    "taxCode": "example_tax_code",
+    "recipientCode": "example_recipient_code",
+    "taxCodeInvoicing": "example_tax_code_invoicing",
+    "status": "DELETED",
+    "userProductRoles": [
+      "admin"
+    ],
+    "subunitCode": "example_subunit_code",
+    "subunitType": "example_subunit_type",
+    "aooParentCode": "example_aoo_parent_code",
+    "city": "example_city",
+    "country": "example_country",
+    "county": "example_county",
+    "paymentServiceProvider": {
+      "abiCode": "example_abi_code",
+      "businessRegisterNumber": "example_business_register_number",
+      "legalRegisterName": "example_legal_register_name",
+      "legalRegisterNumber": "example_legal_register_number",
+      "vatNumberGroup": false
+    },
+    "supportEmail": "example_support_email",
+    "supportPhone": "example_support_phone",
+    "rea": "example_business_type",
+    "shareCapital": "example_share_capital",
+    "businessRegisterPlace": "example_business_register_place",
+    "dataProtectionOfficer": {
+      "address": "example_dpo_address",
+      "email": "example_dpo_email",
+      "pec": "example_dpo_pec"
+    },
+    "rootParent": {
+      "id": "example_parent_id",
+      "description": "example_parent_description"
+    }
+  }
+]

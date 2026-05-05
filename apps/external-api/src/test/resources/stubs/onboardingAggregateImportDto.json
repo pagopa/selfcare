@@ -1,0 +1,25 @@
+{
+  "importContract": {
+    "contractType": "string",
+    "fileName": "string",
+    "filePath": "string",
+    "onboardingDate": "2022-03-22T13:53:58.000Z"
+  },
+  "users": [
+    {
+      "email": "test@est.it",
+      "role": "MANAGER",
+      "taxCode": "string",
+      "name": "string",
+      "surname": "string"
+    }
+  ],
+  "aggregates": [
+    {
+      "taxCode": "string"
+    },
+    {
+      "taxCode": "string"
+    }
+  ]
+}

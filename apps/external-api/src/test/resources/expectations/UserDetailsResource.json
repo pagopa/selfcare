@@ -1,0 +1,12 @@
+{
+  "id":"userId",
+  "institutionId":"institutionId",
+  "onboardedProductDetails":{
+    "productId":"productId",
+    "role":"MANAGER",
+    "roles":[
+      "role"
+    ],
+    "createdAt": "2024-04-17T01:00:00+01:00"
+  }
+}

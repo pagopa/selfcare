@@ -1,0 +1,29 @@
+meta {
+  name: getInstitutionProducts
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{apiBaseUrl}}/external/v2/institutions/{{institutionId}}/products?userId={{userId}}
+  body: json
+  auth: inherit
+}
+
+params:query {
+  userId: {{userId}}
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeyPN}}
+}
+
+script:post-response {
+  test("getInstitutionProducts ok", function () {
+  expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}

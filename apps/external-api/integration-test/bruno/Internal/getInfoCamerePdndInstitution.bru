@@ -1,0 +1,33 @@
+meta {
+  name: getInfoCamerePdndInstitution
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{apiBaseUrl}}/external/internal/v1/infocamere-pdnd/institution/{{taxCode}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeyInternal}}
+}
+
+script:post-response {
+  test("getInfoCamerePdndInstitution ok", function() {
+    const status = res.getStatus();
+    expect([200, 404]).to.include(status);
+
+    if (status === 200) {
+      const jsonData = res.getBody();
+      if (jsonData && jsonData !== "") {
+        expect(jsonData).to.be.an("object");
+      }
+    }
+  });
+}
+
+settings {
+  encodeUrl: true
+}
