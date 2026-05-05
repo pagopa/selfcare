@@ -105,7 +105,7 @@ class InstitutionServiceImpl implements InstitutionService {
         log.trace("updated Institutions IPA index end");
     }
 
-    @Scheduled(cron = "0 0 2 * * *")
+    //@Scheduled(cron = "0 0 2 * * *")
     void doInstitutionsIndex() {
         log.trace("doInstitutionsIndex start");
         List<Institution> institutions = getInstitutions();
