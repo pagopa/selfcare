@@ -32,9 +32,6 @@ class OpenDataLoaderTest {
   @MockBean(name = "institutionIndexWriterService")
   private IndexWriterService<Institution> institutionIndexWriterService;
 
-  @MockBean(name = "aiSearchInstitutionIndexWriterService")
-  private IndexWriterService<Institution> aiSearchInstitutionIndexWriterService;
-
   @MockBean private IndexWriterService<Category> categoryIndexWriterService;
 
   @MockBean private IndexWriterService<AOO> aooIndexWriterService;
@@ -67,7 +64,6 @@ class OpenDataLoaderTest {
     // then
     verify(openDataConnector, times(1)).getInstitutions();
     verify(institutionIndexWriterService, times(1)).adds(institutions);
-    verify(aiSearchInstitutionIndexWriterService, times(1)).adds(institutions);
     verify(openDataConnector, times(1)).getCategories();
     verify(categoryIndexWriterService, times(1)).adds(categories);
     verify(aooIndexWriterService, times(1)).adds(aoos);

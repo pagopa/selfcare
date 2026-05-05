@@ -7,7 +7,6 @@ import it.pagopa.selfcare.party.registry_proxy.connector.model.*;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +16,6 @@ public class OpenDataLoader implements CommandLineRunner {
 
   private final List<OpenDataConnector> openDataConnectors;
   private final IndexWriterService<Institution> institutionIndexWriterService;
-  private final IndexWriterService<Institution> aiSearchInstitutionIndexWriterService;
   private final IndexWriterService<Category> categoryIndexWriterService;
   private final IndexWriterService<AOO> aooIndexWriterService;
   private final IndexWriterService<UO> uoIndexWriterService;
@@ -30,8 +28,6 @@ public class OpenDataLoader implements CommandLineRunner {
   public OpenDataLoader(
       List<OpenDataConnector> openDataConnectors,
       IndexWriterService<Institution> institutionIndexWriterService,
-      @Qualifier("aiSearchInstitutionIndexWriterService")
-          IndexWriterService<Institution> aiSearchInstitutionIndexWriterService,
       IndexWriterService<Category> categoryIndexWriterService,
       IndexWriterService<AOO> aooIndexWriterService,
       IndexWriterService<UO> uoIndexWriterService,
@@ -42,7 +38,6 @@ public class OpenDataLoader implements CommandLineRunner {
     log.trace("Initializing {}", OpenDataLoader.class.getSimpleName());
     this.openDataConnectors = openDataConnectors;
     this.institutionIndexWriterService = institutionIndexWriterService;
-    this.aiSearchInstitutionIndexWriterService = aiSearchInstitutionIndexWriterService;
     this.categoryIndexWriterService = categoryIndexWriterService;
     this.aooIndexWriterService = aooIndexWriterService;
     this.uoIndexWriterService = uoIndexWriterService;
@@ -59,7 +54,6 @@ public class OpenDataLoader implements CommandLineRunner {
         openDataConnector -> {
           List<? extends Institution> institutions = openDataConnector.getInstitutions();
           institutionIndexWriterService.adds(institutions);
-          // aiSearchInstitutionIndexWriterService.adds(institutions);
           categoryIndexWriterService.adds(openDataConnector.getCategories());
           aooIndexWriterService.adds(openDataConnector.getAOOs());
           uoIndexWriterService.adds(openDataConnector.getUOs());
