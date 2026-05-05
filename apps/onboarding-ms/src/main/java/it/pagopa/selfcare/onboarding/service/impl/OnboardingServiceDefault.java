@@ -361,11 +361,9 @@ public class OnboardingServiceDefault implements OnboardingService {
         if (isPersonalFiscalCode(taxCode)) {
             return userRegistryHelper.searchUserIdByFiscalCode(taxCode)
                     .onItem().transformToUni(userId -> {
-                        if (userId == null) {
-                            // Utente non presente su PDV, quindi non può avere onboarding sul DB
+                        if (Objects.isNull(userId)) {
                             return Uni.createFrom().item(List.of());
                         }
-                        // Per PRV_PF sul DB viene salvato l'UUID come taxCode e originId
                         return findInstitutionOnboardings(userId, subunitCode, origin, userId, status);
                     });
         }
