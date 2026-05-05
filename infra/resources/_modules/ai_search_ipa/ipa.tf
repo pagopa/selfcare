@@ -4,26 +4,26 @@
 locals {
   autocomplete_analyzers = [
     {
-      "name" : "autocomplete_analyzer",
-      "@odata.type" : "#Microsoft.Azure.Search.CustomAnalyzer",
-      "tokenizer" : "autocomplete_tokenizer",
-      "tokenFilters" : ["lowercase", "asciifolding"]
+      "name"         = "autocomplete_analyzer"
+      "@odata.type"  = "#Microsoft.Azure.Search.CustomAnalyzer"
+      "tokenizer"    = "autocomplete_tokenizer"
+      "tokenFilters" = ["lowercase", "asciifolding"]
     },
     {
-      "name" : "autocomplete_search_analyzer",
-      "@odata.type" : "#Microsoft.Azure.Search.CustomAnalyzer",
-      "tokenizer" : "lowercase",
-      "tokenFilters" : ["lowercase", "asciifolding"]
+      "name"         = "autocomplete_search_analyzer"
+      "@odata.type"  = "#Microsoft.Azure.Search.CustomAnalyzer"
+      "tokenizer"    = "lowercase"
+      "tokenFilters" = ["lowercase", "asciifolding"]
     }
   ]
 
   autocomplete_tokenizers = [
     {
-      "name" : "autocomplete_tokenizer",
-      "@odata.type" : "#Microsoft.Azure.Search.EdgeNGramTokenizer",
-      "minGram" : 3,
-      "maxGram" : 10,
-      "tokenChars" : ["letter", "digit"]
+      "name"        = "autocomplete_tokenizer"
+      "@odata.type" = "#Microsoft.Azure.Search.EdgeNGramTokenizer"
+      "minGram"     = 3
+      "maxGram"     = 10
+      "tokenChars"  = ["letter", "digit"]
     }
   ]
 }
@@ -32,7 +32,7 @@ locals {
 # IPA Institution index
 # Key = taxCode (Codice_fiscale_ente)
 # Data_aggiornamento is stored as a filterable/sortable string (yyyy-mm-dd)
-# so the scheduler can skip records whose dataAggiornamento has not changed.
+# so the scheduler can skip records whose updateDate has not changed.
 ###############################################################################
 resource "restapi_object" "ipa_institution_index" {
   provider     = restapi.search
@@ -152,10 +152,8 @@ resource "restapi_object" "ipa_institution_index" {
         "facetable" : true,
         "retrievable" : true
       },
-      # Data_aggiornamento (yyyy-mm-dd) — used by the scheduler to detect
-      # whether a record needs to be updated instead of blindly re-indexing.
       {
-        "name" : "dataAggiornamento",
+        "name" : "updateDate",
         "type" : "Edm.String",
         "key" : false,
         "searchable" : false,
@@ -452,10 +450,8 @@ resource "restapi_object" "ipa_aoo_index" {
         "facetable" : false,
         "retrievable" : true
       },
-      # Data_aggiornamento (yyyy-mm-dd) — scheduler uses this to decide
-      # whether each AOO record needs to be updated.
       {
-        "name" : "dataAggiornamento",
+        "name" : "updateDate",
         "type" : "Edm.String",
         "key" : false,
         "searchable" : false,
@@ -762,10 +758,8 @@ resource "restapi_object" "ipa_uo_index" {
         "facetable" : false,
         "retrievable" : true
       },
-      # Data_aggiornamento (yyyy-mm-dd) — scheduler uses this to decide
-      # whether each UO record needs to be updated.
       {
-        "name" : "dataAggiornamento",
+        "name" : "updateDate",
         "type" : "Edm.String",
         "key" : false,
         "searchable" : false,

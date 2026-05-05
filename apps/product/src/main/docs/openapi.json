@@ -203,6 +203,21 @@
         "type" : "string",
         "enum" : [ "PA", "PG", "GSP", "SA", "PT", "SCP", "PSP", "AS", "REC", "CON", "PRV", "PRV_PF", "GPU", "SCEC", "DEFAULT" ]
       },
+      "ManagingInstitution" : {
+        "type" : "object",
+        "properties" : {
+          "institutionId" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "signingStep" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
       "OnboardingStatus" : {
         "type" : "string",
         "enum" : [ "REQUEST", "TOBEVALIDATED", "PENDING", "COMPLETED", "FAILED", "REJECTED", "DELETED" ]
@@ -331,6 +346,15 @@
             "items" : {
               "type" : "string"
             }
+          },
+          "signingConfiguration" : {
+            "$ref" : "#/components/schemas/SigningConfiguration"
+          },
+          "managingInstitutions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ManagingInstitution"
+            }
           }
         }
       },
@@ -423,6 +447,15 @@
             "items" : {
               "type" : "string"
             }
+          },
+          "signingConfiguration" : {
+            "$ref" : "#/components/schemas/SigningConfiguration"
+          },
+          "managingInstitutions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ManagingInstitution"
+            }
           }
         }
       },
@@ -494,6 +527,15 @@
               "type" : "string"
             }
           },
+          "signingConfiguration" : {
+            "$ref" : "#/components/schemas/SigningConfiguration"
+          },
+          "managingInstitutions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ManagingInstitution"
+            }
+          },
           "id" : {
             "type" : "string"
           },
@@ -539,6 +581,42 @@
             "items" : {
               "$ref" : "#/components/schemas/BackOfficeRole"
             }
+          }
+        }
+      },
+      "SigningConfiguration" : {
+        "type" : "object",
+        "properties" : {
+          "requiredSignatures" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "skipSignerIdentityCheck" : {
+            "type" : "boolean"
+          },
+          "steps" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SigningStep"
+            }
+          }
+        }
+      },
+      "SigningStep" : {
+        "type" : "object",
+        "properties" : {
+          "order" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "isFinal" : {
+            "type" : "boolean"
+          },
+          "final" : {
+            "type" : "boolean"
           }
         }
       },

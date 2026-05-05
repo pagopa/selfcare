@@ -155,6 +155,16 @@ components:
       - GPU
       - SCEC
       - DEFAULT
+    ManagingInstitution:
+      type: object
+      properties:
+        institutionId:
+          type: string
+        description:
+          type: string
+        signingStep:
+          type: integer
+          format: int32
     OnboardingStatus:
       type: string
       enum:
@@ -262,6 +272,12 @@ components:
           type: array
           items:
             type: string
+        signingConfiguration:
+          $ref: "#/components/schemas/SigningConfiguration"
+        managingInstitutions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ManagingInstitution"
     ProductMetadata:
       type: object
       properties:
@@ -324,6 +340,12 @@ components:
           type: array
           items:
             type: string
+        signingConfiguration:
+          $ref: "#/components/schemas/SigningConfiguration"
+        managingInstitutions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ManagingInstitution"
     ProductResponse:
       type: object
       required:
@@ -372,6 +394,12 @@ components:
           type: array
           items:
             type: string
+        signingConfiguration:
+          $ref: "#/components/schemas/SigningConfiguration"
+        managingInstitutions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ManagingInstitution"
         id:
           type: string
         createdBy:
@@ -407,6 +435,30 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/BackOfficeRole"
+    SigningConfiguration:
+      type: object
+      properties:
+        requiredSignatures:
+          type: integer
+          format: int32
+        skipSignerIdentityCheck:
+          type: boolean
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/SigningStep"
+    SigningStep:
+      type: object
+      properties:
+        order:
+          type: integer
+          format: int32
+        label:
+          type: string
+        isFinal:
+          type: boolean
+        final:
+          type: boolean
     VisualConfiguration:
       type: object
       properties:
