@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 @Service
 public class SearchServiceImpl implements SearchService {
 
+  public static final String AND = " and ";
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final InstitutionConnector institutionConnector;
   private final SearchServiceConnector searchServiceConnector;
@@ -98,7 +99,7 @@ public class SearchServiceImpl implements SearchService {
 
     if (institutionTypes != null && !institutionTypes.isEmpty()) {
       if (!filterBuilder.isEmpty()) {
-        filterBuilder.append(" and ");
+        filterBuilder.append(AND);
       }
       filterBuilder.append("institutionTypes/any(t: ");
       for (int i = 0; i < institutionTypes.size(); i++) {
@@ -112,7 +113,7 @@ public class SearchServiceImpl implements SearchService {
 
     if (taxCode != null && !taxCode.isEmpty()) {
       if (!filterBuilder.isEmpty()) {
-        filterBuilder.append(" and ");
+        filterBuilder.append(AND);
       }
       filterBuilder.append("taxCode eq '").append(taxCode).append("'");
     }
@@ -158,21 +159,21 @@ public class SearchServiceImpl implements SearchService {
 
     if (products != null && !products.isEmpty()) {
       if (!filter.isEmpty()) {
-        filter.append(" and ");
+        filter.append(AND);
       }
       filter.append("search.in(productId, '").append(String.join(",", products)).append("')");
     }
 
     if (institutionTypes != null && !institutionTypes.isEmpty()) {
       if (!filter.isEmpty()) {
-        filter.append(" and ");
+        filter.append(AND);
       }
       filter.append("search.in(institutionType, '").append(String.join(",", institutionTypes)).append("')");
     }
 
     if (statuses != null && !statuses.isEmpty()) {
       if (!filter.isEmpty()) {
-        filter.append(" and ");
+        filter.append(AND);
       }
       filter.append("search.in(status, '").append(String.join(",", statuses)).append("')");
     }
