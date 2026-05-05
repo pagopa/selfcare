@@ -1,0 +1,54 @@
+{
+  "name": "registry-proxy-runner",
+  "image": "mcr.microsoft.com/devcontainers/java:1-17-bullseye",
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "17",
+      "jdkDistro": "ms",
+      "installMaven": true,
+      "mavenVersion": "3.9.9",
+      "installGradle": false
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "redhat.java",
+        "vscjava.vscode-java-pack",
+        "vscjava.vscode-maven",
+        "redhat.vscode-quarkus",
+        "vscjava.vscode-java-debug",
+        "vscjava.vscode-java-test",
+        "GabrielBB.vscode-lombok",
+        "donjayamanne.githistory"
+      ],
+      "settings": {
+        "java.configuration.updateBuildConfiguration": "automatic",
+        "java.compile.nullAnalysis.mode": "automatic",
+        "editor.formatOnSave": true
+      }
+    }
+  },
+  "postCreateCommand": "mvn -f /workspaces/selfcare/apps/registry-proxy-runner/pom.xml dependency:resolve -q",
+  "containerEnv": {
+    "IPA_OPEN_DATA_URL": "https://indicepa.gov.it/ipa-dati/datastore/dump",
+    "ANAC_BASE_URL": "https://dati.anticorruzione.it",
+    "ANAC_DATA_PATH": "/opendata/dataset/anac-gestori",
+    "IVASS_BASE_URL": "https://www.ivass.it",
+    "AZURE_SEARCH_API_VERSION": "2023-11-01",
+    "AZURE_SEARCH_IPA_INSTITUTION_INDEX": "ipa-institution-index-ar",
+    "AZURE_SEARCH_IPA_AOO_INDEX": "ipa-aoo-index-ar",
+    "AZURE_SEARCH_IPA_UO_INDEX": "ipa-uo-index-ar",
+    "AZURE_SEARCH_IPA_CATEGORY_INDEX": "ipa-category-index-ar",
+    "AZURE_SEARCH_STATION_INDEX": "station-index-ar",
+    "AZURE_SEARCH_INSURANCE_COMPANY_INDEX": "insurance-company-index-ar",
+    "AZURE_SEARCH_BASE_URL": "https://selc-d-weu-ar-srch.search.windows.net"
+  },
+  "remoteEnv": {
+    "AZURE_SEARCH_API_KEY": "${localEnv:AZURE_SEARCH_API_KEY}"
+  },
+  "runArgs": [
+    "--env-file", "${localWorkspaceFolder}/.devcontainer/.env",
+    "--userns=keep-id"
+  ]
+}
