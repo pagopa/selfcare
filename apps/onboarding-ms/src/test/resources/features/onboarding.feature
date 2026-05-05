@@ -145,6 +145,14 @@ Feature: Onboarding collection
     And the response should have field "status" with value "REQUEST"
     And the response should have field "workflowType" with value "FOR_APPROVE"
 
+  Scenario: Successfully store onboarding with countersignature workflow
+    Given I have a request object named "success_pa_countersign_request"
+    When I send a POST request to "/pa" with this request
+    Then the response status code should be 200
+    And the response body should not be empty
+    And the response should have field "status" with value "REQUEST"
+    And the response should have field "workflowType" with value "CONTRACT_WITH_COUNTERSIGNATURE"
+
   Scenario: Successfully store onboarding in status REQUEST
     Given I have a request object named "success_prv_request"
     When I send a POST request to "" with this request
