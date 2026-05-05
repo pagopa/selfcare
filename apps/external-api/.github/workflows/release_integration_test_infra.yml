@@ -1,4 +1,4 @@
-name: Terraform action for integration test
+name: Integration test External API
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
       - releases/*
 
     paths:
-      - "./infra/integration-test/**"
+      - "./infra/resources/external-api/integration-test/**"
 
   workflow_dispatch:
     inputs:
@@ -28,7 +28,7 @@ jobs:
     secrets: inherit
     with:
       environment: dev
-      dir: ./infra/integration-test
+      dir: ./infra/resources/external-api/integration-test
 
   apply_uat:
     uses: ./.github/workflows/call_release_infra.yml
@@ -37,4 +37,4 @@ jobs:
     secrets: inherit
     with:
       environment: uat
-      dir: ./infra/integration-test
+      dir: ./infra/resources/external-api/integration-test
