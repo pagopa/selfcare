@@ -94,7 +94,35 @@ Feature: Product API end-to-end onboarding and lifecycle
       ],
       "metadata": {
         "createdBy": "user-apim-name"
-      }
+      },
+      "signingConfiguration": {
+        "requiredSignatures": 2,
+        "skipSignerIdentityCheck": true,
+        "steps": [
+          {
+            "order": 1,
+            "label": "step-1",
+            "final": false
+          },
+          {
+            "order": 2,
+            "label": "step-2",
+            "final": true
+          }
+        ]
+      },
+      "managingInstitutions": [
+        {
+          "institutionId": "inst-1",
+          "description": "Institution One",
+          "signingStep": 1
+        },
+        {
+          "institutionId": "inst-2",
+          "description": "Institution Two",
+          "signingStep": 2
+        }
+      ]
     }
     """
     And The following query params:
@@ -219,7 +247,35 @@ Feature: Product API end-to-end onboarding and lifecycle
       ],
       "metadata": {
         "createdBy": "user-apim-name"
-      }
+      },
+      "signingConfiguration": {
+        "requiredSignatures": 2,
+        "skipSignerIdentityCheck": true,
+        "steps": [
+          {
+            "order": 1,
+            "label": "step-1",
+            "final": false
+          },
+          {
+            "order": 2,
+            "label": "step-2",
+            "final": true
+          }
+        ]
+      },
+      "managingInstitutions": [
+        {
+          "institutionId": "inst-1",
+          "description": "Institution One",
+          "signingStep": 1
+        },
+        {
+          "institutionId": "inst-2",
+          "description": "Institution Two",
+          "signingStep": 2
+        }
+      ]
     }
     """
     And The following query params:
