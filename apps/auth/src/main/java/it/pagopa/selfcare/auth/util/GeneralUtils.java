@@ -5,6 +5,7 @@ import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.exception.InvalidRequestException;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import jakarta.ws.rs.WebApplicationException;
+import java.net.SocketException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -50,9 +51,19 @@ public class GeneralUtils {
   }
 
   public static boolean checkIfIsRetryableException(Throwable throwable) {
-    return throwable instanceof TimeoutException
+    if (throwable instanceof TimeoutException
+        || throwable instanceof SocketException
         || (throwable instanceof WebApplicationException webApplicationException
-            && webApplicationException.getResponse().getStatus() == 429);
+            && webApplicationException.getResponse().getStatus() == 429)) {
+      return true;
+    }
+
+    // Check cause chain for wrapped exceptions (e.g. Netty wrapping SocketException)
+    Throwable cause = throwable.getCause();
+    if (cause != null && cause != throwable) {
+      return checkIfIsRetryableException(cause);
+    }
+    return false;
   }
 
   public static boolean checkNotFoundException(Throwable throwable) {
