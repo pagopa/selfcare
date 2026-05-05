@@ -3,8 +3,8 @@ package it.pagopa.selfcare.onboarding.util;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 
 import io.quarkus.test.InjectMock;
@@ -14,8 +14,10 @@ import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.common.DocumentType;
 import it.pagopa.selfcare.onboarding.constants.CustomError;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
+import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.model.FormItem;
+import it.pagopa.selfcare.onboarding.service.ProxyRegistryService;
 import it.pagopa.selfcare.onboarding.service.util.OnboardingUtils;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
@@ -27,10 +29,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
-import org.openapi.quarkus.party_registry_proxy_json.api.UoApi;
 import org.openapi.quarkus.party_registry_proxy_json.model.UOResource;
 
 @QuarkusTest
@@ -40,8 +40,7 @@ class OnboardingUtilsTest {
     OnboardingUtils onboardingUtils;
 
     @InjectMock
-    @RestClient
-    UoApi uoApi;
+    ProxyRegistryService proxyRegistryService;
 
     @Test
     void getUoFromRecipientCode_shouldGetData() {
@@ -49,7 +48,7 @@ class OnboardingUtilsTest {
         UOResource uoResource = new UOResource();
         uoResource.setCodiceIpa("codiceIpa");
 
-        when(uoApi.findByUnicodeUsingGET1(anyString(), any()))
+        when(proxyRegistryService.findUoByRecipientCode(anyString(), isNull()))
                 .thenReturn(Uni.createFrom().item(uoResource));
 
         UniAssertSubscriber<UOResource> subscriber = onboardingUtils.getUoFromRecipientCode(recipientCode)
@@ -62,7 +61,7 @@ class OnboardingUtilsTest {
     void getUoFromRecipientCode_shouldThrowResourceNotFound() {
         final String recipientCode = "recipientCode";
 
-        when(uoApi.findByUnicodeUsingGET1(anyString(), any()))
+        when(proxyRegistryService.findUoByRecipientCode(anyString(), isNull()))
                 .thenReturn(Uni.createFrom().failure(new WebApplicationException(Response.Status.NOT_FOUND)));
 
         UniAssertSubscriber<UOResource> subscriber = onboardingUtils.getUoFromRecipientCode(recipientCode)
@@ -142,5 +141,38 @@ class OnboardingUtilsTest {
         assertEquals(formItem.getFile(), form._file);
         assertNotNull(form.request);
         assertEquals(onboarding.getId(), form.request.getOnboardingId());
+    }
+
+    @Test
+    void ensureSuccessfulDocumentResponse_shouldCompleteWhenResponseIs2xx() {
+        //given
+        Response response = Response.status(Response.Status.OK).build();
+
+        //when
+        UniAssertSubscriber<Void> subscriber = onboardingUtils
+                .ensureSuccessfulDocumentResponse(Uni.createFrom().item(response), "upload signed contract", "onb-123")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        //then
+        subscriber.assertCompleted();
+    }
+
+    @Test
+    void ensureSuccessfulDocumentResponse_shouldThrowInvalidRequestExceptionWhenProblemJsonReturned() {
+        //given
+        Response response = Response.status(Response.Status.BAD_REQUEST)
+                .entity("{\"title\":\"002-1003\",\"detail\":\"Only CAdES allowed\"}")
+                .build();
+
+        //when
+        UniAssertSubscriber<Void> subscriber = onboardingUtils
+                .ensureSuccessfulDocumentResponse(Uni.createFrom().item(response), "upload signed contract", "onb-123")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        //then
+        subscriber.assertFailedWith(InvalidRequestException.class);
+        Throwable failure = subscriber.getFailure();
+        assertEquals("Only CAdES allowed", failure.getMessage());
+        assertEquals("002-1003", ((InvalidRequestException) failure).getCode());
     }
 }
