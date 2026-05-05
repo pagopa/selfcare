@@ -31,4 +31,6 @@ public class ProductBaseFields {
   private List<EmailTemplateConfig> emailTemplates;
   private List<BackOfficeEnvironmentConfiguration> backOfficeEnvironmentConfigurations;
   private List<String> testEnvProductIds;
+  private SigningConfiguration signingConfiguration;
+  private List<ManagingInstitution> managingInstitutions;
 }
