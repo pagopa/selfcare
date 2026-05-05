@@ -1,6 +1,8 @@
 {
   "name": "registry-proxy",
-  "image": "mcr.microsoft.com/devcontainers/java:1-17-bullseye",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
   "features": {
     "ghcr.io/devcontainers/features/java:1": {
       "version": "17",
@@ -8,8 +10,7 @@
       "installMaven": true,
       "mavenVersion": "3.9.9",
       "installGradle": false
-    },
-    "ghcr.io/devcontainers/features/dapr:1": {}
+    }
   },
   "customizations": {
     "vscode": {
@@ -98,5 +99,5 @@
     "3500": { "label": "Dapr HTTP" },
     "50001": { "label": "Dapr gRPC" }
   },
-  "postCreateCommand": "mvn -f /workspaces/selfcare/apps/registry-proxy/pom.xml dependency:resolve -q && dapr init"
+  "postCreateCommand": "dapr init && mvn -f /workspaces/selfcare/apps/registry-proxy/pom.xml dependency:resolve -q && cp -r /workspaces/selfcare/apps/registry-proxy/.devcontainer/dapr /workspaces/selfcare/apps/registry-proxy/.dapr"
 }
