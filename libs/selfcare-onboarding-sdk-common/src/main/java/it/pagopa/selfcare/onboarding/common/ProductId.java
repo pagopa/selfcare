@@ -14,7 +14,8 @@ public enum ProductId {
     PROD_DASHBOARD_PSP("prod-dashboard-psp"),
     PROD_REGISTRO_BENI("prod-registro-beni"),
     PROD_IDPAY_MERCHANT("prod-idpay-merchant"),
-    PROD_IDPAY_GI("prod-idpay-gi");
+    PROD_IDPAY_GI("prod-idpay-gi"),
+    PROD_CED("prod-ced");
 
     private final String value;
 

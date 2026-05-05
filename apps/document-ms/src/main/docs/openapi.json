@@ -201,6 +201,10 @@
           },
           "activatedAt" : {
             "$ref" : "#/components/schemas/LocalDateTime"
+          },
+          "signingStep" : {
+            "format" : "int32",
+            "type" : "integer"
           }
         }
       },
@@ -290,6 +294,10 @@
           },
           "activatedAt" : {
             "$ref" : "#/components/schemas/LocalDateTime"
+          },
+          "signingStep" : {
+            "format" : "int32",
+            "type" : "integer"
           }
         }
       },
