@@ -26,7 +26,7 @@ class ProxyRegistryServiceImplTest {
         when(uoApi.findByUnicodeUsingGET1(eq("recipient-001"), isNull())).thenReturn(expectedUni);
 
         //when
-        Uni<UOResource> result = service.findUoByRecipientCode("recipient-001");
+        Uni<UOResource> result = service.findUoByRecipientCode("recipient-001", null);
 
         //then
         assertSame(expectedUni, result);

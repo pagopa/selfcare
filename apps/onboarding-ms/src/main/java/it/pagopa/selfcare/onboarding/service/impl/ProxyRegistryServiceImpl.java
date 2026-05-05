@@ -17,7 +17,7 @@ public class ProxyRegistryServiceImpl implements ProxyRegistryService {
     }
 
     @Override
-    public Uni<UOResource> findUoByRecipientCode(String recipientCode) {
-        return uoApi.findByUnicodeUsingGET1(recipientCode, null);
+    public Uni<UOResource> findUoByRecipientCode(String recipientCode, String categories) {
+        return uoApi.findByUnicodeUsingGET1(recipientCode, categories);
     }
 }
