@@ -196,5 +196,33 @@
   "metadata": {
     "createdAt": "2025-12-01T09:00:00.000Z",
     "createdBy": "test"
-  }
+  },
+  "signingConfiguration": {
+    "requiredSignatures": 2,
+    "skipSignerIdentityCheck": true,
+    "steps": [
+      {
+        "order": 1,
+        "label": "step-1",
+        "final": false
+      },
+      {
+        "order": 2,
+        "label": "step-2",
+        "final": true
+      }
+    ]
+  },
+  "managingInstitutions": [
+    {
+      "institutionId": "inst-1",
+      "description": "Institution One",
+      "signingStep": 1
+    },
+    {
+      "institutionId": "inst-2",
+      "description": "Institution Two",
+      "signingStep": 2
+    }
+  ]
 }

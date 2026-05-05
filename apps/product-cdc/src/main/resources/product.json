@@ -297,5 +297,33 @@
    "metadata": {
     "createdAt": "2021-12-15T15:54:55.190Z",
     "createdBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8"
-  }
+  },
+   "signingConfiguration": {
+     "requiredSignatures": 2,
+     "skipSignerIdentityCheck": true,
+     "steps": [
+       {
+         "order": 1,
+         "label": "step-1",
+         "final": false
+       },
+       {
+         "order": 2,
+         "label": "step-2",
+         "final": true
+       }
+     ]
+   },
+   "managingInstitutions": [
+     {
+       "institutionId": "inst-1",
+       "description": "Institution One",
+       "signingStep": 1
+     },
+     {
+       "institutionId": "inst-2",
+       "description": "Institution Two",
+       "signingStep": 2
+     }
+   ]
 }
