@@ -15,10 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -34,6 +32,8 @@ public class SearchServiceImpl implements SearchService {
 
   @Value("${dapr.queue.topic}")
   private String kafkaTopic;
+
+  private static final Set<String> ALLOWED_DIRECTIONS = Set.of("asc", "desc");
 
   @Autowired
   public SearchServiceImpl(InstitutionConnector institutionConnector, SearchServiceConnector searchServiceConnector,
@@ -142,12 +142,13 @@ public class SearchServiceImpl implements SearchService {
 
   @Override
   public OnboardingIndexSearch searchOnboarding(String searchText, List<String> products, List<String> institutionTypes,
-                                                List<String> statuses, Long page, Long pageSize, String orderBy) {
+                                                List<String> statuses, Long page, Long pageSize, List<String> orderBy) {
     page = page != null && page > 0L && page < Long.MAX_VALUE ? page : 0L;
     pageSize = pageSize != null && pageSize > 0L && pageSize < Long.MAX_VALUE ? pageSize : 15L;
-    orderBy = orderBy != null && !orderBy.isBlank() ? orderBy : "description asc";
+    orderBy = orderBy != null && !orderBy.isEmpty() ? orderBy : List.of("description_ASC");
+    String orderByString = buildOrderBy(orderBy);
     final OnboardingIndexSearch onboardingIndexSearch = searchServiceConnector.searchOnboarding(searchText,
-            buildOnboardingFilter(products, institutionTypes, statuses), pageSize, page * pageSize, orderBy);
+            buildOnboardingFilter(products, institutionTypes, statuses), pageSize, page * pageSize, orderByString);
     onboardingIndexSearch.setPage(page);
     onboardingIndexSearch.setPageSize(pageSize);
     onboardingIndexSearch.setTotalPages((onboardingIndexSearch.getTotalElements() + pageSize - 1) / pageSize);
@@ -194,6 +195,31 @@ public class SearchServiceImpl implements SearchService {
     }
 
     return ipaSearchServiceConnector.searchIpaInstitutions(search, filter, pageSize, page * pageSize);
+  }
+
+  public String buildOrderBy(List<String> orderBy) {
+    if (orderBy == null || orderBy.isEmpty()) {
+      return "description asc";
+    }
+
+    return orderBy.stream()
+            .map(param -> {
+              String[] parts = param.split("_");
+
+              if (parts.length != 2) {
+                throw new IllegalArgumentException("OrderBy format not valid: " + param);
+              }
+
+              String field = parts[0];
+              String direction = parts[1].toLowerCase();
+
+              if (!direction.equals("asc") && !direction.equals("desc")) {
+                throw new IllegalArgumentException("Order must be asc or desc: " + param);
+              }
+
+              return field + " " + direction;
+            })
+            .collect(Collectors.joining(","));
   }
 
 }
