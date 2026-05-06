@@ -20,7 +20,7 @@ on:
       - ready_for_review
     paths:
       - 'apps/user-group-cdc/**'
-      - '.github/workflows/pr_user_cdc.yml'
+      - '.github/workflows/pr_user_group_cdc.yml'
       - '.github/workflows/call_code_review.yml'
 
 jobs:
