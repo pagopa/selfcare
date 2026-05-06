@@ -32,7 +32,6 @@ import org.mockito.Mockito;
 import org.openapi.quarkus.core_json.api.DelegationApi;
 import org.openapi.quarkus.core_json.api.InstitutionApi;
 import org.openapi.quarkus.core_json.model.*;
-import org.openapi.quarkus.document_json.api.DocumentControllerApi;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
 import org.openapi.quarkus.party_registry_proxy_json.api.AooApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.InfocamereApi;
@@ -96,9 +95,8 @@ public class CompletionServiceDefaultTest {
     @RestClient
     @InjectMock
     NationalRegistriesApi nationalRegistriesApi;
-    @RestClient
     @InjectMock
-    DocumentControllerApi documentControllerApi;
+    DocumentService documentService;
 
     final String productId = "productId";
     private static final UserResource userResource;
@@ -694,7 +692,7 @@ public class CompletionServiceDefaultTest {
                 .thenReturn(new InstitutionResponse());
         DocumentResponse document = new DocumentResponse();
         document.setContractSigned("contract-signed-path");
-        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId()))
+        when(documentService.getDocumentByOnboardingIdOrNull(onboarding.getId()))
                 .thenReturn(document);
 
         mockOnboardingUpdateWhenPersistOnboarding(onboarding);
@@ -705,8 +703,8 @@ public class CompletionServiceDefaultTest {
         verify(institutionApi, times(1))
                 .onboardingInstitutionUsingPOST(any(), captor.capture());
 
-        verify(documentControllerApi, times(1))
-                .getDocumentByOnboardingId(onboarding.getId());
+        verify(documentService, times(1))
+                .getDocumentByOnboardingIdOrNull(onboarding.getId());
 
         InstitutionOnboardingRequest actual = captor.getValue();
         assertEquals(productId, actual.getProductId());
@@ -719,8 +717,8 @@ public class CompletionServiceDefaultTest {
         onboarding.getInstitution().setOriginId("originId");
         onboarding.getInstitution().setInstitutionType(InstitutionType.PRV);
 
-        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId()))
-                .thenThrow(new WebApplicationException(Response.status(404).build()));
+        when(documentService.getDocumentByOnboardingIdOrNull(onboarding.getId()))
+                .thenReturn(null);
         when(institutionApi.onboardingInstitutionUsingPOST(any(), any()))
                 .thenReturn(new InstitutionResponse());
 
@@ -747,7 +745,7 @@ public class CompletionServiceDefaultTest {
                 .thenReturn(new InstitutionResponse());
         DocumentResponse document = new DocumentResponse();
         document.setContractSigned("contract-signed-path");
-        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId()))
+        when(documentService.getDocumentByOnboardingIdOrNull(onboarding.getId()))
                 .thenReturn(document);
 
         mockOnboardingUpdateWhenPersistOnboarding(onboarding);
@@ -758,8 +756,8 @@ public class CompletionServiceDefaultTest {
         verify(institutionApi, times(1))
                 .onboardingInstitutionUsingPOST(any(), captor.capture());
 
-        verify(documentControllerApi, times(1))
-                .getDocumentByOnboardingId(onboarding.getId());
+        verify(documentService, times(1))
+                .getDocumentByOnboardingIdOrNull(onboarding.getId());
 
         InstitutionOnboardingRequest actual = captor.getValue();
         assertEquals(onboarding.getProductId(), actual.getProductId());
@@ -1566,4 +1564,3 @@ public class CompletionServiceDefaultTest {
     }
 
 }
-

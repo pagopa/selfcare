@@ -22,6 +22,7 @@ import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.service.ContractService;
 import it.pagopa.selfcare.onboarding.service.CompletionService;
+import it.pagopa.selfcare.onboarding.service.DocumentService;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.service.TelemetryService;
 import it.pagopa.selfcare.onboarding.utils.Utils;
@@ -30,19 +31,18 @@ import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.model.DelegationResponse;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
 
 import java.time.Duration;
 import java.util.*;
 import java.util.logging.Logger;
-import jakarta.ws.rs.core.Response;
 
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -65,7 +65,7 @@ class OnboardingFunctionsTest {
 
   @InjectMock TelemetryService telemetryService;
 
-  @RestClient @InjectMock DocumentContentControllerApi documentContentControllerApi;
+  @InjectMock DocumentService documentService;
 
   @Inject ObjectMapper objectMapper;
 
@@ -1545,15 +1545,14 @@ class OnboardingFunctionsTest {
   void createAggregatesCsvSuccess() {
     DocumentContentControllerApi.UploadAggregatesCsvMultipartForm request =
             new DocumentContentControllerApi.UploadAggregatesCsvMultipartForm();
-    Response response = Response.ok().status(200).build();
 
     when(contractService.requestUploadAggregatesCsv(any())).thenReturn(request);
-    when(documentContentControllerApi.uploadAggregatesCsv(request)).thenReturn(response);
+    when(documentService.uploadAggregatesCsv(any())).thenReturn(Response.ok().build());
 
     function.createAggregatesCsv(onboardingWorkflowString, executionContext);
 
     verify(contractService, times(1)).requestUploadAggregatesCsv(any());
-    verify(documentContentControllerApi, times(1)).uploadAggregatesCsv(request);
+    verify(documentService, times(1)).uploadAggregatesCsv(same(request));
   }
 
   @Test
@@ -1562,31 +1561,32 @@ class OnboardingFunctionsTest {
             new DocumentContentControllerApi.UploadAggregatesCsvMultipartForm();
 
     when(contractService.requestUploadAggregatesCsv(any())).thenReturn(request);
-    when(documentContentControllerApi.uploadAggregatesCsv(request)).thenReturn(null);
+    when(documentService.uploadAggregatesCsv(any()))
+            .thenReturn(null);
 
     Assertions.assertThrows(
             GenericOnboardingException.class,
             () -> function.createAggregatesCsv(onboardingWorkflowString, executionContext));
 
     verify(contractService, times(1)).requestUploadAggregatesCsv(any());
-    verify(documentContentControllerApi, times(1)).uploadAggregatesCsv(request);
+    verify(documentService, times(1)).uploadAggregatesCsv(same(request));
   }
 
   @Test
   void createAggregatesCsvFailsOnServerError() {
     DocumentContentControllerApi.UploadAggregatesCsvMultipartForm request =
             new DocumentContentControllerApi.UploadAggregatesCsvMultipartForm();
-    Response response = Response.status(500).build();
 
     when(contractService.requestUploadAggregatesCsv(any())).thenReturn(request);
-    when(documentContentControllerApi.uploadAggregatesCsv(request)).thenReturn(response);
+    when(documentService.uploadAggregatesCsv(any()))
+            .thenReturn(Response.status(500).build());
 
     Assertions.assertThrows(
             GenericOnboardingException.class,
             () -> function.createAggregatesCsv(onboardingWorkflowString, executionContext));
 
     verify(contractService, times(1)).requestUploadAggregatesCsv(any());
-    verify(documentContentControllerApi, times(1)).uploadAggregatesCsv(request);
+    verify(documentService, times(1)).uploadAggregatesCsv(same(request));
   }
 
   @Test

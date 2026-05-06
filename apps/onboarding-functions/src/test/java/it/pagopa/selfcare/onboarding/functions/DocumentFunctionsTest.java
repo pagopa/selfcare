@@ -8,13 +8,11 @@ import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.dto.EntityFilter;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
+import it.pagopa.selfcare.onboarding.service.DocumentService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
-import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
-import org.openapi.quarkus.document_json.api.DocumentControllerApi;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
 
 import java.util.logging.Logger;
@@ -28,9 +26,7 @@ public class DocumentFunctionsTest {
   @Inject
   DocumentFunctions function;
 
-  @RestClient @InjectMock DocumentContentControllerApi documentContentControllerApi;
-
-  @RestClient @InjectMock DocumentControllerApi documentControllerApi;
+  @InjectMock DocumentService documentService;
 
   @Inject
   ObjectMapper objectMapper;
@@ -46,9 +42,9 @@ public class DocumentFunctionsTest {
   void deleteContract() throws JsonProcessingException {
     EntityFilter entity = EntityFilter.builder().value("123").build();
     String params = objectMapper.writeValueAsString(entity);
-    when(documentContentControllerApi.deleteContract("123")).thenReturn(Response.ok().build());
+    when(documentService.deleteContract("123")).thenReturn(Response.ok().build());
     function.deleteContract(params, executionContext);
-    verify(documentContentControllerApi, times(1)).deleteContract("123");
+    verify(documentService, times(1)).deleteContract("123");
 
   }
 
@@ -56,7 +52,7 @@ public class DocumentFunctionsTest {
   void deleteContract_shouldThrowWhenDocumentServiceFails() throws JsonProcessingException {
     EntityFilter entity = EntityFilter.builder().value("123").build();
     String params = objectMapper.writeValueAsString(entity);
-    when(documentContentControllerApi.deleteContract("123")).thenReturn(Response.status(500).build());
+    when(documentService.deleteContract("123")).thenReturn(Response.status(500).build());
 
     assertThrows(
         GenericOnboardingException.class, () -> function.deleteContract(params, executionContext));
@@ -70,13 +66,13 @@ public class DocumentFunctionsTest {
     String onboardingString = objectMapper.writeValueAsString(onboarding);
 
     DocumentResponse response = DocumentResponse.builder().signingStep(2).build();
-    when(documentControllerApi.getDocumentByOnboardingId("onb-1")).thenReturn(response);
+    when(documentService.getDocumentByOnboardingIdOrNull("onb-1")).thenReturn(response);
 
     DocumentResponse result = function.getLatestDocument(onboardingString, executionContext);
 
     assertNotNull(result);
     assertEquals(2, result.getSigningStep());
-    verify(documentControllerApi, times(1)).getDocumentByOnboardingId("onb-1");
+    verify(documentService, times(1)).getDocumentByOnboardingIdOrNull("onb-1");
   }
 
   @Test
@@ -86,7 +82,7 @@ public class DocumentFunctionsTest {
     onboarding.setProductId("prod-2");
     String onboardingString = objectMapper.writeValueAsString(onboarding);
 
-    when(documentControllerApi.getDocumentByOnboardingId("onb-2"))
+    when(documentService.getDocumentByOnboardingIdOrNull("onb-2"))
         .thenThrow(new WebApplicationException(Response.status(500).build()));
 
     assertThrows(
