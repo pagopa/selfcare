@@ -62,9 +62,9 @@ public class DocumentFunctions {
   }
 
   @FunctionName(GET_LATEST_DOCUMENT_ACTIVITY)
-  public DocumentResponse getLatestDocument(
+  public String getLatestDocument(
           @DurableActivityTrigger(name = "onboardingString") String onboardingString,
-          final ExecutionContext context) {
+          final ExecutionContext context) throws JsonProcessingException {
     Onboarding onboarding = readOnboardingValue(objectMapper, onboardingString);
     telemetryService.trackFunction(
             GET_LATEST_DOCUMENT_ACTIVITY,
@@ -76,14 +76,14 @@ public class DocumentFunctions {
             Map.of(
                     "onboardingId", onboarding.getId(),
                     "productId", onboarding.getProductId()));
-    DocumentResponse document =
-        documentService.getDocumentByOnboardingIdOrNull(onboarding.getId());
+    DocumentResponse document = documentService.getDocumentByOnboardingIdOrNull(onboarding.getId());
     if (document == null) {
       context
           .getLogger()
           .warning(() -> String.format("Document not found for onboardingId=%s", onboarding.getId()));
+      return null;
     }
-    return document;
+    return objectMapper.writeValueAsString(document);
   }
 
   private void ensureSuccessfulDocumentResponse(

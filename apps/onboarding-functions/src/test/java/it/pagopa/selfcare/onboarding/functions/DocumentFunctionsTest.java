@@ -68,10 +68,11 @@ public class DocumentFunctionsTest {
     DocumentResponse response = DocumentResponse.builder().signingStep(2).build();
     when(documentService.getDocumentByOnboardingIdOrNull("onb-1")).thenReturn(response);
 
-    DocumentResponse result = function.getLatestDocument(onboardingString, executionContext);
+    String result = function.getLatestDocument(onboardingString, executionContext);
 
     assertNotNull(result);
-    assertEquals(2, result.getSigningStep());
+    DocumentResponse parsed = objectMapper.readValue(result, DocumentResponse.class);
+    assertEquals(2, parsed.getSigningStep());
     verify(documentService, times(1)).getDocumentByOnboardingIdOrNull("onb-1");
   }
 

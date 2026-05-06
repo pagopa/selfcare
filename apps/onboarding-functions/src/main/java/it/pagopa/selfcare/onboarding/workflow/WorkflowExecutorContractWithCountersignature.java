@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.workflow;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.microsoft.durabletask.TaskOptions;
 import com.microsoft.durabletask.TaskOrchestrationContext;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
@@ -8,6 +9,7 @@ import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
 import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflowInstitution;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
+import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.product.entity.SigningConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
@@ -60,11 +62,12 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
     @Override
     public Optional<OnboardingStatus> executePendingState(TaskOrchestrationContext ctx, OnboardingWorkflow onboardingWorkflow) {
         String onboardingString = getOnboardingString(objectMapper, onboardingWorkflow.getOnboarding());
-        DocumentResponse document =
-                ctx.callActivity(GET_LATEST_DOCUMENT_ACTIVITY, onboardingString, optionsRetry, DocumentResponse.class).await();
+        String latestDocumentString =
+                ctx.callActivity(GET_LATEST_DOCUMENT_ACTIVITY, onboardingString, optionsRetry, String.class).await();
         SigningConfiguration signingConfiguration =
                 ctx.callActivity(GET_SIGNING_CONFIGURATION_ACTIVITY, onboardingString, optionsRetry, SigningConfiguration.class).await();
 
+        DocumentResponse document = parseDocumentOrNull(latestDocumentString);
         int signingStep =
             Objects.nonNull(document) && Objects.nonNull(document.getSigningStep())
                 ? document.getSigningStep()
@@ -107,5 +110,16 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
     @Override
     public TaskOptions optionsRetry() {
         return optionsRetry;
+    }
+
+    private DocumentResponse parseDocumentOrNull(String latestDocumentString) {
+        if (latestDocumentString == null) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(latestDocumentString, DocumentResponse.class);
+        } catch (JsonProcessingException e) {
+            throw new GenericOnboardingException("Cannot deserialize latest document payload: " + e.getMessage());
+        }
     }
 }
