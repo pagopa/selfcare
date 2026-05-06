@@ -3054,6 +3054,99 @@ class OnboardingServiceDefaultTest {
     }
 
     @Test
+    void testInstitutionOnboardings_withPersonalFiscalCode_userFoundOnPdv() {
+        String personalFiscalCode = "PLTGMR96D20H224Z";
+        UUID userId = UUID.randomUUID();
+
+        UserResource userResource = new UserResource();
+        userResource.setId(userId);
+        when(userRegistryApi.searchUsingPOST(eq(USERS_FIELD_LIST), any()))
+                .thenReturn(Uni.createFrom().item(userResource));
+
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.getInstitution().setTaxCode(userId.toString());
+        PanacheMock.mock(Onboarding.class);
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(query.stream()).thenReturn(Multi.createFrom().item(onboarding));
+        when(Onboarding.find(any())).thenReturn(query);
+
+        UniAssertSubscriber<List<OnboardingResponse>> subscriber = onboardingService
+                .institutionOnboardings(personalFiscalCode, "subunitCode", "origin", "originId", OnboardingStatus.PENDING)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        List<OnboardingResponse> response = subscriber.assertCompleted().awaitItem().getItem();
+        assertFalse(response.isEmpty());
+        assertEquals(1, response.size());
+        assertEquals(personalFiscalCode, response.get(0).getInstitution().getTaxCode());
+        verify(userRegistryApi).searchUsingPOST(eq(USERS_FIELD_LIST), any());
+    }
+
+    @Test
+    void testInstitutionOnboardings_withPersonalFiscalCode_userNotFoundOnPdv() {
+        String personalFiscalCode = "RSSMRA85M01H501Z";
+
+        WebApplicationException notFound = mock(WebApplicationException.class);
+        Response mockResponse = mock(Response.class);
+        when(mockResponse.getStatus()).thenReturn(404);
+        when(notFound.getResponse()).thenReturn(mockResponse);
+        when(userRegistryApi.searchUsingPOST(eq(USERS_FIELD_LIST), any()))
+                .thenReturn(Uni.createFrom().failure(notFound));
+
+        UniAssertSubscriber<List<OnboardingResponse>> subscriber = onboardingService
+                .institutionOnboardings(personalFiscalCode, "subunitCode", "origin", "originId", OnboardingStatus.PENDING)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        List<OnboardingResponse> response = subscriber.assertCompleted().awaitItem().getItem();
+        assertTrue(response.isEmpty());
+        verify(userRegistryApi).searchUsingPOST(eq(USERS_FIELD_LIST), any());
+    }
+
+    @Test
+    void testInstitutionOnboardings_withNumericTaxCode_doesNotCallPdv() {
+        String institutionTaxCode = "00000000001";
+
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.getInstitution().setTaxCode(institutionTaxCode);
+        PanacheMock.mock(Onboarding.class);
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(query.stream()).thenReturn(Multi.createFrom().item(onboarding));
+        when(Onboarding.find(any())).thenReturn(query);
+
+        UniAssertSubscriber<List<OnboardingResponse>> subscriber = onboardingService
+                .institutionOnboardings(institutionTaxCode, "subunitCode", "origin", "originId", OnboardingStatus.PENDING)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        List<OnboardingResponse> response = subscriber.assertCompleted().awaitItem().getItem();
+        assertFalse(response.isEmpty());
+        assertEquals(1, response.size());
+        assertEquals(institutionTaxCode, response.get(0).getInstitution().getTaxCode());
+        verify(userRegistryApi, never()).searchUsingPOST(any(), any());
+    }
+
+    @Test
+    void testInstitutionOnboardings_withPersonalFiscalCode_pdvReturnsError() {
+        String personalFiscalCode = "VRDLGI80A01F205X";
+
+        WebApplicationException serverError = mock(WebApplicationException.class);
+        Response mockResponse = mock(Response.class);
+        when(mockResponse.getStatus()).thenReturn(500);
+        when(serverError.getResponse()).thenReturn(mockResponse);
+        when(userRegistryApi.searchUsingPOST(eq(USERS_FIELD_LIST), any()))
+                .thenReturn(Uni.createFrom().failure(serverError));
+
+        UniAssertSubscriber<List<OnboardingResponse>> subscriber = onboardingService
+                .institutionOnboardings(personalFiscalCode, "subunitCode", "origin", "originId", OnboardingStatus.PENDING)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailed();
+        verify(userRegistryApi).searchUsingPOST(eq(USERS_FIELD_LIST), any());
+    }
+
+    @Test
     void checkRecipientCodeWithValidResponse() {
         String recipientCode = "recipientCode";
         String originId = "originId";

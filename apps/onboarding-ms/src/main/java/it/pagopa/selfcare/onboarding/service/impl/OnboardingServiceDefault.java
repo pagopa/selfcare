@@ -38,10 +38,7 @@ import org.openapi.quarkus.core_json.api.OnboardingApi;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.COMPLETED;
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.PENDING;
@@ -361,6 +358,30 @@ public class OnboardingServiceDefault implements OnboardingService {
     public Uni<List<OnboardingResponse>> institutionOnboardings(String taxCode, String subunitCode,
                                                                  String origin, String originId,
                                                                  OnboardingStatus status) {
+        if (isPersonalFiscalCode(taxCode)) {
+            return userRegistryHelper.searchUserIdByFiscalCode(taxCode)
+                    .onItem().transformToUni(userId -> {
+                        if (Objects.isNull(userId)) {
+                            return Uni.createFrom().item(List.of());
+                        }
+                        return findInstitutionOnboardings(userId, subunitCode, origin, userId, status)
+                                .onItem().transform(responses -> {
+                                    responses.forEach(r -> {
+                                        if (Objects.nonNull(r.getInstitution())) {
+                                            r.getInstitution().setTaxCode(taxCode);
+                                            r.getInstitution().setOriginId(taxCode);
+                                        }
+                                    });
+                                    return responses;
+                                });
+                    });
+        }
+        return findInstitutionOnboardings(taxCode, subunitCode, origin, originId, status);
+    }
+
+    private Uni<List<OnboardingResponse>> findInstitutionOnboardings(String taxCode, String subunitCode,
+                                                                      String origin, String originId,
+                                                                      OnboardingStatus status) {
         Map<String, Object> params = QueryUtils.createMapForInstitutionOnboardingsQueryParameter(
                 taxCode, subunitCode, origin, originId, status, null);
         Document query = QueryUtils.buildQuery(params);
@@ -368,6 +389,19 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .map(Onboarding.class::cast)
                 .map(onboardingMapper::toResponse)
                 .collect().asList();
+    }
+
+    /**
+     * Verifica se la stringa è un codice fiscale di persona fisica italiana.
+     * Pattern: 6 lettere + 2 cifre + 1 lettera + 2 cifre + 1 lettera + 3 cifre + 1 lettera (16 caratteri).
+     * Se il taxCode è numerico (persona giuridica, es. "00000000001") restituisce false,
+     * evitando così la chiamata a userRegistry (PDV).
+     */
+    private static boolean isPersonalFiscalCode(String taxCode) {
+        if (taxCode == null || taxCode.length() != 16) {
+            return false;
+        }
+        return taxCode.toUpperCase().matches("^[A-Z]{6}\\d{2}[A-Z]\\d{2}[A-Z]\\d{3}[A-Z]$");
     }
 
     @Override
