@@ -196,7 +196,7 @@ public class SearchServiceImpl implements SearchService {
     return ipaSearchServiceConnector.search(search, filter, pageSize, page * pageSize);
   }
 
-  public String buildOrderBy(List<String> orderBy) {
+  private String buildOrderBy(List<String> orderBy) {
     if (orderBy == null || orderBy.isEmpty()) {
       return "description asc";
     }

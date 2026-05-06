@@ -360,6 +360,34 @@ public class SearchServiceImplTest {
   }
 
   @Test
+  void searchOnboardingWhenOrderIsNotValid() {
+    final String searchText = "Test";
+    final List<String> products = List.of("prod-io", "prod-pagopa");
+    final List<String> institutionTypes = List.of("PA", "GSP");
+    final List<String> statuses = List.of("ACTIVE", "PENDING");
+    final List<String> orderBy = List.of("createdAt_AS", "description_DESC");
+    final Long page = 2L;
+    final Long pageSize = 10L;
+    final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
+    mockResponse.setTotalElements(100L);
+    assertThrows(IllegalArgumentException.class, () -> searchService.searchOnboarding(searchText, products, institutionTypes, statuses, page, pageSize, orderBy));
+  }
+
+  @Test
+  void searchOnboardingWhenOrderIsNotValid2() {
+    final String searchText = "Test";
+    final List<String> products = List.of("prod-io", "prod-pagopa");
+    final List<String> institutionTypes = List.of("PA", "GSP");
+    final List<String> statuses = List.of("ACTIVE", "PENDING");
+    final List<String> orderBy = List.of("createdAt_ASC_DESC", "description_DESC");
+    final Long page = 2L;
+    final Long pageSize = 10L;
+    final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
+    mockResponse.setTotalElements(100L);
+    assertThrows(IllegalArgumentException.class, () -> searchService.searchOnboarding(searchText, products, institutionTypes, statuses, page, pageSize, orderBy));
+  }
+
+  @Test
   void searchIpaInstitutions_shouldCallConnector() {
     IpaInstitutionSearchResult mockResult = new IpaInstitutionSearchResult();
     IpaInstitution institution = new IpaInstitution();
