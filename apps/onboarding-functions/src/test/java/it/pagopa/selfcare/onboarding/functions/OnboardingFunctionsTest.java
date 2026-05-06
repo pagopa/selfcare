@@ -1297,6 +1297,16 @@ class OnboardingFunctionsTest {
   }
 
   @Test
+  void getSigningConfiguration() {
+    when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
+    when(productService.getProductIsValid(any())).thenReturn(createDummyProduct());
+
+    function.getSigningConfiguration(onboardingStringBase, executionContext);
+
+    verify(productService, times(1)).getProductIsValid(any());
+  }
+
+  @Test
   void sendMailOnboardingApprove() {
 
     when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
@@ -1766,6 +1776,41 @@ class OnboardingFunctionsTest {
     assertEquals(ONBOARDINGS_AGGREGATE_BATCH_ORCHESTRATOR, captorActivitySubOrchestrator.getAllValues().get(0));
     assertEquals(SEND_MAIL_COMPLETION_ACTIVITY, captorActivity.getAllValues().get(4));
 
+  }
+
+  @Test
+  void onboardingOrchestratorContractWithCounterSignature() {
+    Onboarding onboarding = new Onboarding();
+    List<User> users = new ArrayList<>();
+    User user = new User();
+    users.add(user);
+    onboarding.setId("onboardingId");
+    onboarding.setStatus(OnboardingStatus.REQUEST);
+    onboarding.setWorkflowType(WorkflowType.CONTRACT_WITH_COUNTERSIGNATURE);
+    onboarding.setUsers(users);
+    onboarding.setInstitution(new Institution());
+
+    UserRequester userRequester =
+        UserRequester.builder()
+            .userRequestUid(UUID.randomUUID().toString())
+            .userMailUuid(UUID.randomUUID().toString())
+            .build();
+    onboarding.setUserRequester(userRequester);
+
+    TaskOrchestrationContext orchestrationContext = mockTaskOrchestrationContext(onboarding);
+
+    function.onboardingsOrchestrator(orchestrationContext, executionContext);
+
+    ArgumentCaptor<String> captorActivity = ArgumentCaptor.forClass(String.class);
+    verify(orchestrationContext, times(5))
+            .callActivity(captorActivity.capture(), any(), any(), any());
+    assertEquals(BUILD_CONTRACT_ACTIVITY_NAME, captorActivity.getAllValues().get(0));
+    assertEquals(SAVE_TOKEN_WITH_CONTRACT_ACTIVITY_NAME, captorActivity.getAllValues().get(1));
+    assertEquals(SEND_MAIL_REGISTRATION_FOR_CONTRACT, captorActivity.getAllValues().get(2));
+    assertEquals(SEND_MAIL_REGISTRATION_FOR_USER, captorActivity.getAllValues().get(3));
+    assertEquals(SEND_MAIL_REGISTRATION_FOR_USER_REQUESTER, captorActivity.getAllValues().get(4));
+
+    verify(service, times(1)).updateOnboardingStatus(onboarding.getId(), OnboardingStatus.PENDING);
   }
 
   private Product createDummyProduct() {
