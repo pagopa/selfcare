@@ -23,8 +23,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
-import org.openapi.quarkus.document_json.api.DocumentControllerApi;
 import org.openapi.quarkus.document_json.model.AttachmentPdfRequest;
 import org.openapi.quarkus.document_json.model.ContractPdfRequest;
 import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
@@ -75,12 +73,8 @@ class OnboardingServiceTest {
     UserMapper userMapper;
     @Inject
     OnboardingService onboardingService;
-    @RestClient
     @InjectMock
-    DocumentContentControllerApi documentContentControllerApi;
-    @RestClient
-    @InjectMock
-    DocumentControllerApi documentControllerApi;
+    DocumentService documentService;
 
     private static OnboardingWorkflow getOnboardingWorkflowInstitution(Onboarding onboarding) {
         return new OnboardingWorkflowInstitution(onboarding, "INSTITUTION");
@@ -213,7 +207,7 @@ class OnboardingServiceTest {
         Mockito.verify(productService, Mockito.times(1)).getProductIsValid(onboarding.getProductId());
 
         ArgumentCaptor<ContractPdfRequest> captorRequest = ArgumentCaptor.forClass(ContractPdfRequest.class);
-        Mockito.verify(documentContentControllerApi, Mockito.times(1))
+        Mockito.verify(documentService, Mockito.times(1))
                 .createContractPdf(captorRequest.capture());
         assertEquals(
                 captorRequest.getValue().getContractTemplatePath(),
@@ -262,7 +256,7 @@ class OnboardingServiceTest {
         Mockito.verify(productService, Mockito.times(1)).getProductIsValid(onboarding.getProductId());
 
         ArgumentCaptor<ContractPdfRequest> captorRequest = ArgumentCaptor.forClass(ContractPdfRequest.class);
-        Mockito.verify(documentContentControllerApi, Mockito.times(1))
+        Mockito.verify(documentService, Mockito.times(1))
                 .createContractPdf(captorRequest.capture());
         assertEquals(
                 captorRequest.getValue().getContractTemplatePath(),
@@ -303,7 +297,7 @@ class OnboardingServiceTest {
         // Assert
         Mockito.verify(productService, Mockito.times(1)).getProductIsValid(onboarding.getProductId());
         ArgumentCaptor<AttachmentPdfRequest> captorRequest = ArgumentCaptor.forClass(AttachmentPdfRequest.class);
-        Mockito.verify(documentContentControllerApi, Mockito.times(1))
+        Mockito.verify(documentService, Mockito.times(1))
                 .createAttachmentPdf(captorRequest.capture());
         assertEquals(attachmentTemplate.getTemplatePath(), captorRequest.getValue().getAttachmentTemplatePath());
     }
@@ -326,13 +320,10 @@ class OnboardingServiceTest {
         onboardingWorkflow.setOnboarding(onboarding);
         Product productExpected = createDummyProduct();
         when(productService.getProductIsValid(onboarding.getProductId())).thenReturn(productExpected);
-        when(documentControllerApi.saveDocument(any())).thenReturn(Response.ok().build());
-
         onboardingService.saveTokenWithContract(onboardingWorkflow);
-
         ArgumentCaptor<DocumentBuilderRequest> requestCaptor =
                 ArgumentCaptor.forClass(DocumentBuilderRequest.class);
-        Mockito.verify(documentControllerApi, Mockito.times(1)).saveDocument(requestCaptor.capture());
+        Mockito.verify(documentService, Mockito.times(1)).saveDocument(requestCaptor.capture());
         assertEquals(onboarding.getId(), requestCaptor.getValue().getOnboardingId());
         assertEquals(onboarding.getProductId(), requestCaptor.getValue().getProductId());
         assertEquals(
@@ -360,13 +351,10 @@ class OnboardingServiceTest {
 
         Product productExpected = createDummyProduct();
         when(productService.getProductIsValid(onboarding.getProductId())).thenReturn(productExpected);
-        when(documentControllerApi.saveDocument(any())).thenReturn(Response.ok().build());
-
         onboardingService.saveTokenWithAttachment(onboardingAttachment);
-
         ArgumentCaptor<DocumentBuilderRequest> requestCaptor =
                 ArgumentCaptor.forClass(DocumentBuilderRequest.class);
-        Mockito.verify(documentControllerApi, Mockito.times(1)).saveDocument(requestCaptor.capture());
+        Mockito.verify(documentService, Mockito.times(1)).saveDocument(requestCaptor.capture());
         assertEquals(onboarding.getId(), requestCaptor.getValue().getOnboardingId());
         assertEquals(onboarding.getProductId(), requestCaptor.getValue().getProductId());
         assertEquals(
@@ -384,7 +372,9 @@ class OnboardingServiceTest {
         onboardingWorkflow.setOnboarding(onboarding);
         Product productExpected = createDummyProduct();
         when(productService.getProductIsValid(onboarding.getProductId())).thenReturn(productExpected);
-        when(documentControllerApi.saveDocument(any())).thenReturn(Response.status(500).build());
+        doThrow(new GenericOnboardingException("ko"))
+                .when(documentService)
+                .saveDocument(any(DocumentBuilderRequest.class));
 
         assertThrows(
                 GenericOnboardingException.class,
@@ -399,7 +389,7 @@ class OnboardingServiceTest {
         UserResource userResource = createUserResource();
         DocumentResponse document = createDummyToken();
 
-        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(document);
+        when(documentService.getDocumentByOnboardingIdOrNull(onboarding.getId())).thenReturn(document);
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
 
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
@@ -480,14 +470,16 @@ class OnboardingServiceTest {
         user.setUserMailUuid("uuid-123");
         onboarding.setUsers(List.of(user));
 
-        Mockito.when(pdndVisuraInfoCamereControllerApi.institutionVisuraDocumentByTaxCodeUsingGET(any())).thenReturn("test".getBytes(StandardCharsets.UTF_8));
-        Mockito.when(documentContentControllerApi.saveVisuraForMerchant(any())).thenReturn(Response.ok().build());
+        Mockito.when(pdndVisuraInfoCamereControllerApi.institutionVisuraDocumentByTaxCodeUsingGET(any()))
+                .thenReturn("test".getBytes(StandardCharsets.UTF_8));
+        Mockito.when(documentService.saveVisuraForMerchant(any()))
+                .thenReturn(Response.ok().build());
         // Act
         onboardingService.saveVisuraForMerchant(onboarding);
 
         // Assert
         Mockito.verify(pdndVisuraInfoCamereControllerApi).institutionVisuraDocumentByTaxCodeUsingGET(Mockito.any());
-        Mockito.verify(documentContentControllerApi).saveVisuraForMerchant(Mockito.any());
+        Mockito.verify(documentService).saveVisuraForMerchant(any());
     }
 
     @Test
@@ -509,7 +501,7 @@ class OnboardingServiceTest {
         Assertions.assertThrows(RuntimeException.class, () -> onboardingService.saveVisuraForMerchant(onboarding));
 
         Mockito.verify(pdndVisuraInfoCamereControllerApi).institutionVisuraDocumentByTaxCodeUsingGET(Mockito.any());
-        Mockito.verifyNoInteractions(documentContentControllerApi);
+        Mockito.verifyNoInteractions(documentService);
     }
 
     @Test
@@ -543,7 +535,7 @@ class OnboardingServiceTest {
 
         Integer expirationDate = 30;
 
-        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(document);
+        when(documentService.getDocumentByOnboardingId(onboarding.getId())).thenReturn(document);
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
         when(productService.getProductExpirationDate(onboarding.getProductId())).thenReturn(expirationDate);
 
@@ -580,7 +572,7 @@ class OnboardingServiceTest {
 
         Integer expirationDate = 30;
 
-        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(document);
+        when(documentService.getDocumentByOnboardingId(onboarding.getId())).thenReturn(document);
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
         when(productService.getProductExpirationDate(onboarding.getProductId())).thenReturn(expirationDate);
 
@@ -616,7 +608,7 @@ class OnboardingServiceTest {
     void sendMailRegistrationWithContract_throwExceptionWhenDocumentIsNotPresent() {
         Onboarding onboarding = createOnboarding();
         OnboardingWorkflow onboardingWorkflow = getOnboardingWorkflowInstitution(onboarding);
-        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenThrow(new RuntimeException("Document not found"));
+        when(documentService.getDocumentByOnboardingId(onboarding.getId())).thenThrow(new RuntimeException("Document not found"));
         assertThrows(
                 GenericOnboardingException.class,
                 () -> onboardingService.sendMailRegistrationForContract(onboardingWorkflow));
@@ -772,7 +764,7 @@ class OnboardingServiceTest {
     @Test
     void sendMailRegistrationApprove_throwExceptionWhenDocumentIsNotPresent() {
         Onboarding onboarding = createOnboarding();
-        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenThrow(new RuntimeException("Document not found"));
+        when(documentService.getDocumentByOnboardingId(onboarding.getId())).thenThrow(new RuntimeException("Document not found"));
         assertThrows(
                 GenericOnboardingException.class,
                 () -> onboardingService.sendMailRegistrationApprove(onboarding));
@@ -806,7 +798,7 @@ class OnboardingServiceTest {
     @Test
     void sendMailOnboardingApprove_throwExceptionWhenDocumentIsNotPresent() {
         Onboarding onboarding = createOnboarding();
-        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenThrow(new RuntimeException("Document not found"));
+        when(documentService.getDocumentByOnboardingId(onboarding.getId())).thenThrow(new RuntimeException("Document not found"));
         assertThrows(
                 GenericOnboardingException.class,
                 () -> onboardingService.sendMailOnboardingApprove(onboarding));
@@ -899,7 +891,7 @@ class OnboardingServiceTest {
         UserResource userResource = createUserResource();
         DocumentResponse document = createDummyToken();
 
-        when(documentControllerApi.getDocumentByOnboardingId(onboarding.getId())).thenReturn(document);
+        when(documentService.getDocumentByOnboardingId(onboarding.getId())).thenReturn(document);
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
 
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))

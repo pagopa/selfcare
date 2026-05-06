@@ -1,4 +1,6 @@
-package it.pagopa.selfcare.onboarding.service;
+package it.pagopa.selfcare.onboarding.service.impl;
+import it.pagopa.selfcare.onboarding.service.*;
+
 
 import com.microsoft.azure.functions.ExecutionContext;
 import it.pagopa.selfcare.onboarding.client.external.ExternalRestClient;
@@ -14,7 +16,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import java.util.Objects;
 
 @ApplicationScoped
-public class CheckOrganizationServiceDefault implements CheckOrganizationService {
+public class CheckOrganizationServiceImpl implements CheckOrganizationService {
     @RestClient
     @Inject
     ExternalRestClient externalRestClient;
@@ -25,7 +27,7 @@ public class CheckOrganizationServiceDefault implements CheckOrganizationService
 
     private final ExternalConfig externalConfig;
 
-    public CheckOrganizationServiceDefault(ExternalConfig externalConfig) {
+    public CheckOrganizationServiceImpl(ExternalConfig externalConfig) {
         this.externalConfig = externalConfig;
     }
 

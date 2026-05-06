@@ -1,4 +1,6 @@
-package it.pagopa.selfcare.onboarding.service;
+package it.pagopa.selfcare.onboarding.service.impl;
+import it.pagopa.selfcare.onboarding.service.*;
+
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,7 +29,6 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.api.DelegationApi;
 import org.openapi.quarkus.core_json.api.InstitutionApi;
 import org.openapi.quarkus.core_json.model.*;
-import org.openapi.quarkus.document_json.api.DocumentControllerApi;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
 import org.openapi.quarkus.party_registry_proxy_json.api.AooApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.InfocamereApi;
@@ -53,7 +54,7 @@ import static org.openapi.quarkus.core_json.model.DelegationResponse.StatusEnum.
 @Slf4j
 @ApplicationScoped
 @SuppressWarnings({"java:S6813", "java:S107"})
-public class CompletionServiceDefault implements CompletionService {
+public class CompletionServiceImpl implements CompletionService {
 
 
     @RestClient
@@ -86,9 +87,8 @@ public class CompletionServiceDefault implements CompletionService {
     @RestClient
     @Inject
     NationalRegistriesApi nationalRegistriesApi;
-    @RestClient
     @Inject
-    DocumentControllerApi documentControllerApi;
+    DocumentService documentService;
 
 
     private final InstitutionMapper institutionMapper;
@@ -103,7 +103,7 @@ public class CompletionServiceDefault implements CompletionService {
     private final boolean forceInstitutionCreation;
     private static final String USERS_FIELD_LIST = "fiscalCode,familyName,name";
 
-    public CompletionServiceDefault(ProductService productService,
+    public CompletionServiceImpl(ProductService productService,
                                     NotificationService notificationService,
                                     OnboardingMapper onboardingMapper,
                                     UserMapper userMapper,
@@ -284,13 +284,10 @@ public class CompletionServiceDefault implements CompletionService {
         onboardingRequest.setIsAggregator(onboarding.getIsAggregator());
         //If contract exists we send the path of the contract
         if(!onboarding.getInstitution().getInstitutionType().equals(InstitutionType.PG)) {
-            try {
-                DocumentResponse document = documentControllerApi.getDocumentByOnboardingId(onboarding.getId());
+            DocumentResponse document = documentService.getDocumentByOnboardingIdOrNull(onboarding.getId());
+            if (Objects.nonNull(document)) {
                 onboardingRequest.setContractPath(document.getContractSigned());
-            } catch (WebApplicationException e) {
-                if (e.getResponse().getStatus() != 404) {
-                    throw e;
-                }
+            } else {
                 log.warn("Document not found for onboarding {}, skipping contract path", onboarding.getId());
             }
         }

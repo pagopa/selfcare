@@ -1,4 +1,6 @@
-package it.pagopa.selfcare.onboarding.service;
+package it.pagopa.selfcare.onboarding.service.impl;
+import it.pagopa.selfcare.onboarding.service.*;
+
 
 import io.jsonwebtoken.Header;
 import io.jsonwebtoken.JwsHeader;
@@ -29,7 +31,7 @@ import java.util.UUID;
 import static it.pagopa.selfcare.onboarding.service.OnboardingService.USERS_FIELD_LIST;
 
 @ApplicationScoped
-public class JwtSessionServiceDefault implements JwtSessionService {
+public class JwtSessionServiceImpl implements JwtSessionService {
 
     @Inject
     TokenConfig tokenConfig;
@@ -39,7 +41,7 @@ public class JwtSessionServiceDefault implements JwtSessionService {
 
     private static final String PRIVATE_KEY_HEADER_TEMPLATE = "-----BEGIN %s-----";
     private static final String PRIVATE_KEY_FOOTER_TEMPLATE = "-----END %s-----";
-    private final Logger logger = LoggerFactory.getLogger(JwtSessionServiceDefault.class.getName());
+    private final Logger logger = LoggerFactory.getLogger(JwtSessionServiceImpl.class.getName());
 
     @Override
     public String createJwt(String userId) {

@@ -8,6 +8,8 @@ import it.pagopa.selfcare.onboarding.dto.QueueEvent;
 import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.NotificationException;
+import it.pagopa.selfcare.onboarding.service.impl.NotificationEventResenderServiceImpl;
+
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
@@ -23,7 +25,7 @@ import static org.mockito.Mockito.*;
 @QuarkusTest
 class NotificationEventResenderServiceDefaultTest {
     @Inject
-    NotificationEventResenderServiceDefault notificationEventResenderServiceDefault;
+    NotificationEventResenderServiceImpl notificationEventResenderServiceDefault;
 
     @InjectMock
     NotificationEventService notificationEventService;

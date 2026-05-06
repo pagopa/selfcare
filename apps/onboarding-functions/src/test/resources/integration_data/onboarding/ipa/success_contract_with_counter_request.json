@@ -1,5 +1,5 @@
 {
-  "id": "89ad7142-24bb-48ad-8504-9c9232137e85",
+  "id": "190e3ca4-8de4-4f90-ad2c-51b1125317b6",
   "billing": {
     "publicServices": false,
     "recipientCode": "UFD333"
@@ -14,7 +14,7 @@
     "origin": "IPA",
     "originId": "c_fx00"
   },
-  "productId": "prod-io",
+  "productId": "prod-ced",
   "status": "REQUEST",
   "users": [
     {
@@ -24,9 +24,7 @@
       "productRole": "referente amministrativo"
     }
   ],
-  "workflowType": "CONTRACT_REGISTRATION",
-  "workflowInstanceId": "9acdc78f-26c1-4352-ad13-24bd01857edf",
-  "updatedAt": "2025-05-13T12:38:17.000Z",
+  "workflowType": "CONTRACT_WITH_COUNTERSIGNATURE",
   "userRequester" : {
     "userRequestUid": "6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"
   }
