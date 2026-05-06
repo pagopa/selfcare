@@ -93,7 +93,6 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
 
     @Override
     public Optional<OnboardingStatus> executePendingInReviewState(TaskOrchestrationContext ctx, OnboardingWorkflow onboardingWorkflow) {
-        // TODO validare firma se skipSignerIdentityCheck è false
         return onboardingCompletionActivity(ctx, onboardingWorkflow);
     }
 

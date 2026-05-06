@@ -29,6 +29,7 @@ import it.pagopa.selfcare.onboarding.utils.Utils;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.product.entity.SigningConfiguration;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
@@ -89,6 +90,8 @@ class OnboardingFunctionsTest {
 
   final String onboardingWithInstitutionIdString =
           "{\"id\":\"id\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":{\"id\":\"inst123\"},\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}";
+
+  final String latestDocumentString = "{ \"id\": \"doc-001\", \"type\": \"INSTITUTION\", \"onboardingId\": \"onb-123\", \"productId\": \"prod-456\", \"attachmentName\": \"contract_attachment.pdf\", \"checksum\": \"a3f5c2d1e8b7094f6a2e1d3c5b8f7e2a1\", \"contractVersion\": \"1.0.0\", \"contractTemplate\": \"STANDARD_TEMPLATE\", \"contractSigned\": \"false\", \"contractFilename\": \"contract_2026_05_06.pdf\", \"rootOnboardingId\": \"onb-root-789\", \"createdAt\": \"2026-05-06T09:00:00\", \"updatedAt\": \"2026-05-06T10:30:00\", \"deletedAt\": null, \"activatedAt\": \"2026-05-06T09:15:00\", \"signingStep\": 1 }";
 
   static ExecutionContext executionContext;
 
@@ -1779,7 +1782,7 @@ class OnboardingFunctionsTest {
   }
 
   @Test
-  void onboardingOrchestratorContractWithCounterSignature() {
+  void onboardingOrchestratorContractWithCounterSignature_whenStatusRequest() {
     Onboarding onboarding = new Onboarding();
     List<User> users = new ArrayList<>();
     User user = new User();
@@ -1811,6 +1814,102 @@ class OnboardingFunctionsTest {
     assertEquals(SEND_MAIL_REGISTRATION_FOR_USER_REQUESTER, captorActivity.getAllValues().get(4));
 
     verify(service, times(1)).updateOnboardingStatus(onboarding.getId(), OnboardingStatus.PENDING);
+  }
+
+  @Test
+  void onboardingOrchestratorContractWithCounterSignature_whenStatusPendingInReview() {
+    Onboarding onboarding = new Onboarding();
+    List<User> users = new ArrayList<>();
+    User user = new User();
+    users.add(user);
+    onboarding.setId("onboardingId");
+    onboarding.setStatus(OnboardingStatus.PENDING_IN_REVIEW);
+    onboarding.setWorkflowType(WorkflowType.CONTRACT_WITH_COUNTERSIGNATURE);
+    onboarding.setUsers(users);
+    onboarding.setInstitution(new Institution());
+
+    TaskOrchestrationContext orchestrationContext = mockTaskOrchestrationContext(onboarding);
+
+    function.onboardingsOrchestrator(orchestrationContext, executionContext);
+
+    ArgumentCaptor<String> captorActivity = ArgumentCaptor.forClass(String.class);
+    verify(orchestrationContext, times(5))
+            .callActivity(captorActivity.capture(), any(), any(), any());
+    assertEquals(CREATE_INSTITUTION_ACTIVITY, captorActivity.getAllValues().get(0));
+    assertEquals(CREATE_ONBOARDING_ACTIVITY, captorActivity.getAllValues().get(1));
+    assertEquals(STORE_ONBOARDING_ACTIVATEDAT, captorActivity.getAllValues().get(2));
+    assertEquals(CREATE_USERS_ACTIVITY, captorActivity.getAllValues().get(3));
+    assertEquals(SEND_MAIL_COMPLETION_ACTIVITY, captorActivity.getAllValues().get(4));
+
+    verify(service, times(1)).updateOnboardingStatus(onboarding.getId(), OnboardingStatus.COMPLETED);
+  }
+
+  @Test
+  void onboardingOrchestratorContractWithCounterSignature_whenStatusPending_nextStatusIsPending() {
+    Onboarding onboarding = new Onboarding();
+    List<User> users = new ArrayList<>();
+    User user = new User();
+    users.add(user);
+    onboarding.setId("onboardingId");
+    onboarding.setStatus(OnboardingStatus.PENDING);
+    onboarding.setWorkflowType(WorkflowType.CONTRACT_WITH_COUNTERSIGNATURE);
+    onboarding.setUsers(users);
+    onboarding.setInstitution(new Institution());
+
+    SigningConfiguration signingConfiguration = new SigningConfiguration();
+    signingConfiguration.setRequiredSignatures(3);
+
+    TaskOrchestrationContext orchestrationContext = mockTaskOrchestrationContext(onboarding);
+    Task<String> getLatestDocumentTask = mockTaskWithValue(latestDocumentString);
+    when(orchestrationContext.callActivity(eq(GET_LATEST_DOCUMENT_ACTIVITY), any(), any(), eq(String.class)))
+            .thenReturn(getLatestDocumentTask);
+    Task<SigningConfiguration> getSigningConfigurationActivity = mockTaskWithValue(signingConfiguration);
+    when(orchestrationContext.callActivity(eq(GET_SIGNING_CONFIGURATION_ACTIVITY), any(), any(), eq(SigningConfiguration.class)))
+            .thenReturn(getSigningConfigurationActivity);
+
+    function.onboardingsOrchestrator(orchestrationContext, executionContext);
+
+    ArgumentCaptor<String> captorActivity = ArgumentCaptor.forClass(String.class);
+    verify(orchestrationContext, times(2))
+            .callActivity(captorActivity.capture(), any(), any(), any());
+    assertEquals(GET_LATEST_DOCUMENT_ACTIVITY, captorActivity.getAllValues().get(0));
+    assertEquals(GET_SIGNING_CONFIGURATION_ACTIVITY, captorActivity.getAllValues().get(1));
+
+    verify(service, times(0)).updateOnboardingStatus(eq(onboarding.getId()), any());
+  }
+
+  @Test
+  void onboardingOrchestratorContractWithCounterSignature_whenStatusPending_nextStatusIsPendingInReview() {
+    Onboarding onboarding = new Onboarding();
+    List<User> users = new ArrayList<>();
+    User user = new User();
+    users.add(user);
+    onboarding.setId("onboardingId");
+    onboarding.setStatus(OnboardingStatus.PENDING);
+    onboarding.setWorkflowType(WorkflowType.CONTRACT_WITH_COUNTERSIGNATURE);
+    onboarding.setUsers(users);
+    onboarding.setInstitution(new Institution());
+
+    SigningConfiguration signingConfiguration = new SigningConfiguration();
+    signingConfiguration.setRequiredSignatures(2);
+
+    TaskOrchestrationContext orchestrationContext = mockTaskOrchestrationContext(onboarding);
+    Task<String> getLatestDocumentTask = mockTaskWithValue(latestDocumentString);
+    when(orchestrationContext.callActivity(eq(GET_LATEST_DOCUMENT_ACTIVITY), any(), any(), eq(String.class)))
+            .thenReturn(getLatestDocumentTask);
+    Task<SigningConfiguration> getSigningConfigurationActivity = mockTaskWithValue(signingConfiguration);
+    when(orchestrationContext.callActivity(eq(GET_SIGNING_CONFIGURATION_ACTIVITY), any(), any(), eq(SigningConfiguration.class)))
+            .thenReturn(getSigningConfigurationActivity);
+
+    function.onboardingsOrchestrator(orchestrationContext, executionContext);
+
+    ArgumentCaptor<String> captorActivity = ArgumentCaptor.forClass(String.class);
+    verify(orchestrationContext, times(2))
+            .callActivity(captorActivity.capture(), any(), any(), any());
+    assertEquals(GET_LATEST_DOCUMENT_ACTIVITY, captorActivity.getAllValues().get(0));
+    assertEquals(GET_SIGNING_CONFIGURATION_ACTIVITY, captorActivity.getAllValues().get(1));
+
+    verify(service, times(1)).updateOnboardingStatus(onboarding.getId(), OnboardingStatus.PENDING_IN_REVIEW);
   }
 
   private Product createDummyProduct() {
