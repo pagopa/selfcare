@@ -3063,7 +3063,8 @@ class OnboardingServiceDefaultTest {
         when(userRegistryApi.searchUsingPOST(eq(USERS_FIELD_LIST), any()))
                 .thenReturn(Uni.createFrom().item(userResource));
 
-        Onboarding onboarding = mock(Onboarding.class);
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.getInstitution().setTaxCode(userId.toString());
         PanacheMock.mock(Onboarding.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
         when(query.stream()).thenReturn(Multi.createFrom().item(onboarding));
@@ -3077,6 +3078,7 @@ class OnboardingServiceDefaultTest {
         List<OnboardingResponse> response = subscriber.assertCompleted().awaitItem().getItem();
         assertFalse(response.isEmpty());
         assertEquals(1, response.size());
+        assertEquals(personalFiscalCode, response.get(0).getInstitution().getTaxCode());
         verify(userRegistryApi).searchUsingPOST(eq(USERS_FIELD_LIST), any());
     }
 
@@ -3105,7 +3107,8 @@ class OnboardingServiceDefaultTest {
     void testInstitutionOnboardings_withNumericTaxCode_doesNotCallPdv() {
         String institutionTaxCode = "00000000001";
 
-        Onboarding onboarding = mock(Onboarding.class);
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.getInstitution().setTaxCode(institutionTaxCode);
         PanacheMock.mock(Onboarding.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
         when(query.stream()).thenReturn(Multi.createFrom().item(onboarding));
@@ -3119,6 +3122,7 @@ class OnboardingServiceDefaultTest {
         List<OnboardingResponse> response = subscriber.assertCompleted().awaitItem().getItem();
         assertFalse(response.isEmpty());
         assertEquals(1, response.size());
+        assertEquals(institutionTaxCode, response.get(0).getInstitution().getTaxCode());
         verify(userRegistryApi, never()).searchUsingPOST(any(), any());
     }
 
