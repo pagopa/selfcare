@@ -28,7 +28,9 @@ jobs:
 
   code_review:
     permissions:
+      contents: read
       packages: read
+      pull-requests: write
     uses: ./.github/workflows/call_code_review.yml
     name: Onboarding function Code Review
     secrets: inherit
