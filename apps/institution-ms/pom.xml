@@ -210,12 +210,6 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>selfcare-onboarding-sdk-product</artifactId>
-            <version>0.16.0</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
 
