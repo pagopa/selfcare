@@ -1,4 +1,6 @@
-package it.pagopa.selfcare.onboarding.service;
+package it.pagopa.selfcare.onboarding.service.impl;
+import it.pagopa.selfcare.onboarding.service.*;
+
 
 import com.microsoft.azure.functions.ExecutionContext;
 import io.quarkus.runtime.util.ExceptionUtil;
@@ -21,7 +23,7 @@ import static it.pagopa.selfcare.onboarding.utils.CustomMetricsConst.EVENT_ONBOA
 import static it.pagopa.selfcare.onboarding.utils.CustomMetricsConst.EVENT_ONBOARDING_INSTTITUTION_FN_FAILURE;
 
 @ApplicationScoped
-public class NotificationEventResenderServiceDefault implements NotificationEventResenderService {
+public class NotificationEventResenderServiceImpl implements NotificationEventResenderService {
     private final NotificationEventService notificationEventService;
     private final OnboardingService onboardingService;
     private final TelemetryService telemetryService;
@@ -30,7 +32,7 @@ public class NotificationEventResenderServiceDefault implements NotificationEven
     private static final String RESEND_ENDING_LOG_LAST_PAGE = "There aren't more notifications to resend, page %s completed";
 
 
-    public NotificationEventResenderServiceDefault(
+    public NotificationEventResenderServiceImpl(
             NotificationEventService notificationEventService,
             OnboardingService onboardingService,
             TelemetryService telemetryService

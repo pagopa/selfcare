@@ -1,4 +1,6 @@
-package it.pagopa.selfcare.onboarding.service;
+package it.pagopa.selfcare.onboarding.service.impl;
+import it.pagopa.selfcare.onboarding.service.*;
+
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.ExecutionContext;
@@ -30,9 +32,9 @@ import static it.pagopa.selfcare.onboarding.utils.GenericError.ERROR_DURING_SEND
 
 
 @ApplicationScoped
-public class NotificationServiceDefault implements NotificationService {
+public class NotificationServiceImpl implements NotificationService {
 
-    private static final Logger log = LoggerFactory.getLogger(NotificationServiceDefault.class);
+    private static final Logger log = LoggerFactory.getLogger(NotificationServiceImpl.class);
 
     public static final String FORMAT_STRING_MSG = "%s: %s";
     public static final String PAGOPA_LOGO_FILENAME = "pagopa-logo.png";
@@ -49,7 +51,7 @@ public class NotificationServiceDefault implements NotificationService {
 
     private final boolean isEmailServiceAvailable;
 
-    public NotificationServiceDefault(MailTemplatePlaceholdersConfig templatePlaceholdersConfig, MailTemplatePathConfig templatePathConfig,
+    public NotificationServiceImpl(MailTemplatePlaceholdersConfig templatePlaceholdersConfig, MailTemplatePathConfig templatePathConfig,
                                       AzureBlobClient azureBlobClient, ObjectMapper objectMapper, Mailer mailer, ContractService contractService,
                                       @ConfigProperty(name = "onboarding-functions.notification-admin-email") String notificationAdminMail,
                                       @ConfigProperty(name = "onboarding-functions.sender-mail") String senderMail,

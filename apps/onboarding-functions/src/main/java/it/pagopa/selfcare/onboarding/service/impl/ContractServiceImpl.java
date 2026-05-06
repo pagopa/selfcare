@@ -1,4 +1,6 @@
-package it.pagopa.selfcare.onboarding.service;
+package it.pagopa.selfcare.onboarding.service.impl;
+import it.pagopa.selfcare.onboarding.service.*;
+
 
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.onboarding.entity.*;
@@ -34,7 +36,7 @@ import static it.pagopa.selfcare.onboarding.utils.GenericError.*;
 
 @Slf4j
 @ApplicationScoped
-public class ContractServiceDefault implements ContractService {
+public class ContractServiceImpl implements ContractService {
 
   private final UserApi userRegistryApi;
   private final AzureBlobClient azureBlobClient;
@@ -50,7 +52,7 @@ public class ContractServiceDefault implements ContractService {
   private static final String REGISTERED_OFFICE_COUNTY = "Sede legale - Provincia (Sigla)";
   private static final String DATE_PATTERN_YYYY_M_MDD_H_HMMSS = "yyyyMMddHHmmss";
 
-  public ContractServiceDefault(
+  public ContractServiceImpl(
             AzureBlobClient azureBlobClient,
             @ConfigProperty(name = "onboarding-functions.logo-path") String logoPath,
             @ConfigProperty(name = "onboarding-functions.logo-enable") Boolean isLogoEnable,
@@ -267,7 +269,7 @@ public class ContractServiceDefault implements ContractService {
     return new FileInputStream(csvFile);
   }
 
-  Path createSafeTempFile(String prefix, String suffix) throws IOException {
+  public Path createSafeTempFile(String prefix, String suffix) throws IOException {
     try {
       return createTempFileWithPosix(prefix, suffix);
     } catch (UnsupportedOperationException e) {
@@ -285,7 +287,7 @@ public class ContractServiceDefault implements ContractService {
     }
   }
 
-  Path createTempFileWithPosix(String prefix, String suffix) throws IOException {
+  public Path createTempFileWithPosix(String prefix, String suffix) throws IOException {
     FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions.asFileAttribute(
             PosixFilePermissions.fromString("rw-------")
     );
