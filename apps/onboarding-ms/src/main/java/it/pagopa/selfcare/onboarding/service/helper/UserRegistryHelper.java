@@ -265,6 +265,20 @@ public class UserRegistryHelper {
                 .value(value)
                 .certification(CertifiableFieldResourceOfstring.CertificationEnum.NONE);
     }
+
+    /**
+     * Cerca un utente nella User Registry tramite codice fiscale e restituisce l'UUID (token) associato.
+     * Restituisce null se l'utente non viene trovato (404).
+     */
+    public Uni<String> searchUserIdByFiscalCode(String fiscalCode) {
+        return userRegistryApi.searchUsingPOST(USERS_FIELD_LIST, new UserSearchDto().fiscalCode(fiscalCode))
+                .onItem().transform(u -> u.getId().toString())
+                .onFailure(WebApplicationException.class)
+                .recoverWithUni(ex -> {
+                    if (((WebApplicationException) ex).getResponse().getStatus() == 404) {
+                        return Uni.createFrom().nullItem();
+                    }
+                    return Uni.createFrom().failure(ex);
+                });
+    }
 }
-
-
