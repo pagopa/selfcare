@@ -1,4 +1,4 @@
-name: Integration test (Bruno)
+name: Integration test External API (Bruno)
 
 permissions:
   contents: read
@@ -52,6 +52,7 @@ jobs:
     secrets: inherit
     with:
       environment: dev
+      path: apps/external-api/src/test/resources/integration_test/bruno
 
   test_uat:
     uses: ./.github/workflows/call_integration_test_bruno.yml
@@ -61,3 +62,4 @@ jobs:
     secrets: inherit
     with:
       environment: uat
+      path: apps/external-api/src/test/resources/integration_test/bruno

@@ -1,11 +1,11 @@
 var fs = require('fs');
 
-fs.readFile('integration-test/integration-test-result.json', 'utf8', function (err, data) {
+fs.readFile('integration-test-result.json', 'utf8', function (err, data) {
   if (err) throw err; // we'll not consider error handling for now
   var obj = JSON.parse(data);
 
   let json = JSON.stringify(convert(obj[0]["summary"], process.argv[2]));
-  fs.writeFile("integration-test/stats.json", json, 'utf8', (err) => {
+  fs.writeFile("stats.json", json, 'utf8', (err) => {
     if (err) {
       console.error('Error writing to file', err);
     } else {

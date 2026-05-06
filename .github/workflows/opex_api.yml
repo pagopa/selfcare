@@ -13,15 +13,17 @@ on:
         type: choice
         description: App name
         options:
-          - auth
-          - iam
-          - product
-          - product-cdc
-          - webhook
-          - registry-proxy
-          - registry-proxy-pnpg
           - api-selfcare-onboarding
           - api-selfcare-onboarding-pnpg
+          - auth
+          - iam
+          - external-api
+          - external-api-pnpg
+          - product
+          - product-cdc
+          - registry-proxy
+          - registry-proxy-pnpg
+          - webhook
         required: true
 
 env:

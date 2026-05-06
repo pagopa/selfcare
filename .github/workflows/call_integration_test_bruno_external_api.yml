@@ -7,6 +7,9 @@ on:
       environment:
         type: string
         required: true
+      path:
+        type: string
+        required: false
 
 jobs:
   integration-test:
@@ -19,7 +22,7 @@ jobs:
       - name: "Download Bruno environment"
         env:
           INTEGRATION_ENVIRONMENT_BRUNO: ${{ secrets.INTEGRATION_ENVIRONMENT_BRUNO }}
-        run: 'echo "$INTEGRATION_ENVIRONMENT_BRUNO" | base64 --decode > Selfcare-External-Integration-Environment.bru'
+        run: 'echo "$INTEGRATION_ENVIRONMENT_BRUNO" | base64 --decode > Selfcare-External-Integration-Environment.json'
         shell: bash
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
         with:
@@ -29,12 +32,12 @@ jobs:
         run: npm install -g @usebruno/cli
       - name: Run bruno cli
         shell: bash
-        working-directory: integration-test/bruno
-        run: bru run . -r --env-file ../../Selfcare-External-Integration-Environment.bru --reporter-json ../integration-test-result.json --reporter-skip-all-headers
+        working-directory: ${{ inputs.path }}
+        run: bru run . -r --env-file Selfcare-External-Integration-Environment.json --reporter-json integration-test-result.json --reporter-skip-all-headers
       - name: Send bruno report
         shell: bash
-        run: node ./integration-test/convert_bruno.js
+        run: node convert_bruno.js
       - name: "Send message on Slack"
         shell: bash
         run: >
-          curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} -H 'Content-type: application/json' -d @integration-test/stats.json
+          curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} -H 'Content-type: application/json' -d @stats.json

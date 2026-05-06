@@ -51,6 +51,7 @@ jobs:
       path_openapi_docs: >-
         ${{ inputs.app == 'registry-proxy' && format('./{0}/app/src/main/resources/swagger/api-docs.json', inputs.APP_PATH)
         || inputs.app == 'institution-ms' && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH)
+        || inputs.app == 'external-api' && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH)
         || endsWith(inputs.app, '-bff') && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH)
         || format('./{0}/src/main/docs/openapi.json', inputs.APP_PATH) }}
       upload_openapi_enabled: ${{ inputs.target == 'ar' && !endsWith(inputs.app, '-cdc') && !endsWith(inputs.app, '-runner') }}
@@ -71,6 +72,7 @@ jobs:
       path_openapi_docs: >-
         ${{ inputs.app == 'registry-proxy' && format('./{0}/app/src/main/resources/swagger/api-docs.json', inputs.APP_PATH)
         || inputs.app == 'institution-ms' && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH)
+        || inputs.app == 'external-api' && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH)
         || endsWith(inputs.app, '-bff') && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH)
         || format('./{0}/src/main/docs/openapi.json', inputs.APP_PATH) }}
       upload_openapi_enabled: ${{ inputs.target == 'ar' && !endsWith(inputs.app, '-cdc') && !endsWith(inputs.app, '-runner') }}
@@ -91,6 +93,7 @@ jobs:
       path_openapi_docs: >-
         ${{ inputs.app == 'registry-proxy' && format('./{0}/app/src/main/resources/swagger/api-docs.json', inputs.APP_PATH)
         || inputs.app == 'institution-ms' && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH)
+        || inputs.app == 'external-api' && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH)
         || endsWith(inputs.app, '-bff') && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH)
         || format('./{0}/src/main/docs/openapi.json', inputs.APP_PATH) }}
       upload_openapi_enabled: ${{ inputs.target == 'ar' && !endsWith(inputs.app, '-cdc') && !endsWith(inputs.app, '-runner') }}
