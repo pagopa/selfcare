@@ -19,7 +19,7 @@ on:
       - reopened
       - ready_for_review
     paths:
-      - 'infra/resources/**/institution-ms.tf'
+      - 'infra/resources/institution-ms/**'
       - '.github/workflows/pr_institution_ms_infra.yml'
       - '.github/workflows/call_code_review_infra.yml'
 
