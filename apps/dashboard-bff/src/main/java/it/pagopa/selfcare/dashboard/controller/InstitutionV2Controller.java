@@ -135,7 +135,7 @@ public class InstitutionV2Controller {
                                                        CreateUserDto user) {
 
         log.trace("createInstitutionProductUser start");
-        log.debug(LogUtils.CONFIDENTIAL_MARKER, "createInstitutionProductUser institutionId = {}, productId = {}, user = {}", institutionId, productId, user);
+        log.debug(LogUtils.CONFIDENTIAL_MARKER, "createInstitutionProductUser institutionId = {}, productId = {}, user = {}", Encode.forJava(institutionId), Encode.forJava(productId), Encode.forJava(user.toString()));
         String userId = userService.createUsers(institutionId, productId, userMapperV2.toUserToCreate(user));
         UserIdResource result = new UserIdResource();
         result.setId(UUID.fromString(userId));

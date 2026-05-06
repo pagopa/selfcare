@@ -11,6 +11,7 @@ import it.pagopa.selfcare.dashboard.model.mapper.DelegationMapper;
 import it.pagopa.selfcare.dashboard.service.DelegationService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.owasp.encoder.Encode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -38,7 +39,7 @@ public class DelegationController {
     @PreAuthorize("hasPermission(new it.pagopa.selfcare.dashboard.security.FilterAuthorityDomain(#delegationRequest.getFrom(), #delegationRequest.getProductId(), null), 'Selc:CreateDelegation')")
     public DelegationIdResource createDelegation(@RequestBody @Valid DelegationRequestDto delegationRequest) {
         log.trace("createDelegation start");
-        log.debug(LogUtils.CONFIDENTIAL_MARKER, "createDelegation request = {}", delegationRequest);
+        log.debug(LogUtils.CONFIDENTIAL_MARKER, "createDelegation request = {}", Encode.forJava(delegationRequest.toString()));
         DelegationId delegationId = delegationService.createDelegation(delegationMapper.toDelegation(delegationRequest));
         DelegationIdResource result = delegationMapper.toIdResource(delegationId);
         log.debug("createDelegation result = {}", result);
