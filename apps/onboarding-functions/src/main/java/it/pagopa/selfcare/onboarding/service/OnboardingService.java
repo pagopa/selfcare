@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.onboarding.service;
 
 import static it.pagopa.selfcare.onboarding.utils.Utils.NOT_ALLOWED_WORKFLOWS_FOR_INSTITUTION_NOTIFICATIONS;
-import static jakarta.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
 import com.microsoft.azure.functions.ExecutionContext;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
@@ -23,7 +22,6 @@ import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -34,8 +32,6 @@ import java.util.stream.Stream;
 import org.bson.Document;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.model.OnboardedProductResponse;
-import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
-import org.openapi.quarkus.document_json.api.DocumentControllerApi;
 import org.openapi.quarkus.document_json.model.AttachmentPdfRequest;
 import org.openapi.quarkus.document_json.model.ContractPdfRequest;
 import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
@@ -68,11 +64,8 @@ public class OnboardingService {
   org.openapi.quarkus.user_json.api.UserApi userApi;
   @RestClient @Inject
   PdndVisuraInfoCamereControllerApi pndnInfocamereApi;
-  @RestClient @Inject
-  DocumentControllerApi documentControllerApi;
-  @RestClient @Inject
-  DocumentContentControllerApi documentContentControllerApi;
   @Inject NotificationService notificationService;
+  @Inject DocumentService documentService;
   private final ProductService productService;
   private final OnboardingRepository repository;
   private final MailTemplatePathConfig mailTemplatePathConfig;
@@ -125,7 +118,7 @@ public class OnboardingService {
             onboardingWorkflow.getContractTemplatePath(product),
             mailTemplatePlaceholdersConfig.rejectOnboardingUrlValue());
 
-      documentContentControllerApi.createContractPdf(request);
+    documentService.createContractPdf(request);
   }
 
   private UserResource getUserResource(Onboarding onboarding) {
@@ -141,7 +134,7 @@ public class OnboardingService {
         attachmentPdfRequestMapper.toRequest(
             onboarding, attachment, product, getUserResource(onboarding));
 
-    documentContentControllerApi.createAttachmentPdf(request);
+    documentService.createAttachmentPdf(request);
   }
 
   public void saveTokenWithContract(OnboardingWorkflow onboardingWorkflow) {
@@ -149,10 +142,7 @@ public class OnboardingService {
     Product product = productService.getProductIsValid(onboarding.getProductId());
     DocumentBuilderRequest request =
         documentBuilderRequestMapper.toRequest(onboarding, product, onboardingWorkflow);
-    try (Response response = documentControllerApi.saveDocument(request)) {
-      ensureSuccessfulDocumentResponse(
-          response, "save contract document", onboarding.getId());
-    }
+    documentService.saveDocument(request);
   }
 
   public void saveTokenWithAttachment(OnboardingAttachment onboardingAttachment) {
@@ -161,10 +151,7 @@ public class OnboardingService {
     AttachmentTemplate attachmentTemplate = onboardingAttachment.getAttachment();
     DocumentBuilderRequest request =
         documentBuilderRequestMapper.toRequest(onboarding, product, attachmentTemplate, DocumentType.ATTACHMENT);
-    try (Response response = documentControllerApi.saveDocument(request)) {
-      ensureSuccessfulDocumentResponse(
-          response, "save attachment document", onboarding.getId());
-    }
+    documentService.saveDocument(request);
   }
 
   public void sendMailRegistration(Onboarding onboarding) {
@@ -217,40 +204,13 @@ public class OnboardingService {
     var taxCode = onboarding.getInstitution().getTaxCode();
     var bytes = pndnInfocamereApi.institutionVisuraDocumentByTaxCodeUsingGET(taxCode);
     final String filename = String.format("VISURA_%s.xml", taxCode);
-    DocumentContentControllerApi.SaveVisuraForMerchantMultipartForm request =
-        new DocumentContentControllerApi.SaveVisuraForMerchantMultipartForm();
+    org.openapi.quarkus.document_json.api.DocumentContentControllerApi.SaveVisuraForMerchantMultipartForm request =
+        new org.openapi.quarkus.document_json.api.DocumentContentControllerApi
+            .SaveVisuraForMerchantMultipartForm();
     request.fileContent = new ByteArrayInputStream(bytes);
     request.onboardingId = onboarding.getId();
     request.filename = filename;
-    try (Response response = documentContentControllerApi.saveVisuraForMerchant(request)) {
-      ensureSuccessfulDocumentResponse(
-          response,
-          "store visura document for institution with taxCode: " + taxCode,
-          onboarding.getId());
-    }
-  }
-
-  private void ensureSuccessfulDocumentResponse(
-      Response response, String operation, String onboardingId) {
-    int status = Objects.nonNull(response) ? response.getStatus() : -1;
-    if (Objects.isNull(response)
-        || Objects.isNull(response.getStatusInfo())
-        || !SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
-      log.warn(
-          "Document service call failed: operation={}, onboardingId={}, status={}",
-          operation,
-          onboardingId,
-          status);
-      throw new GenericOnboardingException(
-          String.format(
-              "Document service call failed while trying to %s for onboarding %s. status=%s",
-              operation, onboardingId, status));
-    }
-    log.debug(
-        "Document service call succeeded: operation={}, onboardingId={}, status={}",
-        operation,
-        onboardingId,
-        status);
+    documentService.saveVisuraForMerchant(request);
   }
 
   public void sendMailRegistrationForContract(OnboardingWorkflow onboardingWorkflow) {

@@ -27,7 +27,6 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.api.DelegationApi;
 import org.openapi.quarkus.core_json.api.InstitutionApi;
 import org.openapi.quarkus.core_json.model.*;
-import org.openapi.quarkus.document_json.api.DocumentControllerApi;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
 import org.openapi.quarkus.party_registry_proxy_json.api.AooApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.InfocamereApi;
@@ -86,9 +85,8 @@ public class CompletionServiceDefault implements CompletionService {
     @RestClient
     @Inject
     NationalRegistriesApi nationalRegistriesApi;
-    @RestClient
     @Inject
-    DocumentControllerApi documentControllerApi;
+    DocumentService documentService;
 
 
     private final InstitutionMapper institutionMapper;
@@ -284,13 +282,10 @@ public class CompletionServiceDefault implements CompletionService {
         onboardingRequest.setIsAggregator(onboarding.getIsAggregator());
         //If contract exists we send the path of the contract
         if(!onboarding.getInstitution().getInstitutionType().equals(InstitutionType.PG)) {
-            try {
-                DocumentResponse document = documentControllerApi.getDocumentByOnboardingId(onboarding.getId());
+            DocumentResponse document = documentService.getDocumentByOnboardingIdOrNull(onboarding.getId());
+            if (Objects.nonNull(document)) {
                 onboardingRequest.setContractPath(document.getContractSigned());
-            } catch (WebApplicationException e) {
-                if (e.getResponse().getStatus() != 404) {
-                    throw e;
-                }
+            } else {
                 log.warn("Document not found for onboarding {}, skipping contract path", onboarding.getId());
             }
         }

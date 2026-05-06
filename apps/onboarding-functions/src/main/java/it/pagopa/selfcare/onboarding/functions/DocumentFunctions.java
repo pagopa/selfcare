@@ -12,13 +12,9 @@ import com.microsoft.durabletask.azurefunctions.DurableActivityTrigger;
 import it.pagopa.selfcare.onboarding.dto.EntityFilter;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
+import it.pagopa.selfcare.onboarding.service.DocumentService;
 import it.pagopa.selfcare.onboarding.service.TelemetryService;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
-import org.openapi.quarkus.document_json.api.DocumentControllerApi;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
 
 import java.util.Map;
@@ -31,13 +27,15 @@ public class DocumentFunctions {
   private static final String FORMAT_LOGGER_INSTITUTION_STRING = "%s: %s";
   private final ObjectMapper objectMapper;
   private final TelemetryService telemetryService;
+  private final DocumentService documentService;
 
-  @RestClient @Inject DocumentContentControllerApi documentContentControllerApi;
-  @RestClient @Inject DocumentControllerApi documentControllerApi;
-
-  public DocumentFunctions(ObjectMapper objectMapper, TelemetryService telemetryService) {
+  public DocumentFunctions(
+      ObjectMapper objectMapper,
+      TelemetryService telemetryService,
+      DocumentService documentService) {
     this.objectMapper = objectMapper;
-    this.telemetryService =  telemetryService;
+    this.telemetryService = telemetryService;
+    this.documentService = documentService;
   }
 
 
@@ -58,33 +56,8 @@ public class DocumentFunctions {
     context
       .getLogger()
       .info(() -> String.format("Deleting contract for onboardingId=%s", onboardingId));
-    try (Response response = documentContentControllerApi.deleteContract(onboardingId)) {
-      if (response == null
-          || response.getStatusInfo() == null
-          || !SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
-        int status = response != null ? response.getStatus() : -1;
-        context
-          .getLogger()
-          .warning(
-            () ->
-              String.format(
-                "Document service deleteContract failed for onboardingId=%s status=%s",
-                onboardingId,
-                status));
-        throw new GenericOnboardingException(
-            String.format(
-                "Unable to delete contract for onboarding %s. status=%s",
-                onboardingId,
-                status));
-      }
-      context
-        .getLogger()
-        .fine(
-          () ->
-            String.format(
-              "Document service deleteContract succeeded for onboardingId=%s status=%s",
-              onboardingId,
-              response.getStatus()));
+    try (Response response = documentService.deleteContract(onboardingId)) {
+      ensureSuccessfulDocumentResponse(response, "delete contract", onboardingId);
     }
   }
 
@@ -103,17 +76,26 @@ public class DocumentFunctions {
             Map.of(
                     "onboardingId", onboarding.getId(),
                     "productId", onboarding.getProductId()));
-    try {
-      return documentControllerApi.getDocumentByOnboardingId(onboarding.getId());
-    } catch (WebApplicationException e) {
-      if (e.getResponse() != null && e.getResponse().getStatus() == 404) {
-        context
-            .getLogger()
-            .warning(
-                () -> String.format("Document not found for onboardingId=%s", onboarding.getId()));
-        return null;
-      }
-      throw e;
+    DocumentResponse document =
+        documentService.getDocumentByOnboardingIdOrNull(onboarding.getId());
+    if (document == null) {
+      context
+          .getLogger()
+          .warning(() -> String.format("Document not found for onboardingId=%s", onboarding.getId()));
+    }
+    return document;
+  }
+
+  private void ensureSuccessfulDocumentResponse(
+      Response response, String operation, String onboardingId) {
+    int status = response != null ? response.getStatus() : -1;
+    if (response == null
+        || response.getStatusInfo() == null
+        || !SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
+      throw new GenericOnboardingException(
+          String.format(
+              "Document service call failed while trying to %s for onboarding %s. status=%s",
+              operation, onboardingId, status));
     }
   }
 }
