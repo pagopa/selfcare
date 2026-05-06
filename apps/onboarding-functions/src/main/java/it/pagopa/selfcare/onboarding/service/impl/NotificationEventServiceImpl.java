@@ -1,4 +1,6 @@
-package it.pagopa.selfcare.onboarding.service;
+package it.pagopa.selfcare.onboarding.service.impl;
+import it.pagopa.selfcare.onboarding.service.*;
+
 
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -32,7 +34,7 @@ import static it.pagopa.selfcare.onboarding.utils.CustomMetricsConst.EVENT_ONBOA
 import static it.pagopa.selfcare.onboarding.utils.Utils.isNotInstitutionOnboarding;
 
 @ApplicationScoped
-public class NotificationEventServiceDefault implements NotificationEventService {
+public class NotificationEventServiceImpl implements NotificationEventService {
     private final TelemetryService telemetryService;
     @RestClient
     @Inject
@@ -61,7 +63,7 @@ public class NotificationEventServiceDefault implements NotificationEventService
     private final QueueEventExaminer queueEventExaminer;
     private static final String NOTIFICATION_EVENT_STRING = "notificationEventTraceId";
 
-    public NotificationEventServiceDefault(ProductService productService,
+    public NotificationEventServiceImpl(ProductService productService,
                                            NotificationConfig notificationConfig,
                                            NotificationBuilderFactory notificationBuilderFactory,
                                            NotificationUserBuilderFactory notificationUserBuilderFactory,

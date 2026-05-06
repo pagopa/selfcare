@@ -1,4 +1,6 @@
-package it.pagopa.selfcare.onboarding.service;
+package it.pagopa.selfcare.onboarding.service.impl;
+import it.pagopa.selfcare.onboarding.service.*;
+
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,7 +54,7 @@ import static org.openapi.quarkus.core_json.model.DelegationResponse.StatusEnum.
 @Slf4j
 @ApplicationScoped
 @SuppressWarnings({"java:S6813", "java:S107"})
-public class CompletionServiceDefault implements CompletionService {
+public class CompletionServiceImpl implements CompletionService {
 
 
     @RestClient
@@ -101,7 +103,7 @@ public class CompletionServiceDefault implements CompletionService {
     private final boolean forceInstitutionCreation;
     private static final String USERS_FIELD_LIST = "fiscalCode,familyName,name";
 
-    public CompletionServiceDefault(ProductService productService,
+    public CompletionServiceImpl(ProductService productService,
                                     NotificationService notificationService,
                                     OnboardingMapper onboardingMapper,
                                     UserMapper userMapper,

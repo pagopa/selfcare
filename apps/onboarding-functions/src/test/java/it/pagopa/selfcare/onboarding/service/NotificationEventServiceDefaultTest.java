@@ -15,6 +15,8 @@ import it.pagopa.selfcare.onboarding.dto.webhook.NotificationRequest;
 import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.onboarding.exception.NotificationException;
 import it.pagopa.selfcare.onboarding.utils.*;
+import it.pagopa.selfcare.onboarding.service.impl.NotificationEventServiceImpl;
+
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
@@ -34,7 +36,7 @@ import static org.mockito.Mockito.*;
 @QuarkusTest
 public class NotificationEventServiceDefaultTest {
 
-  @Inject NotificationEventServiceDefault notificationServiceDefault;
+  @Inject NotificationEventServiceImpl notificationServiceDefault;
 
   @InjectMock ProductService productService;
 
@@ -204,7 +206,7 @@ public class NotificationEventServiceDefaultTest {
   void onboardingEventMapTest() {
     final Onboarding onboarding = createOnboarding();
     onboarding.setId("ID");
-    Map<String, String> properties = NotificationEventServiceDefault.onboardingEventMap(onboarding);
+    Map<String, String> properties = NotificationEventServiceImpl.onboardingEventMap(onboarding);
     assertNotNull(properties);
     assertEquals("ID", properties.get("id"));
   }
@@ -212,7 +214,7 @@ public class NotificationEventServiceDefaultTest {
   @Test
   void onboardingEventFailureMapTest() {
     final Onboarding onboarding = createOnboarding();
-    Map<String, String> properties = NotificationEventServiceDefault.onboardingEventFailureMap(onboarding, new Exception());
+    Map<String, String> properties = NotificationEventServiceImpl.onboardingEventFailureMap(onboarding, new Exception());
     assertNotNull(properties);
   }
 
@@ -228,7 +230,7 @@ public class NotificationEventServiceDefaultTest {
     billing.setPublicService(false);
     notificationToSend.setBilling(billing);
 
-    Map<String, String> properties = NotificationEventServiceDefault.notificationEventMap(notificationToSend, "topic", "traceId");
+    Map<String, String> properties = NotificationEventServiceImpl.notificationEventMap(notificationToSend, "topic", "traceId");
     assertNotNull(properties);
     assertEquals("traceId", properties.get("notificationEventTraceId"));
     assertEquals("id", properties.get("id"));
@@ -267,7 +269,7 @@ public class NotificationEventServiceDefaultTest {
     billing.setTaxCodeInvoicing("456");
     notificationToSend.setBilling(billing);
 
-    Map<String, String> properties = NotificationEventServiceDefault.notificationEventMap(notificationToSend, "topic", null);
+    Map<String, String> properties = NotificationEventServiceImpl.notificationEventMap(notificationToSend, "topic", null);
     assertNotNull(properties);
     assertEquals("id", properties.get("id"));
     assertEquals("internal", properties.get("internalIstitutionID"));
@@ -310,7 +312,7 @@ public class NotificationEventServiceDefaultTest {
     billing.setTaxCodeInvoicing("456");
     notificationToSend.setBilling(billing);
 
-    Map<String, String> properties = NotificationEventServiceDefault.notificationEventMap(notificationToSend, "topic", null);
+    Map<String, String> properties = NotificationEventServiceImpl.notificationEventMap(notificationToSend, "topic", null);
     assertNotNull(properties);
     assertEquals("id", properties.get("id"));
     assertEquals("internal", properties.get("internalIstitutionID"));
@@ -395,7 +397,7 @@ public class NotificationEventServiceDefaultTest {
     user.setRole("OPERATOR");
     notificationUserToSend.setUser(user);
 
-    Map<String, String> properties = NotificationEventServiceDefault.notificationUserEventMap(notificationUserToSend, "topic", "traceId");
+    Map<String, String> properties = NotificationEventServiceImpl.notificationUserEventMap(notificationUserToSend, "topic", "traceId");
     assertNotNull(properties);
     assertEquals("traceId", properties.get("notificationEventTraceId"));
     assertEquals("id", properties.get("id"));
@@ -454,7 +456,7 @@ public class NotificationEventServiceDefaultTest {
     doNothing().when(eventHubRestClient).sendMessage(anyString(), anyString());
 
 
-    NotificationUserToSend notificationUserToSend = NotificationEventServiceDefault.getNotificationUserToSend(notificationsResources, userDataResponse,
+    NotificationUserToSend notificationUserToSend = NotificationEventServiceImpl.getNotificationUserToSend(notificationsResources, userDataResponse,
       onboardedProductResponse, fdNotificationBuilder);
 
     assertNotNull(notificationUserToSend);

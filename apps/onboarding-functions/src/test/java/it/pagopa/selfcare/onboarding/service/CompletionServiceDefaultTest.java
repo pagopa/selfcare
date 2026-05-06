@@ -17,6 +17,8 @@ import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
+import it.pagopa.selfcare.onboarding.service.impl.CompletionServiceImpl;
+
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
@@ -56,7 +58,7 @@ import static org.mockito.Mockito.*;
 public class CompletionServiceDefaultTest {
 
     @Inject
-    CompletionServiceDefault completionServiceDefault;
+    CompletionServiceImpl completionServiceDefault;
 
     @InjectMock
     OnboardingRepository onboardingRepository;

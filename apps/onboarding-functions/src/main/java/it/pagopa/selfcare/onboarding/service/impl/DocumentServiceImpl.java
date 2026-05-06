@@ -1,4 +1,6 @@
 package it.pagopa.selfcare.onboarding.service.impl;
+import it.pagopa.selfcare.onboarding.service.*;
+
 
 import it.pagopa.selfcare.onboarding.service.DocumentService;
 import jakarta.enterprise.context.ApplicationScoped;

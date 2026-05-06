@@ -13,6 +13,8 @@ import it.pagopa.selfcare.onboarding.config.MailTemplatePathConfig;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
 import it.pagopa.selfcare.onboarding.dto.SendMailInput;
 import it.pagopa.selfcare.onboarding.entity.*;
+import it.pagopa.selfcare.onboarding.service.impl.NotificationServiceImpl;
+
 import it.pagopa.selfcare.product.entity.EmailTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
@@ -47,14 +49,14 @@ class NotificationServiceDefaultTest {
     @Inject
     ObjectMapper objectMapper;
     Mailer mailer;
-    NotificationServiceDefault notificationService;
+    NotificationServiceImpl notificationService;
 
     final String notificationAdminMail = "adminAddress";
 
     @BeforeEach
     void startup() {
         mailer = mock(Mailer.class);
-        this.notificationService = new NotificationServiceDefault(templatePlaceholdersConfig, templatePathConfig,
+        this.notificationService = new NotificationServiceImpl(templatePlaceholdersConfig, templatePathConfig,
                 azureBlobClient, objectMapper, mailer, contractService, notificationAdminMail, "senderMail", false, "destinationMailTestAddress", true);
     }
 
