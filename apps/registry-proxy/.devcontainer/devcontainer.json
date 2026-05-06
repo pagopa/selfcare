@@ -1,0 +1,103 @@
+{
+  "name": "registry-proxy",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "17",
+      "jdkDistro": "ms",
+      "installMaven": true,
+      "mavenVersion": "3.9.9",
+      "installGradle": false
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "redhat.java",
+        "vscjava.vscode-java-pack",
+        "vscjava.vscode-maven",
+        "vscjava.vscode-spring-initializr",
+        "vmware.vscode-spring-boot",
+        "vscjava.vscode-spring-boot-dashboard",
+        "vscjava.vscode-java-debug",
+        "vscjava.vscode-java-test",
+        "GabrielBB.vscode-lombok",
+        "donjayamanne.githistory"
+      ],
+      "settings": {
+        "java.configuration.updateBuildConfiguration": "automatic",
+        "java.compile.nullAnalysis.mode": "automatic",
+        "editor.formatOnSave": true,
+        "spring-boot.ls.java.home": "/usr/local/sdkman/candidates/java/current"
+      }
+    }
+  },
+  "containerEnv": {
+    "MS_PARTY_REGISTRY_PROXY_SERVER_PORT": "8080",
+    "MS_PARTY_REGISTRY_PROXY_LOG_LEVEL": "DEBUG",
+    "ANAC_FTP_MODE": "azure",
+    "PDND_SKIP_LOCALIZZAZIONE_NODES": "false",
+    "LOGGING_APPINSIGHTS_ENABLED": "false",
+    "ANAC_FTP_DIRECTORY": "/mnt/RegistroGestoriPiattaforme/Collaudo/",
+    "CONTAINER_APP_NAME": "selc-d-party-reg-proxy-ca",
+    "DAPR_GRPC_PORT": "50001",
+    "DAPR_HTTP_PORT": "3500",
+    "AZURE_SEARCH_URL": "https://selc-d-weu-ar-srch.search.windows.net/",
+    "AZURE_SEARCH_INSTITUTION_INDEX": "institution-index-ar",
+    "INFO_CAMERE_AUTHENTICATION_ENDPOINT": "/ic/ce/wspa/wspa/rest/authentication",
+    "INFO_CAMERE_INSTITUTIONS_BY_LEGAL_ENDPOINT": "/ic/ce/wspa/wspa/rest/listaLegaleRappresentante/{taxId}",
+    "INFO_CAMERE_URL": "https://icapiscl.infocamere.it",
+    "IVASS_BASE_URL": "https://infostat-ivass.bancaditalia.it",
+    "QUEUE_NAMESPACE": "selc-d-eventhub-ns.servicebus.windows.net",
+    "QUEUE_TOPIC": "SC-Contracts",
+    "QUEUE_CONSUMER_GROUP": "party-proxy",
+    "LUCENE_INDEX_ANAC_FOLDER": "index/anac",
+    "LUCENE_INDEX_AOOS_FOLDER": "index/aoos",
+    "LUCENE_INDEX_CATEGORIES_FOLDER": "index/categories",
+    "LUCENE_INDEX_INSTITUTIONS_FOLDER": "index/institutions",
+    "LUCENE_INDEX_IVASS_FOLDER": "index/ivass",
+    "LUCENE_INDEX_UOS_FOLDER": "index/uos",
+    "MOCK_OPEN_DATA_AOO_ENDPOINT": "/aoo-open-data-mock.csv",
+    "MOCK_OPEN_DATA_CATEGORY_ENDPOINT": "/categories-open-data-mock.csv",
+    "MOCK_OPEN_DATA_ENABLED": "false",
+    "MOCK_OPEN_DATA_INSTITUTION_ENDPOINT": "/institutions-open-data-mock.csv",
+    "MOCK_OPEN_DATA_UO_ENDPOINT": "/uo-open-data-mock.csv",
+    "MOCK_OPEN_DATA_URL": "https://selcdcheckoutsa.z6.web.core.windows.net/resources",
+    "PDND_BASE_URL": "https://auth.interop.pagopa.it",
+    "PDND_INFOCAMERE_AUDIENCE": "auth.interop.pagopa.it/client-assertion",
+    "SELC_INSTITUTION_URL": "https://selc-d-ms-core-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+  },
+  "remoteEnv": {
+    "ONBOARDING_DATA_ENCRIPTION_KEY": "${localEnv:ONBOARDING_DATA_ENCRIPTION_KEY}",
+    "ONBOARDING_DATA_ENCRIPTION_IV": "${localEnv:ONBOARDING_DATA_ENCRIPTION_IV}",
+    "APPINSIGHTS_CONNECTION_STRING": "${localEnv:APPINSIGHTS_CONNECTION_STRING}",
+    "ANAC_FTP_IP": "${localEnv:ANAC_FTP_IP}",
+    "ANAC_FTP_KNOWN_HOST": "${localEnv:ANAC_FTP_KNOWN_HOST}",
+    "ANAC_FTP_PASSWORD": "${localEnv:ANAC_FTP_PASSWORD}",
+    "ANAC_FTP_USER": "${localEnv:ANAC_FTP_USER}",
+    "AZURE_CLIENT_ID": "${localEnv:AZURE_CLIENT_ID}",
+    "BLOB_STORAGE_CONN_STRING": "${localEnv:BLOB_STORAGE_CONN_STRING}",
+    "AZURE_SEARCH_API_KEY": "${localEnv:AZURE_SEARCH_API_KEY}",
+    "GEOTAXONOMY_API_KEY": "${localEnv:GEOTAXONOMY_API_KEY}",
+    "JWT-BEARER-TOKEN-FUNCTIONS": "${localEnv:JWT-BEARER-TOKEN-FUNCTIONS}",
+    "JWT_TOKEN_PUBLIC_KEY": "${localEnv:JWT_TOKEN_PUBLIC_KEY}",
+    "NATIONAL_REGISTRY_API_KEY": "${localEnv:NATIONAL_REGISTRY_API_KEY}",
+    "PDND_INFOCAMERE_CLIENT_ID": "${localEnv:PDND_INFOCAMERE_CLIENT_ID}",
+    "PDND_INFOCAMERE_KID": "${localEnv:PDND_INFOCAMERE_KID}",
+    "PDND_INFOCAMERE_PRIVATE_KEY": "${localEnv:PDND_INFOCAMERE_PRIVATE_KEY}",
+    "PDND_INFOCAMERE_PURPOSE_ID": "${localEnv:PDND_INFOCAMERE_PURPOSE_ID}"
+  },
+  "runArgs": [
+    "--env-file", "${localWorkspaceFolder}/.devcontainer/.env",
+    "--userns=keep-id"
+  ],
+  "forwardPorts": [8080, 3500, 50001],
+  "portsAttributes": {
+    "8080": { "label": "App HTTP" },
+    "3500": { "label": "Dapr HTTP" },
+    "50001": { "label": "Dapr gRPC" }
+  },
+  "postCreateCommand": "dapr init && mvn -f /workspaces/selfcare/apps/registry-proxy/pom.xml dependency:resolve -q && cp -r /workspaces/selfcare/apps/registry-proxy/.devcontainer/dapr /workspaces/selfcare/apps/registry-proxy/.dapr"
+}

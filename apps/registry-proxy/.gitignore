@@ -32,6 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 .DS_Store
+.devcontainer/.env
 
 **/.terraform/*
 *.tfstate
