@@ -33,5 +33,5 @@ jobs:
       pr_number: ${{ github.event.pull_request.number }}
       source_branch: ${{ github.head_ref }}
       target_branch: ${{ github.base_ref }}
-      sonar_key: 'pagopa_selfcare'
+      sonar_key: 'pagopa_selfcare-institution'
       module: 'institution-ms'
