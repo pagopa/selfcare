@@ -32,6 +32,27 @@ locals {
   monitor_rg_name          = "${module.local.config.prefix}-${module.local.config.env_short}-monitor-rg"
   monitor_appinsights_name = "${module.local.config.prefix}-${module.local.config.env_short}-appinsights"
 
+
+  lock_enable = false
+
+  # networking
+  cidr_subnet_apim = ["10.1.161.0/24"]
+
+
+  # apim
+  apim_publisher_name = "pagoPA SelfCare DEV"
+  apim_sku            = "Developer_1"
+
+  # aks
+  private_dns_name            = "selc.internal.dev.selfcare.pagopa.it"
+  private_onboarding_dns_name = "selc-d-onboarding-ms-ca.gentleflower-c63e62fe.westeurope.azurecontainerapps.io"
+  # ca_suffix_dns_private_name      = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+  ca_pnpg_suffix_dns_private_name = "blackhill-644148c0.westeurope.azurecontainerapps.io"
+
+  # app_gateway
+  app_gateway_api_certificate_name      = "api-dev-selfcare-pagopa-it"
+  app_gateway_api_pnpg_certificate_name = "api-pnpg-dev-selfcare-pagopa-it"
+
   container_app = {
     min_replicas = module.local.config.container_app.min_replicas
     max_replicas = module.local.config.container_app.max_replicas

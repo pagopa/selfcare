@@ -39,11 +39,11 @@ locals {
       value = "true"
     },
     {
-      name = "USER_CDC_SEND_EVENTS_FD_WATCH_ENABLED"
+      name  = "USER_CDC_SEND_EVENTS_FD_WATCH_ENABLED"
       value = "true"
     },
     {
-      name = "USER_CDC_ADD_ON_AGGREGATES_WATCH_ENABLED"
+      name  = "USER_CDC_ADD_ON_AGGREGATES_WATCH_ENABLED"
       value = "true"
     },
     {
@@ -81,13 +81,13 @@ locals {
   ]
 
   secrets_names_user_cdc = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
-    "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
-    "STORAGE_CONNECTION_STRING"               = "blob-storage-product-connection-string"
-    "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"    = "eventhub-sc-users-selfcare-wo-key-lc"
-    "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
-    "EVENTHUB_SELFCARE_FD_EXTERNAL_KEY_LC"    = "eventhub-selfcare-fd-external-interceptor-wo-key-lc"
-    "INTERNAL_API_KEY"                        = "internal-api-key"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
+    "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
+    "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"  = "eventhub-sc-users-selfcare-wo-key-lc"
+    "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
+    "EVENTHUB_SELFCARE_FD_EXTERNAL_KEY_LC"  = "eventhub-selfcare-fd-external-interceptor-wo-key-lc"
+    "INTERNAL_API_KEY"                      = "internal-api-key"
   }
 }
 

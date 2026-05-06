@@ -50,7 +50,7 @@ resource "github_actions_environment_secret" "integration_environment" {
       env                  = local.env_url
       apimKeyPN            = data.azurerm_key_vault_secret.apim_product_pn_sk.value
       apimKeyDataVaultPNPG = data.azurerm_key_vault_secret.apim_product_pnpg_sk.value
-    }))
+  }))
 }
 
 resource "github_actions_environment_secret" "integration_environment_bruno" {
@@ -63,6 +63,6 @@ resource "github_actions_environment_secret" "integration_environment_bruno" {
       apimKeyPN            = data.azurerm_key_vault_secret.apim_product_pn_sk.value
       apimKeyDataVaultPNPG = data.azurerm_key_vault_secret.apim_product_pnpg_sk.value
       apimKeyInternal      = data.azurerm_key_vault_secret.apim_internal_sk.value
-      apimKeySupport      = data.azurerm_key_vault_secret.apim_support_sk.value
-    }))
+      apimKeySupport       = data.azurerm_key_vault_secret.apim_support_sk.value
+  }))
 }
