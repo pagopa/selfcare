@@ -30,7 +30,11 @@ jobs:
           node-version: 18
 
       - name: Install Optic
-        run: npm install -g @useoptic/optic@1.0.9
+        run: |
+          node --version
+          npm --version
+          npm install -g @useoptic/optic@1.0.9
+          optic --version
 
       - name: Extract base branch
         id: extract_branch
@@ -39,16 +43,40 @@ jobs:
       - name: Build OpenAPI source
         run: mvn --projects :${{ inputs.module }} --also-make package -DskipTests
 
-      - name: Debug paths
+      - name: Debug OpenAPI file
         run: |
+          set -x
+
           echo "OpenAPI file path: ${{ inputs.path_openapi_docs }}"
           echo "Base branch: origin/${{ steps.extract_branch.outputs.branch }}"
+
+          echo "Current directory:"
+          pwd
+
+          echo "Check current OpenAPI file:"
+          test -f "${{ inputs.path_openapi_docs }}"
+          ls -l "${{ inputs.path_openapi_docs }}"
+
+          echo "Check base branch exists:"
+          git rev-parse "origin/${{ steps.extract_branch.outputs.branch }}"
+
+          echo "Check OpenAPI file exists in base branch:"
+          git cat-file -e "origin/${{ steps.extract_branch.outputs.branch }}:${{ inputs.path_openapi_docs }}"
+
+      - name: Validate OpenAPI JSON
+        run: |
+          python -m json.tool "${{ inputs.path_openapi_docs }}" > /tmp/openapi.pretty.json
+
+      - name: Extract base OpenAPI file
+        run: |
+          git show "origin/${{ steps.extract_branch.outputs.branch }}:${{ inputs.path_openapi_docs }}" > /tmp/base-openapi.json
+          ls -l /tmp/base-openapi.json
 
       - name: Check OpenAPI with Optic
         run: |
           set -x
-          DEBUG=optic:* optic diff "${{ inputs.path_openapi_docs }}" \
-            --base "${{ inputs.path_openapi_docs }}" \
+          optic diff "${{ inputs.path_openapi_docs }}" \
+            --base /tmp/base-openapi.json \
             --check
 
       - name: Verify OpenAPI file is up to date
