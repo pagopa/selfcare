@@ -25,7 +25,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install Optic
-        run: npm install --location global @useoptic/optic@1.0.8
+        run: npm install -g @useoptic/optic
 
       - name: Extract base branch
         id: extract_branch

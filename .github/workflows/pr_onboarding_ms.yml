@@ -42,7 +42,7 @@ jobs:
       module: 'onboarding-ms'
 
   openapi_check:
-    needs: [code_review]
+    #needs: [code_review]
     permissions: write-all
     uses: ./.github/workflows/call_openapi_verification.yml
     name: Onboarding MS OpenApi Check
