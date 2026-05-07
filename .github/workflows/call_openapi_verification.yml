@@ -38,13 +38,13 @@ jobs:
         run: |
           echo "OpenAPI file path: ${{ inputs.path_openapi_docs }}"
           echo "Base branch: origin/${{ steps.extract_branch.outputs.branch }}"
-          echo "Current directory:"
-          pwd
-          echo "Files in repo:"
-          ls -R
 
       - name: Check OpenAPI with Optic
-        run: optic diff "${{ inputs.path_openapi_docs }}" --base "origin/${{ steps.extract_branch.outputs.branch }}" --check
+        run: |
+          set -x
+          DEBUG=optic:* optic diff "${{ inputs.path_openapi_docs }}" \
+            --base "origin/${{ steps.extract_branch.outputs.branch }}" \
+            --check
 
       - name: Verify OpenAPI file is up to date
         run: |
