@@ -74,9 +74,9 @@ jobs:
       - name: Check OpenAPI with Optic
         run: |
           set -x
-          cd /tmp/optic-install
+          cd "${GITHUB_WORKSPACE}"
 
-          npx optic diff "${GITHUB_WORKSPACE}/${{ inputs.path_openapi_docs }}" \
+          /tmp/optic-install/node_modules/.bin/optic diff "${{ inputs.path_openapi_docs }}" \
             --base /tmp/base-openapi.json \
             --check
 
