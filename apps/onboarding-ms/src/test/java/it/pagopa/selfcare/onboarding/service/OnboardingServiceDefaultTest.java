@@ -3078,7 +3078,7 @@ class OnboardingServiceDefaultTest {
         List<OnboardingResponse> response = subscriber.assertCompleted().awaitItem().getItem();
         assertFalse(response.isEmpty());
         assertEquals(1, response.size());
-        assertEquals(personalFiscalCode, response.get(0).getInstitution().getTaxCode());
+        assertEquals(userId.toString(), response.get(0).getInstitution().getTaxCode());
         verify(userRegistryApi).searchUsingPOST(eq(USERS_FIELD_LIST), any());
     }
 
