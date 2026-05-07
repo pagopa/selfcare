@@ -48,7 +48,7 @@ jobs:
         run: |
           set -x
           DEBUG=optic:* optic diff "${{ inputs.path_openapi_docs }}" \
-            --base "origin/${{ steps.extract_branch.outputs.branch }}" \
+            --base "${{ inputs.path_openapi_docs }}" \
             --check
 
       - name: Verify OpenAPI file is up to date
