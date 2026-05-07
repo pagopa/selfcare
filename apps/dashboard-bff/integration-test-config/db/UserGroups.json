@@ -1,0 +1,72 @@
+[
+  {
+    "_id": {
+      "$oid": "6759f8df78b6af202b222d29"
+    },
+    "institutionId": "c9a50656-f345-4c81-84be-5b2474470544",
+    "productId": "prod-io",
+    "name": "io group",
+    "description": "io group description",
+    "status": "ACTIVE",
+    "members": [
+      "97a511a7-2acc-47b9-afed-2f3c65753b4a"
+    ],
+    "createdAt": {
+      "$date": "2024-10-28T12:25:53.228+00:00"
+    },
+    "createdBy": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+    "modifiedAt": null
+  },
+  {
+    "_id": {
+      "$oid": "68b703f2e027600fe56ceabf"
+    },
+    "institutionId": "c9a50656-f345-4c81-84be-5b2474470544",
+    "productId": "prod-io",
+    "name": "io empty group",
+    "description": "io empty group description",
+    "status": "ACTIVE",
+    "members": [],
+    "createdAt": {
+      "$date": "2024-10-28T12:25:53.228+00:00"
+    },
+    "createdBy": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+    "modifiedAt": null
+  },
+  {
+    "_id": {
+      "$oid": "6759f8df78b6af202b222d2a"
+    },
+    "institutionId": "c9a50656-f345-4c81-84be-5b2474470544",
+    "productId": "prod-io",
+    "name": "io group 2",
+    "description": "pagopa group description",
+    "status": "SUSPENDED",
+    "members": [
+      "97a511a7-2acc-47b9-afed-2f3c65753b4a"
+    ],
+    "createdAt": {
+      "$date": "2024-10-28T12:25:53.228+00:00"
+    },
+    "createdBy": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+    "modifiedAt": null
+  },
+  {
+    "_id": {
+      "$oid": "6759f8df78b6af202b222d2b"
+    },
+    "institutionId": "c9a50656-f345-4c81-84be-5b2474470544",
+    "productId": "prod-io",
+    "name": "interop group",
+    "description": "interop group description",
+    "status": "SUSPENDED",
+    "members": [
+      "97a511a7-2acc-47b9-afed-2f3c65753b4a"
+    ],
+    "createdAt": {
+      "$date": "2024-10-28T12:25:53.228+00:00"
+    },
+    "createdBy": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+    "modifiedAt": null
+  }
+]

@@ -1,0 +1,194 @@
+#oa3_spec: src/main/resources/swagger/api-docs.json
+oa3_spec: src/main/resources/swagger/api-docs.json
+name: opex_api-dashboard-pnpg
+location: West Europe
+timespan: 30m # Default, a number or a timespan https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan
+data_source: /subscriptions/813119d7-0943-46ed-8ebe-cebe24f9106c/resourceGroups/selc-p-vnet-rg/providers/Microsoft.Network/applicationGateways/selc-p-app-gw
+action_groups:
+  - /subscriptions/813119d7-0943-46ed-8ebe-cebe24f9106c/resourceGroups/selc-p-monitor-rg/providers/microsoft.insights/actionGroups/PagoPA
+  # - /subscriptions/813119d7-0943-46ed-8ebe-cebe24f9106c/resourceGroups/selc-p-monitor-rg/providers/microsoft.insights/actionGroups/SlackPagoPA
+overrides:
+  hosts: # Use these hosts instead of those inside the OpenApi spec
+    - api-pnpg.selfcare.pagopa.it
+  endpoints:
+    /delegations:
+      response_time_threshold: 12 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /institutions:
+      response_time_threshold: 1.5 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /institutions/products:
+      response_time_threshold: 1.6 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /institutions/{institutionId}:
+      response_time_threshold: 2 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /institutions/{institutionId}/geographicTaxonomy:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /institutions/{institutionId}/institutions:
+      response_time_threshold: 2 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /institutions/{institutionId}/logo:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /institutions/{institutionId}/partners:
+      response_time_threshold: 1.5 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /institutions/{institutionId}/products:
+      response_time_threshold: 15 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /institutions/{institutionId}/products/{productId}/users:
+      response_time_threshold: 15 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /institutions/{institutionId}/products/{productId}/users/{userId}:
+      response_time_threshold: 1.4 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /institutions/{institutionId}/users:
+      response_time_threshold: 1.2 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /institutions/{institutionId}/users/{userId}:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /onboarding-requests/approve/{tokenId}:
+      response_time_threshold: 3 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /onboarding-requests/reject/{tokenId}:
+      response_time_threshold: 3 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /onboarding-requests/{tokenId}:
+      response_time_threshold: 1.5 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /pnPGInstitutions/{institutionId}/products:
+      response_time_threshold: 3 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /products/{productId}/back-office:
+      response_time_threshold: 3 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /products/{productId}/brokers/{institutionType}:
+      response_time_threshold: 3 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /products/{productId}/roles:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /relationships/{relationshipId}:
+      response_time_threshold: 30 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /relationships/{relationshipId}/activate:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /relationships/{relationshipId}/suspend:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /support:
+      response_time_threshold: 10 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /token/exchange:
+      response_time_threshold: 1.5 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /token/exchange/fatturazione:
+      response_time_threshold: 1.5 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /users:
+      response_time_threshold: 1.5 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /users/search:
+      response_time_threshold: 3 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /users/{id}:
+      response_time_threshold: 3 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /user-groups:
+      response_time_threshold: 3 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /user-groups/:
+      response_time_threshold: 1.5 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /user-groups/{id}:
+      response_time_threshold: 1.5 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /user-groups/{id}/activate:
+      response_time_threshold: 1.5 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /user-groups/{id}/members/{userId}:
+      response_time_threshold: 1.5 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /user-groups/{id}/suspend:
+      response_time_threshold: 1.5 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: :
+    /user-groups/{userGroupId}/members/{userId}:
+      response_time_threshold: 1.5 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    

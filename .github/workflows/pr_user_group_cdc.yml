@@ -32,5 +32,5 @@ jobs:
       pr_number: ${{ github.event.pull_request.number }}
       source_branch: ${{ github.head_ref }}
       target_branch: ${{ github.base_ref }}
-      sonar_key: 'pagopa_selfcare-user'
+      sonar_key: 'pagopa_selfcare'
       module: 'user-group-cdc'

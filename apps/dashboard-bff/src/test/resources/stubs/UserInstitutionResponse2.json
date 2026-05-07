@@ -1,0 +1,20 @@
+{
+  "id": "id",
+  "userId": "userId",
+  "institutionId": "institutionId",
+  "institutionDescription": "institutionDescription",
+  "institutionRootName": "institutionRootName",
+  "userMailUuid": "userMailUuid",
+  "products": [
+    {
+      "productId": "productId",
+      "tokenId": "tokenId",
+      "status": "ACTIVE",
+      "productRole": "productRole",
+      "role": "DELEGATE",
+      "env": "ROOT",
+      "createdAt": "2022-01-01T00:00",
+      "updatedAt": "2022-01-01T00:00"
+    }
+  ]
+}

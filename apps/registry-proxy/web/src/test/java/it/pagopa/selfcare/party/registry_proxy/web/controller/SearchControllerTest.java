@@ -76,6 +76,7 @@ public class SearchControllerTest {
     final List<String> products = List.of("prod-io", "prod-pagopa");
     final List<String> institutionTypes = List.of("PA", "GSP");
     final List<String> statuses = List.of("ACTIVE", "PENDING");
+    final List<String> orderBy = List.of("description_ASC");
 
     final OnboardingIndexSearch response = new OnboardingIndexSearch();
     response.setTotalPages(1L);
@@ -87,7 +88,7 @@ public class SearchControllerTest {
     onboardingIndex.setDescription("Test Onboarding");
     response.setOnboardings(List.of(onboardingIndex));
 
-    when(searchService.searchOnboarding(searchText, products, institutionTypes, statuses, 0L, 15L, "description asc"))
+    when(searchService.searchOnboarding(searchText, products, institutionTypes, statuses, 0L, 15L, orderBy))
             .thenReturn(response);
 
     mockMvc.perform(get("/search/onboardings")
@@ -95,6 +96,7 @@ public class SearchControllerTest {
                     .param("products", String.join(",", products))
                     .param("institutionTypes", String.join(",", institutionTypes))
                     .param("statuses", String.join(",", statuses))
+                    .param("orderBy", String.join(",", orderBy))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.totalPages", is(1)))
@@ -108,7 +110,7 @@ public class SearchControllerTest {
 
   @Test
   void searchOnboardingTest_internalServerError() throws Exception {
-    when(searchService.searchOnboarding(anyString(), any(), any(), any(), anyLong(), anyLong(), anyString()))
+    when(searchService.searchOnboarding(anyString(), any(), any(), any(), anyLong(), anyLong(), any()))
             .thenThrow(new RuntimeException("Internal service error"));
 
     mockMvc.perform(get("/search/onboardings")

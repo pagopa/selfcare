@@ -510,8 +510,10 @@
           "in" : "query",
           "required" : false,
           "schema" : {
-            "type" : "string",
-            "default" : "description asc"
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         } ],
         "responses" : {

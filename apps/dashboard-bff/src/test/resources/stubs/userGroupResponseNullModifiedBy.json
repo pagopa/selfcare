@@ -1,0 +1,13 @@
+{
+  "id": "id",
+  "institutionId": "institutionId",
+  "productId": "productId",
+  "name": "groupName",
+  "description": "groupDescription",
+  "status": "ACTIVE",
+  "members": ["123e4567-e89b-12d3-a456-426614174000", "123e4567-e89b-12d3-a456-426614174001"],
+  "createdAt": "2022-01-01T00:00:00Z",
+  "createdBy": "creatorId",
+  "modifiedAt": "2022-01-01T00:00:00Z",
+  "modifiedBy": null
+}

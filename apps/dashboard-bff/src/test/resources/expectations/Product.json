@@ -1,0 +1,64 @@
+{
+  "id": "productId",
+  "logo": "http://example.com/logo.png",
+  "depictImageUrl": "http://example.com/depictImage.png",
+  "title": "Product Title",
+  "logoBgColor": "#FFFFFF",
+  "description": "Product Description",
+  "urlPublic": "http://example.com/public",
+  "urlBO": "http://example.com/bo",
+  "createdAt": "2023-11-27T16:09:11.397748300Z",
+  "createdBy": "creatorId",
+  "modifiedAt": "2023-11-27T16:09:11.397748300Z",
+  "modifiedBy": "modifierId",
+  "roleMappings": {
+    "MANAGER": {
+      "role": "Manager Role",
+      "description": "Manager Role Description"
+    }
+  },
+  "roleMappingsByInstitutionType": {
+    "InstitutionType1": {
+      "MANAGER": {
+        "role": "Manager Role",
+        "description": "Manager Role Description"
+      }
+    }
+  },
+  "roleManagementURL": "http://example.com/roleManagement",
+  "contractTemplateUpdatedAt": "2023-11-27T16:09:11.397748300Z",
+  "contractTemplatePath": "/path/to/contractTemplate",
+  "contractTemplateVersion": "v1.0",
+  "institutionContractMappings": {
+    "Institution1": {
+      "contractPath": "/path/to/contract",
+      "version": "v1.0"
+    }
+  },
+  "enabled": true,
+  "delegable": true,
+  "invoiceable": true,
+  "status": "ACTIVE",
+  "parentId": "parentProductId",
+  "testEnvProductIds": [
+    "testEnvProductId1",
+    "testEnvProductId2"
+  ],
+  "identityTokenAudience": "audience",
+  "backOfficeEnvironmentConfigurations": {
+    "env1": {
+      "url": "http://example.com/env1",
+      "apiKey": "apiKey1"
+    }
+  },
+  "parent": {
+    "id": "parentProductId",
+    "title": "Parent Product Title"
+  },
+  "consumers": [
+    "consumer1",
+    "consumer2"
+  ],
+  "userContractTemplatePath": "/path/to/userContractTemplate",
+  "userContractTemplateVersion": "v1.0"
+}

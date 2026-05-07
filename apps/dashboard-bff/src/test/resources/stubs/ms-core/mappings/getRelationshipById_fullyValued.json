@@ -1,0 +1,56 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/ms-core/v1/relationships/3fa85f64-5717-4562-b3fc-2c963f66afa6"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "from": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "to": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "filePath": "string",
+      "fileName": "string",
+      "contentType": "string",
+      "tokenId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "role": "MANAGER",
+      "product": {
+        "id": "string",
+        "role": "string",
+        "createdAt": "2022-10-19T11:08:32.209Z"
+      },
+      "state": "PENDING",
+      "pricingPlan": "string",
+      "institutionUpdate": {
+        "institutionType": "PA",
+        "description": "AGENCY X",
+        "digitalAddress": "email@pec.mail.org",
+        "address": "via del campo",
+        "zipCode": "20100",
+        "taxCode": "string",
+        "paymentServiceProvider": {
+          "abiCode": "string",
+          "businessRegisterNumber": "string",
+          "legalRegisterName": "string",
+          "legalRegisterNumber": "string",
+          "vatNumberGroup": true
+        },
+        "dataProtectionOfficer": {
+          "address": "string",
+          "email": "string",
+          "pec": "string"
+        }
+      },
+      "billing": {
+        "vatNumber": "string",
+        "recipientCode": "string",
+        "publicServices": true
+      },
+      "createdAt": "2022-10-19T11:08:32.210Z",
+      "updatedAt": "2022-10-19T11:08:32.210Z"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

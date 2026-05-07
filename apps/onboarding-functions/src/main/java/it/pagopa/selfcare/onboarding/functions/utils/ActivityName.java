@@ -44,6 +44,8 @@ public class ActivityName {
   public static final String START_ONBOARDING_ORCHESTRATION = "StartOnboardingOrchestration";
   public static final String ONBOARDINGS = "Onboardings";
   public static final String TRIGGER_BUILD_ATTACHMENTS_AND_SAVE_TOKENS = "TriggerBuildAttachmentsAndSaveTokens";
+  public static final String GET_LATEST_DOCUMENT_ACTIVITY = "GetLatestDocument";
+  public static final String GET_SIGNING_CONFIGURATION_ACTIVITY = "GetSigningConfiguration";
   private ActivityName() {
   }
 }

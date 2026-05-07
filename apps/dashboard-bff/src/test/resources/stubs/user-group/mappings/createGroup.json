@@ -1,0 +1,30 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/v1/user-groups",
+    "bodyPatterns": [
+      {
+        "matchesJsonPath": "*"
+      }
+    ]
+  },
+  "response": {
+    "status": "201",
+    "jsonBody": {
+      "id": "randomIdGeneratedByMongo",
+      "institutionId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "productId": "prod-io",
+      "name": "name",
+      "description": "description",
+      "status": "ACTIVE",
+      "members": [],
+      "createdAt": "2021-12-14T09:09:56.751Z",
+      "createdBy": "string",
+      "modifiedAt": "2021-12-14T09:10:56.751Z",
+      "modifiedBy": "string"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

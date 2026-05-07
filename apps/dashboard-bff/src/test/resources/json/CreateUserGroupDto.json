@@ -1,0 +1,7 @@
+{
+  "institutionId": "your_institution_id",
+  "productId": "your_product_id",
+  "name": "your_group_name",
+  "description": "your_group_description",
+  "members": ["3e25b581-04fa-46d1-ba1c-8f72bb1ca5e5", "6e8b5b6e-8f72-4e25-8d1c-b58104fab1ca"]
+}

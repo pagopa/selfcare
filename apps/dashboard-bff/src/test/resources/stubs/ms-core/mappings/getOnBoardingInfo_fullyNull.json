@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/ms-core/v1/onboarding/info",
+    "queryParameters": {
+      "institutionId": {
+        "equalTo": "institutionId2"
+      },
+      "states": {
+        "matches": "^(?:ACTIVE|PENDING|SUSPENDED|DELETED|REJECTED){0,1}(?:,(?:ACTIVE|PENDING|SUSPENDED|DELETED|REJECTED))*$"
+      }
+    }
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {},
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
