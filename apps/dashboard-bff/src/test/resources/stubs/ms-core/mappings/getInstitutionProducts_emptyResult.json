@@ -1,0 +1,20 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/ms-core/v1/institutions/institutionId3/products",
+    "queryParameters": {
+      "states": {
+        "matches": "^(?:ACTIVE|PENDING){0,1}(?:,(?:ACTIVE|PENDING))*$"
+      }
+    }
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+      "products": []
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

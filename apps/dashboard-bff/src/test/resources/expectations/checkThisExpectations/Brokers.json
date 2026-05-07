@@ -1,0 +1,16 @@
+{
+  "brokers": [
+    {
+      "broker_code": "string",
+      "enabled": true,
+      "description": "string"
+    }
+  ],
+  "page_info": {
+    "page": 0,
+    "limit": 0,
+    "total_pages": 0,
+    "items_found": 0,
+    "total_items": 0
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "PUT",
+    "urlPathPattern": "/v1/user-groups/\\w+"
+  },
+  "response": {
+    "status": "204",
+    "jsonBody": {},
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

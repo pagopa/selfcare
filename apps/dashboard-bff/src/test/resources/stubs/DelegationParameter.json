@@ -1,0 +1,8 @@
+{
+  "productId": "setProductId",
+  "taxCode": "taxCode",
+  "search": "name",
+  "order": "ASC",
+  "page": 0,
+  "size": 1000
+}

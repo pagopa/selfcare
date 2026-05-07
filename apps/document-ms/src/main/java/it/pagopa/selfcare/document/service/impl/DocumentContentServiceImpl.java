@@ -401,7 +401,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         log.info("handleSignedContractUpload: onboardingId={}, nextStep={}, fileName={}",
                 sanitize(onboardingId), nextStep, sanitize(fileName));
 
-        return documentService.handleContractDocument(request, nextStep)
+        return documentService.handleContractDocument(request)
             .onFailure().retry()
                 .withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff))
                 .atMost(retryMaxAttempts)

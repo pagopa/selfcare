@@ -1,0 +1,30 @@
+[
+  {
+    "_id": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
+    "institutions": [
+      {
+        "institutionId": "467ac77d-7faa-47bf-a60e-38ea74bd5fd2",
+        "institutionName": "Comune di Agrigento",
+        "status": "ACTIVE",
+        "role": "DELEGATE"
+      }
+    ]
+  },
+  {
+    "_id": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+    "institutions": [
+      {
+        "institutionId": "467ac77d-7faa-47bf-a60e-38ea74bd5fd2",
+        "institutionName": "Comune di Agrigento",
+        "status": "ACTIVE",
+        "role": "OPERATOR"
+      },
+      {
+        "institutionId": "c9a50656-f345-4c81-84be-5b2474470544",
+        "institutionName": "Comune di Castelbuono",
+        "status": "ACTIVE",
+        "role": "DELEGATE"
+      }
+    ]
+  }
+]

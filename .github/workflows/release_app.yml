@@ -42,6 +42,7 @@ on:
           - user-group-ms
           - user-ms
           - webhook
+          - dashboard-bff
         required: true
         default: auth
 

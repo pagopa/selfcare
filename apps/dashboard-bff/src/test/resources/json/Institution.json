@@ -1,0 +1,93 @@
+{
+    "id": "123",
+    "externalId": "ext123",
+    "originId": "orig123",
+    "description": "A description",
+    "digitalAddress": "digital@address.com",
+    "address": "123 Street",
+    "zipCode": "12345",
+    "taxCode": "tax123",
+    "origin": "origin",
+    "institutionType": "SCP",
+    "attributes": [
+        {
+            "origin": "origin1",
+            "code": "code1",
+            "description": "description1"
+        },
+        {
+            "origin": "origin2",
+            "code": "code2",
+            "description": "description2"
+        }
+    ],
+    "geographicTaxonomies": [
+        {
+            "code": "code1",
+            "desc": "desc1"
+        },
+        {
+            "code": "code2",
+            "desc": "desc2"
+        }
+    ],
+    "category": "category1",
+    "billing": {
+        "vatNumber": "vat123",
+        "recipientCode": "rec123",
+        "publicServices": true
+    },
+    "paymentServiceProvider": {
+        "abiCode": "abi123",
+        "businessRegisterNumber": "brn123",
+        "legalRegisterName": "lrn123",
+        "legalRegisterNumber": "lrn123",
+        "vatNumberGroup": true
+    },
+    "dataProtectionOfficer": {
+        "address": "123 Street",
+        "email": "email@address.com",
+        "pec": "pec@address.com"
+    },
+    "supportContact": {
+        "supportEmail": "support@address.com",
+        "supportPhone": "1234567890"
+    },
+    "onboarding": [
+        {
+            "productId": "prod123",
+            "userRole": "role123",
+            "status": "ACTIVE",
+            "tokenId": "id1",
+            "billing": {
+                "vatNumber": "vat123",
+                "recipientCode": "rec123",
+                "publicServices": true
+            },
+            "createdAt": "2023-06-12T10:15:30Z"
+        },
+        {
+            "productId": "prod456",
+            "userRole": "role456",
+            "status": "PENDING",
+            "tokenId": "id2",
+            "billing": {
+                "vatNumber": "vat456",
+                "recipientCode": "rec456",
+                "publicServices": false
+            },
+            "createdAt": "2024-05-13T12:15:30Z"
+        }
+    ],
+    "rootParent": {
+        "description": "description",
+        "id": "id123"
+    },
+    "subunitCode": "sub123",
+    "subunitType": "type123",
+    "aooParentCode": "aoo123",
+    "city": "City",
+    "country": "Country",
+    "county": "County",
+    "delegation": true
+}

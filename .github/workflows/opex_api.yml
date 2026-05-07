@@ -22,6 +22,8 @@ on:
           - registry-proxy-pnpg
           - api-selfcare-onboarding
           - api-selfcare-onboarding-pnpg
+          - api-selfcare-dashboard
+          - api-selfcare-dashboard-pnpg
         required: true
 
 env:

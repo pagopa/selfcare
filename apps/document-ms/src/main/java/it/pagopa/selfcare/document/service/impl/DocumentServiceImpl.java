@@ -139,12 +139,8 @@ public class DocumentServiceImpl implements DocumentService {
         return handleContractDocument(request);
     }
 
-    public Uni<Document> handleContractDocument(DocumentBuilderRequest request) {
-        return handleContractDocument(request, null);
-    }
-
     @Override
-    public Uni<Document> handleContractDocument(DocumentBuilderRequest request, Integer signingStep) {
+    public Uni<Document> handleContractDocument(DocumentBuilderRequest request) {
         String onboardingId = request.getOnboardingId();
 
         return documentRepository.findByOnboardingId(onboardingId)
