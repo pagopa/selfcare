@@ -8,18 +8,18 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.onboarding.service.impl.ProxyRegistryServiceImpl;
+import it.pagopa.selfcare.onboarding.service.impl.RegistryProxyServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.party_registry_proxy_json.api.UoApi;
 import org.openapi.quarkus.party_registry_proxy_json.model.UOResource;
 
-class ProxyRegistryServiceImplTest {
+class RegistryProxyServiceImplTest {
 
     @Test
     void findUoByRecipientCode_shouldDelegateToUoApi() {
         //given
         UoApi uoApi = mock(UoApi.class);
-        ProxyRegistryServiceImpl service = new ProxyRegistryServiceImpl(uoApi);
+        RegistryProxyServiceImpl service = new RegistryProxyServiceImpl(uoApi);
         UOResource expected = new UOResource();
         expected.setCodiceIpa("IPA001");
         Uni<UOResource> expectedUni = Uni.createFrom().item(expected);
