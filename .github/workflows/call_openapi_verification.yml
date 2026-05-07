@@ -24,8 +24,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 18
+
       - name: Install Optic
-        run: npm install -g @useoptic/optic
+        run: npm install -g @useoptic/optic@1.0.9
 
       - name: Extract base branch
         id: extract_branch
