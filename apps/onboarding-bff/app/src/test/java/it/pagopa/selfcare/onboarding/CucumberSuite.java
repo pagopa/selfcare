@@ -51,7 +51,7 @@ public class CucumberSuite {
 
       File composeFile = new File(resource.toURI());
       composeContainer = new ComposeContainer(composeFile)
-              .withLocalCompose(true)
+              //.withLocalCompose(true)
               .withTailChildContainers(true)
               .withLogConsumer("azure-cli", new Slf4jLogConsumer(log))
               .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1));

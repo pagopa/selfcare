@@ -510,8 +510,10 @@
           "in" : "query",
           "required" : false,
           "schema" : {
-            "type" : "string",
-            "default" : "description asc"
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         } ],
         "responses" : {
@@ -993,6 +995,80 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/InstitutionResource"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request"
+          },
+          "401" : {
+            "description" : "Unauthorized"
+          },
+          "404" : {
+            "description" : "Not Found"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/institutions/ipa" : {
+      "get" : {
+        "tags" : [ "institution", "external-v2", "support" ],
+        "summary" : "Retrieve IPA institutions",
+        "description" : "Retrieves a list of IPA institutions from the Azure AI Search index with optional text search and category filter",
+        "operationId" : "searchIpaInstitutionsOnSearchEngine",
+        "parameters" : [ {
+          "name" : "search",
+          "in" : "query",
+          "description" : "Optional search field. Users can provide a search string to filter results",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "*"
+          }
+        }, {
+          "name" : "category",
+          "in" : "query",
+          "description" : "Filter from origin category",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Desired page number for result pagination. It is optional, and the default value is 1 when not specified",
+          "required" : false,
+          "schema" : {
+            "minimum" : 0,
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "description" : "Maximum number of items per page. It is optional, and the default value is 10 when not specified",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InstitutionsResource"
                 }
               }
             }
@@ -1919,6 +1995,9 @@
             "enum" : [ "static", "IPA", "ANAC", "IVASS", "INFOCAMERE" ]
           },
           "istatCode" : {
+            "type" : "string"
+          },
+          "updateDate" : {
             "type" : "string"
           }
         }

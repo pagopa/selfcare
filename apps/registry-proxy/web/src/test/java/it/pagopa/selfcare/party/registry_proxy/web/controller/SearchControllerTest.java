@@ -1,11 +1,21 @@
 package it.pagopa.selfcare.party.registry_proxy.web.controller;
 
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndexSearch;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceInstitution;
 import it.pagopa.selfcare.party.registry_proxy.core.SearchService;
 import it.pagopa.selfcare.party.registry_proxy.web.config.WebTestConfig;
 import it.pagopa.selfcare.party.registry_proxy.web.model.mapper.OnboardingMapperImpl;
+import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -14,17 +24,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.Collections;
-import java.util.List;
-
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(value = {SearchController.class}, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 @ContextConfiguration(classes = {SearchController.class, WebTestConfig.class, OnboardingMapperImpl.class})
@@ -77,6 +76,7 @@ public class SearchControllerTest {
     final List<String> products = List.of("prod-io", "prod-pagopa");
     final List<String> institutionTypes = List.of("PA", "GSP");
     final List<String> statuses = List.of("ACTIVE", "PENDING");
+    final List<String> orderBy = List.of("description_ASC");
 
     final OnboardingIndexSearch response = new OnboardingIndexSearch();
     response.setTotalPages(1L);
@@ -88,7 +88,7 @@ public class SearchControllerTest {
     onboardingIndex.setDescription("Test Onboarding");
     response.setOnboardings(List.of(onboardingIndex));
 
-    when(searchService.searchOnboarding(searchText, products, institutionTypes, statuses, 0L, 15L, "description asc"))
+    when(searchService.searchOnboarding(searchText, products, institutionTypes, statuses, 0L, 15L, orderBy))
             .thenReturn(response);
 
     mockMvc.perform(get("/search/onboardings")
@@ -96,6 +96,7 @@ public class SearchControllerTest {
                     .param("products", String.join(",", products))
                     .param("institutionTypes", String.join(",", institutionTypes))
                     .param("statuses", String.join(",", statuses))
+                    .param("orderBy", String.join(",", orderBy))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.totalPages", is(1)))
@@ -109,7 +110,7 @@ public class SearchControllerTest {
 
   @Test
   void searchOnboardingTest_internalServerError() throws Exception {
-    when(searchService.searchOnboarding(anyString(), any(), any(), any(), anyLong(), anyLong(), anyString()))
+    when(searchService.searchOnboarding(anyString(), any(), any(), any(), anyLong(), anyLong(), any()))
             .thenThrow(new RuntimeException("Internal service error"));
 
     mockMvc.perform(get("/search/onboardings")
@@ -118,5 +119,4 @@ public class SearchControllerTest {
             .andExpect(status().isInternalServerError())
             .andReturn().getResponse().getContentAsString();
   }
-
 }

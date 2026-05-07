@@ -1,8 +1,5 @@
 package it.pagopa.selfcare.onboarding.service.util;
 
-import static it.pagopa.selfcare.onboarding.common.Origin.IPA;
-import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_PAGOPA;
-
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
@@ -12,8 +9,12 @@ import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
 import java.util.Objects;
 import java.util.Set;
+
+import static it.pagopa.selfcare.onboarding.common.Origin.IPA;
+import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_PAGOPA;
 
 /**
  * Determina il {@link WorkflowType} da associare all'onboarding
@@ -34,14 +35,14 @@ public class WorkflowTypeResolver {
      */
     public Uni<WorkflowType> resolve(Onboarding onboarding) {
         return Uni.createFrom()
-                .item(() -> resolveSync(onboarding))
+                .item(() -> resolveWorkflow(onboarding))
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 
     /**
      * Logica sincrona di risoluzione del workflow (da invocare solo su worker thread).
      */
-    private WorkflowType resolveSync(Onboarding onboarding) {
+    private WorkflowType resolveWorkflow(Onboarding onboarding) {
         InstitutionType institutionType = onboarding.getInstitution().getInstitutionType();
         Product product = productService.getProductIsValid(onboarding.getProductId());
 
@@ -51,6 +52,10 @@ public class WorkflowTypeResolver {
 
         if (Boolean.TRUE.equals(onboarding.getIsAggregator())) {
             return WorkflowType.CONTRACT_REGISTRATION_AGGREGATOR;
+        }
+
+        if (Objects.nonNull(product.getSigningConfiguration()) && product.getSigningConfiguration().getRequiredSignatures() > 1){
+            return WorkflowType.CONTRACT_WITH_COUNTERSIGNATURE;
         }
 
         if (InstitutionType.PA.equals(institutionType)

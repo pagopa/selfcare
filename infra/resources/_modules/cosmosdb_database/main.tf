@@ -7,6 +7,13 @@ resource "azurerm_cosmosdb_mongo_database" "this" {
   name                = var.database_name
   resource_group_name = data.azurerm_cosmosdb_account.cosmosdb.resource_group_name
   account_name        = data.azurerm_cosmosdb_account.cosmosdb.name
+
+  dynamic "autoscale_settings" {
+    for_each = var.max_throughput != null ? [var.max_throughput] : []
+    content {
+      max_throughput = autoscale_settings.value
+    }
+  }
 }
 
 # Lock

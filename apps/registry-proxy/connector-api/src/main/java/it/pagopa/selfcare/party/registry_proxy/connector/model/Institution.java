@@ -2,60 +2,62 @@ package it.pagopa.selfcare.party.registry_proxy.connector.model;
 
 public interface Institution {
 
-    String getId();
+  String getId();
 
-    String getOriginId();
+  String getOriginId();
 
-    String getO();
+  String getO();
 
-    String getOu();
+  String getOu();
 
-    String getAoo();
+  String getAoo();
 
-    String getTaxCode();
+  String getTaxCode();
 
-    String getCategory();
+  String getCategory();
 
-    String getDescription();
+  String getDescription();
 
-    String getDigitalAddress();
+  String getDigitalAddress();
 
-    String getAddress();
+  String getAddress();
 
-    String getZipCode();
+  String getZipCode();
 
-    Origin getOrigin();
-    String getIstatCode();
+  Origin getOrigin();
 
+  String getIstatCode();
 
-    enum Field implements SearchField {
-        ID("id"),
-        ORIGIN_ID("originId"),
-        O("o"),
-        OU("ou"),
-        AOO("aoo"),
-        TAX_CODE("taxCode"),
-        CATEGORY("category"),
-        DESCRIPTION("description"),
-        DIGITAL_ADDRESS("digitalAddress"),
-        ADDRESS("address"),
-        ZIP_CODE("zipCode"),
-        ORIGIN("origin"),
+  default String getUpdateDate() {
+    return null;
+  }
 
-        DESCRIPTIONFULL("descriptionfull"),
-        ISTAT_CODE("istatCode");
+  enum Field implements SearchField {
+    ID("id"),
+    ORIGIN_ID("originId"),
+    O("o"),
+    OU("ou"),
+    AOO("aoo"),
+    TAX_CODE("taxCode"),
+    CATEGORY("category"),
+    DESCRIPTION("description"),
+    DIGITAL_ADDRESS("digitalAddress"),
+    ADDRESS("address"),
+    ZIP_CODE("zipCode"),
+    ORIGIN("origin"),
+    DESCRIPTIONFULL("descriptionfull"),
+    ISTAT_CODE("istatCode"),
+    UPDATE_DATE("updateDate");
 
-        private final String name;
+    private final String name;
 
-        Field(String name) {
-            this.name = name;
-        }
-
-        @Override
-        public String toString() {
-            return name;
-        }
-
+    Field(String name) {
+      this.name = name;
     }
 
+    @Override
+    public String toString() {
+      return name;
+    }
+  }
 }

@@ -48,6 +48,14 @@ module "ai_search_onboarding" {
   srch_service_primary_key = data.azurerm_search_service.srch_service.primary_key
 }
 
+module "ai_search_ipa" {
+  source                   = "../../_modules/ai_search_ipa"
+  domain                   = module.local.config.domain
+  search_service_id        = data.azurerm_search_service.srch_service.id
+  srch_service_name        = data.azurerm_search_service.srch_service.name
+  srch_service_primary_key = data.azurerm_search_service.srch_service.primary_key
+}
+
 
 ###############################################################################
 # DAPR
@@ -222,7 +230,7 @@ locals {
     },
     {
       name  = "SELC_INSTITUTION_URL"
-      value = "https://selc-${module.local.config.env_short}-ms-core-ca.${module.local.config.private_dns_name_domain}"
+      value = "https://selc-${module.local.config.env_short}-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "AZURE_SEARCH_URL"
@@ -231,6 +239,22 @@ locals {
     {
       name  = "AZURE_SEARCH_INSTITUTION_INDEX"
       value = "institution-index-ar"
+    },
+    {
+      name  = "AZURE_SEARCH_IPA_INSTITUTION_INDEX"
+      value = module.ai_search_ipa.institution_index_name
+    },
+    {
+      name  = "AZURE_SEARCH_IPA_AOO_INDEX"
+      value = module.ai_search_ipa.aoo_index_name
+    },
+    {
+      name  = "AZURE_SEARCH_IPA_UO_INDEX"
+      value = module.ai_search_ipa.uo_index_name
+    },
+    {
+      name  = "AZURE_SEARCH_IPA_CATEGORY_INDEX"
+      value = module.ai_search_ipa.category_index_name
     },
     {
       name  = "ANAC_FTP_MODE"
@@ -364,7 +388,7 @@ module "container_app_registry_proxy_ms" {
   env_short                      = module.local.config.env_short
   resource_group_name            = module.local.config.ca_resource_group_name
   container_app                  = local.registry_proxy_container_app
-  container_app_name             = local.ca_base_name
+  container_app_name             = local.ca_name
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-registry-proxy-ms"
   image_tag                      = var.image_tag

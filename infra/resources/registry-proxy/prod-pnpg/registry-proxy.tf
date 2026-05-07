@@ -24,9 +24,9 @@ module "local" {
 locals {
 
   registry_proxy_container_app = {
-    min_replicas = local.container_app.min_replicas
-    max_replicas = local.container_app.max_replicas
-    scale_rules  = local.container_app.scale_rules
+    min_replicas = module.local.config.container_app.min_replicas
+    max_replicas = module.local.config.container_app.max_replicas
+    scale_rules  = module.local.config.container_app.scale_rules
     cpu          = 1.0
     memory       = "2Gi"
   }

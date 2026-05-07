@@ -19,6 +19,7 @@ import it.pagopa.selfcare.onboarding.mapper.OnboardingDocumentMapper;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.model.FormItem;
 import it.pagopa.selfcare.onboarding.model.OnboardingGetFilters;
+import it.pagopa.selfcare.onboarding.service.DocumentService;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.service.OrchestrationService;
 import it.pagopa.selfcare.onboarding.service.helper.*;
@@ -34,15 +35,10 @@ import org.bson.Document;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.api.OnboardingApi;
-import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
-import org.openapi.quarkus.document_json.api.DocumentControllerApi;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.COMPLETED;
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.PENDING;
@@ -63,8 +59,6 @@ public class OnboardingServiceDefault implements OnboardingService {
     // -------------------------------------------------------------------------
 
     @RestClient @Inject OnboardingApi onboardingApi;
-    @RestClient @Inject DocumentControllerApi documentControllerApi;
-    @RestClient @Inject DocumentContentControllerApi documentContentControllerApi;
 
     @Inject OnboardingMapper onboardingMapper;
     @Inject OnboardingResponseFactory onboardingResponseFactory;
@@ -73,6 +67,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     @Inject OnboardingDocumentMapper onboardingDocumentMapper;
     @Inject RegistryResourceFactory registryResourceFactory;
     @Inject OrchestrationService orchestrationService;
+    @Inject DocumentService documentService;
 
     // Helpers
     @Inject
@@ -240,7 +235,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                         updateOnboarding(onboardingId, onboarding)
                                 .onItem().transformToUni(ignore ->
                                         onboardingUtils.ensureSuccessfulDocumentResponse(
-                                                documentControllerApi.updateDocumentUpdatedAt(onboardingId),
+                                                documentService.updateDocumentUpdatedAt(onboardingId),
                                                 "updateDocumentUpdatedAt", onboardingId))
                                 .replaceWith(onboarding));
     }
@@ -354,7 +349,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                                         onboardingResponseFactory.toGetResponse(onboarding)
                                                 .invoke(og -> og.setUsers(userResponses))))
                 .flatMap(onboardingGet ->
-                        documentControllerApi.getAttachments(onboardingId)
+                        documentService.getAttachments(onboardingId)
                                 .invoke(onboardingGet::setAttachments)
                                 .replaceWith(onboardingGet));
     }
@@ -363,6 +358,30 @@ public class OnboardingServiceDefault implements OnboardingService {
     public Uni<List<OnboardingResponse>> institutionOnboardings(String taxCode, String subunitCode,
                                                                  String origin, String originId,
                                                                  OnboardingStatus status) {
+        if (isPersonalFiscalCode(taxCode)) {
+            return userRegistryHelper.searchUserIdByFiscalCode(taxCode)
+                    .onItem().transformToUni(userId -> {
+                        if (Objects.isNull(userId)) {
+                            return Uni.createFrom().item(List.of());
+                        }
+                        return findInstitutionOnboardings(userId, subunitCode, origin, userId, status)
+                                .onItem().transform(responses -> {
+                                    responses.forEach(r -> {
+                                        if (Objects.nonNull(r.getInstitution())) {
+                                            r.getInstitution().setTaxCode(taxCode);
+                                            r.getInstitution().setOriginId(taxCode);
+                                        }
+                                    });
+                                    return responses;
+                                });
+                    });
+        }
+        return findInstitutionOnboardings(taxCode, subunitCode, origin, originId, status);
+    }
+
+    private Uni<List<OnboardingResponse>> findInstitutionOnboardings(String taxCode, String subunitCode,
+                                                                      String origin, String originId,
+                                                                      OnboardingStatus status) {
         Map<String, Object> params = QueryUtils.createMapForInstitutionOnboardingsQueryParameter(
                 taxCode, subunitCode, origin, originId, status, null);
         Document query = QueryUtils.buildQuery(params);
@@ -370,6 +389,19 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .map(Onboarding.class::cast)
                 .map(onboardingMapper::toResponse)
                 .collect().asList();
+    }
+
+    /**
+     * Verifica se la stringa è un codice fiscale di persona fisica italiana.
+     * Pattern: 6 lettere + 2 cifre + 1 lettera + 2 cifre + 1 lettera + 3 cifre + 1 lettera (16 caratteri).
+     * Se il taxCode è numerico (persona giuridica, es. "00000000001") restituisce false,
+     * evitando così la chiamata a userRegistry (PDV).
+     */
+    private static boolean isPersonalFiscalCode(String taxCode) {
+        if (taxCode == null || taxCode.length() != 16) {
+            return false;
+        }
+        return taxCode.toUpperCase().matches("^[A-Z]{6}\\d{2}[A-Z]\\d{2}[A-Z]\\d{3}[A-Z]$");
     }
 
     @Override
@@ -540,7 +572,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                         persistenceHelper.persistOnboarding(onboarding, userRequests, product, aggregates))
                 .onItem().call(persisted ->
                         onboardingUtils.ensureSuccessfulDocumentResponse(
-                                documentControllerApi.persistDocumentForImport(
+                                documentService.persistDocumentForImport(
                                         onboardingDocumentMapper.toRequest(persisted, product, contract)),
                                 "persistDocumentForImport", persisted.getId()))
                 .onItem().transformToUni(persisted ->
@@ -604,7 +636,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                         onboarding, skipSignatureVerification, formItem, product, documentType, fiscalCodes))
                 .flatMap(request ->
                         onboardingUtils.ensureSuccessfulDocumentResponse(
-                                documentContentControllerApi.uploadSignedContract(request, onboarding.getId()),
+                                documentService.uploadSignedContract(request, onboarding.getId()),
                                 "uploadSignedContract", onboarding.getId()));
     }
 

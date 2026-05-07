@@ -25,14 +25,14 @@ import it.pagopa.selfcare.onboarding.service.TelemetryService;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.service.CompletionService;
 import it.pagopa.selfcare.onboarding.service.ContractService;
+import it.pagopa.selfcare.onboarding.service.DocumentService;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.utils.InstitutionUtils;
 import it.pagopa.selfcare.onboarding.workflow.*;
 import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.product.entity.SigningConfiguration;
 import it.pagopa.selfcare.product.service.ProductService;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.model.DelegationResponse;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
 
@@ -67,8 +67,7 @@ public class OnboardingFunctions {
   private final TelemetryService telemetryService;
   private final ProductService productService;
   private final AggregateBatchConfig aggregateBatchConfig;
-
-  @RestClient @Inject DocumentContentControllerApi documentContentControllerApi;
+  private final DocumentService documentService;
 
   public OnboardingFunctions(
       OnboardingService service,
@@ -79,6 +78,7 @@ public class OnboardingFunctions {
       OnboardingMapper onboardingMapper,
       ProductService productService,
       AggregateBatchConfig aggregateBatchConfig,
+      DocumentService documentService,
       TelemetryService telemetryService) {
     this.service = service;
     this.objectMapper = objectMapper;
@@ -87,6 +87,7 @@ public class OnboardingFunctions {
     this.onboardingMapper = onboardingMapper;
     this.productService = productService;
     this.aggregateBatchConfig = aggregateBatchConfig;
+    this.documentService = documentService;
     this.telemetryService = telemetryService;
     final int maxAttempts = retryPolicyConfig.maxAttempts();
     final Duration firstRetryInterval = Duration.ofSeconds(retryPolicyConfig.firstRetryInterval());
@@ -318,6 +319,8 @@ public class OnboardingFunctions {
             workflowExecutor =
                 new WorkflowExecutorContractRegistrationAggregator(
                     objectMapper, optionsRetry, onboardingMapper);
+        case CONTRACT_WITH_COUNTERSIGNATURE ->
+            workflowExecutor = new WorkflowExecutorContractWithCountersignature(objectMapper, optionsRetry, onboardingMapper);
         case FOR_APPROVE ->
             workflowExecutor = new WorkflowExecutorForApprove(objectMapper, optionsRetry, onboardingMapper);
         case FOR_APPROVE_PT ->
@@ -329,9 +332,7 @@ public class OnboardingFunctions {
         case CONFIRMATION_AGGREGATE ->
             workflowExecutor = new WorkflowExecutorConfirmAggregate(objectMapper, optionsRetry);
         case CONFIRMATION_AGGREGATOR ->
-                workflowExecutor =
-                        new WorkflowExecutorConfirmationAggregator(
-                                objectMapper, optionsRetry, onboardingMapper);
+            workflowExecutor = new WorkflowExecutorConfirmationAggregator(objectMapper, optionsRetry, onboardingMapper);
         case IMPORT -> workflowExecutor = new WorkflowExecutorImport(objectMapper, optionsRetry);
         case IMPORT_AGGREGATION -> workflowExecutor = new WorkflowExecutorImportAggregation(objectMapper, optionsRetry, onboardingMapper);
         case USERS -> workflowExecutor = new WorkflowExecutorForUsers(objectMapper, optionsRetry);
@@ -464,8 +465,9 @@ public class OnboardingFunctions {
       Supplier<String> messageSupplier,
       Map<String, String> properties) {
     if (!ctx.getIsReplaying()) {
-      telemetryService.trackFunction(
-          fCtx.getFunctionName(), messageSupplier.get(), severityLevel, properties);
+      String message = messageSupplier.get();
+      fCtx.getLogger().info(message);
+      telemetryService.trackFunction(fCtx.getFunctionName(), message, severityLevel, properties);
     }
   }
 
@@ -476,6 +478,7 @@ public class OnboardingFunctions {
       String message,
       Map<String, String> properties) {
     if (!ctx.getIsReplaying()) {
+      fCtx.getLogger().info(message);
       telemetryService.trackFunction(fCtx.getFunctionName(), message, severityLevel, properties);
     }
   }
@@ -921,30 +924,9 @@ public class OnboardingFunctions {
             "productId", onboardingWorkflow.getOnboarding().getProductId()));
     DocumentContentControllerApi.UploadAggregatesCsvMultipartForm request =
         contractService.requestUploadAggregatesCsv(onboardingWorkflow);
-    try (Response response = documentContentControllerApi.uploadAggregatesCsv(request)) {
-      if (response == null
-          || response.getStatusInfo() == null
-          || !SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
-        int status = response != null ? response.getStatus() : -1;
-        context
-            .getLogger()
-            .warning(
-                () ->
-                    String.format(
-                        "Document service uploadAggregatesCsv failed for onboardingId=%s status=%s",
-                        onboardingWorkflow.getOnboarding().getId(), status));
-        throw new GenericOnboardingException(
-            String.format(
-                "Unable to upload aggregates csv for onboarding %s. status=%s",
-                onboardingWorkflow.getOnboarding().getId(), status));
-      }
-      context
-          .getLogger()
-          .fine(
-              () ->
-                  String.format(
-                      "Document service uploadAggregatesCsv succeeded for onboardingId=%s status=%s",
-                      onboardingWorkflow.getOnboarding().getId(), response.getStatus()));
+    String onboardingId = onboardingWorkflow.getOnboarding().getId();
+    try (Response response = documentService.uploadAggregatesCsv(request)) {
+      ensureSuccessfulDocumentResponse(response, "upload aggregates csv", onboardingId);
     }
   }
 
@@ -982,5 +964,36 @@ public class OnboardingFunctions {
             "onboardingId", onboarding.getId(),
             "productId", onboarding.getProductId()));
     service.updateOnboardingExpiringDate(onboarding);
+  }
+
+  @FunctionName(GET_SIGNING_CONFIGURATION_ACTIVITY)
+  public SigningConfiguration getSigningConfiguration(
+      @DurableActivityTrigger(name = "onboardingString") String onboardingString,
+      final ExecutionContext context) {
+    Onboarding onboarding = readOnboardingValue(objectMapper, onboardingString);
+    telemetryService.trackFunction(
+        GET_SIGNING_CONFIGURATION_ACTIVITY,
+        String.format(
+            FORMAT_LOGGER_ONBOARDING_STRING,
+            GET_SIGNING_CONFIGURATION_ACTIVITY,
+            onboardingString),
+        SeverityLevel.Information,
+        Map.of(
+            "onboardingId", onboarding.getId(),
+            "productId", onboarding.getProductId()));
+    return productService.getProductIsValid(onboarding.getProductId()).getSigningConfiguration();
+  }
+
+  private void ensureSuccessfulDocumentResponse(
+      Response response, String operation, String onboardingId) {
+    int status = response != null ? response.getStatus() : -1;
+    if (response == null
+        || response.getStatusInfo() == null
+        || !SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
+      throw new GenericOnboardingException(
+          String.format(
+              "Document service call failed while trying to %s for onboarding %s. status=%s",
+              operation, onboardingId, status));
+    }
   }
 }

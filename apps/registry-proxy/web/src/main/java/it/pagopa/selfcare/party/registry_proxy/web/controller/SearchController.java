@@ -11,6 +11,7 @@ import it.pagopa.selfcare.party.registry_proxy.web.model.OnboardingIndexSearchRe
 import it.pagopa.selfcare.party.registry_proxy.web.model.mapper.OnboardingMapper;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,8 +20,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -81,10 +80,9 @@ public class SearchController {
                                                          @RequestParam(required = false) List<String> statuses,
                                                          @RequestParam(defaultValue = "0") @PositiveOrZero Long page,
                                                          @RequestParam(defaultValue = "15") @Positive Long pageSize,
-                                                         @RequestParam(defaultValue = "description asc") String orderBy) {
+                                                         @RequestParam(required = false) List<String> orderBy) {
     final OnboardingIndexSearch onboardingIndexSearch = searchService.searchOnboarding(searchText, products,
             institutionTypes, statuses, page, pageSize, orderBy);
     return onboardingMapper.toOnboardingIndexSearchResource(onboardingIndexSearch);
   }
-
 }

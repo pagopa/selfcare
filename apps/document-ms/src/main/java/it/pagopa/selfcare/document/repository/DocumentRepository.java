@@ -16,12 +16,17 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
 
     private static final List<String> CONTRACT_TYPES = List.of(INSTITUTION.name(), USER.name());
     private static final String ONBOARDING_AND_TYPES_FILTER = "onboardingId = ?1 and type in ?2";
-    private static final String ONBOARDING_ID = "onboardingId";
 
     public Uni<Long> updateContractFiles(String onboardingId, String contractSigned, String contractFilename) {
         return update("contractSigned = ?1 and contractFilename = ?2 and updatedAt = ?3",
                 contractSigned, contractFilename, LocalDateTime.now())
                 .where(ONBOARDING_AND_TYPES_FILTER, onboardingId, CONTRACT_TYPES);
+    }
+
+    public Uni<Long> updateContractFilesById(String documentId, String contractSigned, String contractFilename, Integer signingStep) {
+        return update("contractSigned = ?1 and contractFilename = ?2 and signingStep = ?3 and updatedAt = ?4",
+                contractSigned, contractFilename, signingStep, LocalDateTime.now())
+                .where("_id = ?1", documentId);
     }
 
     public Uni<Document> findAttachment(String onboardingId, String type, String name) {

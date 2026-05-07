@@ -1,12 +1,19 @@
 package it.pagopa.selfcare.party.registry_proxy.core;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.InstitutionConnector;
+import it.pagopa.selfcare.party.registry_proxy.connector.api.IpaSearchServiceConnector;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.SearchServiceConnector;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ServiceUnavailableException;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.*;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.institution.Institution;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,13 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 @ContextConfiguration(classes = {SearchServiceImplTest.class})
 @ExtendWith(MockitoExtension.class)
 public class SearchServiceImplTest {
@@ -33,6 +33,9 @@ public class SearchServiceImplTest {
 
   @Mock
   private SearchServiceConnector searchServiceConnector;
+
+  @Mock
+  private IpaSearchServiceConnector ipaSearchServiceConnector;
 
   @InjectMocks
   private SearchServiceImpl searchService;
@@ -286,15 +289,16 @@ public class SearchServiceImplTest {
     final List<String> products = List.of("prod-io", "prod-pagopa");
     final List<String> institutionTypes = List.of("PA", "GSP");
     final List<String> statuses = List.of("ACTIVE", "PENDING");
+    final List<String> orderBy = List.of("createdAt_ASC", "description_DESC");
     final Long page = 2L;
     final Long pageSize = 10L;
-    final String orderBy = "createdAt asc";
+    final String orderByString = "createdAt asc,description desc";
     final String filter = "search.in(productId, 'prod-io,prod-pagopa') and search.in(institutionType, 'PA,GSP') and search.in(status, 'ACTIVE,PENDING')";
     final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
     mockResponse.setTotalElements(100L);
-    when(searchServiceConnector.searchOnboarding(searchText, filter, pageSize, 20L, orderBy)).thenReturn(mockResponse);
+    when(searchServiceConnector.searchOnboarding(searchText, filter, pageSize, 20L, orderByString)).thenReturn(mockResponse);
     final OnboardingIndexSearch onboardingIndexSearch = searchService.searchOnboarding(searchText, products, institutionTypes, statuses, page, pageSize, orderBy);
-    verify(searchServiceConnector, times(1)).searchOnboarding(searchText, filter, pageSize, 20L, orderBy);
+    verify(searchServiceConnector, times(1)).searchOnboarding(searchText, filter, pageSize, 20L, orderByString);
     assertEquals(page, onboardingIndexSearch.getPage());
     assertEquals(pageSize, onboardingIndexSearch.getPageSize());
     assertEquals(100L, mockResponse.getTotalElements());
@@ -353,6 +357,85 @@ public class SearchServiceImplTest {
     assertEquals(15L, onboardingIndexSearch.getPageSize());
     assertEquals(100L, mockResponse.getTotalElements());
     assertEquals(7L, onboardingIndexSearch.getTotalPages());
+  }
+
+  @Test
+  void searchOnboardingWhenOrderIsNotValid() {
+    final String searchText = "Test";
+    final List<String> products = List.of("prod-io", "prod-pagopa");
+    final List<String> institutionTypes = List.of("PA", "GSP");
+    final List<String> statuses = List.of("ACTIVE", "PENDING");
+    final List<String> orderBy = List.of("createdAt_AS", "description_DESC");
+    final Long page = 2L;
+    final Long pageSize = 10L;
+    final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
+    mockResponse.setTotalElements(100L);
+    assertThrows(IllegalArgumentException.class, () -> searchService.searchOnboarding(searchText, products, institutionTypes, statuses, page, pageSize, orderBy));
+  }
+
+  @Test
+  void searchOnboardingWhenOrderIsNotValid2() {
+    final String searchText = "Test";
+    final List<String> products = List.of("prod-io", "prod-pagopa");
+    final List<String> institutionTypes = List.of("PA", "GSP");
+    final List<String> statuses = List.of("ACTIVE", "PENDING");
+    final List<String> orderBy = List.of("createdAt_ASC_DESC", "description_DESC");
+    final Long page = 2L;
+    final Long pageSize = 10L;
+    final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
+    mockResponse.setTotalElements(100L);
+    assertThrows(IllegalArgumentException.class, () -> searchService.searchOnboarding(searchText, products, institutionTypes, statuses, page, pageSize, orderBy));
+  }
+
+  @Test
+  void searchIpaInstitutions_shouldCallConnector() {
+    IpaInstitutionSearchResult mockResult = new IpaInstitutionSearchResult();
+    IpaInstitution institution = new IpaInstitution();
+    institution.setId("ipa-1");
+    institution.setDescription("Comune di Roma");
+    mockResult.setInstitutions(List.of(institution));
+    mockResult.setTotalElements(1L);
+
+    when(ipaSearchServiceConnector.search("Roma", null, 50, 0))
+            .thenReturn(mockResult);
+
+    IpaInstitutionSearchResult result = searchService.searchIpaInstitutions("Roma", null, 0, 50);
+
+    assertNotNull(result);
+    assertEquals(1L, result.getTotalElements());
+    assertEquals("ipa-1", result.getInstitutions().get(0).getId());
+    verify(ipaSearchServiceConnector, times(1)).search("Roma", null, 50, 0);
+  }
+
+  @Test
+  void searchIpaInstitutions_withCategory_shouldBuildFilter() {
+    IpaInstitutionSearchResult mockResult = new IpaInstitutionSearchResult();
+    mockResult.setInstitutions(List.of());
+    mockResult.setTotalElements(0L);
+
+    when(ipaSearchServiceConnector.search("*", "category eq 'L6'", 50, 0))
+            .thenReturn(mockResult);
+
+    IpaInstitutionSearchResult result = searchService.searchIpaInstitutions(null, "L6", 0, 50);
+
+    assertNotNull(result);
+    assertEquals(0L, result.getTotalElements());
+    verify(ipaSearchServiceConnector, times(1)).search("*", "category eq 'L6'", 50, 0);
+  }
+
+  @Test
+  void searchIpaInstitutions_withDefaultPagination() {
+    IpaInstitutionSearchResult mockResult = new IpaInstitutionSearchResult();
+    mockResult.setInstitutions(List.of());
+    mockResult.setTotalElements(0L);
+
+    when(ipaSearchServiceConnector.search("*", null, 50, 0))
+            .thenReturn(mockResult);
+
+    IpaInstitutionSearchResult result = searchService.searchIpaInstitutions(null, null, null, null);
+
+    assertNotNull(result);
+    verify(ipaSearchServiceConnector, times(1)).search("*", null, 50, 0);
   }
 
 }
