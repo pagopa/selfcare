@@ -1,0 +1,8 @@
+{
+  "geographicTaxonomyDtoList": [
+    {
+      "code": "stringCode",
+      "desc": "stringDesc"
+    }
+  ]
+}

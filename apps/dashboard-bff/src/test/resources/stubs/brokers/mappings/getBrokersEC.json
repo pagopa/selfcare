@@ -1,0 +1,22 @@
+{
+  "request":{
+    "method":"GET",
+    "url":"/brokers?limit=10&page=1"
+  },
+  "response":{
+    "status":"200",
+    "jsonBody":{
+      "brokers":[
+        {
+          "broker_code":"code",
+          "description":"description",
+          "extendedFaultBean":true,
+          "enabled":true
+        }
+      ]
+    },
+    "headers":{
+      "Content-Type":"application/json"
+    }
+  }
+}

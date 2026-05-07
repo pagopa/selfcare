@@ -1,0 +1,55 @@
+{
+  "request": {
+    "method": "PUT",
+    "urlPathPattern": "/ms-core/v1/institutions/pg/institutionId"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+      "address": "string",
+      "attributes": [
+        {
+          "code": "string",
+          "description": "string",
+          "origin": "string"
+        }
+      ],
+      "businessRegisterPlace": "string",
+      "dataProtectionOfficer": {
+        "address": "string",
+        "email": "string",
+        "pec": "string"
+      },
+      "description": "string",
+      "digitalAddress": "string",
+      "externalId": "string",
+      "geographicTaxonomies": [
+        {
+          "code": "string",
+          "desc": "string"
+        }
+      ],
+      "id": "string",
+      "imported": true,
+      "institutionType": "PG",
+      "origin": "string",
+      "originId": "string",
+      "paymentServiceProvider": {
+        "abiCode": "string",
+        "businessRegisterNumber": "string",
+        "legalRegisterName": "string",
+        "legalRegisterNumber": "string",
+        "vatNumberGroup": true
+      },
+      "rea": "string",
+      "shareCapital": "string",
+      "supportEmail": "string",
+      "supportPhone": "string",
+      "taxCode": "string",
+      "zipCode": "string"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

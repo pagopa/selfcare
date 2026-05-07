@@ -1,0 +1,17 @@
+{
+  "brokerId": null,
+  "brokerName": null,
+  "brokerTaxCode": null,
+  "brokerType": null,
+  "createdAt": null,
+  "id": null,
+  "institutionId": null,
+  "institutionName": null,
+  "institutionRootName": null,
+  "institutionType": null,
+  "productId": null,
+  "status": null,
+  "taxCode": null,
+  "type": null,
+  "updatedAt": null
+}

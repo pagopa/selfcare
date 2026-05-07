@@ -1,0 +1,15 @@
+{
+  "id": "group_id",
+  "institutionId": "institution_id",
+  "productId": "product_id",
+  "description": "group_description",
+  "name": "group_name",
+  "status": "ACTIVE",
+  "members": [
+      "7c83a18e-e4aa-4dc5-8546-f1a3fd7890a9"
+  ],
+  "createdAt": "2024-05-08T12:00:00Z",
+  "createdBy": "f8bce6fc-848c-4a03-8ef3-01ac36a38299",
+  "modifiedAt": "2024-05-08T13:00:00Z",
+  "modifiedBy": "3f62c13b-9d33-4768-9a43-0e10a0bea2a9"
+}

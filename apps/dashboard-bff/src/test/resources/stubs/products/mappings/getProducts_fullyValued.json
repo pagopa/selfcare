@@ -1,0 +1,23 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/products/"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": [
+      {
+        "logo": "products logo",
+        "title": "products title",
+        "description": "products description",
+        "urlPublic": "urlPublic",
+        "urlBO": "urlBO",
+        "activationDateTime": "2021-10-29T12:51:11.104Z",
+        "identityTokenAudience": "string"
+      }
+    ],
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

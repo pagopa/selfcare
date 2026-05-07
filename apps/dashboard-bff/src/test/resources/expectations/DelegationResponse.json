@@ -1,0 +1,17 @@
+{
+  "brokerId": "brokerIdValue",
+  "brokerName": "brokerNameValue",
+  "brokerTaxCode": "brokerTaxCodeValue",
+  "brokerType": "brokerTypeValue",
+  "createdAt": "2024-11-29T16:23:10.289966300+01:00",
+  "id": "id",
+  "institutionId": "institutionIdValue",
+  "institutionName": "institutionNameValue",
+  "institutionRootName": "institutionRootNameValue",
+  "institutionType": "institutionTypeValue",
+  "productId": "productIdValue",
+  "status": "ACTIVE",
+  "taxCode": "taxCodeValue",
+  "type": "AOO",
+  "updatedAt": "2024-11-29T16:23:10.289966300+01:00"
+}

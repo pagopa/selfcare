@@ -1,0 +1,58 @@
+[
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/pagopa-bo-mock/brokers"
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"brokers\":[{\"broker_code\":\"223344556677889911\",\"enabled\":true,\"description\":\"Loremipsum dolor sit amet\"}],\"page_info\":{\"page\":0,\"limit\":0,\"items_found\":2,\"total_pages\":0,\"total_items\":2}}}"
+    },
+    "times": {
+      "unlimited": false,
+      "remainingTimes": 1
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/pagopa-bo-mock/brokers"
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"brokers\":[],\"page_info\":{\"page\":0,\"limit\":0,\"items_found\":0,\"total_pages\":0,\"total_items\":0}}}"
+    },
+    "times": {
+      "unlimited": false,
+      "remainingTimes": 1
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/pagopa-bo-mock/brokerspsp"
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"brokers_psp\":[{\"broker_psp_code\":\"223344556677889900\",\"enabled\":true,\"description\":\"Loremipsum dolor sit amet\"}],\"page_info\":{\"page\":0,\"limit\":0,\"items_found\":2,\"total_pages\":0,\"total_items\":2}}}"
+    },
+    "times": {
+      "unlimited": false,
+      "remainingTimes": 1
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/pagopa-bo-mock/brokerspsp"
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"brokers_psp\":[],\"page_info\":{\"page\":0,\"limit\":0,\"items_found\":0,\"total_pages\":0,\"total_items\":0}}}"
+    },
+    "times": {
+      "unlimited": false,
+      "remainingTimes": 1
+    }
+  }
+]
