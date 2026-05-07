@@ -32,4 +32,22 @@ class RegistryProxyServiceImplTest {
         assertSame(expectedUni, result);
         verify(uoApi).findByUnicodeUsingGET1("recipient-001", null);
     }
+
+    @Test
+    void findUoByRecipientCode_shouldDelegateToUoApiWithCategories() {
+        //given
+        UoApi uoApi = mock(UoApi.class);
+        RegistryProxyServiceImpl service = new RegistryProxyServiceImpl(uoApi);
+        UOResource expected = new UOResource();
+        expected.setCodiceIpa("IPA002");
+        Uni<UOResource> expectedUni = Uni.createFrom().item(expected);
+        when(uoApi.findByUnicodeUsingGET1(eq("recipient-002"), eq("PA,PSP"))).thenReturn(expectedUni);
+
+        //when
+        Uni<UOResource> result = service.findUoByRecipientCode("recipient-002", "PA,PSP");
+
+        //then
+        assertSame(expectedUni, result);
+        verify(uoApi).findByUnicodeUsingGET1("recipient-002", "PA,PSP");
+    }
 }
