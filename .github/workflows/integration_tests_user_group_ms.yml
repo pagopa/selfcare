@@ -10,7 +10,7 @@ on:
       - main
       - releases/*
     paths:
-      - "apps/user-ms/**"
+      - "apps/user-group-ms/**"
       - ".github/workflows/integration_tests_user_group_ms.yml"
   workflow_dispatch:
 
