@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -125,8 +126,9 @@ public class UserV2Controller {
                                @RequestParam(value = "institutionId")
                                String institutionId) {
         log.trace("searchByFiscalCode start");
-        log.debug(LogUtils.CONFIDENTIAL_MARKER, "searchByFiscalCode fiscalCode = {}", searchUserDto);
-        User user = userService.searchUserByFiscalCode(searchUserDto.getFiscalCode(), institutionId);
+        final String fiscalCode = Optional.ofNullable(searchUserDto).map(SearchUserDto::getFiscalCode).orElseThrow();
+        log.debug(LogUtils.CONFIDENTIAL_MARKER, "searchByFiscalCode fiscalCode = {}", Encode.forJava(fiscalCode));
+        User user = userService.searchUserByFiscalCode(fiscalCode, institutionId);
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "searchByFiscalCode user = {}", user);
         log.trace("searchByFiscalCode end");
         return userMapperV2.toUserResource(user);

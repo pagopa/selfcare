@@ -47,7 +47,7 @@ public class UserGroupV2Controller {
     @PreAuthorize("hasPermission(new it.pagopa.selfcare.dashboard.security.FilterAuthorityDomain(#group.getInstitutionId(), #group.getProductId(), null), 'Selc:ManageProductGroups')")
     public UserGroupIdResource createUserGroup(@RequestBody @Valid CreateUserGroupDto group) {
         log.trace("createGroup start");
-        log.debug("createGroup group = {}", group);
+        log.debug("createGroup group = {}", Encode.forJava(group.toString()));
         CreateUserGroup userGroup = groupMapperV2.fromDto(group);
         String groupId = groupService.createUserGroup(userGroup);
         UserGroupIdResource result = groupMapper.toIdResource(groupId);
