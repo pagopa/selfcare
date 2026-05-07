@@ -16,8 +16,8 @@ permissions:
 jobs:
   openapi_conflict_update:
     runs-on: ubuntu-24.04
-    permissions: write-all
     name: OpenAPI Verification
+
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -33,6 +33,15 @@ jobs:
 
       - name: Build OpenAPI source
         run: mvn --projects :${{ inputs.module }} --also-make package -DskipTests
+
+      - name: Debug paths
+        run: |
+          echo "OpenAPI file path: ${{ inputs.path_openapi_docs }}"
+          echo "Base branch: origin/${{ steps.extract_branch.outputs.branch }}"
+          echo "Current directory:"
+          pwd
+          echo "Files in repo:"
+          ls -R
 
       - name: Check OpenAPI with Optic
         run: optic diff "${{ inputs.path_openapi_docs }}" --base "origin/${{ steps.extract_branch.outputs.branch }}" --check
