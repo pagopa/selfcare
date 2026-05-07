@@ -1,0 +1,22 @@
+[
+  {
+    "id": "8a3b085b-5d5e-4a0a-b1f5-85692d1862b3",
+    "name": "string",
+    "surname": "string",
+    "email": "string",
+    "role": "ADMIN",
+    "product": {
+      "id": "123456",
+      "title": "string",
+      "roleInfos": [
+        {
+          "relationshipId": "rel123",
+          "role": "string",
+          "status": "string",
+          "selcRole": "LIMITED"
+        }
+      ]
+    },
+    "status": "string"
+  }
+]

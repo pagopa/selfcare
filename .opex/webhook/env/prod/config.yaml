@@ -1,0 +1,50 @@
+oa3_spec: apps/webhook/src/main/docs/openapi.json
+name: opex_api-webhook-api
+location: West Europe
+timespan: 30m # Default, a number or a timespan https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan
+evaluation_frequency: 10
+evaluation_time_window: 30
+event_occurrences: 4 # After 5*4=20 min
+data_source: /subscriptions/813119d7-0943-46ed-8ebe-cebe24f9106c/resourceGroups/selc-p-vnet-rg/providers/Microsoft.Network/applicationGateways/selc-p-app-gw
+action_groups:
+  - /subscriptions/813119d7-0943-46ed-8ebe-cebe24f9106c/resourceGroups/selc-p-monitor-rg/providers/microsoft.insights/actionGroups/PagoPA
+overrides:
+  hosts: # Use these hosts instead of those inside the OpenApi spec
+    - api.selfcare.pagopa.it
+  endpoints:
+    /info/version:
+      availability_threshold: 0.95 # Default: 99%
+      availability_evaluation_frequency: 30 # Default: 10
+      availability_evaluation_time_window: 50 # Default: 20
+      availability_event_occurrences: 3 # Default: 1
+      response_time_threshold: 2 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default:
+    /webhooks:
+      availability_threshold: 0.95 # Default: 99%
+      availability_evaluation_frequency: 30 # Default: 10
+      availability_evaluation_time_window: 50 # Default: 20
+      availability_event_occurrences: 3 # Default: 1
+      response_time_threshold: 2 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /webhooks/{productId}:
+      availability_threshold: 0.95 # Default: 99%
+      availability_evaluation_frequency: 30 # Default: 10
+      availability_evaluation_time_window: 50 # Default: 20
+      availability_event_occurrences: 3 # Default: 1
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default:
+    /webhooks/notify:
+      availability_threshold: 0.95 # Default: 99%
+      availability_evaluation_frequency: 30 # Default: 10
+      availability_evaluation_time_window: 50 # Default: 20
+      availability_event_occurrences: 3 # Default: 1
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default:

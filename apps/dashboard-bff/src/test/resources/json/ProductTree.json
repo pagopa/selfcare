@@ -1,0 +1,87 @@
+{
+  "node": {
+    "id": "product123",
+    "logo": "https://example.com/logo.png",
+    "logoBgColor": "#ffffff",
+    "depictImageUrl": "https://example.com/depict_image.png",
+    "title": "Product Title",
+    "description": "Product Description",
+    "urlPublic": "https://example.com/public",
+    "urlBO": "https://example.com/back_office",
+    "status": "TESTING",
+    "delegable": true,
+    "invoiceable": true,
+    "identityTokenAudience": "audience123",
+    "roleMappings": {
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "roles": [
+          {
+            "code": "seller",
+            "label": "Seller",
+            "description": "Seller Role"
+          }
+        ]
+      },
+      "DELEGATE": {
+        "multiroleAllowed": false,
+        "roles": [
+          {
+            "code": "buyer",
+            "label": "Buyer",
+            "description": "Buyer Role"
+          }
+        ]
+      }
+    },
+    "backOfficeEnvironmentConfigurations": {
+      "production": {
+        "url": "https://example.com/production_bo",
+        "identityTokenAudience": "audience123"
+      },
+      "development": {
+        "url": "https://example.com/dev_bo",
+        "identityTokenAudience": "audience456"
+      }
+    }
+  },
+  "children": [
+    {
+      "id": "product456",
+      "logo": "https://example.com/logo2.png",
+      "logoBgColor": "#ff0000",
+      "depictImageUrl": "https://example.com/depict_image2.png",
+      "title": "Child Product 1",
+      "description": "Description of Child Product 1",
+      "urlPublic": "https://example.com/public_child1",
+      "urlBO": "https://example.com/back_office_child1",
+      "status": "TESTING",
+      "delegable": false,
+      "invoiceable": false,
+      "identityTokenAudience": "audience789",
+      "roleMappings": {
+        "MANAGER": {
+          "multiroleAllowed": true,
+          "roles": [
+            {
+              "code": "seller",
+              "label": "Seller",
+              "description": "Seller Role"
+            },
+            {
+              "code": "admin",
+              "label": "Administrator",
+              "description": "Administrator Role"
+            }
+          ]
+        }
+      },
+      "backOfficeEnvironmentConfigurations": {
+        "production": {
+          "url": "https://example.com/production_bo_child1",
+          "identityTokenAudience": "audience789"
+        }
+      }
+    }
+  ]
+}

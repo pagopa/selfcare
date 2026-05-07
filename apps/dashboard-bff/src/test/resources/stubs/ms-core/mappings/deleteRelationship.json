@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "DELETE",
+    "urlPathPattern": "/ms-core/v1/relationships/\\w+"
+  },
+  "response": {
+    "status": "204",
+    "jsonBody": {},
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

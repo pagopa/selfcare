@@ -1,0 +1,27 @@
+{
+  "id": "8a3b085b-5d5e-4a0a-b1f5-85692d1862b3",
+  "name": "string",
+  "surname": "string",
+  "email": "string",
+  "mobilePhone": "string",
+  "role": "ADMIN",
+  "status": "string",
+  "products": [
+    {
+      "id": "123456",
+      "title": "string",
+      "roleInfos": [
+        {
+          "relationshipId": "rel123",
+          "role": "string",
+          "status": "string",
+          "selcRole": "LIMITED",
+          "partyRole": "ADMIN_EA",
+          "createdAt": "2026-03-05T10:51:01.955",
+          "updatedAt": "2026-03-05T10:51:01.955"
+        }
+      ]
+    }
+  ],
+  "fiscalCode": "string"
+}

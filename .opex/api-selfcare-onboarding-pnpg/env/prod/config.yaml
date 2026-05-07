@@ -1,0 +1,147 @@
+oa3_spec: app/src/main/resources/swagger/api-docs.json
+name: opex_api-onboarding-pnpg
+location: West Europe
+timespan: 30m # Default, a number or a timespan https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan
+data_source: /subscriptions/813119d7-0943-46ed-8ebe-cebe24f9106c/resourceGroups/selc-p-vnet-rg/providers/Microsoft.Network/applicationGateways/selc-p-app-gw
+action_groups:
+  - /subscriptions/813119d7-0943-46ed-8ebe-cebe24f9106c/resourceGroups/selc-p-monitor-rg/providers/microsoft.insights/actionGroups/PagoPA
+  # - /subscriptions/813119d7-0943-46ed-8ebe-cebe24f9106c/resourceGroups/selc-p-monitor-rg/providers/microsoft.insights/actionGroups/SlackPagoPA
+overrides:
+  hosts: # Use these hosts instead of those inside the OpenApi spec
+    - api-pnpg.selfcare.pagopa.it
+  endpoints:
+    /v1/institutions:
+      response_time_threshold: 2 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/institutions/{externalInstitutionId}/geographicTaxonomy:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/institutions/{externalInstitutionId}/legal-address:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/institutions/{externalInstitutionId}/match:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/institutions/{externalInstitutionId}/products/{productId}:
+      response_time_threshold: 3 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/institutions/{externalInstitutionId}/products/{productId}/onboarded-institution-info:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/institutions/{externalInstitutionId}/products/{productId}/onboarding:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/institutions/company/onboarding:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/institutions/from-infocamere/:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/institutions/geographicTaxonomies:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/institutions/onboarding:
+      response_time_threshold: 4.5 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/institutions/onboarding/:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/institutions/verification/legal-address:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/institutions/verification/match:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/pnPGInstitutions/{externalInstitutionId}/legal-address:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/pnPGInstitutions/{externalInstitutionId}/match:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/pnPGInstitutions/{externalInstitutionId}/products/{productId}/onboarding:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/product/{id}:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/tokens/{tokenId}/complete:
+      response_time_threshold: 32 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/tokens/{tokenId}/verify:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v1/users/validate:
+      response_time_threshold: 2 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v2/institutions/onboarding:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v2/tokens/{onboardingId}:
+      response_time_threshold: 2.2 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v2/tokens/{onboardingId}/approve:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v2/tokens/{onboardingId}/complete:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v2/tokens/{onboardingId}/reject:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 
+    /v2/tokens/{onboardingId}/verify:
+      response_time_threshold: 1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 30 # Default: 

@@ -1,0 +1,15 @@
+{
+  "count": 1,
+  "items": [
+    {
+      "id": "id",
+      "productId": "productId",
+      "workflowType": "workflowType",
+      "pricingPlan": "pricingPlan",
+      "signContract": false,
+      "status": "PENDING",
+      "userRequestUid": "userRequestUid",
+      "reasonForReject": "reasonForReject"
+    }
+  ]
+}

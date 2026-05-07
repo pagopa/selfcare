@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/v1/user-groups/\\w+/activate"
+  },
+  "response": {
+    "status": "204",
+    "jsonBody": {},
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

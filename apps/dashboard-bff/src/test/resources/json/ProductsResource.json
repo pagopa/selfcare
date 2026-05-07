@@ -1,0 +1,14 @@
+[
+  {
+    "id": "product123",
+    "logo": "https://example.com/logo.png",
+    "logoBgColor": "#ffffff",
+    "title": "Product Title",
+    "description": "Product Description",
+    "urlPublic": "https://example.com/public",
+    "urlBO": "https://example.com/back_office",
+    "status": "TESTING",
+    "delegable": true,
+    "invoiceable": true
+  }
+]
