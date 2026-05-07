@@ -364,16 +364,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                         if (Objects.isNull(userId)) {
                             return Uni.createFrom().item(List.of());
                         }
-                        return findInstitutionOnboardings(userId, subunitCode, origin, userId, status)
-                                .onItem().transform(responses -> {
-                                    responses.forEach(r -> {
-                                        if (Objects.nonNull(r.getInstitution())) {
-                                            r.getInstitution().setTaxCode(taxCode);
-                                            r.getInstitution().setOriginId(taxCode);
-                                        }
-                                    });
-                                    return responses;
-                                });
+                        return findInstitutionOnboardings(userId, subunitCode, origin, userId, status);
                     });
         }
         return findInstitutionOnboardings(taxCode, subunitCode, origin, originId, status);
