@@ -1,0 +1,62 @@
+name: OpenAPI Verification
+
+on:
+  workflow_call:
+    inputs:
+      module:
+        type: string
+        required: true
+      path_openapi_docs:
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  openapi_conflict_update:
+    runs-on: ubuntu-24.04
+    name: OpenAPI Verification
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Install Optic
+        run: |
+          mkdir -p optic-install
+          cd optic-install
+
+          npm init -y
+          npm pkg set overrides.ajv="8.17.1"
+          npm install @useoptic/optic@1.0.9
+
+      - name: Resolve and fetch base branch
+        id: base_branch
+        run: |
+          BASE_BRANCH="${GITHUB_BASE_REF:-${GITHUB_REF#refs/heads/}}"
+          echo "branch=${BASE_BRANCH}" >> "$GITHUB_OUTPUT"
+          git fetch origin "${BASE_BRANCH}"
+
+      - name: Build OpenAPI source
+        run: mvn --projects :${{ inputs.module }} --also-make package -DskipTests
+
+      - name: Check OpenAPI with Optic
+        run: |
+          ./optic-install/node_modules/.bin/optic diff "${{ inputs.path_openapi_docs }}" \
+            --base "origin/${{ steps.base_branch.outputs.branch }}" \
+            --check
+
+      - name: Verify OpenAPI file is up to date
+        run: |
+          if git diff --name-only HEAD | grep -Fxq "${{ inputs.path_openapi_docs }}"; then
+            echo "OpenAPI documentation is outdated. Regenerate and commit ${{ inputs.path_openapi_docs }}."
+            exit 1
+          fi
