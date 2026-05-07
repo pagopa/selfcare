@@ -115,7 +115,7 @@ public class ExchangeTokenServiceV2 {
 
     public ExchangedToken exchange(String institutionId, String productId, Optional<String> environment) {
         log.trace("exchange start");
-        log.debug(LogUtils.CONFIDENTIAL_MARKER, "exchange institutionId = {}, productId = {}", institutionId, productId);
+        log.debug(LogUtils.CONFIDENTIAL_MARKER, "exchange institutionId = {}, productId = {}", Encode.forJava(institutionId), Encode.forJava(productId));
         Authentication authentication = getAuthentication();
         SelfCareUser selfCareUser = (SelfCareUser) authentication.getPrincipal();
         String userId = selfCareUser.getId();
@@ -149,7 +149,7 @@ public class ExchangeTokenServiceV2 {
 
     public ExchangedToken exchangeBackofficeAdmin(String institutionId, String productId, Optional<String> environment) {
         log.trace("exchangeBackofficeAdmin start");
-        log.debug(LogUtils.CONFIDENTIAL_MARKER, "exchangeBackofficeAdmin institutionId = {}, productId = {}", institutionId, productId);
+        log.debug(LogUtils.CONFIDENTIAL_MARKER, "exchangeBackofficeAdmin institutionId = {}, productId = {}", Encode.forJava(institutionId), Encode.forJava(productId));
         Authentication authentication = getAuthentication();
         SelfCareUser selfCareUser = (SelfCareUser) authentication.getPrincipal();
 
