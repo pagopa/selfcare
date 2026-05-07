@@ -31,8 +31,8 @@ jobs:
 
       - name: Install Optic
         run: |
-          mkdir -p /tmp/optic-install
-          cd /tmp/optic-install
+          mkdir -p optic-install
+          cd optic-install
 
           npm init -y
           npm pkg set overrides.ajv="8.17.1"
@@ -50,7 +50,7 @@ jobs:
 
       - name: Check OpenAPI with Optic
         run: |
-          /tmp/optic-install/node_modules/.bin/optic diff "${{ inputs.path_openapi_docs }}" \
+          ./optic-install/node_modules/.bin/optic diff "${{ inputs.path_openapi_docs }}" \
             --base "origin/${{ steps.base_branch.outputs.branch }}" \
             --check
 
