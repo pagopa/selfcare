@@ -46,6 +46,10 @@ jobs:
         id: extract_branch
         run: echo "branch=${GITHUB_BASE_REF:-${GITHUB_REF#refs/heads/}}" >> "$GITHUB_OUTPUT"
 
+      - name: Fetch base branch
+        run: |
+          git fetch origin ${{ steps.extract_branch.outputs.branch }}
+
       - name: Build OpenAPI source
         run: mvn --projects :${{ inputs.module }} --also-make package -DskipTests
 
@@ -77,7 +81,7 @@ jobs:
           cd "${GITHUB_WORKSPACE}"
 
           /tmp/optic-install/node_modules/.bin/optic diff "${{ inputs.path_openapi_docs }}" \
-            --base /tmp/base-openapi.json \
+            --base "origin/${{ steps.extract_branch.outputs.branch }}" \
             --check
 
       - name: Verify OpenAPI file is up to date
