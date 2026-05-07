@@ -35,7 +35,7 @@ jobs:
         run: mvn --projects :${{ inputs.module }} --also-make package -DskipTests
 
       - name: Check OpenAPI with Optic
-        run: optic diff "${{ inputs.path_openapi_docs }}" --base "origin/${{ steps.extract_branch.outputs.branch }}" --ruleset .github/optic-ruleset/optic.yml --check
+        run: optic diff "${{ inputs.path_openapi_docs }}" --base "origin/${{ steps.extract_branch.outputs.branch }}" --check
 
       - name: Verify OpenAPI file is up to date
         run: |
