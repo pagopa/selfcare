@@ -1,0 +1,120 @@
+{
+  "jwtData": [
+    {
+      "username": "j.doe",
+      "password": "test",
+      "jwtHeader": {
+        "alg": "RS256",
+        "typ": "JWT",
+        "kid": "jwt_test_kid"
+      },
+      "jwtPayload": {
+        "family_name": "Doe",
+        "fiscal_number": "PRVTNT80A41H401T",
+        "name": "John",
+        "spid_level": "https://www.spid.gov.it/SpidL2",
+        "from_aa": false,
+        "uid": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+        "level": "L2",
+        "aud": "api.dev.selfcare.pagopa.it",
+        "iss": "SPID",
+        "jti": "_2f603a8bc36b1231b1a6"
+      }
+    },
+    {
+      "username": "s.froid",
+      "password": "test",
+      "jwtHeader": {
+        "alg": "RS256",
+        "typ": "JWT",
+        "kid": "jwt_test_kid"
+      },
+      "jwtPayload": {
+        "family_name": "Sigmund",
+        "fiscal_number": "SGMFRD67R25A124E",
+        "name": "Froid",
+        "spid_level": "https://www.spid.gov.it/SpidL2",
+        "from_aa": false,
+        "uid": "45a78331-d039-4bfa-8e85-2cbe7f6b7bc8",
+        "level": "L2",
+        "aud": "api.dev.selfcare.pagopa.it",
+        "iss": "SPID",
+        "jti": "_2f603a8bc36b1231b1a6"
+      }
+    },
+    {
+      "username": "r.balboa",
+      "password": "test",
+      "jwtHeader": {
+        "alg": "RS256",
+        "typ": "JWT",
+        "kid": "jwt_test_kid"
+      },
+      "jwtPayload": {
+        "family_name": "Balboa",
+        "fiscal_number": "BLBRKY67C30H501B",
+        "name": "Rocky",
+        "spid_level": "https://www.spid.gov.it/SpidL2",
+        "from_aa": false,
+        "uid": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
+        "level": "L2",
+        "aud": "api.dev.selfcare.pagopa.it",
+        "iss": "SPID",
+        "jti": "_2f603a8bc36b1231b1a6"
+      }
+    },
+    {
+      "username": "b.barnes",
+      "password": "test",
+      "jwtHeader": {
+        "alg": "RS256",
+        "typ": "JWT",
+        "kid": "jwt_test_kid"
+      },
+      "jwtPayload": {
+        "uid": "35a78332-d038-4bfa-8e85-2cba7f6b7bf8",
+        "aud": "api.dev.selfcare.pagopa.it",
+        "email": "test@t.it",
+        "iss": "PAGOPA",
+        "jti": "_2f603a8bc36b1231b1a6"
+      }
+    },
+    {
+      "username": "b.king",
+      "password": "test",
+      "jwtHeader": {
+        "alg": "RS256",
+        "typ": "JWT",
+        "kid": "jwt_test_kid"
+      },
+      "jwtPayload": {
+        "uid": "9f2b6b54-6c2b-4b36-8d83-4cd1d6fcf3e8",
+        "aud": "api.dev.selfcare.pagopa.it",
+        "email": "test@tt.tt",
+        "iss": "PAGOPA",
+        "jti": "_2f603a8bc36b1231b1a6"
+      }
+    },
+    {
+      "username": "m.polo",
+      "password": "test",
+      "jwtHeader": {
+        "alg": "RS256",
+        "typ": "JWT",
+        "kid": "jwt_test_kid"
+      },
+      "jwtPayload": {
+        "family_name": "Polo",
+        "fiscal_number": "PLOMRC99Z99Z999X",
+        "name": "Marco",
+        "spid_level": "https://www.spid.gov.it/SpidL2",
+        "from_aa": false,
+        "uid": "9b8e2b3f-4c7d-4f91-a6e2-3d1f8a7c5b42",
+        "level": "L2",
+        "aud": "api.dev.selfcare.pagopa.it",
+        "iss": "SPID",
+        "jti": "_2f603a8bc36b1231b1a6"
+      }
+    }
+  ]
+}

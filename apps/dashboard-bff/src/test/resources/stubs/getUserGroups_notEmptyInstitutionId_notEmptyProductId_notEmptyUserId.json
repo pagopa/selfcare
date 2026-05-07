@@ -1,0 +1,16 @@
+{
+  "id": "setId",
+  "institutionId": "setInstitutionId",
+  "productId": "setProductId",
+  "description": "setDescription",
+  "name": "setName",
+  "status": "ACTIVE",
+  "members": [
+    "895b4af3-7fa7-4442-8a0d-a2b05c6c719f",
+    "895b4af3-7fa7-4442-8a0d-a2b05c6c719a"
+  ],
+  "createdAt": "+1000000000-12-31T23:59:59.999999999Z",
+  "createdBy": "setCreatedBy",
+  "modifiedAt": "+1000000000-12-31T23:59:59.999999999Z",
+  "modifiedBy": "setModifiedBy"
+}

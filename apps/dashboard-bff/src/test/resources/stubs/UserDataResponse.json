@@ -1,0 +1,33 @@
+[
+  {
+    "id": "id",
+    "userId": "123e4567-e89b-12d3-a456-426614174000",
+    "institutionId": "institutionId",
+    "institutionDescription": "institutionDescription",
+    "institutionRootName": "institutionRootName",
+    "userMailUuid": "userMailUuid",
+    "role": "MANAGER",
+    "status": "ACTIVE",
+    "products": [
+      {
+        "productId": "productId",
+        "tokenId": "tokenId",
+        "status": "ACTIVE",
+        "productRole": "productRole",
+        "role": "MANAGER",
+        "env": "ROOT",
+        "createdAt": "2020-01-01T00:00:00Z",
+        "updatedAt": "2020-01-01T00:00:00Z"
+      }
+    ],
+    "userResponse": {
+      "id": "id",
+      "taxCode": "taxCode",
+      "name": "name",
+      "surname": "surname",
+      "email": "email",
+      "mobilePhone": "phone",
+      "workContacts": null
+    }
+  }
+]

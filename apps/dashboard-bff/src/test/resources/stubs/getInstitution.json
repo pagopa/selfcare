@@ -1,0 +1,52 @@
+{
+  "id": "setId",
+  "externalId": "setExternalId",
+  "originId": "setOriginId",
+  "description": "setDescription",
+  "digitalAddress": "setDigitalAddress",
+  "address": "setAddress",
+  "zipCode": "setZipCode",
+  "taxCode": "setTaxCode",
+  "origin": "setOrigin",
+  "institutionType": "AS",
+  "attributes": [
+    {
+      "origin": "setOrigin",
+      "code": "setCode",
+      "description": "setDescription"
+    }
+  ],
+  "geographicTaxonomies": [
+    {
+      "code": "setCode",
+      "desc": "setDesc"
+    }
+  ],
+  "category": "setCode",
+  "billing": null,
+  "paymentServiceProvider": {
+    "abiCode": "setAbiCode",
+    "businessRegisterNumber": "setBusinessRegisterNumber",
+    "legalRegisterName": "setLegalRegisterName",
+    "legalRegisterNumber": "setLegalRegisterNumber",
+    "vatNumberGroup": true
+  },
+  "dataProtectionOfficer": {
+    "address": "setAddress",
+    "email": "setEmail",
+    "pec": "setPec"
+  },
+  "supportContact": null,
+  "onboarding": [],
+  "rootParent": {
+    "description": "setDescription",
+    "id": "setId"
+  },
+  "subunitCode": "setSubunitCode",
+  "subunitType": "setSubunitType",
+  "aooParentCode": "setAooParentCode",
+  "city": "setCity",
+  "country": "setCountry",
+  "county": "setCounty",
+  "delegation": true
+}

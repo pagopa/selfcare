@@ -1,0 +1,59 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/products/\\w+/role-mappings"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+      "MANAGER": {
+        "multiroleAllowed": true,
+        "roles": [
+          {
+            "code": "ref_admin-1",
+            "label": "Referente Amministrativo",
+            "description": "Lorem ipsum dolor sit amet."
+          }
+        ]
+      },
+      "DELEGATE": {
+        "multiroleAllowed": true,
+        "roles": [
+          {
+            "code": "ref_admin-2",
+            "label": "Referente Amministrativo",
+            "description": "Lorem ipsum dolor sit amet."
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": true,
+        "roles": [
+          {
+            "code": "ref_admin-3",
+            "label": "Referente Amministrativo",
+            "description": "Lorem ipsum dolor sit amet."
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": true,
+        "roles": [
+          {
+            "code": "op_api",
+            "label": "Operatore API",
+            "description": "Lorem ipsum dolor sit amet."
+          },
+          {
+            "code": "op_sec",
+            "label": "Operatore Sicurezza",
+            "description": "Lorem ipsum dolor sit amet."
+          }
+        ]
+      }
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

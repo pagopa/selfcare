@@ -20,6 +20,7 @@ jobs:
       webhook: ${{ steps.filter.outputs.webhook }}
       registry_proxy: ${{ steps.filter.outputs.registry_proxy }}
       document_ms: ${{ steps.filter.outputs.document_ms }}
+      dashboard_bff: ${{ steps.filter.outputs.dashboard_bff }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - id: filter
@@ -46,6 +47,8 @@ jobs:
               - 'apps/registry-proxy/**'
             document_ms:
               - 'apps/document-ms/**'
+            dashboard_bff:
+              - 'apps/dashboard-bff/**'
 
   trigger_release_push:
     name: Trigger DEV Release
@@ -92,3 +95,7 @@ jobs:
       - name: Trigger document-ms release
         if: needs.detect_changes.outputs.document_ms == 'true'
         run: gh workflow run "trigger_release_document_ms.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger dashboard-bff release
+        if: needs.detect_changes.outputs.dashboard_bff == 'true'
+        run: gh workflow run "trigger_release_dashboard_bff.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main

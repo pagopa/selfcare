@@ -455,6 +455,25 @@
             </dependencies>
         </profile>
         <profile>
+            <id>dashboard-bff</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>libs</artifactId>
+                    <version>0.0.1</version>
+                    <type>pom</type>
+                </dependency>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>selc-dashboard</artifactId>
+                    <version>0.0.1-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
             <id>webhook</id>
             <activation>
                 <activeByDefault>false</activeByDefault>

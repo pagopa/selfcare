@@ -1573,7 +1573,7 @@ class DocumentContentServiceImplTest {
 
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().nullItem());
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), anyInt()))
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
                 .thenReturn(Uni.createFrom().item(mockDocument));
         when(signatureService.verifyContractSignature(eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), eq(skipVerification)))
                 .thenReturn(Uni.createFrom().voidItem());
@@ -1604,7 +1604,7 @@ class DocumentContentServiceImplTest {
 
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().nullItem());
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), anyInt()))
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
                 .thenReturn(Uni.createFrom().item(mockDocument));
 
         // Simuliamo il fallimento della firma
@@ -1635,7 +1635,7 @@ class DocumentContentServiceImplTest {
 
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().nullItem());
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), anyInt()))
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
                 .thenReturn(Uni.createFrom().item(mockDocument));
         when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean()))
                 .thenReturn(Uni.createFrom().voidItem());
@@ -1669,7 +1669,7 @@ class DocumentContentServiceImplTest {
 
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().nullItem());
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), anyInt()))
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
                 .thenReturn(Uni.createFrom().item(mockDocument));
         when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean()))
                 .thenReturn(Uni.createFrom().voidItem());

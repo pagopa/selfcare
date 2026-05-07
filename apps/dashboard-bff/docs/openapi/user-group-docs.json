@@ -1,0 +1,977 @@
+{
+  "openapi" : "3.0.3",
+  "info" : {
+    "title" : "user-group-ms",
+    "description" : "The services described in this section deal with the management of UserGroup entity, providing the necessary  methods for its creation, consultation and activation.",
+    "version" : "1.0.0-SNAPSHOT"
+  },
+  "servers" : [ {
+    "url" : "{url}:{port}{basePath}",
+    "variables" : {
+      "url" : {
+        "default" : "http://localhost"
+      },
+      "port" : {
+        "default" : "80"
+      },
+      "basePath" : {
+        "default" : ""
+      }
+    }
+  } ],
+  "tags" : [ {
+    "name" : "UserGroup",
+    "description" : "User group endpoint CRUD operations"
+  } ],
+  "paths" : {
+    "/v1/user-groups" : {
+      "get" : {
+        "tags" : [ "UserGroup", "external-v2", "support", "support-pnpg" ],
+        "summary" : "getUserGroups",
+        "description" : "Service that allows to get a list of UserGroup entities",
+        "operationId" : "getUserGroupsUsingGET",
+        "parameters" : [ {
+          "name" : "institutionId",
+          "in" : "query",
+          "description" : "Users group's institutionId",
+          "required" : false,
+          "style" : "form",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "The page number to access (0 indexed, defaults to 0)",
+          "required" : false,
+          "style" : "form",
+          "allowReserved" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "Number of records per page (defaults to 20, max 2000)",
+          "required" : false,
+          "style" : "form",
+          "allowReserved" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property(,asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "style" : "form",
+          "allowReserved" : true,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }, {
+          "name" : "productId",
+          "in" : "query",
+          "description" : "Users group's productId",
+          "required" : false,
+          "style" : "form",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "userId",
+          "in" : "query",
+          "description" : "Member's unique identifier",
+          "required" : false,
+          "style" : "form",
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "status",
+          "in" : "query",
+          "description" : "If filter on status is present, it must be used with at least one of the other filters",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "DELETED", "SUSPENDED" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageOfUserGroupResource"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "UserGroup" ],
+        "summary" : "createGroup",
+        "description" : "Service that allows the insert of a new occurrence for the UserGroup entity",
+        "operationId" : "createGroupUsingPOST",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateUserGroupDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserGroupResource"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Conflict",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v1/user-groups/members/{memberId}" : {
+      "delete" : {
+        "tags" : [ "UserGroup" ],
+        "summary" : "deleteMemberFromUserGroups",
+        "description" : "Service to delete a member from a specific UserGroup entity",
+        "operationId" : "deleteMemberFromUserGroupsUsingDELETE",
+        "parameters" : [ {
+          "name" : "memberId",
+          "in" : "path",
+          "description" : "Member's unique identifier",
+          "required" : true,
+          "style" : "simple",
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "institutionId",
+          "in" : "query",
+          "description" : "institutionId",
+          "required" : true,
+          "style" : "form",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productId",
+          "in" : "query",
+          "description" : "productId",
+          "required" : true,
+          "style" : "form",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v1/user-groups/{id}" : {
+      "get" : {
+        "tags" : [ "UserGroup" ],
+        "summary" : "getUserGroup",
+        "description" : "Service to get a specific UserGroup entity",
+        "operationId" : "getUserGroupUsingGET",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Users group's unique identifier",
+          "required" : true,
+          "style" : "simple",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserGroupResource"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      },
+      "put" : {
+        "tags" : [ "UserGroup" ],
+        "summary" : "updateUserGroup",
+        "description" : "Service that allows the modification of a specific occurrence for the UserGroup entity by an Admin user",
+        "operationId" : "updateUserGroupUsingPUT",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Users group's unique identifier",
+          "required" : true,
+          "style" : "simple",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateUserGroupDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserGroupResource"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Conflict",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "UserGroup" ],
+        "summary" : "deleteGroup",
+        "description" : "Service that allows the deletion of a specific occurrence for the UserGroup entity by an Admin user",
+        "operationId" : "deleteGroupUsingDELETE",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Users group's unique identifier",
+          "required" : true,
+          "style" : "simple",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v1/user-groups/{id}/activate" : {
+      "post" : {
+        "tags" : [ "UserGroup" ],
+        "summary" : "activateGroup",
+        "description" : "Service that allows the activation of a specific occurrence for the UserGroup entity by an Admin user",
+        "operationId" : "activateGroupUsingPOST",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Users group's unique identifier",
+          "required" : true,
+          "style" : "simple",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v1/user-groups/{id}/members/{memberId}" : {
+      "put" : {
+        "tags" : [ "UserGroup" ],
+        "summary" : "addMemberToUserGroup",
+        "description" : "Service to add a member to a specific UserGroup entity",
+        "operationId" : "addMemberToUserGroupUsingPUT",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Users group's unique identifier",
+          "required" : true,
+          "style" : "simple",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "memberId",
+          "in" : "path",
+          "description" : "Member's unique identifier",
+          "required" : true,
+          "style" : "simple",
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "UserGroup" ],
+        "summary" : "deleteMemberFromUserGroup",
+        "description" : "Service to delete a member from a specific UserGroup entity",
+        "operationId" : "deleteMemberFromUserGroupUsingDELETE",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Users group's unique identifier",
+          "required" : true,
+          "style" : "simple",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "memberId",
+          "in" : "path",
+          "description" : "Member's unique identifier",
+          "required" : true,
+          "style" : "simple",
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v1/user-groups/{id}/suspend" : {
+      "post" : {
+        "tags" : [ "UserGroup" ],
+        "summary" : "suspendGroup",
+        "description" : "Service that allows the suspension of a specific occurrence for the UserGroup entity by an Admin user",
+        "operationId" : "suspendGroupUsingPOST",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Users group's unique identifier",
+          "required" : true,
+          "style" : "simple",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "CreateUserGroupDto" : {
+        "title" : "CreateUserGroupDto",
+        "required" : [ "description", "institutionId", "members", "name", "productId", "status" ],
+        "type" : "object",
+        "properties" : {
+          "description" : {
+            "type" : "string",
+            "description" : "Users group's description"
+          },
+          "institutionId" : {
+            "type" : "string",
+            "description" : "Users group's institutionId"
+          },
+          "members" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "description" : "List of all the members of the group",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "Users group's name"
+          },
+          "productId" : {
+            "type" : "string",
+            "description" : "Users group's productId"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Users group's status",
+            "enum" : [ "ACTIVE", "DELETED", "SUSPENDED" ]
+          }
+        }
+      },
+      "InvalidParam" : {
+        "title" : "InvalidParam",
+        "required" : [ "name", "reason" ],
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "description" : "Invalid parameter name."
+          },
+          "reason" : {
+            "type" : "string",
+            "description" : "Invalid parameter reason."
+          }
+        }
+      },
+      "PageOfUserGroupResource" : {
+        "title" : "PageOfUserGroupResource",
+        "required" : [ "content", "number", "size", "totalElements", "totalPages" ],
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "description" : "The page content",
+            "items" : {
+              "$ref" : "#/components/schemas/UserGroupResource"
+            }
+          },
+          "number" : {
+            "type" : "integer",
+            "description" : "The number of the current page",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "description" : "The size of the page",
+            "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "description" : "The total amount of elements",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "description" : "The number of total pages",
+            "format" : "int32"
+          }
+        }
+      },
+      "Problem" : {
+        "title" : "Problem",
+        "required" : [ "status", "title" ],
+        "type" : "object",
+        "properties" : {
+          "detail" : {
+            "type" : "string",
+            "description" : "Human-readable description of this specific problem."
+          },
+          "instance" : {
+            "type" : "string",
+            "description" : "A URI that describes where the problem occurred."
+          },
+          "invalidParams" : {
+            "type" : "array",
+            "description" : "A list of invalid parameters details.",
+            "items" : {
+              "$ref" : "#/components/schemas/InvalidParam"
+            }
+          },
+          "status" : {
+            "type" : "integer",
+            "description" : "The HTTP status code.",
+            "format" : "int32",
+            "example" : 500
+          },
+          "title" : {
+            "type" : "string",
+            "description" : "Short human-readable summary of the problem."
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "A URL to a page with more details regarding the problem."
+          }
+        },
+        "description" : "A \"problem detail\" as a way to carry machine-readable details of errors (https://datatracker.ietf.org/doc/html/rfc7807)"
+      },
+      "UpdateUserGroupDto" : {
+        "title" : "UpdateUserGroupDto",
+        "required" : [ "description", "members", "name" ],
+        "type" : "object",
+        "properties" : {
+          "description" : {
+            "type" : "string",
+            "description" : "Users group's description"
+          },
+          "members" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "description" : "List of all the members of the group",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "Users group's name"
+          }
+        }
+      },
+      "UserGroupResource" : {
+        "title" : "UserGroupResource",
+        "required" : [ "description", "id", "institutionId", "name", "productId", "status" ],
+        "type" : "object",
+        "properties" : {
+          "createdAt" : {
+            "type" : "string",
+            "description" : "Date on which the group was created",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "User by which the group was created"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Users group's description"
+          },
+          "id" : {
+            "type" : "string",
+            "description" : "Users group's unique identifier"
+          },
+          "institutionId" : {
+            "type" : "string",
+            "description" : "Users group's institutionId"
+          },
+          "members" : {
+            "type" : "array",
+            "description" : "List of all the members of the group",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          "modifiedAt" : {
+            "type" : "string",
+            "description" : "Date on which the group was modified",
+            "format" : "date-time"
+          },
+          "modifiedBy" : {
+            "type" : "string",
+            "description" : "User by which the group was modified"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "Users group's name"
+          },
+          "productId" : {
+            "type" : "string",
+            "description" : "Users group's productId"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Users group's status",
+            "enum" : [ "ACTIVE", "DELETED", "SUSPENDED" ]
+          }
+        }
+      }
+    },
+    "securitySchemes" : {
+      "bearerAuth" : {
+        "type" : "http",
+        "description" : "A bearer token in the format of a JWS and conformed to the specifications included in [RFC8725](https://tools.ietf.org/html/RFC8725)",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT"
+      }
+    }
+  }
+}

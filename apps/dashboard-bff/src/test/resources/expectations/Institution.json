@@ -1,0 +1,60 @@
+{
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "externalId": "externalId",
+  "origin": "origin",
+  "originId": "originId",
+  "description": "description",
+  "institutionType": "PA",
+  "digitalAddress": "digitalAddress",
+  "address": "address",
+  "zipCode": "zipCode",
+  "taxCode": "taxCode",
+  "city": "city",
+  "county": "county",
+  "country": "country",
+  "onboarding": [
+    {
+      "productId": "productId",
+      "status": "ACTIVE",
+      "billing": {
+        "vatNumber": "vatNumber",
+        "recipientCode": "recipientCode",
+        "publicServices": true
+      }
+    },
+    {
+      "productId": "productId2",
+      "status": "ACTIVE",
+      "billing": {
+        "vatNumber": "vatNumber",
+        "recipientCode": "recipientCode",
+        "publicServices": true
+      }
+    }
+  ],
+  "geographicTaxonomies": [
+    {
+      "code": "code",
+      "desc": "desc"
+    }
+  ],
+  "attributes": [
+    {
+      "origin": "origin",
+      "code": "code",
+      "description": "description"
+    }
+  ],
+  "paymentServiceProvider": {
+    "abiCode": "abiCode",
+    "businessRegisterNumber": "businessRegisterNumber",
+    "legalRegisterName": "legalRegisterName",
+    "legalRegisterNumber": "legalRegisterNumber",
+    "vatNumberGroup": true
+  },
+  "dataProtectionOfficer": {
+    "address": "address",
+    "email": "email",
+    "pec": "pec"
+  }
+}

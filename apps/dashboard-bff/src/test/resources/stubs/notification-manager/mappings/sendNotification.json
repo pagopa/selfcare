@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/notifications/v1/user",
+    "bodyPatterns": [
+      {
+        "matchesJsonPath": "*"
+      }
+    ]
+  },
+  "response": {
+    "status": "204",
+    "jsonBody": {},
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+[
+  {
+    "id": "institutionBaseId",
+    "name": "institutionBaseName",
+    "userRole": "userRole",
+    "status": "ACTIVE",
+    "parentDescription": "parentDescription"
+  }
+]

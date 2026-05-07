@@ -1,0 +1,52 @@
+{
+  "id": "8a3b085b-5d5e-4a0a-b1f5-85692d1862b3",
+  "user": {
+    "id": "string",
+    "fiscalCode": "string",
+    "name": {
+      "certification": "NONE",
+      "value": "string"
+    },
+    "familyName": {
+      "certification": "NONE",
+      "value": "string"
+    },
+    "email": {
+      "certification": "NONE",
+      "value": "string"
+    },
+    "mobilePhone": {
+      "certification": "NONE",
+      "value": "string"
+    },
+    "workContacts": {
+      "string": {
+        "email": {
+          "certification": "NONE",
+          "value": "string"
+        }
+      }
+    }
+  },
+  "role": "ADMIN",
+  "products": {
+    "string": {
+      "id": "123456",
+      "title": "string",
+      "roleInfos": [
+        {
+          "relationshipId": "rel123",
+          "role": "string",
+          "status": "string",
+          "selcRole": "LIMITED",
+          "partyRole": "ADMIN_EA",
+          "createdAt": "2026-03-05T10:51:01.955",
+          "updatedAt": "2026-03-05T10:51:01.955"
+        }
+      ]
+    }
+  },
+  "status": "string",
+  "institutionId": "string",
+  "userMailUuid": "string"
+}
