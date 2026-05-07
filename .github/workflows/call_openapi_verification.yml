@@ -11,7 +11,7 @@ on:
         required: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   openapi_conflict_update:
@@ -38,13 +38,12 @@ jobs:
           npm pkg set overrides.ajv="8.17.1"
           npm install @useoptic/optic@1.0.9
 
-      - name: Extract base branch
-        id: extract_branch
-        run: echo "branch=${GITHUB_BASE_REF:-${GITHUB_REF#refs/heads/}}" >> "$GITHUB_OUTPUT"
-
-      - name: Fetch base branch
+      - name: Resolve and fetch base branch
+        id: base_branch
         run: |
-          git fetch origin ${{ steps.extract_branch.outputs.branch }}
+          BASE_BRANCH="${GITHUB_BASE_REF:-${GITHUB_REF#refs/heads/}}"
+          echo "branch=${BASE_BRANCH}" >> "$GITHUB_OUTPUT"
+          git fetch origin "${BASE_BRANCH}"
 
       - name: Build OpenAPI source
         run: mvn --projects :${{ inputs.module }} --also-make package -DskipTests
@@ -52,7 +51,7 @@ jobs:
       - name: Check OpenAPI with Optic
         run: |
           /tmp/optic-install/node_modules/.bin/optic diff "${{ inputs.path_openapi_docs }}" \
-            --base "origin/${{ steps.extract_branch.outputs.branch }}" \
+            --base "origin/${{ steps.base_branch.outputs.branch }}" \
             --check
 
       - name: Verify OpenAPI file is up to date
