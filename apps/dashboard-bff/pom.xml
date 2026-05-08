@@ -194,8 +194,6 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <skip>false</skip>
-                    <finalName>${project.parent.artifactId}-${project.parent.version}-FATJAR</finalName>
-                    <outputDirectory>../target</outputDirectory>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
