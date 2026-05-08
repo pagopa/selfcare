@@ -112,5 +112,5 @@ variable "domain" {
 
 variable "developer_path" {
   type        = string
-  description = "Path where il located developer index.html file"
+  description = "Path where is located developer index.html file"
 }
