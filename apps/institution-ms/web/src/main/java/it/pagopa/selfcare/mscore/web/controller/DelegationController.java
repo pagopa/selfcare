@@ -155,7 +155,7 @@ public class DelegationController {
      * @param size maximum size of the returned list
      * @return list of the delegators
      */
-    @Tags({@Tag(name = "external-v2"), @Tag(name = "Delegation")})
+    @Tags({@Tag(name = "Delegation"), @Tag(name = "external-v2"),   @Tag(name = "support")})
     @Operation(summary = "${swagger.mscore.delegation.delegators}", description = "${swagger.mscore.delegation.delegators.notes}")
     @GetMapping(value = "/delegators/{institutionId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<DelegationInstitutionResponse>> getDelegatorInstitutions(@Parameter(description = "${swagger.mscore.institutions.model.institutionId}")
@@ -182,7 +182,7 @@ public class DelegationController {
      * @param size maximum size of the returned list
      * @return list of the delegates
      */
-    @Tags({@Tag(name = "external-v2"), @Tag(name = "Delegation")})
+    @Tags({@Tag(name = "Delegation"), @Tag(name = "external-v2"),   @Tag(name = "support")})
     @Operation(summary = "${swagger.mscore.delegation.delegates}", description = "${swagger.mscore.delegation.delegates.notes}")
     @GetMapping(value = "/delegates/{institutionId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<DelegationInstitutionResponse>> getDelegateInstitutions(@Parameter(description = "${swagger.mscore.institutions.model.institutionId}")
