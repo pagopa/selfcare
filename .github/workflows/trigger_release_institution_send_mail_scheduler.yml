@@ -1,17 +1,15 @@
 name: Institution SendMailScheduler - Trigger Release
 
-permissions:
-  contents: read
-  pull-requests: write
-  packages: read
-
 on:
   workflow_dispatch:
     inputs:
       env:
         type: choice
         description: Environment
-        options: [dev, uat, prod]
+        options:
+          - dev
+          - uat
+          - prod
         required: true
       branch:
         type: string
@@ -19,35 +17,58 @@ on:
         required: true
 
 jobs:
-  prepare:
+  release:
+    name: "Trigger Release Workflows"
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: write
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     outputs:
-      version: ${{ steps.extract.outputs.VERSION }}
-    steps:
-      - id: extract
-        run: |
-          VERSION=$(echo "${{ inputs.branch }}" | sed 's/.*_//;s/^v//')
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+      version: ${{ env.VERSION }}
 
-  release_institution_send_mail_scheduler:
-    needs: prepare
-    uses: ./.github/workflows/call_release_app.yml
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Extract Version
+        run: |
+          echo "VERSION=$(echo "${{ inputs.branch }}" | sed 's/.*_//;s/^v//')" >> $GITHUB_ENV
+
+      - name: Trigger Institution SendMailScheduler Release (AR)
+        run: |
+          gh workflow run release_app.yml \
+            --ref ${{ inputs.branch }} \
+            -f env=${{ inputs.env }} \
+            -f target=ar \
+            -f app=institution-send-mail-scheduler
+
+  update_uat_variable:
+    name: "Update UAT Version Variable"
+    needs: release
+    if: ${{ inputs.env == 'uat' }}
+    permissions:
+      contents: read
+      actions: write
+    uses: ./.github/workflows/call_update_gh_variable.yml
     with:
-      env: ${{ inputs.env }}
-      target: ar
-      app: institution-send-mail-scheduler
-      APP_PATH: apps/institution-send-mail-scheduler
-      APPS_POM: apps/pom.xml
-      POM: pom.xml
+      domain: institution-send-mail-scheduler
+      env: uat
+      version: ${{ needs.release.outputs.version }}
     secrets: inherit
 
   update_prod_variable:
     name: "Update PROD Version Variable"
-    needs: [prepare, release_institution_send_mail_scheduler]
-    if: inputs.env == 'prod'
+    needs: release
+    if: ${{ inputs.env == 'prod' }}
+    permissions:
+      contents: read
+      actions: write
     uses: ./.github/workflows/call_update_gh_variable.yml
     with:
       domain: institution-send-mail-scheduler
       env: prod
-      version: ${{ needs.prepare.outputs.version }}
+      version: ${{ needs.release.outputs.version }}
     secrets: inherit
