@@ -34,7 +34,7 @@ jobs:
       # Selfcare-onboarding
       - uses: s4u/maven-settings-action@7802f6aec16c9098b4798ad1f1d8ac75198194bd # v3.0.0
         with:
-          servers: '[{"id": "selfcare-onboarding", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
+          servers: '[{"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
 
       - name: Run Integration Tests
         id: int_tests

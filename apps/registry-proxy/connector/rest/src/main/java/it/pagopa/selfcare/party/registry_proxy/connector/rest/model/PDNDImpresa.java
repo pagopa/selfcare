@@ -2,6 +2,7 @@ package it.pagopa.selfcare.party.registry_proxy.connector.rest.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import java.util.Objects;
 import lombok.Data;
 
@@ -31,6 +32,7 @@ public class PDNDImpresa {
   private String nRea;
 
   @JsonProperty("StatoImpresa")
+  @JsonAlias("StatoDitta")
   private String businessStatus;
 
   @JsonProperty("IndirizzoSedeLegale")
