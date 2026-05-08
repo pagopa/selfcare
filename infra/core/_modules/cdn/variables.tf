@@ -160,3 +160,9 @@ variable "origin_health_probe" {
 
   default = {}
 }
+
+variable "qualtrics_csp_enabled" {
+  type        = bool
+  default     = false
+  description = "Enable Qualtrics site intercept (siteintercept.qualtrics.com) in Content-Security-Policy-Report-Only headers"
+}

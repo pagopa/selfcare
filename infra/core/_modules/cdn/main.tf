@@ -443,7 +443,7 @@ resource "azurerm_cdn_frontdoor_rule" "csp_frame_ancestors" {
     response_header_action {
       header_action = "Append"
       header_name   = "Content-Security-Policy"
-      value         = format("frame-ancestors 'none'; object-src 'none'; frame-src 'self' *.%s.%s;", var.dns_zone_prefix, var.external_domain)
+      value         = format("frame-ancestors 'none'; object-src 'none'; frame-src 'self' *.%s.%s%s;", var.dns_zone_prefix, var.external_domain, var.qualtrics_csp_enabled ? " https://siteintercept.qualtrics.com" : "")
     }
   }
 }
@@ -540,7 +540,7 @@ resource "azurerm_cdn_frontdoor_rule" "csp_frame_ancestors_ar" {
     response_header_action {
       header_action = "Append"
       header_name   = "Content-Security-Policy"
-      value         = "frame-ancestors 'none'; object-src 'none'; frame-src 'self' *.${var.dns_zone_prefix_ar}.${var.external_domain};"
+      value         = "frame-ancestors 'none'; object-src 'none'; frame-src 'self' *.${var.dns_zone_prefix_ar}.${var.external_domain}${var.qualtrics_csp_enabled ? " https://siteintercept.qualtrics.com" : ""};"
     }
   }
 }

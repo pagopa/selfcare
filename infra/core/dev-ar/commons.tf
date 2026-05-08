@@ -172,6 +172,7 @@ module "cdn" {
   vnet_name                       = module.network.vnet_name
   rg_vnet_name                    = module.network.rg_vnet_name
   cidr_subnet_cdn                 = local.cidr_subnet_cdn
+  qualtrics_csp_enabled           = true
 }
 
 
