@@ -13,13 +13,13 @@ Feature: Institution
       | id                                      | taxCode                  | name        | surname      | email                                               | mobilePhone | telephone  |
       | 97a511a7-2acc-47b9-afed-2f3c65753b4a    | PRVTNT80A41H401T         | John        | Doe          | 81956dd1-00fd-4423-888b-f77a48d26ba1@test.it        | 3365252525  | 0987654321 |
       | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7    | blbrki80A41H401T         | rocky       | Balboa       | r.balboa@regionelazio.it                            |             |            |
-    And The response body contains the list "[0].products" of size 2
-    And The response body contains at path "[0].products" the following list of objects in any order:
+    And The response body contains the list "find { it.taxCode == 'PRVTNT80A41H401T' }.products" of size 2
+    And The response body contains at path "find { it.taxCode == 'PRVTNT80A41H401T' }.products" the following list of objects in any order:
       | roleId                               | productId    | tokenId                              | status  | productRole              | role    | env  | createdAt                |
       | d9f8e7c6-1234-45a6-b789-0c1d2e3f4a5b | prod-io      | abc12345-6789-4def-b012-3456789abcd  | ACTIVE  | admin                    | MANAGER | ROOT | 2023-06-15T14:30:00Z     |
       | f1e2d3c4-b567-890a-bcde-1234567890ff | prod-interop | def67890-1234-4abc-5678-90abcdef1234 | DELETED | referente amministrativo | MANAGER | ROOT | 2024-01-20T09:45:10.567Z |
-    And The response body contains the list "[1].products" of size 1
-    And The response body contains at path "[1].products" the following list of objects in any order:
+    And The response body contains the list "find { it.taxCode == 'blbrki80A41H401T' }.products" of size 1
+    And The response body contains at path "find { it.taxCode == 'blbrki80A41H401T' }.products" the following list of objects in any order:
       | roleId                               | productId    | tokenId                              | status  | productRole              | role         | env  | createdAt                |
       | d9f8e7c6-1234-45a6-b789-0c1d2e3f4a5b | prod-io      | abc12345-6789-4def-b012-3456789abcd  | ACTIVE  | admin                    | SUB_DELEGATE | ROOT | 2023-06-15T14:30:00Z     |
 

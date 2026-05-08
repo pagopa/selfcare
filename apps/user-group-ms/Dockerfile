@@ -29,12 +29,12 @@ RUN echo "<settings>\n" \
          "</servers>\n" \
          "</settings>\n" > settings.xml
 
-ARG REPO_ONBOARDING
+ARG REPO_SELFCARE
 ARG REPO_USERNAME
 ARG REPO_PASSWORD
 ARG REPO_SELFCARE
 
-RUN mvn --global-settings settings.xml --projects :user-group-ms -DrepositoryId=${REPO_ONBOARDING} -DselfcareRepositoryId=${REPO_SELFCARE} -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} --also-make-dependents clean package -DskipTests
+RUN mvn --global-settings settings.xml --projects :user-group-ms -DrepositoryId=${REPO_SELFCARE} -DselfcareRepositoryId=${REPO_SELFCARE} -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} --also-make-dependents clean package -DskipTests
 
 
 FROM eclipse-temurin:17@sha256:d838da85ec7aa8fd72b613e30b5f7629d8f5ac70a4264d45735a8a2ed9af447c AS runtime
