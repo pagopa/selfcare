@@ -77,8 +77,3 @@ data "azurerm_key_vault_secret" "web_storage_url" {
   name         = "web-storage-url"
   key_vault_id = data.azurerm_key_vault.key_vault.id
 }
-
-data "azurerm_api_management" "apim" {
-  name                = "${local.project}-apim-v2"
-  resource_group_name = local.rg_apim_name
-}

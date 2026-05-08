@@ -11,6 +11,11 @@ terraform {
       source  = "integrations/github"
       version = "~> 6.0"
     }
+
+    pkcs12 = {
+      source  = "chilicat/pkcs12"
+      version = "0.2.5"
+    }
   }
 
   backend "azurerm" {

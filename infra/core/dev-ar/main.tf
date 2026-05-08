@@ -5,7 +5,7 @@ terraform {
     azurerm = { source = "hashicorp/azurerm", version = "~> 4.0" }
     azuread = { source = "hashicorp/azuread", version = ">= 3.8.0" }
     random  = { source = "hashicorp/random", version = ">= 3.0.0" }
-    pkcs12  = { source = "chilicat/pkcs12", version = "0.0.7" }
+    pkcs12  = { source = "chilicat/pkcs12", version = "0.2.5" }
     dx      = { source = "pagopa-dx/azure", version = "~> 0.0" }
   }
 

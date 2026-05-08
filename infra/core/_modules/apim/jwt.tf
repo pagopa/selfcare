@@ -6,8 +6,8 @@ resource "pkcs12_from_pem" "jwt_pkcs12" {
 
 resource "azurerm_api_management_certificate" "jwt_certificate" {
   name                = "jwt-spid-crt"
-  api_management_name = data.azurerm_api_management.apim.name
-  resource_group_name = local.rg_apim_name
+  api_management_name = module.apim.name
+  resource_group_name = azurerm_resource_group.rg_api.name
   data                = pkcs12_from_pem.jwt_pkcs12.result
 }
 
@@ -19,7 +19,7 @@ resource "pkcs12_from_pem" "jwt_pkcs12_pnpg" {
 
 resource "azurerm_api_management_certificate" "jwt_certificate_pnpg" {
   name                = "jwt-pnpg-spid-crt"
-  api_management_name = data.azurerm_api_management.apim.name
-  resource_group_name = local.rg_apim_name
+  api_management_name = module.apim.name
+  resource_group_name = azurerm_resource_group.rg_api.name
   data                = pkcs12_from_pem.jwt_pkcs12_pnpg.result
 }

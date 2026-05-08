@@ -1,6 +1,7 @@
 # general
 locals {
-  project = "${var.prefix}-${var.env_short}"
+  project      = "${var.prefix}-${var.env_short}"
+  rg_apim_name = "${local.project}-api-v2-rg"
 }
 
 variable "prefix" {
@@ -107,4 +108,9 @@ variable "domain" {
     error_message = "Max length is 12 chars."
   }
   default = "pnpg"
+}
+
+variable "developer_path" {
+  type        = string
+  description = "Path where il located developer index.html file"
 }

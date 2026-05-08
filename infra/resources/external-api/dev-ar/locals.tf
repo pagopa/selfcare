@@ -57,8 +57,8 @@ locals {
     min_replicas = module.local.config.container_app.min_replicas
     max_replicas = module.local.config.container_app.max_replicas
     scale_rules  = module.local.config.container_app.scale_rules
-    cpu          = 1.0
-    memory       = "2Gi"
+    cpu          = 0.5
+    memory       = "1Gi"
   }
 
   spring_boot_health_probes = [
