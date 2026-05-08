@@ -15,6 +15,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -74,8 +76,16 @@ public class PDNDCacheableService {
         String bearer = BEARER + tokenResponse.getAccessToken();
 
         try {
-            PDNDImpresa impresa = pdndInfoCamereRestClient.retrieveInstitutionPdndByTaxCode(taxCode, bearer).get(0);
+            List<PDNDImpresa> imprese = pdndInfoCamereRestClient.retrieveInstitutionPdndByTaxCode(taxCode, bearer);
+            if (Objects.isNull(imprese) || imprese.isEmpty()) {
+                throw new ResourceNotFoundException("No institution found for taxCode: " + taxCode);
+            }
+            int lastUpdatedIndex = imprese.size() - 1;
+            log.info("InfoCamere returned {} records for taxCode {}, selecting last updated index {}", imprese.size(), taxCode, lastUpdatedIndex);
+            PDNDImpresa impresa = imprese.get(lastUpdatedIndex);
             return DataEncryptionUtils.encrypt(new ObjectMapper().writeValueAsString(impresa));
+        } catch (ResourceNotFoundException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Unexpected exception occurred while retrieving institution", e);
             throw new IllegalArgumentException("Unexpected error while retrieving institution", e);
