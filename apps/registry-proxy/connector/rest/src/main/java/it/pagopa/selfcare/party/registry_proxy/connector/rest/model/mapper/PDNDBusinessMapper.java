@@ -23,6 +23,7 @@ public interface PDNDBusinessMapper {
     @Mapping(target = "city", source = "businessAddress.city")
     @Mapping(target = "county", source = "businessAddress.county")
     @Mapping(target = "zipCode", source = "businessAddress.zipCode")
+    @Mapping(target = "digitalAddress", source = "digitalAddress")
     PDNDBusiness toPDNDBusiness(PDNDImpresa pdndImpresa);
 
     @Mapping(target = ".", source = "datiIdentificativiImpresa")
