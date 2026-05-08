@@ -38,10 +38,7 @@ import org.openapi.quarkus.core_json.api.OnboardingApi;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.COMPLETED;
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.PENDING;
@@ -361,6 +358,19 @@ public class OnboardingServiceDefault implements OnboardingService {
     public Uni<List<OnboardingResponse>> institutionOnboardings(String taxCode, String subunitCode,
                                                                  String origin, String originId,
                                                                  OnboardingStatus status) {
+        return userRegistryHelper.resolveTaxCodeForQuery(taxCode)
+                .onItem().transformToUni(resolvedTaxCode -> {
+                    if (Objects.isNull(resolvedTaxCode)) {
+                        return Uni.createFrom().item(List.of());
+                    }
+                    String resolvedOriginId = UserRegistryHelper.isPersonalFiscalCode(taxCode) ? resolvedTaxCode : originId;
+                    return findInstitutionOnboardings(resolvedTaxCode, subunitCode, origin, resolvedOriginId, status);
+                });
+    }
+
+    private Uni<List<OnboardingResponse>> findInstitutionOnboardings(String taxCode, String subunitCode,
+                                                                      String origin, String originId,
+                                                                      OnboardingStatus status) {
         Map<String, Object> params = QueryUtils.createMapForInstitutionOnboardingsQueryParameter(
                 taxCode, subunitCode, origin, originId, status, null);
         Document query = QueryUtils.buildQuery(params);
@@ -369,6 +379,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .map(onboardingMapper::toResponse)
                 .collect().asList();
     }
+
 
     @Override
     public Uni<List<OnboardingResponse>> verifyOnboarding(String taxCode, String subunitCode, String origin,

@@ -1,0 +1,602 @@
+[
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          "workContacts"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "97a511a7-2acc-47b9-afed-2f3c65753b4a"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"workContacts\":{\"ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}},\"ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1\":{\"email\":{\"certification\":\"NONE\",\"value\":\"81956dd1-00fd-4423-888b-f77a48d26ba1@test.it\"}},\"ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375\":{\"email\":{\"certification\":\"NONE\",\"value\":\"875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3335252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          "name","familyName","fiscalCode"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "97a511a7-2acc-47b9-afed-2f3c65753b4a"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"fiscalCode\":\"PRVTNT80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"john\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          "name,familyName,fiscalCode"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "97a511a7-2acc-47b9-afed-2f3c65753b4a"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"fiscalCode\":\"PRVTNT80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"john\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          "name,familyName"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "97a511a7-2acc-47b9-afed-2f3c65753b4a"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"name\":{\"certification\":\"SPID\",\"value\":\"john\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          "fiscalCode","name","familyName"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "97a511a7-2acc-47b9-afed-2f3c65753b4a"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"fiscalCode\":\"PRVTNT80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"john\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          "fiscalCode,name,familyName"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "97a511a7-2acc-47b9-afed-2f3c65753b4a"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"fiscalCode\":\"PRVTNT80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"john\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          "name","familyName","email","workContacts"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "97a511a7-2acc-47b9-afed-2f3c65753b4a"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"name\":{\"certification\":\"SPID\",\"value\":\"john\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"},\"email\":{\"certification\":\"SPID\",\"value\":\"personal@test.it\"},\"workContacts\":{\"ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}},\"ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1\":{\"email\":{\"certification\":\"NONE\",\"value\":\"81956dd1-00fd-4423-888b-f77a48d26ba1@test.it\"}},\"ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375\":{\"email\":{\"certification\":\"NONE\",\"value\":\"875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3335252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          "name,familyName,email,workContacts"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "97a511a7-2acc-47b9-afed-2f3c65753b4a"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"body\":{\"email\":{\"certification\":\"SPID\",\"value\":\"personal@test.it\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"},\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"name\":{\"certification\":\"SPID\",\"value\":\"john\"},\"workContacts\":{\"ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}},\"ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375\":{\"email\":{\"certification\":\"NONE\",\"value\":\"875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3335252525\"}},\"ID_CONTACTS#a59d9a0a-2df1-4fb9-99c6-1c7fa3d1a867\":{\"email\":{\"certification\":\"NONE\",\"value\":\"cucumber@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3252525251\"}},\"ID_CONTACTS#e59d9a0b-1de0-4fb9-99c6-1c7fa3d1a999\":{\"email\":{\"certification\":\"NONE\",\"value\":\"cucumber@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3252525252\"}},\"ID_CONTACTS#f66d9a0e-1de0-4fb9-99c6-1d8fa3d1a000\":{\"email\":{\"certification\":\"NONE\",\"value\":\"cucumber2@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3252525253\"}},\"ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1\":{\"email\":{\"certification\":\"NONE\",\"value\":\"81956dd1-00fd-4423-888b-f77a48d26ba1@test.it\"}}}},\"statusCode\":200}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          "fiscalCode","familyName","email","name","workContacts"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "97a511a7-2acc-47b9-afed-2f3c65753b4a"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"fiscalCode\":\"PRVTNT80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"john\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"},\"email\":{\"certification\":\"SPID\",\"value\":\"personal@test.it\"},\"workContacts\":{\"ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}},\"ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1\":{\"email\":{\"certification\":\"NONE\",\"value\":\"81956dd1-00fd-4423-888b-f77a48d26ba1@test.it\"}},\"ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375\":{\"email\":{\"certification\":\"NONE\",\"value\":\"875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3335252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          "fiscalCode,familyName,email,name,workContacts"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "97a511a7-2acc-47b9-afed-2f3c65753b4a"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"email\":{\"certification\":\"SPID\",\"value\":\"personal@test.it\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"},\"fiscalCode\":\"PRVTNT80A41H401T\",\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"name\":{\"certification\":\"SPID\",\"value\":\"john\"},\"workContacts\":{\"ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}},\"ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375\":{\"email\":{\"certification\":\"NONE\",\"value\":\"875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3335252525\"}},\"ID_CONTACTS#a59d9a0a-2df1-4fb9-99c6-1c7fa3d1a867\":{\"email\":{\"certification\":\"NONE\",\"value\":\"cucumber@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3252525251\"}},\"ID_CONTACTS#e59d9a0b-1de0-4fb9-99c6-1c7fa3d1a999\":{\"email\":{\"certification\":\"NONE\",\"value\":\"cucumber@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3252525252\"}},\"ID_CONTACTS#f66d9a0e-1de0-4fb9-99c6-1d8fa3d1a000\":{\"email\":{\"certification\":\"NONE\",\"value\":\"cucumber2@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3252525253\"}},\"ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1\":{\"email\":{\"certification\":\"NONE\",\"value\":\"81956dd1-00fd-4423-888b-f77a48d26ba1@test.it\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          "fiscalCode,familyName,email,name,workContacts"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "9b8e2b3f-4c7d-4f91-a6e2-3d1f8a7c5b42"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"email\":{\"certification\":\"SPID\",\"value\":\"\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Polo\"},\"fiscalCode\":\"PLOMRC99Z99Z999X\",\"id\":\"9b8e2b3f-4c7d-4f91-a6e2-3d1f8a7c5b42\",\"name\":{\"certification\":\"SPID\",\"value\":\"Marco\"},\"workContacts\":{\"ID_CONTACTS#3f7c1d2a-8b64-4f91-9a73-2d8e5b6c1f40\":{\"email\":{\"certification\":\"NONE\",\"value\":\"mail1@test.test\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"0000000001\"}},\"ID_CONTACTS#a91e4c57-2d3b-4a8f-b6c1-7e2f9d0a5c13\":{\"email\":{\"certification\":\"NONE\",\"value\":\"mail2@test.test\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"00000000002\"}},\"ID_CONTACTS#6b2f9a10-cd47-4e85-91ab-3f8d2c7e4b56\":{\"email\":{\"certification\":\"NONE\",\"value\":\"mail2@test.test\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"0000000003\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          "fiscalCode,familyName,email,name,workContacts"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "97a511a7-2acc-47b9-afed-2f3c65753ccc"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753ccc\",\"fiscalCode\":\"MRATST80M15F205E\",\"name\":{\"certification\":\"SPID\",\"value\":\"Mario\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Test\"},\"email\":{\"certification\":\"SPID\",\"value\":\"mtest@test.it\"},\"workContacts\":{\"ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          "fiscalCode,familyName,email,name,workContacts"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"35a78332-d038-4bfa-8e85-2cba7f6b7bf7\",\"fiscalCode\":\"blbrki80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"rocky\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Balboa\"},\"email\":{\"certification\":\"SPID\",\"value\":\"personal@test.it\"},\"workContacts\":{\"ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          "name,familyName,email,workContacts"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"35a78332-d038-4bfa-8e85-2cba7f6b7bf7\",\"name\":{\"certification\":\"SPID\",\"value\":\"rocky\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Balboa\"},\"email\":{\"certification\":\"SPID\",\"value\":\"personal@test.it\"},\"workContacts\":{\"ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          "fiscalCode,familyName,email,name,workContacts"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "4a7be530-1c36-41f4-8967-c479fb2d7fa9"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"4a7be530-1c36-41f4-8967-c479fb2d7fa9\",\"fiscalCode\":\"SCDFLV80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"Flavia\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"},\"email\":{\"certification\":\"SPID\",\"value\":\"personal@test.it\"},\"workContacts\":{\"ID_CONTACTS#4a7be530-1c36-41f4-8967-c479fb2d7fa9\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": ".{1,}"
+            }
+          }
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":404,\"body\":{\"title\":\"Not Found\",\"status\":404,\"detail\":\"An error occurred during a downstream service request\",\"instance\":\"/users/35a78332-d038-4bfa-8e85-2cba7f6b7bf7\"}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/user-registry-mock/v1/users/search",
+      "queryStringParameters": {
+        "fl": [
+          "name","familyName","email","workContacts"
+        ]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "PRVTNT80A41H401T"
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"name\":{\"certification\":\"SPID\",\"value\":\"john\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"},\"email\":{\"certification\":\"SPID\",\"value\":\"personal@test.it\"},\"workContacts\":{\"ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}},\"ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1\":{\"email\":{\"certification\":\"NONE\",\"value\":\"81956dd1-00fd-4423-888b-f77a48d26ba1@test.it\"}},\"ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375\":{\"email\":{\"certification\":\"NONE\",\"value\":\"875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3335252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/user-registry-mock/v1/users/search",
+      "queryStringParameters": {
+        "fl": [
+          "name,familyName,email,workContacts"
+        ]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "PRVTNT80A41H401T"
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"name\":{\"certification\":\"SPID\",\"value\":\"john\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"},\"email\":{\"certification\":\"SPID\",\"value\":\"personal@test.it\"},\"workContacts\":{\"ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}},\"ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1\":{\"email\":{\"certification\":\"NONE\",\"value\":\"81956dd1-00fd-4423-888b-f77a48d26ba1@test.it\"}},\"ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375\":{\"email\":{\"certification\":\"NONE\",\"value\":\"875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3335252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/user-registry-mock/v1/users/search",
+      "queryStringParameters": {
+        "fl": [
+          "fiscalCode","familyName","email","name","workContacts"
+        ]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "PRVTNT80A41H401T"
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"fiscalCode\":\"PRVTNT80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"john\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"},\"email\":{\"certification\":\"SPID\",\"value\":\"personal@test.it\"},\"workContacts\":{\"ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}},\"ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1\":{\"email\":{\"certification\":\"NONE\",\"value\":\"81956dd1-00fd-4423-888b-f77a48d26ba1@test.it\"}},\"ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375\":{\"email\":{\"certification\":\"NONE\",\"value\":\"875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3335252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/user-registry-mock/v1/users/search",
+      "queryStringParameters": {
+        "fl": [
+          "fiscalCode,familyName,email,name,workContacts"
+        ]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "PRVTNT80A41H401T"
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"fiscalCode\":\"PRVTNT80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"john\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"},\"email\":{\"certification\":\"SPID\",\"value\":\"personal@test.it\"},\"workContacts\":{\"ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}},\"ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1\":{\"email\":{\"certification\":\"NONE\",\"value\":\"81956dd1-00fd-4423-888b-f77a48d26ba1@test.it\"}},\"ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375\":{\"email\":{\"certification\":\"NONE\",\"value\":\"875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3335252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/user-registry-mock/v1/users/search",
+      "queryStringParameters": {
+        "fl": [
+          "fiscalCode,familyName,email,name,workContacts"
+        ]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "blbrki80A41H401T"
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"35a78332-d038-4bfa-8e85-2cba7f6b7bf7\",\"fiscalCode\":\"blbrki80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"rocky\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Balboa\"},\"email\":{\"certification\":\"SPID\",\"value\":\"personal@test.it\"},\"workContacts\":{\"ID_MAIL#9425e6ea-7d84-4c5e-9196-6f66b62800b2\":{\"email\":{\"certification\":\"NONE\",\"value\":\"r.balboa@regionelazio.it\"}},\"ID_MAIL#123123-55555-efaz-12312-apclacpela\":{\"email\":{\"certification\":\"NONE\",\"value\":\"r.balboa@unibologna.it\"}},\"ID_CONTACTS#35a78332-d038-4bfa-8e85-2cba7f6b7bf7\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}}}}}"    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/user-registry-mock/v1/users/search",
+      "queryStringParameters": {
+        "fl": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": ".{1,}"
+            }
+          }
+        ]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "CCICRA80A41H401T"
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":404,\"body\":{\"title\":\"Not Found\",\"status\":404,\"detail\":\"An error occurred during a downstream service request\",\"instance\":\"/users/35a78332-d038-4bfa-8e85-2cba7f6b7bf7\"}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/user-registry-mock/v1/users",
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "PRVTNT80A41H401T"
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\",\"fiscalCode\":\"PRVTNT80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"john\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"},\"email\":{\"certification\":\"SPID\",\"value\":\"personal@test.it\"},\"workContacts\":{\"ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}},\"ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1\":{\"email\":{\"certification\":\"NONE\",\"value\":\"81956dd1-00fd-4423-888b-f77a48d26ba1@test.it\"}},\"ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375\":{\"email\":{\"certification\":\"NONE\",\"value\":\"875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3335252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "PATCH",
+      "path": "/user-registry-mock/v1/users",
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "PTRCRT80A41H401T"
+        },
+        "matchType": "ONLY_MATCHING_FIELDS"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"97a511a7-2acc-47b9-afed-2f3c65753b4a\"}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "PATCH",
+      "path": "/user-registry-mock/v1/users",
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "blbrki80A41H401T"
+        },
+        "matchType": "ONLY_MATCHING_FIELDS"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"35a78332-d038-4bfa-8e85-2cba7f6b7bf7\"}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "PATCH",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "pathParameters": {
+        "id": [
+          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":204}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "PATCH",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "pathParameters": {
+        "id": [
+          "97a511a7-2acc-47b9-afed-2f3c65753b4a"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":204}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "PATCH",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "pathParameters": {
+        "id": [
+          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":404,\"body\":{\"title\":\"Not Found\",\"status\":404,\"detail\":\"An error occurred during a downstream service request\",\"instance\":\"/users/35a78332-d038-4bfa-8e85-2cba7f6b7bf7\"}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/user-registry-mock/v1/users/search",
+      "queryStringParameters": {
+        "fl": [
+          "name,familyName,fiscalCode"
+        ]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "blbrki80A41H401T"
+        }
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"35a78332-d038-4bfa-8e85-2cba7f6b7bf7\",\"fiscalCode\":\"blbrki80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"rocky\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Balboa\"}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/user-registry-mock/v1/users/search",
+      "queryStringParameters": {
+        "fl": [
+          "name,familyName,fiscalCode"
+        ]
+      },
+      "body": {
+        "type": "JSON",
+        "json": {
+          "fiscalCode": "CCCVTNT80A41H401C"
+        },
+        "matchType": "STRICT"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":404,\"body\":\"Not Found\"}"
+    }
+  }
+]

@@ -1,0 +1,103 @@
+{
+  "id": "group_id",
+  "institutionId": "institution_id",
+  "productId": "product_id",
+  "description": "group_description",
+  "name": "group_name",
+  "status": "ACTIVE",
+  "members": [
+    {
+      "id": "7c83a18e-e4aa-4dc5-8546-f1a3fd7890a9",
+      "user": {
+        "id": "user_id",
+        "fiscalCode": "user_fiscal_code",
+        "name": {
+          "certification": "SPID",
+          "value": "user_name"
+        },
+        "familyName": {
+          "certification": "SPID",
+          "value": "user_family_name"
+        },
+        "email": {
+          "certification": "SPID",
+          "value": "user_email"
+        },
+        "workContacts": {
+          "user_mail_uuid": {
+            "email": {
+              "certification": "SPID",
+              "value": "user_contact_email"
+            }
+          }
+        }
+      },
+      "role": "ADMIN",
+      "products": {
+        "product1": {
+          "id": "product_id",
+          "title": "product_title",
+          "roleInfos": [
+            {
+              "relationshipId": "relationship_id",
+              "role": "role",
+              "status": "status",
+              "selcRole": "ADMIN"
+            }
+          ]
+        }
+      },
+      "status": "active",
+      "institutionId": "institution_id",
+      "userMailUuid": "user_mail_uuid"
+    }
+  ],
+  "createdBy": {
+    "id": "f8bce6fc-848c-4a03-8ef3-01ac36a38299",
+    "fiscalCode": "creator_fiscal_code",
+    "name": {
+      "certification": "SPID",
+      "value": "creator_name"
+    },
+    "familyName": {
+      "certification": "SPID",
+      "value": "creator_family_name"
+    },
+    "email": {
+      "certification": "SPID",
+      "value": "creator_email"
+    },
+    "workContacts": {
+      "contact1": {
+        "email": {
+          "certification": "SPID",
+          "value": "creator_contact_email"
+        }
+      }
+    }
+  },
+  "modifiedBy": {
+    "id": "3f62c13b-9d33-4768-9a43-0e10a0bea2a9",
+    "fiscalCode": "modifier_fiscal_code",
+    "name": {
+      "certification": "SPID",
+      "value": "modifier_name"
+    },
+    "familyName": {
+      "certification": "SPID",
+      "value": "modifier_family_name"
+    },
+    "email": {
+      "certification": "SPID",
+      "value": "modifier_email"
+    },
+    "workContacts": {
+      "contact1": {
+        "email": {
+          "certification": "SPID",
+          "value": "modifier_contact_email"
+        }
+      }
+    }
+  }
+}

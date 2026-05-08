@@ -9,7 +9,7 @@ import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.model.FormItem;
-import it.pagopa.selfcare.onboarding.service.ProxyRegistryService;
+import it.pagopa.selfcare.onboarding.service.RegistryProxyService;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -31,16 +31,16 @@ import static jakarta.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 public class OnboardingUtils {
 
 
-    private final ProxyRegistryService proxyRegistryService;
+    private final RegistryProxyService registryProxyService;
 
-    public OnboardingUtils(ProxyRegistryService proxyRegistryService) {
-        this.proxyRegistryService = proxyRegistryService;
+    public OnboardingUtils(RegistryProxyService registryProxyService) {
+        this.registryProxyService = registryProxyService;
     }
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public Uni<UOResource> getUoFromRecipientCode(String recipientCode) {
-        return proxyRegistryService.findUoByRecipientCode(recipientCode, null)
+        return registryProxyService.findUoByRecipientCode(recipientCode, null)
                 .onFailure(WebApplicationException.class)
                 .recoverWithUni(ex -> ((WebApplicationException) ex).getResponse().getStatus() == 404
                         ? Uni.createFrom().failure(new ResourceNotFoundException(

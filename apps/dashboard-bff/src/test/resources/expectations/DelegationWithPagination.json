@@ -1,0 +1,44 @@
+{
+  "delegations": [
+    {
+      "id": "1",
+      "institutionId": "inst1",
+      "institutionName": "Institution 1",
+      "brokerId": "broker1",
+      "brokerName": "Broker 1",
+      "brokerTaxCode": "123456",
+      "brokerType": "type1",
+      "productId": "product1",
+      "institutionRootName": "Root 1",
+      "type": "AOO",
+      "createdAt": "2022-01-01T00:00:00+00:00",
+      "updatedAt": "2022-01-01T00:00:00+00:00",
+      "institutionType": "PSP",
+      "status": "ACTIVE",
+      "taxCode": "123456"
+    },
+    {
+      "id": "2",
+      "institutionId": "inst2",
+      "institutionName": "Institution 2",
+      "brokerId": "broker2",
+      "brokerName": "Broker 2",
+      "brokerTaxCode": "654321",
+      "brokerType": "type2",
+      "productId": "product2",
+      "institutionRootName": "Root 2",
+      "type": "PT",
+      "createdAt": "2022-01-02T00:00:00+00:00",
+      "updatedAt": "2022-01-02T00:00:00+00:00",
+      "institutionType": "PSP",
+      "status": "ACTIVE",
+      "taxCode": "654321"
+    }
+  ],
+  "pageInfo": {
+    "pageSize": 10,
+    "pageNo": 1,
+    "totalElements": 2,
+    "totalPages": 1
+  }
+}

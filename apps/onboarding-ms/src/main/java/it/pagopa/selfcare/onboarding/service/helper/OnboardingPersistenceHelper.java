@@ -122,6 +122,20 @@ public class OnboardingPersistenceHelper {
         final String productId = onboarding.getProductId();
         final String subunitCode = onboarding.getInstitution().getSubunitCode();
 
+        return userRegistryHelper.resolveTaxCodeForQuery(taxCode)
+                .onItem().transformToUni(resolvedTaxCode -> {
+                    if (Objects.isNull(resolvedTaxCode) && UserRegistryHelper.isPersonalFiscalCode(taxCode)) {
+                        return Uni.createFrom().failure(new ResourceNotFoundException(
+                                String.format("User not found on PDV for taxCode %s", taxCode)));
+                    }
+                    String resolvedOriginId = UserRegistryHelper.isPersonalFiscalCode(taxCode) ? resolvedTaxCode : originId;
+                    return doAddReferencedOnboardingId(onboarding, resolvedTaxCode, subunitCode, origin, resolvedOriginId, productId);
+                });
+    }
+
+    private Uni<Onboarding> doAddReferencedOnboardingId(Onboarding onboarding, String taxCode,
+                                                         String subunitCode, String origin,
+                                                         String originId, String productId) {
         Multi<Onboarding> onboardings = getOnboardingByFilters(taxCode, subunitCode, origin, originId, productId);
 
         Uni<Onboarding> current = onboardings
@@ -221,6 +235,7 @@ public class OnboardingPersistenceHelper {
                 ? product.getParent().getRoleMappings(onboarding.getInstitution().getInstitutionType().name())
                 : product.getRoleMappings(onboarding.getInstitution().getInstitutionType().name());
     }
+
 }
 
 

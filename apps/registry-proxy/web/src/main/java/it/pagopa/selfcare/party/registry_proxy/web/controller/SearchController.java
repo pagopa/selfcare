@@ -80,7 +80,7 @@ public class SearchController {
                                                          @RequestParam(required = false) List<String> statuses,
                                                          @RequestParam(defaultValue = "0") @PositiveOrZero Long page,
                                                          @RequestParam(defaultValue = "15") @Positive Long pageSize,
-                                                         @RequestParam(defaultValue = "description asc") String orderBy) {
+                                                         @RequestParam(required = false) List<String> orderBy) {
     final OnboardingIndexSearch onboardingIndexSearch = searchService.searchOnboarding(searchText, products,
             institutionTypes, statuses, page, pageSize, orderBy);
     return onboardingMapper.toOnboardingIndexSearchResource(onboardingIndexSearch);

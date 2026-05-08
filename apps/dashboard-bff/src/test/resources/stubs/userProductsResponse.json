@@ -1,0 +1,28 @@
+{
+  "userId": "userID",
+  "institutions": [
+    {
+      "institutionId": "institutionId1",
+      "institutionName": "a",
+      "status": "ACTIVE",
+      "role": "MANAGER"
+    },
+    {
+      "institutionId": "institutionId2",
+      "institutionName": "b",
+      "status": "ACTIVE",
+      "role": "MANAGER"
+    },
+    {
+      "institutionId": "institutionId3",
+      "institutionName": "c",
+      "status": "ACTIVE",
+      "role": "MANAGER"
+    },
+    {
+      "institutionId": "institutionId4",
+      "status": "ACTIVE",
+      "role": "MANAGER"
+    }
+  ]
+}

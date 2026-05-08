@@ -1,0 +1,9 @@
+{
+  "id": "id",
+  "from": "john.doe@example.com",
+  "to": "jane.smith@example.com",
+  "productId": "67890",
+  "institutionFromName": "Institution A",
+  "institutionToName": "Institution B",
+  "type": "AOO"
+}
