@@ -1,7 +1,9 @@
 # general
 locals {
-  project      = "${var.prefix}-${var.env_short}"
-  rg_apim_name = "${local.project}-api-v2-rg"
+  project       = "${var.prefix}-${var.env_short}"
+  rg_apim_name  = "${local.project}-api-v2-rg"
+  api_domain    = "api.${var.dns_zone_prefix}.${var.external_domain}"
+  apim_base_url = "${local.api_domain}/external"
 }
 
 variable "prefix" {

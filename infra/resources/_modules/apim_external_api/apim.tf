@@ -1,11 +1,3 @@
-locals {
-  # apim_cert_name_proxy_endpoint = format("%s-proxy-endpoint-cert", local.project)
-  api_domain = "api.${var.dns_zone_prefix}.${var.external_domain}"
-  # logo_api_domain               = format("%s.%s", var.dns_zone_prefix, var.external_domain)
-  apim_base_url = "${local.api_domain}/external"
-}
-
-
 #########
 ## API ##
 #########
