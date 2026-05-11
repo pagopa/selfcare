@@ -666,5 +666,5 @@ module "apim" {
   apim_publisher_name              = "pagoPA SelfCare ${upper(local.env)}"
   apim_sku                         = "Premium_1"
   app_gateway_api_certificate_name = local.app_gateway_api_certificate_name
-
+  application_insight_enabled      = true
 }
