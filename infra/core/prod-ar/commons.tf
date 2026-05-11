@@ -647,3 +647,24 @@ module "ai_search" {
   adgroup_admin_object_id      = module.key_vault.adgroup_admin_id
   adgroup_developers_object_id = module.key_vault.adgroup_developers_id
 }
+
+
+
+###############################################################################
+# API Management Service
+###############################################################################
+module "apim" {
+  source = "../_modules/apim"
+
+  prefix                           = local.prefix
+  env_short                        = local.env_short
+  location                         = local.location
+  tags                             = local.tags
+  dns_zone_prefix                  = local.dns_zone_prefix
+  external_domain                  = local.external_domain
+  cidr_subnet_apim                 = local.cidr_subnet_apim
+  apim_publisher_name              = "pagoPA SelfCare ${upper(local.env)}"
+  apim_sku                         = "Premium_1"
+  app_gateway_api_certificate_name = local.app_gateway_api_certificate_name
+
+}
