@@ -23,13 +23,13 @@ data "azurerm_application_insights" "ai" {
 }
 
 data "azurerm_storage_account" "checkout" {
-  name                = replace("${local.project}-checkout-sa", "-", "")
+  name                = replace("${local.project}-${var.location_short}-ar-checkout-st-01", "-", "")
   resource_group_name = "${local.project}-checkout-fe-rg"
 }
 
 data "azurerm_storage_account" "checkout_pnpg" {
-  name                = replace("${local.project}-weu-pnpg-checkout-sa", "-", "")
-  resource_group_name = "${local.project}-weu-pnpg-checkout-fe-rg"
+  name                = replace("${local.project}-${var.location_short}-pnpg-checkout-st-01", "-", "")
+  resource_group_name = "${local.project}-${var.location_short}-pnpg-checkout-fe-rg"
 }
 
 data "azurerm_key_vault_secret" "apim_publisher_email" {

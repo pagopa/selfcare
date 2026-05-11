@@ -37,6 +37,11 @@ variable "location" {
   default = "westeurope"
 }
 
+variable "location_short" {
+  type    = string
+  default = "weu"
+}
+
 variable "tags" {
   type = map(any)
   default = {
@@ -96,10 +101,6 @@ variable "ca_pnpg_suffix_dns_private_name" {
   description = "CA PNPG suffix private DNS record"
 }
 
-variable "location_short" {
-  type    = string
-  default = "weu"
-}
 
 variable "domain" {
   type = string
