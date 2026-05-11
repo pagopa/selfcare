@@ -62,8 +62,8 @@ jobs:
         working-directory: apps/onboarding-bff
         run: |
           mkdir -p docker-logs
-          for s in $(docker compose -f src/test/resources/docker-compose.yml config --services); do
-            docker compose -f src/test/resources/docker-compose.yml logs $s > docker-logs/$s.log 2>&1 || true
+          for s in $(docker compose -f app/src/test/resources/docker-compose.yml config --services); do
+            docker compose -f app/src/test/resources/docker-compose.yml logs $s > docker-logs/$s.log 2>&1 || true
           done
 
       - name: Upload logs
