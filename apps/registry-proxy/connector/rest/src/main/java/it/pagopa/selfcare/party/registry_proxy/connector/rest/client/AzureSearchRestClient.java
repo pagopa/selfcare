@@ -35,6 +35,7 @@ public interface AzureSearchRestClient {
 
   @GetMapping("${rest-client.ai-search.onboarding.search.path}")
   SearchServiceIndexResponse<SearchServiceOnboardingIndex> searchOnboarding(@RequestParam(value = "search", required = false) String search,
+                                                                            @RequestParam(value = "searchMode", required = false) String searchMode,
                                                                             @RequestParam(value = "$filter", required = false) String filter,
                                                                             @RequestParam(value = "$count", required = false) Boolean count,
                                                                             @RequestParam(value = "$top", required = false) Long top,
