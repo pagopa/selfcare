@@ -62,7 +62,11 @@ public class CucumberSuite {
 
       composeContainer.start();
 
-      Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
+      if (System.getenv("CI") == null) {
+        Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
+      } else {
+        log.info("CI detected (CI={}). Skipping shutdown hook so external log collection can run", System.getenv("CI"));
+      }
 
       log.info("Test containers started successfully");
     } catch (URISyntaxException e) {
