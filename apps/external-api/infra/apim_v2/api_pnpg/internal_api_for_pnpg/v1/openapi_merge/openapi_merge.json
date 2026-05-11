@@ -1,0 +1,41 @@
+{
+    "inputs": [
+        {
+          "description": {
+              "append":true
+          },
+          "inputFile": "./openapi_template.json"
+        },
+        {
+          "inputFile": "../../../../../../src/main/resources/swagger/api-docs.json",
+          "operationSelection": {
+            "includeTags": ["internal-pnpg"]
+          }
+        },
+      {
+        "inputFile": "../../../../../../../docs/pagopa/selfcare-institution-ms/openapi.json",
+        "operationSelection": {
+          "includeTags": ["internal-pnpg"]
+        }
+      },
+      {
+        "inputFile": "../../../../../../../docs/pagopa/selfcare-user-ms/openapi.json",
+        "operationSelection": {
+          "includeTags": ["internal-pnpg"]
+        }
+      },
+      {
+        "inputFile": "../../../../../../../docs/pagopa/selfcare-onboarding-ms/openapi.json",
+        "operationSelection": {
+          "includeTags": ["internal-pnpg"]
+        }
+      },
+      {
+        "inputFile": "../../../../../../../docs/pagopa/selfcare-user-group-ms/openapi.json",
+        "operationSelection": {
+          "includeTags": ["internal-pnpg"]
+        }
+      }
+    ], 
+    "output": "../openapi.json"
+  }

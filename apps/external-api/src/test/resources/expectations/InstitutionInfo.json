@@ -1,0 +1,118 @@
+[
+  {
+    "id": "07532a3f-1cf9-4d60-8b15-e2c146b7273a",
+    "externalId": "example_external_id",
+    "description": "example_description",
+    "status": "example_status",
+    "taxCode": "example_tax_code",
+    "address": "example_address",
+    "digitalAddress": "example_digital_address",
+    "pricingPlan": "example_pricing_plan",
+    "zipCode": "example_zip_code",
+    "institutionLocation": {
+      "city": "example_city",
+      "county": "example_county",
+      "country": "example_country"
+    },
+    "category": "example_category",
+    "billing": {
+      "vatNumber": "example_vat_number",
+      "recipientCode": "example_recipient_code",
+      "publicServices": true
+    },
+    "origin": "example_origin",
+    "originId": "example_origin_id",
+    "institutionType": "PA",
+    "userRole": "MANAGER",
+    "productRoles": [
+      "role1",
+      "role2"
+    ],
+    "businessData": {
+      "rea": "example_business_type",
+      "shareCapital": "example_share_capital",
+      "businessRegisterPlace": "example_business_register_place"
+    },
+    "supportContact": {
+      "supportEmail": "example_support_email",
+      "supportPhone": "example_support_phone"
+    },
+    "paymentServiceProvider": {
+      "abiCode": "example_abi_code",
+      "businessRegisterNumber": "example_business_register_number",
+      "legalRegisterName": "example_legal_register_name",
+      "legalRegisterNumber": "example_legal_register_number",
+      "vatNumberGroup": false
+    },
+    "dataProtectionOfficer": {
+      "address": "example_dpo_address",
+      "email": "example_dpo_email",
+      "pec": "example_dpo_pec"
+    },
+    "subunitCode": "example_subunit_code",
+    "subunitType": "example_subunit_type",
+    "rootParent": {
+      "id": "example_parent_id",
+      "description": "example_parent_description"
+    },
+    "aooParentCode": "example_aoo_parent_code"
+  },
+  {
+    "id": "07532a3f-1cf9-4d60-8b15-e2c146b7273b",
+    "externalId": "example_external_id",
+    "description": "example_description",
+    "status": "example_status",
+    "taxCode": "example_tax_code",
+    "address": "example_address",
+    "digitalAddress": "example_digital_address",
+    "pricingPlan": "example_pricing_plan",
+    "zipCode": "example_zip_code",
+    "institutionLocation": {
+      "city": "example_city",
+      "county": "example_county",
+      "country": "example_country"
+    },
+    "category": "example_category",
+    "billing": {
+      "vatNumber": "example_vat_number",
+      "recipientCode": "example_recipient_code",
+      "publicServices": true
+    },
+    "origin": "example_origin",
+    "originId": "example_origin_id",
+    "institutionType": "PA",
+    "userRole": "MANAGER",
+    "productRoles": [
+      "role1",
+      "role2"
+    ],
+    "businessData": {
+      "rea": "example_business_type",
+      "shareCapital": "example_share_capital",
+      "businessRegisterPlace": "example_business_register_place"
+    },
+    "supportContact": {
+      "supportEmail": "example_support_email",
+      "supportPhone": "example_support_phone"
+    },
+    "paymentServiceProvider": {
+      "abiCode": "example_abi_code",
+      "businessRegisterNumber": "example_business_register_number",
+      "legalRegisterName": "example_legal_register_name",
+      "legalRegisterNumber": "example_legal_register_number",
+      "vatNumberGroup": false
+    },
+    "dataProtectionOfficer": {
+      "address": "example_dpo_address",
+      "email": "example_dpo_email",
+      "pec": "example_dpo_pec"
+    },
+    "subunitCode": "example_subunit_code",
+    "subunitType": "example_subunit_type",
+    "rootParent": {
+      "id": "example_parent_id",
+      "description": "example_parent_description"
+    },
+    "aooParentCode": "example_aoo_parent_code"
+  }
+]

@@ -5,9 +5,9 @@ resource "azurerm_container_app_job" "container_app_job" {
   workload_profile_name        = var.workload_profile_name
   tags                         = var.tags
 
-  location                     = data.azurerm_resource_group.resource_group_app.location
-  replica_timeout_in_seconds   = var.replica_timeout_in_seconds
-  replica_retry_limit          = var.replica_retry_limit
+  location                   = data.azurerm_resource_group.resource_group_app.location
+  replica_timeout_in_seconds = var.replica_timeout_in_seconds
+  replica_retry_limit        = var.replica_retry_limit
 
   # Managed Identity
   identity {

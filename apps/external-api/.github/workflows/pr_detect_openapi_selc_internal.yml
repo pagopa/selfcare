@@ -1,0 +1,39 @@
+name: APIM Selc Internal - Detect Conflict and Update
+on:
+  pull_request:
+    branches:
+      - main
+      - releases/**
+    paths:
+      - "infra/apim_v2/api/ms_internal_api/v1/**"
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    
+permissions:
+  contents: write
+
+jobs:
+  selc_detect_internal_dev:
+    uses: ./.github/workflows/call_detect_openapi.yml
+    name: "[DEV] Selc Internal - Detect Rules and Conflict"
+    secrets: inherit
+    with:
+        path_openapi_docs: infra/apim_v2/api/ms_internal_api/v1/openapi.dev.json
+
+  selc_detect_internal_uat:
+    uses: ./.github/workflows/call_detect_openapi.yml
+    name: "[UAT] Selc Internal - Detect Rules and Conflict"
+    secrets: inherit
+    with:
+        path_openapi_docs: infra/apim_v2/api/ms_internal_api/v1/openapi.uat.json
+
+  selc_detect_internal_prod:
+    uses: ./.github/workflows/call_detect_openapi.yml
+    name: "[PROD] Selc Internal - Detect Rules and Conflict"
+    secrets: inherit
+    with:
+        path_openapi_docs: infra/apim_v2/api/ms_internal_api/v1/openapi.prod.json

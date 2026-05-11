@@ -1,0 +1,18 @@
+[
+        {
+          "billing": {
+            "publicServices": true,
+            "recipientCode": "recipientCode",
+            "vatNumber": "vatNumber"
+          },
+          "closedAt": "2019-01-01T00:00:00Z",
+          "contract": "contract",
+          "createdAt": "2019-01-01T00:00:00Z",
+          "pricingPlan": "pricingPlan",
+          "productId": "productId",
+          "status": "ACTIVE",
+          "tokenId": "tokenId",
+          "updatedAt": "2019-01-01T00:00:00Z"
+        }
+]
+

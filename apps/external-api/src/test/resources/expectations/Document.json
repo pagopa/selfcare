@@ -1,0 +1,17 @@
+{
+  "id": "tokenId",
+  "type": "INSTITUTION",
+  "onboardingId": "onboardingId",
+  "productId": "productId",
+  "attachmentName": "attachmentName",
+  "checksum": "checksum",
+  "contractVersion": "contractVersion",
+  "contractTemplate": "contractTemplate",
+  "contractSigned": "contractSigned",
+  "contractFilename": "contractFilename",
+  "rootOnboardingId": "rootOnboardingId",
+  "createdAt": "2022-12-31T23:59:59.999",
+  "updatedAt": "2022-12-31T23:59:59.999",
+  "deletedAt": "2022-12-31T23:59:59.999",
+  "activatedAt": "2022-12-31T23:59:59.999"
+}

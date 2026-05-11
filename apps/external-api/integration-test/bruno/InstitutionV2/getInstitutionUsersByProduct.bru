@@ -1,0 +1,47 @@
+meta {
+  name: getInstitutionUsersByProduct
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{apiBaseUrl}}/external/v2/institutions/{{institutionId}}/users
+  body: json
+  auth: inherit
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeyPN}}
+}
+
+script:post-response {
+  test("getInstitutionUserByProduct ok", function () {
+      expect(res.getStatus()).to.equal(200);
+  
+      const jsonData = res.getBody();
+  
+      // Check that the array is not empty
+      expect(jsonData).to.be.an('array').that.is.not.empty;
+  
+      // Function to check each user object
+      function checkUserFields(user) {
+          // Check that the user has all the required keys
+          expect(user).to.have.all.keys("id", "name", "surname", "email", "roles", "role");
+          // Check types of each field
+          expect(user.id).to.be.a('string');
+          expect(user.name).to.be.a('string');
+          expect(user.surname).to.be.a('string');
+          expect(user.email).to.be.a('string');
+          expect(user.roles).to.be.an('array');
+          expect(user.role).to.be.a('string');
+      }
+  
+      // Run the check on each user in the array
+      jsonData.forEach(user => checkUserFields(user));
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

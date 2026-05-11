@@ -1,0 +1,29 @@
+{
+  "importContract": {
+    "contractType": "V2.2(29 luglio)",
+    "fileName": "Accordo di Adesione IO con allegati-signed.0000012345.pdf",
+    "filePath": "SICILIA/ENNA-00123456789/",
+    "onboardingDate": "2024-07-15T10:20:30.000Z"
+  },
+  "users": [
+    {
+      "email": "mario.rossi@comune.example.it",
+      "role": "MANAGER",
+      "taxCode": "RSSMRA80A01F205Z",
+      "name": "Mario",
+      "surname": "Rossi"
+    },
+    {
+      "email": "luigi.verdi@comune.example.it",
+      "role": "MANAGER",
+      "taxCode": "VRDLGU85B01Z404Y",
+      "name": "Luigi",
+      "surname": "Verdi"
+    }
+  ],
+  "aggregates": [
+    {
+      "taxCode": "01234567890"
+    }
+  ]
+}

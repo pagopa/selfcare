@@ -28,6 +28,7 @@ on:
           - iam
           - delegation-cdc
           - document-ms
+          - external-api
           - institution-ms
           - institution-send-mail-scheduler
           - onboarding-bff

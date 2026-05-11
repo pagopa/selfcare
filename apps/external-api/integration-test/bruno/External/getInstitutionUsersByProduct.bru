@@ -1,0 +1,25 @@
+meta {
+  name: getInstitutionUsersByProduct
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{apiBaseUrl}}/external/v2/institutions/{{institutionId}}/users
+  body: json
+  auth: inherit
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeyPN}}
+}
+
+script:post-response {
+  test("getInstitutionUsersByProduct ok", function () {
+  expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}

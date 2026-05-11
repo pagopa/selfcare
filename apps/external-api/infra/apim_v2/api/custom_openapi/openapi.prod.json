@@ -1,0 +1,517 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "External API service",
+    "description": "This service is the proxy for external services",
+    "version": "2.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://${host}/${basePath}"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Institution",
+      "description": "Institution V 2 Controller"
+    },
+    {
+      "name": "Token",
+      "description": "Token Controller"
+    },
+    {
+      "name": "User",
+      "description": "User V 2 Controller"
+    },
+    {
+      "name": "Delegation",
+      "description": "Delegation Controller"
+    },
+    {
+      "name": "UserGroup",
+      "description": "User group endpoint CRUD operations"
+    }
+  ],
+  "paths": {
+    "/institutions/": {
+      "get": {
+        "tags": [
+          "institutions",
+          "external-v2"
+        ],
+        "summary": "getInstitutions",
+        "deprecated": true,
+        "description": "The service retrieves all the onboarded institutions related to the provided user and the product retrieved from Subscription Key. It is deprecated in favor of endpoint /users?institutionId={institutionId}",
+        "operationId": "getInstitutionsUsingGETDeprecated",
+        "parameters": [
+          {
+            "name": "userIdForAuth",
+            "in": "query",
+            "description": "User's unique identifier",
+            "required": true,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InstitutionResource"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
+    "/message/{messageId}/status/{status}": {
+      "post": {
+        "tags": [
+          "external-v2"
+        ],
+        "summary": "messageAcknowledgment",
+        "description": "Service to acknowledge message consumption by a consumer",
+        "operationId": "messageAcknowledgmentUsingPOST",
+        "parameters": [
+          {
+            "name": "messageId",
+            "in": "path",
+            "description": "Kafka message unique identifier",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "path",
+            "description": "Kafka message consumption acknowledgment status",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACK",
+                "NACK"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AckPayloadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Problem": {
+        "title": "Problem",
+        "required": [
+          "status",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string",
+            "description": "Human-readable description of this specific problem."
+          },
+          "instance": {
+            "type": "string",
+            "description": "A URI that describes where the problem occurred."
+          },
+          "invalidParams": {
+            "type": "array",
+            "description": "A list of invalid parameters details.",
+            "items": {
+              "$ref": "#/components/schemas/InvalidParam"
+            }
+          },
+          "status": {
+            "type": "integer",
+            "description": "The HTTP status code.",
+            "format": "int32",
+            "example": 500
+          },
+          "title": {
+            "type": "string",
+            "description": "Short human-readable summary of the problem."
+          },
+          "type": {
+            "type": "string",
+            "description": "A URL to a page with more details regarding the problem."
+          }
+        },
+        "description": "A \"problem detail\" as a way to carry machine-readable details of errors (https://datatracker.ietf.org/doc/html/rfc7807)"
+      },
+      "InvalidParam": {
+        "title": "InvalidParam",
+        "required": [
+          "name",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Invalid parameter name."
+          },
+          "reason": {
+            "type": "string",
+            "description": "Invalid parameter reason."
+          }
+        }
+      },
+      "AckPayloadRequest": {
+        "title": "AckPayloadRequest",
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Acknowledgment request payload message"
+          }
+        }
+      },
+      "AssistanceContactsResource": {
+        "title": "AssistanceContactsResource",
+        "type": "object",
+        "properties": {
+          "supportEmail": {
+            "type": "string",
+            "description": "Institution's support email contact"
+          },
+          "supportPhone": {
+            "type": "string",
+            "description": "Institution's support phone contact"
+          }
+        }
+      },
+      "CompanyInformationsResource": {
+        "title": "CompanyInformationsResource",
+        "type": "object",
+        "properties": {
+          "businessRegisterPlace": {
+            "type": "string",
+            "description": "Institution's business register place"
+          },
+          "rea": {
+            "type": "string",
+            "description": "Institution's REA"
+          },
+          "shareCapital": {
+            "type": "string",
+            "description": "Institution's share capital value"
+          }
+        }
+      },
+      "RootParentResponse": {
+        "title": "RootParentResponse",
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          }
+        }
+      },
+      "DpoDataResource": {
+        "title": "DpoDataResource",
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "DPO's address"
+          },
+          "email": {
+            "type": "string",
+            "description": "DPO's email",
+            "format": "email",
+            "example": "email@example.com"
+          },
+          "pec": {
+            "type": "string",
+            "description": "DPO's PEC",
+            "format": "email",
+            "example": "email@example.com"
+          }
+        }
+      },
+      "RootParentResource": {
+        "title": "RootParentResource",
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "swagger.external_api.institutions.model.parentDescription"
+          },
+          "id": {
+            "type": "string",
+            "description": "Institution's unique internal Id"
+          }
+        }
+      },
+      "PspDataResource": {
+        "title": "PspDataResource",
+        "type": "object",
+        "properties": {
+          "abiCode": {
+            "type": "string",
+            "description": "PSP's ABI code"
+          },
+          "businessRegisterNumber": {
+            "type": "string",
+            "description": "PSP's Business Register number"
+          },
+          "legalRegisterName": {
+            "type": "string",
+            "description": "PSP's legal register name"
+          },
+          "legalRegisterNumber": {
+            "type": "string",
+            "description": "PSP's legal register number"
+          },
+          "vatNumberGroup": {
+            "type": "boolean",
+            "description": "PSP's Vat Number group",
+            "example": false
+          }
+        }
+      },
+      "InstitutionResource": {
+        "title": "InstitutionResource",
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "Institution's physical address"
+          },
+          "aooParentCode": {
+            "type": "string",
+            "description": "AOO unit parent institution Code"
+          },
+          "assistanceContacts": {
+            "description": "Institution's assistance contacts",
+            "$ref": "#/components/schemas/AssistanceContactsResource"
+          },
+          "city": {
+            "type": "string",
+            "description": "Institution's physical address city"
+          },
+          "companyInformations": {
+            "description": "GPS, SCP, PT optional data",
+            "$ref": "#/components/schemas/CompanyInformationsResource"
+          },
+          "country": {
+            "type": "string",
+            "description": "Institution's physical address country"
+          },
+          "county": {
+            "type": "string",
+            "description": "Institution's physical address county"
+          },
+          "description": {
+            "type": "string",
+            "description": "Institution's legal name"
+          },
+          "digitalAddress": {
+            "type": "string",
+            "description": "Institution's digitalAddress"
+          },
+          "dpoData": {
+            "description": "Data Protection Officer (DPO) specific data",
+            "$ref": "#/components/schemas/DpoDataResource"
+          },
+          "externalId": {
+            "type": "string",
+            "description": "Institution's unique external identifier"
+          },
+          "id": {
+            "type": "string",
+            "description": "Institution's unique internal Id",
+            "format": "uuid"
+          },
+          "institutionType": {
+            "type": "string",
+            "description": "Institution's type",
+            "enum": [
+              "AS",
+              "GSP",
+              "PA",
+              "PG",
+              "PSP",
+              "PT",
+              "SA",
+              "SCP",
+              "REC",
+              "CON"
+            ]
+          },
+          "origin": {
+            "type": "string",
+            "description": "Institution data origin"
+          },
+          "originId": {
+            "type": "string",
+            "description": "Institution's details origin Id"
+          },
+          "pspData": {
+            "description": "Payment Service Provider (PSP) specific data",
+            "$ref": "#/components/schemas/PspDataResource"
+          },
+          "recipientCode": {
+            "type": "string",
+            "description": "Billing recipient code, not required only for institutionType SA"
+          },
+          "rootParent": {
+            "description": "Institution AOO/UO root institutionDescription",
+            "$ref": "#/components/schemas/RootParentResource"
+          },
+          "status": {
+            "type": "string",
+            "description": "Institution onboarding status"
+          },
+          "subunitCode": {
+            "type": "string",
+            "description": "Institutions AOO/UO unit Code"
+          },
+          "subunitType": {
+            "type": "string",
+            "description": "Institutions AOO/UO unit type"
+          },
+          "taxCode": {
+            "type": "string",
+            "description": "Institution's taxCode"
+          },
+          "userProductRoles": {
+            "type": "array",
+            "description": "Logged user's roles on product",
+            "items": {
+              "type": "string"
+            }
+          },
+          "zipCode": {
+            "type": "string",
+            "description": "Institution's zipCode"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "apiKeyHeader": {
+        "type": "apiKey",
+        "name": "Ocp-Apim-Subscription-Key",
+        "in": "header"
+      }
+    }
+  }
+}

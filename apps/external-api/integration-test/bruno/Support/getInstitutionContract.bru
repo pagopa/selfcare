@@ -1,0 +1,39 @@
+meta {
+  name: getInstitutionContract
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{apiBaseUrl}}/external/support/v1/institutions/{{institutionId}}/contract?productId={{productId}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  ~productId: {{productId}}
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeySupport}}
+}
+
+script:post-response {
+  test("getInstitutionContract ok", function() {
+    const status = res.getStatus();
+    // 200 OK or 404 Not Found
+    expect([200, 404]).to.include(status);
+
+    if (status === 200) {
+      // Expect binary content (string base64 or bytes) or octet-stream
+      const headers = res.getHeaders();
+      expect(headers).to.have.property('content-type');
+      // content-type should contain 'application/octet-stream' or similar
+      expect(res.getHeaders()['content-type'].toLowerCase()).to.include('application/octet-stream');
+    }
+  });
+}
+
+settings {
+  encodeUrl: true
+}

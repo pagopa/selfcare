@@ -1,0 +1,20 @@
+[
+  {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "name": "John",
+    "surname": "Doe",
+    "email":"contact1@work.it",
+    "fiscalCode": "NLLGPJ67L30L783W",
+    "roles": ["admin","operator"],
+    "role": "MANAGER"
+  },
+  {
+    "id": "123e4567-e89b-12d3-a456-426614174555",
+    "name": "John2",
+    "surname": "Doe2",
+    "email":"contact1@work.it",
+    "fiscalCode": "NLLGPJ67L30L783S",
+    "roles": ["admin"],
+    "role": "MANAGER"
+  }
+]

@@ -1,0 +1,25 @@
+<policies>
+  <inbound>
+    <base/>
+    <set-header name="x-selfcare-uid" exists-action="override">
+      <value>@(context.Request.Headers.GetValueOrDefault("x-selfcare-uid",
+        ""))
+      </value>
+    </set-header>
+
+    <set-query-parameter name="productId" exists-action="override">
+      <value>@((string)context.Variables["productId"])</value>
+    </set-query-parameter>
+
+    <set-backend-service base-url="${MS_BACKEND_URL}" />
+  </inbound>
+  <backend>
+    <base/>
+  </backend>
+  <outbound>
+    <base/>
+  </outbound>
+  <on-error>
+    <base/>
+  </on-error>
+</policies>
