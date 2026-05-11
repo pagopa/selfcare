@@ -13,9 +13,8 @@ on:
           - document-ms
           - institution-ms
           - institution-send-mail-scheduler
+          - onboarding
           - onboarding-bff
-          - onboarding-cdc
-          - onboarding-ms
           - product
           - product-cdc
           - registry-proxy
