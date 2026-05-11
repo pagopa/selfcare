@@ -59,11 +59,11 @@ jobs:
 
       - name: Collect service logs
         if: always()
-        working-directory: apps/onboarding-functions
+        working-directory: apps/onboarding-bff
         run: |
           mkdir -p docker-logs
-          for s in $(docker compose -f src/test/resources/docker-compose.yml config --services); do
-            docker compose -f src/test/resources/docker-compose.yml logs $s > docker-logs/$s.log 2>&1 || true
+          for s in $(docker compose -f app/src/test/resources/docker-compose.yml config --services); do
+            docker compose -f app/src/test/resources/docker-compose.yml logs $s > docker-logs/$s.log 2>&1 || true
           done
 
       - name: Upload logs
@@ -71,5 +71,5 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: docker-logs
-          path: apps/onboarding-functions/docker-logs
+          path: apps/onboarding-bff/docker-logs
           retention-days: 1
