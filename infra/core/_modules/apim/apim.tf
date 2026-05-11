@@ -100,7 +100,7 @@ module "apim" {
   sign_up_enabled = false
   lock_enable     = false
 
-  management_logger_applicaiton_insight_enabled = false
+  management_logger_applicaiton_insight_enabled = var.application_insight_enabled
 
   application_insights = {
     enabled             = true
@@ -111,4 +111,10 @@ module "apim" {
 
   tags = var.tags
 }
+
+# # Step 1: destroy the diagnostic that references the logger
+# terraform apply -destroy -target='module.apim.module.apim.azurerm_api_management_diagnostic.this[0]'
+
+# # Step 2: apply normally — Terraform will recreate both the logger and diagnostic
+# terraform apply
 
