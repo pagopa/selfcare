@@ -4,15 +4,15 @@
 module "local" {
   source = "../../_modules/local-env"
 
-  env       = "dev"
-  env_short = "d"
+  env       = "prod"
+  env_short = "p"
   domain    = "ar"
 
-  dns_zone_prefix                = "dev.selfcare"
-  api_dns_zone_prefix            = "api.dev.selfcare"
-  private_dns_name_domain        = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
-  container_app_environment_name = "selc-d-cae-002"
-  ca_resource_group_name         = "selc-d-container-app-002-rg"
+  dns_zone_prefix                = "selfcare"
+  api_dns_zone_prefix            = "api.selfcare"
+  private_dns_name_domain        = "lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-p-cae-002"
+  ca_resource_group_name         = "selc-p-container-app-002-rg"
   container_app_min_replicas     = 0
 }
 
@@ -40,18 +40,18 @@ locals {
 
 
   # apim
-  apim_publisher_name = "pagoPA SelfCare DEV"
+  apim_publisher_name = "pagoPA SelfCare UAT"
   apim_sku            = "Developer_1"
 
   # aks
-  private_dns_name            = "selc.internal.dev.selfcare.pagopa.it"
-  private_onboarding_dns_name = "selc-${module.local.config.env_short}-onboarding-ms-ca.gentleflower-c63e62fe.westeurope.azurecontainerapps.io"
+  private_dns_name            = "selc.internal.selfcare.pagopa.it"
+  private_onboarding_dns_name = "selc-p-onboarding-ms-ca.lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
   # ca_suffix_dns_private_name      = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
-  ca_pnpg_suffix_dns_private_name = "blackhill-644148c0.westeurope.azurecontainerapps.io"
+  ca_pnpg_suffix_dns_private_name = "calmmoss-0be48755.westeurope.azurecontainerapps.io"
 
   # app_gateway
-  app_gateway_api_certificate_name      = "api-dev-selfcare-pagopa-it"
-  app_gateway_api_pnpg_certificate_name = "api-pnpg-dev-selfcare-pagopa-it"
+  app_gateway_api_certificate_name      = "api-selfcare-pagopa-it"
+  app_gateway_api_pnpg_certificate_name = "api-pnpg-selfcare-pagopa-it"
 
   container_app = {
     min_replicas = module.local.config.container_app.min_replicas
@@ -145,7 +145,7 @@ locals {
     },
     {
       name  = "USERVICE_USER_REGISTRY_URL"
-      value = "https://api.uat.pdv.pagopa.it/user-registry/v1"
+      value = "https://api.pdv.pagopa.it/user-registry/v1"
     },
     {
       name  = "USERVICE_PARTY_MANAGEMENT_URL"

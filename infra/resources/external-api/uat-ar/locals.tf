@@ -4,15 +4,15 @@
 module "local" {
   source = "../../_modules/local-env"
 
-  env       = "dev"
-  env_short = "d"
+  env       = "uat"
+  env_short = "u"
   domain    = "ar"
 
-  dns_zone_prefix                = "dev.selfcare"
-  api_dns_zone_prefix            = "api.dev.selfcare"
-  private_dns_name_domain        = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
-  container_app_environment_name = "selc-d-cae-002"
-  ca_resource_group_name         = "selc-d-container-app-002-rg"
+  dns_zone_prefix                = "uat.selfcare"
+  api_dns_zone_prefix            = "api.uat.selfcare"
+  private_dns_name_domain        = "mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-u-cae-002"
+  ca_resource_group_name         = "selc-u-container-app-002-rg"
   container_app_min_replicas     = 0
 }
 
@@ -40,18 +40,18 @@ locals {
 
 
   # apim
-  apim_publisher_name = "pagoPA SelfCare DEV"
+  apim_publisher_name = "pagoPA SelfCare UAT"
   apim_sku            = "Developer_1"
 
   # aks
-  private_dns_name            = "selc.internal.dev.selfcare.pagopa.it"
-  private_onboarding_dns_name = "selc-${module.local.config.env_short}-onboarding-ms-ca.gentleflower-c63e62fe.westeurope.azurecontainerapps.io"
+  private_dns_name            = "selc.internal.uat.selfcare.pagopa.it"
+  private_onboarding_dns_name = "selc-u-onboarding-ms-ca.calmsky-143987c1.westeurope.azurecontainerapps.io"
   # ca_suffix_dns_private_name      = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
-  ca_pnpg_suffix_dns_private_name = "blackhill-644148c0.westeurope.azurecontainerapps.io"
+  ca_pnpg_suffix_dns_private_name = "orangeground-0bd2d4dc.westeurope.azurecontainerapps.io"
 
   # app_gateway
-  app_gateway_api_certificate_name      = "api-dev-selfcare-pagopa-it"
-  app_gateway_api_pnpg_certificate_name = "api-pnpg-dev-selfcare-pagopa-it"
+  app_gateway_api_certificate_name      = "api-uat-selfcare-pagopa-it"
+  app_gateway_api_pnpg_certificate_name = "api-pnpg-uat-selfcare-pagopa-it"
 
   container_app = {
     min_replicas = module.local.config.container_app.min_replicas
