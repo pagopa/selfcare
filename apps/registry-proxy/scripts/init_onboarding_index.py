@@ -87,7 +87,7 @@ def main():
     count_errors = 0
     onboardings = []
     for o in collection.find({}, batch_size=MONGO_BATCH_SIZE):
-        if not o.get("institution") or not o["institution"].get("description") or not o["institution"].get("institutionType") or not o.get("productId") or not o.get("status") or o.get("status") in ["REQUEST", "TOBEVALIDATED"]:
+        if not o.get("institution") or not o["institution"].get("description") or not o["institution"].get("institutionType") or not o.get("productId") or o.get("productId") in ["prod-interop-atst", "prod-interop-coll"] or not o.get("status") or o.get("status") in ["REQUEST", "TOBEVALIDATED"]:
             count_skipped += 1
             continue
         onboardings.append(o)
