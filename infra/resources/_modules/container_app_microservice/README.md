@@ -9,7 +9,7 @@ Then, it updates the private DNS zone with a new A record pointing at the existi
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >=1.6.0 |
 | <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | > 2.0.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | > 4 |
@@ -17,7 +17,7 @@ Then, it updates the private DNS zone with a new A record pointing at the existi
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | > 4 |
 
 ## Modules
@@ -27,7 +27,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azurerm_container_app.container_app](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app) | resource |
 | [azurerm_private_dns_a_record.private_dns_record_a_azurecontainerapps_io](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_a_record) | resource |
 | [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
@@ -43,7 +43,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_app_settings"></a> [app\_settings](#input\_app\_settings) | n/a | <pre>list(object({<br/>    name                  = string<br/>    value                 = optional(string, "")<br/>    key_vault_secret_name = optional(string)<br/>  }))</pre> | n/a | yes |
 | <a name="input_container_app"></a> [container\_app](#input\_container\_app) | Container App configuration | <pre>object({<br/>    min_replicas = number<br/>    max_replicas = number<br/><br/>    scale_rules = list(object({<br/>      name = string<br/>      type = optional(string)<br/>      custom = object({<br/>        metadata = map(string)<br/>        type     = string<br/>      })<br/>    }))<br/><br/>    cpu    = number<br/>    memory = string<br/>  })</pre> | n/a | yes |
 | <a name="input_container_app_environment_name"></a> [container\_app\_environment\_name](#input\_container\_app\_environment\_name) | Container app environment name to use | `string` | n/a | yes |
@@ -64,7 +64,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_cae_identity_client_id"></a> [cae\_identity\_client\_id](#output\_cae\_identity\_client\_id) | n/a |
 | <a name="output_cae_identity_id"></a> [cae\_identity\_id](#output\_cae\_identity\_id) | n/a |
 | <a name="output_container_app_environment_name"></a> [container\_app\_environment\_name](#output\_container\_app\_environment\_name) | n/a |

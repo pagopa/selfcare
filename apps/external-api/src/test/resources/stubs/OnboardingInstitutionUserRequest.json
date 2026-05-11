@@ -1,0 +1,27 @@
+{
+  "productId":"prod-io",
+  "institutionId": "aaaa-bbbb",
+  "institutionTaxCode":"123456789",
+  "institutionSubunitCode":"987654",
+  "sendCreateUserNotificationEmail":false,
+  "users":[
+    {
+      "id":"1",
+      "role":"MANAGER",
+      "productRole":"admin"
+    },
+    {
+      "id":"2",
+      "role":"DELEGATE",
+      "productRole":"admin"
+    },
+    {
+      "name": "John2",
+      "surname": "Doe2",
+      "taxCode": "NLLGPJ67L30L783S",
+      "email":"test@test.it",
+      "role":"DELEGATE",
+      "productRole":"admin"
+    }
+  ]
+}

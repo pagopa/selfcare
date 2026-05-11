@@ -1,0 +1,3033 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "selc-starter-parent",
+    "description" : "Self Care External Api Documentation",
+    "version" : "0.0.1-SNAPSHOT"
+  },
+  "servers" : [ {
+    "url" : "{url}:{port}{basePath}",
+    "variables" : {
+      "url" : {
+        "default" : "http://localhost"
+      },
+      "port" : {
+        "default" : "80"
+      },
+      "basePath" : {
+        "default" : ""
+      }
+    }
+  } ],
+  "tags" : [ {
+    "name" : "Institution",
+    "description" : "Institution V 2 Controller"
+  }, {
+    "name" : "Onboarding",
+    "description" : "Onboarding V 2 Controller"
+  }, {
+    "name" : "Proxy",
+    "description" : "National Registry Controller"
+  }, {
+    "name" : "Token",
+    "description" : "Token Controller"
+  }, {
+    "name" : "User",
+    "description" : "User V 2 Controller"
+  }, {
+    "name" : "institutions-pnpg",
+    "description" : "Pn Pg Controller"
+  } ],
+  "paths" : {
+    "/v2/users" : {
+      "get" : {
+        "tags" : [ "User", "external-pnpg", "external-v2" ],
+        "summary" : "getUserInstitution",
+        "description" : "This endpoint retrieves detailed information about a user's association with various products within an institution. The response provides a comprehensive view of the user's roles, product statuses and the relevant timestamps.",
+        "operationId" : "v2getUserInstitution",
+        "parameters" : [ {
+          "name" : "institutionId",
+          "in" : "query",
+          "description" : "Institution's unique internal Id",
+          "required" : false,
+          "style" : "form",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "userId",
+          "in" : "query",
+          "description" : "User's unique identifier",
+          "required" : false,
+          "style" : "form",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "roles",
+          "in" : "query",
+          "description" : "General role of the user related to the product.",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR", "ADMIN_EA" ]
+          }
+        }, {
+          "name" : "states",
+          "in" : "query",
+          "description" : "The current status of the user on the product. <br>Available values: ACTIVE, PENDING, TOBEVALIDATED, SUSPENDED, DELETED, REJECTED",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "products",
+          "in" : "query",
+          "description" : "products",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productRoles",
+          "in" : "query",
+          "description" : "The current status of the user on the product. <br>Available values: ACTIVE, PENDING, TOBEVALIDATED, SUSPENDED, DELETED, REJECTED",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "page",
+          "required" : false,
+          "style" : "form",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "size",
+          "required" : false,
+          "style" : "form",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 100
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/UserInstitutionResource"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "internal-v1", "User", "external-v2", "support-pnpg", "support" ],
+        "summary" : "getUserInfo",
+        "description" : "Service to retrieve user info including institutions and products linked to him, this service retrives 100 institutions at most",
+        "operationId" : "V2getUserInfoUsingGET",
+        "parameters" : [ {
+          "name" : "productId",
+          "in" : "query",
+          "description" : "productId",
+          "required" : false,
+          "style" : "form",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SearchUserDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserInfoResource"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v2/onboarding" : {
+      "post" : {
+        "tags" : [ "internal-v1", "Onboarding" ],
+        "summary" : "onboarding",
+        "description" : "The service allows the onboarding of Users to a subunit of an Institution",
+        "operationId" : "onboardingUsingPOST",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OnboardingProductDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created"
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v2/onboarding/users" : {
+      "post" : {
+        "tags" : [ "internal-v1", "support-pnpg", "support", "Onboarding" ],
+        "summary" : "The service adds users to the registry if they are not present and associates them with the institution and product contained in the body",
+        "description" : "The service adds users to the registry if they are not present and associates them with the institution and product contained in the body",
+        "operationId" : "onboardingInstitutionUsersUsingPOST",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OnboardingInstitutionUsersRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RelationshipResult"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v2/onboarding/import" : {
+      "post" : {
+        "tags" : [ "internal-v1", "Onboarding" ],
+        "summary" : "onboardingImport",
+        "description" : "The service allows the onboarding of an institution through import",
+        "operationId" : "onboardingImportUsingPOST",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OnboardingImportProductDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created"
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v2/onboarding/aggregation/{taxCode}" : {
+      "post" : {
+        "tags" : [ "internal-v1", "Onboarding" ],
+        "summary" : "onboardingAggregateImport",
+        "description" : "The service allows the onboarding of an institution through import with aggregates",
+        "operationId" : "onboardingAggregateImport",
+        "parameters" : [ {
+          "name" : "taxCode",
+          "in" : "path",
+          "description" : "taxCode",
+          "required" : true,
+          "style" : "simple",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OnboardingAggregatorImportDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created"
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v2/national-registries/legal-tax/verification" : {
+      "post" : {
+        "tags" : [ "Proxy", "NationalRegistry", "support-pnpg" ],
+        "summary" : "verifyLegal",
+        "description" : "Verify if given taxId is legal of given institution identified with vatNumber",
+        "operationId" : "verifyLegalByPOST",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VerifyRequestDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegalVerificationResource"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v1/pn-pg/institutions/add" : {
+      "post" : {
+        "tags" : [ "institutions-pnpg" ],
+        "summary" : "addInstitution",
+        "description" : "Checks if there is an institution with given externalId and returns its internalId if doesn't exists it creates it",
+        "operationId" : "addInstitutionUsingPOST",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreatePnPgInstitutionDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PnPgInstitutionIdResource"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v2/users/{id}/onboarded-product" : {
+      "get" : {
+        "tags" : [ "User" ],
+        "summary" : "getUserProductInfo",
+        "description" : "Service to retrieve user's onboarded product info",
+        "operationId" : "V2getUserProductInfoUsingGET",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "User's unique identifier",
+          "required" : true,
+          "style" : "simple",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productId",
+          "in" : "query",
+          "description" : "Product's unique identifier",
+          "required" : true,
+          "style" : "form",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "institutionId",
+          "in" : "query",
+          "description" : "Institution's unique internal Id",
+          "required" : true,
+          "style" : "form",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserDetailsResource"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v2/institutions" : {
+      "get" : {
+        "tags" : [ "external-pnpg", "Institution" ],
+        "summary" : "getInstitutions",
+        "description" : "The service retrieves all the onboarded institutions related to the logged user",
+        "operationId" : "getInstitutionsUsingGETDeprecated",
+        "parameters" : [ {
+          "name" : "productId",
+          "in" : "query",
+          "description" : "Product's unique identifier",
+          "required" : true,
+          "style" : "form",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/InstitutionResource"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : true,
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v2/institutions/{institutionId}/users" : {
+      "get" : {
+        "tags" : [ "internal-v1", "external-pnpg", "external-v2", "Institution" ],
+        "summary" : "getInstitutionUsersByProduct",
+        "description" : "Service to get all the active users related to a specific pair of institution-product",
+        "operationId" : "getInstitutionUsersByProductUsingGET",
+        "parameters" : [ {
+          "name" : "institutionId",
+          "in" : "path",
+          "description" : "Institution's unique internal Id",
+          "required" : true,
+          "style" : "simple",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productId",
+          "in" : "query",
+          "description" : "Product's unique identifier",
+          "required" : false,
+          "style" : "form",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "userId",
+          "in" : "query",
+          "description" : "User's unique identifier",
+          "required" : false,
+          "style" : "form",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productRoles",
+          "in" : "query",
+          "description" : "Specific role of the user related to the product.",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "x-selfcare-uid",
+          "in" : "header",
+          "description" : "x-selfcare-uid",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/UserResource"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v2/institutions/{institutionId}/products" : {
+      "get" : {
+        "tags" : [ "external-pnpg", "external-v2", "Institution" ],
+        "summary" : "getInstitutionProducts",
+        "description" : "Service to retrieve all active products for given institution and logged user",
+        "operationId" : "getInstitutionProductsUsingGET",
+        "parameters" : [ {
+          "name" : "institutionId",
+          "in" : "path",
+          "description" : "Institution's unique internal Id",
+          "required" : true,
+          "style" : "simple",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "userId",
+          "in" : "query",
+          "description" : "User's unique identifier",
+          "required" : true,
+          "style" : "form",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProductResource"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v2/institutions/{institutionId}/contract" : {
+      "get" : {
+        "tags" : [ "contract", "external-v2", "Institution", "support" ],
+        "summary" : "getContract",
+        "description" : "Service to retrieve a contract given institutionId and productId",
+        "operationId" : "getContractUsingGET",
+        "parameters" : [ {
+          "name" : "institutionId",
+          "in" : "path",
+          "description" : "Institution's unique internal Id",
+          "required" : true,
+          "style" : "simple",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productId",
+          "in" : "query",
+          "description" : "Product's unique identifier",
+          "required" : false,
+          "style" : "form",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/octet-stream" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v1/tokens/products/{productId}" : {
+      "get" : {
+        "tags" : [ "external-v2", "Token", "support" ],
+        "summary" : "Service to retrieve tokens from product's identifier",
+        "description" : "Service to retrieve tokens from product's identifier",
+        "operationId" : "getTokensFromProductUsingGET",
+        "parameters" : [ {
+          "name" : "productId",
+          "in" : "path",
+          "description" : "Product's identifier",
+          "required" : true,
+          "style" : "simple",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Number of page",
+          "required" : false,
+          "style" : "form",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "Number of elements per page",
+          "required" : false,
+          "style" : "form",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 100
+          }
+        }, {
+          "name" : "status",
+          "in" : "query",
+          "description" : "Token's status. Available values: REQUEST, TOBEVALIDATED, PENDING, COMPLETED, FAILED, REJECTED, DELETED",
+          "required" : false,
+          "style" : "form",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TokensResource"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "SearchUserDto" : {
+        "title" : "SearchUserDto",
+        "required" : [ "fiscalCode" ],
+        "type" : "object",
+        "properties" : {
+          "fiscalCode" : {
+            "type" : "string",
+            "description" : "User's fiscal code"
+          },
+          "statuses" : {
+            "type" : "array",
+            "description" : "User's statuses",
+            "items" : {
+              "type" : "string",
+              "description" : "User's statuses",
+              "enum" : [ "ACTIVE", "SUSPENDED", "DELETED", "REJECTED", "PENDING", "TOBEVALIDATED" ]
+            }
+          }
+        },
+        "description" : "User's fiscal code"
+      },
+      "OnboardedInstitutionResource" : {
+        "title" : "OnboardedInstitutionResource",
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "Institution's Id"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Institution's description"
+          },
+          "institutionType" : {
+            "type" : "string",
+            "description" : "Institution's type",
+            "enum" : [ "PA", "PG", "GSP", "SA", "PT", "SCP", "PSP", "AS", "REC", "CON", "PRV", "PRV_PF", "GPU", "SCEC" ]
+          },
+          "origin" : {
+            "type" : "string",
+            "description" : "Institution's origin"
+          },
+          "originId" : {
+            "type" : "string",
+            "description" : "Institution's originId"
+          },
+          "digitalAddress" : {
+            "type" : "string",
+            "description" : "Institution's digital address"
+          },
+          "address" : {
+            "type" : "string",
+            "description" : "Institution's address"
+          },
+          "state" : {
+            "type" : "string",
+            "description" : "Onboarding's state"
+          },
+          "zipCode" : {
+            "type" : "string",
+            "description" : "Institution's zip code"
+          },
+          "taxCode" : {
+            "type" : "string",
+            "description" : "Institution's tax code"
+          },
+          "userEmail" : {
+            "type" : "string",
+            "description" : "User's email linked to the institution"
+          },
+          "userMobilePhone" : {
+            "type" : "string",
+            "description" : "User's phone number linked to the institution"
+          },
+          "userTelephone" : {
+            "type" : "string",
+            "description" : "User's phone number linked to the institution"
+          },
+          "productInfo" : {
+            "$ref" : "#/components/schemas/ProductInfo"
+          }
+        },
+        "description" : "Object that includes all info about onboarded institutions linked to a user"
+      },
+      "ProductInfo" : {
+        "title" : "ProductInfo",
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string"
+          },
+          "productRole" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "status" : {
+            "type" : "string"
+          }
+        }
+      },
+      "UserInfoResource" : {
+        "title" : "UserInfoResource",
+        "type" : "object",
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/UserResource"
+          },
+          "onboardedInstitutions" : {
+            "type" : "array",
+            "description" : "Object that includes all info about onboarded institutions linked to a user",
+            "items" : {
+              "$ref" : "#/components/schemas/OnboardedInstitutionResource"
+            }
+          }
+        }
+      },
+      "UserResource" : {
+        "title" : "UserResource",
+        "required" : [ "id", "name", "surname" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "User's unique identifier",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "User's name"
+          },
+          "surname" : {
+            "type" : "string",
+            "description" : "User's surname"
+          },
+          "email" : {
+            "type" : "string",
+            "description" : "User's institutional email"
+          },
+          "lastActiveOnboardingUserEmail" : {
+            "type" : "string",
+            "description" : "User's last active onboarding used email"
+          },
+          "fiscalCode" : {
+            "type" : "string",
+            "description" : "User's fiscal code"
+          },
+          "roles" : {
+            "type" : "array",
+            "description" : "User's roles in product",
+            "items" : {
+              "type" : "string",
+              "description" : "User's roles in product"
+            }
+          },
+          "role" : {
+            "type" : "string",
+            "description" : "User's role",
+            "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR", "ADMIN_EA" ]
+          }
+        },
+        "description" : "Object that includes all info about a user"
+      },
+      "AdditionalInformationsDto" : {
+        "title" : "AdditionalInformationsDto",
+        "type" : "object",
+        "properties" : {
+          "belongRegulatedMarket" : {
+            "type" : "boolean"
+          },
+          "regulatedMarketNote" : {
+            "type" : "string"
+          },
+          "ipa" : {
+            "type" : "boolean"
+          },
+          "ipaCode" : {
+            "type" : "string"
+          },
+          "establishedByRegulatoryProvision" : {
+            "type" : "boolean"
+          },
+          "establishedByRegulatoryProvisionNote" : {
+            "type" : "string"
+          },
+          "agentOfPublicService" : {
+            "type" : "boolean"
+          },
+          "agentOfPublicServiceNote" : {
+            "type" : "string"
+          },
+          "otherNote" : {
+            "type" : "string"
+          }
+        },
+        "description" : "GSP institution's additional information"
+      },
+      "AggregateInstitutionDto" : {
+        "title" : "AggregateInstitutionDto",
+        "required" : [ "description", "taxCode" ],
+        "type" : "object",
+        "properties" : {
+          "taxCode" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "subunitCode" : {
+            "type" : "string"
+          },
+          "subunitType" : {
+            "type" : "string"
+          },
+          "vatNumber" : {
+            "type" : "string"
+          },
+          "parentDescription" : {
+            "type" : "string"
+          },
+          "geographicTaxonomies" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/GeographicTaxonomyDto"
+            }
+          },
+          "address" : {
+            "type" : "string"
+          },
+          "zipCode" : {
+            "type" : "string"
+          },
+          "originId" : {
+            "type" : "string"
+          },
+          "origin" : {
+            "type" : "string",
+            "enum" : [ "MOCK", "IPA", "SELC", "ANAC", "UNKNOWN", "ADE", "INFOCAMERE", "IVASS", "PDND_INFOCAMERE" ]
+          },
+          "users" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/User"
+            }
+          },
+          "recipientCode" : {
+            "type" : "string"
+          },
+          "digitalAddress" : {
+            "type" : "string"
+          },
+          "city" : {
+            "type" : "string"
+          },
+          "county" : {
+            "type" : "string"
+          },
+          "iban" : {
+            "type" : "string"
+          },
+          "istatCode" : {
+            "type" : "string"
+          }
+        },
+        "description" : "List of aggregates users"
+      },
+      "AssistanceContactsDto" : {
+        "title" : "AssistanceContactsDto",
+        "type" : "object",
+        "properties" : {
+          "supportEmail" : {
+            "type" : "string",
+            "description" : "Institution's support email contact",
+            "format" : "email",
+            "example" : "email@example.com"
+          },
+          "supportPhone" : {
+            "type" : "string",
+            "description" : "Institution's support phone contact"
+          }
+        },
+        "description" : "Institution's assistance contacts"
+      },
+      "BillingDataDto" : {
+        "title" : "BillingDataDto",
+        "required" : [ "businessName", "digitalAddress", "registeredOffice" ],
+        "type" : "object",
+        "properties" : {
+          "businessName" : {
+            "type" : "string",
+            "description" : "Institution's legal name"
+          },
+          "registeredOffice" : {
+            "type" : "string",
+            "description" : "Institution's physical address"
+          },
+          "digitalAddress" : {
+            "type" : "string",
+            "description" : "Institution's digitalAddress"
+          },
+          "zipCode" : {
+            "type" : "string",
+            "description" : "Institution's zipCode"
+          },
+          "taxCode" : {
+            "type" : "string",
+            "description" : "Institution's taxCode"
+          },
+          "taxCodeInvoicing" : {
+            "type" : "string",
+            "description" : "Institution's taxCodeInvoicing"
+          },
+          "vatNumber" : {
+            "type" : "string",
+            "description" : "Institution's VAT number"
+          },
+          "recipientCode" : {
+            "type" : "string",
+            "description" : "Billing recipient code, not required only for institutionType SA"
+          },
+          "publicServices" : {
+            "type" : "boolean",
+            "description" : "Institution's service type",
+            "example" : false
+          }
+        },
+        "description" : "Institution's billing information"
+      },
+      "CompanyInformationsDto" : {
+        "title" : "CompanyInformationsDto",
+        "type" : "object",
+        "properties" : {
+          "rea" : {
+            "type" : "string",
+            "description" : "Institution's REA"
+          },
+          "shareCapital" : {
+            "type" : "string",
+            "description" : "Institution's share capital value"
+          },
+          "businessRegisterPlace" : {
+            "type" : "string",
+            "description" : "Institution's business register place"
+          }
+        },
+        "description" : "GPS, SCP, PT optional data"
+      },
+      "DpoDataDto" : {
+        "title" : "DpoDataDto",
+        "required" : [ "address", "email", "pec" ],
+        "type" : "object",
+        "properties" : {
+          "address" : {
+            "type" : "string",
+            "description" : "DPO's address"
+          },
+          "pec" : {
+            "type" : "string",
+            "description" : "DPO's PEC",
+            "format" : "email",
+            "example" : "email@example.com"
+          },
+          "email" : {
+            "type" : "string",
+            "description" : "DPO's email",
+            "format" : "email",
+            "example" : "email@example.com"
+          }
+        },
+        "description" : "Data Protection Officer (DPO) specific data"
+      },
+      "GPUData" : {
+        "title" : "GPUData",
+        "type" : "object",
+        "properties" : {
+          "businessRegisterNumber" : {
+            "type" : "string"
+          },
+          "legalRegisterNumber" : {
+            "type" : "string"
+          },
+          "legalRegisterName" : {
+            "type" : "string"
+          },
+          "manager" : {
+            "type" : "boolean"
+          },
+          "managerAuthorized" : {
+            "type" : "boolean"
+          },
+          "managerEligible" : {
+            "type" : "boolean"
+          },
+          "managerProsecution" : {
+            "type" : "boolean"
+          },
+          "institutionCourtMeasures" : {
+            "type" : "boolean"
+          }
+        },
+        "description" : "GPU specific data"
+      },
+      "GeographicTaxonomyDto" : {
+        "title" : "GeographicTaxonomyDto",
+        "required" : [ "code", "desc" ],
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Institution's geographic taxonomy ISTAT code"
+          },
+          "desc" : {
+            "type" : "string",
+            "description" : "Institution's geographic taxonomy extended name"
+          }
+        }
+      },
+      "InstitutionLocationDataDto" : {
+        "title" : "InstitutionLocationDataDto",
+        "type" : "object",
+        "properties" : {
+          "city" : {
+            "type" : "string",
+            "description" : "Institution's physical address city"
+          },
+          "county" : {
+            "type" : "string",
+            "description" : "Institution's physical address county"
+          },
+          "country" : {
+            "type" : "string",
+            "description" : "Institution's physical address country"
+          }
+        },
+        "description" : "Institution's location Data"
+      },
+      "OnboardingProductDto" : {
+        "title" : "OnboardingProductDto",
+        "required" : [ "geographicTaxonomies", "institutionType", "productId", "users" ],
+        "type" : "object",
+        "properties" : {
+          "users" : {
+            "type" : "array",
+            "description" : "List of onboarding users",
+            "items" : {
+              "$ref" : "#/components/schemas/UserDto"
+            }
+          },
+          "billingData" : {
+            "$ref" : "#/components/schemas/BillingDataDto"
+          },
+          "institutionLocationData" : {
+            "$ref" : "#/components/schemas/InstitutionLocationDataDto"
+          },
+          "institutionType" : {
+            "type" : "string",
+            "description" : "Institution's type",
+            "enum" : [ "PA", "PG", "GSP", "SA", "PT", "SCP", "PSP", "AS", "REC", "CON", "PRV", "PRV_PF", "GPU", "SCEC" ]
+          },
+          "origin" : {
+            "type" : "string",
+            "description" : "Institution data origin"
+          },
+          "originId" : {
+            "type" : "string",
+            "description" : "Institution's details origin Id"
+          },
+          "pricingPlan" : {
+            "type" : "string",
+            "description" : "Product's pricing plan"
+          },
+          "pspData" : {
+            "$ref" : "#/components/schemas/PspDataDto"
+          },
+          "gpuData" : {
+            "$ref" : "#/components/schemas/GPUData"
+          },
+          "geographicTaxonomies" : {
+            "type" : "array",
+            "description" : "List of geographic Taxonomies",
+            "items" : {
+              "$ref" : "#/components/schemas/GeographicTaxonomyDto"
+            }
+          },
+          "companyInformations" : {
+            "$ref" : "#/components/schemas/CompanyInformationsDto"
+          },
+          "assistanceContacts" : {
+            "$ref" : "#/components/schemas/AssistanceContactsDto"
+          },
+          "productId" : {
+            "type" : "string",
+            "description" : "Product's unique identifier"
+          },
+          "taxCode" : {
+            "type" : "string",
+            "description" : "Institution's taxCode"
+          },
+          "subunitCode" : {
+            "type" : "string",
+            "description" : "Institutions AOO/UO unit Code"
+          },
+          "subunitType" : {
+            "type" : "string",
+            "description" : "Institutions AOO/UO unit type"
+          },
+          "additionalInformations" : {
+            "$ref" : "#/components/schemas/AdditionalInformationsDto"
+          },
+          "isAggregator" : {
+            "type" : "boolean",
+            "description" : "True if institution is an aggregator",
+            "example" : false
+          },
+          "istatCode" : {
+            "type" : "string",
+            "description" : "Location code of institution"
+          },
+          "aggregates" : {
+            "type" : "array",
+            "description" : "List of aggregates users",
+            "items" : {
+              "$ref" : "#/components/schemas/AggregateInstitutionDto"
+            }
+          }
+        }
+      },
+      "PspDataDto" : {
+        "title" : "PspDataDto",
+        "required" : [ "abiCode", "businessRegisterNumber", "dpoData", "legalRegisterName", "legalRegisterNumber", "vatNumberGroup" ],
+        "type" : "object",
+        "properties" : {
+          "businessRegisterNumber" : {
+            "type" : "string",
+            "description" : "PSP's Business Register number"
+          },
+          "legalRegisterName" : {
+            "type" : "string",
+            "description" : "PSP's legal register name"
+          },
+          "legalRegisterNumber" : {
+            "type" : "string",
+            "description" : "PSP's legal register number"
+          },
+          "abiCode" : {
+            "type" : "string",
+            "description" : "PSP's ABI code"
+          },
+          "vatNumberGroup" : {
+            "type" : "boolean",
+            "description" : "PSP's Vat Number group",
+            "example" : false
+          },
+          "contractType" : {
+            "type" : "string",
+            "description" : "PSP Contract type A or B"
+          },
+          "contractId" : {
+            "type" : "string",
+            "description" : "PSP Contract unique identifier"
+          },
+          "providerNames" : {
+            "type" : "array",
+            "description" : "PSP provider names",
+            "items" : {
+              "type" : "string",
+              "description" : "PSP provider names"
+            }
+          },
+          "dpoData" : {
+            "$ref" : "#/components/schemas/DpoDataDto"
+          }
+        },
+        "description" : "Payment Service Provider (PSP) specific data"
+      },
+      "User" : {
+        "title" : "User",
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "surname" : {
+            "type" : "string"
+          },
+          "taxCode" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string",
+            "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR", "ADMIN_EA" ]
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "productRole" : {
+            "type" : "string"
+          }
+        }
+      },
+      "UserDto" : {
+        "title" : "UserDto",
+        "required" : [ "email", "name", "role", "surname", "taxCode" ],
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "description" : "User's name"
+          },
+          "surname" : {
+            "type" : "string",
+            "description" : "User's surname"
+          },
+          "taxCode" : {
+            "type" : "string",
+            "description" : "User's fiscal code"
+          },
+          "role" : {
+            "type" : "string",
+            "description" : "User's role",
+            "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR", "ADMIN_EA" ]
+          },
+          "email" : {
+            "type" : "string",
+            "description" : "User's email",
+            "format" : "email",
+            "example" : "email@example.com"
+          }
+        },
+        "description" : "List of onboarding users"
+      },
+      "InvalidParam" : {
+        "title" : "InvalidParam",
+        "required" : [ "name", "reason" ],
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "description" : "Invalid parameter name."
+          },
+          "reason" : {
+            "type" : "string",
+            "description" : "Invalid parameter reason."
+          }
+        }
+      },
+      "Problem" : {
+        "title" : "Problem",
+        "required" : [ "status", "title" ],
+        "type" : "object",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "description" : "A URL to a page with more details regarding the problem."
+          },
+          "title" : {
+            "type" : "string",
+            "description" : "Short human-readable summary of the problem."
+          },
+          "status" : {
+            "maximum" : 599,
+            "minimum" : 100,
+            "type" : "integer",
+            "description" : "The HTTP status code.",
+            "format" : "int32",
+            "example" : 500
+          },
+          "detail" : {
+            "type" : "string",
+            "description" : "Human-readable description of this specific problem."
+          },
+          "instance" : {
+            "type" : "string",
+            "description" : "A URI that describes where the problem occurred."
+          },
+          "invalidParams" : {
+            "type" : "array",
+            "description" : "A list of invalid parameters details.",
+            "items" : {
+              "$ref" : "#/components/schemas/InvalidParam"
+            }
+          }
+        },
+        "description" : "A \"problem detail\" as a way to carry machine-readable details of errors (https://datatracker.ietf.org/doc/html/rfc7807)"
+      },
+      "OnboardingInstitutionUsersRequest" : {
+        "title" : "OnboardingInstitutionUsersRequest",
+        "required" : [ "productId", "users" ],
+        "type" : "object",
+        "properties" : {
+          "productId" : {
+            "type" : "string",
+            "description" : "Product to add roles to"
+          },
+          "users" : {
+            "type" : "array",
+            "description" : "List of users to add",
+            "items" : {
+              "$ref" : "#/components/schemas/Person"
+            }
+          },
+          "institutionId" : {
+            "type" : "string",
+            "description" : "The institution ID where users will be added. This takes precedence over the tax code"
+          },
+          "institutionTaxCode" : {
+            "type" : "string",
+            "description" : "Add users to the institution via tax code. Can be used in combination with institutionSubunitCode"
+          },
+          "institutionSubunitCode" : {
+            "type" : "string",
+            "description" : "Add users to the institution via subunit code. Can be used in combination with institutionTaxCode"
+          },
+          "sendCreateUserNotificationEmail" : {
+            "type" : "boolean",
+            "description" : "Send an email notification to the user. By default it's set to true",
+            "example" : false
+          },
+          "toAddOnAggregates" : {
+            "type" : "boolean",
+            "description" : "Enable automatic management of group assignment",
+            "example" : false
+          }
+        }
+      },
+      "Person" : {
+        "title" : "Person",
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "User ID of a user already in the registry. A role will be added to the institution/product for the user. It takes precedence over taxCode"
+          },
+          "taxCode" : {
+            "type" : "string",
+            "description" : "The tax code of the user to add / create. If id is present, the field is ignored"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "The name of the user to add / create. If id is present, the field is ignored"
+          },
+          "surname" : {
+            "type" : "string",
+            "description" : "The surname of the user to add / create. If id is present, the field is ignored"
+          },
+          "email" : {
+            "type" : "string",
+            "description" : "The email address of the user to add / create. If id is present, the field is ignored"
+          },
+          "userMailUuid" : {
+            "type" : "string",
+            "description" : "The email ID of the user already in the registry to be assigned to the institution/product. This field is only used when adding a user by ID"
+          },
+          "role" : {
+            "type" : "string",
+            "description" : "The role to assign to the user",
+            "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR", "ADMIN_EA" ]
+          },
+          "productRole" : {
+            "type" : "string",
+            "description" : "The product role to assign to the user based on the product specifications"
+          },
+          "env" : {
+            "type" : "string",
+            "description" : "Environment. The field is currently not used to create users. It's only returned in response",
+            "enum" : [ "ROOT", "DEV", "COLL", "PROD" ]
+          },
+          "roleLabel" : {
+            "type" : "string",
+            "description" : "The product role label based on the product specifications. The field is currently not used to create users"
+          }
+        },
+        "description" : "List of users to add"
+      },
+      "BillingResponse" : {
+        "title" : "BillingResponse",
+        "type" : "object",
+        "properties" : {
+          "vatNumber" : {
+            "type" : "string"
+          },
+          "recipientCode" : {
+            "type" : "string"
+          },
+          "publicServices" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "DpoDataResource" : {
+        "title" : "DpoDataResource",
+        "type" : "object",
+        "properties" : {
+          "address" : {
+            "type" : "string",
+            "description" : "DPO's address"
+          },
+          "pec" : {
+            "type" : "string",
+            "description" : "DPO's PEC"
+          },
+          "email" : {
+            "type" : "string",
+            "description" : "DPO's email"
+          }
+        }
+      },
+      "InstitutionUpdateResponse" : {
+        "title" : "InstitutionUpdateResponse",
+        "type" : "object",
+        "properties" : {
+          "institutionType" : {
+            "type" : "string",
+            "enum" : [ "PA", "PG", "GSP", "SA", "PT", "SCP", "PSP", "AS", "REC", "CON", "PRV", "PRV_PF", "GPU", "SCEC" ]
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "digitalAddress" : {
+            "type" : "string"
+          },
+          "address" : {
+            "type" : "string"
+          },
+          "taxCode" : {
+            "type" : "string"
+          },
+          "zipCode" : {
+            "type" : "string"
+          },
+          "paymentServiceProvider" : {
+            "$ref" : "#/components/schemas/PspDataResource"
+          },
+          "dataProtectionOfficer" : {
+            "$ref" : "#/components/schemas/DpoDataResource"
+          },
+          "businessRegisterPlace" : {
+            "type" : "string"
+          },
+          "geographicTaxonomies" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "imported" : {
+            "type" : "boolean"
+          },
+          "rea" : {
+            "type" : "string"
+          },
+          "shareCapital" : {
+            "type" : "string"
+          },
+          "supportEmail" : {
+            "type" : "string"
+          },
+          "supportPhone" : {
+            "type" : "string"
+          }
+        }
+      },
+      "PspDataResource" : {
+        "title" : "PspDataResource",
+        "type" : "object",
+        "properties" : {
+          "businessRegisterNumber" : {
+            "type" : "string",
+            "description" : "PSP's Business Register number"
+          },
+          "legalRegisterName" : {
+            "type" : "string",
+            "description" : "PSP's legal register name"
+          },
+          "legalRegisterNumber" : {
+            "type" : "string",
+            "description" : "PSP's legal register number"
+          },
+          "abiCode" : {
+            "type" : "string",
+            "description" : "PSP's ABI code"
+          },
+          "vatNumberGroup" : {
+            "type" : "boolean",
+            "description" : "PSP's Vat Number group",
+            "example" : false
+          }
+        }
+      },
+      "RelationshipResult" : {
+        "title" : "RelationshipResult",
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "to" : {
+            "type" : "string"
+          },
+          "from" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string",
+            "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR", "ADMIN_EA" ]
+          },
+          "tokenId" : {
+            "type" : "string"
+          },
+          "product" : {
+            "$ref" : "#/components/schemas/ProductInfo"
+          },
+          "state" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "SUSPENDED", "DELETED", "REJECTED", "PENDING", "TOBEVALIDATED" ]
+          },
+          "pricingPlan" : {
+            "type" : "string"
+          },
+          "institutionUpdate" : {
+            "$ref" : "#/components/schemas/InstitutionUpdateResponse"
+          },
+          "billing" : {
+            "$ref" : "#/components/schemas/BillingResponse"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "OnboardingImportProductDto" : {
+        "title" : "OnboardingImportProductDto",
+        "required" : [ "geographicTaxonomies", "institutionType", "productId" ],
+        "type" : "object",
+        "properties" : {
+          "users" : {
+            "type" : "array",
+            "description" : "List of onboarding users",
+            "items" : {
+              "$ref" : "#/components/schemas/UserDto"
+            }
+          },
+          "billingData" : {
+            "$ref" : "#/components/schemas/BillingDataDto"
+          },
+          "institutionLocationData" : {
+            "$ref" : "#/components/schemas/InstitutionLocationDataDto"
+          },
+          "institutionType" : {
+            "type" : "string",
+            "description" : "Institution's type",
+            "enum" : [ "PA", "PG", "GSP", "SA", "PT", "SCP", "PSP", "AS", "REC", "CON", "PRV", "PRV_PF", "GPU", "SCEC" ]
+          },
+          "origin" : {
+            "type" : "string",
+            "description" : "Institution data origin"
+          },
+          "originId" : {
+            "type" : "string",
+            "description" : "Institution's details origin Id"
+          },
+          "pricingPlan" : {
+            "type" : "string",
+            "description" : "Product's pricing plan"
+          },
+          "pspData" : {
+            "$ref" : "#/components/schemas/PspDataDto"
+          },
+          "geographicTaxonomies" : {
+            "type" : "array",
+            "description" : "List of geographic Taxonomies",
+            "items" : {
+              "$ref" : "#/components/schemas/GeographicTaxonomyDto"
+            }
+          },
+          "companyInformations" : {
+            "$ref" : "#/components/schemas/CompanyInformationsDto"
+          },
+          "assistanceContacts" : {
+            "$ref" : "#/components/schemas/AssistanceContactsDto"
+          },
+          "productId" : {
+            "type" : "string",
+            "description" : "Product's unique identifier"
+          },
+          "taxCode" : {
+            "type" : "string",
+            "description" : "Institution's taxCode"
+          },
+          "subunitCode" : {
+            "type" : "string",
+            "description" : "Institutions AOO/UO unit Code"
+          },
+          "subunitType" : {
+            "type" : "string",
+            "description" : "Institutions AOO/UO unit type"
+          },
+          "additionalInformations" : {
+            "$ref" : "#/components/schemas/AdditionalInformationsDto"
+          },
+          "contractSigned" : {
+            "type" : "string",
+            "description" : "Contract signed file path"
+          },
+          "activatedAt" : {
+            "type" : "string",
+            "description" : "Previous contract sign date for import",
+            "format" : "date-time"
+          }
+        }
+      },
+      "ImportContractDto" : {
+        "title" : "ImportContractDto",
+        "required" : [ "contractType", "fileName", "filePath", "onboardingDate" ],
+        "type" : "object",
+        "properties" : {
+          "fileName" : {
+            "type" : "string",
+            "description" : "Institution's old contract file name"
+          },
+          "filePath" : {
+            "type" : "string",
+            "description" : "Institution's old contract file path"
+          },
+          "contractType" : {
+            "type" : "string",
+            "description" : "Institution's old contract version"
+          },
+          "onboardingDate" : {
+            "type" : "string",
+            "description" : "Institution's old onboarding date in the format 2007-12-03T10:15:30+01:00 (YYYY-MM-DD-T-HH:mm:ss+UTC)",
+            "format" : "date-time"
+          }
+        },
+        "description" : "Institution's old contract information"
+      },
+      "OnboardingAggregatorImportDto" : {
+        "title" : "OnboardingAggregatorImportDto",
+        "required" : [ "aggregates", "importContract" ],
+        "type" : "object",
+        "properties" : {
+          "users" : {
+            "type" : "array",
+            "description" : "List of onboarding users",
+            "items" : {
+              "$ref" : "#/components/schemas/UserDto"
+            }
+          },
+          "importContract" : {
+            "$ref" : "#/components/schemas/ImportContractDto"
+          },
+          "aggregates" : {
+            "type" : "array",
+            "description" : "List of aggregates users",
+            "items" : {
+              "$ref" : "#/components/schemas/TaxCodeDto"
+            }
+          }
+        }
+      },
+      "TaxCodeDto" : {
+        "title" : "TaxCodeDto",
+        "required" : [ "taxCode" ],
+        "type" : "object",
+        "properties" : {
+          "taxCode" : {
+            "type" : "string",
+            "description" : "Taxcode of user"
+          }
+        },
+        "description" : "List of aggregates users"
+      },
+      "VerifyRequestDto" : {
+        "title" : "VerifyRequestDto",
+        "required" : [ "taxId", "vatNumber" ],
+        "type" : "object",
+        "properties" : {
+          "taxId" : {
+            "type" : "string"
+          },
+          "vatNumber" : {
+            "type" : "string"
+          }
+        }
+      },
+      "LegalVerificationResource" : {
+        "title" : "LegalVerificationResource",
+        "type" : "object",
+        "properties" : {
+          "resultCode" : {
+            "type" : "string"
+          },
+          "resultDetail" : {
+            "type" : "string"
+          },
+          "verificationResult" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "CreatePnPgInstitutionDto" : {
+        "title" : "CreatePnPgInstitutionDto",
+        "required" : [ "externalId" ],
+        "type" : "object",
+        "properties" : {
+          "externalId" : {
+            "type" : "string",
+            "description" : "Institution's unique external identifier"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Institution's legal name"
+          }
+        },
+        "description" : "swagger.external-api.institutions.model.searchInstitutionDto"
+      },
+      "PnPgInstitutionIdResource" : {
+        "title" : "PnPgInstitutionIdResource",
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "Institution's unique internal Id"
+          }
+        }
+      },
+      "UserInstitutionResource" : {
+        "title" : "UserInstitutionResource",
+        "required" : [ "userId" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "A unique identifier for the user-institution association record."
+          },
+          "userId" : {
+            "type" : "string",
+            "description" : "User's unique identifier"
+          },
+          "institutionId" : {
+            "type" : "string",
+            "description" : "Institution's unique internal Id"
+          },
+          "institutionDescription" : {
+            "type" : "string",
+            "description" : "Institution's description"
+          },
+          "institutionRootName" : {
+            "type" : "string",
+            "description" : "The root name of the institution"
+          },
+          "products" : {
+            "type" : "array",
+            "description" : "Object that includes all info about onboarded institutions linked to a user",
+            "items" : {
+              "$ref" : "#/components/schemas/UserProductResource"
+            }
+          }
+        }
+      },
+      "UserProductResource" : {
+        "title" : "UserProductResource",
+        "type" : "object",
+        "properties" : {
+          "productId" : {
+            "type" : "string",
+            "description" : "Product's identifier"
+          },
+          "tokenId" : {
+            "type" : "string",
+            "description" : "A unique identifier for the token associated with the product."
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "The current status of the user on the product. <br>Available values: ACTIVE, PENDING, TOBEVALIDATED, SUSPENDED, DELETED, REJECTED"
+          },
+          "productRole" : {
+            "type" : "string",
+            "description" : "The specific role of the user related to the product."
+          },
+          "productRoleLabel" : {
+            "type" : "string",
+            "description" : "The specific role label of the user related to the product."
+          },
+          "role" : {
+            "type" : "string",
+            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "description" : "Object that includes all info about onboarded institutions linked to a user"
+      },
+      "OnboardedProductResource" : {
+        "title" : "OnboardedProductResource",
+        "type" : "object",
+        "properties" : {
+          "productId" : {
+            "type" : "string",
+            "description" : "Product's unique identifier"
+          },
+          "role" : {
+            "type" : "string",
+            "description" : "User's role",
+            "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR", "ADMIN_EA" ]
+          },
+          "roles" : {
+            "type" : "array",
+            "description" : "User's roles in product",
+            "items" : {
+              "type" : "string",
+              "description" : "User's roles in product"
+            }
+          },
+          "createdAt" : {
+            "type" : "string",
+            "description" : "User product relation create date",
+            "format" : "date-time"
+          }
+        },
+        "description" : "Object that includes user's onboarded product info"
+      },
+      "UserDetailsResource" : {
+        "title" : "UserDetailsResource",
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "User's unique identifier"
+          },
+          "institutionId" : {
+            "type" : "string",
+            "description" : " swagger.external_api.institutions.model.id"
+          },
+          "onboardedProductDetails" : {
+            "$ref" : "#/components/schemas/OnboardedProductResource"
+          }
+        }
+      },
+      "AssistanceContactsResource" : {
+        "title" : "AssistanceContactsResource",
+        "type" : "object",
+        "properties" : {
+          "supportEmail" : {
+            "type" : "string",
+            "description" : "Institution's support email contact"
+          },
+          "supportPhone" : {
+            "type" : "string",
+            "description" : "Institution's support phone contact"
+          }
+        },
+        "description" : "Institution's assistance contacts"
+      },
+      "CompanyInformationsResource" : {
+        "title" : "CompanyInformationsResource",
+        "type" : "object",
+        "properties" : {
+          "rea" : {
+            "type" : "string",
+            "description" : "Institution's REA"
+          },
+          "shareCapital" : {
+            "type" : "string",
+            "description" : "Institution's share capital value"
+          },
+          "businessRegisterPlace" : {
+            "type" : "string",
+            "description" : "Institution's business register place"
+          }
+        },
+        "description" : "GPS, SCP, PT optional data"
+      },
+      "InstitutionResource" : {
+        "title" : "InstitutionResource",
+        "required" : [ "id", "origin", "originId" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "Institution's unique internal Id",
+            "format" : "uuid"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Institution's legal name"
+          },
+          "externalId" : {
+            "type" : "string",
+            "description" : "Institution's unique external identifier"
+          },
+          "originId" : {
+            "type" : "string",
+            "description" : "Institution's details origin Id"
+          },
+          "institutionType" : {
+            "type" : "string",
+            "description" : "Institution's type",
+            "enum" : [ "PA", "PG", "GSP", "SA", "PT", "SCP", "PSP", "AS", "REC", "CON", "PRV", "PRV_PF", "GPU", "SCEC" ]
+          },
+          "digitalAddress" : {
+            "type" : "string",
+            "description" : "Institution's digitalAddress"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Institution onboarding status"
+          },
+          "address" : {
+            "type" : "string",
+            "description" : "Institution's physical address"
+          },
+          "zipCode" : {
+            "type" : "string",
+            "description" : "Institution's zipCode"
+          },
+          "taxCode" : {
+            "type" : "string",
+            "description" : "Institution's taxCode"
+          },
+          "taxCodeInvoicing" : {
+            "type" : "string",
+            "description" : "Institution's taxCodeInvoicing"
+          },
+          "origin" : {
+            "type" : "string",
+            "description" : "Institution data origin"
+          },
+          "userProductRoles" : {
+            "type" : "array",
+            "description" : "Logged user's roles on product",
+            "items" : {
+              "type" : "string",
+              "description" : "Logged user's roles on product"
+            }
+          },
+          "recipientCode" : {
+            "type" : "string",
+            "description" : "Billing recipient code, not required only for institutionType SA"
+          },
+          "companyInformations" : {
+            "$ref" : "#/components/schemas/CompanyInformationsResource"
+          },
+          "assistanceContacts" : {
+            "$ref" : "#/components/schemas/AssistanceContactsResource"
+          },
+          "pspData" : {
+            "$ref" : "#/components/schemas/PspDataResource"
+          },
+          "dpoData" : {
+            "$ref" : "#/components/schemas/DpoDataResource"
+          },
+          "subunitCode" : {
+            "type" : "string",
+            "description" : "Institutions AOO/UO unit Code"
+          },
+          "subunitType" : {
+            "type" : "string",
+            "description" : "Institutions AOO/UO unit type"
+          },
+          "rootParent" : {
+            "$ref" : "#/components/schemas/RootParentResource"
+          },
+          "aooParentCode" : {
+            "type" : "string",
+            "description" : "AOO unit parent institution Code"
+          },
+          "country" : {
+            "type" : "string",
+            "description" : "Institution's physical address country"
+          },
+          "county" : {
+            "type" : "string",
+            "description" : "Institution's physical address county"
+          },
+          "city" : {
+            "type" : "string",
+            "description" : "Institution's physical address city"
+          }
+        }
+      },
+      "RootParentResource" : {
+        "title" : "RootParentResource",
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "Institution's unique internal Id"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "swagger.external_api.institutions.model.parentDescription"
+          }
+        },
+        "description" : "Institution AOO/UO root institutionDescription"
+      },
+      "ProductResource" : {
+        "title" : "ProductResource",
+        "required" : [ "contractTemplatePath", "contractTemplateVersion", "description", "id", "roleMappings", "title", "urlBO" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "Product's unique identifier"
+          },
+          "title" : {
+            "type" : "string",
+            "description" : "Product's title"
+          },
+          "contractTemplatePath" : {
+            "type" : "string",
+            "description" : "The path of contract"
+          },
+          "contractTemplateVersion" : {
+            "type" : "string",
+            "description" : "Version of the contract"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "description" : "Date the products was activated/created",
+            "format" : "date-time"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Product's description"
+          },
+          "urlPublic" : {
+            "type" : "string",
+            "description" : "URL that redirects to the public information webpage of the product"
+          },
+          "urlBO" : {
+            "type" : "string",
+            "description" : "URL that redirects to the back-office section, where is possible to manage the product"
+          },
+          "depictImageUrl" : {
+            "type" : "string",
+            "description" : "Product's depiction image url"
+          },
+          "identityTokenAudience" : {
+            "type" : "string",
+            "description" : "Product's identity token audience"
+          },
+          "logo" : {
+            "type" : "string",
+            "description" : "Product's logo"
+          },
+          "logoBgColor" : {
+            "type" : "string",
+            "description" : "Product logo's background color"
+          },
+          "parentId" : {
+            "type" : "string",
+            "description" : "Root parent of the sub product"
+          },
+          "roleMappings" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/ProductRoleInfo"
+            },
+            "description" : "Mappings between Party's and Product's role"
+          },
+          "roleManagementURL" : {
+            "type" : "string",
+            "description" : "Url of the utilities management"
+          }
+        }
+      },
+      "ProductRole" : {
+        "title" : "ProductRole",
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "productLabel" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ProductRoleInfo" : {
+        "title" : "ProductRoleInfo",
+        "type" : "object",
+        "properties" : {
+          "multiroleAllowed" : {
+            "type" : "boolean"
+          },
+          "skipUserCreation" : {
+            "type" : "boolean"
+          },
+          "phasesAdditionAllowed" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "roles" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProductRole"
+            }
+          }
+        },
+        "description" : "Mappings between Party's and Product's role"
+      },
+      "DataProtectionOfficer" : {
+        "title" : "DataProtectionOfficer",
+        "type" : "object",
+        "properties" : {
+          "address" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "pec" : {
+            "type" : "string"
+          }
+        }
+      },
+      "GeographicTaxonomy" : {
+        "title" : "GeographicTaxonomy",
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "desc" : {
+            "type" : "string"
+          }
+        }
+      },
+      "InstitutionUpdate" : {
+        "title" : "InstitutionUpdate",
+        "type" : "object",
+        "properties" : {
+          "institutionType" : {
+            "type" : "string",
+            "enum" : [ "PA", "PG", "GSP", "SA", "PT", "SCP", "PSP", "AS", "REC", "CON", "PRV", "PRV_PF", "GPU", "SCEC" ]
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "digitalAddress" : {
+            "type" : "string"
+          },
+          "address" : {
+            "type" : "string"
+          },
+          "city" : {
+            "type" : "string"
+          },
+          "county" : {
+            "type" : "string"
+          },
+          "country" : {
+            "type" : "string"
+          },
+          "taxCode" : {
+            "type" : "string"
+          },
+          "zipCode" : {
+            "type" : "string"
+          },
+          "paymentServiceProvider" : {
+            "$ref" : "#/components/schemas/PaymentServiceProvider"
+          },
+          "dataProtectionOfficer" : {
+            "$ref" : "#/components/schemas/DataProtectionOfficer"
+          },
+          "gpuData" : {
+            "$ref" : "#/components/schemas/GPUData"
+          },
+          "payment" : {
+            "$ref" : "#/components/schemas/Payment"
+          },
+          "geographicTaxonomies" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/GeographicTaxonomy"
+            }
+          },
+          "rea" : {
+            "type" : "string"
+          },
+          "shareCapital" : {
+            "type" : "string"
+          },
+          "businessRegisterPlace" : {
+            "type" : "string"
+          },
+          "supportEmail" : {
+            "type" : "string"
+          },
+          "supportPhone" : {
+            "type" : "string"
+          },
+          "imported" : {
+            "type" : "boolean"
+          },
+          "atecoCodes" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "legalForm" : {
+            "type" : "string"
+          }
+        }
+      },
+      "LegalsResource" : {
+        "title" : "LegalsResource",
+        "type" : "object",
+        "properties" : {
+          "partyId" : {
+            "type" : "string"
+          },
+          "relationshipId" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string",
+            "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR", "ADMIN_EA" ]
+          },
+          "env" : {
+            "type" : "string",
+            "enum" : [ "ROOT", "DEV", "COLL", "PROD" ]
+          }
+        }
+      },
+      "Payment" : {
+        "title" : "Payment",
+        "type" : "object",
+        "properties" : {
+          "iban" : {
+            "type" : "string"
+          },
+          "holder" : {
+            "type" : "string"
+          }
+        }
+      },
+      "PaymentServiceProvider" : {
+        "title" : "PaymentServiceProvider",
+        "type" : "object",
+        "properties" : {
+          "abiCode" : {
+            "type" : "string"
+          },
+          "businessRegisterNumber" : {
+            "type" : "string"
+          },
+          "legalRegisterName" : {
+            "type" : "string"
+          },
+          "legalRegisterNumber" : {
+            "type" : "string"
+          },
+          "vatNumberGroup" : {
+            "type" : "boolean"
+          },
+          "contractType" : {
+            "type" : "string"
+          },
+          "contractId" : {
+            "type" : "string"
+          },
+          "providerNames" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "TokenResource" : {
+        "title" : "TokenResource",
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "checksum" : {
+            "type" : "string"
+          },
+          "legals" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/LegalsResource"
+            }
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "institutionId" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "string"
+          },
+          "expiringDate" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "contractVersion" : {
+            "type" : "string"
+          },
+          "contractTemplate" : {
+            "type" : "string"
+          },
+          "contractSigned" : {
+            "type" : "string"
+          },
+          "contentType" : {
+            "type" : "string"
+          },
+          "institutionUpdate" : {
+            "$ref" : "#/components/schemas/InstitutionUpdate"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "closedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "activatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "TokensResource" : {
+        "title" : "TokensResource",
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TokenResource"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes" : {
+      "bearerAuth" : {
+        "type" : "http",
+        "description" : "A bearer token in the format of a JWS and conformed to the specifications included in [RFC8725](https://tools.ietf.org/html/RFC8725)",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT"
+      }
+    }
+  }
+}

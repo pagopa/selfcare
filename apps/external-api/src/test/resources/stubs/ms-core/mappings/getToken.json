@@ -1,0 +1,73 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/tokens/token",
+    "queryParameters": {
+      "institutionId": {
+        "equalTo": "institutionId"
+      },
+      "productId": {
+        "equalTo": "productId"
+      }
+    }
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+                  "checksum": "string",
+                  "closedAt": "2023-05-22T15:59:59.578Z",
+                  "contractSigned": "string",
+                  "contractTemplate": "string",
+                  "contractVersion": "string",
+                  "createdAt": "2023-05-22T15:59:59.578Z",
+                  "expiringDate": "2023-05-22T15:59:59.578Z",
+                  "id": "string",
+                  "institutionId": "string",
+                  "institutionUpdate": {
+                    "address": "string",
+                    "businessRegisterPlace": "string",
+                    "dataProtectionOfficer": {
+                      "address": "string",
+                      "email": "string",
+                      "pec": "string"
+                    },
+                    "description": "string",
+                    "digitalAddress": "string",
+                    "geographicTaxonomies": [
+                      {
+                        "code": "string",
+                        "desc": "string"
+                      }
+                    ],
+                    "imported": true,
+                    "institutionType": "GSP",
+                    "paymentServiceProvider": {
+                      "abiCode": "string",
+                      "businessRegisterNumber": "string",
+                      "legalRegisterName": "string",
+                      "legalRegisterNumber": "string",
+                      "vatNumberGroup": true
+                    },
+                    "rea": "string",
+                    "shareCapital": "string",
+                    "supportEmail": "string",
+                    "supportPhone": "string",
+                    "taxCode": "string",
+                    "zipCode": "string"
+                  },
+                  "productId": "string",
+                  "status": "ACTIVE",
+                  "type": "INSTITUTION",
+                  "updatedAt": "2023-05-22T15:59:59.578Z",
+                  "users": [
+                    {
+                      "role": "DELEGATE",
+                      "userId": "string"
+                    }
+                  ]
+                },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+name: Publish - Custom openapi
+
+on:
+  push:
+    branches:
+      - main
+      - releases/*
+    paths:
+      - "src/**"
+      - 'pom.xml'
+
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options: 
+        - dev
+        - uat
+        - prod
+
+jobs:
+
+  release_dev:
+    uses: ./.github/workflows/call_deploy_openapi.yml
+    name: '[Dev] Release custom openapi'
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+      path_openapi_docs: infra/apim_v2/api/custom_openapi/openapi.dev.json
+
+  release_uat:
+    uses: ./.github/workflows/call_deploy_openapi.yml
+    name: '[UAT] Release custom openapi'
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    secrets: inherit
+    with:
+      environment: uat
+      path_openapi_docs: infra/apim_v2/api/custom_openapi/openapi.uat.json
+
+  release_prod:
+    uses: ./.github/workflows/call_deploy_openapi.yml
+    name: '[Prod] Release custom openapi'
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod
+      path_openapi_docs: infra/apim_v2/api/custom_openapi/openapi.prod.json

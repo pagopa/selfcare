@@ -1,0 +1,51 @@
+meta {
+  name: getInstitutionOnboardings
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{apiBaseUrl}}/external/support/v1/onboarding/institutionOnboardings?taxCode={{taxCode}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  taxCode: {{taxCode}}
+  ~subunitCode:
+  ~origin:
+  ~originId:
+  ~productId: {{productId}}
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeySupport}}
+}
+
+script:post-response {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  test("getInstitutionOnboardings ok", function() {
+    expect(res.getStatus()).to.equal(200);
+
+    const jsonData = res.getBody();
+
+    // The API returns a top-level array of onboardings, not an object with "onboardings"
+    expect(jsonData).to.be.an("array");
+
+    if (jsonData.length > 0) {
+      jsonData.forEach(item => {
+        expect(item).to.have.property("id").that.is.a("string");
+        expect(item).to.have.property("productId").that.is.a("string");
+        expect(item).to.have.property("workflowType").that.is.a("string");
+        expect(item).to.have.property("institution").that.is.an("object");
+        expect(item.institution).to.have.property("taxCode").that.is.a("string");
+        expect(item).to.have.property("status").that.is.a("string");
+      });
+    }
+  });
+}
+
+settings {
+  encodeUrl: true
+}

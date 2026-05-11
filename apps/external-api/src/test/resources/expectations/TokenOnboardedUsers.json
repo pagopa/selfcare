@@ -1,0 +1,104 @@
+[
+  {
+    "id": "id",
+    "status": "status",
+    "institutionId": "institutionId",
+    "productId": "productId",
+    "expiringDate": "2022-12-31T23:59:59Z",
+    "users": [
+      {
+        "userId": "userId",
+        "role": "DELEGATE"
+      }
+    ],
+    "institutionUpdate": {
+      "institutionType": "PA",
+      "description": "description",
+      "digitalAddress": "digitalAddress",
+      "address": "address",
+      "city": "city",
+      "county": "county",
+      "country": "country",
+      "taxCode": "taxCode",
+      "zipCode": "zipCode",
+      "paymentServiceProvider": {
+        "abiCode": "abiCode",
+        "businessRegisterNumber": "businessRegisterNumber",
+        "legalRegisterName": "legalRegisterName",
+        "legalRegisterNumber": "legalRegisterNumber",
+        "vatNumberGroup": true
+      },
+      "dataProtectionOfficer": {
+        "address": "address",
+        "email": "email",
+        "pec": "pec"
+      },
+      "geographicTaxonomies": [
+        {
+          "code": "code",
+          "desc": "description"
+        }
+      ],
+      "rea": "reason",
+      "shareCapital": "shareCapital",
+      "businessRegisterPlace": "businessRegisterPlace",
+      "supportEmail": "supportEmail",
+      "supportPhone": "supportPhone",
+      "imported": true
+    },
+    "createdAt": "2022-01-01T00:00:00Z",
+    "updatedAt": "2022-01-01T00:00:00Z",
+    "closedAt": "2022-12-31T23:59:59Z"
+  },
+  {
+    "id": "id2",
+    "status": "status",
+    "institutionId": "institutionId",
+    "productId": "productId",
+    "expiringDate": "2022-12-31T23:59:59Z",
+    "users": [
+      {
+        "userId": "userId",
+        "role": "DELEGATE"
+      }
+    ],
+    "institutionUpdate": {
+      "institutionType": "PA",
+      "description": "description",
+      "digitalAddress": "digitalAddress",
+      "address": "address",
+      "city": "city",
+      "county": "county",
+      "country": "country",
+      "taxCode": "taxCode",
+      "zipCode": "zipCode",
+      "paymentServiceProvider": {
+        "abiCode": "abiCode",
+        "businessRegisterNumber": "businessRegisterNumber",
+        "legalRegisterName": "legalRegisterName",
+        "legalRegisterNumber": "legalRegisterNumber",
+        "vatNumberGroup": true
+      },
+      "dataProtectionOfficer": {
+        "address": "address",
+        "email": "email",
+        "pec": "pec"
+      },
+      "geographicTaxonomies": [
+        {
+          "code": "code",
+          "desc": "description"
+        }
+      ],
+      "rea": "reason",
+      "shareCapital": "shareCapital",
+      "businessRegisterPlace": "businessRegisterPlace",
+      "supportEmail": "supportEmail",
+      "supportPhone": "supportPhone",
+      "imported": true
+    },
+    "createdAt": "2022-01-01T00:00:00Z",
+    "updatedAt": "2022-01-01T00:00:00Z",
+    "closedAt": "2022-12-31T23:59:59Z"
+  }
+]

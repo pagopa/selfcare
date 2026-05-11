@@ -1,0 +1,17 @@
+{
+  "users": [
+    {
+      "email": "email@example.com",
+      "name": "string",
+      "role": "DELEGATE",
+      "surname": "string",
+      "taxCode": "string"
+    }
+  ],
+  "importContract": {
+    "fileName": "fileName",
+    "filePath": "filePath",
+    "contractType": "contractType",
+    "onboardingDate": "2007-12-03T10:15:30+01:00"
+  }
+}

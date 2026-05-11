@@ -1,0 +1,13 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+      "title": "Internal API service",
+      "description": "This service acts as an orchestrator for information coming from different services and as a proxy",
+      "version": "1.0.0"
+    },
+    "servers": [
+      {
+        "url": "https://${host}/${basePath}"
+      }
+    ]
+  }

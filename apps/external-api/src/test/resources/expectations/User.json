@@ -1,0 +1,30 @@
+{
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "fiscalCode": "NLLGPJ67L30L783W",
+  "name": {
+    "value": "John"
+  },
+  "familyName": {
+    "value": "Doe"
+  },
+  "email": {
+    "value": "john.doe@example.com"
+  },
+  "workContacts": {
+    "institution1": {
+      "email": {
+        "value": "contact1@work.it"
+      }
+    },
+    "contact2": {
+      "email": {
+        "value": "contact2@work.it"
+      }
+    },
+    "123e4567-e89b-12d3-a456-426614174000": {
+      "email": {
+        "value": "contact2@work.it"
+      }
+    }
+  }
+}

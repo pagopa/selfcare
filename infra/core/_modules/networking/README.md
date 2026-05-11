@@ -8,7 +8,7 @@ No requirements.
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | n/a |
 
 ## Modules
@@ -18,7 +18,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azurerm_nat_gateway_public_ip_association.subnet_pip_nat_gateway](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway_public_ip_association) | resource |
 | [azurerm_network_security_group.subnet_nsg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) | resource |
 | [azurerm_network_security_rule.cae_subnet_inbound_rule](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_rule) | resource |
@@ -33,7 +33,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_cidr_subnet_cae"></a> [cidr\_subnet\_cae](#input\_cidr\_subnet\_cae) | CIDR block for ContainerAppEnvironment subnet | `string` | n/a | yes |
 | <a name="input_cidr_subnet_main"></a> [cidr\_subnet\_main](#input\_cidr\_subnet\_main) | CIDR block for main subnet | `string` | `null` | no |
 | <a name="input_container_app_name_snet"></a> [container\_app\_name\_snet](#input\_container\_app\_name\_snet) | Name of container app subnet | `string` | n/a | yes |
@@ -46,6 +46,6 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_subnet"></a> [subnet](#output\_subnet) | n/a |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->

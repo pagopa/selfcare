@@ -1,0 +1,43 @@
+meta {
+  name: getUserById
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{apiBaseUrl}}/external/support/v1/users/{{userId}}?institutionId={{institutionId}}&productId={{productId}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  institutionId: {{institutionId}}
+  productId: {{productId}}
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeySupport}}
+}
+
+script:post-response {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  test("getUserById ok", function() {
+    const status = res.getStatus();
+    expect([200, 404]).to.include(status);
+
+    if (status === 200) {
+      const jsonData = res.getBody();
+      expect(jsonData).to.have.property("id");
+      expect(jsonData).to.have.property("name");
+      expect(jsonData).to.have.property("surname");
+      if (jsonData.id) {
+        expect(jsonData.id).to.match(uuidRegex);
+      }
+    }
+  });
+}
+
+settings {
+  encodeUrl: true
+}

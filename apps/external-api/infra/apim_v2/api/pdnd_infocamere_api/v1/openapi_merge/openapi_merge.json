@@ -1,0 +1,19 @@
+{
+  "inputs": [
+    {
+      "description": {
+        "append": true
+      },
+      "inputFile": "./openapi_template.json"
+    },
+    {
+      "inputFile": "../../../../../../../docs/pagopa/selfcare-ms-party-registry-proxy/openapi.json",
+      "operationSelection": {
+        "includeTags": [
+          "infocamere-pdnd"
+        ]
+      }
+    }
+  ],
+  "output": "../openapi.json"
+}

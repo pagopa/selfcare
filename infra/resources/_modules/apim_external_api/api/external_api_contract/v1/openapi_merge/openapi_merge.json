@@ -1,0 +1,27 @@
+{
+  "inputs": [
+    {
+      "description": {
+        "append": true
+      },
+      "inputFile": "./openapi_template.json"
+    },
+    {
+      "inputFile": "../../../../../../src/main/resources/swagger/api-docs.json",
+      "operationSelection": {
+        "includeTags": [
+          "contract"
+        ]
+      }
+    },
+    {
+      "inputFile": "../../../../../../../docs/pagopa/selfcare-onboarding-functions/openapi-apim-function.json",
+      "operationSelection": {
+        "includeTags": [
+          "conservazione"
+        ]
+      }
+    }
+  ],
+  "output": "../openapi.json"
+}

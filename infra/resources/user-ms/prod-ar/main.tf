@@ -112,7 +112,7 @@ locals {
       value = true
     },
     {
-      name = "USER_MS_EVENTHUB_SELFCARE_FD_ENABLED"
+      name  = "USER_MS_EVENTHUB_SELFCARE_FD_ENABLED"
       value = true
     },
     {

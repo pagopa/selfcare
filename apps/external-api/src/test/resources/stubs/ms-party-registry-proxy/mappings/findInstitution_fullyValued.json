@@ -1,0 +1,26 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/institutions/institutionExteranlIdFullyValued"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+      "id": "735f1009-5f93-4133-b503-e8b96d493588",
+      "originId": "c_h846",
+      "o": "o",
+      "ou": "ou",
+      "aoo": "aoo",
+      "taxCode": "80001780792",
+      "category": "L6",
+      "description": "Comune di San Floro",
+      "digitalAddress": "ragioneria.sanfloro@asmepec.it",
+      "address": "Piazza Roma 1",
+      "zipCode": "88021",
+      "origin": "IPA"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
