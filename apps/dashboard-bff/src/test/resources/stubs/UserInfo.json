@@ -1,0 +1,104 @@
+[
+  {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "user": {
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "fiscalCode": "NLLGPJ67L30L783W",
+      "name": {
+        "value": "John"
+      },
+      "familyName": {
+        "value": "Doe"
+      },
+      "email": {
+        "value": "john.doe@example.com"
+      },
+      "workContacts": {
+        "institution1": {
+          "email": {
+            "value": "contact1@work.it"
+          }
+        },
+        "contact2": {
+          "email": {
+            "value": "contact2@work.it"
+          }
+        }
+      }
+    },
+    "role": "ADMIN",
+    "products": {
+      "testProductId": {
+        "id": "product1",
+        "title": "Product1",
+        "roleInfos": [
+          {
+            "relationshipId": "rel1",
+            "role": "role1",
+            "status": "ACTIVE",
+            "selcRole": "ADMIN"
+          },
+          {
+            "relationshipId": "rel2",
+            "role": "role2",
+            "status": "ACTIVE",
+            "selcRole": "ADMIN"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "institutionId": "institution1"
+  },
+  {
+    "id": "123e4567-e89b-12d3-a456-426614174555",
+    "user": {
+      "id": "123e4567-e89b-12d3-a456-426614174555",
+      "fiscalCode": "NLLGPJ67L30L783S",
+      "name": {
+        "value": "John2"
+      },
+      "familyName": {
+        "value": "Doe2"
+      },
+      "email": {
+        "value": "john.doe@example.com"
+      },
+      "workContacts": {
+        "institution1": {
+          "email": {
+            "value": "contact1@work.it"
+          }
+        },
+        "contact2": {
+          "email": {
+            "value": "contact2@work.it"
+          }
+        }
+      }
+    },
+    "role": "ADMIN",
+    "products": {
+      "testProductId": {
+        "id": "product1",
+        "title": "Product1",
+        "roleInfos": [
+          {
+            "relationshipId": "rel1",
+            "role": "role1",
+            "status": "ACTIVE",
+            "selcRole": "ADMIN"
+          },
+          {
+            "relationshipId": "rel2",
+            "role": "role2",
+            "status": "ACTIVE",
+            "selcRole": "ADMIN"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "institutionId": "institution1"
+  }
+]

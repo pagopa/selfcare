@@ -1,0 +1,9 @@
+{
+  "email": "email@example.com",
+  "name": "string",
+  "productRoles": [
+    "string"
+  ],
+  "surname": "string",
+  "taxCode": "string"
+}

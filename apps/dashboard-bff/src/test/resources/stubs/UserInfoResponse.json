@@ -1,0 +1,12 @@
+{
+  "userId": "userId",
+  "institutions": [
+    {
+      "institutionId": "institutionId",
+      "institutionName": "institutionName",
+      "institutionRootName": "institutionRootName",
+      "role": "DELEGATE",
+      "status": "ACTIVE"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "userId": "userId",
+  "institutionId": "institutionId",
+  "institutionDescription": "institutionDescription",
+  "institutionRootName": "institutionRootName",
+  "userMailUuid": "userMailUuid",
+  "products": [
+    {
+      "productId": "productId",
+      "tokenId": "tokenId",
+      "status": "ACTIVE",
+      "productRole": "productRole",
+      "role": "OPERATOR",
+      "env": "DEV",
+      "createdAt": "2023-10-10T10:10:10",
+      "updatedAt": "2023-10-10T10:10:10",
+      "delegationId": "delegationId",
+      "userProductActions": [
+        "TEST_ACTION_1",
+        "TEST_ACTION_2"
+      ]
+    }
+  ]
+}

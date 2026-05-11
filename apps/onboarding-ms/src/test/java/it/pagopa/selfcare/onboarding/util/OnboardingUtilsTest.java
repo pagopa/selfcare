@@ -17,7 +17,7 @@ import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.model.FormItem;
-import it.pagopa.selfcare.onboarding.service.ProxyRegistryService;
+import it.pagopa.selfcare.onboarding.service.RegistryProxyService;
 import it.pagopa.selfcare.onboarding.service.util.OnboardingUtils;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
@@ -40,7 +40,7 @@ class OnboardingUtilsTest {
     OnboardingUtils onboardingUtils;
 
     @InjectMock
-    ProxyRegistryService proxyRegistryService;
+    RegistryProxyService registryProxyService;
 
     @Test
     void getUoFromRecipientCode_shouldGetData() {
@@ -48,7 +48,7 @@ class OnboardingUtilsTest {
         UOResource uoResource = new UOResource();
         uoResource.setCodiceIpa("codiceIpa");
 
-        when(proxyRegistryService.findUoByRecipientCode(anyString(), isNull()))
+        when(registryProxyService.findUoByRecipientCode(anyString(), isNull()))
                 .thenReturn(Uni.createFrom().item(uoResource));
 
         UniAssertSubscriber<UOResource> subscriber = onboardingUtils.getUoFromRecipientCode(recipientCode)
@@ -61,7 +61,7 @@ class OnboardingUtilsTest {
     void getUoFromRecipientCode_shouldThrowResourceNotFound() {
         final String recipientCode = "recipientCode";
 
-        when(proxyRegistryService.findUoByRecipientCode(anyString(), isNull()))
+        when(registryProxyService.findUoByRecipientCode(anyString(), isNull()))
                 .thenReturn(Uni.createFrom().failure(new WebApplicationException(Response.Status.NOT_FOUND)));
 
         UniAssertSubscriber<UOResource> subscriber = onboardingUtils.getUoFromRecipientCode(recipientCode)

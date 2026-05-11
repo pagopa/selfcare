@@ -28,7 +28,9 @@ jobs:
 
   code_review:
     permissions:
+      contents: read
       packages: read
+      pull-requests: write
     uses: ./.github/workflows/call_code_review.yml
     name: Onboarding function Code Review
     secrets: inherit
@@ -36,5 +38,5 @@ jobs:
       pr_number: ${{ github.event.pull_request.number }}
       source_branch: ${{ github.head_ref }}
       target_branch: ${{ github.base_ref }}
-      sonar_key: 'pagopa_selfcare-onboarding'
+      sonar_key: 'pagopa_selfcare'
       module: 'onboarding-functions'

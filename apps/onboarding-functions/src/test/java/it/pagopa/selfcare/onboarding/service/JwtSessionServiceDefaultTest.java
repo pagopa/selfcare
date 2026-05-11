@@ -5,6 +5,8 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.onboarding.service.impl.JwtSessionServiceImpl;
+
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
@@ -29,7 +31,7 @@ import static org.mockito.Mockito.when;
 class JwtSessionServiceDefaultTest {
 
     @Inject
-    JwtSessionServiceDefault tokenService;
+    JwtSessionServiceImpl tokenService;
 
     @RestClient
     @InjectMock

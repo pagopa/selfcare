@@ -289,15 +289,16 @@ public class SearchServiceImplTest {
     final List<String> products = List.of("prod-io", "prod-pagopa");
     final List<String> institutionTypes = List.of("PA", "GSP");
     final List<String> statuses = List.of("ACTIVE", "PENDING");
+    final List<String> orderBy = List.of("createdAt_ASC", "description_DESC");
     final Long page = 2L;
     final Long pageSize = 10L;
-    final String orderBy = "createdAt asc";
+    final String orderByString = "createdAt asc,description desc";
     final String filter = "search.in(productId, 'prod-io,prod-pagopa') and search.in(institutionType, 'PA,GSP') and search.in(status, 'ACTIVE,PENDING')";
     final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
     mockResponse.setTotalElements(100L);
-    when(searchServiceConnector.searchOnboarding(searchText, filter, pageSize, 20L, orderBy)).thenReturn(mockResponse);
+    when(searchServiceConnector.searchOnboarding(searchText, filter, pageSize, 20L, orderByString)).thenReturn(mockResponse);
     final OnboardingIndexSearch onboardingIndexSearch = searchService.searchOnboarding(searchText, products, institutionTypes, statuses, page, pageSize, orderBy);
-    verify(searchServiceConnector, times(1)).searchOnboarding(searchText, filter, pageSize, 20L, orderBy);
+    verify(searchServiceConnector, times(1)).searchOnboarding(searchText, filter, pageSize, 20L, orderByString);
     assertEquals(page, onboardingIndexSearch.getPage());
     assertEquals(pageSize, onboardingIndexSearch.getPageSize());
     assertEquals(100L, mockResponse.getTotalElements());
@@ -356,6 +357,34 @@ public class SearchServiceImplTest {
     assertEquals(15L, onboardingIndexSearch.getPageSize());
     assertEquals(100L, mockResponse.getTotalElements());
     assertEquals(7L, onboardingIndexSearch.getTotalPages());
+  }
+
+  @Test
+  void searchOnboardingWhenOrderIsNotValid() {
+    final String searchText = "Test";
+    final List<String> products = List.of("prod-io", "prod-pagopa");
+    final List<String> institutionTypes = List.of("PA", "GSP");
+    final List<String> statuses = List.of("ACTIVE", "PENDING");
+    final List<String> orderBy = List.of("createdAt_AS", "description_DESC");
+    final Long page = 2L;
+    final Long pageSize = 10L;
+    final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
+    mockResponse.setTotalElements(100L);
+    assertThrows(IllegalArgumentException.class, () -> searchService.searchOnboarding(searchText, products, institutionTypes, statuses, page, pageSize, orderBy));
+  }
+
+  @Test
+  void searchOnboardingWhenOrderIsNotValid2() {
+    final String searchText = "Test";
+    final List<String> products = List.of("prod-io", "prod-pagopa");
+    final List<String> institutionTypes = List.of("PA", "GSP");
+    final List<String> statuses = List.of("ACTIVE", "PENDING");
+    final List<String> orderBy = List.of("createdAt_ASC_DESC", "description_DESC");
+    final Long page = 2L;
+    final Long pageSize = 10L;
+    final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
+    mockResponse.setTotalElements(100L);
+    assertThrows(IllegalArgumentException.class, () -> searchService.searchOnboarding(searchText, products, institutionTypes, statuses, page, pageSize, orderBy));
   }
 
   @Test

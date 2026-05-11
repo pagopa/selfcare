@@ -1,0 +1,24 @@
+{
+  "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  "fiscalCode": "setFiscalCode",
+  "name": {
+    "certification": "SPID",
+    "value": "setValue"
+  },
+  "familyName": {
+    "certification": "SPID",
+    "value": "setValue"
+  },
+  "email": {
+    "certification": "SPID",
+    "value": "setValue"
+  },
+  "workContacts": {
+    "institutionId": {
+      "email": {
+        "certification": "SPID",
+        "value": "setValue"
+      }
+    }
+  }
+}

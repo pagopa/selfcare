@@ -1,0 +1,29 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/products/productId"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+      "contractTemplatePath": "string",
+      "contractTemplateUpdatedAt": "2022-05-09T08:56:23.528Z",
+      "contractTemplateVersion": "string",
+      "createdAt": "2022-05-09T08:56:23.528Z",
+      "description": "string",
+      "id": "string",
+      "identityTokenAudience": "string",
+      "status": "ACTIVE",
+      "logo": "string",
+      "depictImageUrl": "string",
+      "parentId": "string",
+      "roleManagementURL": "string",
+      "title": "string",
+      "urlBO": "string",
+      "urlPublic": "string"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

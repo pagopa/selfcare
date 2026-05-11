@@ -1,0 +1,33 @@
+{
+  "id": "productId",
+  "logo": "http://example.com/logo.png",
+  "depictImageUrl": "http://example.com/depictImage.png",
+  "title": "Product Title",
+  "logoBgColor": "#FFFFFF",
+  "description": "Product Description",
+  "urlPublic": "http://example.com/public",
+  "urlBO": "http://example.com/bo",
+  "createdAt": "2023-11-27T16:09:11.397748300Z",
+  "createdBy": "creatorId",
+  "modifiedAt": "2023-11-27T16:09:11.397748300Z",
+  "modifiedBy": "modifierId",
+  "roleMappings": {
+    "MANAGER": {
+      "multiroleAllowed": true,
+      "roles": [
+        {
+          "code": "code1",
+          "label": "label1",
+          "description": "description1"
+        },
+        {
+          "code": "code2",
+          "label": "label2",
+          "description": "description2"
+        }
+      ]
+    }
+  },
+  "parentId": "parentProduct",
+  "roleManagementURL": "roleManagementUrl"
+}

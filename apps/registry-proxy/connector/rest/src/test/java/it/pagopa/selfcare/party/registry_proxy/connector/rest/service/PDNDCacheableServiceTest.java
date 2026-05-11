@@ -16,13 +16,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -189,6 +191,68 @@ class PDNDCacheableServiceTest {
     }
 
     @Test
+    void getEncryptedPDNDImpresa_returnsLastElementOfList() {
+        // given
+        String encryptedTax = "ENC_TC";
+        String decryptedTax = "TAXABC";
+        String token = "tok-ic";
+
+        ClientCredentialsResponse tokenResp = mock(ClientCredentialsResponse.class);
+        PdndSecretValue pdndSecretValue = null;
+
+        when(pdndInfoCamereRestClientConfig.getPdndSecretValue()).thenReturn(pdndSecretValue);
+        when(tokenProviderPDND.getTokenPdnd(pdndSecretValue)).thenReturn(tokenResp);
+        when(tokenResp.getAccessToken()).thenReturn(token);
+
+        PDNDImpresa olderImpresa = buildImpresa("OLD-CF");
+        PDNDImpresa latestImpresa = buildImpresa("LATEST-CF");
+        List<PDNDImpresa> list = new ArrayList<>(List.of(olderImpresa, latestImpresa));
+        when(pdndInfoCamereRestClient.retrieveInstitutionPdndByTaxCode(decryptedTax, "Bearer " + token))
+                .thenReturn(list);
+
+        try (MockedStatic<DataEncryptionUtils> utils = mockStatic(DataEncryptionUtils.class)) {
+            utils.when(() -> DataEncryptionUtils.decrypt(encryptedTax)).thenReturn(decryptedTax);
+            utils.when(() -> DataEncryptionUtils.encrypt(anyString()))
+                    .thenAnswer(inv -> "ENCRYPTED:" + inv.getArgument(0, String.class));
+
+            // when
+            String result = pdndCacheableService.getEncryptedPDNDImpresa(encryptedTax);
+
+            // then
+            assertThat(result).contains("LATEST-CF").doesNotContain("OLD-CF");
+        }
+    }
+
+    @Test
+    void getEncryptedPDNDImpresa_emptyListThrowsResourceNotFound() {
+        // given
+        String encryptedTax = "ENC_TC";
+        String decryptedTax = "TAXABC";
+        String token = "tok-ic";
+
+        ClientCredentialsResponse tokenResp = mock(ClientCredentialsResponse.class);
+        PdndSecretValue pdndSecretValue = null;
+
+        when(pdndInfoCamereRestClientConfig.getPdndSecretValue()).thenReturn(pdndSecretValue);
+        when(tokenProviderPDND.getTokenPdnd(pdndSecretValue)).thenReturn(tokenResp);
+        when(tokenResp.getAccessToken()).thenReturn(token);
+        when(pdndInfoCamereRestClient.retrieveInstitutionPdndByTaxCode(decryptedTax, "Bearer " + token))
+                .thenReturn(Collections.emptyList());
+
+        try (MockedStatic<DataEncryptionUtils> utils = mockStatic(DataEncryptionUtils.class)) {
+            utils.when(() -> DataEncryptionUtils.decrypt(encryptedTax)).thenReturn(decryptedTax);
+
+            // when
+            ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class,
+                    () -> pdndCacheableService.getEncryptedPDNDImpresa(encryptedTax));
+
+            // then
+            assertThat(ex).hasMessageContaining("No institution found for taxCode: " + decryptedTax);
+            utils.verify(() -> DataEncryptionUtils.encrypt(anyString()), never());
+        }
+    }
+
+    @Test
     void getEncryptedPDNDImpresa_exceptionWrappedAsIllegalArgument() {
         String encryptedTax = "ENC_TC";
         String decryptedTax = "TAXABC";
@@ -210,6 +274,12 @@ class PDNDCacheableServiceTest {
                     () -> pdndCacheableService.getEncryptedPDNDImpresa(encryptedTax));
             assertThat(ex).hasMessageContaining("Unexpected error while retrieving institution");
         }
+    }
+
+    private PDNDImpresa buildImpresa(String taxCode) {
+        PDNDImpresa impresa = new PDNDImpresa();
+        impresa.setBusinessTaxId(taxCode);
+        return impresa;
     }
 
 }

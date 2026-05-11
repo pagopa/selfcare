@@ -19,7 +19,7 @@ on:
       - reopened
       - ready_for_review
     paths:
-      - "infra/resources/user-cdc/**"
+      - 'apps/user-cdc/**'
       - '.github/workflows/pr_user_cdc.yml'
       - '.github/workflows/call_code_review.yml'
 
@@ -32,5 +32,5 @@ jobs:
       pr_number: ${{ github.event.pull_request.number }}
       source_branch: ${{ github.head_ref }}
       target_branch: ${{ github.base_ref }}
-      sonar_key: 'pagopa_selfcare-user'
+      sonar_key: 'pagopa_selfcare'
       module: 'user-cdc'
