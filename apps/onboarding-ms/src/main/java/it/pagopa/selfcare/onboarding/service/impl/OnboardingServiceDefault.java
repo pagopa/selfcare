@@ -339,8 +339,8 @@ public class OnboardingServiceDefault implements OnboardingService {
         return Onboarding.findByIdOptional(onboardingId)
                 .onItem().transformToUni(opt ->
                         opt.map(Onboarding.class::cast)
-                                .map(o -> Uni.createFrom().item(o))
-                                .orElse(Uni.createFrom().failure(
+                                .map(Uni.createFrom()::item)
+                                .orElseGet(() -> Uni.createFrom().failure(
                                         new ResourceNotFoundException(
                                                 String.format("Onboarding with id %s not found!", onboardingId)))))
                 .flatMap(onboarding ->
