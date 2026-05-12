@@ -31,8 +31,3 @@ resource "github_actions_environment_secret" "integration_environment_bruno" {
       apimKeySupport       = data.azurerm_key_vault_secret.apim_support_sk.value
   }))
 }
-
-output "integration_environment_bruno" {
-  value     = github_actions_environment_secret.integration_environment_bruno.value
-  sensitive = true
-}
