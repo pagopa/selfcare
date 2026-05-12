@@ -23,7 +23,7 @@ db.onboardings.insertMany([
     status: "PENDING",
     users: [
       {
-        id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+        _id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
         role: "MANAGER",
         userMailUuid: "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e22",
       },
@@ -52,7 +52,7 @@ db.onboardings.insertMany([
     status: "PENDING",
     users: [
       {
-        id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+        _id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
         role: "MANAGER",
         userMailUuid: "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e22",
       },
@@ -83,7 +83,7 @@ db.onboardings.insertMany([
     status: "COMPLETED",
     users: [
       {
-        id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+        _id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
         role: "MANAGER",
         userMailUuid: "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e22",
       },
@@ -112,7 +112,7 @@ db.onboardings.insertMany([
     status: "COMPLETED",
     users: [
       {
-        id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+        _id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
         role: "MANAGER",
         userMailUuid: "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e22",
       },
@@ -141,7 +141,7 @@ db.onboardings.insertMany([
     status: "TOBEVALIDATED",
     users: [
       {
-        id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+        _id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
         role: "MANAGER",
         userMailUuid: "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e22",
       },
@@ -170,7 +170,7 @@ db.onboardings.insertMany([
     status: "TOBEVALIDATED",
     users: [
       {
-        id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+        _id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
         role: "MANAGER",
         userMailUuid: "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e22",
       },
@@ -199,7 +199,7 @@ db.onboardings.insertMany([
     status: "TOBEVALIDATED",
     users: [
       {
-        id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+        _id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
         role: "MANAGER",
         userMailUuid: "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e22",
       },
@@ -228,7 +228,7 @@ db.onboardings.insertMany([
     status: "COMPLETED",
     users: [
       {
-        id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+        _id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
         role: "MANAGER",
         userMailUuid: "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e22",
       },

@@ -53,7 +53,7 @@ services:
       - institution-ms
 
   user-ms:
-    image: ghcr.io/pagopa/selfcare-user-ms:sha-f3cd392
+    image: ghcr.io/pagopa/selfcare-user-ms:latest
     ports:
       - "8087:8080"
     env_file:
