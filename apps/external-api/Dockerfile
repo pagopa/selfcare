@@ -17,6 +17,8 @@ COPY --link ./apps/external-api/pom.xml .
 COPY ./apps/external-api/src/main/ ./src/main/
 
 WORKDIR /src
+run ls -la 
+run ls -la /src/apps/external-api/
 
 RUN echo "<settings>\n" \
          "<servers>\n" \
@@ -40,6 +42,8 @@ FROM eclipse-temurin:17@sha256:d838da85ec7aa8fd72b613e30b5f7629d8f5ac70a4264d457
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
 
 WORKDIR /app
+run ls -la 
+run ls -la /src/apps/external-api/
 
 COPY --from=builder /src/apps/external-api/target/*.jar ./app.jar
 
