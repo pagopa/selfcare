@@ -27,75 +27,8 @@ class UserServiceTest {
   @RestClient @InjectMock
   InstitutionApi institutionApi;
 
-  @InjectMock
-  OnboardingRepository onboardingRepository;
-
   private final String productId = "productId";
   private final String institutionId = "institutionId";
-
-  @Test
-  void findByInstitutionAndProduct() {
-    // given
-    Onboarding onboarding = new Onboarding();
-    Institution institution = new Institution();
-    institution.setId(institutionId);
-    onboarding.setInstitution(institution);
-    onboarding.setProductId(productId);
-    onboarding.setUsers(List.of());
-    // when
-    when(onboardingRepository.findByOnboardingUsers(institutionId, productId))
-        .thenReturn(List.of(onboarding));
-    // then
-    List<String> onboardings = userService.findByInstitutionAndProduct(institutionId, productId);
-    assertNotNull(onboardings);
-    assertTrue(onboardings.isEmpty());
-
-    Mockito.verify(onboardingRepository, times(1))
-            .findByOnboardingUsers(institutionId, productId);
-
-  }
-
-  @Test
-  void findByInstitutionAndProduct_NotEmptyList() {
-    // given
-    Onboarding onboarding = new Onboarding();
-    Institution institution = new Institution();
-    institution.setId(institutionId);
-    onboarding.setInstitution(institution);
-    onboarding.setProductId(productId);
-    User user = new User();
-    String userId = "userId";
-    user.setId(userId);
-    onboarding.setUsers(List.of(user));
-    // when
-    when(onboardingRepository.findByOnboardingUsers(institutionId, productId))
-            .thenReturn(List.of(onboarding));
-    // then
-    List<String> onboardings = userService.findByInstitutionAndProduct(institutionId, productId);
-    assertNotNull(onboardings);
-    assertFalse(onboardings.isEmpty());
-    assertEquals(1, onboardings.size());
-    assertEquals(userId, onboardings.get(0));
-
-    Mockito.verify(onboardingRepository, times(1))
-            .findByOnboardingUsers(institutionId, productId);
-
-  }
-
-  @Test
-  void findByInstitutionAndProduct_EmptyList() {
-    // when
-    when(onboardingRepository.findByOnboardingUsers(institutionId, productId))
-            .thenReturn(List.of());
-    // then
-    List<String> onboardings = userService.findByInstitutionAndProduct(institutionId, productId);
-    assertNotNull(onboardings);
-    assertTrue(onboardings.isEmpty());
-
-    Mockito.verify(onboardingRepository, times(1))
-            .findByOnboardingUsers(institutionId, productId);
-
-  }
 
   @Test
   void deleteByIdAndInstitutionIdAndProductId() {

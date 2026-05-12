@@ -31,6 +31,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.bson.Document;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -77,6 +78,9 @@ public class OnboardingServiceImpl implements OnboardingService {
   private final AttachmentPdfRequestMapper attachmentPdfRequestMapper;
   private final DocumentBuilderRequestMapper documentBuilderRequestMapper;
 
+  //JPA
+  private final OnboardingRepository onboardingRepository;
+
   public OnboardingServiceImpl(
           ProductService productService,
           OnboardingRepository repository,
@@ -85,7 +89,7 @@ public class OnboardingServiceImpl implements OnboardingService {
           NotificationService notificationService,
           ContractPdfRequestMapper contractPdfRequestMapper,
           AttachmentPdfRequestMapper attachmentPdfRequestMapper,
-          DocumentBuilderRequestMapper documentBuilderRequestMapper) {
+          DocumentBuilderRequestMapper documentBuilderRequestMapper, OnboardingRepository onboardingRepository) {
     this.repository = repository;
     this.productService = productService;
     this.notificationService = notificationService;
@@ -94,6 +98,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     this.contractPdfRequestMapper  = contractPdfRequestMapper;
     this.attachmentPdfRequestMapper = attachmentPdfRequestMapper;
     this.documentBuilderRequestMapper = documentBuilderRequestMapper;
+    this.onboardingRepository = onboardingRepository;
   }
 
   public Optional<Onboarding> getOnboarding(String onboardingId) {
@@ -558,6 +563,19 @@ public class OnboardingServiceImpl implements OnboardingService {
       List.of(String.valueOf(PartyRole.MANAGER)),
       List.of(String.valueOf(OnboardedProductResponse.StatusEnum.ACTIVE)),
       null);
+  }
+
+  public List<String> findByInstitutionAndProduct(String institutionId, String productId) {
+        var onboardings = onboardingRepository.findByOnboardingUsers(institutionId, productId);
+        if (onboardings.isEmpty()) {
+            return List.of();
+        }
+        return onboardings.stream()
+                .flatMap(onboarding -> onboarding.getUsers().stream())
+                .map(User::getId)
+                .collect(Collectors.toSet())
+                .stream()
+                .toList();
   }
 
 }

@@ -1,19 +1,16 @@
 package it.pagopa.selfcare.onboarding.service.impl;
 
 
-import it.pagopa.selfcare.onboarding.entity.User;
-import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
 import it.pagopa.selfcare.onboarding.service.UserService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_json.api.InstitutionApi;
 import org.openapi.quarkus.user_json.model.DeletedUserCountResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Objects;
 
 @ApplicationScoped
 public class UserServiceImpl implements UserService {
@@ -23,26 +20,6 @@ public class UserServiceImpl implements UserService {
     @RestClient
     @Inject
     InstitutionApi institutionApi;
-
-    private final OnboardingRepository onboardingRepository;
-
-    public UserServiceImpl(
-            OnboardingRepository onboardingRepository) {
-        this.onboardingRepository = onboardingRepository;
-    }
-
-    public List<String> findByInstitutionAndProduct(String institutionId, String productId) {
-        var onboardings = onboardingRepository.findByOnboardingUsers(institutionId, productId);
-        if (onboardings.isEmpty()) {
-            return List.of();
-        }
-        return onboardings.stream()
-                .flatMap(onboarding -> onboarding.getUsers().stream())
-                .map(User::getId)
-                .collect(Collectors.toSet())
-                .stream()
-                .toList();
-    }
 
     public void deleteByIdAndInstitutionIdAndProductId(String institutionId, String productId) {
         log.debug("Deleting user for institution {} and product {}", institutionId, productId);
