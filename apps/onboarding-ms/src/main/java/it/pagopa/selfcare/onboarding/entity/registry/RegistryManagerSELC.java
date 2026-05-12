@@ -35,13 +35,21 @@ public class RegistryManagerSELC extends BaseRegistryManager<Object> {
     }
 
     protected boolean isWorkflowTypeAllowed(WorkflowType workflowType) {
-        return workflowType == WorkflowType.FOR_APPROVE ||
-                workflowType == WorkflowType.IMPORT ||
-                workflowType == WorkflowType.FOR_APPROVE_PT ||
-                workflowType == WorkflowType.FOR_APPROVE_GPU ||
-                workflowType == WorkflowType.CONFIRMATION ||
-                workflowType == WorkflowType.CONFIRMATION_AGGREGATOR ||
-                workflowType == WorkflowType.INCREMENT_REGISTRATION_AGGREGATOR;
+        if (Objects.isNull(workflowType )) {
+            return false;
+        }
+
+        return switch (workflowType) {
+            case FOR_APPROVE,
+                 IMPORT,
+                 FOR_APPROVE_PT,
+                 FOR_APPROVE_GPU,
+                 CONFIRMATION,
+                 CONFIRMATION_AGGREGATOR,
+                 INCREMENT_REGISTRATION_AGGREGATOR,
+                 CONTRACT_WITH_COUNTERSIGNATURE -> true;
+            default -> false;
+        };
     }
 
     @Override
