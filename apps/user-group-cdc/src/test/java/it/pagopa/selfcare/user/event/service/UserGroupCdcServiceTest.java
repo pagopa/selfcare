@@ -52,6 +52,7 @@ public class UserGroupCdcServiceTest {
                 sendUserGroupMessage(notification.capture());
         Assertions.assertEquals(userGroupEntity.getId().toString(), notification.getValue().getId());
         Assertions.assertEquals(userGroupEntity.getInstitutionId(), notification.getValue().getInstitutionId());
+        Assertions.assertEquals(userGroupEntity.getParentInstitutionId(), notification.getValue().getParentInstitutionId());
         Assertions.assertEquals(userGroupEntity.getProductId(), notification.getValue().getProductId());
         Assertions.assertEquals(2, notification.getValue().getMembers().size());
     }
