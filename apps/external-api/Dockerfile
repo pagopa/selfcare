@@ -15,7 +15,6 @@ COPY --link ./apps/pom.xml .
 WORKDIR /src/apps/external-api
 COPY --link ./apps/external-api/pom.xml .
 COPY ./apps/external-api/src/main/ ./src/main/
-COPY ./apps/external-api/docs/ ./docs/
 
 WORKDIR /src
 
