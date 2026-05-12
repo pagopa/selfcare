@@ -18,7 +18,6 @@ COPY ./apps/external-api/src/main/ ./src/main/
 
 WORKDIR /src
 run ls -la 
-run ls -la /src/apps/external-api/
 
 RUN echo "<settings>\n" \
          "<servers>\n" \
