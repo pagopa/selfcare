@@ -1,10 +1,7 @@
 FROM maven:3-eclipse-temurin-17@sha256:0d328fa6843bb26b60cf44d69833f241ffe96218fb29fa19df7a6603863eaae7 AS builder
 
 WORKDIR /src
-COPY --link ./pom.xml .
-
-WORKDIR /src/libs
-COPY --link ./libs/ .
+COPY --link pom.xml .
 
 WORKDIR /src/test-coverage
 COPY --link ./test-coverage/pom.xml .
@@ -12,12 +9,14 @@ COPY --link ./test-coverage/pom.xml .
 WORKDIR /src/apps
 COPY --link ./apps/pom.xml .
 
+WORKDIR /src/libs
+COPY --link ./libs/ .
+
 WORKDIR /src/apps/external-api
 COPY --link ./apps/external-api/pom.xml .
 COPY ./apps/external-api/src/main/ ./src/main/
 
 WORKDIR /src
-run ls -la 
 
 RUN echo "<settings>\n" \
          "<servers>\n" \
@@ -33,7 +32,7 @@ ARG REPO_SELFCARE
 ARG REPO_USERNAME
 ARG REPO_PASSWORD
 
-RUN mvn --global-settings settings.xml -DrepositoryOnboarding=${REPO_SELFCARE} -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} clean package -DskipTests
+RUN mvn --global-settings settings.xml --projects :external-api -DrepositoryId=${REPO_SELFCARE} -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} --also-make clean package -DskipTests
 
 
 FROM eclipse-temurin:17@sha256:d838da85ec7aa8fd72b613e30b5f7629d8f5ac70a4264d45735a8a2ed9af447c AS runtime
@@ -41,8 +40,6 @@ FROM eclipse-temurin:17@sha256:d838da85ec7aa8fd72b613e30b5f7629d8f5ac70a4264d457
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
 
 WORKDIR /app
-run ls -la 
-run ls -la /src/apps/external-api/
 
 COPY --from=builder /src/apps/external-api/target/*.jar ./app.jar
 
