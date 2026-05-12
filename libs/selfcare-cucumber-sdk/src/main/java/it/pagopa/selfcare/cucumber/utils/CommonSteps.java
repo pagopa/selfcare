@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -107,7 +108,7 @@ public class CommonSteps {
     @And("Upload the file at path {string} with form key {string} and content type {string}")
     public void setFileToUpload(String filePath, String formKey, String contentType) {
         sharedStepData.setFileUpload(FileDescriptor.builder()
-                .filePathReference(filePath)
+                .filePathName(filePath)
                 .keyParamRequest(formKey)
                 .mediaType(contentType)
                 .build());
@@ -162,7 +163,7 @@ public class CommonSteps {
             .given(request)
             .multiPart(
                 sharedStepData.getFileUpload().getKeyParamRequest(),
-                new File(getClass().getClassLoader().getResource(sharedStepData.getFileUpload().getFilePathReference()).getFile()),
+                new File(getClass().getClassLoader().getResource(sharedStepData.getFileUpload().getFilePathName()).getFile()),
                 sharedStepData.getFileUpload().getMediaType()
             )
             .when()
@@ -210,7 +211,7 @@ public class CommonSteps {
             .header("Authorization", "Bearer " + sharedStepData.getToken())
             .pathParams(Optional.ofNullable(sharedStepData.getPathParams()).orElse(Collections.emptyMap()))
             .queryParams(Optional.ofNullable(sharedStepData.getQueryParams()).orElse(Collections.emptyMap()))
-            .multiPart(fileDescriptor.getKeyParamRequest(), fileDescriptor.getFilePathReference(), (byte[]) entry.getValue(), fileDescriptor.getMediaType())
+            .multiPart(fileDescriptor.getKeyParamRequest(), fileDescriptor.getFilePathName(), (byte[]) entry.getValue(), fileDescriptor.getMediaType())
             .when()
             .post(url)
             .then()
@@ -431,16 +432,17 @@ public class CommonSteps {
     }
 
     @And("A mock-file of type {string} with key {string} and document path {string} used to perform request")
-    public void setMockFile(String type, String key, String fileName) throws IOException {
-        InputStream fileStream = getClass().getClassLoader().getResourceAsStream(fileName);
+    public void setMockFile(String type, String key, String filePath) throws IOException {
+        InputStream fileStream = getClass().getClassLoader().getResourceAsStream(filePath);
 
         if (fileStream == null) {
-            throw new FileNotFoundException("File not found in classpath: " + fileName);
+            throw new FileNotFoundException("File not found in classpath: " + filePath);
         }
         byte[] fileBytes = fileStream.readAllBytes();
+        String fileName = Paths.get(filePath).getFileName().toString();
 
         Map<FileDescriptor, Object> currentInput = new HashMap<>();
-        FileDescriptor fileDescriptor = FileDescriptor.builder().keyParamRequest(key).filePathReference(fileName).mediaType(type).build();
+        FileDescriptor fileDescriptor = FileDescriptor.builder().keyParamRequest(key).filePathName(fileName).mediaType(type).build();
         currentInput.put(fileDescriptor, fileBytes);
 
         sharedStepData.setContentMultiPart(currentInput);
