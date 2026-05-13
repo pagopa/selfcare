@@ -1,0 +1,47 @@
+meta {
+  name: getDelegations
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{apiBaseUrl}}/external/support/v1/delegations?institutionId={{institutionId}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  institutionId: {{institutionId}}
+  ~productId: {{productId}}
+  ~taxCode: {{taxCode}}
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeySupport}}
+}
+
+script:post-response {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  test("getDelegations ok", function() {
+    expect(res.getStatus()).to.equal(200);
+
+    const jsonData = res.getBody();
+
+    expect(jsonData).to.be.an("array");
+
+    if (jsonData.length > 0) {
+      jsonData.forEach(delegation => {
+        expect(delegation).to.have.property("id").that.is.a("string");
+        expect(delegation).to.have.property("institutionId").that.is.a("string");
+        expect(delegation).to.have.property("brokerId").that.is.a("string");
+        expect(delegation).to.have.property("productId").that.is.a("string");
+        expect(delegation).to.have.property("type").that.is.a("string");
+      });
+    }
+  });
+}
+
+settings {
+  encodeUrl: true
+}

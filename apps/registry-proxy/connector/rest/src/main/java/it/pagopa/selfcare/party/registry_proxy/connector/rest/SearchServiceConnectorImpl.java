@@ -27,6 +27,8 @@ import java.util.Optional;
 @Service
 public class SearchServiceConnectorImpl implements SearchServiceConnector {
 
+  private static final String SEARCH_MODE_ALL = "all";
+
   private final AzureSearchRestClient azureSearchRestClient;
   private final SearchServiceMapper searchServiceMapper;
 
@@ -66,7 +68,7 @@ public class SearchServiceConnectorImpl implements SearchServiceConnector {
 
   @Override
   public OnboardingIndexSearch searchOnboarding(String search, String filter, Long top, Long skip, String orderBy) {
-    final SearchServiceIndexResponse<SearchServiceOnboardingIndex> response = azureSearchRestClient.searchOnboarding(search, filter, true, top, skip, null, orderBy);
+    final SearchServiceIndexResponse<SearchServiceOnboardingIndex> response = azureSearchRestClient.searchOnboarding(search, SEARCH_MODE_ALL, filter, true, top, skip, null, orderBy);
     return searchServiceMapper.toOnboardingIndexSearch(response);
   }
 

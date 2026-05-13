@@ -1,0 +1,54 @@
+{
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "externalId": "externalId",
+    "originId": "originId",
+    "description": "description",
+    "origin": "origin",
+    "institutionType": "PA",
+    "digitalAddress": "digitalAddress",
+    "address": "address",
+    "zipCode": "zipCode",
+    "taxCode": "MNCCSD01R13A757G",
+    "pricingPlan": "pricingPlan",
+    "billing": {
+      "vatNumber": "IT12345678901",
+      "recipientCode": "recipientCode",
+      "publicServices": true
+    },
+    "state": "ACTIVE",
+    "role": "DELEGATE",
+    "productInfo": {
+      "id": "123e4567-e89b-12d3",
+      "role": "DELEGATE",
+      "createdAt": "2022-08-08T09:13:00.837Z",
+      "status": "ACTIVE"
+    },
+    "subunitCode": "subunitCode",
+    "subunitType": "subunitType",
+    "aooParentCode": "aooParentCode",
+    "userMailUuid": "id",
+    "city": "city",
+    "country": "country",
+    "county": "county",
+    "paymentServiceProvider": {
+      "abiCode": "string",
+      "businessRegisterNumber": "string",
+      "legalRegisterName": "string",
+      "legalRegisterNumber": "string",
+      "vatNumberGroup": true
+    },
+    "supportEmail": "supportEmail",
+    "supportPhone": "supportPhone",
+    "rea": "rea",
+    "shareCapital": "shareCapital",
+    "businessRegisterPlace": "businessRegisterPlace",
+    "dataProtectionOfficer": {
+      "address": "address",
+      "email": "email",
+      "pec": "pec"
+    },
+    "rootParent": {
+      "id": "id",
+      "description": "description"
+    }
+  }

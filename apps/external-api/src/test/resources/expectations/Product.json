@@ -1,0 +1,87 @@
+[
+  {
+    "id": "123",
+    "logo": "logoUrl",
+    "logoBgColor": "#FFFFFF",
+    "depictImageUrl": "depictImageUrl",
+    "title": "Title",
+    "description": "ProductDescription",
+    "urlPublic": "urlPublic",
+    "urlBO": "backOfficeUrl",
+    "createdAt":"2024-04-17T01:00:00Z",
+    "enabled": true,
+    "delegable": true,
+    "invoiceable": true,
+    "status": "ACTIVE",
+    "identityTokenAudience": "audience",
+    "roleMappings": {
+      "MANAGER": {
+        "multiroleAllowed": true,
+        "phasesAdditionAllowed" : null,
+        "roles": [
+          {
+            "code": "code1",
+            "label": "label1",
+            "productLabel":"productLabel1",
+            "description": "description1"
+          },
+          {
+            "code": "code2",
+            "label": "label2",
+            "description": "description2"
+          }
+        ]
+      }
+    },
+    "parentId": "parentProduct",
+    "roleManagementURL": "roleManagementUrl",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "path_template",
+        "contractTemplateVersion": "1.0.0"
+      }
+    }
+  },
+  {
+    "id": "456",
+    "logo": "logoUrl",
+    "logoBgColor": "#FFFFFF",
+    "depictImageUrl": "depictImageUrl",
+    "title": "Title",
+    "description": "ProductDescription",
+    "urlPublic": "urlPublic",
+    "urlBO": "backOfficeUrl",
+    "enabled": true,
+    "delegable": true,
+    "invoiceable": true,
+    "status": "ACTIVE",
+    "identityTokenAudience": "audience",
+    "roleMappings": {
+      "MANAGER": {
+        "multiroleAllowed": true,
+        "phasesAdditionAllowed" : null,
+        "roles": [
+          {
+            "code": "code1",
+            "label": "label1",
+            "description": "description1"
+          },
+          {
+            "code": "code2",
+            "label": "label2",
+            "description": "description2"
+          }
+        ]
+      }
+    },
+    "parentId": "parentProduct",
+    "createdAt": "2024-04-17T01:00:00Z",
+    "roleManagementURL": "roleManagementUrl",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "path_template",
+        "contractTemplateVersion": "1.0.0"
+      }
+    }
+  }
+]

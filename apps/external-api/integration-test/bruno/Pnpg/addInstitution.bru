@@ -1,0 +1,35 @@
+meta {
+  name: addInstitution
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{apiBaseUrl}}/external/data-vault/v1/pn-pg/institutions/add
+  body: json
+  auth: inherit
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeyDataVaultPNPG}}
+}
+
+body:json {
+  {"externalId":"1234"}
+}
+
+script:post-response {
+  test("addInstitution ok", function () {
+      expect(res.getStatus()).to.equal(200);
+  
+      const jsonData = res.getBody();
+  
+      expect(jsonData).to.have.property("id");
+      expect(jsonData.id).to.be.a("string");
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

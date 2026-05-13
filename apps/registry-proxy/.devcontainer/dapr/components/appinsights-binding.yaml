@@ -1,0 +1,13 @@
+# Local no-op HTTP binding for Application Insights.
+# In the devcontainer LOGGING_APPINSIGHTS_ENABLED=false so this binding
+# is never actually invoked; it exists only to satisfy Dapr component resolution.
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: appinsights-binding
+spec:
+  type: bindings.http
+  version: v1
+  metadata:
+    - name: url
+      value: "http://localhost:3500/noop"

@@ -394,11 +394,11 @@ public class SearchServiceConnectorImplTest {
 
   @Test
   void testSearchOnboarding() {
-    when(azureSearchRestClient.searchOnboarding("search", "filter", true, 15L, 0L, null, "orderBy"))
+    when(azureSearchRestClient.searchOnboarding("search", "all", "filter", true, 15L, 0L, null, "orderBy"))
             .thenReturn(new SearchServiceIndexResponse<>());
     searchServiceConnector.searchOnboarding("search", "filter", 15L, 0L, "orderBy");
     verify(azureSearchRestClient, times(1))
-            .searchOnboarding("search", "filter", true, 15L, 0L, null, "orderBy");
+            .searchOnboarding("search", "all", "filter", true, 15L, 0L, null, "orderBy");
   }
 
 }

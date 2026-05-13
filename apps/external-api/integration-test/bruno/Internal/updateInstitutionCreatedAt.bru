@@ -1,0 +1,34 @@
+meta {
+  name: updateInstitutionCreatedAt
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{apiBaseUrl}}/external/internal/v1/institutions/{{institutionId}}/created-at
+  body: json
+  auth: inherit
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeyInternal}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "createdAt": "2024-01-15T10:30:00Z",
+    "activatedAt": "2024-01-15T10:30:00Z",
+    "productId": "{{productId}}"
+  }
+}
+
+script:post-response {
+  test("updateInstitutionCreatedAt ok", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}

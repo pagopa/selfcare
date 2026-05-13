@@ -345,4 +345,17 @@
             </properties>
         </profile>
     </profiles>
+    <repositories>
+        <repository>
+            <id>selfcare-platform</id>
+            <url>
+                https://pkgs.dev.azure.com/pagopaspa/selfcare-platform-app-projects/_packaging/selfcare-platform/maven/v1
+            </url>
+        </repository>
+        <repository>
+            <id>selfcare</id>
+            <name>Selfcare SDK</name>
+            <url>https://maven.pkg.github.com/pagopa/selfcare</url>
+        </repository>
+    </repositories>
 </project>

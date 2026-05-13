@@ -1,0 +1,116 @@
+name: Create OpenAPI merge
+
+on:
+  workflow_dispatch:
+    inputs:
+      billing-portal-api:
+        type: boolean
+        description: Enable creation of Billing Portal API
+        default: True
+      selc-ms-external-api:
+        type: boolean
+        description: Enable creation of Selc External API
+        default: True
+      selc-external-api-contract:
+        type: boolean
+        description: Enable creation of Selc External Contract API
+        default: True
+      selc-ms-internal-api:
+        type: boolean
+        description: Enable creation of Selc Internal API
+        default: True
+      selc-support-service:
+        type: boolean
+        description: Enable creation of Selc Support Service API
+        default: True
+      pnpg-ms-external-api:
+        type: boolean
+        description: Enable creation of PNPG External API
+        default: True
+      pnpg-support-service:
+        type: boolean
+        description: Enable creation of PNPG Support Service API
+        default: True
+      pnpg-ms-internal-api:
+        type: boolean
+        description: Enable creation of PNPG Internal API
+        default: True
+      env:
+        type: choice
+        description: Environment
+        options: 
+        - dev
+        - uat
+        - prod
+
+  schedule:
+    - cron: '00 14 * * 1-5' # DEV
+    - cron: '15 14 * * 1-5' # UAT
+    - cron: '30 14 * * 1-5' # PROD
+
+jobs:
+
+  setup:
+    name: Setup Environment And Flag Vars
+    runs-on: 'ubuntu-latest'
+    outputs:
+      selc-ms-external-api: ${{ steps.set-env.outputs.selc-ms-external-api }}
+      selc-external-api-contract: ${{ steps.set-env.outputs.selc-external-api-contract }}
+      selc-ms-internal-api: ${{  steps.set-env.outputs.selc-ms-internal-api }}
+      selc-support-service: ${{  steps.set-env.outputs.selc-support-service }}
+      pnpg-ms-external-api: ${{  steps.set-env.outputs.pnpg-ms-external-api }}
+      pnpg-support-service: ${{  steps.set-env.outputs.pnpg-support-service }}
+      billing-portal-api:   ${{  steps.set-env.outputs.billing-portal-api }}
+      pnpg-ms-internal-api:   ${{  steps.set-env.outputs.pnpg-ms-internal-api }}
+      environ: ${{ steps.set-env.outputs.environ }}
+    steps:
+      - name: Set Environment Variable
+        id: set-env
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "selc-ms-external-api=${{ github.event.inputs.selc-ms-external-api }}" >> $GITHUB_OUTPUT
+            echo "selc-external-api-contract=${{ github.event.inputs.selc-external-api-contract }}" >> $GITHUB_OUTPUT
+            echo "selc-ms-internal-api=${{ github.event.inputs.selc-ms-internal-api }}" >> $GITHUB_OUTPUT
+            echo "billing-portal-api=${{ github.event.inputs.billing-portal-api }}" >> $GITHUB_OUTPUT
+            echo "selc-support-service=${{ github.event.inputs.selc-support-service }}" >> $GITHUB_OUTPUT
+            echo "pnpg-ms-external-api=${{ github.event.inputs.pnpg-ms-external-api }}" >> $GITHUB_OUTPUT
+            echo "pnpg-support-service=${{ github.event.inputs.pnpg-support-service }}" >> $GITHUB_OUTPUT
+            echo "pnpg-ms-internal-api=${{ github.event.inputs.pnpg-ms-internal-api }}" >> $GITHUB_OUTPUT
+            echo "environ=${{ inputs.env }}" >> $GITHUB_OUTPUT
+          else
+            if [ "${{ github.event.schedule }}" == "30 14 * * 1-5" ]; then
+              echo "environ=prod" >> $GITHUB_OUTPUT
+            else
+              if [ "${{ github.event.schedule }}" == "15 14 * * 1-5" ]; then
+                echo "environ=uat" >> $GITHUB_OUTPUT
+              else
+                echo "environ=dev" >> $GITHUB_OUTPUT
+              fi
+            fi
+
+            echo "selc-ms-external-api=false" >> $GITHUB_OUTPUT
+            echo "selc-external-api-contract=true" >> $GITHUB_OUTPUT
+            echo "selc-ms-internal-api=true" >> $GITHUB_OUTPUT
+            echo "billing-portal-api=true" >> $GITHUB_OUTPUT
+            echo "selc-support-service=true" >> $GITHUB_OUTPUT
+            echo "pnpg-ms-external-api=true" >> $GITHUB_OUTPUT
+            echo "pnpg-support-service=true" >> $GITHUB_OUTPUT
+            echo "pnpg-ms-internal-api=true" >> $GITHUB_OUTPUT
+          fi
+
+  openapi_merge:
+    uses: ./.github/workflows/call_openapi_merge.yml
+    name: "Create OpenAPI merge"
+    secrets: inherit
+    needs: setup
+    with:
+      selc-ms-external-api: ${{ needs.setup.outputs.selc-ms-external-api == 'true' }}
+      selc-external-api-contract: ${{ needs.setup.outputs.selc-external-api-contract == 'true' }}
+      selc-ms-internal-api: ${{ needs.setup.outputs.selc-ms-internal-api == 'true' }}
+      billing-portal-api: ${{ needs.setup.outputs.billing-portal-api == 'true' }}
+      selc-support-service: ${{ needs.setup.outputs.selc-support-service == 'true' }}
+      pnpg-ms-external-api: ${{ needs.setup.outputs.pnpg-ms-external-api == 'true' }}
+      pnpg-support-service: ${{ needs.setup.outputs.pnpg-support-service == 'true' }}
+      pnpg-ms-internal-api: ${{ needs.setup.outputs.pnpg-ms-internal-api == 'true' }}
+      env: ${{ needs.setup.outputs.environ }}
+    

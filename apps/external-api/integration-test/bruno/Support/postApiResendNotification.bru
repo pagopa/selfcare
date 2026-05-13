@@ -1,0 +1,32 @@
+meta {
+  name: postApiResendNotification
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{apiBaseUrl}}/external/support/v1/api/ResendNotification?onboardingId={{onboardingId}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  onboardingId: {{onboardingId}}
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeySupport}}
+}
+
+script:post-response {
+  test("postApiResendNotification ok", function() {
+    const status = res.getStatus();
+    // Accept 202 Accepted OR 200 OK (some envs return 200)
+    // Accept 404 if the onboarding does not exist in the current environment
+    expect([200, 202, 404]).to.include(status);
+  });
+}
+
+settings {
+  encodeUrl: true
+}

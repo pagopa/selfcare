@@ -1,0 +1,39 @@
+name: APIM Selc External Onboarding IO - Detect Conflict and Update
+on:
+  pull_request:
+    branches:
+      - main
+      - releases/**
+    paths:
+      - "infra/apim_v2/api/external-api-onboarding-io/v1/**"
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    
+permissions:
+  contents: write
+
+jobs:
+  selc_detect_ext_onboarding_io_dev:
+    uses: ./.github/workflows/call_detect_openapi.yml
+    name: "[DEV] Selc External Onboarding IO - Detect Rules and Conflict"
+    secrets: inherit
+    with:
+        path_openapi_docs: infra/apim_v2/api/external-api-onboarding-io/v1/openapi.dev.json
+
+  selc_detect_ext_onboarding_io_uat:
+    uses: ./.github/workflows/call_detect_openapi.yml
+    name: "[UAT] Selc External Onboarding IO - Detect Rules and Conflict"
+    secrets: inherit
+    with:
+        path_openapi_docs: infra/apim_v2/api/external-api-onboarding-io/v1/openapi.uat.json
+
+  selc_detect_ext_onboarding_io_prod:
+    uses: ./.github/workflows/call_detect_openapi.yml
+    name: "[PROD] Selc External Onboarding IO - Detect Rules and Conflict"
+    secrets: inherit
+    with:
+        path_openapi_docs: infra/apim_v2/api/external-api-onboarding-io/v1/openapi.prod.json

@@ -1,0 +1,20 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/external/institutions/pn-pg",
+    "bodyPatterns": [
+      {
+        "matchesJsonPath": "$[?(@.taxId == 'externalId')]"
+      }
+    ]
+  },
+  "response": {
+    "status": "201",
+    "jsonBody": {
+                  "id": "string"
+                },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

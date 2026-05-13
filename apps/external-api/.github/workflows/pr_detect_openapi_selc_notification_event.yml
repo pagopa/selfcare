@@ -1,0 +1,39 @@
+name: APIM Selc Notification Event - Detect Conflict and Update
+on:
+  pull_request:
+    branches:
+      - main
+      - releases/**
+    paths:
+      - "infra/apim_v2/api/notification_event_api/v1/**"
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    
+permissions:
+  contents: write
+
+jobs:
+  selc_detect_notification_event_dev:
+    uses: ./.github/workflows/call_detect_openapi.yml
+    name: "[DEV] Selc Notification Event - Detect Rules and Conflict"
+    secrets: inherit
+    with:
+        path_openapi_docs: infra/apim_v2/api/notification_event_api/v1/openapi.dev.json
+
+  selc_detect_notification_event_uat:
+    uses: ./.github/workflows/call_detect_openapi.yml
+    name: "[UAT] Selc Notification Event - Detect Rules and Conflict"
+    secrets: inherit
+    with:
+        path_openapi_docs: infra/apim_v2/api/notification_event_api/v1/openapi.uat.json
+
+  selc_detect_notification_event_prod:
+    uses: ./.github/workflows/call_detect_openapi.yml
+    name: "[PROD] Selc Notification Event - Detect Rules and Conflict"
+    secrets: inherit
+    with:
+        path_openapi_docs: infra/apim_v2/api/notification_event_api/v1/openapi.prod.json

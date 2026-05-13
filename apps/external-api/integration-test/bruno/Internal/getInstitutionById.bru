@@ -1,0 +1,33 @@
+meta {
+  name: getInstitutionById
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{apiBaseUrl}}/external/internal/v1/institutions/{{institutionId}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeyInternal}}
+}
+
+script:post-response {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  test("getInstitutionById ok", function() {
+    expect(res.getStatus()).to.equal(200);
+
+    const jsonData = res.getBody();
+
+    expect(jsonData).to.have.property("id").that.is.a("string");
+    expect(jsonData).to.have.property("origin").that.is.a("string");
+    expect(jsonData).to.have.property("originId").that.is.a("string");
+  });
+}
+
+settings {
+  encodeUrl: true
+}

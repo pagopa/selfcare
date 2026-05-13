@@ -1,0 +1,41 @@
+meta {
+  name: updateOnboarding
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{apiBaseUrl}}/external/support/v1/onboarding/{{onboardingId}}/update
+  body: json
+  auth: inherit
+}
+
+params:query {
+  ~status: COMPLETED
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeySupport}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "billing": {
+      "recipientCode": "ABCDEF1",
+      "vatNumber": "12345678901"
+    }
+  }
+}
+
+script:post-response {
+  test("updateOnboarding ok", function() {
+    const status = res.getStatus();
+    // 200 OK or 404 Not Found (if onboardingId doesn't exist)
+    expect([200, 204, 404]).to.include(status);
+  });
+}
+
+settings {
+  encodeUrl: true
+}

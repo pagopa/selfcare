@@ -1,0 +1,69 @@
+meta {
+  name: getUserInfo
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{apiBaseUrl}}/external/v2/users?productId=prod-io
+  body: json
+  auth: inherit
+}
+
+params:query {
+  productId: prod-io
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeyPN}}
+}
+
+body:json {
+  {
+      "fiscalCode": "SRTNLM09T06G635S",
+      "statuses": ["ACTIVE", "SUSPENDED"]
+  }
+}
+
+script:post-response {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
+  
+  test("getUserInfo ok", function() {
+      expect(res.getStatus()).to.equal(200);
+  
+      const jsonData = res.getBody();
+  
+      // user
+      expect(jsonData).to.have.property("user");
+      expect(jsonData.user).to.have.property("id").to.match(uuidRegex);
+      expect(jsonData.user).to.have.property("name", "Anselmo");
+      expect(jsonData.user).to.have.property("surname", "Sartori");
+      expect(jsonData.user).to.have.property("lastActiveOnboardingUserEmail").to.match(emailRegex);
+  
+      // onboardedInstitutions
+      expect(jsonData).to.have.property("onboardedInstitutions").that.is.an("array").that.is.not.empty;
+      jsonData.onboardedInstitutions.forEach(inst => {
+          expect(inst).to.have.property("id").to.match(uuidRegex);
+          expect(inst).to.have.property("description").that.is.a("string");
+          expect(inst).to.have.property("institutionType").that.is.a("string");
+          expect(inst).to.have.property("digitalAddress").to.match(emailRegex);
+          expect(inst).to.have.property("address").that.is.a("string");
+          expect(inst).to.have.property("state").that.is.a("string");
+          expect(inst).to.have.property("zipCode").that.is.a("string");
+          expect(inst).to.have.property("taxCode").that.is.a("string");
+          expect(inst).to.have.property("productInfo").that.is.an("object");
+          expect(inst.productInfo).to.have.property("id").that.is.a("string");
+          expect(inst.productInfo).to.have.property("role").that.is.a("string");
+          expect(inst.productInfo).to.have.property("productRole").that.is.a("string");
+          expect(inst.productInfo).to.have.property("status").that.is.a("string");
+          expect(inst.productInfo).to.have.property("createdAt").to.match(isoDateRegex);
+      });
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

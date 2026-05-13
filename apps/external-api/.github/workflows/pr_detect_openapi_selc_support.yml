@@ -1,0 +1,39 @@
+name: APIM Selc Support - Detect Conflict and Update
+on:
+  pull_request:
+    branches:
+      - main
+      - releases/**
+    paths:
+      - "infra/apim_v2/api/selfcare_support_service/v1/**"
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    
+permissions:
+  contents: write
+
+jobs:
+  selc_detect_support_dev:
+    uses: ./.github/workflows/call_detect_openapi.yml
+    name: "[DEV] Selc Support - Detect Rules and Conflict"
+    secrets: inherit
+    with:
+        path_openapi_docs: infra/apim_v2/api/selfcare_support_service/v1/openapi.dev.json
+
+  selc_detect_support_uat:
+    uses: ./.github/workflows/call_detect_openapi.yml
+    name: "[UAT] Selc Support - Detect Rules and Conflict"
+    secrets: inherit
+    with:
+        path_openapi_docs: infra/apim_v2/api/selfcare_support_service/v1/openapi.uat.json
+
+  selc_detect_support_prod:
+    uses: ./.github/workflows/call_detect_openapi.yml
+    name: "[PROD] Selc Support - Detect Rules and Conflict"
+    secrets: inherit
+    with:
+        path_openapi_docs: infra/apim_v2/api/selfcare_support_service/v1/openapi.prod.json

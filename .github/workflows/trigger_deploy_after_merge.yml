@@ -21,6 +21,13 @@ jobs:
       registry_proxy: ${{ steps.filter.outputs.registry_proxy }}
       document_ms: ${{ steps.filter.outputs.document_ms }}
       dashboard_bff: ${{ steps.filter.outputs.dashboard_bff }}
+      institution_ms: ${{ steps.filter.outputs.institution_ms }}
+      institution_send_mail_scheduler: ${{ steps.filter.outputs.institution_send_mail_scheduler }}
+      delegation_cdc: ${{ steps.filter.outputs.delegation_cdc }}
+      user_ms: ${{ steps.filter.outputs.user_ms }}
+      user_group_ms: ${{ steps.filter.outputs.user_group_ms }}
+      user_cdc: ${{ steps.filter.outputs.user_cdc }}
+      user_group_cdc: ${{ steps.filter.outputs.user_group_cdc }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - id: filter
@@ -49,6 +56,20 @@ jobs:
               - 'apps/document-ms/**'
             dashboard_bff:
               - 'apps/dashboard-bff/**'
+            institution_ms:
+              - 'apps/institution-ms/**'
+            institution_send_mail_scheduler:
+              - 'apps/institution-send-mail-scheduler/**'
+            delegation_cdc:
+              - 'apps/delegation-cdc/**'
+            user_ms:
+              - 'apps/user-ms/**'
+            user_group_ms:
+              - 'apps/user-group-ms/**'
+            user_cdc:
+              - 'apps/user-cdc/**'
+            user_group_cdc:
+              - 'apps/user-group-cdc/**'
 
   trigger_release_push:
     name: Trigger DEV Release
@@ -99,3 +120,31 @@ jobs:
       - name: Trigger dashboard-bff release
         if: needs.detect_changes.outputs.dashboard_bff == 'true'
         run: gh workflow run "trigger_release_dashboard_bff.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger institution-ms release
+        if: needs.detect_changes.outputs.institution_ms == 'true'
+        run: gh workflow run "trigger_release_institution_ms.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger institution-send-mail-scheduler release
+        if: needs.detect_changes.outputs.institution_send_mail_scheduler == 'true'
+        run: gh workflow run "trigger_release_institution_send_mail_scheduler.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger delegation-cdc release
+        if: needs.detect_changes.outputs.delegation_cdc == 'true'
+        run: gh workflow run "trigger_release_delegation_cdc.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger user-ms release
+        if: needs.detect_changes.outputs.user_ms == 'true'
+        run: gh workflow run "trigger_release_user_ms.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger user-group-ms release
+        if: needs.detect_changes.outputs.user_group_ms == 'true'
+        run: gh workflow run "trigger_release_user_group_ms.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger user-cdc release
+        if: needs.detect_changes.outputs.user_cdc == 'true'
+        run: gh workflow run "trigger_release_user_cdc.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger user-group-cdc release
+        if: needs.detect_changes.outputs.user_group_cdc == 'true'
+        run: gh workflow run "trigger_release_user_group_cdc.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main

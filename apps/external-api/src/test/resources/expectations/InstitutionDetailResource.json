@@ -1,0 +1,65 @@
+[
+  {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "description": "description",
+    "externalId": "externalId",
+    "originId": "originId",
+    "institutionType": "PA",
+    "digitalAddress": "digitalAddress",
+    "address": "address",
+    "zipCode": "zipCode",
+    "taxCode": "taxCode",
+    "origin": "origin",
+    "geographicTaxonomies": [
+      {
+        "code": "code",
+        "desc": "desc"
+      }
+    ],
+    "rea": "rea",
+    "shareCapital": "shareCapital",
+    "businessRegisterPlace": "businessRegisterPlace",
+    "supportEmail": "supportEmail",
+    "supportPhone": "supportPhone",
+    "imported": true,
+    "subunitCode": "subunitCode",
+    "subunitType": "subunitType",
+    "parentDescription": "parentDescription",
+    "aooParentCode": "aooParentCode",
+    "country": "country",
+    "county": "county",
+    "city": "city"
+  },
+  {
+    "id": "123e4567-e89b-12d3-a456-426614174555",
+    "description": "description",
+    "externalId": "externalId",
+    "originId": "originId",
+    "institutionType": "PA",
+    "digitalAddress": "digitalAddress",
+    "address": "address",
+    "zipCode": "zipCode",
+    "taxCode": "taxCode",
+    "origin": "origin",
+    "geographicTaxonomies": [
+      {
+        "code": "code",
+        "desc": "desc"
+      }
+    ],
+    "rea": "rea",
+    "shareCapital": "shareCapital",
+    "businessRegisterPlace": "businessRegisterPlace",
+    "supportEmail": "supportEmail",
+    "supportPhone": "supportPhone",
+    "imported": true,
+    "subunitCode": "subunitCode",
+    "subunitType": "subunitType",
+    "parentDescription": "parentDescription",
+    "aooParentCode": "aooParentCode",
+    "country": "country",
+    "county": "county",
+    "city": "city"
+  }
+]
+

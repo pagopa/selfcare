@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Selfcare-External-Integration",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
