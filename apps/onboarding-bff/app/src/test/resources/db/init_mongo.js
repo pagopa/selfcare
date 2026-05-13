@@ -23,7 +23,7 @@ db.onboardings.insertMany([
     status: "PENDING",
     users: [
       {
-        id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+        _id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
         role: "MANAGER",
         userMailUuid: "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e22",
       },
@@ -52,7 +52,7 @@ db.onboardings.insertMany([
     status: "PENDING",
     users: [
       {
-        id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+        _id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
         role: "MANAGER",
         userMailUuid: "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e22",
       },
@@ -83,7 +83,7 @@ db.onboardings.insertMany([
     status: "COMPLETED",
     users: [
       {
-        id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+        _id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
         role: "MANAGER",
         userMailUuid: "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e22",
       },
@@ -112,7 +112,7 @@ db.onboardings.insertMany([
     status: "COMPLETED",
     users: [
       {
-        id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+        _id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
         role: "MANAGER",
         userMailUuid: "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e22",
       },
@@ -141,7 +141,7 @@ db.onboardings.insertMany([
     status: "TOBEVALIDATED",
     users: [
       {
-        id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+        _id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
         role: "MANAGER",
         userMailUuid: "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e22",
       },
@@ -170,7 +170,7 @@ db.onboardings.insertMany([
     status: "TOBEVALIDATED",
     users: [
       {
-        id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+        _id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
         role: "MANAGER",
         userMailUuid: "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e22",
       },
@@ -199,7 +199,7 @@ db.onboardings.insertMany([
     status: "TOBEVALIDATED",
     users: [
       {
-        id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+        _id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
         role: "MANAGER",
         userMailUuid: "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e22",
       },
@@ -228,7 +228,7 @@ db.onboardings.insertMany([
     status: "COMPLETED",
     users: [
       {
-        id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+        _id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
         role: "MANAGER",
         userMailUuid: "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e22",
       },
@@ -269,40 +269,8 @@ db.onboardings.insertMany([
       },
     ],
     workflowType: "CONTRACT_REGISTRATION",
-    updateAt: ISODate("2024-02-23T11:04:16.280Z"),
     updatedAt: ISODate("2024-05-17T12:25:27.963Z"),
-  },
-  {
-  "_id": "5369b559-d2ed-4c79-af12-4a4491fc70f1",
-  "createdAt": {
-    "$date": "2024-10-18T12:24:50.050Z"
-  },
-  "institution": {
-    "address": "sede leg",
-    "city": "Milano",
-    "country": "IT",
-    "county": "MI",
-    "description": "Techpartner 23-02",
-    "digitalAddress": "pec@pectest.com",
-    "geographicTaxonomies": [],
-    "id": "c2808e95-59a7-44fb-a6df-64faf4ff3ed3",
-    "imported": false,
-    "institutionType": "PT",
-    "origin": "ADE",
-    "taxCode": "11223345777",
-    "zipCode": "11223"
-  },
-  "productId": "prod-io",
-  "status": "COMPLETED",
-  "users": [
-    {
-      "id": "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
-      "role": "MANAGER",
-      "userMailUuid": "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e22"
-    }
-  ],
-  "workflowType": "CONTRACT_REGISTRATION"
-}
+  }
 ]);
 
 db.tokens.insertMany([
@@ -538,4 +506,23 @@ db.products.insertMany([
       createdBy: "user-apim-name"
     }
   }
+]);
+
+db = db.getSiblingDB("selcDocument");
+
+db.documents.insertMany([
+  {
+    _id: "37f7609b-5a4b-4200-82e7-2117756d64aa",
+    attachmentName: "Dichiarazione_sostitutiva_certificazione",
+    checksum: "2B0zPYLxWtxaxofkRnueQLvdXv+tCiB9tDBTqM3H6l8=",
+    contractFilename: "Pagamenti_pagoPA_Dichiarazione_sostitutiva_certificazione.pdf",
+    contractTemplate: "contracts/template/pagopa/attachments/1.0.0/pagopa-checklist-v1.0.0.html",
+    contractVersion: "1.0.0",
+    createdAt: ISODate("2026-04-21T13:17:32.675Z"),
+    onboardingId: "37f7609b-5a4b-4200-82e7-2117756d64aa",
+    productId: "prod-pagopa",
+    rootOnboardingId: "37f7609b-5a4b-4200-82e7-2117756d64aa",
+    type: "ATTACHMENT",
+    updatedAt: ISODate("2026-04-21T13:17:32.675Z"),
+  },
 ]);
