@@ -56,3 +56,69 @@ jobs:
         with:
           name: cucumber-report
           path: apps/onboarding-bff/app/target/cucumber-report/cucumber.html
+
+      - name: Collect service logs
+        if: always()
+        working-directory: apps/onboarding-bff
+        run: |
+          mkdir -p docker-logs
+          echo "Listing all containers (for debug)" > docker-logs/docker-ps.txt
+          docker ps -a --format 'table {{.ID}}\t{{.Names}}\t{{.Image}}\t{{.Status}}' >> docker-logs/docker-ps.txt 2>&1 || true
+
+          COMPOSE_FILE=app/src/test/resources/docker-compose.yml
+          services=$(docker compose -f $COMPOSE_FILE config --services 2>/dev/null || true)
+          for s in $services; do
+            echo "Collecting logs for service: $s" >&2
+            cids=$(docker ps -a --filter "label=com.docker.compose.service=$s" --format '{{.ID}}') || true
+            if [ -z "$cids" ]; then
+              cids=$(docker ps -a --format '{{.ID}} {{.Names}} {{.Image}}' | awk -v svc="_$s" 'index($2, svc) {print $1}')
+            fi
+            if [ -z "$cids" ]; then
+              cids=$(docker ps -a --format '{{.ID}} {{.Names}} {{.Image}}' | awk -v s="$s" 'tolower($0) ~ tolower(s) {print $1}')
+            fi
+            if [ -z "$cids" ]; then
+              echo "No containers found for $s" > docker-logs/$s.log
+              continue
+            fi
+            for cid in $cids; do
+              echo "=== Logs for $s ($cid) ===" > docker-logs/$s-$cid.log
+              # include timestamps for better correlation
+              docker logs --timestamps $cid >> docker-logs/$s-$cid.log 2>&1 || true
+              # save container inspect for debugging labels, mounts, status
+              docker inspect $cid > docker-logs/$s-$cid.inspect.json 2>&1 || true
+            done
+          done
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: docker-logs
+          path: apps/onboarding-bff/docker-logs
+          retention-days: 1
+
+      - name: Tear-down Docker
+        if: always()
+        working-directory: apps/onboarding-bff
+        run: |
+          set -e
+          COMPOSE_FILE=app/src/test/resources/docker-compose.yml
+          echo "Attempting docker compose down for $COMPOSE_FILE"
+          if docker compose -f $COMPOSE_FILE ps -q >/dev/null 2>&1; then
+            docker compose -f $COMPOSE_FILE down --volumes --remove-orphans || true
+          else
+            echo "No compose-managed containers found with $COMPOSE_FILE"
+          fi
+          services=$(docker compose -f $COMPOSE_FILE config --services 2>/dev/null || true)
+          for s in $services; do
+            echo "Looking for containers labeled as service: $s"
+            cids=$(docker ps -a --filter "label=com.docker.compose.service=$s" --format '{{.ID}}') || true
+            if [ -n "$cids" ]; then
+              for cid in $cids; do
+                echo "Forcing removal of container $cid (service $s)";
+                docker rm -f $cid || true
+              done
+            else
+              echo "No containers found for service $s"
+            fi
+          done

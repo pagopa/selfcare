@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.platform.suite.api.ConfigurationParameter;
 import org.junit.platform.suite.api.IncludeEngines;
@@ -26,7 +27,9 @@ import org.testcontainers.containers.wait.strategy.Wait;
 @Suite
 @IncludeEngines("cucumber")
 @SelectClasspathResource("features")
-@ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "pretty")
+@ConfigurationParameter(
+        key = PLUGIN_PROPERTY_NAME,
+        value = "pretty, html:target/cucumber-report/cucumber.html, json:target/cucumber-report/cucumber.json")
 @ConfigurationParameter(
     key = GLUE_PROPERTY_NAME,
     value = "it.pagopa.selfcare.cucumber.utils, it.pagopa.selfcare.onboarding")
@@ -54,11 +57,16 @@ public class CucumberSuite {
               //.withLocalCompose(true)
               .withTailChildContainers(true)
               .withLogConsumer("azure-cli", new Slf4jLogConsumer(log))
-              .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1));
+              .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1)
+                      .withStartupTimeout(Duration.ofMinutes(5)));
 
       composeContainer.start();
 
-      Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
+      if (System.getenv("CI") == null) {
+        Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
+      } else {
+        log.info("CI detected (CI={}). Skipping shutdown hook so external log collection can run", System.getenv("CI"));
+      }
 
       log.info("Test containers started successfully");
     } catch (URISyntaxException e) {
