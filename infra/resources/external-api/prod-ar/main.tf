@@ -11,7 +11,7 @@ module "container_app_registry_proxy_ms" {
   container_app                  = local.container_app
   container_app_name             = local.ca_base_name
   container_app_environment_name = module.local.config.container_app_environment_name
-  image_name                     = "selfcare-external-api-bff"
+  image_name                     = "selfcare-external-api-ms"
   image_tag                      = var.image_tag
   app_settings                   = local.app_settings
   secrets_names                  = local.secrets_names
