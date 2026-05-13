@@ -116,6 +116,9 @@ jobs:
     name: "[${{ inputs.environment }}-${{ inputs.domain }}] ${{ inputs.app }} Infra Plan"
     needs: [prepare]
     secrets: inherit
+    permissions:
+      id-token: write
+      contents: read
     with:
       environment: ${{ inputs.environment }}-${{ inputs.domain }}
       base_path: infra/resources/${{ inputs.app }}
