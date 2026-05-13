@@ -3401,6 +3401,9 @@
           },
           "legalForm" : {
             "type" : "string"
+          },
+          "isTest" : {
+            "type" : "boolean"
           }
         }
       },
