@@ -2,7 +2,7 @@ Feature: Token
 
   Scenario: Success to complete onboarding
     Given User login with username "j.doe" and password "test"
-    And A mock-file of type "application/pdf" with key "contract" and document path "mock/mock-template.pdf" used to perform request
+    And A mock-file of type "multipart/form-data" with key "contract" and document path "mock/mock-template.pdf" used to perform request
     When I send a POST request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i103/complete" with multi-part file
     Then The status code is 204
 
@@ -16,7 +16,7 @@ Feature: Token
 
   Scenario: Success to complete onboarding-users
     Given User login with username "j.doe" and password "test"
-    And A mock-file of type "application/pdf" with key "contract" and document path "mock/mock-template.pdf" used to perform request
+    And A mock-file of type "multipart/form-data" with key "contract" and document path "mock/mock-template.pdf" used to perform request
     When I send a POST request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i105/complete-onboarding-users" with multi-part file
     Then The status code is 204
 
