@@ -241,6 +241,19 @@ public class DocumentServiceImpl implements DocumentService {
                 });
     }
 
+    @Override
+    public Uni<Boolean> deleteDocumentById(String documentId) {
+        return documentRepository.deleteDocument(documentId)
+                .onItem().transform(deleted -> {
+                    if (deleted) {
+                        log.info("Document with id {} deleted successfully", sanitize(documentId));
+                    } else {
+                        log.info("Document with id {} not found for deletion", sanitize(documentId));
+                    }
+                    return deleted;
+                });
+    }
+
     private Document buildDocument(DocumentBuilderRequest request, String digest) {
         log.debug("Creating Document for onboarding {} ...", sanitize(request.getOnboardingId()));
 

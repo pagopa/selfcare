@@ -599,4 +599,29 @@ class DocumentServiceImplTest {
 
         assertEquals(0L, result);
     }
+
+
+    @Test
+    void deleteDocumentById_shouldReturnTrue_whenDocumentIsDeleted() {
+        when(documentRepository.deleteDocument(DOCUMENT_ID))
+                .thenReturn(Uni.createFrom().item(true));
+
+        Boolean result = documentService.deleteDocumentById(DOCUMENT_ID)
+                .await().indefinitely();
+
+        assertTrue(result);
+        verify(documentRepository).deleteDocument(DOCUMENT_ID);
+    }
+
+    @Test
+    void deleteDocumentById_shouldReturnFalse_whenDocumentNotFound() {
+        when(documentRepository.deleteDocument(DOCUMENT_ID))
+                .thenReturn(Uni.createFrom().item(false));
+
+        Boolean result = documentService.deleteDocumentById(DOCUMENT_ID)
+                .await().indefinitely();
+
+        assertFalse(result);
+        verify(documentRepository).deleteDocument(DOCUMENT_ID);
+    }
 }

@@ -1626,6 +1626,81 @@ class DocumentContentServiceImplTest {
     }
 
     @Test
+    void uploadSignedContract_shouldRollbackNewDocument_whenSignatureVerificationFails_andDocumentCreatedInCall() {
+        // Arrange
+        InputStream mockFile = new ByteArrayInputStream("dummy content".getBytes());
+        String fileName = "filename";
+
+        // No previous document in DB
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        // handleContractDocument creates a new document for this call
+        Document newDoc = buildDocument();
+        newDoc.setId("new-doc-id");
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+                .thenReturn(Uni.createFrom().item(newDoc));
+
+        // signature verification fails
+        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean()))
+                .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Invalid Signature", "400")));
+
+        // deleteDocumentById will be invoked as part of rollback - mock success
+        when(documentService.deleteDocumentById("new-doc-id"))
+                .thenReturn(Uni.createFrom().item(true));
+
+        // Act
+        var awaiter = documentContentService.uploadSignedContract(
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName
+        ).await();
+
+        // Assert
+        InvalidRequestException ex = assertThrows(InvalidRequestException.class, awaiter::indefinitely);
+        assertEquals("Invalid Signature", ex.getMessage());
+
+        // Rollback: the newly created document must be deleted
+        verify(documentService).deleteDocumentById("new-doc-id");
+        // Azure and DB update must not be called
+        verify(azureBlobClient, never()).uploadFile(anyString(), anyString(), any(byte[].class));
+        verify(documentService, never()).updateDocumentContractFilesById(any());
+    }
+
+    @Test
+    void uploadSignedContract_shouldNotRollbackWhenReusingExistingDocument_onSignatureFailure() {
+        // Arrange
+        InputStream mockFile = new ByteArrayInputStream("dummy content".getBytes());
+        String fileName = "filename";
+
+        // There is a previous document in DB
+        Document existingDoc = buildDocument();
+        existingDoc.setId("existing-id");
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(existingDoc));
+
+        // handleContractDocument returns the same existing document (reuse)
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+                .thenReturn(Uni.createFrom().item(existingDoc));
+
+        // signature verification fails
+        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean()))
+                .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Invalid Signature", "400")));
+
+        // Act
+        var awaiter = documentContentService.uploadSignedContract(
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName
+        ).await();
+
+        // Assert
+        InvalidRequestException ex = assertThrows(InvalidRequestException.class, awaiter::indefinitely);
+        assertEquals("Invalid Signature", ex.getMessage());
+
+        // Since the document was reused (not newly created), rollback should NOT delete it
+        verify(documentService, never()).deleteDocumentById(anyString());
+        verify(azureBlobClient, never()).uploadFile(anyString(), anyString(), any(byte[].class));
+        verify(documentService, never()).updateDocumentContractFilesById(any());
+    }
+
+    @Test
     void uploadSignedContract_shouldThrowException_whenAzureUploadFails() {
         // Arrange
         InputStream mockFile = new ByteArrayInputStream("dummy content".getBytes());

@@ -59,4 +59,6 @@ public interface DocumentService {
      */
     Uni<Document> handleContractDocument(DocumentBuilderRequest request);
 
+    Uni<Boolean> deleteDocumentById(String documentId);
+
 }
