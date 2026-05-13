@@ -523,8 +523,10 @@ class InstitutionControllerTest {
     void shouldCreateInstitution() throws Exception {
 
         InstitutionRequest institution = TestUtils.createSimpleInstitutionRequest();
+        institution.setIsTest(Boolean.TRUE);
         Institution response = TestUtils.createSimpleInstitutionPA();
         response.setLegalForm("legalForm");
+        response.setIsTest(Boolean.TRUE);
 
         when(institutionService.createInstitution(any())).thenReturn(response);
 
@@ -538,7 +540,8 @@ class InstitutionControllerTest {
                 .perform(requestBuilder);
         actualPerformResult.andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.legalForm").value("legalForm"));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.legalForm").value("legalForm"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.isTest").value(Boolean.TRUE));
     }
 
     /**

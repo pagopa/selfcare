@@ -1040,14 +1040,15 @@ Feature: Institution
     And The response body contains field "id"
 
   @RemoveInstitutionIdAfterScenario
-  Scenario: Successfully create and update raw institution with legalForm
+  Scenario: Successfully create and update raw institution with legalForm and isTest
     # CREATE
     Given User login with username "j.doe" and password "test"
     And The following request body:
       """
       {
         "taxCode": "98765432100",
-        "legalForm": "legal"
+        "legalForm": "legal",
+        "isTest": true
       }
       """
     When I send a POST request to "/institutions"
@@ -1057,6 +1058,7 @@ Feature: Institution
       | origin    | SELC             |
       | originId  | SELC_98765432100 |
       | legalForm | legal            |
+      | isTest    | true             |
     And The response body contains field "id"
     And The response body doesn't contain field "supportEmail"
     # UPDATE
@@ -1077,6 +1079,7 @@ Feature: Institution
       | originId     | SELC_98765432100 |
       | supportEmail | test@pec.it      |
       | legalForm    | legal2           |
+      | isTest       | true             |
     And The response body contains field "id"
 
 # POST /institutions/insert/{externalId} (deprecated)
