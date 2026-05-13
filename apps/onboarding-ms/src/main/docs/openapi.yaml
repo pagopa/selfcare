@@ -1405,6 +1405,8 @@ components:
           type: string
         iban:
           type: string
+        isTest:
+          type: boolean
     AggregateUser:
       type: object
       properties:
@@ -1590,6 +1592,8 @@ components:
           type: array
           items:
             type: string
+        isTest:
+          type: boolean
     InstitutionImportRequest:
       required:
       - taxCode
@@ -1703,6 +1707,8 @@ components:
           type: array
           items:
             type: string
+        isTest:
+          type: boolean
         paymentServiceProvider:
           $ref: "#/components/schemas/PaymentServiceProviderRequest"
         dataProtectionOfficer:
