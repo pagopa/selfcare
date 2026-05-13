@@ -2508,7 +2508,7 @@
     },
     "/delegations/delegators/{institutionId}" : {
       "get" : {
-        "tags" : [ "external-v2", "Delegation" ],
+        "tags" : [ "external-v2", "support", "Delegation" ],
         "summary" : "Returns the delegators of an institution with the details of each",
         "description" : "Returns the list of institutions that have granted a delegation to the institution specified in the request path parameter.<br><br> Example: /delegations/delegators/D --> Returns institution details of A,B,C<br><br> <img src=\"https://img.plantuml.biz/plantuml/svg/SoWkIImgoStCIybDBE0goIzGACbNICelASdFLKZ9B4fDBidCp-FI1efQANZc5PTabfI2H1HSk7Hr5TAAydDHXHsn2pjX5tRcSaW5MWor7000\">",
         "operationId" : "getDelegatorInstitutionsUsingGET",
@@ -2606,7 +2606,7 @@
     },
     "/delegations/delegates/{institutionId}" : {
       "get" : {
-        "tags" : [ "external-v2", "Delegation" ],
+        "tags" : [ "external-v2", "support", "Delegation" ],
         "summary" : "Returns the delegates of an institution with the details of each",
         "description" : "Returns the list of institutions of all delegations created by the institution specified in the request path parameter.<br><br> Example: /delegations/delegates/A --> Returns institution details of B,C,D<br><br> <img src=\"https://img.plantuml.biz/plantuml/svg/SoWkIImgoStCIybDBE0goIzGACbNICelASdFLKZ9B4fDBidCp-FIKaWhoi-rKl3CAox9B2a5YIauScbf0HMZ2ZfX4tJ69kZ2vP0Aj1HgCG00\">",
         "operationId" : "getDelegateInstitutionsUsingGET",
@@ -3401,6 +3401,9 @@
           },
           "legalForm" : {
             "type" : "string"
+          },
+          "isTest" : {
+            "type" : "boolean"
           }
         }
       },
