@@ -22,14 +22,17 @@ class IamServiceImplTest {
 
     @Test
     void hasIamUserPermission() {
+        // given
         String permission = "Selc:AccessProductBackofficeAdmin";
         String userId = "userId";
         String institutionId = "institutionId";
         String productId = "productId";
         when(iamConnector.hasUserPermission(permission, userId, institutionId, productId)).thenReturn(true);
 
+        // when
         boolean result = iamPermissionService.hasIamUserPermission(permission, userId, institutionId, productId);
 
+        // then
         assertTrue(result);
         Mockito.verify(iamConnector, Mockito.times(1))
                 .hasUserPermission(permission, userId, institutionId, productId);
