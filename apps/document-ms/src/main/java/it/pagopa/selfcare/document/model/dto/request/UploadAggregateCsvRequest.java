@@ -21,7 +21,7 @@ public class UploadAggregateCsvRequest {
     @NotBlank
     private String productId;
 
-    @RestForm("file")
+    @RestForm("csv")
     @PartType(MediaType.APPLICATION_OCTET_STREAM)
     @NotNull
     private InputStream csv;

@@ -45,6 +45,7 @@ public class Institution {
     private String parentDescription;
     private List<String> atecoCodes;
     private String legalForm;
+    private Boolean isTest;
 
     @Override
     public String toString() {

@@ -34,4 +34,5 @@ public class AggregateInstitutionRequest {
     private String county;
     private String iban;
 
+    private Boolean isTest;
 }
