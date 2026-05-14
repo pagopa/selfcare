@@ -2,30 +2,12 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/iam/users/{uid}/permissions/{permission}",
-      "pathParameters": {
-        "uid": [
-          "97a511a7-2acc-47b9-afed-2f3c65753b4a"
-        ],
-        "permission": [
-          "Selc:ViewAccountPage"
-        ]
-      },
-      "queryStringParameters": {
-        "institutionId": [
-          ""
-        ],
-        "productId": [
-          "prod-interop"
-        ]
-      }
+      "path": "/iam/users/97a511a7-2acc-47b9-afed-2f3c65753b4a/permissions/Selc%3AViewAccountPage"
     },
     "httpResponse": {
       "statusCode": 200,
       "headers": {
-        "Content-Type": [
-          "application/json"
-        ]
+        "Content-Type": ["application/json"]
       },
       "body": {
         "hasPermission": true
@@ -35,63 +17,12 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/iam/users/{uid}/permissions/{permission}",
-      "pathParameters": {
-        "uid": [
-          "97a511a7-2acc-47b9-afed-2f3c65753b4a"
-        ],
-        "permission": [
-          "Selc:ManageAccountPage"
-        ]
-      },
-      "queryStringParameters": {
-        "institutionId": [
-          ""
-        ],
-        "productId": [
-          "prod-pagopa"
-        ]
-      }
+      "path": "/iam/users/35a78332-d038-4bfa-8e85-2cba7f6b7bf7/permissions/Selc%3AViewAccountPage"
     },
     "httpResponse": {
       "statusCode": 200,
       "headers": {
-        "Content-Type": [
-          "application/json"
-        ]
-      },
-      "body": {
-        "hasPermission": true
-      }
-    }
-  },
-  {
-    "httpRequest": {
-      "method": "GET",
-      "path": "/iam/users/{uid}/permissions/{permission}",
-      "pathParameters": {
-        "uid": [
-          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
-        ],
-        "permission": [
-          "Selc:ViewAccountPage"
-        ]
-      },
-      "queryStringParameters": {
-        "institutionId": [
-          ""
-        ],
-        "productId": [
-          "prod-interop"
-        ]
-      }
-    },
-    "httpResponse": {
-      "statusCode": 200,
-      "headers": {
-        "Content-Type": [
-          "application/json"
-        ]
+        "Content-Type": ["application/json"]
       },
       "body": {
         "hasPermission": false
@@ -101,63 +32,12 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/iam/users/{uid}/permissions/{permission}",
-      "pathParameters": {
-        "uid": [
-          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
-        ],
-        "permission": [
-          "Selc:ManageAccountPage"
-        ]
-      },
-      "queryStringParameters": {
-        "institutionId": [
-          ""
-        ],
-        "productId": [
-          "prod-pagopa"
-        ]
-      }
+      "path": "/iam/users/97a511a7-2acc-47b9-afed-2f3c65753b4a/permissions/Selc%3AManageAccountPage"
     },
     "httpResponse": {
       "statusCode": 200,
       "headers": {
-        "Content-Type": [
-          "application/json"
-        ]
-      },
-      "body": {
-        "hasPermission": false
-      }
-    }
-  },
-  {
-    "httpRequest": {
-      "method": "GET",
-      "path": "/iam/users/{uid}/permissions/{permission}",
-      "pathParameters": {
-        "uid": [
-          "97a511a7-2acc-47b9-afed-2f3c65753b4a"
-        ],
-        "permission": [
-          "Selc:ManageAccountPage"
-        ]
-      },
-      "queryStringParameters": {
-        "institutionId": [
-          ""
-        ],
-        "productId": [
-          "prod-io"
-        ]
-      }
-    },
-    "httpResponse": {
-      "statusCode": 200,
-      "headers": {
-        "Content-Type": [
-          "application/json"
-        ]
+        "Content-Type": ["application/json"]
       },
       "body": {
         "hasPermission": true
@@ -167,30 +47,12 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/iam/users/{uid}/permissions/{permission}",
-      "pathParameters": {
-        "uid": [
-          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
-        ],
-        "permission": [
-          "Selc:ManageAccountPage"
-        ]
-      },
-      "queryStringParameters": {
-        "institutionId": [
-          ""
-        ],
-        "productId": [
-          "prod-io"
-        ]
-      }
+      "path": "/iam/users/35a78332-d038-4bfa-8e85-2cba7f6b7bf7/permissions/Selc%3AManageAccountPage"
     },
     "httpResponse": {
       "statusCode": 200,
       "headers": {
-        "Content-Type": [
-          "application/json"
-        ]
+        "Content-Type": ["application/json"]
       },
       "body": {
         "hasPermission": false
