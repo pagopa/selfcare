@@ -26,6 +26,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.*;
 
 
@@ -399,6 +400,17 @@ public class SearchServiceConnectorImplTest {
     searchServiceConnector.searchOnboarding("search", "filter", 15L, 0L, "orderBy");
     verify(azureSearchRestClient, times(1))
             .searchOnboarding("search", "all", "filter", true, 15L, 0L, null, "orderBy");
+  }
+
+  @Test
+  void testOptimizeSearchString() {
+    assertEquals("\\\"Test*\\\" \\\"+Test\\\" \\\"-Test\\\"", searchServiceConnector.optimizeSearchString("Test* +Test -Test"));
+    assertEquals("\\\"\"test\"\\\"", searchServiceConnector.optimizeSearchString("\"test\""));
+    assertEquals("", searchServiceConnector.optimizeSearchString("    "));
+    assertEquals("", searchServiceConnector.optimizeSearchString("  *  "));
+    assertEquals("", searchServiceConnector.optimizeSearchString("di a"));
+    assertEquals("\\\"test\\\"", searchServiceConnector.optimizeSearchString("di a test"));
+    assertNull(searchServiceConnector.optimizeSearchString(null));
   }
 
 }
