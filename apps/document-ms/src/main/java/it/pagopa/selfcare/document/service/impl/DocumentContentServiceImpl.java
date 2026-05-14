@@ -412,7 +412,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 .onFailure().retry()
                 .withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff))
                 .atMost(retryMaxAttempts)
-                .chain(previousDocument -> documentService.handleContractDocument(request)
+                .chain(previousDocument -> documentService.handleContractDocument(request, previousDocument)
                         .onFailure().retry()
                         .withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff))
                         .atMost(retryMaxAttempts)
