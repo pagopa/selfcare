@@ -90,6 +90,31 @@ Feature: User Management
       | productId | role     | permissions |
       | product-A | OPERATOR | read:users  |
 
+  Scenario: Get user product role permissions list by UID and productId when user has permission productId and ALL
+    When I request the user product role permissions list with parameters:
+      | uid       | 72d4984f-d2bc-4584-a6a7-dd63068b7f48 |
+      | productId | product-A                            |
+    Then the user product role permissions list should be retrieved successfully
+    And the user should have the following product role permissions:
+      | productId | role     | permissions |
+      | product-A | OPERATOR | read:users  |
+
+  Scenario: Get user product role permissions list by UID and productId when user has permission ALL
+    When I request the user product role permissions list with parameters:
+      | uid       | 72d4984f-d2bc-4584-a6a7-dd63068b7f48 |
+      | productId | product-A                            |
+    Then the user product role permissions list should be retrieved successfully
+    And the user should have the following product role permissions:
+      | productId | role     | permissions             |
+      | ALL       | SUPPORT  | read:users,write:users  |
+
+  Scenario: Get user product role permissions list with unknown product should return empty list
+    When I request the user product role permissions list with parameters:
+      | uid       | a0530f76-3454-418c-9d65-eb3162075495 |
+      | productId | product-Z                             |
+    Then the user product role permissions list should be retrieved successfully
+    And the user should have no product role permissions
+
   Scenario: Merge new product roles for existing user
     Given a user exists with email "bob@example.com" and product "product-A" with roles "ADMIN"
     When I add product "product-D" with roles "OPERATOR" to the user
