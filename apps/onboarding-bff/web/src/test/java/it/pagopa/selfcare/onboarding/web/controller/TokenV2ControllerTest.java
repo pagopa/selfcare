@@ -169,7 +169,7 @@ class TokenV2ControllerTest {
         // then
         assertNotNull(preAuthorize);
         assertEquals(
-                "@iamAuthorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_VIEW_ACCOUNT_PAGE + "')",
+                "@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_VIEW_ACCOUNT_PAGE + "')",
                 preAuthorize.value()
         );
     }

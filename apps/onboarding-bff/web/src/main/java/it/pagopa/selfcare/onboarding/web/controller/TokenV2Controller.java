@@ -141,7 +141,7 @@ public class TokenV2Controller {
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.tokens.retrieveOnboardingRequest}",
             description = "${swagger.tokens.retrieveOnboardingRequest}", operationId = "retrieveOnboardingRequestUsingGET")
-    @PreAuthorize("@iamAuthorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_VIEW_ACCOUNT_PAGE + "')")
+    @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_VIEW_ACCOUNT_PAGE + "')")
     public OnboardingRequestResource retrieveOnboardingRequest(@ApiParam("${swagger.tokens.onboardingId}")
                                                                @PathVariable("onboardingId")
                                                                String onboardingId) {
@@ -169,7 +169,7 @@ public class TokenV2Controller {
     @Operation(description = "${swagger.tokens.approveOnboardingRequest}",
             summary = "${swagger.tokens.approveOnboardingRequest}", operationId = "approveOnboardingUsingPOST")
     @PostMapping("/{onboardingId}/approve")
-    @PreAuthorize("@iamAuthorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_APPROVE_ACCOUNT_PAGE + "')")
+    @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_APPROVE_ACCOUNT_PAGE + "')")
     public void approveOnboarding(@ApiParam("${swagger.tokens.onboardingId}")
                                   @PathVariable("onboardingId") String onboardingId) {
         log.debug("approve onboarding identified with {}", onboardingId);
