@@ -37,7 +37,7 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), any(Boolean.class)))
+                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), any(Boolean.class), any(Boolean.class)))
         .thenReturn(Uni.createFrom().voidItem());
 
     given()
@@ -60,7 +60,7 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), any(Boolean.class)))
+                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), any(Boolean.class), any(Boolean.class)))
         .thenReturn(Uni.createFrom().voidItem());
 
     given()
@@ -84,7 +84,7 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), any(Boolean.class)))
+                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), any(Boolean.class), any(Boolean.class)))
         .thenReturn(Uni.createFrom().voidItem());
 
     given()
@@ -172,7 +172,7 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                anyString(), any(File.class), anyList(), any(Boolean.class)))
+                anyString(), any(File.class), anyList(), any(Boolean.class), any(Boolean.class)))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Signature verification failed")));
 
     given()
@@ -196,7 +196,7 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                anyString(), any(File.class), anyList(), any(Boolean.class)))
+                anyString(), any(File.class), anyList(), any(Boolean.class), any(Boolean.class)))
         .thenReturn(
             Uni.createFrom().failure(new IllegalStateException("Invalid signature format")));
 
@@ -221,7 +221,7 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                anyString(), any(File.class), anyList(), any(Boolean.class)))
+                anyString(), any(File.class), anyList(), any(Boolean.class), any(Boolean.class)))
         .thenReturn(Uni.createFrom().failure(new java.io.IOException("Cannot read file")));
 
     given()
@@ -245,7 +245,7 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                anyString(), any(File.class), anyList(), any(Boolean.class)))
+                anyString(), any(File.class), anyList(), any(Boolean.class), any(Boolean.class)))
         .thenReturn(
             Uni.createFrom()
                 .failure(new IllegalArgumentException("Fiscal code does not match signature")));
@@ -270,7 +270,7 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                anyString(), any(File.class), anyList(), any(Boolean.class)))
+                anyString(), any(File.class), anyList(), any(Boolean.class), any(Boolean.class)))
         .thenReturn(Uni.createFrom().voidItem());
 
     given()
@@ -284,7 +284,7 @@ class SignatureControllerTest {
         .statusCode(204);
 
     Mockito.verify(signatureService, Mockito.times(1))
-        .verifyContractSignature(eq(ONBOARDING_ID), any(File.class), anyList(), any(Boolean.class));
+        .verifyContractSignature(eq(ONBOARDING_ID), any(File.class), anyList(), any(Boolean.class), any(Boolean.class));
   }
 
   @Test
@@ -296,7 +296,7 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), any(Boolean.class)))
+                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), any(Boolean.class), any(Boolean.class)))
         .thenReturn(Uni.createFrom().voidItem());
 
     given()
@@ -319,7 +319,7 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), any(Boolean.class)))
+                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), any(Boolean.class), any(Boolean.class)))
         .thenReturn(Uni.createFrom().voidItem());
 
     given()
@@ -343,7 +343,7 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), any(Boolean.class)))
+                eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), any(Boolean.class), any(Boolean.class)))
         .thenReturn(Uni.createFrom().voidItem());
 
     given()
@@ -367,7 +367,7 @@ class SignatureControllerTest {
 
     Mockito.when(
             signatureService.verifyContractSignature(
-                eq(specialOnboardingId), any(File.class), eq(fiscalCodes), any(Boolean.class)))
+                eq(specialOnboardingId), any(File.class), eq(fiscalCodes), any(Boolean.class), any(Boolean.class)))
         .thenReturn(Uni.createFrom().voidItem());
 
     given()

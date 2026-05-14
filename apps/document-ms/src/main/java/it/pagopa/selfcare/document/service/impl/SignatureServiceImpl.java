@@ -196,7 +196,7 @@ public class SignatureServiceImpl implements SignatureService {
   }
 
   @Override
-  public void verifySignature(File file, String checksum, List<String> usersTaxCode) {
+  public void verifySignature(File file, String checksum, List<String> usersTaxCode, boolean skipSignerIdentityCheck) {
     try {
       Path safePath = validateUploadedFile(file);
       byte[] byteData = Files.readAllBytes(safePath);
@@ -209,7 +209,11 @@ public class SignatureServiceImpl implements SignatureService {
       verifySignatureForm(validator);
       verifySignature(reports);
       verifyDigest(validator, checksum);
-      verifyManagerTaxCode(reports, usersTaxCode);
+      if (!skipSignerIdentityCheck) {
+        verifyManagerTaxCode(reports, usersTaxCode);
+      } else {
+        log.info("Skipping signer identity check for uploaded file: {}", sanitize(file.getName()));
+      }
 
     } catch (InvalidRequestException e) {
       throw e;
@@ -226,7 +230,8 @@ public class SignatureServiceImpl implements SignatureService {
             String onboardingId,
             File file,
             List<String> fiscalCodes,
-            boolean skipSignatureVerification) {
+            boolean skipSignatureVerification,
+            boolean skipSignerIdentityCheck) {
 
         log.info("Verifying contract signature for onboardingId: {}", sanitize(onboardingId));
 
@@ -241,7 +246,7 @@ public class SignatureServiceImpl implements SignatureService {
                 .transformToUni(digest ->
                         Uni.createFrom()
                                 .voidItem()
-                                .invoke(() -> verifySignature(file, digest, fiscalCodes))
+                                .invoke(() -> verifySignature(file, digest, fiscalCodes, skipSignerIdentityCheck))
                                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 )
                 .invoke(() -> telemetryService.trackSignatureVerification(

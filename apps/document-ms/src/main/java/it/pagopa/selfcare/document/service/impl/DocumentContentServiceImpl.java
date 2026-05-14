@@ -368,7 +368,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
   @Override
   public Uni<String> uploadSignedContract(String onboardingId, DocumentBuilderRequest request, boolean skipSignatureVerification,
-      InputStream fileUpload, String fileName) {
+                                          InputStream fileUpload, String fileName, boolean skipSignerIdentityCheck) {
 
     log.info("START - Uploading and verifying signed contract for onboardingId={}, productId={}",
         sanitize(onboardingId), sanitize(request.getProductId()));
@@ -376,11 +376,18 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
     return saveInputStreamToTempFile(fileUpload, fileName)
         .chain(physicalFile ->
-            resolveNextSigningStep(onboardingId)
-                .chain(nextStep -> handleSignedContractUpload(onboardingId, request, skipSignatureVerification, physicalFile, fileName, nextStep))
-                .invoke(ignored -> telemetryService.trackSignedContractUploaded(onboardingId, System.currentTimeMillis() - start))
-                .onTermination().invoke(() -> cleanupTempFile(physicalFile, onboardingId, request.getProductId()))
-        );
+                resolveNextSigningStep(onboardingId)
+                    .chain(nextStep ->
+                            handleSignedContractUpload(
+                                onboardingId,
+                                request,
+                                skipSignatureVerification,
+                                physicalFile,
+                                fileName,
+                                nextStep,
+                                skipSignerIdentityCheck))
+                    .invoke(ignored -> telemetryService.trackSignedContractUploaded(onboardingId, System.currentTimeMillis() - start))
+                    .onTermination().invoke(() -> cleanupTempFile(physicalFile, onboardingId, request.getProductId())));
   }
 
     private Uni<File> saveInputStreamToTempFile(InputStream fileUpload, String fileName) {
@@ -396,28 +403,67 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     }
 
     private Uni<String> handleSignedContractUpload(String onboardingId, DocumentBuilderRequest request,
-            boolean skipSignatureVerification, File physicalFile, String fileName, int nextStep) {
+            boolean skipSignatureVerification, File physicalFile, String fileName, int nextStep, boolean skipSignerIdentityCheck) {
 
         log.info("handleSignedContractUpload: onboardingId={}, nextStep={}, fileName={}",
                 sanitize(onboardingId), nextStep, sanitize(fileName));
 
-        return documentService.handleContractDocument(request)
-            .onFailure().retry()
+        return documentRepository.findByOnboardingId(onboardingId)
+                .onFailure().retry()
                 .withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff))
                 .atMost(retryMaxAttempts)
-            .invoke(document -> {
-                document.setSigningStep(nextStep);
-                log.info("Document id={} for onboardingId={}: signingStep set to {}",
-                        sanitize(document.getId()), sanitize(onboardingId), nextStep);
-            })
-            .call(document -> signatureService.verifyContractSignature(
-                    onboardingId, physicalFile, request.getFiscalCodes(), skipSignatureVerification))
-            .chain(document -> {
-                String signedName = buildSignedFileName(document, fileName, onboardingId, nextStep);
-                log.info("Uploading signed contract for onboardingId={}, signingStep={}, blobFileName={}",
-                        sanitize(onboardingId), nextStep, sanitize(signedName));
-                return uploadToAzureAndUpdateDb(document, physicalFile, signedName);
-            });
+                .chain(previousDocument -> documentService.handleContractDocument(request, previousDocument)
+                        .onFailure().retry()
+                        .withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff))
+                        .atMost(retryMaxAttempts)
+                        .invoke(document -> {
+                            document.setSigningStep(nextStep);
+                            log.info("Document id={} for onboardingId={}: signingStep set to {}",
+                                    sanitize(document.getId()), sanitize(onboardingId), nextStep);
+                        })
+                        .chain(document -> {
+                            boolean isNewlyDocument = Objects.isNull(previousDocument)
+                                    || !Objects.equals(previousDocument.getId(), document.getId());
+
+                            return signatureService.verifyContractSignature(
+                                            onboardingId, physicalFile, request.getFiscalCodes(), skipSignatureVerification, skipSignerIdentityCheck)
+                                    .onFailure().call(signatureError -> rollbackCreatedDocumentAfterSignatureFailure(
+                                            isNewlyDocument, document))
+                                    .replaceWith(document);
+                        })
+                        .chain(document -> {
+                            String signedName = buildSignedFileName(document, fileName, onboardingId, nextStep);
+                            log.info("Uploading signed contract for onboardingId={}, signingStep={}, blobFileName={}",
+                                    sanitize(onboardingId), nextStep, sanitize(signedName));
+                            return uploadToAzureAndUpdateDb(document, physicalFile, signedName);
+                        }));
+    }
+
+    private Uni<Void> rollbackCreatedDocumentAfterSignatureFailure(boolean isNewlyDocument, Document document) {
+        if (!isNewlyDocument) {
+            log.warn("Signature verification failed for onboardingId={}. Reused document id={} not deleted.",
+                    sanitize(document.getRootOnboardingId()), sanitize(document.getId()));
+            return Uni.createFrom().voidItem();
+        }
+
+        return documentService.deleteDocumentById(document.getId())
+                .onFailure()
+                .retry()
+                .withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff))
+                .atMost(retryMaxAttempts)
+                .invoke(deleted -> {
+                    if (Boolean.TRUE.equals(deleted)) {
+                        log.warn("Signature verification failed for onboardingId={}. Rollback deleted document id={}",
+                                sanitize(document.getRootOnboardingId()), sanitize(document.getId()));
+                    } else {
+                        log.warn("Signature verification failed for onboardingId={}. Rollback found no document to delete for id={}",
+                                sanitize(document.getRootOnboardingId()), sanitize(document.getId()));
+                    }
+                })
+                .onFailure().invoke(error -> log.error(
+                        "Signature verification rollback failed for onboardingId={}, documentId={}",
+                        sanitize(document.getRootOnboardingId()), sanitize(document.getId()), error))
+                .onFailure().recoverWithNull().replaceWithVoid();
     }
 
     private String buildSignedFileName(Document document, String originalFileName, String onboardingId, int signingStep) {
