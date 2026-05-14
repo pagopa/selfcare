@@ -368,7 +368,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
   @Override
   public Uni<String> uploadSignedContract(String onboardingId, DocumentBuilderRequest request, boolean skipSignatureVerification,
-      InputStream fileUpload, String fileName) {
+                                          InputStream fileUpload, String fileName, boolean skipSignerIdentityCheck) {
 
     log.info("START - Uploading and verifying signed contract for onboardingId={}, productId={}",
         sanitize(onboardingId), sanitize(request.getProductId()));
@@ -376,11 +376,18 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
     return saveInputStreamToTempFile(fileUpload, fileName)
         .chain(physicalFile ->
-            resolveNextSigningStep(onboardingId)
-                .chain(nextStep -> handleSignedContractUpload(onboardingId, request, skipSignatureVerification, physicalFile, fileName, nextStep))
-                .invoke(ignored -> telemetryService.trackSignedContractUploaded(onboardingId, System.currentTimeMillis() - start))
-                .onTermination().invoke(() -> cleanupTempFile(physicalFile, onboardingId, request.getProductId()))
-        );
+                resolveNextSigningStep(onboardingId)
+                    .chain(nextStep ->
+                            handleSignedContractUpload(
+                                onboardingId,
+                                request,
+                                skipSignatureVerification,
+                                physicalFile,
+                                fileName,
+                                nextStep,
+                                skipSignerIdentityCheck))
+                    .invoke(ignored -> telemetryService.trackSignedContractUploaded(onboardingId, System.currentTimeMillis() - start))
+                    .onTermination().invoke(() -> cleanupTempFile(physicalFile, onboardingId, request.getProductId())));
   }
 
     private Uni<File> saveInputStreamToTempFile(InputStream fileUpload, String fileName) {
@@ -396,7 +403,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     }
 
     private Uni<String> handleSignedContractUpload(String onboardingId, DocumentBuilderRequest request,
-            boolean skipSignatureVerification, File physicalFile, String fileName, int nextStep) {
+            boolean skipSignatureVerification, File physicalFile, String fileName, int nextStep, boolean skipSignerIdentityCheck) {
 
         log.info("handleSignedContractUpload: onboardingId={}, nextStep={}, fileName={}",
                 sanitize(onboardingId), nextStep, sanitize(fileName));
@@ -419,9 +426,9 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                                     || !Objects.equals(previousDocument.getId(), document.getId());
 
                             return signatureService.verifyContractSignature(
-                                            onboardingId, physicalFile, request.getFiscalCodes(), skipSignatureVerification)
+                                            onboardingId, physicalFile, request.getFiscalCodes(), skipSignatureVerification, skipSignerIdentityCheck)
                                     .onFailure().call(signatureError -> rollbackCreatedDocumentAfterSignatureFailure(
-                                            isNewlyDocument, document, onboardingId))
+                                            isNewlyDocument, document))
                                     .replaceWith(document);
                         })
                         .chain(document -> {
@@ -432,29 +439,31 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                         }));
     }
 
-    private Uni<Void> rollbackCreatedDocumentAfterSignatureFailure(boolean isNewlyDocument, Document document,
-                                                                   String onboardingId) {
+    private Uni<Void> rollbackCreatedDocumentAfterSignatureFailure(boolean isNewlyDocument, Document document) {
         if (!isNewlyDocument) {
             log.warn("Signature verification failed for onboardingId={}. Reused document id={} not deleted.",
-                    sanitize(onboardingId), sanitize(document.getId()));
+                    sanitize(document.getRootOnboardingId()), sanitize(document.getId()));
             return Uni.createFrom().voidItem();
         }
 
         return documentService.deleteDocumentById(document.getId())
-                .onItem().invoke(deleted -> {
+                .onFailure()
+                .retry()
+                .withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff))
+                .atMost(retryMaxAttempts)
+                .invoke(deleted -> {
                     if (Boolean.TRUE.equals(deleted)) {
                         log.warn("Signature verification failed for onboardingId={}. Rollback deleted document id={}",
-                                sanitize(onboardingId), sanitize(document.getId()));
+                                sanitize(document.getRootOnboardingId()), sanitize(document.getId()));
                     } else {
-                        log.error("Signature verification failed for onboardingId={}. Rollback could not delete document id={}",
-                                sanitize(onboardingId), sanitize(document.getId()));
+                        log.warn("Signature verification failed for onboardingId={}. Rollback found no document to delete for id={}",
+                                sanitize(document.getRootOnboardingId()), sanitize(document.getId()));
                     }
                 })
                 .onFailure().invoke(error -> log.error(
                         "Signature verification rollback failed for onboardingId={}, documentId={}",
-                        sanitize(onboardingId), sanitize(document.getId()), error))
-                .onFailure().recoverWithItem(false)
-                .replaceWithVoid();
+                        sanitize(document.getRootOnboardingId()), sanitize(document.getId()), error))
+                .onFailure().recoverWithNull().replaceWithVoid();
     }
 
     private String buildSignedFileName(Document document, String originalFileName, String onboardingId, int signingStep) {

@@ -1565,6 +1565,7 @@ class DocumentContentServiceImplTest {
         String fileName = "filename";
         List<String> fiscalCodes = List.of("FC123");
         boolean skipVerification = false;
+        boolean skipSignerIdentityCheck = false;
 
         InputStream dummyFile = new ByteArrayInputStream("dummy content".getBytes());
 
@@ -1575,7 +1576,7 @@ class DocumentContentServiceImplTest {
                 .thenReturn(Uni.createFrom().nullItem());
         when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
                 .thenReturn(Uni.createFrom().item(mockDocument));
-        when(signatureService.verifyContractSignature(eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), eq(skipVerification)))
+        when(signatureService.verifyContractSignature(eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), eq(skipVerification), eq(skipSignerIdentityCheck)))
                 .thenReturn(Uni.createFrom().voidItem());
         when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
         when(azureBlobClient.uploadFile(anyString(), anyString(), any(byte[].class)))
@@ -1585,8 +1586,7 @@ class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, dummyFile, fileName
-        ).await();
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, dummyFile, fileName, false).await();
 
         // Assert
         assertDoesNotThrow(awaiter::indefinitely);
@@ -1608,13 +1608,12 @@ class DocumentContentServiceImplTest {
                 .thenReturn(Uni.createFrom().item(mockDocument));
 
         // Simuliamo il fallimento della firma
-        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean()))
+        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean(), anyBoolean()))
                 .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Invalid Signature", "400")));
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName
-        ).await();
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName,false).await();
 
         // Assert
         InvalidRequestException ex = assertThrows(InvalidRequestException.class, awaiter::indefinitely);
@@ -1642,7 +1641,7 @@ class DocumentContentServiceImplTest {
                 .thenReturn(Uni.createFrom().item(newDoc));
 
         // signature verification fails
-        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean()))
+        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean(), anyBoolean()))
                 .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Invalid Signature", "400")));
 
         // deleteDocumentById will be invoked as part of rollback - mock success
@@ -1651,8 +1650,7 @@ class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName
-        ).await();
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName, false).await();
 
         // Assert
         InvalidRequestException ex = assertThrows(InvalidRequestException.class, awaiter::indefinitely);
@@ -1682,13 +1680,12 @@ class DocumentContentServiceImplTest {
                 .thenReturn(Uni.createFrom().item(existingDoc));
 
         // signature verification fails
-        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean()))
+        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean(), anyBoolean()))
                 .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Invalid Signature", "400")));
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName
-        ).await();
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName,false).await();
 
         // Assert
         InvalidRequestException ex = assertThrows(InvalidRequestException.class, awaiter::indefinitely);
@@ -1712,7 +1709,7 @@ class DocumentContentServiceImplTest {
                 .thenReturn(Uni.createFrom().nullItem());
         when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
                 .thenReturn(Uni.createFrom().item(mockDocument));
-        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean()))
+        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean(), anyBoolean()))
                 .thenReturn(Uni.createFrom().voidItem());
         when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
 
@@ -1722,8 +1719,7 @@ class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName
-        ).await();
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName, false).await();
 
         // Assert
         SelfcareAzureStorageException ex = assertThrows(SelfcareAzureStorageException.class, awaiter::indefinitely);
@@ -1746,7 +1742,7 @@ class DocumentContentServiceImplTest {
                 .thenReturn(Uni.createFrom().nullItem());
         when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
                 .thenReturn(Uni.createFrom().item(mockDocument));
-        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean()))
+        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean(), anyBoolean()))
                 .thenReturn(Uni.createFrom().voidItem());
         when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
 
@@ -1760,8 +1756,7 @@ class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName
-        ).await();
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName,false).await();
 
         // Assert
         RuntimeException ex = assertThrows(RuntimeException.class, awaiter::indefinitely);
