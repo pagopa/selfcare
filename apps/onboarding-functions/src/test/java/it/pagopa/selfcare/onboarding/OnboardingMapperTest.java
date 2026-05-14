@@ -5,6 +5,8 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.common.ProductId;
 import it.pagopa.selfcare.onboarding.dto.OnboardingAggregateOrchestratorInput;
 import it.pagopa.selfcare.onboarding.entity.AggregateInstitution;
+import it.pagopa.selfcare.onboarding.entity.Billing;
+import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.User;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapperImpl;
@@ -439,5 +441,181 @@ class OnboardingMapperTest {
         Assertions.assertEquals(PartyRole.MANAGER, result.get(0).getRole());
         Assertions.assertEquals("onboardingUserId2", result.get(1).getId());
         Assertions.assertEquals(PartyRole.DELEGATE, result.get(1).getRole());
+    }
+
+    // -------------------------------------------------------------------------
+    // Tests for mapAggregateBilling
+    // -------------------------------------------------------------------------
+
+    @Test
+    void mapAggregateBilling_shouldFallbackToParentWhenAggregateHasNoRecipientCodeOrVatNumber() {
+        Onboarding onboarding = new Onboarding();
+        Billing parentBilling = new Billing();
+        parentBilling.setRecipientCode("PARENT_RC");
+        parentBilling.setVatNumber("PARENT_VAT");
+        parentBilling.setPublicServices(true);
+        parentBilling.setTaxCodeInvoicing("PARENT_TCI");
+        onboarding.setBilling(parentBilling);
+
+        AggregateInstitution aggregate = new AggregateInstitution();
+
+        Billing result = onboardingMapper.mapAggregateBilling(onboarding, aggregate);
+
+        Assertions.assertEquals("PARENT_RC", result.getRecipientCode());
+        Assertions.assertEquals("PARENT_VAT", result.getVatNumber());
+        Assertions.assertTrue(result.isPublicServices());
+        Assertions.assertEquals("PARENT_TCI", result.getTaxCodeInvoicing());
+    }
+
+    @Test
+    void mapAggregateBilling_shouldUseAggregateRecipientCodeWhenPresent() {
+        Onboarding onboarding = new Onboarding();
+        Billing parentBilling = new Billing();
+        parentBilling.setRecipientCode("PARENT_RC");
+        parentBilling.setVatNumber("PARENT_VAT");
+        onboarding.setBilling(parentBilling);
+
+        AggregateInstitution aggregate = new AggregateInstitution();
+        aggregate.setRecipientCode("AGGREGATE_RC");
+
+        Billing result = onboardingMapper.mapAggregateBilling(onboarding, aggregate);
+
+        Assertions.assertEquals("AGGREGATE_RC", result.getRecipientCode());
+        Assertions.assertEquals("PARENT_VAT", result.getVatNumber());
+    }
+
+    @Test
+    void mapAggregateBilling_shouldUseAggregateVatNumberWhenPresent() {
+        Onboarding onboarding = new Onboarding();
+        Billing parentBilling = new Billing();
+        parentBilling.setRecipientCode("PARENT_RC");
+        parentBilling.setVatNumber("PARENT_VAT");
+        onboarding.setBilling(parentBilling);
+
+        AggregateInstitution aggregate = new AggregateInstitution();
+        aggregate.setVatNumber("AGGREGATE_VAT");
+
+        Billing result = onboardingMapper.mapAggregateBilling(onboarding, aggregate);
+
+        Assertions.assertEquals("PARENT_RC", result.getRecipientCode());
+        Assertions.assertEquals("AGGREGATE_VAT", result.getVatNumber());
+    }
+
+    @Test
+    void mapAggregateBilling_shouldUseAggregateValuesForBothWhenPresent() {
+        Onboarding onboarding = new Onboarding();
+        Billing parentBilling = new Billing();
+        parentBilling.setRecipientCode("PARENT_RC");
+        parentBilling.setVatNumber("PARENT_VAT");
+        onboarding.setBilling(parentBilling);
+
+        AggregateInstitution aggregate = new AggregateInstitution();
+        aggregate.setRecipientCode("AGGREGATE_RC");
+        aggregate.setVatNumber("AGGREGATE_VAT");
+
+        Billing result = onboardingMapper.mapAggregateBilling(onboarding, aggregate);
+
+        Assertions.assertEquals("AGGREGATE_RC", result.getRecipientCode());
+        Assertions.assertEquals("AGGREGATE_VAT", result.getVatNumber());
+    }
+
+    @Test
+    void mapAggregateBilling_shouldHandleNullParentBilling() {
+        Onboarding onboarding = new Onboarding();
+        onboarding.setBilling(null);
+
+        AggregateInstitution aggregate = new AggregateInstitution();
+        aggregate.setRecipientCode("AGGREGATE_RC");
+
+        Billing result = onboardingMapper.mapAggregateBilling(onboarding, aggregate);
+
+        Assertions.assertEquals("AGGREGATE_RC", result.getRecipientCode());
+        Assertions.assertNull(result.getVatNumber());
+    }
+
+    @Test
+    void mapAggregateBilling_shouldHandleNullAggregate() {
+        Onboarding onboarding = new Onboarding();
+        Billing parentBilling = new Billing();
+        parentBilling.setRecipientCode("PARENT_RC");
+        parentBilling.setVatNumber("PARENT_VAT");
+        onboarding.setBilling(parentBilling);
+
+        Billing result = onboardingMapper.mapAggregateBilling(onboarding, null);
+
+        Assertions.assertEquals("PARENT_RC", result.getRecipientCode());
+        Assertions.assertEquals("PARENT_VAT", result.getVatNumber());
+    }
+
+    @Test
+    void mapAggregateBilling_shouldIgnoreEmptyAggregateRecipientCode() {
+        Onboarding onboarding = new Onboarding();
+        Billing parentBilling = new Billing();
+        parentBilling.setRecipientCode("PARENT_RC");
+        onboarding.setBilling(parentBilling);
+
+        AggregateInstitution aggregate = new AggregateInstitution();
+        aggregate.setRecipientCode("");
+
+        Billing result = onboardingMapper.mapAggregateBilling(onboarding, aggregate);
+
+        Assertions.assertEquals("PARENT_RC", result.getRecipientCode());
+    }
+
+    // -------------------------------------------------------------------------
+    // Tests for mapInstitution isTest propagation
+    // -------------------------------------------------------------------------
+
+    @Test
+    void mapInstitution_shouldPropagateIsTestFromAggregator() {
+        Institution aggregate = new Institution();
+        Institution aggregator = new Institution();
+        aggregator.setIsTest(true);
+        aggregator.setOrigin(it.pagopa.selfcare.onboarding.common.Origin.IPA);
+        aggregator.setInstitutionType(it.pagopa.selfcare.onboarding.common.InstitutionType.PA);
+
+        Institution result = onboardingMapper.mapInstitution(aggregate, aggregator);
+
+        Assertions.assertTrue(result.getIsTest());
+    }
+
+    @Test
+    void mapInstitution_shouldNotOverrideIsTestWhenAggregatorIsTestIsFalse() {
+        Institution aggregate = new Institution();
+        aggregate.setIsTest(true);
+        Institution aggregator = new Institution();
+        aggregator.setIsTest(false);
+        aggregator.setOrigin(it.pagopa.selfcare.onboarding.common.Origin.IPA);
+
+        Institution result = onboardingMapper.mapInstitution(aggregate, aggregator);
+
+        // aggregate keeps its own isTest because aggregator is false
+        Assertions.assertTrue(result.getIsTest());
+    }
+
+    @Test
+    void mapInstitution_shouldNotOverrideIsTestWhenAggregatorIsTestIsNull() {
+        Institution aggregate = new Institution();
+        aggregate.setIsTest(null);
+        Institution aggregator = new Institution();
+        aggregator.setIsTest(null);
+        aggregator.setOrigin(it.pagopa.selfcare.onboarding.common.Origin.IPA);
+
+        Institution result = onboardingMapper.mapInstitution(aggregate, aggregator);
+
+        Assertions.assertNull(result.getIsTest());
+    }
+
+    @Test
+    void mapInstitution_shouldForceIsTestOnAggregateEvenIfAggregateSaysFalse() {
+        Institution aggregate = new Institution();
+        aggregate.setIsTest(false);
+        Institution aggregator = new Institution();
+        aggregator.setIsTest(true);
+        aggregator.setOrigin(it.pagopa.selfcare.onboarding.common.Origin.IPA);
+
+        Institution result = onboardingMapper.mapInstitution(aggregate, aggregator);
+
+        Assertions.assertTrue(result.getIsTest());
     }
 }

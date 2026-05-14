@@ -46,5 +46,6 @@ public class Institution {
 
     private String parentDescription;
     private List<String> atecoCodes;
+    private Boolean isTest;
 
 }

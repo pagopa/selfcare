@@ -27,5 +27,6 @@ public class AggregateInstitution {
     private String county;
     private String iban;
     private String istatCode;
+    private Boolean isTest;
 
 }
