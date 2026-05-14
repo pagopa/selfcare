@@ -162,6 +162,10 @@ locals {
     {
       name  = "MS_DOCUMENT_URL"
       value = "http://selc-${module.local.config.env_short}-document-ms-ca"
+    },
+    {
+      name  = "PRODUCT_STORAGE_CONTAINER"
+      value = "selc-${module.local.config.env_short}-product"
     }
   ]
 
