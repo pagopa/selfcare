@@ -29,7 +29,7 @@ class AuthorizationServiceTest {
     void hasPermission_shouldDelegateToTokenService() {
         // given
         String onboardingId = "onboardingId";
-        String permission = "Selc:ApproveAccountPage";
+        String permission = "Selc:ManageAccountPage";
         String userId = "user-id";
         String productId = "product-id";
         OnboardingData onboardingData = new OnboardingData();

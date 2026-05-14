@@ -48,10 +48,24 @@ Feature: Token
     When I send a GET request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i1019"
     Then The status code is 404
 
+  Scenario: Forbidden to retrive onboarding when user has no permission
+    Given User login with username "r.balboa" and password "test"
+    When I send a GET request to "/v2/tokens/37f7609b-5a4b-4200-82e7-2117756d64aa"
+    Then The status code is 403
+    And The response body contains:
+      | detail | Access Denied |
+
   Scenario: Success to approve onboarding
     Given User login with username "j.doe" and password "test"
     When I send a POST request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i10222/approve"
     Then The status code is 200
+
+  Scenario: Forbidden to approve onboarding when user has no permission
+    Given User login with username "r.balboa" and password "test"
+    When I send a POST request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i10222/approve"
+    Then The status code is 403
+    And The response body contains:
+      | detail | Access Denied |
 
   Scenario: Failed to approve onboarding when given invalid id
     Given User login with username "j.doe" and password "test"
@@ -78,6 +92,19 @@ Feature: Token
     """
     When I send a POST request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i123/reject"
     Then The status code is 200
+
+  Scenario: Forbidden to reject onboarding when user has no permission
+    Given User login with username "r.balboa" and password "test"
+    And The following request body:
+    """
+      {
+        "reason": "test reject"
+      }
+    """
+    When I send a POST request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i123/reject"
+    Then The status code is 403
+    And The response body contains:
+      | detail | Access Denied |
 
   Scenario: Failed to reject onboarding
     Given User login with username "j.doe" and password "test"
