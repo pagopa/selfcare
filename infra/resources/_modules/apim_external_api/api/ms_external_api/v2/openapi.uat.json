@@ -1176,7 +1176,9 @@
     },
     "/message/{messageId}/status/{status}": {
       "post": {
-        "tags": [],
+        "tags": [
+          "conservazione"
+        ],
         "summary": "messageAcknowledgment",
         "description": "Service to acknowledge message consumption by a consumer",
         "operationId": "messageAcknowledgmentUsingPOST1",
