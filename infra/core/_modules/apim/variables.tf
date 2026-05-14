@@ -72,3 +72,9 @@ variable "app_gateway_api_certificate_name" {
   type        = string
   description = "Application gateway: api certificate name on Key Vault"
 }
+
+variable "application_insight_enabled" {
+  type        = bool
+  description = "Logger application insight enabled"
+  default     = false
+}

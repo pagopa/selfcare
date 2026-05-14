@@ -385,8 +385,9 @@ module "apim_pnpg_internal_api" {
   ]
 }
 
-# # PRODUCTS
-
+############
+# PRODUCTS #
+############
 module "apim_pnpg_product_pn_pg" {
   source       = "git::https://github.com/pagopa/terraform-azurerm-v4.git//api_management_product?ref=v10.9.0"
   product_id   = "prod-pn-pg"
