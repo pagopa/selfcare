@@ -192,7 +192,7 @@ db.onboardings.insertMany([
       zipCode: "11223",
     },
     productId: "prod-pagopa",
-    status: "TOBEVALIDATED",
+    status: "COMPLETED",
     users: [
       {
         _id: "97a511a7-2acc-47b9-afed-2f3c65753b4a",
@@ -345,7 +345,7 @@ db.onboardings.insertMany([
       imported: false,
       institutionType: "PT",
       origin: "INFOCAMERE",
-      taxCode: "11223345661",
+      taxCode: "11223345668",
       zipCode: "11223",
     },
     productId: "prod-pagopa",
@@ -407,7 +407,7 @@ db.onboardings.insertMany([
       zipCode: "11223",
     },
     productId: "prod-pagopa",
-    status: "COMPLETED",
+    status: "TOBEVALIDATED",
     users: [
       {
         _id: "ec7ca4d5-c537-462a-8c06-e102e0c21c44",

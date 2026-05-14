@@ -58,7 +58,7 @@ Feature: Token
   Scenario: Success to approve onboarding
     Given User login with username "j.doe" and password "test"
     When I send a POST request to "/v2/tokens/ac986657-2d5f-4e0f-bf0c-8953d3d8598c/approve"
-    Then The status code is 409
+    Then The status code is 200
 
   Scenario: Forbidden to approve onboarding when user has no permission
     Given User login with username "r.balboa" and password "test"
@@ -80,7 +80,7 @@ Feature: Token
   Scenario: Failed to approve onboarding when is already consumed
     Given User login with username "j.doe" and password "test"
     When I send a POST request to "/v2/tokens/a9609461-a99b-404f-8ed9-c9c2d2e7e416/approve"
-    Then The status code is 400
+    Then The status code is 409
 
   Scenario: Success to reject onboarding
     Given User login with username "j.doe" and password "test"
