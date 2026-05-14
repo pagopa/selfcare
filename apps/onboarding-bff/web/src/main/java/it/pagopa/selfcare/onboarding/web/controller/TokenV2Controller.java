@@ -169,7 +169,7 @@ public class TokenV2Controller {
     @Operation(description = "${swagger.tokens.approveOnboardingRequest}",
             summary = "${swagger.tokens.approveOnboardingRequest}", operationId = "approveOnboardingUsingPOST")
     @PostMapping("/{onboardingId}/approve")
-    @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_APPROVE_ACCOUNT_PAGE + "')")
+    @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE + "')")
     public void approveOnboarding(@ApiParam("${swagger.tokens.onboardingId}")
                                   @PathVariable("onboardingId") String onboardingId) {
         log.debug("approve onboarding identified with {}", onboardingId);
@@ -190,6 +190,7 @@ public class TokenV2Controller {
     @Operation(summary = "Service to reject a specific onboarding request",
             description = "Service to reject a specific onboarding request", operationId = "rejectOnboardingUsingPOST")
     @PostMapping("/{onboardingId}/reject")
+    @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE + "')")
     public void rejectOnboarding(@ApiParam("${swagger.tokens.onboardingId}")
                                  @PathVariable("onboardingId") String onboardingId,
                                  @RequestBody ReasonForRejectDto reasonForRejectDto) {

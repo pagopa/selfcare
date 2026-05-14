@@ -174,6 +174,22 @@ class TokenV2ControllerTest {
         );
     }
 
+    @Test
+    void rejectOnboardingRequest_shouldBeProtectedByApprovePermission() throws NoSuchMethodException {
+        // given
+        Method method = TokenV2Controller.class.getMethod("rejectOnboarding", String.class, ReasonForRejectDto.class);
+
+        // when
+        PreAuthorize preAuthorize = method.getAnnotation(PreAuthorize.class);
+
+        // then
+        assertNotNull(preAuthorize);
+        assertEquals(
+                "@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE + "')",
+                preAuthorize.value()
+        );
+    }
+
     /**
      * Method under test: {@link TokenV2Controller#approveOnboarding(String)}
      */
