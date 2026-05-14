@@ -57,4 +57,8 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
                 .where(ONBOARDING_AND_TYPES_FILTER, onboardingId, CONTRACT_TYPES);
     }
 
+    public Uni<Boolean> deleteDocument(String documentId) {
+        return deleteById(documentId);
+    }
+
 }
