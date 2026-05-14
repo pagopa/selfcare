@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.DocumentType;
+import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.constants.CustomError;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
@@ -68,6 +69,9 @@ public class OnboardingUtils {
         request.skipSignatureVerification = skipSignatureVerification;
         request._file = formItem.getFile();
         request.fileName = formItem.getFileName();
+        if (OnboardingStatus.PENDING_IN_REVIEW.equals(onboarding.getStatus())) {
+            request.skipSignerIdentityCheck = product.getSigningConfiguration().isSkipSignerIdentityCheck();
+        }
 
         String institutionType = onboarding.getInstitution().getInstitutionType().name();
         ContractTemplate contractTemplate = product.getInstitutionContractTemplate(institutionType);
