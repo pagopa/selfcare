@@ -1,73 +1,67 @@
 # storage_accounts
 
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
 No requirements.
 
 ## Providers
 
-| Name                                                          | Version |
-|---------------------------------------------------------------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.18.0  |
+| Name | Version |
+| ---- | ------- |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | n/a |
 
 ## Modules
 
-| Name                                                                                              | Source                                                  | Version |
-|---------------------------------------------------------------------------------------------------|---------------------------------------------------------|---------|
-| <a name="module_com_st"></a> [com\_st](#module\_com\_st)                                          | pagopa-dx/azure-storage-account/azurerm                 | 0.0.9   |
-| <a name="module_storage_api"></a> [storage\_api](#module\_storage\_api)                           | github.com/pagopa/terraform-azurerm-v4//storage_account | v1.2.1  |
-| <a name="module_storage_api_events"></a> [storage\_api\_events](#module\_storage\_api\_events)    | github.com/pagopa/terraform-azurerm-v4//storage_account | v1.2.1  |
-| <a name="module_storage_api_replica"></a> [storage\_api\_replica](#module\_storage\_api\_replica) | github.com/pagopa/terraform-azurerm-v4//storage_account | v1.2.1  |
+| Name | Source | Version |
+| ---- | ------ | ------- |
+| <a name="module_storage_account"></a> [storage\_account](#module\_storage\_account) | pagopa-dx/azure-storage-account/azurerm | ~>1.0 |
 
 ## Resources
 
-| Name                                                                                                                                                                                         | Type     |
-|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|
-| [azurerm_monitor_metric_alert.iopstapi_throttling_low_availability](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_metric_alert)                    | resource |
-| [azurerm_storage_container.cached](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_container)                                                        | resource |
-| [azurerm_storage_container.deleted_messages_logs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_container)                                         | resource |
-| [azurerm_storage_container.message_content](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_container)                                               | resource |
-| [azurerm_storage_container.operations](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_container)                                                    | resource |
-| [azurerm_storage_container_immutability_policy.deleted_messages_logs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_container_immutability_policy) | resource |
-| [azurerm_storage_object_replication.api_replica](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_object_replication)                                 | resource |
-| [azurerm_storage_queue.delete_messages](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_queue)                                                       | resource |
-| [azurerm_storage_queue.events](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_queue)                                                                | resource |
-| [azurerm_storage_queue.message_paymentupdater_failures](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_queue)                                       | resource |
-| [azurerm_storage_queue.push_notif_notifymessage](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_queue)                                              | resource |
-| [azurerm_storage_queue.push_notif_notifymessage_poison](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_queue)                                       | resource |
-| [azurerm_storage_queue.push_notifications](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_queue)                                                    | resource |
-| [azurerm_storage_queue.push_notifications_poison](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_queue)                                             | resource |
-| [azurerm_storage_table.faileduserdataprocessing](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_table)                                              | resource |
-| [azurerm_storage_table.message-statuses-dataplan-ingestion-errors](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_table)                            | resource |
-| [azurerm_storage_table.messages-dataplan-ingestion-errors](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_table)                                    | resource |
-| [azurerm_storage_table.messages_ingestion_error](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_table)                                              | resource |
-| [azurerm_storage_table.subscriptionsfeedbyday](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_table)                                                | resource |
-| [azurerm_storage_table.validationtokens](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_table)                                                      | resource |
+| Name | Type |
+| ---- | ---- |
+| [azurerm_key_vault_secret.selc_documents_storage_connection_string](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
+| [azurerm_management_lock.selc_documents_blob_management_lock](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
+| [azurerm_management_lock.selc_documents_storage_management_lock](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
+| [azurerm_storage_container.selc_documents_blob](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_container) | resource |
+| [azurerm_storage_management_policy.lifecycle](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_management_policy) | resource |
+| [azurerm_subnet.documents_snet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) | resource |
+| [azurerm_key_vault.key_vault](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault) | data source |
+| [azurerm_virtual_network.vnet_selc](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
 
 ## Inputs
 
-| Name                                                                                                                   | Description                                     | Type                                                                                                          | Default | Required |
-|------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------|---------|:--------:|
-| <a name="input_environment"></a> [environment](#input\_environment)                                                    | n/a                                             | <pre>object({<br/>    prefix    = string<br/>    env_short = string<br/>    location  = string<br/>  })</pre> | n/a     |   yes    |
-| <a name="input_error_action_group_id"></a> [error\_action\_group\_id](#input\_error\_action\_group\_id)                | n/a                                             | `string`                                                                                                      | n/a     |   yes    |
-| <a name="input_legacy_resource_group_name"></a> [legacy\_resource\_group\_name](#input\_legacy\_resource\_group\_name) | Resource group name for VNet                    | `string`                                                                                                      | n/a     |   yes    |
-| <a name="input_location"></a> [location](#input\_location)                                                             | Azure region                                    | `string`                                                                                                      | n/a     |   yes    |
-| <a name="input_location_short"></a> [location\_short](#input\_location\_short)                                         | Azure region short name                         | `string`                                                                                                      | n/a     |   yes    |
-| <a name="input_project"></a> [project](#input\_project)                                                                | IO prefix, short environment and short location | `string`                                                                                                      | n/a     |   yes    |
-| <a name="input_project_legacy"></a> [project\_legacy](#input\_project\_legacy)                                         | IO prefix and short environment                 | `string`                                                                                                      | n/a     |   yes    |
-| <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)                        | Resource group name for VNet                    | `string`                                                                                                      | n/a     |   yes    |
-| <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id)                                          | n/a                                             | `string`                                                                                                      | n/a     |   yes    |
-| <a name="input_tags"></a> [tags](#input\_tags)                                                                         | Resource tags                                   | `map(any)`                                                                                                    | n/a     |   yes    |
+| Name | Description | Type | Default | Required |
+| ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_app_name"></a> [app\_name](#input\_app\_name) | App name | `string` | n/a | yes |
+| <a name="input_base_blob_tier_to_cold_after_days_since_creation_greater_than"></a> [base\_blob\_tier\_to\_cold\_after\_days\_since\_creation\_greater\_than](#input\_base\_blob\_tier\_to\_cold\_after\_days\_since\_creation\_greater\_than) | n/a | `number` | n/a | yes |
+| <a name="input_base_blob_tier_to_cool_after_days_since_modification_greater_than"></a> [base\_blob\_tier\_to\_cool\_after\_days\_since\_modification\_greater\_than](#input\_base\_blob\_tier\_to\_cool\_after\_days\_since\_modification\_greater\_than) | n/a | `number` | n/a | yes |
+| <a name="input_base_delete_after_days_since_creation_greater_than"></a> [base\_delete\_after\_days\_since\_creation\_greater\_than](#input\_base\_delete\_after\_days\_since\_creation\_greater\_than) | n/a | `number` | n/a | yes |
+| <a name="input_blob_features"></a> [blob\_features](#input\_blob\_features) | Advanced blob features like versioning, change feed, immutability, and retention policies. | <pre>object({<br/>    restore_policy_days   = optional(number, 0)<br/>    delete_retention_days = optional(number, 0)<br/>    last_access_time      = optional(bool, false)<br/>    versioning            = optional(bool, false)<br/>    change_feed = optional(object({<br/>      enabled           = optional(bool, false)<br/>      retention_in_days = optional(number, 0)<br/>    }), { enabled = false })<br/>    immutability_policy = optional(object({<br/>      enabled                       = optional(bool, false)<br/>      allow_protected_append_writes = optional(bool, false)<br/>      period_since_creation_in_days = optional(number, 730)<br/>    }), { enabled = false })<br/>  })</pre> | <pre>{<br/>  "change_feed": {<br/>    "enabled": false,<br/>    "retention_in_days": 0<br/>  },<br/>  "delete_retention_days": 0,<br/>  "immutability_policy": {<br/>    "enabled": false<br/>  },<br/>  "last_access_time": false,<br/>  "restore_policy_days": 0,<br/>  "versioning": false<br/>}</pre> | no |
+| <a name="input_cidr_subnet_contract_storage"></a> [cidr\_subnet\_contract\_storage](#input\_cidr\_subnet\_contract\_storage) | Documents storage address space. | `list(string)` | n/a | yes |
+| <a name="input_domain"></a> [domain](#input\_domain) | Domain | `string` | n/a | yes |
+| <a name="input_env_short"></a> [env\_short](#input\_env\_short) | Environment short name | `string` | n/a | yes |
+| <a name="input_instance_number"></a> [instance\_number](#input\_instance\_number) | The istance number to create | `string` | n/a | yes |
+| <a name="input_key_vault_name"></a> [key\_vault\_name](#input\_key\_vault\_name) | Name of Key Vault | `string` | n/a | yes |
+| <a name="input_key_vault_resource_group_name"></a> [key\_vault\_resource\_group\_name](#input\_key\_vault\_resource\_group\_name) | Name of Key Vault resource group | `string` | n/a | yes |
+| <a name="input_location"></a> [location](#input\_location) | n/a | `string` | `"westeurope"` | no |
+| <a name="input_prefix"></a> [prefix](#input\_prefix) | Domain prefix | `string` | `"selc"` | no |
+| <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | he name of the resource group holding private DNS zone to use for private endpoints. Default is Virtual Network resource group | `string` | n/a | yes |
+| <a name="input_project"></a> [project](#input\_project) | Selfcare prefix and short environment | `string` | n/a | yes |
+| <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group | `string` | n/a | yes |
+| <a name="input_snapshot_change_tier_to_cool_after_days_since_creation"></a> [snapshot\_change\_tier\_to\_cool\_after\_days\_since\_creation](#input\_snapshot\_change\_tier\_to\_cool\_after\_days\_since\_creation) | n/a | `number` | n/a | yes |
+| <a name="input_snapshot_delete_after_days_since_creation_greater_than"></a> [snapshot\_delete\_after\_days\_since\_creation\_greater\_than](#input\_snapshot\_delete\_after\_days\_since\_creation\_greater\_than) | n/a | `number` | n/a | yes |
+| <a name="input_suffix_increment"></a> [suffix\_increment](#input\_suffix\_increment) | Suffix increment Container App Environment name | `string` | `""` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | n/a | `map(any)` | n/a | yes |
+| <a name="input_version_change_tier_to_cool_after_days_since_creation"></a> [version\_change\_tier\_to\_cool\_after\_days\_since\_creation](#input\_version\_change\_tier\_to\_cool\_after\_days\_since\_creation) | n/a | `number` | n/a | yes |
+| <a name="input_version_delete_after_days_since_creation"></a> [version\_delete\_after\_days\_since\_creation](#input\_version\_delete\_after\_days\_since\_creation) | n/a | `number` | n/a | yes |
+| <a name="input_virtual_network_name"></a> [virtual\_network\_name](#input\_virtual\_network\_name) | Name of the resource where resources will be created | `string` | n/a | yes |
 
 ## Outputs
 
-| Name                                                                                                       | Description |
-|------------------------------------------------------------------------------------------------------------|-------------|
-| <a name="output_com_st_connectiostring"></a> [com\_st\_connectiostring](#output\_com\_st\_connectiostring) | n/a         |
-| <a name="output_com_st_id"></a> [com\_st\_id](#output\_com\_st\_id)                                        | n/a         |
-| <a name="output_com_st_name"></a> [com\_st\_name](#output\_com\_st\_name)                                  | n/a         |
-| <a name="output_com_st_rg"></a> [com\_st\_rg](#output\_com\_st\_rg)                                        | n/a         |
-
+| Name | Description |
+| ---- | ----------- |
+| <a name="output_storage_account"></a> [storage\_account](#output\_storage\_account) | n/a |
+| <a name="output_storage_container_name"></a> [storage\_container\_name](#output\_storage\_container\_name) | n/a |
 <!-- END_TF_DOCS -->

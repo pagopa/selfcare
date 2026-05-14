@@ -5,7 +5,7 @@ This module deploys SelfCare microservices on a Container App. Then gives it acc
 Then, it updates the private DNS zone with a new A record pointing at the existing Container App Environment but with the Container App name as prefix.
 
 <!-- markdownlint-disable -->
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
@@ -70,4 +70,4 @@ No modules.
 | <a name="output_container_app_environment_name"></a> [container\_app\_environment\_name](#output\_container\_app\_environment\_name) | n/a |
 | <a name="output_container_app_name"></a> [container\_app\_name](#output\_container\_app\_name) | n/a |
 | <a name="output_container_app_resource_group_name"></a> [container\_app\_resource\_group\_name](#output\_container\_app\_resource\_group\_name) | n/a |
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- END_TF_DOCS -->
