@@ -40,7 +40,7 @@ Feature: Token
 
   Scenario: Success to retrive onboarding
     Given User login with username "j.doe" and password "test"
-    When I send a GET request to "/v2/tokens/37f7609b-5a4b-4200-82e7-2117756d64aa"
+    When I send a GET request to "/v2/tokens/30452bc5-2051-45db-8958-1ab0e25ccd99"
     Then The status code is 200
 
   Scenario: Failed to retrive onboarding
@@ -50,36 +50,36 @@ Feature: Token
 
   Scenario: Forbidden to retrive onboarding when user has no permission
     Given User login with username "r.balboa" and password "test"
-    When I send a GET request to "/v2/tokens/37f7609b-5a4b-4200-82e7-2117756d64aa"
+    When I send a GET request to "/v2/tokens/30452bc5-2051-45db-8958-1ab0e25ccd99"
     Then The status code is 403
     And The response body contains:
       | detail | Access Denied |
 
   Scenario: Success to approve onboarding
     Given User login with username "j.doe" and password "test"
-    When I send a POST request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i10222/approve"
+    When I send a POST request to "/v2/tokens/ac986657-2d5f-4e0f-bf0c-8953d3d8598c/approve"
     Then The status code is 200
 
   Scenario: Forbidden to approve onboarding when user has no permission
     Given User login with username "r.balboa" and password "test"
-    When I send a POST request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i10222/approve"
+    When I send a POST request to "/v2/tokens/ac986657-2d5f-4e0f-bf0c-8953d3d8598c/approve"
     Then The status code is 403
     And The response body contains:
       | detail | Access Denied |
 
   Scenario: Failed to approve onboarding when given invalid id
     Given User login with username "j.doe" and password "test"
-    When I send a POST request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i101/approve"
+    When I send a POST request to "/v2/tokens/8b45369f-3ea9-468f-8a1f-4c2f18c23ce0/approve"
     Then The status code is 400
 
   Scenario: Failed to approve onboarding when is not found
     Given User login with username "j.doe" and password "test"
-    When I send a POST request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i101/approve"
+    When I send a POST request to "/v2/tokens/8b45369f-3ea9-468f-8a1f-4c2f18c23ce0/approve"
     Then The status code is 400
 
   Scenario: Failed to approve onboarding when is already consumed
     Given User login with username "j.doe" and password "test"
-    When I send a POST request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i1022/approve"
+    When I send a POST request to "/v2/tokens/a9609461-a99b-404f-8ed9-c9c2d2e7e416/approve"
     Then The status code is 409
 
   Scenario: Success to reject onboarding
@@ -90,7 +90,7 @@ Feature: Token
         "reason": "test reject"
       }
     """
-    When I send a POST request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i123/reject"
+    When I send a POST request to "/v2/tokens/312affae-1382-4480-b63a-9883556d35ee/reject"
     Then The status code is 200
 
   Scenario: Forbidden to reject onboarding when user has no permission
@@ -101,7 +101,7 @@ Feature: Token
         "reason": "test reject"
       }
     """
-    When I send a POST request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i123/reject"
+    When I send a POST request to "/v2/tokens/312affae-1382-4480-b63a-9883556d35ee/reject"
     Then The status code is 403
     And The response body contains:
       | detail | Access Denied |
@@ -114,7 +114,7 @@ Feature: Token
         "reason": "test reject"
       }
     """
-    When I send a POST request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i1000/reject"
+    When I send a POST request to "/v2/tokens/382ac4ff-03b1-4d98-bb06-f4bbd3335654/reject"
     Then The status code is 400
 
   Scenario: Success to delete onboarding
