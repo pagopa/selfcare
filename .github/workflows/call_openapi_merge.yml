@@ -44,7 +44,7 @@ env:
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
-  INFRA_APIM_FOLDER: './selfcare-external-api-backend/infra/apim_v2'
+  INFRA_APIM_FOLDER: './selfcare/infra/resources/_modules/apim_external_api'
 
 jobs:
   setup:
