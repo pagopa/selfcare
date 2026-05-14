@@ -66,6 +66,26 @@
           "OPERATOR",
           "SUPPORT"
         ]
+      },
+      {
+          "productId": "ALL",
+          "roles": [
+          "SUPPORT"
+          ]
+      }
+    ]
+  },
+  {
+    "_id": "9f3c7a12-6d44-4b1a-8b7e-2f6d91c5e321",
+    "email": "m4LpQx8Ta2VnYk7Rz1HsUw3BcDfGhJkLmNoPqRsTuVwX",
+    "familyName": "x9KlmPqRt5VzBnCyHdFgJw2Ls",
+    "name": "n7DsQaWzXcErTyUiOpLmKbHv",
+    "productRoles": [
+      {
+        "productId": "ALL",
+        "roles": [
+          "SUPPORT"
+        ]
       }
     ]
   }

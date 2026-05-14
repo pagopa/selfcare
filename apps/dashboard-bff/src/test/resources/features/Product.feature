@@ -119,13 +119,13 @@ Feature: Product
     Then the response status should be 200
     And The response body contains the list "items" of size 2
     And The response body contains:
-      | items[0].productId   | prod-interop                                                                               |
-      | items[0].role        | OPERATOR                                                                                   |
-      | items[0].group       | operator                                                                                   |
-      | items[0].permissions | [read:users, Selc:AccessProductBackofficeAdmin]                                            |
-      | items[1].productId   | ALL                                                                                        |
-      | items[1].role        | SUPPORT                                                                                    |
-      | items[1].permissions | [read:users, write:users, Selc:AccessProductBackofficeAdmin, Selc:ListAllProductUsers]     |
+      | items[0].productId   | prod-interop                                                                                                      |
+      | items[0].role        | OPERATOR                                                                                                          |
+      | items[0].group       | operator                                                                                                          |
+      | items[0].permissions | [read:users, Selc:AccessProductBackofficeAdmin]                                                                   |
+      | items[1].productId   | ALL                                                                                                               |
+      | items[1].role        | SUPPORT                                                                                                           |
+      | items[1].permissions | [read:users, write:users, Selc:AccessProductBackofficeAdmin, Selc:ListAllProductUsers, Selc:ListAllProductGroups] |
 
   Scenario: Unsuccessfully retrieving my permissions without ARB permission
     Given user login with username "j.doe" and password "test"

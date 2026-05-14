@@ -14,6 +14,7 @@ import io.restassured.response.Response;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
 import it.pagopa.selfcare.iam.cucumber.CucumberSuiteTest;
 import it.pagopa.selfcare.iam.model.ProductRolePermissions;
+import it.pagopa.selfcare.iam.model.ProductRolePermissionsList;
 import it.pagopa.selfcare.iam.model.ProductRoles;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -432,5 +433,16 @@ public class IamStepDefinitions {
   public void theProductRoleShouldBeForProduct(String productId) {
     List<Map<String, Object>> productRoles = response.jsonPath().getList("productRoles");
     assertEquals(productId, productRoles.get(0).get("productId"));
+  }
+
+  @Then("the user should have no product role permissions")
+  public void theUserShouldHaveNoProductRolePermissions() {
+
+    ProductRolePermissionsList result =
+            response.as(ProductRolePermissionsList.class);
+
+    assertNotNull(result);
+    assertNotNull(result.getItems());
+    assertTrue(result.getItems().isEmpty(), "Expected no product role permissions but found some");
   }
 }
