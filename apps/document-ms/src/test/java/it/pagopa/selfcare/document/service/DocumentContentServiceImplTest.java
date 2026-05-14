@@ -1574,7 +1574,7 @@ class DocumentContentServiceImplTest {
 
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().nullItem());
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), isNull()))
                 .thenReturn(Uni.createFrom().item(mockDocument));
         when(signatureService.verifyContractSignature(eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), eq(skipVerification), eq(skipSignerIdentityCheck)))
                 .thenReturn(Uni.createFrom().voidItem());
@@ -1604,7 +1604,7 @@ class DocumentContentServiceImplTest {
 
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().nullItem());
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), isNull()))
                 .thenReturn(Uni.createFrom().item(mockDocument));
 
         // Simuliamo il fallimento della firma
@@ -1637,7 +1637,7 @@ class DocumentContentServiceImplTest {
         // handleContractDocument creates a new document for this call
         Document newDoc = buildDocument();
         newDoc.setId("new-doc-id");
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), isNull()))
                 .thenReturn(Uni.createFrom().item(newDoc));
 
         // signature verification fails
@@ -1676,7 +1676,7 @@ class DocumentContentServiceImplTest {
                 .thenReturn(Uni.createFrom().item(existingDoc));
 
         // handleContractDocument returns the same existing document (reuse)
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), any(Document.class)))
                 .thenReturn(Uni.createFrom().item(existingDoc));
 
         // signature verification fails
@@ -1707,7 +1707,7 @@ class DocumentContentServiceImplTest {
 
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().nullItem());
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), isNull()))
                 .thenReturn(Uni.createFrom().item(mockDocument));
         when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean(), anyBoolean()))
                 .thenReturn(Uni.createFrom().voidItem());
@@ -1740,7 +1740,7 @@ class DocumentContentServiceImplTest {
 
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().nullItem());
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class)))
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), isNull()))
                 .thenReturn(Uni.createFrom().item(mockDocument));
         when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean(), anyBoolean()))
                 .thenReturn(Uni.createFrom().voidItem());
