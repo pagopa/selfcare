@@ -26,6 +26,7 @@ public class AggregateInstitution {
     private String recipientCode;
     private String parentDescription;
     private String istatCode;
+    private Boolean isTest;
 
     public String getIstatCode() {
         return istatCode;
@@ -152,6 +153,14 @@ public class AggregateInstitution {
 
     public void setParentDescription(String parentDescription) {
         this.parentDescription = parentDescription;
+    }
+
+    public Boolean getIsTest() {
+        return isTest;
+    }
+
+    public void setIsTest(Boolean isTest) {
+        this.isTest = isTest;
     }
 
 }
