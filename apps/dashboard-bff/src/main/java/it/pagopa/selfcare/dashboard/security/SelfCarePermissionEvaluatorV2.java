@@ -117,6 +117,25 @@ public class SelfCarePermissionEvaluatorV2 implements PermissionEvaluator {
     private boolean checkIamPermission(String userId, Object targetDomainObject, String permission) {
         FilterAuthorityDomain filterAuthorityDomain = extractFilterAuthorityDomain(targetDomainObject);
 
+        if (StringUtils.hasText(filterAuthorityDomain.getGroupId())) {
+            UserGroupInfo userGroupInfo = getUserGroupById(filterAuthorityDomain.getGroupId());
+
+            if (Objects.isNull(userGroupInfo)) {
+                log.warn("User group not found for groupId={}", filterAuthorityDomain.getGroupId());
+                return false;
+            }
+
+            return Optional.ofNullable(
+                            iamRestClient._hasIAMUserPermission(
+                                            permission,
+                                            userId,
+                                            userGroupInfo.getInstitutionId(),
+                                            userGroupInfo.getProductId())
+                                    .getBody())
+                    .map(PermissionResponse::getHasPermission)
+                    .orElse(false);
+        }
+
         return Optional.ofNullable(
                         iamRestClient._hasIAMUserPermission(
                                         permission,

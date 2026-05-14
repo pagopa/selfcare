@@ -84,29 +84,29 @@ Feature: Institution
     When I send a GET request to "/v2/institutions/all/{institutionId}" to retrieve institution
     Then the response status should be 200
     And The response body contains:
-      | id                             | 067327d3-bdd6-408d-8655-87e8f1960046                                                                             |
-      | externalId                     | 99000870064                                                                                                      |
-      | originId                       | c_d277                                                                                                           |
-      | origin                         | IPA                                                                                                              |
-      | name                           | comune di dernice                                                                                                |
-      | category                       | Comuni e loro Consorzi e Associazioni                                                                            |
-      | categoryCode                   | L6                                                                                                               |
-      | fiscalCode                     | 99000870064                                                                                                      |
-      | mailAddress                    | protocollo@pec.comune.dernice.al.it                                                                              |
-      | address                        | Via Roma N.17                                                                                                    |
-      | zipCode                        | 15056                                                                                                            |
-      | products[0].productId          | prod-io                                                                                                          |
-      | products[0].authorized         | false                                                                                                            |
-      | products[1].productId          | prod-pagopa                                                                                                      |
-      | products[1].authorized         | false                                                                                                            |
-      | products[2].productId          | prod-pagopa                                                                                                      |
-      | products[2].authorized         | false                                                                                                            |
-      | products[3].origin             | IPA                                                                                                              |
-      | products[3].originId           | c_d277                                                                                                           |
-      | products[3].productId          | prod-interop                                                                                                     |
-      | products[3].institutionType    | PT                                                                                                               |
-      | products[3].userRole           | SUPPORT                                                                                                          |
-      | products[3].userProductActions | [read:users, write:users, Selc:AccessProductBackofficeAdmin, Selc:ListAllProductUsers]                           |
+      | id                             | 067327d3-bdd6-408d-8655-87e8f1960046                                                                              |
+      | externalId                     | 99000870064                                                                                                       |
+      | originId                       | c_d277                                                                                                            |
+      | origin                         | IPA                                                                                                               |
+      | name                           | comune di dernice                                                                                                 |
+      | category                       | Comuni e loro Consorzi e Associazioni                                                                             |
+      | categoryCode                   | L6                                                                                                                |
+      | fiscalCode                     | 99000870064                                                                                                       |
+      | mailAddress                    | protocollo@pec.comune.dernice.al.it                                                                               |
+      | address                        | Via Roma N.17                                                                                                     |
+      | zipCode                        | 15056                                                                                                             |
+      | products[0].productId          | prod-io                                                                                                           |
+      | products[0].authorized         | false                                                                                                             |
+      | products[1].productId          | prod-pagopa                                                                                                       |
+      | products[1].authorized         | false                                                                                                             |
+      | products[2].productId          | prod-pagopa                                                                                                       |
+      | products[2].authorized         | false                                                                                                             |
+      | products[3].origin             | IPA                                                                                                               |
+      | products[3].originId           | c_d277                                                                                                            |
+      | products[3].productId          | prod-interop                                                                                                      |
+      | products[3].institutionType    | PT                                                                                                                |
+      | products[3].userRole           | SUPPORT                                                                                                           |
+      | products[3].userProductActions | [read:users, write:users, Selc:AccessProductBackofficeAdmin, Selc:ListAllProductUsers, Selc:ListAllProductGroups] |
     And The response body contains the list "products" of size 4
     # Field institutionType not present if productId not specified in request
     And The response body doesn't contain field "institutionType"
@@ -135,13 +135,13 @@ Feature: Institution
       | products[0].userRole           | SUPPORT                                                                                                             |
       | products[0].tokenId            | string                                                                                                              |
       | products[0].authorized         | true                                                                                                                |
-      | products[0].userProductActions | [read:users, write:users, Selc:AccessProductBackofficeAdmin, Selc:ListAllProductUsers]    |
+      | products[0].userProductActions | [read:users, write:users, Selc:AccessProductBackofficeAdmin, Selc:ListAllProductUsers, Selc:ListAllProductGroups]  |
       | products[1].productId          | prod-pagopa                                                                                                         |
       | products[1].authorized         | false                                                                                                               |
       | products[1].tokenId            | string                                                                                                              |
       | products[2].productId          | prod-pagopa                                                                                                         |
       | products[2].authorized         | true                                                                                                                |
-      | products[2].userProductActions | [read:users, write:users, Selc:AccessProductBackofficeAdmin, Selc:ListAllProductUsers]    |
+      | products[2].userProductActions | [read:users, write:users, Selc:AccessProductBackofficeAdmin, Selc:ListAllProductUsers, Selc:ListAllProductGroups]   |
       | products[2].tokenId            | 21f73488-d0df-4a3d-9b6f-9adf634780b5                                                                                |
       | products[3].productId          | prod-interop                                                                                                        |
       | products[3].userRole           | OPERATOR                                                                                                            |
