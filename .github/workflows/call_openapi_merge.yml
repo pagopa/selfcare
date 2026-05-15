@@ -119,6 +119,11 @@ jobs:
       - name: Debug - List files (recursive)
         run: find ${{ env.INFRA_APIM_FOLDER }} -type f | head -100
 
+      - name: Debug - Show OpenAPI files content
+        run: |
+          echo "Showing content of OpenAPI files:"
+          find ${{ env.INFRA_APIM_FOLDER }}/api/billing-portal-api/v1/openapi_merge/openapi_merge.json -type f | head -100
+
       - name: Merge OpenAPI and PostProcess - Billing Portal
         if: ${{ inputs.billing-portal-api }}
         run: |
