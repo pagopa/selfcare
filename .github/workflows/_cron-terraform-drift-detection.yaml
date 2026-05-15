@@ -7,7 +7,7 @@ on:
 
 jobs:
   drift_detection_dev_ar:
-    uses: .github/workflows/infra_drift_detection.yml
+    uses: ./.github/workflows/infra_drift_detection.yml
     name: Drift Detection - DEV AR
     permissions:
       contents: read
@@ -23,7 +23,7 @@ jobs:
       override_labels: "dev"
   
   drift_detection_dev_pnpg:
-    uses: .github/workflows/infra_drift_detection.yml
+    uses: ./.github/workflows/infra_drift_detection.yml
     name: Drift Detection - DEV PNPG
     permissions:
       contents: read
@@ -39,7 +39,7 @@ jobs:
       override_labels: "dev"
 
   drift_detection_uat_ar:
-    uses: .github/workflows/infra_drift_detection.yml
+    uses: ./.github/workflows/infra_drift_detection.yml
     name: Drift Detection - UAT AR
     permissions:
       contents: read
@@ -55,7 +55,7 @@ jobs:
       override_labels: "uat"
   
   drift_detection_uat_pnpg:
-    uses: .github/workflows/infra_drift_detection.yml
+    uses: ./.github/workflows/infra_drift_detection.yml
     name: Drift Detection - UAT PNPG
     permissions:
       contents: read
@@ -71,7 +71,7 @@ jobs:
       override_labels: "uat"
 
   drift_detection_prod_ar:
-    uses: .github/workflows/infra_drift_detection.yml
+    uses: ./.github/workflows/infra_drift_detection.yml
     name: Drift Detection - PROD AR
     permissions:
       contents: read
@@ -87,7 +87,7 @@ jobs:
       override_labels: "prod"
   
   drift_detection_prod_pnpg:
-    uses: .github/workflows/infra_drift_detection.yml
+    uses: ./.github/workflows/infra_drift_detection.yml
     name: Drift Detection - PROD PNPG
     permissions:
       contents: read
