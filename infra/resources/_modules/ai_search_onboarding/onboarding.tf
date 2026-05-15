@@ -29,7 +29,7 @@ resource "restapi_object" "search_index" {
         "name" : "autocomplete_tokenizer",
         "@odata.type" : "#Microsoft.Azure.Search.EdgeNGramTokenizer",
         "minGram" : 3,
-        "maxGram" : 10,
+        "maxGram" : 15,
         "tokenChars" : ["letter", "digit"]
       }
     ],
