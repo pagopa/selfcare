@@ -114,6 +114,7 @@ public interface OnboardingMapper {
     institution.supportPhone(onboardingData.getInstitutionUpdate().getSupportPhone());
     institution.imported(onboardingData.getInstitutionUpdate().getImported());
     institution.setIstatCode(onboardingData.getIstatCode());
+    institution.setIsTest(onboardingData.getIsTest());
     return institution;
   }
 

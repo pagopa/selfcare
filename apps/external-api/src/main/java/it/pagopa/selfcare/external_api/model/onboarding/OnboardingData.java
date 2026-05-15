@@ -35,6 +35,7 @@ public class OnboardingData {
     private Boolean isAggregator;
     private List<AggregateInsitution> aggregates;
     private String istatCode;
+    private Boolean isTest;
 
     public List<User> getUsers() {
         return Optional.ofNullable(users).orElse(Collections.emptyList());

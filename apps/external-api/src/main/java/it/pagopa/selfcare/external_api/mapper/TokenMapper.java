@@ -3,7 +3,7 @@ package it.pagopa.selfcare.external_api.mapper;
 import it.pagopa.selfcare.external_api.model.token.Token;
 import it.pagopa.selfcare.external_api.model.token.TokenOnboardedUsers;
 import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingGet;
-import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.TokenResponse;
+import it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -18,8 +18,7 @@ public interface TokenMapper {
 
     @Mapping(source = "createdAt", target = "createdAt", qualifiedByName = "toOffsetDateTime")
     @Mapping(source = "updatedAt", target = "updatedAt", qualifiedByName = "toOffsetDateTime")
-    @Mapping(source = "closedAt", target = "closedAt", qualifiedByName = "toOffsetDateTime")
-    Token toEntity(TokenResponse response);
+    Token toEntity(DocumentResponse response);
 
     @Mapping(target = "institutionId", source = "institution.id")
     @Mapping(target = "institutionUpdate", source = "institution")
