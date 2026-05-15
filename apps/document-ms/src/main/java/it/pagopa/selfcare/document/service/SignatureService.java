@@ -9,7 +9,7 @@ import java.io.File;
 import java.util.List;
 
 public interface SignatureService {
-    void verifySignature(File file, String checksum, List<String> usersTaxCode);
+    void verifySignature(File file, String checksum, List<String> usersTaxCode, boolean isSkipSignerIdentityCheck);
 
     boolean verifySignature(File file);
 
@@ -21,7 +21,7 @@ public interface SignatureService {
 
     Uni<File> signDocument(File pdf, String institutionDescription, String productId);
 
-    Uni<Void> verifyContractSignature(String onboardingId, File file, List<String> fiscalCodes, boolean skipSignatureVerification);
+    Uni<Void> verifyContractSignature(String onboardingId, File file, List<String> fiscalCodes, boolean skipSignatureVerification, boolean skipSignerIdentityCheck);
 
     String verifyUploadedFileDigest(FormItem file, String templateDigest, boolean skipDigestCheck);
 

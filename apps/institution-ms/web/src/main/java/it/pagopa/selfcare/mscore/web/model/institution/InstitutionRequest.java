@@ -40,5 +40,6 @@ public class InstitutionRequest {
     private boolean delegation;
     private String istatCode;
     private String legalForm;
+    private Boolean isTest;
 
 }

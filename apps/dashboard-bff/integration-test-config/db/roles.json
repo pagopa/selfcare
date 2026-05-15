@@ -25,7 +25,8 @@
       "read:users",
       "write:users",
       "Selc:AccessProductBackofficeAdmin",
-      "Selc:ListAllProductUsers"
+      "Selc:ListAllProductUsers",
+      "Selc:ListAllProductGroups"
     ]
   }
 ]

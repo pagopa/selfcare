@@ -7,7 +7,7 @@ import lombok.Data;
 @Builder
 public class FileDescriptor {
 
-    String filePathReference;
+    String filePathName;
     String keyParamRequest;
     String mediaType;
 

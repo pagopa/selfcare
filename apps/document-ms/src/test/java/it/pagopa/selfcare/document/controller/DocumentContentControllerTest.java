@@ -275,7 +275,7 @@ class DocumentContentControllerTest {
         given()
                 .multiPart("onboardingId", ONBOARDING_ID)
                 .multiPart("productId", PRODUCT_ID)
-                .multiPart("file", csvFile, "text/csv")
+                .multiPart("csv", csvFile, "text/csv")
                 .when()
                 .post(BASE_PATH + "aggregates-csv")
                 .then()
@@ -295,7 +295,7 @@ class DocumentContentControllerTest {
         given()
                 .multiPart("onboardingId", ONBOARDING_ID)
                 .multiPart("productId", PRODUCT_ID)
-                .multiPart("file", csvFile, "text/csv")
+                .multiPart("csv", csvFile, "text/csv")
                 .when()
                 .post(BASE_PATH + "aggregates-csv")
                 .then()
@@ -941,13 +941,15 @@ class DocumentContentControllerTest {
         // GIVEN: Il service risponde con successo
         String onboardingId = "onb-123";
 
-        Mockito.when(documentContentService.uploadSignedContract(
-                eq(onboardingId),
-                eq(new DocumentBuilderRequest()),
-                eq(false),
-                any(InputStream.class),
-                anyString()
-        )).thenReturn(Uni.createFrom().item("success-path")); // O .voidItem() se il service restituisce Uni<Void>
+        Mockito.when(
+                documentContentService.uploadSignedContract(
+                    eq(onboardingId),
+                    eq(new DocumentBuilderRequest()),
+                    eq(false),
+                    any(InputStream.class),
+                    anyString(),
+                    anyBoolean()))
+            .thenReturn(Uni.createFrom().item("success-path")); // O .voidItem() se il service restituisce Uni<Void>
 
         File dummyFile = new File("src/test/resources/pdf/dummy.pdf");
 
@@ -976,8 +978,8 @@ class DocumentContentControllerTest {
 
         // SOSTITUISCI QUI: Usa InvalidRequestException invece di IllegalArgumentException
         Mockito.when(documentContentService.uploadSignedContract(
-                any(), any(), anyBoolean(), any(), anyString()
-        )).thenReturn(Uni.createFrom().failure(new InvalidRequestException("Invalid signature", "CODE-400")));
+                    any(), any(), anyBoolean(), any(), anyString(), anyBoolean()))
+            .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Invalid signature", "CODE-400")));
 
         File dummyFile = new File("src/test/resources/pdf/dummy.pdf");
 
@@ -1002,8 +1004,8 @@ class DocumentContentControllerTest {
         String onboardingId = "onb-123";
 
         Mockito.when(documentContentService.uploadSignedContract(
-                eq(onboardingId), any(), anyBoolean(), any(), anyString()
-        )).thenReturn(Uni.createFrom().failure(new RuntimeException("Azure is down")));
+                    eq(onboardingId), any(), anyBoolean(), any(), anyString(), anyBoolean()))
+            .thenReturn(Uni.createFrom().failure(new RuntimeException("Azure is down")));
 
         File dummyFile = new File("src/test/resources/pdf/dummy.pdf");
 

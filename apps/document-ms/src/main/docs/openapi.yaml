@@ -866,6 +866,9 @@ paths:
                 skipSignatureVerification:
                   default: false
                   type: boolean
+                skipSignerIdentityCheck:
+                  default: false
+                  type: boolean
                 file:
                   format: binary
                   type: string

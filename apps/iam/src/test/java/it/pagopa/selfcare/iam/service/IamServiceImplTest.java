@@ -563,6 +563,56 @@ class IamServiceImplTest {
   }
 
   @Test
+  void getProductRolePermissionsList_shouldReturnAllProductPermissions_whenFallbackToAll() {
+    String userId = "user-123";
+    String productId = "productA";
+
+    ProductRolePermissions prp1 =
+            ProductRolePermissions.builder()
+                    .productId("ALL")
+                    .role("admin")
+                    .permissions(List.of("read:users", "write:users"))
+                    .build();
+
+    List<ProductRolePermissions> productRolePermissions = List.of(prp1);
+
+    when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId))
+            .thenReturn(Uni.createFrom().item(productRolePermissions));
+
+    ProductRolePermissionsList result =
+            service.getProductRolePermissionsList(userId, productId).await().indefinitely();
+
+    assertNotNull(result);
+    assertEquals(1, result.getItems().size());
+    assertEquals("ALL", result.getItems().get(0).getProductId());
+  }
+
+  @Test
+  void getProductRolePermissionsList_shouldPreferSpecificProductOverAll() {
+    String userId = "user-123";
+    String productId = "productA";
+
+    ProductRolePermissions specificPermission =
+            ProductRolePermissions.builder()
+                    .productId("productA")
+                    .role("admin")
+                    .permissions(List.of("read:specific"))
+                    .build();
+
+    when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId))
+            .thenReturn(Uni.createFrom().item(List.of(specificPermission)));
+
+    ProductRolePermissionsList result =
+            service.getProductRolePermissionsList(userId, productId)
+                    .await()
+                    .indefinitely();
+
+    assertNotNull(result);
+    assertEquals(1, result.getItems().size());
+    assertEquals("productA", result.getItems().get(0).getProductId());
+  }
+
+  @Test
   void getProductRolePermissionsList_shouldReturnEmptyList_whenNoMatch() {
     String userId = "user-123";
     String productId = "productA";

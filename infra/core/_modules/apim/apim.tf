@@ -100,7 +100,7 @@ module "apim" {
   sign_up_enabled = false
   lock_enable     = false
 
-  management_logger_applicaiton_insight_enabled = false
+  management_logger_applicaiton_insight_enabled = var.application_insight_enabled
 
   application_insights = {
     enabled             = true
@@ -111,4 +111,3 @@ module "apim" {
 
   tags = var.tags
 }
-

@@ -151,4 +151,40 @@ class SelfCarePermissionEvaluatorV2Test {
                 "Selc:ARB"
         ));
     }
+
+    @Test
+    void hasPermissionReturnsTrueForValidUserGroupPermissionIAM() {
+        Authentication authentication = mock(Authentication.class);
+        SelfCareUser user = SelfCareUser.builder("userId")
+                .issuer("PAGOPA")
+                .build();
+
+        UserGroupResource userGroupResource = new UserGroupResource();
+        userGroupResource.setInstitutionId("institutionId");
+        userGroupResource.setProductId("productId");
+
+        when(authentication.getPrincipal()).thenReturn(user);
+        when(userGroupRestClient._getUserGroupUsingGET("groupId")).thenReturn(ResponseEntity.of(Optional.of(userGroupResource)));
+        when(iamRestClient._hasIAMUserPermission("Selc:ListAllProductGroups","userId","institutionId", "productId")).thenReturn(ResponseEntity.ok(new PermissionResponse(true)));
+
+        assertTrue(permissionEvaluator.hasPermission(authentication, new FilterAuthorityDomain("institutionId", "productId", "groupId"), "Selc:ListAllProductGroups"));
+    }
+
+    @Test
+    void hasPermissionReturnsFalseForInvalidUserGroupPermissionIAM() {
+        Authentication authentication = mock(Authentication.class);
+        SelfCareUser user = SelfCareUser.builder("userId")
+                .issuer("PAGOPA")
+                .build();
+
+        UserGroupResource userGroupResource = new UserGroupResource();
+        userGroupResource.setInstitutionId("institutionId");
+        userGroupResource.setProductId("productId");
+
+        when(authentication.getPrincipal()).thenReturn(user);
+        when(userGroupRestClient._getUserGroupUsingGET("groupId")).thenReturn(ResponseEntity.of(Optional.of(userGroupResource)));
+        when(iamRestClient._hasIAMUserPermission("Selc:ListAllProductGroups","userId","institutionId", "productId")).thenReturn(ResponseEntity.ok(new PermissionResponse(false)));
+
+        assertFalse(permissionEvaluator.hasPermission(authentication, new FilterAuthorityDomain("institutionId", "productId", "groupId"), "Selc:ListAllProductGroups"));
+    }
 }

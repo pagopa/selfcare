@@ -2,6 +2,7 @@ package it.pagopa.selfcare.onboarding.mapper;
 
 import it.pagopa.selfcare.onboarding.dto.OnboardingAggregateOrchestratorInput;
 import it.pagopa.selfcare.onboarding.entity.AggregateInstitution;
+import it.pagopa.selfcare.onboarding.entity.Billing;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.User;
@@ -32,6 +33,7 @@ public interface OnboardingMapper {
     @Mapping(target = "aggregate", expression = "java(mapFromAggregateInstitution(aggregateInstitution))")
     @Mapping(target = "users", expression = "java(mapAggregateUsers(onboarding, aggregateInstitution))")
     @Mapping(target = "referenceOnboardingId", source = "onboarding.id")
+    @Mapping(target = "billing", expression = "java(mapAggregateBilling(onboarding, aggregateInstitution))")
     OnboardingAggregateOrchestratorInput mapToOnboardingAggregateOrchestratorInput(Onboarding onboarding, AggregateInstitution aggregateInstitution);
 
     @Mapping(target = "institution", expression = "java(mapInstitutionFromDelegation(delegationResponse))")
@@ -55,7 +57,7 @@ public interface OnboardingMapper {
 
     /**
      * We need to create an explicit method to map the aggregate into the institution field of the new onboarding entity
-     * because the data related to institutionType and origin must be retrieved from the aggregator,
+     * because the data related to institutionType, origin, and isTest must be retrieved from the aggregator,
      * which corresponds to the institution field in the input object.
      */
     @Named("mapInstitution")
@@ -64,8 +66,47 @@ public interface OnboardingMapper {
             aggregate.setOrigin(institution.getOrigin());
             aggregate.setInstitutionType(institution.getInstitutionType());
             aggregate.setCountry(institution.getCountry());
+            // isTest from the aggregator is always propagated to the aggregate
+            if (Boolean.TRUE.equals(institution.getIsTest())) {
+                aggregate.setIsTest(institution.getIsTest());
+            }
         }
         return aggregate;
+    }
+
+    /**
+     * Maps the billing for an aggregate onboarding.
+     * For recipientCode and vatNumber: if the aggregate specifies its own value, use it;
+     * otherwise fall back to the parent (aggregator) billing.
+     * All other billing fields are always taken from the parent.
+     */
+    @Named("mapAggregateBilling")
+    default Billing mapAggregateBilling(Onboarding onboarding, AggregateInstitution aggregateInstitution) {
+        Billing billing = new Billing();
+        Billing parent = onboarding.getBilling();
+
+        if (Objects.nonNull(parent)) {
+            billing.setPublicServices(parent.isPublicServices());
+            billing.setTaxCodeInvoicing(parent.getTaxCodeInvoicing());
+        }
+
+        // recipientCode: aggregate wins if present, otherwise parent
+        if (Objects.nonNull(aggregateInstitution) && Objects.nonNull(aggregateInstitution.getRecipientCode())
+                && !aggregateInstitution.getRecipientCode().isEmpty()) {
+            billing.setRecipientCode(aggregateInstitution.getRecipientCode());
+        } else if (Objects.nonNull(parent)) {
+            billing.setRecipientCode(parent.getRecipientCode());
+        }
+
+        // vatNumber: aggregate wins if present, otherwise parent
+        if (Objects.nonNull(aggregateInstitution) && Objects.nonNull(aggregateInstitution.getVatNumber())
+                && !aggregateInstitution.getVatNumber().isEmpty()) {
+            billing.setVatNumber(aggregateInstitution.getVatNumber());
+        } else if (Objects.nonNull(parent)) {
+            billing.setVatNumber(parent.getVatNumber());
+        }
+
+        return billing;
     }
 
 
