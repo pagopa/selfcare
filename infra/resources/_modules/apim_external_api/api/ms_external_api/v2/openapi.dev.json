@@ -3647,7 +3647,9 @@
     },
     "/onboarding/{onboardingId}": {
       "delete": {
-        "tags": ["Onboarding Controller"],
+        "tags": [
+          "Onboarding Controller"
+        ],
         "summary": "Perform delete operation of an onboarding request",
         "description": "Perform delete operation of an onboarding request receiving onboarding id, then invokes async process to set DELETED as status for institution and user onboardings.",
         "operationId": "deleteOnboarding",
@@ -3686,7 +3688,9 @@
     },
     "/onboarding/{onboardingId}/complete": {
       "put": {
-        "tags": ["Onboarding Controller"],
+        "tags": [
+          "Onboarding Controller"
+        ],
         "summary": "Complete onboarding by verifying and uploading contract, then trigger async activities.",
         "description": "Perform complete operation of an onboarding request receiving onboarding id and contract signed by the institution.It checks the contract's signature and upload the contract on an azure storageAt the end, function triggers async activities related to complete onboarding that consist of create the institution, activate the onboarding and sending data to notification queue.",
         "operationId": "completeOnboardingUsingPUT",
@@ -5043,6 +5047,15 @@
             "items": {
               "type": "string"
             }
+          },
+          "signingConfiguration": {
+            "$ref": "#/components/schemas/SigningConfiguration"
+          },
+          "managingInstitutions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ManagingInstitution"
+            }
           }
         }
       },
@@ -5315,6 +5328,57 @@
           }
         }
       },
+      "SigningConfiguration": {
+        "type": "object",
+        "properties": {
+          "requiredSignatures": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skipSignerIdentityCheck": {
+            "type": "boolean"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SigningStep"
+            }
+          }
+        }
+      },
+      "SigningStep": {
+        "type": "object",
+        "properties": {
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "label": {
+            "type": "string"
+          },
+          "isFinal": {
+            "type": "boolean"
+          },
+          "final": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ManagingInstitution": {
+        "type": "object",
+        "properties": {
+          "institutionId": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "signingStep": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "ProductOriginResponse": {
         "type": "object",
         "properties": {
@@ -5395,6 +5459,15 @@
             "items": {
               "type": "string"
             }
+          },
+          "signingConfiguration": {
+            "$ref": "#/components/schemas/SigningConfiguration"
+          },
+          "managingInstitutions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ManagingInstitution"
+            }
           }
         }
       },
@@ -5466,6 +5539,15 @@
             "type": "array",
             "items": {
               "type": "string"
+            }
+          },
+          "signingConfiguration": {
+            "$ref": "#/components/schemas/SigningConfiguration"
+          },
+          "managingInstitutions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ManagingInstitution"
             }
           },
           "id": {
