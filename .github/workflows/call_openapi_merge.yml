@@ -78,17 +78,13 @@ jobs:
       pull-requests: write
     steps:
 
-      - name: Azure Login
-        uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
-        with:
-          client-id: ${{ secrets.ARM_CLIENT_ID }}
-          tenant-id: ${{ vars.ARM_TENANT_ID }}
-          subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
 
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
-          path: selfcare-external-api-backend
+          path: selfcare
 
       - name: Download from blob storage
         uses: azure/CLI@v2
@@ -96,7 +92,7 @@ jobs:
           azcliversion: 2.76.0
           inlineScript: |
             mkdir docs
-            az storage blob download-batch --auth-mode key -d ./docs/ --account-name selc${{ needs.setup.outputs.env_short }}checkoutsa -s selc-openapi --pattern pagopa/**
+            az storage blob download-batch --auth-mode key -d ./docs/ --account-name selc${{ needs.setup.outputs.env_short }}weuarcheckoutst01 -s selc-openapi --pattern pagopa/**
 
       - name: Install openapi-merge-cli
         run: npm install --location global openapi-merge-cli
