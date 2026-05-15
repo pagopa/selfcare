@@ -404,12 +404,15 @@ public class SearchServiceConnectorImplTest {
 
   @Test
   void testOptimizeSearchString() {
-    assertEquals("\\\"Test*\\\" \\\"+Test\\\" \\\"-Test\\\"", searchServiceConnector.optimizeSearchString("Test* +Test -Test"));
-    assertEquals("\\\"\"test\"\\\"", searchServiceConnector.optimizeSearchString("\"test\""));
+    assertEquals("\\\"Test\\\" \\\"Test\\\" \\\"Test\\\"", searchServiceConnector.optimizeSearchString("Test* +Test -Test"));
+    assertEquals("\\\"test\\\"", searchServiceConnector.optimizeSearchString("\"test\""));
     assertEquals("", searchServiceConnector.optimizeSearchString("    "));
     assertEquals("", searchServiceConnector.optimizeSearchString("  *  "));
     assertEquals("", searchServiceConnector.optimizeSearchString("di a"));
     assertEquals("\\\"test\\\"", searchServiceConnector.optimizeSearchString("di a test"));
+    assertEquals("\\\"ACME\\\"", searchServiceConnector.optimizeSearchString("A.C.M.E"));
+    assertEquals("\\\"Più\\\"", searchServiceConnector.optimizeSearchString("50&Più"));
+    assertEquals("\\\"Aquila\\\"", searchServiceConnector.optimizeSearchString("L'Aquila"));
     assertNull(searchServiceConnector.optimizeSearchString(null));
   }
 

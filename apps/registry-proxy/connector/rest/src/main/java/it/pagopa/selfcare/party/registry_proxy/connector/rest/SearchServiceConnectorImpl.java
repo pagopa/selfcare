@@ -77,7 +77,7 @@ public class SearchServiceConnectorImpl implements SearchServiceConnector {
 
   String optimizeSearchString(String search) {
     return Optional.ofNullable(search).map(s ->
-            Arrays.stream(s.trim().split("\\s+"))
+            Arrays.stream(s.trim().replace(".", "").split("[^\\p{L}\\p{N}]+"))
                 .filter(token -> token.length() >= SEARCH_MIN_TOKEN_LENGTH)
                 .map(token -> "\\\"" + token + "\\\"")
                 .collect(Collectors.joining(" ")))
