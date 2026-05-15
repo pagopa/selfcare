@@ -16,6 +16,7 @@ import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.config.AggregateBatchConfig;
 import it.pagopa.selfcare.onboarding.config.RetryPolicyConfig;
 import it.pagopa.selfcare.onboarding.dto.OnboardingAggregateOrchestratorInput;
+import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionEmailRequest;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.OnboardingAttachment;
 import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
@@ -27,8 +28,10 @@ import it.pagopa.selfcare.onboarding.service.CompletionService;
 import it.pagopa.selfcare.onboarding.service.ContractService;
 import it.pagopa.selfcare.onboarding.service.DocumentService;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
+import it.pagopa.selfcare.onboarding.service.UserService;
 import it.pagopa.selfcare.onboarding.utils.InstitutionUtils;
 import it.pagopa.selfcare.onboarding.workflow.*;
+import it.pagopa.selfcare.product.entity.ManagingInstitution;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.SigningConfiguration;
 import it.pagopa.selfcare.product.service.ProductService;
@@ -68,6 +71,7 @@ public class OnboardingFunctions {
   private final ProductService productService;
   private final AggregateBatchConfig aggregateBatchConfig;
   private final DocumentService documentService;
+  private final UserService userService;
 
   public OnboardingFunctions(
       OnboardingService service,
@@ -79,7 +83,8 @@ public class OnboardingFunctions {
       ProductService productService,
       AggregateBatchConfig aggregateBatchConfig,
       DocumentService documentService,
-      TelemetryService telemetryService) {
+      TelemetryService telemetryService,
+      UserService userService) {
     this.service = service;
     this.objectMapper = objectMapper;
     this.completionService = completionService;
@@ -89,6 +94,7 @@ public class OnboardingFunctions {
     this.aggregateBatchConfig = aggregateBatchConfig;
     this.documentService = documentService;
     this.telemetryService = telemetryService;
+    this.userService = userService;
     final int maxAttempts = retryPolicyConfig.maxAttempts();
     final Duration firstRetryInterval = Duration.ofSeconds(retryPolicyConfig.firstRetryInterval());
     RetryPolicy retryPolicy = new RetryPolicy(maxAttempts, firstRetryInterval);
@@ -632,6 +638,14 @@ public class OnboardingFunctions {
     service.sendMailRegistrationForUser(onboarding);
   }
 
+  @FunctionName(SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION)
+  public void sendMailNotificationManagerInstitution(
+          @DurableActivityTrigger(name = "emailString") String emailString,
+          final ExecutionContext context) {
+    // TODO add telemetry
+    // TODO call service
+  }
+
   @FunctionName(SEND_MAIL_REGISTRATION_FOR_USER_REQUESTER)
   public void sendMailRegistrationForUserRequester(
           @DurableActivityTrigger(name = "onboardingString") String onboardingString,
@@ -982,6 +996,47 @@ public class OnboardingFunctions {
             "onboardingId", onboarding.getId(),
             "productId", onboarding.getProductId()));
     return productService.getProductIsValid(onboarding.getProductId()).getSigningConfiguration();
+  }
+
+  @FunctionName(GET_MANAGING_INSTITUTION_ACTIVITY)
+  public List<ManagingInstitution> getManagingInstitutions(
+      @DurableActivityTrigger(name = "onboardingString") String onboardingString,
+      final ExecutionContext context) {
+    Onboarding onboarding = readOnboardingValue(objectMapper, onboardingString);
+    telemetryService.trackFunction(
+            GET_MANAGING_INSTITUTION_ACTIVITY,
+            String.format(
+                    FORMAT_LOGGER_ONBOARDING_STRING,
+                    GET_MANAGING_INSTITUTION_ACTIVITY,
+                    onboardingString),
+            SeverityLevel.Information,
+            Map.of(
+                    "onboardingId", onboarding.getId(),
+                    "productId", onboarding.getProductId()));
+    return productService.getProductIsValid(onboarding.getProductId()).getManagingInstitutions();
+  }
+
+  @FunctionName(GET_USER_EMAIL_ACTIVITY)
+  public String getUserEmail(
+      @DurableActivityTrigger(name = "managingInstitutionEmailRequestString") String managingInstitutionEmailRequestString,
+      final ExecutionContext context) {
+    ManagingInstitutionEmailRequest request =
+        readManagingInstitutionEmailRequest(objectMapper, managingInstitutionEmailRequestString);
+    telemetryService.trackFunction(
+            GET_MANAGING_INSTITUTION_ACTIVITY,
+            String.format(
+                    FORMAT_LOGGER_ONBOARDING_STRING,
+                    GET_MANAGING_INSTITUTION_ACTIVITY,
+                    managingInstitutionEmailRequestString),
+            SeverityLevel.Information,
+            Map.of(
+                    "onboardingId", request.getOnboardingId(),
+                    "productId", request.getProductId(),
+                    "managingInstitutionId", request.getManagingInstitutionId()));
+    List<String> emails = userService.findEmailByInstitutionAndProducts(
+        request.getManagingInstitutionId(),
+        List.of(request.getProductId()));
+    return getEmailListString(objectMapper, emails);
   }
 
   private void ensureSuccessfulDocumentResponse(

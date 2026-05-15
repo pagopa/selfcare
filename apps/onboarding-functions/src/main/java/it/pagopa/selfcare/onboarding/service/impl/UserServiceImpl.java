@@ -4,12 +4,15 @@ package it.pagopa.selfcare.onboarding.service.impl;
 import it.pagopa.selfcare.onboarding.service.UserService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_json.api.InstitutionApi;
 import org.openapi.quarkus.user_json.model.DeletedUserCountResponse;
+import org.openapi.quarkus.user_json.model.UserProductResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Objects;
 
 @ApplicationScoped
@@ -27,5 +30,31 @@ public class UserServiceImpl implements UserService {
         if (Objects.isNull(response) || response.getDeletedUserCount() < 1L) {
             log.error("Error during user deletion: {}", response);
         }
+    }
+
+    public List<String> findEmailByInstitutionAndProducts(String institutionId, List<String> products) {
+        List<UserProductResponse> userProductResponses = institutionApi.getInstitutionUsersUsingGET(
+                institutionId,
+                products,
+                null,
+                null);
+
+        if (Objects.isNull(userProductResponses) || userProductResponses.isEmpty()) {
+            log.error("No users found for institution '{}' and products '{}'", institutionId, products);
+            return List.of();
+        }
+
+        List<String> emails = userProductResponses.stream()
+                .map(UserProductResponse::getEmail)
+                .filter(StringUtils::isNotBlank)
+                .distinct()
+                .toList();
+
+        if (emails.isEmpty()) {
+            log.error("No email found for institution '{}' and products '{}'", institutionId, products);
+            return List.of();
+        }
+
+        return emails;
     }
 }

@@ -10,21 +10,28 @@ import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
 import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflowInstitution;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
+import it.pagopa.selfcare.product.entity.ManagingInstitution;
 import it.pagopa.selfcare.product.entity.SigningConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 import static it.pagopa.selfcare.onboarding.entity.OnboardingWorkflowType.INSTITUTION;
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.BUILD_CONTRACT_ACTIVITY_NAME;
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.GET_LATEST_DOCUMENT_ACTIVITY;
+import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.GET_MANAGING_INSTITUTION_ACTIVITY;
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.GET_SIGNING_CONFIGURATION_ACTIVITY;
+import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.GET_USER_EMAIL_ACTIVITY;
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.SAVE_TOKEN_WITH_CONTRACT_ACTIVITY_NAME;
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.SEND_MAIL_REGISTRATION_FOR_CONTRACT;
+import static it.pagopa.selfcare.onboarding.utils.Utils.getManagingInstitutionEmailRequestString;
 import static it.pagopa.selfcare.onboarding.utils.Utils.getOnboardingString;
 import static it.pagopa.selfcare.onboarding.utils.Utils.getOnboardingWorkflowString;
+import static it.pagopa.selfcare.onboarding.utils.Utils.readEmailList;
 
 @Slf4j
 public class WorkflowExecutorContractWithCountersignature implements WorkflowExecutor {
@@ -86,7 +93,37 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
             requiredSignatures);
             return Optional.empty();
         }
-        // TODO SEND_MAIL_NOTIFY_COUNTERSIGNER
+
+        ManagingInstitution managingInstitution =
+            Collections.singletonList(
+                ctx.callActivity(GET_MANAGING_INSTITUTION_ACTIVITY,onboardingString,optionsRetry,ManagingInstitution.class)
+                    .await()).get(0);
+
+        String managingInstitutionEmailRequestString =
+            getManagingInstitutionEmailRequestString(
+                objectMapper,
+                managingInstitution.getInstitutionId(),
+                document.getProductId(),
+                onboardingWorkflow.getOnboarding().getId());
+
+        // chiamare function che tramite userApi ottiene la lista di email associata all'institution
+        String emailsString =
+            ctx.callActivity(
+                    GET_USER_EMAIL_ACTIVITY,
+                    managingInstitutionEmailRequestString,
+                    optionsRetry,
+                    String.class)
+                .await();
+
+        List<String> emails = readEmailList(objectMapper, emailsString);
+
+
+        // TODO
+        // ciclare sulla lista di email invocando function SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION per invio email
+        // VEDI: SEND_MAIL_REGISTRATION_FOR_USER
+        emails.forEach(email -> {
+
+        });
 
         return Optional.of(OnboardingStatus.PENDING_IN_REVIEW);
     }

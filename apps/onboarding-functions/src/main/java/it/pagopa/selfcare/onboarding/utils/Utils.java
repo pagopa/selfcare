@@ -8,6 +8,7 @@ import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.dto.AckPayloadRequest;
 import it.pagopa.selfcare.onboarding.dto.AggregatesBatchOrchestratorInput;
+import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionEmailRequest;
 import it.pagopa.selfcare.onboarding.dto.OnboardingAggregateOrchestratorInput;
 import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
+
 import org.apache.commons.lang3.StringUtils;
 import org.openapi.quarkus.core_json.model.DelegationResponse;
 
@@ -151,6 +153,43 @@ public class Utils {
       throw new FunctionOrchestratedException(e);
     }
     return batchInputString;
+  }
+
+  public static String getManagingInstitutionEmailRequestString(
+      ObjectMapper objectMapper,
+      String managingInstitutionId,
+      String productId,
+      String onboardingId) {
+    try {
+      return objectMapper.writeValueAsString(
+          new ManagingInstitutionEmailRequest(managingInstitutionId, productId, onboardingId));
+    } catch (JsonProcessingException e) {
+      throw new FunctionOrchestratedException(e);
+    }
+  }
+
+  public static ManagingInstitutionEmailRequest readManagingInstitutionEmailRequest(ObjectMapper objectMapper, String request) {
+    try {
+      return objectMapper.readValue(request, ManagingInstitutionEmailRequest.class);
+    } catch (JsonProcessingException e) {
+      throw new FunctionOrchestratedException(e);
+    }
+  }
+
+  public static String getEmailListString(ObjectMapper objectMapper, List<String> emails) {
+    try {
+      return objectMapper.writeValueAsString(emails);
+    } catch (JsonProcessingException e) {
+      throw new FunctionOrchestratedException(e);
+    }
+  }
+
+  public static List<String> readEmailList(ObjectMapper objectMapper, String emailsString) {
+    try {
+      return objectMapper.readValue(emailsString, new TypeReference<>() {});
+    } catch (JsonProcessingException e) {
+      throw new FunctionOrchestratedException(e);
+    }
   }
 
   public static AggregatesBatchOrchestratorInput readAggregatesBatchInput(

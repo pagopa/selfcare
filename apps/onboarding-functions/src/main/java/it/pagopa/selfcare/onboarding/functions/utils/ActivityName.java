@@ -24,6 +24,7 @@ public class ActivityName {
   public static final String CREATE_INSTITUTION_ACTIVITY = "CreateInstitution";
   public static final String CREATE_ONBOARDING_ACTIVITY = "CreateOnboarding";
   public static final String SEND_MAIL_COMPLETION_ACTIVITY = "SendMailCompletion";
+  public static final String SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION = "SendMailNotificationManagingInstitution";
   public static final String SEND_MAIL_REJECTION_ACTIVITY = "SendMailRejection";
   public static final String STORE_ONBOARDING_ACTIVATEDAT = "StoreOnboardingActivatedAt";
   public static final String REJECT_OUTDATED_ONBOARDINGS = "RejectOutdatedOnboardings";
@@ -46,6 +47,8 @@ public class ActivityName {
   public static final String TRIGGER_BUILD_ATTACHMENTS_AND_SAVE_TOKENS = "TriggerBuildAttachmentsAndSaveTokens";
   public static final String GET_LATEST_DOCUMENT_ACTIVITY = "GetLatestDocument";
   public static final String GET_SIGNING_CONFIGURATION_ACTIVITY = "GetSigningConfiguration";
+  public static final String GET_MANAGING_INSTITUTION_ACTIVITY = "GetManagingInstitution";
+  public static final String GET_USER_EMAIL_ACTIVITY = "GetUserEmail";
   private ActivityName() {
   }
 }
