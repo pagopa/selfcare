@@ -15,8 +15,8 @@ import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.product.entity.Product;
 import jakarta.ws.rs.WebApplicationException;
-import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import org.openapi.quarkus.party_registry_proxy_json.api.AooApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.GeographicTaxonomiesApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.InstitutionApi;
@@ -25,7 +25,9 @@ import org.openapi.quarkus.party_registry_proxy_json.model.UOResource;
 
 public class RegistryManagerIPAUo extends ClientRegistryIPA {
 
-    private static final List<String> ALLOWED_PRICING_PLANS = List.of("C0");
+    private static final Set<String> ALLOWED_PRICING_PLANS = Set.of("C0");
+    private static final Set<String> PRODUCTS_WITHOUT_RECIPIENT_CODE_REQUIREMENT =
+            Set.of(PROD_INTEROP.getValue(), PROD_IO.getValue(), PROD_PAGOPA.getValue());
 
     public RegistryManagerIPAUo(Onboarding onboarding, UoApi uoApi, AooApi aooApi) {
         super(onboarding, uoApi, aooApi);
@@ -42,16 +44,25 @@ public class RegistryManagerIPAUo extends ClientRegistryIPA {
     @Override
     public Uni<Onboarding> customValidation(Product product) {
         return checkRecipientCode().onItem().transformToUni(unused -> {
-            if (!PROD_INTEROP.getValue().equals(onboarding.getProductId()) && !PROD_IO.getValue().equals(onboarding.getProductId())
-                    && !onboarding.getInstitution().isImported() && (Objects.isNull(onboarding.getBilling()) || Objects.isNull(onboarding.getBilling().getRecipientCode()))) {
+            if (isBillingOrRecipientCodeRequired()) {
                 return Uni.createFrom().failure(new InvalidRequestException(BILLING_OR_RECIPIENT_CODE_REQUIRED));
-            } else if (PROD_IO_PREMIUM.getValue().equals(onboarding.getProductId()) &&
-                    ALLOWED_PRICING_PLANS.stream().noneMatch(
-                            pricingPlan -> pricingPlan.equals(onboarding.getPricingPlan()))) {
+            }
+            if (isInvalidIoPremiumPricingPlan()) {
                 return Uni.createFrom().failure(new InvalidRequestException(BaseRegistryManager.NOT_ALLOWED_PRICING_PLAN));
             }
             return Uni.createFrom().item(onboarding);
         }).onItem().transformToUni(unused -> billingChecks());
+    }
+
+    private boolean isBillingOrRecipientCodeRequired() {
+        return !PRODUCTS_WITHOUT_RECIPIENT_CODE_REQUIREMENT.contains(onboarding.getProductId())
+                && !onboarding.getInstitution().isImported()
+                && (Objects.isNull(onboarding.getBilling()) || Objects.isNull(onboarding.getBilling().getRecipientCode()));
+    }
+
+    private boolean isInvalidIoPremiumPricingPlan() {
+        return PROD_IO_PREMIUM.getValue().equals(onboarding.getProductId())
+                && !ALLOWED_PRICING_PLANS.contains(onboarding.getPricingPlan());
     }
 
     @Override
