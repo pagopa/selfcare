@@ -90,8 +90,19 @@ jobs:
             mkdir docs
             az storage blob download-batch --auth-mode key -d ./docs/ --account-name ${{ steps.extract_env_short.outputs.storage_account_name }}  -s '$web' --pattern ${{ inputs.docs_openapi_path }}
 
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
       - name: Install Optic
-        run: npm install --location global @useoptic/optic
+        run: |
+          mkdir -p optic-install
+          cd optic-install
+
+          npm init -y
+          npm pkg set overrides.ajv="8.17.1"
+          npm install @useoptic/optic@1.0.9
         shell: bash
 
       - name: Verify if Operation Changes
@@ -99,7 +110,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          optic_output=$(optic diff ./docs/${{ inputs.docs_openapi_path }} ${{ env.DIR }}${{ inputs.api_folder_path }}/openapi.${{ inputs.env }}.json)
+          optic_output=$(./optic-install/node_modules/.bin/optic diff ./docs/${{ inputs.docs_openapi_path }} ${{ env.DIR }}${{ inputs.api_folder_path }}/openapi.${{ inputs.env }}.json)
           echo "$optic_output"
           echo "$optic_output" > optic_diff_output.txt
           if grep -q "Operations: No operations changed" optic_diff_output.txt; then
