@@ -114,7 +114,7 @@ jobs:
 
       - name: Debug - List files working-directory
         working-directory: selfcare_openapi_merge
-        run: find ${{ env.INFRA_APIM_FOLDER }} -type f | head -100
+        run: find . -type f | head -100
         
       - name: Debug - List files (recursive)
         run: find ${{ env.INFRA_APIM_FOLDER }} -type f | head -100
