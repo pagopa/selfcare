@@ -1,8 +1,6 @@
 package it.pagopa.selfcare.onboarding.entity.registry;
 
-import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_IO;
-import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_IO_PREMIUM;
-import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_PAGOPA;
+import static it.pagopa.selfcare.onboarding.common.ProductId.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -66,10 +64,10 @@ class RegistryManagerIPAUoTest {
     }
 
     @Test
-    void givenPagoPaProductWithoutRecipientCode_whenCustomValidation_thenReturnOnboarding() {
+    void givenCEDProductWithoutRecipientCode_whenCustomValidation_thenReturnOnboarding() {
         // given
         Onboarding onboarding = buildBaseOnboarding();
-        onboarding.setProductId(PROD_PAGOPA.getValue());
+        onboarding.setProductId(PROD_CED.getValue());
         onboarding.setBilling(null);
         RegistryManagerIPAUo registryManager = new RegistryManagerIPAUo(onboarding, mock(UoApi.class));
 
