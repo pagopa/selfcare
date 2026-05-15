@@ -13,67 +13,67 @@
       }
     },
     {
-      "inputFile": "../../../../../../../docs/pagopa/selfcare-institution-ms/openapi.json",
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-institution-ms/openapi.json",
       "operationSelection": {
         "includeTags": ["external-v2"]
       }
     },
     {
-      "inputFile": "../../../../../../../docs/pagopa/selfcare-user-ms/openapi.json",
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-user-ms/openapi.json",
       "operationSelection": {
         "includeTags": ["external-v2"]
       }
     },
     {
-      "inputFile": "../../../../../../../docs/pagopa/selfcare-user-group-ms/openapi.json",
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-user-group-ms/openapi.json",
       "operationSelection": {
         "includeTags": ["external-v2"]
       }
     },
     {
-      "inputFile": "../../../../../../../docs/pagopa/selfcare-onboarding-functions/openapi.json",
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-onboarding-functions/openapi.json",
       "operationSelection": {
         "includeTags": ["external-v2"]
       }
     },
     {
-      "inputFile": "../../../../../../../docs/pagopa/selfcare-onboarding-ms/openapi.json",
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-onboarding-ms/openapi.json",
       "operationSelection": {
         "includeTags": ["external-v2"]
       }
     },
     {
-      "inputFile": "../../../../../../../docs/pagopa/selfcare-ms-party-registry-proxy/openapi.json",
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-ms-party-registry-proxy/openapi.json",
       "operationSelection": {
         "includeTags": ["external-v2"]
       }
     },
     {
-      "inputFile": "../../../../../../../docs/pagopa/selfcare-openapi/openapi.json",
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-openapi/openapi.json",
       "operationSelection": {
         "includeTags": ["external-v2"]
       }
     },
     {
-      "inputFile": "../../../../../../../docs/pagopa/selfcare-product-ms/openapi.json",
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-product-ms/openapi.json",
       "operationSelection": {
         "includeTags": ["external-v2"]
       }
     },
     {
-      "inputFile": "../../../../../../../docs/pagopa/selfcare-webhook-ms/openapi.json",
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-webhook-ms/openapi.json",
       "operationSelection": {
         "includeTags": ["external-v2"]
       }
     },
     {
-      "inputFile": "../../../../../../../docs/pagopa/selfcare-iam-ms/openapi.json",
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-iam-ms/openapi.json",
       "operationSelection": {
         "includeTags": ["external-v2"]
       }
     },
     {
-      "inputFile": "../../../../../../../docs/pagopa/selfcare-document-ms/openapi.json",
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-document-ms/openapi.json",
       "operationSelection": {
         "includeTags": ["external-v2"]
       }

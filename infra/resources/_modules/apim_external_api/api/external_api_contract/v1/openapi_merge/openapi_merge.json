@@ -15,7 +15,7 @@
       }
     },
     {
-      "inputFile": "../../../../../../../docs/pagopa/selfcare-onboarding-functions/openapi-apim-function.json",
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-onboarding-functions/openapi-apim-function.json",
       "operationSelection": {
         "includeTags": [
           "conservazione"
