@@ -1730,6 +1730,15 @@
             "items": {
               "type": "string"
             }
+          },
+          "signingConfiguration": {
+            "$ref": "#/components/schemas/SigningConfiguration"
+          },
+          "managingInstitutions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ManagingInstitution"
+            }
           }
         }
       },
@@ -1969,11 +1978,11 @@
             "type": "string"
           },
           "status": {
-            "$ref": "#/components/schemas/OnboardingStatus"
+            "$ref": "#/components/schemas/OnboardingStatus1"
           }
         }
       },
-      "OnboardingStatus": {
+      "OnboardingStatus1": {
         "type": "string",
         "enum": [
           "REQUEST",
@@ -1999,6 +2008,57 @@
           },
           "identityTokenAudience": {
             "type": "string"
+          }
+        }
+      },
+      "SigningConfiguration": {
+        "type": "object",
+        "properties": {
+          "requiredSignatures": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skipSignerIdentityCheck": {
+            "type": "boolean"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SigningStep"
+            }
+          }
+        }
+      },
+      "SigningStep": {
+        "type": "object",
+        "properties": {
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "label": {
+            "type": "string"
+          },
+          "isFinal": {
+            "type": "boolean"
+          },
+          "final": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ManagingInstitution": {
+        "type": "object",
+        "properties": {
+          "institutionId": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "signingStep": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -2082,6 +2142,15 @@
             "items": {
               "type": "string"
             }
+          },
+          "signingConfiguration": {
+            "$ref": "#/components/schemas/SigningConfiguration"
+          },
+          "managingInstitutions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ManagingInstitution"
+            }
           }
         }
       },
@@ -2153,6 +2222,15 @@
             "type": "array",
             "items": {
               "type": "string"
+            }
+          },
+          "signingConfiguration": {
+            "$ref": "#/components/schemas/SigningConfiguration"
+          },
+          "managingInstitutions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ManagingInstitution"
             }
           },
           "id": {
