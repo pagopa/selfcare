@@ -70,7 +70,9 @@ public class OnboardingUtils {
         request._file = formItem.getFile();
         request.fileName = formItem.getFileName();
         if (OnboardingStatus.PENDING_IN_REVIEW.equals(onboarding.getStatus())) {
-            request.skipSignerIdentityCheck = product.getSigningConfiguration().isSkipSignerIdentityCheck();
+            request.skipSignerIdentityCheck =
+              Objects.nonNull(product.getSigningConfiguration())
+                  && product.getSigningConfiguration().isSkipSignerIdentityCheck();
         }
 
         String institutionType = onboarding.getInstitution().getInstitutionType().name();
