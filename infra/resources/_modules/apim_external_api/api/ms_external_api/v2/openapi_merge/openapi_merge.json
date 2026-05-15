@@ -7,7 +7,7 @@
       "inputFile": "./openapi_template.json"
     },
     {
-      "inputFile": "../../../../../../../../src/main/resources/swagger/api-docs.json",
+      "inputFile": "../../../../../../../../apps/external-api/src/main/resources/swagger/api-docs.json",
       "operationSelection": {
         "includeTags": ["external-v2"]
       }
