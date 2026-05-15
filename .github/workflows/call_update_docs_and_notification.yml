@@ -108,15 +108,22 @@ jobs:
       - name: Verify if Operation Changes
         id: optic_diff
         shell: bash
+        env:
+          DOCS_OPENAPI_PATH: ${{ inputs.docs_openapi_path }}
+          API_BASE_DIR: ${{ env.DIR }}
+          API_FOLDER_PATH: ${{ inputs.api_folder_path }}
+          TARGET_ENV: ${{ inputs.env }}
         run: |
           set +e
-          optic_output=$(./optic-install/node_modules/.bin/optic diff ./docs/${{ inputs.docs_openapi_path }} ${{ env.DIR }}${{ inputs.api_folder_path }}/openapi.${{ inputs.env }}.json)
+          docs_path="./docs/$DOCS_OPENAPI_PATH"
+          target_path="$API_BASE_DIR$API_FOLDER_PATH/openapi.$TARGET_ENV.json"
+          optic_output=$(./optic-install/node_modules/.bin/optic diff "$docs_path" "$target_path")
           echo "$optic_output"
           echo "$optic_output" > optic_diff_output.txt
           if grep -q "Operations: No operations changed" optic_diff_output.txt; then
-            echo "changes_detected=false" >> $GITHUB_OUTPUT
+            echo "changes_detected=false" >> "$GITHUB_OUTPUT"
           else
-            echo "changes_detected=true" >> $GITHUB_OUTPUT
+            echo "changes_detected=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Upload to blob storage
