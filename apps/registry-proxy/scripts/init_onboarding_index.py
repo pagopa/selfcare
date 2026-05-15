@@ -12,6 +12,7 @@ Before running this script, ensure that the following environment variables are 
 """
 
 import requests
+import json
 import sys
 import os
 
@@ -77,19 +78,26 @@ def update_onboarding_index(onboardings: list[dict]):
         return False
     return True
 
+def get_onboarding_filter():
+    return {
+        "workflowType": {"$ne": "USERS"},
+        "institution": {"$exists": True, "$ne": None},
+        "institution.description": {"$exists": True, "$ne": None},
+        "institution.institutionType": {"$exists": True, "$ne": None},
+        "productId": {"$exists": True, "$ne": None, "$nin": ["prod-interop-atst", "prod-interop-coll"]},
+        "status": {"$exists": True, "$ne": None, "$nin": ["REQUEST", "TOBEVALIDATED"]}
+    }
+
 def main():
     client = MongoClient(MONGO_HOST)
     db = client[ONBOARDING_DB]
     collection = db[ONBOARDING_COLLECTION]
-    total_count = collection.count_documents({})
+    print("Fetching onboardings with filter:", json.dumps(get_onboarding_filter()))
+    total_count = collection.count_documents(get_onboarding_filter())
     count = 0
-    count_skipped = 0
     count_errors = 0
     onboardings = []
-    for o in collection.find({}, batch_size=MONGO_BATCH_SIZE):
-        if not o.get("institution") or not o["institution"].get("description") or not o["institution"].get("institutionType") or not o.get("productId") or o.get("productId") in ["prod-interop-atst", "prod-interop-coll"] or not o.get("status") or o.get("status") in ["REQUEST", "TOBEVALIDATED"]:
-            count_skipped += 1
-            continue
+    for o in collection.find(get_onboarding_filter(), batch_size=MONGO_BATCH_SIZE):
         onboardings.append(o)
         count += 1
         if len(onboardings) >= MONGO_BATCH_SIZE:
@@ -102,7 +110,6 @@ def main():
         if not update_onboarding_index(onboardings):
             count_errors += len(onboardings)
         onboardings = []
-    print(f"Skipped onboardings: {count_skipped} (missing description, institutionType, productId, status or status is REQUEST or TOBEVALIDATED)")
     print(f"Errors updating onboardings: {count_errors}")
 
 if __name__ == "__main__":
