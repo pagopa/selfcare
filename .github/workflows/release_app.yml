@@ -26,6 +26,7 @@ on:
         options:
           - auth
           - iam
+          - dashboard-bff
           - delegation-cdc
           - document-ms
           - external-api
@@ -43,7 +44,6 @@ on:
           - user-group-ms
           - user-ms
           - webhook
-          - dashboard-bff
         required: true
         default: auth
 
