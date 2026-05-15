@@ -41,10 +41,6 @@
       "name": "Product"
     },
     {
-      "name": "Webhook",
-      "description": "API for webhook configuration management"
-    },
-    {
       "name": "IAM"
     },
     {
@@ -1089,91 +1085,6 @@
         ]
       }
     },
-    "/institutions/": {
-      "get": {
-        "tags": [
-          "institutions"
-        ],
-        "summary": "getInstitutions",
-        "deprecated": true,
-        "description": "The service retrieves all the onboarded institutions related to the provided user and the product retrieved from Subscription Key. It is deprecated in favor of endpoint /users?institutionId={institutionId}",
-        "operationId": "getInstitutionsUsingGETDeprecated",
-        "parameters": [
-          {
-            "name": "userIdForAuth",
-            "in": "query",
-            "description": "User's unique identifier",
-            "required": true,
-            "style": "form",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/InstitutionResource2"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem4"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem4"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem4"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem4"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "apiKeyHeader": [
-              "global"
-            ]
-          }
-        ]
-      }
-    },
     "/message/{messageId}/status/{status}": {
       "post": {
         "tags": [
@@ -1926,8 +1837,16 @@
         "summary": "Create a new webhook",
         "description": "Create a new webhook configuration",
         "operationId": "createWebhook",
-        "tags": [
-          "Webhook"
+        "tags": [],
+        "parameters": [
+          {
+            "name": "requesterProductId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
         "requestBody": {
           "content": {
@@ -1957,14 +1876,20 @@
         "summary": "Update webhook",
         "description": "Update an existing webhook configuration",
         "operationId": "updateWebhookbyProductId",
-        "tags": [
-          "Webhook"
-        ],
+        "tags": [],
         "parameters": [
           {
             "name": "productId",
             "in": "path",
             "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "requesterProductId",
+            "required": true,
+            "in": "query",
             "schema": {
               "type": "string"
             }
@@ -1996,14 +1921,20 @@
         "summary": "Get webhook by ID",
         "description": "Retrieve a specific webhook configuration",
         "operationId": "getWebhookbyProductId",
-        "tags": [
-          "Webhook"
-        ],
+        "tags": [],
         "parameters": [
           {
             "name": "productId",
             "in": "path",
             "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "requesterProductId",
+            "required": true,
+            "in": "query",
             "schema": {
               "type": "string"
             }
@@ -3649,7 +3580,9 @@
     },
     "/onboarding/{onboardingId}": {
       "delete": {
-        "tags": ["Onboarding Controller"],
+        "tags": [
+          "Onboarding Controller"
+        ],
         "summary": "Perform delete operation of an onboarding request",
         "description": "Perform delete operation of an onboarding request receiving onboarding id, then invokes async process to set DELETED as status for institution and user onboardings.",
         "operationId": "deleteOnboarding",
@@ -3688,7 +3621,9 @@
     },
     "/onboarding/{onboardingId}/complete": {
       "put": {
-        "tags": ["Onboarding Controller"],
+        "tags": [
+          "Onboarding Controller"
+        ],
         "summary": "Complete onboarding by verifying and uploading contract, then trigger async activities.",
         "description": "Perform complete operation of an onboarding request receiving onboarding id and contract signed by the institution.It checks the contract's signature and upload the contract on an azure storageAt the end, function triggers async activities related to complete onboarding that consist of create the institution, activate the onboarding and sending data to notification queue.",
         "operationId": "completeOnboardingUsingPUT",
@@ -4622,219 +4557,6 @@
           }
         }
       },
-      "InstitutionResource2": {
-        "title": "InstitutionResource",
-        "type": "object",
-        "properties": {
-          "address": {
-            "type": "string",
-            "description": "Institution's physical address"
-          },
-          "aooParentCode": {
-            "type": "string",
-            "description": "AOO unit parent institution Code"
-          },
-          "assistanceContacts": {
-            "description": "Institution's assistance contacts",
-            "$ref": "#/components/schemas/AssistanceContactsResource1"
-          },
-          "city": {
-            "type": "string",
-            "description": "Institution's physical address city"
-          },
-          "companyInformations": {
-            "description": "GPS, SCP, PT optional data",
-            "$ref": "#/components/schemas/CompanyInformationsResource1"
-          },
-          "country": {
-            "type": "string",
-            "description": "Institution's physical address country"
-          },
-          "county": {
-            "type": "string",
-            "description": "Institution's physical address county"
-          },
-          "description": {
-            "type": "string",
-            "description": "Institution's legal name"
-          },
-          "digitalAddress": {
-            "type": "string",
-            "description": "Institution's digitalAddress"
-          },
-          "dpoData": {
-            "description": "Data Protection Officer (DPO) specific data",
-            "$ref": "#/components/schemas/DpoDataResource1"
-          },
-          "externalId": {
-            "type": "string",
-            "description": "Institution's unique external identifier"
-          },
-          "id": {
-            "type": "string",
-            "description": "Institution's unique internal Id",
-            "format": "uuid"
-          },
-          "institutionType": {
-            "type": "string",
-            "description": "Institution's type",
-            "enum": [
-              "AS",
-              "GSP",
-              "PA",
-              "PG",
-              "PSP",
-              "PT",
-              "SA",
-              "SCP",
-              "REC",
-              "CON"
-            ]
-          },
-          "origin": {
-            "type": "string",
-            "description": "Institution data origin"
-          },
-          "originId": {
-            "type": "string",
-            "description": "Institution's details origin Id"
-          },
-          "pspData": {
-            "description": "Payment Service Provider (PSP) specific data",
-            "$ref": "#/components/schemas/PspDataResource"
-          },
-          "recipientCode": {
-            "type": "string",
-            "description": "Billing recipient code, not required only for institutionType SA"
-          },
-          "rootParent": {
-            "description": "Institution AOO/UO root institutionDescription",
-            "$ref": "#/components/schemas/RootParentResource1"
-          },
-          "status": {
-            "type": "string",
-            "description": "Institution onboarding status"
-          },
-          "subunitCode": {
-            "type": "string",
-            "description": "Institutions AOO/UO unit Code"
-          },
-          "subunitType": {
-            "type": "string",
-            "description": "Institutions AOO/UO unit type"
-          },
-          "taxCode": {
-            "type": "string",
-            "description": "Institution's taxCode"
-          },
-          "userProductRoles": {
-            "type": "array",
-            "description": "Logged user's roles on product",
-            "items": {
-              "type": "string"
-            }
-          },
-          "zipCode": {
-            "type": "string",
-            "description": "Institution's zipCode"
-          }
-        }
-      },
-      "AssistanceContactsResource1": {
-        "title": "AssistanceContactsResource",
-        "type": "object",
-        "properties": {
-          "supportEmail": {
-            "type": "string",
-            "description": "Institution's support email contact"
-          },
-          "supportPhone": {
-            "type": "string",
-            "description": "Institution's support phone contact"
-          }
-        }
-      },
-      "CompanyInformationsResource1": {
-        "title": "CompanyInformationsResource",
-        "type": "object",
-        "properties": {
-          "businessRegisterPlace": {
-            "type": "string",
-            "description": "Institution's business register place"
-          },
-          "rea": {
-            "type": "string",
-            "description": "Institution's REA"
-          },
-          "shareCapital": {
-            "type": "string",
-            "description": "Institution's share capital value"
-          }
-        }
-      },
-      "DpoDataResource1": {
-        "title": "DpoDataResource",
-        "type": "object",
-        "properties": {
-          "address": {
-            "type": "string",
-            "description": "DPO's address"
-          },
-          "email": {
-            "type": "string",
-            "description": "DPO's email",
-            "format": "email",
-            "example": "email@example.com"
-          },
-          "pec": {
-            "type": "string",
-            "description": "DPO's PEC",
-            "format": "email",
-            "example": "email@example.com"
-          }
-        }
-      },
-      "PspDataResource": {
-        "title": "PspDataResource",
-        "type": "object",
-        "properties": {
-          "abiCode": {
-            "type": "string",
-            "description": "PSP's ABI code"
-          },
-          "businessRegisterNumber": {
-            "type": "string",
-            "description": "PSP's Business Register number"
-          },
-          "legalRegisterName": {
-            "type": "string",
-            "description": "PSP's legal register name"
-          },
-          "legalRegisterNumber": {
-            "type": "string",
-            "description": "PSP's legal register number"
-          },
-          "vatNumberGroup": {
-            "type": "boolean",
-            "description": "PSP's Vat Number group",
-            "example": false
-          }
-        }
-      },
-      "RootParentResource1": {
-        "title": "RootParentResource",
-        "type": "object",
-        "properties": {
-          "description": {
-            "type": "string",
-            "description": "swagger.external_api.institutions.model.parentDescription"
-          },
-          "id": {
-            "type": "string",
-            "description": "Institution's unique internal Id"
-          }
-        }
-      },
       "Problem4": {
         "title": "Problem",
         "required": [
@@ -5044,6 +4766,15 @@
             "type": "array",
             "items": {
               "type": "string"
+            }
+          },
+          "signingConfiguration": {
+            "$ref": "#/components/schemas/SigningConfiguration"
+          },
+          "managingInstitutions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ManagingInstitution"
             }
           }
         }
@@ -5284,7 +5015,7 @@
             "type": "string"
           },
           "status": {
-            "$ref": "#/components/schemas/OnboardingStatus"
+            "$ref": "#/components/schemas/OnboardingStatus1"
           }
         }
       },
@@ -5314,6 +5045,57 @@
           },
           "identityTokenAudience": {
             "type": "string"
+          }
+        }
+      },
+      "SigningConfiguration": {
+        "type": "object",
+        "properties": {
+          "requiredSignatures": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skipSignerIdentityCheck": {
+            "type": "boolean"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SigningStep"
+            }
+          }
+        }
+      },
+      "SigningStep": {
+        "type": "object",
+        "properties": {
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "label": {
+            "type": "string"
+          },
+          "isFinal": {
+            "type": "boolean"
+          },
+          "final": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ManagingInstitution": {
+        "type": "object",
+        "properties": {
+          "institutionId": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "signingStep": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -5397,6 +5179,15 @@
             "items": {
               "type": "string"
             }
+          },
+          "signingConfiguration": {
+            "$ref": "#/components/schemas/SigningConfiguration"
+          },
+          "managingInstitutions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ManagingInstitution"
+            }
           }
         }
       },
@@ -5470,6 +5261,15 @@
               "type": "string"
             }
           },
+          "signingConfiguration": {
+            "$ref": "#/components/schemas/SigningConfiguration"
+          },
+          "managingInstitutions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ManagingInstitution"
+            }
+          },
           "id": {
             "type": "string"
           },
@@ -5500,15 +5300,10 @@
         "type": "object",
         "required": [
           "url",
-          "productId",
           "httpMethod"
         ],
         "properties": {
           "url": {
-            "type": "string",
-            "pattern": "\\S"
-          },
-          "productId": {
             "type": "string",
             "pattern": "\\S"
           },
