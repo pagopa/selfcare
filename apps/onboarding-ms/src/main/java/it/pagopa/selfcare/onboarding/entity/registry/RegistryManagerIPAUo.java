@@ -27,7 +27,7 @@ public class RegistryManagerIPAUo extends ClientRegistryIPA {
 
     private static final Set<String> ALLOWED_PRICING_PLANS = Set.of("C0");
     private static final Set<String> PRODUCTS_WITHOUT_RECIPIENT_CODE_REQUIREMENT =
-            Set.of(PROD_INTEROP.getValue(), PROD_IO.getValue(), PROD_PAGOPA.getValue());
+            Set.of(PROD_INTEROP.getValue(), PROD_IO.getValue(), PROD_CED.getValue());
 
     public RegistryManagerIPAUo(Onboarding onboarding, UoApi uoApi, AooApi aooApi) {
         super(onboarding, uoApi, aooApi);
