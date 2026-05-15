@@ -1914,6 +1914,9 @@
           },
           "iban" : {
             "type" : "string"
+          },
+          "isTest" : {
+            "type" : "boolean"
           }
         }
       },
@@ -2183,6 +2186,9 @@
             "items" : {
               "type" : "string"
             }
+          },
+          "isTest" : {
+            "type" : "boolean"
           }
         }
       },
@@ -2337,6 +2343,9 @@
             "items" : {
               "type" : "string"
             }
+          },
+          "isTest" : {
+            "type" : "boolean"
           },
           "paymentServiceProvider" : {
             "$ref" : "#/components/schemas/PaymentServiceProviderRequest"
@@ -3025,48 +3034,6 @@
             "type" : "string"
           }
         }
-      },
-      "TokenResponse" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "type" : {
-            "$ref" : "#/components/schemas/TokenType"
-          },
-          "productId" : {
-            "type" : "string"
-          },
-          "checksum" : {
-            "type" : "string"
-          },
-          "contractVersion" : {
-            "type" : "string"
-          },
-          "contractTemplate" : {
-            "type" : "string"
-          },
-          "contractSigned" : {
-            "type" : "string"
-          },
-          "createdAt" : {
-            "$ref" : "#/components/schemas/LocalDateTime"
-          },
-          "updatedAt" : {
-            "$ref" : "#/components/schemas/LocalDateTime"
-          },
-          "closedAt" : {
-            "$ref" : "#/components/schemas/LocalDateTime"
-          },
-          "deletedAt" : {
-            "$ref" : "#/components/schemas/LocalDateTime"
-          }
-        }
-      },
-      "TokenType" : {
-        "enum" : [ "INSTITUTION", "LEGALS", "USER", "ATTACHMENT" ],
-        "type" : "string"
       },
       "UUID" : {
         "format" : "uuid",
