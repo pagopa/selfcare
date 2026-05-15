@@ -112,33 +112,6 @@ jobs:
           BRANCH_NAME="docs/openapi-update-$(date +%Y%m%d%H%M%S)-${{ inputs.env }}"
           echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
 
-      # - name: Debug - List files working-directory
-      #   working-directory: selfcare_openapi_merge
-      #   run: find . -type f | head -100
-        
-      - name: Debug - List files (recursive)
-        run: find ${{ env.INFRA_APIM_FOLDER }}/api/billing-portal-api/v1/ -type f | head -100
-
-      - name: Debug - Show OpenAPI files content
-        run: |
-          echo "Showing content of OpenAPI files:"
-          find ${{ env.INFRA_APIM_FOLDER }}/api/billing-portal-api/v1/openapi_merge/openapi_merge.json -type f | head -100
-
-      - name: Debug - Show OpenAPI files content
-        run: |
-          echo "Showing content of OpenAPI files:"
-          find ${{ env.INFRA_APIM_FOLDER }}/api/billing-portal-api/v1/openapi_merge/openapi_merge.json -type f | head -100
-
-      - name: Debug - Show OpenAPI files content
-        run: |
-          echo "Showing content of OpenAPI files:"
-          find ${{ env.INFRA_APIM_FOLDER }}/api/billing-portal-api/v1/openapi.json -type f | head -100
-
-      - name: Debug - Show OpenAPI files content
-        run: |
-          echo "Showing content of OpenAPI files:"
-          find ${{ env.INFRA_APIM_FOLDER }}/api/billing-portal-api/v1/openapi.${{ inputs.env }}.json -type f | head -100
-
       - name: Merge OpenAPI and PostProcess - Billing Portal
         if: ${{ inputs.billing-portal-api }}
         run: |
