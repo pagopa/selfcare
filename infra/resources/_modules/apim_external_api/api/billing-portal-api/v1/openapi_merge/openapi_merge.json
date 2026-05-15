@@ -7,7 +7,7 @@
       "inputFile": "./openapi_template.json"
     },
     {
-      "inputFile": "../../../../../../../docs/pagopa/selfcare-onboarding-backend/openapi.json",
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-onboarding-backend/openapi.json",
       "operationSelection": {
         "includeTags": [
           "billing-portal"
@@ -15,7 +15,7 @@
       }
     },
     {
-      "inputFile": "../../../../../../../docs/pagopa/selfcare-onboarding-ms/openapi.json",
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-onboarding-ms/openapi.json",
       "operationSelection": {
         "includeTags": [
           "billing-portal"
