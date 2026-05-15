@@ -86,4 +86,7 @@ public class OnboardingProductDto {
     @Schema(description = "${swagger.external_api.institutions.model.aggregates}")
     @Valid
     private List<AggregateInstitutionDto> aggregates;
+
+    @Schema(description = "${swagger.external_api.institutions.model.isTest}", example = "false")
+    private Boolean isTest;
 }
