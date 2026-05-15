@@ -9,12 +9,15 @@ on:
         options:
           - auth
           - iam
+          - dashboard-bff
           - delegation-cdc
           - document-ms
+          - external-api
           - institution-ms
           - institution-send-mail-scheduler
-          - onboarding
           - onboarding-bff
+          - onboarding-cdc
+          - onboarding-ms
           - product
           - product-cdc
           - registry-proxy
@@ -24,7 +27,6 @@ on:
           - user-group-ms
           - user-ms
           - webhook
-          - dashboard-bff
         required: true
       version-bump:
         type: choice

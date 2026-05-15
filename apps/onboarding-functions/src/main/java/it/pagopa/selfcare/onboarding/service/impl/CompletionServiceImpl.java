@@ -237,7 +237,9 @@ public class CompletionServiceImpl implements CompletionService {
     boolean verifyAllowedOnboardingByWorkflowType(WorkflowType workflowType){
         EnumSet<WorkflowType> allowedWorkflowType = EnumSet.of(
                 IMPORT_AGGREGATION,
-                INCREMENT_REGISTRATION_AGGREGATOR
+                INCREMENT_REGISTRATION_AGGREGATOR,
+                CONFIRMATION_AGGREGATOR,
+                CONTRACT_REGISTRATION_AGGREGATOR
         );
         return allowedWorkflowType.contains(workflowType);
     }

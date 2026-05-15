@@ -59,4 +59,19 @@ public interface DocumentService {
      */
     Uni<Document> handleContractDocument(DocumentBuilderRequest request);
 
+    /**
+     * Variant of handleContractDocument that accepts a previously-loaded Document.
+     * This avoids an extra repository lookup when the caller already fetched the
+     * most-recent document (useful for upload flows that already called findByOnboardingId).
+     *
+     * Implementations should prefer the provided existingDocument when non-null.
+     *
+     * @param request the document builder request
+     * @param existingDocument the previously loaded document (may be null)
+     * @return the document (existing or newly created)
+     */
+    Uni<Document> handleContractDocument(DocumentBuilderRequest request, Document existingDocument);
+
+    Uni<Boolean> deleteDocumentById(String documentId);
+
 }

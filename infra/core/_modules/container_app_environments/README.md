@@ -1,6 +1,6 @@
 # container_app_environments
 
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 No requirements.
@@ -9,7 +9,7 @@ No requirements.
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | n/a |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.72.0 |
 
 ## Modules
 
@@ -46,4 +46,4 @@ No modules.
 | ---- | ----------- |
 | <a name="output_container_app_environment"></a> [container\_app\_environment](#output\_container\_app\_environment) | n/a |
 | <a name="output_user_assigned_identity"></a> [user\_assigned\_identity](#output\_user\_assigned\_identity) | Details about the user-assigned managed identity created to manage roles of the Container Apps of Selfcare Environment |
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- END_TF_DOCS -->

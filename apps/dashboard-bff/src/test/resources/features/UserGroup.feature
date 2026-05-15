@@ -194,18 +194,37 @@ Feature: UserGroups
     When I send a DELETE request to "/v2/user-groups/{userGroupId}/members/{userId}" to delete member
     Then the response status should be 204
 
+  Scenario: Successfully retrieve a group with a valid ID
+    Given user login with username "j.doe" and password "test"
+    And I have groupId "6759f8df78b6af202b222d29"
+    When I send a GET request to "/v2/user-groups/{id}" to retrieve userGroup
+    Then the response status should be 200
+    And the response should contain the group details
+
   Scenario: Attempt to retrieve a non-existent group
     Given user login with username "j.doe" and password "test"
     And I have groupId "non-existent-group-id"
     When I send a GET request to "/v2/user-groups/{id}" to retrieve userGroup
     Then the response status should be 404
 
-  Scenario: Attempt to retrieve a group with a valid ID
-    Given user login with username "j.doe" and password "test"
+  Scenario: Successfully retrieve a group with a valid ID with PAGOPA issuer
+    Given user login with username "b.king" and password "test"
     And I have groupId "6759f8df78b6af202b222d29"
     When I send a GET request to "/v2/user-groups/{id}" to retrieve userGroup
     Then the response status should be 200
     And the response should contain the group details
+
+  Scenario: Attempt to retrieve a non-existent group with PAGOPA issuer
+    Given user login with username "b.barnes" and password "test"
+    And I have groupId "non-existent-group-id"
+    When I send a GET request to "/v2/user-groups/{id}" to retrieve userGroup
+    Then the response status should be 404
+
+  Scenario: Attempt to retrieve a group with a valid ID but no permission with PAGOPA issuer
+    Given user login with username "b.barnes" and password "test"
+    And I have groupId "6759f8df78b6af202b222d29"
+    When I send a GET request to "/v2/user-groups/{id}" to retrieve userGroup
+    Then the response status should be 403
 
   Scenario: Attempt to retrieve a group of which you are a member
     Given user login with username "j.doe" and password "test"

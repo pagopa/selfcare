@@ -239,6 +239,17 @@
         <module>dashboard-bff</module>
       </modules>
     </profile>
+    <profile>
+      <id>external-api</id>
+      <activation>
+        <file>
+          <exists>external-api/pom.xml</exists>
+        </file>
+      </activation>
+      <modules>
+        <module>external-api</module>
+      </modules>
+    </profile>
   </profiles>
 
 </project>

@@ -17,7 +17,7 @@
     <properties>
         <selc-commons.version>2.9.3</selc-commons.version>
         <sonar.host.url>https://sonarcloud.io/</sonar.host.url>
-        <commons-sdk-version>0.14.0</commons-sdk-version>
+        <commons-sdk-version>0.16.0</commons-sdk-version>
     </properties>
 
 
@@ -137,7 +137,7 @@
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>onboarding-sdk-product</artifactId>
+            <artifactId>selfcare-onboarding-sdk-product</artifactId>
             <version>${commons-sdk-version}</version>
             <scope>compile</scope>
         </dependency>
@@ -352,9 +352,9 @@
 
     <repositories>
         <repository>
-            <id>selfcare-onboarding</id>
-            <name>Selfcare Onboarding SDK</name>
-            <url>https://maven.pkg.github.com/pagopa/selfcare-onboarding</url>
+            <id>selfcare</id>
+            <name>Selfcare SDK</name>
+            <url>https://maven.pkg.github.com/pagopa/selfcare</url>
         </repository>
         <repository>
             <id>selfcare-platform</id>

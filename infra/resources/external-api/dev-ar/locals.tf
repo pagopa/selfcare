@@ -45,7 +45,7 @@ locals {
 
   # aks
   private_dns_name            = "selc.internal.dev.selfcare.pagopa.it"
-  private_onboarding_dns_name = "selc-d-onboarding-ms-ca.gentleflower-c63e62fe.westeurope.azurecontainerapps.io"
+  private_onboarding_dns_name = "selc-${module.local.config.env_short}-onboarding-ms-ca.gentleflower-c63e62fe.westeurope.azurecontainerapps.io"
   # ca_suffix_dns_private_name      = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
   ca_pnpg_suffix_dns_private_name = "blackhill-644148c0.westeurope.azurecontainerapps.io"
 
@@ -129,19 +129,19 @@ locals {
     },
     {
       name  = "MS_ONBOARDING_URL"
-      value = "http://selc-d-onboarding-ms-ca"
+      value = "http://selc-${module.local.config.env_short}-onboarding-ms-ca"
     },
     {
       name  = "MS_CORE_URL"
-      value = "http://selc-d-institution-ms-ca"
+      value = "http://selc-${module.local.config.env_short}-institution-ms-ca"
     },
     {
       name  = "USERVICE_PARTY_REGISTRY_PROXY_URL"
-      value = "http://selc-d-party-reg-proxy-ca"
+      value = "http://selc-${module.local.config.env_short}-party-reg-proxy-ca"
     },
     {
       name  = "USERVICE_PARTY_PROCESS_URL"
-      value = "http://selc-d-institution-ms-ca"
+      value = "http://selc-${module.local.config.env_short}-institution-ms-ca"
     },
     {
       name  = "USERVICE_USER_REGISTRY_URL"
@@ -149,19 +149,19 @@ locals {
     },
     {
       name  = "USERVICE_PARTY_MANAGEMENT_URL"
-      value = "http://selc-d-institution-ms-ca"
+      value = "http://selc-${module.local.config.env_short}-institution-ms-ca"
     },
     {
       name  = "STORAGE_CONTAINER"
-      value = "sc-d-documents-blob"
+      value = "sc-${module.local.config.env_short}-documents-blob"
     },
     {
       name  = "SELFCARE_USER_URL"
-      value = "http://selc-d-user-ms-ca"
+      value = "http://selc-${module.local.config.env_short}-user-ms-ca"
     },
     {
       name  = "MS_DOCUMENT_URL"
-      value = "http://selc-d-document-ms-ca"
+      value = "http://selc-${module.local.config.env_short}-document-ms-ca"
     }
   ]
 
