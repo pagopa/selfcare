@@ -45,7 +45,7 @@ jobs:
         run: echo "env ${{ steps.set-env.outputs.environ }}"
 
   test_dev:
-    uses: ./.github/workflows/call_integration_test_bruno.yml
+    uses: ./.github/workflows/call_integration_test_bruno_external_api.yml
     name: "[DEV] Integration test (Bruno)"
     needs: setup_env
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && needs.setup_env.outputs.environ == null) || needs.setup_env.outputs.environ == 'dev' }}
@@ -55,7 +55,7 @@ jobs:
       path: apps/external-api/src/test/resources/integration_test/bruno
 
   test_uat:
-    uses: ./.github/workflows/call_integration_test_bruno.yml
+    uses: ./.github/workflows/call_integration_test_bruno_external_api.yml
     name: "[UAT] Integration test (Bruno)"
     needs: setup_env
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && needs.setup_env.outputs.environ == null) == false && needs.setup_env.outputs.environ == 'uat' }}

@@ -32,13 +32,24 @@
       "description": "User group endpoint CRUD operations"
     },
     {
+      "name": "Onboarding Controller"
+    },
+    {
       "name": "ContractTemplate"
     },
     {
       "name": "Product"
     },
     {
+      "name": "Webhook",
+      "description": "API for webhook configuration management"
+    },
+    {
       "name": "IAM"
+    },
+    {
+      "name": "Document Content Controller",
+      "description": "Endpoints for creating PDF document content (contracts and attachments)"
     }
   ],
   "paths": {
@@ -1078,6 +1089,91 @@
         ]
       }
     },
+    "/institutions/": {
+      "get": {
+        "tags": [
+          "institutions"
+        ],
+        "summary": "getInstitutions",
+        "deprecated": true,
+        "description": "The service retrieves all the onboarded institutions related to the provided user and the product retrieved from Subscription Key. It is deprecated in favor of endpoint /users?institutionId={institutionId}",
+        "operationId": "getInstitutionsUsingGETDeprecated",
+        "parameters": [
+          {
+            "name": "userIdForAuth",
+            "in": "query",
+            "description": "User's unique identifier",
+            "required": true,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InstitutionResource2"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem4"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem4"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem4"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem4"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
     "/message/{messageId}/status/{status}": {
       "post": {
         "tags": [
@@ -1830,16 +1926,8 @@
         "summary": "Create a new webhook",
         "description": "Create a new webhook configuration",
         "operationId": "createWebhook",
-        "tags": [],
-        "parameters": [
-          {
-            "name": "requesterProductId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
+        "tags": [
+          "Webhook"
         ],
         "requestBody": {
           "content": {
@@ -1869,20 +1957,14 @@
         "summary": "Update webhook",
         "description": "Update an existing webhook configuration",
         "operationId": "updateWebhookbyProductId",
-        "tags": [],
+        "tags": [
+          "Webhook"
+        ],
         "parameters": [
           {
             "name": "productId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "requesterProductId",
-            "required": true,
-            "in": "query",
             "schema": {
               "type": "string"
             }
@@ -1914,20 +1996,14 @@
         "summary": "Get webhook by ID",
         "description": "Retrieve a specific webhook configuration",
         "operationId": "getWebhookbyProductId",
-        "tags": [],
+        "tags": [
+          "Webhook"
+        ],
         "parameters": [
           {
             "name": "productId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "requesterProductId",
-            "required": true,
-            "in": "query",
             "schema": {
               "type": "string"
             }
@@ -2192,6 +2268,88 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserClaims"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem6"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not Authorized"
+          },
+          "403": {
+            "description": "Not Allowed"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem6"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem6"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
+    "/iam/users/{uid}/roles": {
+      "get": {
+        "summary": "Get IAM user Product Role Permissions List",
+        "description": "Retrieves a list of product, role and permissions by user ID and product ID.",
+        "operationId": "getIAMProductRoles",
+        "tags": [
+          "IAM"
+        ],
+        "parameters": [
+          {
+            "name": "uid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "productId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductRolePermissionsList"
                 }
               }
             }
@@ -3304,6 +3462,141 @@
         ]
       }
     },
+    "/onboarding": {
+      "get": {
+        "tags": [
+          "Onboarding Controller"
+        ],
+        "summary": "Retrieve paged onboardings with optional filters and sorting.",
+        "description": "The API retrieves paged onboarding using optional filter, order by descending creation date",
+        "operationId": "getOnboardingWithFilter",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "institutionId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "onboardingId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "format": "int32",
+              "default": "0",
+              "type": "integer"
+            }
+          },
+          {
+            "name": "productId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "productIds",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "format": "int32",
+              "default": "20",
+              "type": "integer"
+            }
+          },
+          {
+            "name": "skipPagination",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/OnboardingStatus"
+            }
+          },
+          {
+            "name": "subunitCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "taxCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingGetResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not Authorized"
+          },
+          "403": {
+            "description": "Not Allowed"
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
     "/onboarding/institutions/{institutionId}": {
       "get": {
         "tags": [],
@@ -3334,6 +3627,198 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/OnboardingGet"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not Authorized"
+          },
+          "403": {
+            "description": "Not Allowed"
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
+    "/onboarding/{onboardingId}": {
+      "delete": {
+        "tags": ["Onboarding Controller"],
+        "summary": "Perform delete operation of an onboarding request",
+        "description": "Perform delete operation of an onboarding request receiving onboarding id, then invokes async process to set DELETED as status for institution and user onboardings.",
+        "operationId": "deleteOnboarding",
+        "parameters": [
+          {
+            "name": "onboardingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "401": {
+            "description": "Not Authorized"
+          },
+          "403": {
+            "description": "Not Allowed"
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
+    "/onboarding/{onboardingId}/complete": {
+      "put": {
+        "tags": ["Onboarding Controller"],
+        "summary": "Complete onboarding by verifying and uploading contract, then trigger async activities.",
+        "description": "Perform complete operation of an onboarding request receiving onboarding id and contract signed by the institution.It checks the contract's signature and upload the contract on an azure storageAt the end, function triggers async activities related to complete onboarding that consist of create the institution, activate the onboarding and sending data to notification queue.",
+        "operationId": "completeOnboardingUsingPUT",
+        "parameters": [
+          {
+            "name": "onboardingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "contract"
+                ],
+                "type": "object",
+                "properties": {
+                  "contract": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "401": {
+            "description": "Not Authorized"
+          },
+          "403": {
+            "description": "Not Allowed"
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
+    "/onboarding/{onboardingId}/reject": {
+      "put": {
+        "tags": [
+          "Onboarding Controller"
+        ],
+        "summary": "Perform reject operation of an onboarding request",
+        "description": "Perform reject operation of an onboarding request receiving onboarding id.Function change status to REJECT for an onboarding request that is not COMPLETED. ",
+        "operationId": "rejectOnboardingUsingPUT",
+        "parameters": [
+          {
+            "name": "onboardingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReasonRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "401": {
+            "description": "Not Authorized"
+          },
+          "403": {
+            "description": "Not Allowed"
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
+    "/document-content/{onboardingId}/contract-signed": {
+      "get": {
+        "summary": "Retrieve contract signed for a given onboarding",
+        "description": "Downloads the contract file associated with the specified onboarding ID.",
+        "operationId": "getContractSigned",
+        "tags": [
+          "Document Content Controller"
+        ],
+        "parameters": [
+          {
+            "name": "onboardingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
                 }
               }
             }
@@ -4137,6 +4622,219 @@
           }
         }
       },
+      "InstitutionResource2": {
+        "title": "InstitutionResource",
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "Institution's physical address"
+          },
+          "aooParentCode": {
+            "type": "string",
+            "description": "AOO unit parent institution Code"
+          },
+          "assistanceContacts": {
+            "description": "Institution's assistance contacts",
+            "$ref": "#/components/schemas/AssistanceContactsResource1"
+          },
+          "city": {
+            "type": "string",
+            "description": "Institution's physical address city"
+          },
+          "companyInformations": {
+            "description": "GPS, SCP, PT optional data",
+            "$ref": "#/components/schemas/CompanyInformationsResource1"
+          },
+          "country": {
+            "type": "string",
+            "description": "Institution's physical address country"
+          },
+          "county": {
+            "type": "string",
+            "description": "Institution's physical address county"
+          },
+          "description": {
+            "type": "string",
+            "description": "Institution's legal name"
+          },
+          "digitalAddress": {
+            "type": "string",
+            "description": "Institution's digitalAddress"
+          },
+          "dpoData": {
+            "description": "Data Protection Officer (DPO) specific data",
+            "$ref": "#/components/schemas/DpoDataResource1"
+          },
+          "externalId": {
+            "type": "string",
+            "description": "Institution's unique external identifier"
+          },
+          "id": {
+            "type": "string",
+            "description": "Institution's unique internal Id",
+            "format": "uuid"
+          },
+          "institutionType": {
+            "type": "string",
+            "description": "Institution's type",
+            "enum": [
+              "AS",
+              "GSP",
+              "PA",
+              "PG",
+              "PSP",
+              "PT",
+              "SA",
+              "SCP",
+              "REC",
+              "CON"
+            ]
+          },
+          "origin": {
+            "type": "string",
+            "description": "Institution data origin"
+          },
+          "originId": {
+            "type": "string",
+            "description": "Institution's details origin Id"
+          },
+          "pspData": {
+            "description": "Payment Service Provider (PSP) specific data",
+            "$ref": "#/components/schemas/PspDataResource"
+          },
+          "recipientCode": {
+            "type": "string",
+            "description": "Billing recipient code, not required only for institutionType SA"
+          },
+          "rootParent": {
+            "description": "Institution AOO/UO root institutionDescription",
+            "$ref": "#/components/schemas/RootParentResource1"
+          },
+          "status": {
+            "type": "string",
+            "description": "Institution onboarding status"
+          },
+          "subunitCode": {
+            "type": "string",
+            "description": "Institutions AOO/UO unit Code"
+          },
+          "subunitType": {
+            "type": "string",
+            "description": "Institutions AOO/UO unit type"
+          },
+          "taxCode": {
+            "type": "string",
+            "description": "Institution's taxCode"
+          },
+          "userProductRoles": {
+            "type": "array",
+            "description": "Logged user's roles on product",
+            "items": {
+              "type": "string"
+            }
+          },
+          "zipCode": {
+            "type": "string",
+            "description": "Institution's zipCode"
+          }
+        }
+      },
+      "AssistanceContactsResource1": {
+        "title": "AssistanceContactsResource",
+        "type": "object",
+        "properties": {
+          "supportEmail": {
+            "type": "string",
+            "description": "Institution's support email contact"
+          },
+          "supportPhone": {
+            "type": "string",
+            "description": "Institution's support phone contact"
+          }
+        }
+      },
+      "CompanyInformationsResource1": {
+        "title": "CompanyInformationsResource",
+        "type": "object",
+        "properties": {
+          "businessRegisterPlace": {
+            "type": "string",
+            "description": "Institution's business register place"
+          },
+          "rea": {
+            "type": "string",
+            "description": "Institution's REA"
+          },
+          "shareCapital": {
+            "type": "string",
+            "description": "Institution's share capital value"
+          }
+        }
+      },
+      "DpoDataResource1": {
+        "title": "DpoDataResource",
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "DPO's address"
+          },
+          "email": {
+            "type": "string",
+            "description": "DPO's email",
+            "format": "email",
+            "example": "email@example.com"
+          },
+          "pec": {
+            "type": "string",
+            "description": "DPO's PEC",
+            "format": "email",
+            "example": "email@example.com"
+          }
+        }
+      },
+      "PspDataResource": {
+        "title": "PspDataResource",
+        "type": "object",
+        "properties": {
+          "abiCode": {
+            "type": "string",
+            "description": "PSP's ABI code"
+          },
+          "businessRegisterNumber": {
+            "type": "string",
+            "description": "PSP's Business Register number"
+          },
+          "legalRegisterName": {
+            "type": "string",
+            "description": "PSP's legal register name"
+          },
+          "legalRegisterNumber": {
+            "type": "string",
+            "description": "PSP's legal register number"
+          },
+          "vatNumberGroup": {
+            "type": "boolean",
+            "description": "PSP's Vat Number group",
+            "example": false
+          }
+        }
+      },
+      "RootParentResource1": {
+        "title": "RootParentResource",
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "swagger.external_api.institutions.model.parentDescription"
+          },
+          "id": {
+            "type": "string",
+            "description": "Institution's unique internal Id"
+          }
+        }
+      },
       "Problem4": {
         "title": "Problem",
         "required": [
@@ -4590,7 +5288,7 @@
           }
         }
       },
-      "OnboardingStatus": {
+      "OnboardingStatus1": {
         "type": "string",
         "enum": [
           "REQUEST",
@@ -4802,10 +5500,15 @@
         "type": "object",
         "required": [
           "url",
+          "productId",
           "httpMethod"
         ],
         "properties": {
           "url": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "productId": {
             "type": "string",
             "pattern": "\\S"
           },
@@ -4950,6 +5653,9 @@
             "type": "string"
           },
           "role": {
+            "type": "string"
+          },
+          "group": {
             "type": "string"
           },
           "permissions": {
@@ -5812,6 +6518,21 @@
           }
         }
       },
+      "OnboardingGetResponse": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OnboardingGet"
+            }
+          }
+        }
+      },
       "OnboardingGet": {
         "type": "object",
         "properties": {
@@ -6153,6 +6874,27 @@
             "type": "string"
           },
           "userRequestUid": {
+            "type": "string"
+          }
+        }
+      },
+      "OnboardingStatus": {
+        "enum": [
+          "REQUEST",
+          "TOBEVALIDATED",
+          "PENDING",
+          "PENDING_IN_REVIEW",
+          "COMPLETED",
+          "FAILED",
+          "REJECTED",
+          "DELETED"
+        ],
+        "type": "string"
+      },
+      "ReasonRequest": {
+        "type": "object",
+        "properties": {
+          "reasonForReject": {
             "type": "string"
           }
         }
