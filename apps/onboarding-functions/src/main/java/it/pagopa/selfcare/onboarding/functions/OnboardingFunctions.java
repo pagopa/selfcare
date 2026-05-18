@@ -1032,7 +1032,9 @@ public class OnboardingFunctions {
             Map.of(
                     ONBOARDING_ID, onboarding.getId(),
                     PRODUCT_ID, onboarding.getProductId()));
-    return productService.getProductIsValid(onboarding.getProductId()).getManagingInstitutions();
+      List<ManagingInstitution> managingInstitutions = productService.getProductIsValid(onboarding.getProductId()).getManagingInstitutions();
+      context.getLogger().info(String.format("Found %d managing institution(s) for product %s - %s", managingInstitutions.size(), onboarding.getProductId(), managingInstitutions.get(0).getInstitutionId()));
+      return managingInstitutions;
   }
 
   @FunctionName(GET_USER_EMAIL_UUID_ACTIVITY)
