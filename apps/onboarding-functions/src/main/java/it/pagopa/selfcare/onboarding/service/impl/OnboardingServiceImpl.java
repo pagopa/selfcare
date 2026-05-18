@@ -1,7 +1,5 @@
 package it.pagopa.selfcare.onboarding.service.impl;
 
-import static it.pagopa.selfcare.onboarding.utils.Utils.NOT_ALLOWED_WORKFLOWS_FOR_INSTITUTION_NOTIFICATIONS;
-
 import com.microsoft.azure.functions.ExecutionContext;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
@@ -17,15 +15,25 @@ import it.pagopa.selfcare.onboarding.mapper.AttachmentPdfRequestMapper;
 import it.pagopa.selfcare.onboarding.mapper.ContractPdfRequestMapper;
 import it.pagopa.selfcare.onboarding.mapper.DocumentBuilderRequestMapper;
 import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
-import it.pagopa.selfcare.onboarding.service.DocumentService;
-import it.pagopa.selfcare.onboarding.service.NotificationService;
-import it.pagopa.selfcare.onboarding.service.OnboardingService;
+import it.pagopa.selfcare.onboarding.service.*;
 import it.pagopa.selfcare.onboarding.utils.GenericError;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import org.bson.Document;
+import org.openapi.quarkus.core_json.model.OnboardedProductResponse;
+import org.openapi.quarkus.document_json.model.AttachmentPdfRequest;
+import org.openapi.quarkus.document_json.model.ContractPdfRequest;
+import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
+import org.openapi.quarkus.document_json.model.DocumentType;
+import org.openapi.quarkus.user_json.model.SendMailDto;
+import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
+import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
+import org.openapi.quarkus.user_registry_json.model.UserResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -34,22 +42,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.bson.Document;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.openapi.quarkus.core_json.model.OnboardedProductResponse;
-import org.openapi.quarkus.document_json.model.AttachmentPdfRequest;
-import org.openapi.quarkus.document_json.model.ContractPdfRequest;
-import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
-import org.openapi.quarkus.document_json.model.DocumentType;
-import org.openapi.quarkus.party_registry_proxy_json.api.PdndVisuraInfoCamereControllerApi;
-import org.openapi.quarkus.user_json.api.InstitutionApi;
-import org.openapi.quarkus.user_json.model.SendMailDto;
-import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
-import org.openapi.quarkus.user_registry_json.api.UserApi;
-import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
-import org.openapi.quarkus.user_registry_json.model.UserResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static it.pagopa.selfcare.onboarding.utils.Utils.NOT_ALLOWED_WORKFLOWS_FOR_INSTITUTION_NOTIFICATIONS;
 
 @ApplicationScoped
 public class OnboardingServiceImpl implements OnboardingService {
@@ -63,47 +57,53 @@ public class OnboardingServiceImpl implements OnboardingService {
   public static final String DELETED_AT_FIELD = "deletedAt";
   private static final String WORKFLOW_TYPE = "workflowType";
 
-  @RestClient @Inject UserApi userRegistryApi;
-  @RestClient @Inject InstitutionApi userInstitutionApi;
-  @RestClient @Inject
-  org.openapi.quarkus.user_json.api.UserApi userApi;
-  @RestClient @Inject
-  PdndVisuraInfoCamereControllerApi pndnInfocamereApi;
-  @Inject NotificationService notificationService;
-  @Inject DocumentService documentService;
+  private final NotificationService notificationService;
+  private final DocumentService documentService;
   private final ProductService productService;
-  private final OnboardingRepository repository;
   private final MailTemplatePathConfig mailTemplatePathConfig;
   private final MailTemplatePlaceholdersConfig mailTemplatePlaceholdersConfig;
   private final ContractPdfRequestMapper contractPdfRequestMapper;
   private final AttachmentPdfRequestMapper attachmentPdfRequestMapper;
   private final DocumentBuilderRequestMapper documentBuilderRequestMapper;
+  private final PdvUserRegistryService pdvUserRegistryService;
+  private final UserInstitutionRestService userInstitutionRestService;
+  private final UserNotificationService userNotificationService;
+  private final InfocamereService infocamereService;
 
   //JPA
   private final OnboardingRepository onboardingRepository;
 
   public OnboardingServiceImpl(
           ProductService productService,
-          OnboardingRepository repository,
           MailTemplatePathConfig mailTemplatePathConfig,
           MailTemplatePlaceholdersConfig mailTemplatePlaceholdersConfig,
           NotificationService notificationService,
+          DocumentService documentService,
           ContractPdfRequestMapper contractPdfRequestMapper,
           AttachmentPdfRequestMapper attachmentPdfRequestMapper,
-          DocumentBuilderRequestMapper documentBuilderRequestMapper, OnboardingRepository onboardingRepository) {
-    this.repository = repository;
+          DocumentBuilderRequestMapper documentBuilderRequestMapper,
+          OnboardingRepository onboardingRepository,
+          PdvUserRegistryService pdvUserRegistryService,
+          UserInstitutionRestService userInstitutionRestService,
+          UserNotificationService userNotificationService,
+          InfocamereService infocamereService) {
     this.productService = productService;
     this.notificationService = notificationService;
+    this.documentService = documentService;
     this.mailTemplatePathConfig = mailTemplatePathConfig;
     this.mailTemplatePlaceholdersConfig = mailTemplatePlaceholdersConfig;
     this.contractPdfRequestMapper  = contractPdfRequestMapper;
     this.attachmentPdfRequestMapper = attachmentPdfRequestMapper;
     this.documentBuilderRequestMapper = documentBuilderRequestMapper;
     this.onboardingRepository = onboardingRepository;
+    this.pdvUserRegistryService = pdvUserRegistryService;
+    this.userInstitutionRestService = userInstitutionRestService;
+    this.userNotificationService = userNotificationService;
+    this.infocamereService = infocamereService;
   }
 
   public Optional<Onboarding> getOnboarding(String onboardingId) {
-    return repository.findByIdOptional(onboardingId);
+    return onboardingRepository.findByIdOptional(onboardingId);
   }
 
   public void createContract(OnboardingWorkflow onboardingWorkflow) {
@@ -114,7 +114,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         .filter(userToOnboard -> PartyRole.MANAGER != userToOnboard.getRole())
         .map(
           userToOnboard ->
-            userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userToOnboard.getId()))
+            pdvUserRegistryService.getUserById(USERS_WORKS_FIELD_LIST, userToOnboard.getId()))
         .toList();
     UserResource manager = getUserResource(onboarding);
     Product product = productService.getProductIsValid(onboarding.getProductId());
@@ -132,7 +132,7 @@ public class OnboardingServiceImpl implements OnboardingService {
 
   private UserResource getUserResource(Onboarding onboarding) {
     String validManagerId = getValidManagerId(onboarding.getUsers());
-    return userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, validManagerId);
+    return pdvUserRegistryService.getUserById(USERS_WORKS_FIELD_LIST, validManagerId);
   }
 
   public void createAttachment(OnboardingAttachment onboardingAttachment) {
@@ -186,11 +186,7 @@ public class OnboardingServiceImpl implements OnboardingService {
    sendMailDto.setProductId(onboarding.getProductId());
    sendMailDto.setUserMailUuid(user.getUserMailUuid());
 
-    try {
-      userApi.sendMailRequest(user.getId(), sendMailDto);
-    } catch (Exception e) {
-      log.error("Impossible to send mail to user");
-    }
+    userNotificationService.sendMailRequest(user.getId(), sendMailDto);
   }
 
   public void sendMailRegistrationForUserRequester(Onboarding onboarding) {
@@ -202,11 +198,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     sendMailDto.setProductId(onboarding.getProductId());
     sendMailDto.setUserMailUuid(userRequester.getUserMailUuid());
 
-    try {
-      userApi.sendMailRequest(userRequester.getUserRequestUid(), sendMailDto);
-    } catch (Exception e) {
-      log.error("Impossible to send mail to user");
-    }
+    userNotificationService.sendMailRequest(userRequester.getUserRequestUid(), sendMailDto);
   }
 
   public void sendMailManagingInstitution(ManagingInstitutionSendEmail request) {
@@ -215,16 +207,12 @@ public class OnboardingServiceImpl implements OnboardingService {
     sendMailDto.setInstitutionName(request.getManagingInstitutionDescription());
     sendMailDto.setProductId(request.getProductId());
     sendMailDto.setUserMailUuid(request.getUserMailUuid());
-    try {
-      userApi.sendMailRequest(request.getUserMailUuid(), sendMailDto);
-    } catch (Exception e) {
-      log.error("Impossible to send mail to managing institution");
-    }
+    userNotificationService.sendMailRequest(request.getUserMailUuid(), sendMailDto);
   }
 
   public void saveVisuraForMerchant(Onboarding onboarding) {
     var taxCode = onboarding.getInstitution().getTaxCode();
-    var bytes = pndnInfocamereApi.institutionVisuraDocumentByTaxCodeUsingGET(taxCode);
+    var bytes = infocamereService.getInstitutionVisuraByTaxCode(taxCode);
     final String filename = String.format("VISURA_%s.xml", taxCode);
     org.openapi.quarkus.document_json.api.DocumentContentControllerApi.SaveVisuraForMerchantMultipartForm request =
         new org.openapi.quarkus.document_json.api.DocumentContentControllerApi
@@ -297,7 +285,7 @@ public class OnboardingServiceImpl implements OnboardingService {
   public void updateOnboardingExpiringDate(Onboarding onboarding) {
     Integer onboardingExpirationDays = productService.getProductExpirationDate(onboarding.getProductId());
     onboarding.setExpiringDate(OffsetDateTime.now().plusDays(onboardingExpirationDays).toLocalDateTime());
-    repository.update(onboarding);
+    onboardingRepository.update(onboarding);
   }
 
   public void sendMailOnboardingApprove(Onboarding onboarding) {
@@ -336,7 +324,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     // Retrieve user request name and surname
     UserResource userRequest =
       Optional.ofNullable(
-          userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
+          pdvUserRegistryService.getUserById(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
         .orElseThrow(
           () ->
             new GenericOnboardingException(
@@ -352,14 +340,14 @@ public class OnboardingServiceImpl implements OnboardingService {
   }
 
   public void updateOnboardingStatus(String onboardingId, OnboardingStatus status) {
-    repository
+      onboardingRepository
       .update("status = ?1 and updatedAt = ?2", status.name(), LocalDateTime.now())
       .where("_id", onboardingId);
   }
 
   public void updateOnboardingStatusAndInstanceId(
     String onboardingId, OnboardingStatus status, String instanceId) {
-    repository
+      onboardingRepository
       .update(
         "status = ?1 and workflowInstanceId = ?2 and updatedAt = ?3",
         status.name(),
@@ -388,8 +376,8 @@ public class OnboardingServiceImpl implements OnboardingService {
     Document queryAddEvent = getQueryNotificationAdd(productId, from, to);
     Document queryUpdateEvent = getQueryNotificationDelete(productId, from, to);
 
-    long countAddEvents = repository.find(queryAddEvent).count();
-    long countUpdateEvents = repository.find(queryUpdateEvent).count();
+    long countAddEvents = onboardingRepository.find(queryAddEvent).count();
+    long countUpdateEvents = onboardingRepository.find(queryUpdateEvent).count();
     long total = countUpdateEvents + countAddEvents;
 
     context
@@ -471,7 +459,7 @@ public class OnboardingServiceImpl implements OnboardingService {
 
   public List<Onboarding> getOnboardingsToResend(
     ResendNotificationsFilters filters, int page, int pageSize) {
-    return repository.find(createQueryByFilters(filters)).page(page, pageSize).list();
+    return onboardingRepository.find(createQueryByFilters(filters)).page(page, pageSize).list();
   }
 
   private Document createQueryByFilters(ResendNotificationsFilters filters) {
@@ -542,12 +530,12 @@ public class OnboardingServiceImpl implements OnboardingService {
       userInstitutions.stream().anyMatch(userInstitution ->
         userInstitution.getUserId().equals(onboarding.getPreviousManagerId()))) {
       UserResource previousManager =
-        userRegistryApi.findByIdUsingGET(
+        pdvUserRegistryService.getUserById(
           USERS_WORKS_FIELD_LIST, onboarding.getPreviousManagerId());
       sendMailInput.setPreviousManagerName(previousManager.getName().getValue());
       sendMailInput.setPreviousManagerSurname(previousManager.getFamilyName().getValue());
       UserResource currentManager =
-        userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, managerId);
+        pdvUserRegistryService.getUserById(USERS_WORKS_FIELD_LIST, managerId);
       sendMailInput.setManagerName(currentManager.getName().getValue());
       sendMailInput.setManagerSurname(currentManager.getFamilyName().getValue());
     } else {
@@ -558,7 +546,7 @@ public class OnboardingServiceImpl implements OnboardingService {
   private List<UserInstitutionResponse> getUserInstitutions(Onboarding onboarding) {
 
     // Retrieve all onboardings for data in input
-    List<Onboarding> onboardings = repository.findByFilters(
+    List<Onboarding> onboardings = onboardingRepository.findByFilters(
       onboarding.getInstitution().getTaxCode(),
       onboarding.getInstitution().getSubunitCode(),
       onboarding.getInstitution().getOrigin().name(),
@@ -570,13 +558,8 @@ public class OnboardingServiceImpl implements OnboardingService {
     }
 
     final String institutionId = onboardings.get(0).getInstitution().getId();
-    return userInstitutionApi.retrieveUserInstitutions(
-      institutionId,
-      null,
-      List.of(onboarding.getProductId()),
-      List.of(String.valueOf(PartyRole.MANAGER)),
-      List.of(String.valueOf(OnboardedProductResponse.StatusEnum.ACTIVE)),
-      null);
+    return userInstitutionRestService.getActiveManagersByInstitutionAndProduct(
+      institutionId, onboarding.getProductId(), OnboardedProductResponse.StatusEnum.ACTIVE);
   }
 
   public List<String> findByInstitutionAndProduct(String institutionId, String productId) {
