@@ -143,6 +143,10 @@ public class OnboardingServiceDefault implements OnboardingService {
                                     it.pagopa.selfcare.onboarding.entity.Institution institution = institutionMapper.toEntity(response);
                                     institution.setInstitutionType(request.getInstitutionType());
                                     onboarding.setInstitution(institution);
+                                    if(Objects.nonNull(request.getOrigin()) && Objects.nonNull(request.getOriginId())) {
+                                        onboarding.getInstitution().setOrigin(Origin.valueOf(request.getOrigin()));
+                                        onboarding.getInstitution().setOriginId(request.getOriginId());
+                                    }
                                     onboarding.setExpiringDate(OffsetDateTime.now().plusDays(expirationDays).toLocalDateTime());
                                     return onboarding;
                                 })
