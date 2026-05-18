@@ -20,6 +20,7 @@ import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.openapi.quarkus.core_json.model.OnboardedProductResponse;
 import org.openapi.quarkus.document_json.model.AttachmentPdfRequest;
@@ -30,8 +31,6 @@ import org.openapi.quarkus.user_json.model.SendMailDto;
 import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
@@ -45,6 +44,7 @@ import java.util.stream.Stream;
 import static it.pagopa.selfcare.onboarding.utils.Utils.NOT_ALLOWED_WORKFLOWS_FOR_INSTITUTION_NOTIFICATIONS;
 
 @ApplicationScoped
+@Slf4j
 public class OnboardingServiceImpl implements OnboardingService {
 
     public static final String USERS_FIELD_LIST = "fiscalCode,familyName,name";
@@ -52,7 +52,6 @@ public class OnboardingServiceImpl implements OnboardingService {
     public static final String USER_REQUEST_DOES_NOT_FOUND = "User request does not found for onboarding %s";
     public static final String ACTIVATED_AT_FIELD = "activatedAt";
     public static final String DELETED_AT_FIELD = "deletedAt";
-    private static final Logger log = LoggerFactory.getLogger(OnboardingServiceImpl.class);
     private static final String WORKFLOW_TYPE = "workflowType";
 
     private final NotificationService notificationService;
