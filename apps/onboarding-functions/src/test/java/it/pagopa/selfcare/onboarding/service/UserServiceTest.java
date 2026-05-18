@@ -8,6 +8,7 @@ import static org.mockito.Mockito.*;
 
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
+import it.pagopa.selfcare.onboarding.dto.UserMail;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
@@ -74,12 +75,12 @@ class UserServiceTest {
   }
 
   @Test
-  void findEmailUuidByInstitutionAndProducts_whenApiReturnsNull_returnsEmpty() {
+  void findEmailByInstitutionAndProducts_whenApiReturnsNull_returnsEmpty() {
     List<String> products = List.of(productId);
     when(institutionApi.retrieveUserInstitutions(eq(institutionId), isNull(), eq(products), isNull(), isNull(), isNull()))
         .thenReturn(null);
 
-    List<String> result = userService.findEmailUuidByInstitutionAndProducts(institutionId, products);
+    List<UserMail> result = userService.findEmailByInstitutionAndProducts(institutionId, products);
 
     assertNotNull(result);
     assertTrue(result.isEmpty());
@@ -88,12 +89,12 @@ class UserServiceTest {
   }
 
   @Test
-  void findEmailUuidByInstitutionAndProducts_whenApiReturnsEmpty_returnsEmpty() {
+  void findEmailByInstitutionAndProducts_whenApiReturnsEmpty_returnsEmpty() {
     List<String> products = List.of(productId);
     when(institutionApi.retrieveUserInstitutions(eq(institutionId), isNull(), eq(products), isNull(), isNull(), isNull()))
         .thenReturn(List.of());
 
-    List<String> result = userService.findEmailUuidByInstitutionAndProducts(institutionId, products);
+    List<UserMail> result = userService.findEmailByInstitutionAndProducts(institutionId, products);
 
     assertNotNull(result);
     assertTrue(result.isEmpty());
@@ -102,14 +103,14 @@ class UserServiceTest {
   }
 
   @Test
-  void findEmailUuidByInstitutionAndProducts_whenEmailsBlankOrNull_returnsEmpty() {
+  void findEmailByInstitutionAndProducts_whenEmailsBlankOrNull_returnsEmpty() {
     List<String> products = List.of(productId);
-    UserInstitutionResponse blankEmail = createUserInstitutionResponse(" ");
-    UserInstitutionResponse nullEmail = createUserInstitutionResponse(null);
+    UserInstitutionResponse blankEmail = createUserInstitutionResponse(" ", " ");
+    UserInstitutionResponse nullEmail = createUserInstitutionResponse(null, null);
     when(institutionApi.retrieveUserInstitutions(eq(institutionId), isNull(), eq(products), isNull(), isNull(), isNull()))
         .thenReturn(List.of(blankEmail, nullEmail));
 
-    List<String> result = userService.findEmailUuidByInstitutionAndProducts(institutionId, products);
+    List<UserMail> result = userService.findEmailByInstitutionAndProducts(institutionId, products);
 
     assertNotNull(result);
     assertTrue(result.isEmpty());
@@ -118,40 +119,42 @@ class UserServiceTest {
   }
 
   @Test
-  void findEmailUuidByInstitutionAndProducts_filtersDuplicatesAndBlanks() {
+  void findEmailByInstitutionAndProducts_filtersBlanks() {
     List<String> products = List.of(productId);
-    UserInstitutionResponse first = createUserInstitutionResponse("email-uuid-1");
-    UserInstitutionResponse duplicate = createUserInstitutionResponse("email-uuid-1");
-    UserInstitutionResponse second = createUserInstitutionResponse("email-uuid-2");
-    UserInstitutionResponse blank = createUserInstitutionResponse("  ");
+    UserInstitutionResponse first = createUserInstitutionResponse("email-uuid-1", "user-1");
+    UserInstitutionResponse second = createUserInstitutionResponse("email-uuid-2",  "user-3");
+    UserInstitutionResponse blank = createUserInstitutionResponse("  ", " ");
     when(institutionApi.retrieveUserInstitutions(eq(institutionId), isNull(), eq(products), isNull(), isNull(), isNull()))
-        .thenReturn(List.of(first, duplicate, second, blank));
+        .thenReturn(List.of(first, second, blank));
 
-    List<String> result = userService.findEmailUuidByInstitutionAndProducts(institutionId, products);
+    List<UserMail> result = userService.findEmailByInstitutionAndProducts(institutionId, products);
 
-    assertEquals(List.of("email-uuid-1", "email-uuid-2"), result);
+    assertEquals(List.of("email-uuid-1", "email-uuid-2"), result.stream().map(UserMail::getUserMailUuid).toList());
+    assertEquals(List.of("user-1", "user-3"), result.stream().map(UserMail::getUserId).toList());
     verify(institutionApi, times(1))
         .retrieveUserInstitutions(eq(institutionId), isNull(), eq(products), isNull(), isNull(), isNull());
   }
 
   @Test
-  void findEmailUuidByInstitutionAndProducts_returnsEmails() {
+  void findEmailByInstitutionAndProducts_returnsEmails() {
     List<String> products = List.of(productId);
-    UserInstitutionResponse first = createUserInstitutionResponse("email-uuid-1");
-    UserInstitutionResponse second = createUserInstitutionResponse("email-uuid-2");
+    UserInstitutionResponse first = createUserInstitutionResponse("email-uuid-1",  "user-1");
+    UserInstitutionResponse second = createUserInstitutionResponse("email-uuid-2",   "user-2");
     when(institutionApi.retrieveUserInstitutions(eq(institutionId), isNull(), eq(products), isNull(), isNull(), isNull()))
         .thenReturn(List.of(first, second));
 
-    List<String> result = userService.findEmailUuidByInstitutionAndProducts(institutionId, products);
+    List<UserMail> result = userService.findEmailByInstitutionAndProducts(institutionId, products);
 
-    assertEquals(List.of("email-uuid-1", "email-uuid-2"), result);
+    assertEquals(List.of("email-uuid-1", "email-uuid-2"), result.stream().map(UserMail::getUserMailUuid).toList());
+    assertEquals(List.of("user-1", "user-2"), result.stream().map(UserMail::getUserId).toList());
     verify(institutionApi, times(1))
         .retrieveUserInstitutions(eq(institutionId), isNull(), eq(products), isNull(), isNull(), isNull());
   }
 
-  private UserInstitutionResponse createUserInstitutionResponse(String emailUuid) {
+  private UserInstitutionResponse createUserInstitutionResponse(String emailUuid, String userId) {
     UserInstitutionResponse response = new UserInstitutionResponse();
     response.setUserMailUuid(emailUuid);
+    response.setUserId(userId);
     return response;
   }
 

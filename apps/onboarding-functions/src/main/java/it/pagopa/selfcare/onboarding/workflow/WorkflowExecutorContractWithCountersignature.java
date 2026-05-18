@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.durabletask.TaskOptions;
 import com.microsoft.durabletask.TaskOrchestrationContext;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
+import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionGetEmailRequest;
+import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
+import it.pagopa.selfcare.onboarding.dto.UserMail;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
 import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflowInstitution;
@@ -88,53 +91,45 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
                 ctx.callActivity(GET_MANAGING_INSTITUTION_ACTIVITY, onboardingString, optionsRetry, ManagingInstitution[].class)
                         .await();
 
-        log.info("Managing institution(s) found for onboardingId={}: {}", onboardingWorkflow.getOnboarding().getId(), managingInstitutionTest);
-
         List<ManagingInstitution> managingInstitutions = managingInstitutionTest != null ? List.of(managingInstitutionTest) : Collections.emptyList();
-
-        log.info("Found {} managing institution(s) for onboardingId={}", managingInstitutions.size(), onboardingWorkflow.getOnboarding().getId());
-
         ManagingInstitution managingInstitution = managingInstitutions.get(0);
 
-        log.info(managingInstitution.getInstitutionId());
-
-        String managingInstitutionEmailRequestString =
-                getManagingInstitutionEmailRequestString(
-                        objectMapper,
-                        managingInstitution.getInstitutionId(),
-                        document.getProductId(),
-                        onboardingWorkflow.getOnboarding().getId());
-
-        log.info(managingInstitutionEmailRequestString);
+        ManagingInstitutionGetEmailRequest managingInstitutionGetEmailRequest = ManagingInstitutionGetEmailRequest.builder()
+                        .managingInstitutionId(managingInstitution.getInstitutionId())
+                        .productId(document.getProductId())
+                        .onboardingId(onboardingWorkflow.getOnboarding().getId())
+                        .build();
 
         String emailsString =
-                ctx.callActivity(
-                                GET_USER_EMAIL_UUID_ACTIVITY,
-                                managingInstitutionEmailRequestString,
+                ctx.callActivity(GET_USER_EMAIL_UUID_ACTIVITY,
+                                managingInstitutionGetEmailRequest,
                                 optionsRetry,
                                 String.class)
                         .await();
 
-        List<String> emailsUuid = readEmailList(objectMapper, emailsString);
+        List<UserMail> userMails = readEmailList(objectMapper, emailsString);
         log.info("Found {} email(s) for institution {} and product {}",
-                emailsUuid.size(),
+                userMails.size(),
                 managingInstitution.getInstitutionId(),
                 document.getProductId());
 
-        emailsUuid.forEach(
-                emailUuid ->
-                        ctx.callActivity(
-                                        SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION,
-                                        getManagingInstitutionSendEmailString(
-                                                objectMapper,
-                                                managingInstitution.getInstitutionId(),
-                                                managingInstitution.getDescription(),
-                                                document.getProductId(),
-                                                emailUuid),
-                                        optionsRetry,
-                                        String.class)
-                                .await()
-        );
+        ManagingInstitutionSendEmail managingInstitutionSendEmail = ManagingInstitutionSendEmail.builder()
+                .managingInstitutionId(managingInstitution.getInstitutionId())
+                .managingInstitutionDescription(managingInstitution.getDescription())
+                .productId(document.getProductId())
+                .build();
+
+        userMails.forEach(
+            userMail -> {
+              managingInstitutionSendEmail.setUserId(userMail.getUserId());
+              managingInstitutionSendEmail.setUserMailUuid(userMail.getUserMailUuid());
+              ctx.callActivity(
+                      SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION,
+                      managingInstitutionSendEmail,
+                      optionsRetry,
+                      String.class)
+                  .await();
+            });
 
         return Optional.of(OnboardingStatus.PENDING_IN_REVIEW);
     }

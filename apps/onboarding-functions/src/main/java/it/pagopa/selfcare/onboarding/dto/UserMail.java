@@ -9,10 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ManagingInstitutionSendEmail {
-    private String managingInstitutionId;
-    private String productId;
-    private String managingInstitutionDescription;
-    private String userMailUuid;
+public class UserMail {
     private String userId;
+    private String userMailUuid;
 }
+

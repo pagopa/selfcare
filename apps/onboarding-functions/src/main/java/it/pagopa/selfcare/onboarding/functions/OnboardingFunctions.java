@@ -18,6 +18,7 @@ import it.pagopa.selfcare.onboarding.config.RetryPolicyConfig;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.dto.OnboardingAggregateOrchestratorInput;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionGetEmailRequest;
+import it.pagopa.selfcare.onboarding.dto.UserMail;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.OnboardingAttachment;
 import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
@@ -646,24 +647,21 @@ public class OnboardingFunctions {
 
   @FunctionName(SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION)
   public void sendMailNotificationManagerInstitution(
-          @DurableActivityTrigger(name = "managingInstitutionSendEmailString") String managingInstitutionSendEmailString,
+          @DurableActivityTrigger(name = "managingInstitutionSendEmail") ManagingInstitutionSendEmail managingInstitutionSendEmail,
           final ExecutionContext context) {
-    ManagingInstitutionSendEmail request =
-            readManagingInstitutionSendEmail(objectMapper, managingInstitutionSendEmailString);
     telemetryService.trackFunction(
             SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION,
             String.format(
                     FORMAT_LOGGER_ONBOARDING_STRING,
                     SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION,
-                    managingInstitutionSendEmailString),
+                    managingInstitutionSendEmail),
             SeverityLevel.Information,
             Map.of(
-                    PRODUCT_ID, request.getProductId(),
-                    MANAGING_INSTITUTION_ID, request.getManagingInstitutionId(),
-                    MANAGING_INSTITUTION_DESCRIPTION, request.getManagingInstitutionDescription(),
-                    USER_MAIL_UUID, request.getUserMailUuid()));
-    request.setUserMailUuid(request.getUserMailUuid().replace("ID_MAIL#",""));
-    service.sendMailManagingInstitution(request);
+                    PRODUCT_ID, managingInstitutionSendEmail.getProductId(),
+                    MANAGING_INSTITUTION_ID, managingInstitutionSendEmail.getManagingInstitutionId(),
+                    MANAGING_INSTITUTION_DESCRIPTION, managingInstitutionSendEmail.getManagingInstitutionDescription(),
+                    USER_MAIL_UUID, managingInstitutionSendEmail.getUserMailUuid()));
+    service.sendMailManagingInstitution(managingInstitutionSendEmail);
   }
 
   @FunctionName(SEND_MAIL_REGISTRATION_FOR_USER_REQUESTER)
@@ -1040,26 +1038,24 @@ public class OnboardingFunctions {
 
   @FunctionName(GET_USER_EMAIL_UUID_ACTIVITY)
   public String getUserEmailUuid(
-      @DurableActivityTrigger(name = "managingInstitutionEmailRequestString") String managingInstitutionEmailRequestString,
+      @DurableActivityTrigger(name = "managingInstitutionGetEmailRequest") ManagingInstitutionGetEmailRequest request,
       final ExecutionContext context) {
-    ManagingInstitutionGetEmailRequest request =
-        readManagingInstitutionEmailRequest(objectMapper, managingInstitutionEmailRequestString);
     telemetryService.trackFunction(
             GET_MANAGING_INSTITUTION_ACTIVITY,
             String.format(
                     FORMAT_LOGGER_ONBOARDING_STRING,
                     GET_MANAGING_INSTITUTION_ACTIVITY,
-                    managingInstitutionEmailRequestString),
+                    request),
             SeverityLevel.Information,
             Map.of(
                     ONBOARDING_ID, request.getOnboardingId(),
                     PRODUCT_ID, request.getProductId(),
                     MANAGING_INSTITUTION_ID, request.getManagingInstitutionId()));
-    List<String> emailsUuid = userService.findEmailUuidByInstitutionAndProducts(
+    List<UserMail> emails = userService.findEmailByInstitutionAndProducts(
         request.getManagingInstitutionId(),
         List.of(request.getProductId()));
-    context.getLogger().info(String.valueOf(emailsUuid.size()));
-    return getEmailListString(objectMapper, emailsUuid);
+
+    return getEmailListString(objectMapper, emails);
   }
 
   private void ensureSuccessfulDocumentResponse(

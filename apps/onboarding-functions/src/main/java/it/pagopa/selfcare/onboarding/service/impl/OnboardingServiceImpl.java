@@ -203,7 +203,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         sendMailDto.setInstitutionName(request.getManagingInstitutionDescription());
         sendMailDto.setProductId(request.getProductId());
         sendMailDto.setUserMailUuid(request.getUserMailUuid());
-        userNotificationService.sendMailRequest(request.getUserMailUuid(), sendMailDto);
+        userNotificationService.sendMailRequest(request.getUserId(), sendMailDto);
     }
 
     public void saveVisuraForMerchant(Onboarding onboarding) {

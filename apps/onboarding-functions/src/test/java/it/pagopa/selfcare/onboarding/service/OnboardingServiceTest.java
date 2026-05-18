@@ -511,7 +511,7 @@ class OnboardingServiceTest {
         Mockito.doThrow(new RuntimeException("Email failure"))
                 .when(userNotificationService).sendMailRequest(Mockito.any(), Mockito.any());
 
-        Assertions.assertDoesNotThrow(() -> onboardingService.sendMailRegistrationForUser(onboarding));
+        Assertions.assertThrows(RuntimeException.class, () -> userNotificationService.sendMailRequest(Mockito.any(), Mockito.any()));
 
         Mockito.verify(userNotificationService).sendMailRequest(Mockito.any(), Mockito.any());
     }
@@ -1001,7 +1001,7 @@ class OnboardingServiceTest {
         Mockito.doThrow(new RuntimeException("Email failure"))
                 .when(userNotificationService).sendMailRequest(Mockito.any(), Mockito.any());
 
-        Assertions.assertDoesNotThrow(() -> onboardingService.sendMailRegistrationForUserRequester(onboarding));
+        Assertions.assertThrows(RuntimeException.class, () -> onboardingService.sendMailRegistrationForUserRequester(onboarding));
 
         Mockito.verify(userNotificationService).sendMailRequest(Mockito.any(), Mockito.any());
     }
@@ -1076,10 +1076,11 @@ class OnboardingServiceTest {
         request.setManagingInstitutionDescription("Test Institution");
         request.setProductId("prod-123");
         request.setUserMailUuid("uuid-123");
+        request.setUserId("user-1");
 
         onboardingService.sendMailManagingInstitution(request);
 
-        Mockito.verify(userNotificationService).sendMailRequest(eq("uuid-123"),
+        Mockito.verify(userNotificationService).sendMailRequest(eq("user-1"),
                 Mockito.argThat(dto ->
                         "Test Institution".equals(dto.getInstitutionName())
                                 && "prod-123".equals(dto.getProductId())
@@ -1094,6 +1095,7 @@ class OnboardingServiceTest {
         request.setManagingInstitutionDescription("Test Institution");
         request.setProductId("prod-123");
         request.setUserMailUuid("uuid-123");
+        request.setUserId("user-1");
 
         Mockito.doThrow(new RuntimeException("Email failure"))
                 .when(userNotificationService)
@@ -1101,6 +1103,6 @@ class OnboardingServiceTest {
 
         Assertions.assertDoesNotThrow(() -> onboardingService.sendMailManagingInstitution(request));
 
-        Mockito.verify(userNotificationService).sendMailRequest(eq("uuid-123"), any(SendMailDto.class));
+        Mockito.verify(userNotificationService).sendMailRequest(eq("user-1"), any(SendMailDto.class));
     }
 }

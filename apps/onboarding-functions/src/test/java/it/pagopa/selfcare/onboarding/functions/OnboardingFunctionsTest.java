@@ -17,6 +17,9 @@ import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.HttpResponseMessageMock;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
+import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionGetEmailRequest;
+import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
+import it.pagopa.selfcare.onboarding.dto.UserMail;
 import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
@@ -96,10 +99,6 @@ class OnboardingFunctionsTest {
           "{\"id\":\"id\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":{\"id\":\"inst123\"},\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}";
 
   final String latestDocumentString = "{ \"id\": \"doc-001\", \"type\": \"INSTITUTION\", \"onboardingId\": \"onb-123\", \"productId\": \"prod-456\", \"attachmentName\": \"contract_attachment.pdf\", \"checksum\": \"a3f5c2d1e8b7094f6a2e1d3c5b8f7e2a1\", \"contractVersion\": \"1.0.0\", \"contractTemplate\": \"STANDARD_TEMPLATE\", \"contractSigned\": \"false\", \"contractFilename\": \"contract_2026_05_06.pdf\", \"rootOnboardingId\": \"onb-root-789\", \"createdAt\": \"2026-05-06T09:00:00\", \"updatedAt\": \"2026-05-06T10:30:00\", \"deletedAt\": null, \"activatedAt\": \"2026-05-06T09:15:00\", \"signingStep\": 1 }";
-
-  final String managingInstitutionEmailRequestString = "{ \"managingInstitutionId\": \"inst-12345\", \"productId\": \"prod-67890\", \"onboardingId\": \"onb-abcdef\" }";
-
-  final String managingInstitutionSendEmailString = "{ \"managingInstitutionId\": \"12345678901\", \"productId\": \"prod-001\", \"managingInstitutionDescription\": \"Istituto Gestore di esempio\", \"userMailUuid\": \"2f3a1c4e-8b6d-4f2a-9c1e-7d8a6b5c4d3e\" }";
 
   static ExecutionContext executionContext;
 
@@ -1268,7 +1267,15 @@ class OnboardingFunctionsTest {
     when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
     doNothing().when(service).sendMailManagingInstitution(any());
 
-    function.sendMailNotificationManagerInstitution(managingInstitutionSendEmailString, executionContext);
+    ManagingInstitutionSendEmail institutionSendEmail =
+        ManagingInstitutionSendEmail.builder()
+            .managingInstitutionId("id")
+            .productId("productId")
+            .managingInstitutionDescription("description")
+            .userMailUuid("mailUuid")
+            .build();
+
+    function.sendMailNotificationManagerInstitution(institutionSendEmail, executionContext);
 
     verify(service, times(1)).sendMailManagingInstitution(any());
   }
@@ -1340,11 +1347,17 @@ class OnboardingFunctionsTest {
   @Test
   void getUserEmailUuid() {
     when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
-    when(userService.findEmailUuidByInstitutionAndProducts(any(), anyList())).thenReturn(List.of("emailUuid"));
+    when(userService.findEmailByInstitutionAndProducts(any(), anyList())).thenReturn(List.of(UserMail.builder().build()));
+    ManagingInstitutionGetEmailRequest managingInstitutionEmailRequest =
+          ManagingInstitutionGetEmailRequest.builder()
+                  .managingInstitutionId("id")
+                  .productId("productId")
+                  .onboardingId("onboardingId")
+                  .build();
 
-    function.getUserEmailUuid(managingInstitutionEmailRequestString, executionContext);
+    function.getUserEmailUuid(managingInstitutionEmailRequest, executionContext);
 
-    verify(userService, times(1)).findEmailUuidByInstitutionAndProducts(any(), any());
+    verify(userService, times(1)).findEmailByInstitutionAndProducts(any(), any());
   }
 
   @Test
@@ -1946,7 +1959,7 @@ class OnboardingFunctionsTest {
     when(orchestrationContext.callActivity(eq(GET_MANAGING_INSTITUTION_ACTIVITY), any(), any(), eq(ManagingInstitution.class)))
             .thenReturn(getManagingInstitutionTask);
 
-    String emailsJson = Utils.getEmailListString(objectMapper, List.of("email-uuid"));
+    String emailsJson = Utils.getEmailListString(objectMapper, List.of(UserMail.builder().build()));
     Task<String> getUserEmailUuidTask = mockTaskWithValue(emailsJson);
     when(orchestrationContext.callActivity(eq(GET_USER_EMAIL_UUID_ACTIVITY), any(), any(), eq(String.class)))
             .thenReturn(getUserEmailUuidTask);
@@ -1967,6 +1980,7 @@ class OnboardingFunctionsTest {
     product.setId("test");
     product.setInstitutionContractMappings(createDummyContractTemplateInstitution());
     product.setUserContractMappings(createDummyContractTemplateInstitution());
+    product.setManagingInstitutions(List.of(createDummyManagingInstitution()));
 
     return product;
   }
@@ -2001,6 +2015,13 @@ class OnboardingFunctionsTest {
 
     institutionTemplate.put(Product.CONTRACT_TYPE_DEFAULT, conctractTemplate);
     return institutionTemplate;
+  }
+
+  private static ManagingInstitution createDummyManagingInstitution() {
+      ManagingInstitution managingInstitution = new ManagingInstitution();
+      managingInstitution.setInstitutionId("inst-123");
+      managingInstitution.setDescription("Managing Institution");
+      return managingInstitution;
   }
 
 }

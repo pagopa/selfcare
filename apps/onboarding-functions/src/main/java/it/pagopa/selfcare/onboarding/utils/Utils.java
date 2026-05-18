@@ -12,6 +12,7 @@ import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionGetEmailRequest;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.dto.OnboardingAggregateOrchestratorInput;
 import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
+import it.pagopa.selfcare.onboarding.dto.UserMail;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.OnboardingAttachment;
 import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
@@ -155,7 +156,7 @@ public class Utils {
     }
     return batchInputString;
   }
-
+  /*
   public static String getManagingInstitutionEmailRequestString(
       ObjectMapper objectMapper,
       String managingInstitutionId,
@@ -177,6 +178,7 @@ public class Utils {
     }
   }
 
+
   public static String getManagingInstitutionSendEmailString(
           ObjectMapper objectMapper,
           String managingInstitutionId,
@@ -191,6 +193,8 @@ public class Utils {
     }
   }
 
+
+
   public static ManagingInstitutionSendEmail readManagingInstitutionSendEmail(ObjectMapper objectMapper, String request) {
     try {
       return objectMapper.readValue(request, ManagingInstitutionSendEmail.class);
@@ -198,8 +202,8 @@ public class Utils {
       throw new FunctionOrchestratedException(e);
     }
   }
-
-  public static String getEmailListString(ObjectMapper objectMapper, List<String> emails) {
+   */
+  public static String getEmailListString(ObjectMapper objectMapper, List<UserMail> emails) {
     try {
       return objectMapper.writeValueAsString(emails);
     } catch (JsonProcessingException e) {
@@ -207,7 +211,7 @@ public class Utils {
     }
   }
 
-  public static List<String> readEmailList(ObjectMapper objectMapper, String emailsString) {
+  public static List<UserMail> readEmailList(ObjectMapper objectMapper, String emailsString) {
     try {
       return objectMapper.readValue(emailsString, new TypeReference<>() {});
     } catch (JsonProcessingException e) {

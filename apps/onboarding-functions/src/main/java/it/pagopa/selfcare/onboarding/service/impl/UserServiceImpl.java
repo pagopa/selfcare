@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.service.impl;
 
 
+import it.pagopa.selfcare.onboarding.dto.UserMail;
 import it.pagopa.selfcare.onboarding.service.UserService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -8,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_json.api.InstitutionApi;
 import org.openapi.quarkus.user_json.model.DeletedUserCountResponse;
+import org.openapi.quarkus.user_json.model.User;
 import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +34,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    public List<String> findEmailUuidByInstitutionAndProducts(String institutionId, List<String> products) {
+    public List<UserMail> findEmailByInstitutionAndProducts(String institutionId, List<String> products) {
         List<UserInstitutionResponse> userInstitutionResponses = institutionApi.retrieveUserInstitutions(
                 institutionId,
                 null,
@@ -46,10 +48,12 @@ public class UserServiceImpl implements UserService {
             return List.of();
         }
 
-        List<String> emails = userInstitutionResponses.stream()
-                .map(UserInstitutionResponse::getUserMailUuid)
-                .filter(StringUtils::isNotBlank)
-                .distinct()
+        List<UserMail> emails = userInstitutionResponses.stream()
+                .filter(userInstitutionResponse -> StringUtils.isNotBlank(userInstitutionResponse.getUserMailUuid()))
+                .map(userInstitutionResponse -> UserMail.builder()
+                        .userId(userInstitutionResponse.getUserId())
+                        .userMailUuid(userInstitutionResponse.getUserMailUuid())
+                        .build())
                 .toList();
 
         if (emails.isEmpty()) {
