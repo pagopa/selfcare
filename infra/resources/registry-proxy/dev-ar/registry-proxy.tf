@@ -124,7 +124,7 @@ locals {
 
   dapr_sidecar_settings = [
     {
-      app_id       = "party-reg-proxy"
+      app_id       = "selc-${module.local.config.env_short}-party-reg-proxy-ca"
       app_port     = 8080
       app_protocol = "http"
     }

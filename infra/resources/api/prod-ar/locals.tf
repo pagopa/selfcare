@@ -4,32 +4,101 @@
 module "local" {
   source = "../../_modules/local-env"
 
-  env       = "dev"
-  env_short = "d"
+  env       = "prod"
+  env_short = "p"
   domain    = "ar"
 
-  dns_zone_prefix                = "dev.selfcare"
-  api_dns_zone_prefix            = "api.dev.selfcare"
-  private_dns_name_domain        = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
-  container_app_environment_name = "selc-d-cae-002"
-  ca_resource_group_name         = "selc-d-container-app-002-rg"
+  dns_zone_prefix                = "selfcare"
+  api_dns_zone_prefix            = "api.selfcare"
+  private_dns_name_domain        = "lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-p-cae-002"
+  ca_resource_group_name         = "selc-p-container-app-002-rg"
   container_app_min_replicas     = 0
 }
 
 locals {
-  ca_base_name             = "selc-${module.local.config.env_short}-ext-api-backend"
+  ca_base_name = "selc-${module.local.config.env_short}-ext-api-backend"
+  ca_name      = "${local.ca_base_name}-ca"
+  # storage_logs    = "selc${module.local.config.env_short}stlogs"
+  # storage_logs_rg = "selc-${module.local.config.env_short}-logs-storage-rg"
+
+  # pnpg_suffix = var.is_pnpg == true ? "-pnpg" : ""
+  # project     = "selc-${var.env_short}"
+  # env_url     = var.env_short == "p" ? "" : ".${var.env}"
+  # env         = var.env
+
+  # container_app_environment_name = "${local.project}${local.pnpg_suffix}-${var.cae_name}"
+  # ca_resource_group_name         = "${local.project}-container-app${var.suffix_increment}-rg"
   monitor_rg_name          = "${module.local.config.prefix}-${module.local.config.env_short}-monitor-rg"
   monitor_appinsights_name = "${module.local.config.prefix}-${module.local.config.env_short}-appinsights"
+
+
+  lock_enable = false
+
+  # networking
+  cidr_subnet_apim = ["10.1.161.0/24"]
+
+
+  # apim
+  apim_publisher_name = "pagoPA SelfCare UAT"
+  apim_sku            = "Developer_1"
+
+  # aks
+  private_dns_name            = "selc.internal.selfcare.pagopa.it"
+  private_onboarding_dns_name = "selc-p-onboarding-ms-ca.lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
+  # ca_suffix_dns_private_name      = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
+  ca_pnpg_suffix_dns_private_name = "calmmoss-0be48755.westeurope.azurecontainerapps.io"
+
+  # app_gateway
+  app_gateway_api_certificate_name      = "api-selfcare-pagopa-it"
+  app_gateway_api_pnpg_certificate_name = "api-pnpg-selfcare-pagopa-it"
 
   container_app = {
     min_replicas = module.local.config.container_app.min_replicas
     max_replicas = module.local.config.container_app.max_replicas
     scale_rules  = module.local.config.container_app.scale_rules
-    cpu          = 0.5
-    memory       = "1Gi"
+    cpu          = 1.25
+    memory       = "2.5Gi"
   }
 
+  spring_boot_health_probes = [
+    {
+      httpGet = {
+        path   = "/actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Liveness"
+      failureThreshold    = 3
+      initialDelaySeconds = 1
+    },
+    {
+      httpGet = {
+        path   = "/actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Readiness"
+      failureThreshold    = 30
+      initialDelaySeconds = 30
+    },
+    {
+      httpGet = {
+        path   = "/actuator/health"
+        port   = 8080
+        scheme = "HTTP"
+      }
+      timeoutSeconds      = 30
+      type                = "Startup"
+      failureThreshold    = 30
+      initialDelaySeconds = 60
+    }
+  ]
+
   app_settings = [
+
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
       value = "external-api"
@@ -76,7 +145,7 @@ locals {
     },
     {
       name  = "USERVICE_USER_REGISTRY_URL"
-      value = "https://api.uat.pdv.pagopa.it/user-registry/v1"
+      value = "https://api.pdv.pagopa.it/user-registry/v1"
     },
     {
       name  = "USERVICE_PARTY_MANAGEMENT_URL"
@@ -93,6 +162,10 @@ locals {
     {
       name  = "MS_DOCUMENT_URL"
       value = "http://selc-${module.local.config.env_short}-document-ms-ca"
+    },
+    {
+      name  = "PRODUCT_STORAGE_CONTAINER"
+      value = "selc-${module.local.config.env_short}-product"
     }
   ]
 
@@ -102,6 +175,7 @@ locals {
     "USERVICE_USER_REGISTRY_API_KEY"         = "user-registry-api-key"
     "JWT_TOKEN_PUBLIC_KEY"                   = "jwt-public-key"
     "BLOB_STORAGE_PRODUCT_CONNECTION_STRING" = "blob-storage-product-connection-string"
+
   }
 
   probes = [
