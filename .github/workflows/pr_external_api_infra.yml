@@ -20,6 +20,7 @@ on:
       - ready_for_review
     paths:
       - 'infra/resources/external-api/**'
+      - 'infra/resources/api/dev-ar/**'
       - '.github/workflows/pr_external_api_infra.yml'
       - '.github/workflows/call_code_review_infra.yml'
 
@@ -33,6 +34,18 @@ jobs:
       environment: dev
       dir: ./infra/resources/external-api/dev-ar
       tf_environment: dev-ar
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+
+  code_review_dev_ar_api:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[DEV-AR] API Infra Code Review'
+    if: ${{ !startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: dev
+      dir: ./infra/resources/api/dev-ar
+      tf_environment: api-dev-ar
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
 
