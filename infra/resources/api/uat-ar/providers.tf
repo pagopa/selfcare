@@ -20,9 +20,9 @@ terraform {
 
   backend "azurerm" {
     resource_group_name  = "io-infra-rg"
-    storage_account_name = "selcdstinfraterraform"
+    storage_account_name = "selcustinfraterraform"
     container_name       = "azurermstate"
-    key                  = "selc.infra.resources.external-api.dev-ar.tfstate"
+    key                  = "selc.infra.resources.api.uat-ar.tfstate"
     use_azuread_auth     = true
   }
 
@@ -36,3 +36,4 @@ provider "azurerm" {
 provider "github" {
   owner = "pagopa"
 }
+
