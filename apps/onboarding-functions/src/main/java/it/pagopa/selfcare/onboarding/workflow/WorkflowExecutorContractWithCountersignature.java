@@ -123,7 +123,7 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
             document.getProductId());
 
         emailsUuid.forEach(
-            emailUuid -> {
+            emailUuid ->
               ctx.callActivity(
                       SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION,
                       getManagingInstitutionSendEmailString(
@@ -134,8 +134,8 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
                           emailUuid),
                       optionsRetry,
                       String.class)
-                  .await();
-            });
+                  .await()
+            );
 
         return Optional.of(OnboardingStatus.PENDING_IN_REVIEW);
     }

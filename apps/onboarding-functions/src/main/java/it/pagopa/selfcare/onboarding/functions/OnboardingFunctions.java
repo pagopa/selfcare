@@ -61,6 +61,11 @@ public class OnboardingFunctions {
       "Created new Onboarding orchestration with instance ID = ";
   private static final String CREATED_NEW_BUILD_ATTACHMENTS_ORCHESTRATION_WITH_INSTANCE_ID_MSG =
       "Created new Build Attachments orchestration with instance ID = ";
+  public static final String PRODUCT_ID = "productId";
+  public static final String ONBOARDING_ID = "onboardingId";
+  public static final String MANAGING_INSTITUTION_ID = "managingInstitutionId";
+  public static final String MANAGING_INSTITUTION_DESCRIPTION = "managingInstitutionDescription";
+  public static final String USER_MAIL_UUID = "userMailUuid";
 
   private final OnboardingService service;
   private final CompletionService completionService;
@@ -120,10 +125,10 @@ public class OnboardingFunctions {
       @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
       final ExecutionContext context) {
 
-    final String onboardingId = request.getQueryParameters().get("onboardingId");
+    final String onboardingId = request.getQueryParameters().get(ONBOARDING_ID);
     final String timeoutString = request.getQueryParameters().get("timeout");
 
-    Map<String, String> properties = Map.of("onboardingId", onboardingId);
+    Map<String, String> properties = Map.of(ONBOARDING_ID, onboardingId);
 
     telemetryService.trackFunction(
         START_ONBOARDING_ORCHESTRATION,
@@ -187,7 +192,7 @@ public class OnboardingFunctions {
           functionContext.getFunctionName(),
           "Error checking delegation, proceeding as if it exist: " + e.getMessage(),
           SeverityLevel.Warning,
-          Map.of("onboardingId", onboardingId == null ? "unknown" : onboardingId));
+          Map.of(ONBOARDING_ID, onboardingId == null ? "unknown" : onboardingId));
       existsDelegation = true;
     }
     try {
@@ -247,7 +252,7 @@ public class OnboardingFunctions {
               String.format(
                   "Processing aggregate batch [%d-%d] of %d total for onboarding %s",
                   logCurrentIndex, logEndIndex - 1, allInputs.size(), batchInput.getOnboardingId()),
-          Map.of("onboardingId", batchInput.getOnboardingId()));
+          Map.of(ONBOARDING_ID, batchInput.getOnboardingId()));
 
       // Process batch in parallel (controlled)
       List<Task<String>> batchTasks = new ArrayList<>();
@@ -267,7 +272,7 @@ public class OnboardingFunctions {
               String.format(
                   "Single aggregate orchestration failed during batch processing for onboarding %s, input [%s]: %s",
                   batchInput.getOnboardingId(), failedInput, e.getMessage()),
-              Map.of("onboardingId", batchInput.getOnboardingId()));
+              Map.of(ONBOARDING_ID, batchInput.getOnboardingId()));
         }
       }
 
@@ -288,7 +293,7 @@ public class OnboardingFunctions {
       ctx.continueAsNew(nextInput);
     } else {
       log(ctx, functionContext, SeverityLevel.Information,() -> String.format(
-          "Completed all aggregate batches for onboarding %s", batchInput.getOnboardingId()), Map.of("onboardingId", batchInput.getOnboardingId()));
+          "Completed all aggregate batches for onboarding %s", batchInput.getOnboardingId()), Map.of(ONBOARDING_ID, batchInput.getOnboardingId()));
     }
   }
 
@@ -308,7 +313,7 @@ public class OnboardingFunctions {
         ONBOARDINGS,
         "OnboardingsOrchestrator trigger processed a request for onboardingId: " + onboardingId,
         SeverityLevel.Information,
-        Map.of("onboardingId", onboardingId));
+        Map.of(ONBOARDING_ID, onboardingId));
 
     try {
       onboarding =
@@ -462,7 +467,7 @@ public class OnboardingFunctions {
         functionContext,
         SeverityLevel.Information,
         "BuildAttachmentAndSaveToken orchestration completed",
-        Map.of("onboardingId", onboarding.getId(), "productId", onboarding.getProductId()));
+        Map.of(ONBOARDING_ID, onboarding.getId(), PRODUCT_ID, onboarding.getProductId()));
   }
 
   private void log(
@@ -497,7 +502,7 @@ public class OnboardingFunctions {
         fCtx,
         SeverityLevel.Warning,
         "Error during workflow execution: " + ex.getMessage(),
-        Map.of("onboardingId", onboardingId));
+        Map.of(ONBOARDING_ID, onboardingId));
     service.updateOnboardingStatusAndInstanceId(onboardingId, OnboardingStatus.FAILED, ctx.getInstanceId());
   }
 
@@ -510,8 +515,8 @@ public class OnboardingFunctions {
 
     Map<String, String> properties =
         Map.of(
-            "onboardingId", onboardingAttachment.getOnboarding().getId(),
-            "productId", onboardingAttachment.getOnboarding().getProductId());
+            ONBOARDING_ID, onboardingAttachment.getOnboarding().getId(),
+            PRODUCT_ID, onboardingAttachment.getOnboarding().getProductId());
     telemetryService.trackFunction(
         BUILD_ATTACHMENT_ACTIVITY_NAME,
         String.format(
@@ -532,8 +537,8 @@ public class OnboardingFunctions {
         readOnboardingWorkflowValue(objectMapper, onboardingWorkflowString);
     Map<String, String> properties =
         Map.of(
-            "onboardingId", onboardingWorkflow.getOnboarding().getId(),
-            "productId", onboardingWorkflow.getOnboarding().getProductId());
+            ONBOARDING_ID, onboardingWorkflow.getOnboarding().getId(),
+            PRODUCT_ID, onboardingWorkflow.getOnboarding().getProductId());
     telemetryService.trackFunction(
         SAVE_TOKEN_WITH_CONTRACT_ACTIVITY_NAME,
         String.format(
@@ -554,8 +559,8 @@ public class OnboardingFunctions {
     OnboardingAttachment onboardingAttachment = readOnboardingAttachmentValue(objectMapper, onboardingAttachmentString);
     Map<String, String> properties =
         Map.of(
-            "onboardingId", onboardingAttachment.getOnboarding().getId(),
-            "productId", onboardingAttachment.getOnboarding().getProductId());
+            ONBOARDING_ID, onboardingAttachment.getOnboarding().getId(),
+            PRODUCT_ID, onboardingAttachment.getOnboarding().getProductId());
     telemetryService.trackFunction(
         SAVE_TOKEN_WITH_ATTACHMENT_ACTIVITY_NAME,
         String.format(
@@ -581,8 +586,8 @@ public class OnboardingFunctions {
             onboardingWorkflowString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboardingWorkflow.getOnboarding().getId(),
-            "productId", onboardingWorkflow.getOnboarding().getProductId()));
+            ONBOARDING_ID, onboardingWorkflow.getOnboarding().getId(),
+            PRODUCT_ID, onboardingWorkflow.getOnboarding().getProductId()));
     service.sendMailRegistrationForContract(onboardingWorkflow);
   }
 
@@ -599,8 +604,8 @@ public class OnboardingFunctions {
             onboardingWorkflowString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboardingWorkflow.getOnboarding().getId(),
-            "productId", onboardingWorkflow.getOnboarding().getProductId()));
+            ONBOARDING_ID, onboardingWorkflow.getOnboarding().getId(),
+            PRODUCT_ID, onboardingWorkflow.getOnboarding().getProductId()));
     service.sendMailRegistrationForContractWhenApprove(onboardingWorkflow);
   }
 
@@ -617,8 +622,8 @@ public class OnboardingFunctions {
             onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     service.sendMailRegistration(onboarding);
   }
 
@@ -634,8 +639,8 @@ public class OnboardingFunctions {
             FORMAT_LOGGER_ONBOARDING_STRING, SEND_MAIL_REGISTRATION_FOR_USER, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     service.sendMailRegistrationForUser(onboarding);
   }
 
@@ -653,10 +658,10 @@ public class OnboardingFunctions {
                     managingInstitutionSendEmailString),
             SeverityLevel.Information,
             Map.of(
-                    "productId", request.getProductId(),
-                    "managingInstitutionId", request.getManagingInstitutionId(),
-                    "managingInstitutionDescription", request.getManagingInstitutionDescription(),
-                    "userMailUuid", request.getUserMailUuid()));
+                    PRODUCT_ID, request.getProductId(),
+                    MANAGING_INSTITUTION_ID, request.getManagingInstitutionId(),
+                    MANAGING_INSTITUTION_DESCRIPTION, request.getManagingInstitutionDescription(),
+                    USER_MAIL_UUID, request.getUserMailUuid()));
     service.sendMailManagingInstitution(request);
   }
 
@@ -673,8 +678,8 @@ public class OnboardingFunctions {
             onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     service.sendMailRegistrationForUserRequester(onboarding);
   }
 
@@ -689,8 +694,8 @@ public class OnboardingFunctions {
         String.format(FORMAT_LOGGER_ONBOARDING_STRING, SAVE_VISURA_FOR_MERCHANT, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     service.saveVisuraForMerchant(onboarding);
   }
 
@@ -708,8 +713,8 @@ public class OnboardingFunctions {
             onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     service.sendMailRegistrationApprove(onboarding);
   }
 
@@ -726,8 +731,8 @@ public class OnboardingFunctions {
             onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     service.sendMailOnboardingApprove(onboarding);
   }
 
@@ -742,8 +747,8 @@ public class OnboardingFunctions {
             FORMAT_LOGGER_ONBOARDING_STRING, CREATE_INSTITUTION_ACTIVITY, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     return completionService.createInstitutionAndPersistInstitutionId(onboarding);
   }
 
@@ -758,8 +763,8 @@ public class OnboardingFunctions {
             FORMAT_LOGGER_ONBOARDING_STRING, STORE_ONBOARDING_ACTIVATEDAT, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     completionService.persistActivatedAt(readOnboardingValue(objectMapper, onboardingString));
   }
 
@@ -774,8 +779,8 @@ public class OnboardingFunctions {
             FORMAT_LOGGER_ONBOARDING_STRING, REJECT_OUTDATED_ONBOARDINGS, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     completionService.rejectOutdatedOnboardings(onboarding);
   }
 
@@ -790,8 +795,8 @@ public class OnboardingFunctions {
             FORMAT_LOGGER_ONBOARDING_STRING, CREATE_ONBOARDING_ACTIVITY, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     completionService.persistOnboarding(onboarding);
   }
 
@@ -808,8 +813,8 @@ public class OnboardingFunctions {
             onboardingWorkflowString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboardingWorkflow.getOnboarding().getId(),
-            "productId", onboardingWorkflow.getOnboarding().getProductId()));
+            ONBOARDING_ID, onboardingWorkflow.getOnboarding().getId(),
+            PRODUCT_ID, onboardingWorkflow.getOnboarding().getProductId()));
     completionService.sendCompletedEmail(onboardingWorkflow);
   }
 
@@ -824,8 +829,8 @@ public class OnboardingFunctions {
             FORMAT_LOGGER_ONBOARDING_STRING, SEND_MAIL_REJECTION_ACTIVITY, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     completionService.sendMailRejection(context, onboarding);
   }
 
@@ -839,8 +844,8 @@ public class OnboardingFunctions {
         String.format(FORMAT_LOGGER_ONBOARDING_STRING, CREATE_USERS_ACTIVITY, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     completionService.persistUsers(onboarding);
   }
 
@@ -860,8 +865,8 @@ public class OnboardingFunctions {
             onboardingAggregateOrchestratorInputString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     return completionService.createAggregateOnboardingRequest(onboarding);
   }
 
@@ -876,8 +881,8 @@ public class OnboardingFunctions {
             FORMAT_LOGGER_ONBOARDING_STRING, CREATE_DELEGATION_ACTIVITY, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     return completionService.createDelegation(onboarding);
   }
 
@@ -893,8 +898,8 @@ public class OnboardingFunctions {
             FORMAT_LOGGER_ONBOARDING_STRING, EXISTS_DELEGATION_ACTIVITY, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     return completionService.existsDelegation(onboarding);
   }
 
@@ -912,8 +917,8 @@ public class OnboardingFunctions {
             onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     return completionService.verifyOnboardingAggregate(onboarding);
   }
 
@@ -948,8 +953,8 @@ public class OnboardingFunctions {
             onboardingWorkflowString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboardingWorkflow.getOnboarding().getId(),
-            "productId", onboardingWorkflow.getOnboarding().getProductId()));
+            ONBOARDING_ID, onboardingWorkflow.getOnboarding().getId(),
+            PRODUCT_ID, onboardingWorkflow.getOnboarding().getProductId()));
     DocumentContentControllerApi.UploadAggregatesCsvMultipartForm request =
         contractService.requestUploadAggregatesCsv(onboardingWorkflow);
     String onboardingId = onboardingWorkflow.getOnboarding().getId();
@@ -969,8 +974,8 @@ public class OnboardingFunctions {
             FORMAT_LOGGER_ONBOARDING_STRING, RETRIEVE_AGGREGATES_ACTIVITY, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     List<DelegationResponse> delegationResponseList =
         completionService.retrieveAggregates(onboarding);
     return getDelegationResponseListString(objectMapper, delegationResponseList);
@@ -989,8 +994,8 @@ public class OnboardingFunctions {
             onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     service.updateOnboardingExpiringDate(onboarding);
   }
 
@@ -1007,8 +1012,8 @@ public class OnboardingFunctions {
             onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     return productService.getProductIsValid(onboarding.getProductId()).getSigningConfiguration();
   }
 
@@ -1025,8 +1030,8 @@ public class OnboardingFunctions {
                     onboardingString),
             SeverityLevel.Information,
             Map.of(
-                    "onboardingId", onboarding.getId(),
-                    "productId", onboarding.getProductId()));
+                    ONBOARDING_ID, onboarding.getId(),
+                    PRODUCT_ID, onboarding.getProductId()));
     return productService.getProductIsValid(onboarding.getProductId()).getManagingInstitutions();
   }
 
@@ -1044,9 +1049,9 @@ public class OnboardingFunctions {
                     managingInstitutionEmailRequestString),
             SeverityLevel.Information,
             Map.of(
-                    "onboardingId", request.getOnboardingId(),
-                    "productId", request.getProductId(),
-                    "managingInstitutionId", request.getManagingInstitutionId()));
+                    ONBOARDING_ID, request.getOnboardingId(),
+                    PRODUCT_ID, request.getProductId(),
+                    MANAGING_INSTITUTION_ID, request.getManagingInstitutionId()));
     List<String> emailsUuid = userService.findEmailUuidByInstitutionAndProducts(
         request.getManagingInstitutionId(),
         List.of(request.getProductId()));
