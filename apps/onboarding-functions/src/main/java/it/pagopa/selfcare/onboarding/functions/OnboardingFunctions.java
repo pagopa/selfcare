@@ -1055,6 +1055,7 @@ public class OnboardingFunctions {
     List<String> emailsUuid = userService.findEmailUuidByInstitutionAndProducts(
         request.getManagingInstitutionId(),
         List.of(request.getProductId()));
+    context.getLogger().info(String.valueOf(emailsUuid.size()));
     return getEmailListString(objectMapper, emailsUuid);
   }
 

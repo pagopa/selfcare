@@ -101,12 +101,16 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
                 ctx.callActivity(GET_MANAGING_INSTITUTION_ACTIVITY,onboardingString,optionsRetry,ManagingInstitution.class)
                     .await()).get(0);
 
+        log.info(managingInstitution.getInstitutionId());
+
         String managingInstitutionEmailRequestString =
             getManagingInstitutionEmailRequestString(
                 objectMapper,
                 managingInstitution.getInstitutionId(),
                 document.getProductId(),
                 onboardingWorkflow.getOnboarding().getId());
+
+        log.info(managingInstitutionEmailRequestString);
 
         String emailsString =
             ctx.callActivity(
