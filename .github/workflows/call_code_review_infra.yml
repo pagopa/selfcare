@@ -37,38 +37,49 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-        name: Checkout
+      # - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      #   name: Checkout
 
-      - name: Set Environment Variables
-        if: ${{ inputs.env_vars }}
-        run: |
-          for i in "${{ inputs.env_vars }}"
-          do
-            printf "%s\n" $i >> $GITHUB_ENV
-          done
+      # - name: Set Environment Variables
+      #   if: ${{ inputs.env_vars }}
+      #   run: |
+      #     for i in "${{ inputs.env_vars }}"
+      #     do
+      #       printf "%s\n" $i >> $GITHUB_ENV
+      #     done
 
-      - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+      # - name: Cloud Login
+      #   uses: pagopa/dx/actions/csp-login@main
 
-      - name: Set Terraform Version
-        id: set-terraform-version
-        run: |
-          echo "terraform_version=$(cat .terraform-version)" >> $GITHUB_OUTPUT
+      # - name: Set Terraform Version
+      #   id: set-terraform-version
+      #   run: |
+      #     echo "terraform_version=$(cat .terraform-version)" >> $GITHUB_OUTPUT
 
-      - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # v3.0.0
-        name: Setup Terraform
+      # - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # v3.0.0
+      #   name: Setup Terraform
+      #   with:
+      #     terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
+
+      # - name: Terraform Init
+      #   working-directory: ${{ inputs.dir }}
+      #   shell: bash
+      #   run: |
+      #     terraform init
+
+      # - name: Terraform Plan
+      #   working-directory: ${{ inputs.dir }}
+      #   shell: bash
+      #   run: |
+      #     terraform plan
+      - uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+        name: "[${{ inputs.environment }}-${{ inputs.domain }}] ${{ inputs.app }} Infra Plan"
+        needs: [prepare]
+        secrets: inherit
         with:
-          terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
-
-      - name: Terraform Init
-        working-directory: ${{ inputs.dir }}
-        shell: bash
-        run: |
-          terraform init
-
-      - name: Terraform Plan
-        working-directory: ${{ inputs.dir }}
-        shell: bash
-        run: |
-          terraform plan
+          environment: ${{ inputs.tf_environment }}
+          base_path: ${{ inputs.dir }}
+          env_vars: ${{ inputs.env_vars }}
+          use_private_agent: true
+          use_labels: true
+          override_labels: ${{ inputs.environment }}
