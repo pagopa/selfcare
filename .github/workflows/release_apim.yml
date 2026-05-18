@@ -1,0 +1,84 @@
+name: Release - APIM
+
+permissions:
+  contents: read
+  id-token: write
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'infra/resources/api/**'
+
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options:
+          - dev
+          - uat
+          - prod
+
+jobs:
+  # prepare:
+  #   name: Prepare Image Tag
+  #   runs-on: ubuntu-24.04
+  #   outputs:
+  #     image_tag: ${{ steps.setsha.outputs.short_sha }}
+  #   steps:
+  #     - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+  #     - name: Set Short Git Commit SHA
+  #       id: setsha
+  #       run: |
+  #         calculatedSha=$(git rev-parse --short ${{ github.sha }})
+  #         echo "short_sha=sha-$calculatedSha" >> $GITHUB_OUTPUT
+
+  #     - name: Wait for Docker image to be available
+  #       env:
+  #         IMAGE_TAG: ${{ steps.setsha.outputs.short_sha }}
+  #       run: |
+  #         IMAGE="ghcr.io/pagopa/selfcare-registry-proxy-ms:${IMAGE_TAG}"
+  #         echo "Waiting for image: ${IMAGE}"
+  #         for i in $(seq 1 30); do
+  #           if docker manifest inspect "${IMAGE}" > /dev/null 2>&1; then
+  #             echo "Image found!"
+  #             exit 0
+  #           fi
+  #           echo "Attempt ${i}/30 - Image not found yet, waiting 60s..."
+  #           sleep 60
+  #         done
+  #         echo "::error::Image ${IMAGE} not found after 30 minutes"
+  #         exit 1
+
+  release_dev_ar:
+    uses: ./.github/workflows/call_release_infra.yml
+    name: '[Dev] APIM'
+    if: ${{ ((startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev') }}
+    secrets: inherit
+    with:
+      environment: dev
+      dir: infra/resources/api/dev-ar
+      # runner: "self-hosted"
+
+  release_uat_ar:
+    uses: ./.github/workflows/call_release_infra.yml
+    name: '[UAT] APIM'
+    if: ${{ ((startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat') }}
+    secrets: inherit
+    with:
+      environment: uat
+      dir: infra/resources/api/uat-ar
+      # runner: "self-hosted"
+
+  release_prod_ar:
+    uses: ./.github/workflows/call_release_infra.yml
+    name: '[Prod] APIM'
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod
+      dir: infra/resources/api/prod-ar
+      # runner: "self-hosted"
+

@@ -21,6 +21,8 @@ on:
     paths:
       - 'infra/resources/external-api/**'
       - 'infra/resources/api/dev-ar/**'
+      - 'infra/resources/api/uat-ar/**'
+      - 'infra/resources/api/prod-ar/**'
       - '.github/workflows/pr_external_api_infra.yml'
       - '.github/workflows/call_code_review_infra.yml'
 
@@ -61,6 +63,18 @@ jobs:
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
 
+  code_review_uat_ar_api:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[UAT-AR] API Infra Code Review'
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: uat
+      dir: ./infra/resources/api/uat-ar
+      tf_environment: api-uat-ar
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+
   code_review_prod_ar:
     uses: ./.github/workflows/call_code_review_infra.yml
     name: '[PROD-AR] External API Infra Code Review'
@@ -70,5 +84,17 @@ jobs:
       environment: prod
       dir: ./infra/resources/external-api/prod-ar
       tf_environment: prod-ar
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+
+  code_review_prod_ar_api:
+    uses: ./.github/workflows/call_code_review_infra.yml
+    name: '[PROD-AR] API Infra Code Review'
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: prod
+      dir: ./infra/resources/api/prod-ar
+      tf_environment: api-prod-ar
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
