@@ -30,7 +30,7 @@ jobs:
     with:
       environment: dev
       dir: infra/resources/api/dev-ar
-      # runner: "self-hosted"
+      runner: "self-hosted"
 
   release_uat_ar:
     uses: ./.github/workflows/call_release_infra.yml
@@ -40,7 +40,7 @@ jobs:
     with:
       environment: uat
       dir: infra/resources/api/uat-ar
-      # runner: "self-hosted"
+      runner: "self-hosted"
 
   release_prod_ar:
     uses: ./.github/workflows/call_release_infra.yml
@@ -50,5 +50,5 @@ jobs:
     with:
       environment: prod
       dir: infra/resources/api/prod-ar
-      # runner: "self-hosted"
+      runner: "self-hosted"
 
