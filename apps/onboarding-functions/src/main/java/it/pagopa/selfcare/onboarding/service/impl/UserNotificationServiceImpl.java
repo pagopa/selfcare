@@ -6,14 +6,11 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_json.api.UserApi;
 import org.openapi.quarkus.user_json.model.SendMailDto;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 @ApplicationScoped
+@Slf4j
 public class UserNotificationServiceImpl implements UserNotificationService {
-
-  private static final Logger log = LoggerFactory.getLogger(UserNotificationServiceImpl.class);
-
   private final UserApi userApi;
 
   @Inject
@@ -23,6 +20,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
   @Override
   public void sendMailRequest(String userId, SendMailDto sendMailDto) {
+    log.debug("Sending mail request to user service: userId={}", userId);
     try {
       userApi.sendMailRequest(userId, sendMailDto);
     } catch (Exception e) {

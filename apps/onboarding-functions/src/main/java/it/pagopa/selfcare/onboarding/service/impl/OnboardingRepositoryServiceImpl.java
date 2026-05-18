@@ -25,11 +25,13 @@ public class OnboardingRepositoryServiceImpl implements OnboardingRepositoryServ
 
     @Override
     public Optional<Onboarding> findById(String onboardingId) {
+        log.debug("Finding onboarding by id: onboardingId={}", onboardingId);
         return onboardingRepository.findByIdOptional(onboardingId);
     }
 
     @Override
     public void update(Onboarding onboarding) {
+        log.debug("Updating onboarding entity: onboardingId={}", onboarding != null ? onboarding.getId() : null);
         onboardingRepository.update(onboarding);
     }
 
@@ -68,11 +70,13 @@ public class OnboardingRepositoryServiceImpl implements OnboardingRepositoryServ
 
     @Override
     public long countByQuery(Document query) {
+        log.debug("Counting onboardings by query");
         return onboardingRepository.find(query).count();
     }
 
     @Override
     public List<Onboarding> findByQueryPaged(Document query, int page, int pageSize) {
+        log.debug("Finding onboardings by query paged: page={}, pageSize={}", page, pageSize);
         return onboardingRepository.find(query).page(page, pageSize).list();
     }
 
@@ -83,11 +87,13 @@ public class OnboardingRepositoryServiceImpl implements OnboardingRepositoryServ
             String origin,
             String originId,
             String productId) {
+        log.debug("Finding onboardings by filters: taxCode={}, subunitCode={}, origin={}, originId={}, productId={}", taxCode, subunitCode, origin, originId, productId);
         return onboardingRepository.findByFilters(taxCode, subunitCode, origin, originId, productId);
     }
 
     @Override
     public List<Onboarding> findByOnboardingUsers(String institutionId, String productId) {
+        log.debug("Finding onboarding users: institutionId={}, productId={}", institutionId, productId);
         return onboardingRepository.findByOnboardingUsers(institutionId, productId);
     }
 }

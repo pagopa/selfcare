@@ -4,6 +4,7 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.service.UserInstitutionRestService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.model.OnboardedProductResponse;
@@ -11,6 +12,7 @@ import org.openapi.quarkus.user_json.api.InstitutionApi;
 import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
 
 @ApplicationScoped
+@Slf4j
 public class UserInstitutionRestServiceImpl implements UserInstitutionRestService {
 
   private final InstitutionApi userInstitutionApi;
@@ -25,6 +27,7 @@ public class UserInstitutionRestServiceImpl implements UserInstitutionRestServic
     String institutionId,
     String productId,
     OnboardedProductResponse.StatusEnum status) {
+    log.debug("Retrieving active managers: institutionId={}, productId={}, status={}", institutionId, productId, status);
     return userInstitutionApi.retrieveUserInstitutions(
       institutionId,
       null,
