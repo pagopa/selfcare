@@ -14,7 +14,6 @@ import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.mapper.AttachmentPdfRequestMapper;
 import it.pagopa.selfcare.onboarding.mapper.ContractPdfRequestMapper;
 import it.pagopa.selfcare.onboarding.mapper.DocumentBuilderRequestMapper;
-import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
 import it.pagopa.selfcare.onboarding.service.*;
 import it.pagopa.selfcare.onboarding.utils.GenericError;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
@@ -70,8 +69,7 @@ public class OnboardingServiceImpl implements OnboardingService {
   private final UserNotificationService userNotificationService;
   private final InfocamereService infocamereService;
 
-  //JPA
-  private final OnboardingRepository onboardingRepository;
+  private final OnboardingRepositoryService onboardingPersistenceService;
 
   public OnboardingServiceImpl(
           ProductService productService,
@@ -82,7 +80,7 @@ public class OnboardingServiceImpl implements OnboardingService {
           ContractPdfRequestMapper contractPdfRequestMapper,
           AttachmentPdfRequestMapper attachmentPdfRequestMapper,
           DocumentBuilderRequestMapper documentBuilderRequestMapper,
-          OnboardingRepository onboardingRepository,
+          OnboardingRepositoryService onboardingPersistenceService,
           PdvUserRegistryService pdvUserRegistryService,
           UserInstitutionRestService userInstitutionRestService,
           UserNotificationService userNotificationService,
@@ -95,7 +93,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     this.contractPdfRequestMapper  = contractPdfRequestMapper;
     this.attachmentPdfRequestMapper = attachmentPdfRequestMapper;
     this.documentBuilderRequestMapper = documentBuilderRequestMapper;
-    this.onboardingRepository = onboardingRepository;
+    this.onboardingPersistenceService = onboardingPersistenceService;
     this.pdvUserRegistryService = pdvUserRegistryService;
     this.userInstitutionRestService = userInstitutionRestService;
     this.userNotificationService = userNotificationService;
@@ -103,7 +101,7 @@ public class OnboardingServiceImpl implements OnboardingService {
   }
 
   public Optional<Onboarding> getOnboarding(String onboardingId) {
-    return onboardingRepository.findByIdOptional(onboardingId);
+    return onboardingPersistenceService.findById(onboardingId);
   }
 
   public void createContract(OnboardingWorkflow onboardingWorkflow) {
@@ -285,7 +283,7 @@ public class OnboardingServiceImpl implements OnboardingService {
   public void updateOnboardingExpiringDate(Onboarding onboarding) {
     Integer onboardingExpirationDays = productService.getProductExpirationDate(onboarding.getProductId());
     onboarding.setExpiringDate(OffsetDateTime.now().plusDays(onboardingExpirationDays).toLocalDateTime());
-    onboardingRepository.update(onboarding);
+    onboardingPersistenceService.update(onboarding);
   }
 
   public void sendMailOnboardingApprove(Onboarding onboarding) {
@@ -340,20 +338,13 @@ public class OnboardingServiceImpl implements OnboardingService {
   }
 
   public void updateOnboardingStatus(String onboardingId, OnboardingStatus status) {
-      onboardingRepository
-      .update("status = ?1 and updatedAt = ?2", status.name(), LocalDateTime.now())
-      .where("_id", onboardingId);
+    onboardingPersistenceService.updateStatus(onboardingId, status.name(), LocalDateTime.now());
   }
 
   public void updateOnboardingStatusAndInstanceId(
     String onboardingId, OnboardingStatus status, String instanceId) {
-      onboardingRepository
-      .update(
-        "status = ?1 and workflowInstanceId = ?2 and updatedAt = ?3",
-        status.name(),
-        instanceId,
-        LocalDateTime.now())
-      .where("_id", onboardingId);
+    onboardingPersistenceService.updateStatusAndInstanceId(
+      onboardingId, status.name(), instanceId, LocalDateTime.now());
   }
 
   public List<NotificationCountResult> countNotifications(
@@ -376,8 +367,8 @@ public class OnboardingServiceImpl implements OnboardingService {
     Document queryAddEvent = getQueryNotificationAdd(productId, from, to);
     Document queryUpdateEvent = getQueryNotificationDelete(productId, from, to);
 
-    long countAddEvents = onboardingRepository.find(queryAddEvent).count();
-    long countUpdateEvents = onboardingRepository.find(queryUpdateEvent).count();
+    long countAddEvents = onboardingPersistenceService.countByQuery(queryAddEvent);
+    long countUpdateEvents = onboardingPersistenceService.countByQuery(queryUpdateEvent);
     long total = countUpdateEvents + countAddEvents;
 
     context
@@ -459,7 +450,7 @@ public class OnboardingServiceImpl implements OnboardingService {
 
   public List<Onboarding> getOnboardingsToResend(
     ResendNotificationsFilters filters, int page, int pageSize) {
-    return onboardingRepository.find(createQueryByFilters(filters)).page(page, pageSize).list();
+    return onboardingPersistenceService.findByQueryPaged(createQueryByFilters(filters), page, pageSize);
   }
 
   private Document createQueryByFilters(ResendNotificationsFilters filters) {
@@ -546,7 +537,7 @@ public class OnboardingServiceImpl implements OnboardingService {
   private List<UserInstitutionResponse> getUserInstitutions(Onboarding onboarding) {
 
     // Retrieve all onboardings for data in input
-    List<Onboarding> onboardings = onboardingRepository.findByFilters(
+    List<Onboarding> onboardings = onboardingPersistenceService.findByFilters(
       onboarding.getInstitution().getTaxCode(),
       onboarding.getInstitution().getSubunitCode(),
       onboarding.getInstitution().getOrigin().name(),
@@ -563,7 +554,7 @@ public class OnboardingServiceImpl implements OnboardingService {
   }
 
   public List<String> findByInstitutionAndProduct(String institutionId, String productId) {
-        var onboardings = onboardingRepository.findByOnboardingUsers(institutionId, productId);
+        var onboardings = onboardingPersistenceService.findByOnboardingUsers(institutionId, productId);
         if (onboardings.isEmpty()) {
             return List.of();
         }
