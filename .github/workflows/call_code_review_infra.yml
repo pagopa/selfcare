@@ -74,7 +74,6 @@ jobs:
       #     terraform plan
       - uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
         name: "[${{ inputs.environment }}-${{ inputs.domain }}] ${{ inputs.app }} Infra Plan"
-        secrets: inherit
         with:
           environment: ${{ inputs.tf_environment }}
           base_path: ${{ inputs.dir }}
