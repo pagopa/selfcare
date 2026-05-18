@@ -30,6 +30,7 @@ jobs:
     with:
       environment: dev-ar
       base_path: infra/resources/registry-proxy
+      override_github_environment: dev
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
       use_private_agent: true
