@@ -16,11 +16,9 @@ module "local" {
   container_app_min_replicas     = 0
 }
 
-
 ###############################################################################
 # Container App
 ###############################################################################
-
 
 # ONLY FOR AR
 module "apim_api_registry_proxy" {
@@ -35,7 +33,6 @@ module "apim_api_registry_proxy" {
   api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
   openapi_path        = "../../../../apps/registry-proxy/app/src/main/resources/swagger/apim_api_bff_proxy.json"
 }
-
 
 ###############################################################################
 # AI Search
@@ -401,7 +398,6 @@ module "container_app_registry_proxy_ms" {
 ###############################################################################
 # DAPR
 ###############################################################################
-
 
 module "dapr" {
   source = "../../_modules/dapr"
