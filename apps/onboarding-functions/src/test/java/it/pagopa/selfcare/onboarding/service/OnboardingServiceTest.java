@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.onboarding.service;
 
 import com.microsoft.azure.functions.ExecutionContext;
-import io.quarkus.mongodb.panache.PanacheQuery;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.common.*;
@@ -12,14 +11,12 @@ import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.mapper.UserMapper;
-import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -28,11 +25,8 @@ import org.openapi.quarkus.document_json.model.AttachmentPdfRequest;
 import org.openapi.quarkus.document_json.model.ContractPdfRequest;
 import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
-import org.openapi.quarkus.party_registry_proxy_json.api.PdndVisuraInfoCamereControllerApi;
-import org.openapi.quarkus.user_json.api.InstitutionApi;
 import org.openapi.quarkus.user_json.model.SendMailDto;
 import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
-import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
@@ -53,19 +47,15 @@ class OnboardingServiceTest {
 
     final String productId = "productId";
     @InjectMock
-    OnboardingRepository onboardingRepository;
-    @RestClient
+    OnboardingRepositoryService onboardingRepositoryService;
     @InjectMock
-    UserApi userRegistryApi;
-    @RestClient
+    PdvUserRegistryService pdvUserRegistryService;
     @InjectMock
-    InstitutionApi userInstitutionApi;
-    @RestClient
+    UserInstitutionRestService userInstitutionRestService;
     @InjectMock
-    org.openapi.quarkus.user_json.api.UserApi userApi;
-    @RestClient
+    UserNotificationService userNotificationService;
     @InjectMock
-    PdndVisuraInfoCamereControllerApi pdndVisuraInfoCamereControllerApi;
+    InfocamereService infocamereService;
     @InjectMock
     NotificationService notificationService;
     @InjectMock
@@ -150,7 +140,7 @@ class OnboardingServiceTest {
     @Test
     void getOnboarding() {
         Onboarding onboarding = createOnboarding();
-        when(onboardingRepository.findByIdOptional(any())).thenReturn(Optional.of(onboarding));
+        when(onboardingRepositoryService.findById(any())).thenReturn(Optional.of(onboarding));
 
         Optional<Onboarding> actual = onboardingService.getOnboarding(onboarding.getId());
         assertTrue(actual.isPresent());
@@ -167,7 +157,7 @@ class OnboardingServiceTest {
         user.setId(userResource.getId().toString());
         user.setRole(PartyRole.MANAGER);
 
-        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, user.getId()))
+        when(pdvUserRegistryService.getUserById(USERS_FIELD_LIST, user.getId()))
                 .thenReturn(userResource);
 
         Product product = new Product();
@@ -194,7 +184,7 @@ class OnboardingServiceTest {
 
         Product product = createDummyProduct();
 
-        when(userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, manager.getId()))
+        when(pdvUserRegistryService.getUserById(USERS_WORKS_FIELD_LIST, manager.getId()))
                 .thenReturn(userResource);
 
         when(productService.getProductIsValid(onboarding.getProductId())).thenReturn(product);
@@ -202,8 +192,8 @@ class OnboardingServiceTest {
         OnboardingWorkflow onboardingWorkflow = getOnboardingWorkflowInstitution(onboarding);
         onboardingService.createContract(onboardingWorkflow);
 
-        Mockito.verify(userRegistryApi, Mockito.times(1))
-                .findByIdUsingGET(USERS_WORKS_FIELD_LIST, manager.getId());
+        Mockito.verify(pdvUserRegistryService, Mockito.times(1))
+                .getUserById(USERS_WORKS_FIELD_LIST, manager.getId());
 
         Mockito.verify(productService, Mockito.times(1)).getProductIsValid(onboarding.getProductId());
 
@@ -237,10 +227,10 @@ class OnboardingServiceTest {
 
         Product product = createDummyProduct();
 
-        when(userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, manager.getId()))
+        when(pdvUserRegistryService.getUserById(USERS_WORKS_FIELD_LIST, manager.getId()))
                 .thenReturn(userResource);
 
-        when(userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, delegate.getId()))
+        when(pdvUserRegistryService.getUserById(USERS_WORKS_FIELD_LIST, delegate.getId()))
                 .thenReturn(delegateResource);
 
         when(productService.getProductIsValid(onboarding.getProductId())).thenReturn(product);
@@ -248,11 +238,11 @@ class OnboardingServiceTest {
         OnboardingWorkflow onboardingWorkflow = getOnboardingWorkflowInstitution(onboarding);
         onboardingService.createContract(onboardingWorkflow);
 
-        Mockito.verify(userRegistryApi, Mockito.times(1))
-                .findByIdUsingGET(USERS_WORKS_FIELD_LIST, manager.getId());
+        Mockito.verify(pdvUserRegistryService, Mockito.times(1))
+                .getUserById(USERS_WORKS_FIELD_LIST, manager.getId());
 
-        Mockito.verify(userRegistryApi, Mockito.times(1))
-                .findByIdUsingGET(USERS_WORKS_FIELD_LIST, delegate.getId());
+        Mockito.verify(pdvUserRegistryService, Mockito.times(1))
+                .getUserById(USERS_WORKS_FIELD_LIST, delegate.getId());
 
         Mockito.verify(productService, Mockito.times(1)).getProductIsValid(onboarding.getProductId());
 
@@ -289,7 +279,7 @@ class OnboardingServiceTest {
         Map<String, WorkContactResource> map = new HashMap<>();
         userResource.setWorkContacts(map);
 
-        when(userRegistryApi.findByIdUsingGET(anyString(), anyString()))
+        when(pdvUserRegistryService.getUserById(anyString(), anyString()))
                 .thenReturn(userResource);
 
         // Act
@@ -393,7 +383,7 @@ class OnboardingServiceTest {
         when(documentService.getDocumentByOnboardingIdOrNull(onboarding.getId())).thenReturn(document);
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
 
-        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
+        when(pdvUserRegistryService.getUserById(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
                 .thenReturn(userResource);
 
         OnboardingWorkflow onboardingWorkflow = getOnboardingWorkflowInstitution(onboarding);
@@ -445,7 +435,7 @@ class OnboardingServiceTest {
         onboardingService.sendMailRegistrationForUser(onboarding);
 
         // Assert
-        Mockito.verify(userApi).sendMailRequest(any(),
+        Mockito.verify(userNotificationService).sendMailRequest(any(),
                 Mockito.argThat(dto ->
                         dto.getInstitutionName().equals(expectedDto.getInstitutionName()) &&
                                 dto.getProductId().equals(expectedDto.getProductId()) &&
@@ -471,7 +461,7 @@ class OnboardingServiceTest {
         user.setUserMailUuid("uuid-123");
         onboarding.setUsers(List.of(user));
 
-        Mockito.when(pdndVisuraInfoCamereControllerApi.institutionVisuraDocumentByTaxCodeUsingGET(any()))
+        Mockito.when(infocamereService.getInstitutionVisuraByTaxCode(any()))
                 .thenReturn("test".getBytes(StandardCharsets.UTF_8));
         Mockito.when(documentService.saveVisuraForMerchant(any()))
                 .thenReturn(Response.ok().build());
@@ -479,7 +469,7 @@ class OnboardingServiceTest {
         onboardingService.saveVisuraForMerchant(onboarding);
 
         // Assert
-        Mockito.verify(pdndVisuraInfoCamereControllerApi).institutionVisuraDocumentByTaxCodeUsingGET(Mockito.any());
+        Mockito.verify(infocamereService).getInstitutionVisuraByTaxCode(Mockito.any());
         Mockito.verify(documentService).saveVisuraForMerchant(any());
     }
 
@@ -497,11 +487,11 @@ class OnboardingServiceTest {
         onboarding.setUsers(List.of(user));
 
         Mockito.doThrow(new RuntimeException("Error during download"))
-                .when(pdndVisuraInfoCamereControllerApi).institutionVisuraDocumentByTaxCodeUsingGET(Mockito.any());
+                .when(infocamereService).getInstitutionVisuraByTaxCode(Mockito.any());
 
         Assertions.assertThrows(RuntimeException.class, () -> onboardingService.saveVisuraForMerchant(onboarding));
 
-        Mockito.verify(pdndVisuraInfoCamereControllerApi).institutionVisuraDocumentByTaxCodeUsingGET(Mockito.any());
+        Mockito.verify(infocamereService).getInstitutionVisuraByTaxCode(Mockito.any());
         Mockito.verifyNoInteractions(documentService);
     }
 
@@ -519,11 +509,11 @@ class OnboardingServiceTest {
         onboarding.setUsers(List.of(user));
         Mockito.when(userMapper.toUserPartyRole(PartyRole.MANAGER)).thenReturn(org.openapi.quarkus.user_json.model.PartyRole.MANAGER);
         Mockito.doThrow(new RuntimeException("Email failure"))
-                .when(userApi).sendMailRequest(Mockito.any(), Mockito.any());
+                .when(userNotificationService).sendMailRequest(Mockito.any(), Mockito.any());
 
         Assertions.assertDoesNotThrow(() -> onboardingService.sendMailRegistrationForUser(onboarding));
 
-        Mockito.verify(userApi).sendMailRequest(Mockito.any(), Mockito.any());
+        Mockito.verify(userNotificationService).sendMailRequest(Mockito.any(), Mockito.any());
     }
 
     @Test
@@ -540,7 +530,7 @@ class OnboardingServiceTest {
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
         when(productService.getProductExpirationDate(onboarding.getProductId())).thenReturn(expirationDate);
 
-        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
+        when(pdvUserRegistryService.getUserById(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
                 .thenReturn(userResource);
         doNothing()
                 .when(notificationService)
@@ -627,7 +617,7 @@ class OnboardingServiceTest {
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
         when(productService.getProductExpirationDate(onboarding.getProductId())).thenReturn(expirationDate);
 
-        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
+        when(pdvUserRegistryService.getUserById(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
                 .thenReturn(userResource);
         doNothing()
                 .when(notificationService)
@@ -663,10 +653,10 @@ class OnboardingServiceTest {
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
         when(productService.getProductExpirationDate(onboarding.getProductId())).thenReturn(expirationDate);
 
-        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
+        when(pdvUserRegistryService.getUserById(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
                 .thenReturn(userResource);
 
-        when(onboardingRepository.findByFilters(any(), any(), any(), any(), any()))
+        when(onboardingRepositoryService.findByFilters(any(), any(), any(), any(), any()))
                 .thenReturn(Collections.emptyList());
 
         doNothing()
@@ -703,17 +693,17 @@ class OnboardingServiceTest {
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
         when(productService.getProductExpirationDate(onboarding.getProductId())).thenReturn(expirationDate);
 
-        when(userRegistryApi.findByIdUsingGET(any(), any()))
+        when(pdvUserRegistryService.getUserById(any(), any()))
                 .thenReturn(userResource);
 
-        when(onboardingRepository.findByFilters(any(), any(), any(), any(), any()))
+        when(onboardingRepositoryService.findByFilters(any(), any(), any(), any(), any()))
                 .thenReturn(List.of(onboarding));
 
         UserInstitutionResponse userInstitutionResponse = new UserInstitutionResponse();
         userInstitutionResponse.setInstitutionId(onboarding.getInstitution().getId());
         userInstitutionResponse.setUserId("previousManagerId");
 
-        when(userInstitutionApi.retrieveUserInstitutions(any(), any(), any(), any(), any(), any()))
+        when(userInstitutionRestService.getActiveManagersByInstitutionAndProduct(any(), any(), any()))
                 .thenReturn(List.of(userInstitutionResponse));
 
         doNothing()
@@ -744,7 +734,7 @@ class OnboardingServiceTest {
         UserResource userResource = createUserResource();
 
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
-        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
+        when(pdvUserRegistryService.getUserById(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
                 .thenReturn(userResource);
 
         doNothing()
@@ -779,7 +769,7 @@ class OnboardingServiceTest {
         UserResource userResource = createUserResource();
 
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
-        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
+        when(pdvUserRegistryService.getUserById(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
                 .thenReturn(userResource);
         doNothing()
                 .when(notificationService)
@@ -812,14 +802,11 @@ class OnboardingServiceTest {
 
         ExecutionContext context = getExecutionContext();
 
-        PanacheQuery<Onboarding> onboardingQuery = mock(PanacheQuery.class);
-
         Product product1 = new Product();
         product1.setId("product1");
         when(productService.getProducts(false, false)).thenReturn(List.of(product1));
 
-        when(onboardingRepository.find(any())).thenReturn(onboardingQuery);
-        when(onboardingQuery.count()).thenReturn(5L).thenReturn(3L);
+        when(onboardingRepositoryService.countByQuery(any())).thenReturn(5L).thenReturn(3L);
 
         List<NotificationCountResult> results =
                 onboardingService.countNotifications(product1.getId(), from, to, context);
@@ -846,10 +833,8 @@ class OnboardingServiceTest {
 
         getExecutionContext();
 
-        PanacheQuery<Onboarding> onboardingQuery = mock(PanacheQuery.class);
-        when(onboardingRepository.find(any())).thenReturn(onboardingQuery);
-        when(onboardingQuery.page(anyInt(), anyInt())).thenReturn(onboardingQuery);
-        when(onboardingQuery.list()).thenReturn(List.of(new Onboarding(), new Onboarding()));
+        when(onboardingRepositoryService.findByQueryPaged(any(), anyInt(), anyInt()))
+                .thenReturn(List.of(new Onboarding(), new Onboarding()));
 
         List<Onboarding> onboardings = onboardingService.getOnboardingsToResend(filters, 0, 100);
         assertEquals(2, onboardings.size());
@@ -863,10 +848,8 @@ class OnboardingServiceTest {
 
         getExecutionContext();
 
-        PanacheQuery<Onboarding> onboardingQuery = mock(PanacheQuery.class);
-        when(onboardingRepository.find(any())).thenReturn(onboardingQuery);
-        when(onboardingQuery.page(anyInt(), anyInt())).thenReturn(onboardingQuery);
-        when(onboardingQuery.list()).thenReturn(List.of());
+        when(onboardingRepositoryService.findByQueryPaged(any(), anyInt(), anyInt()))
+                .thenReturn(List.of());
 
         List<Onboarding> onboardings = onboardingService.getOnboardingsToResend(filters, 0, 100);
         assertTrue(onboardings.isEmpty());
@@ -895,7 +878,7 @@ class OnboardingServiceTest {
         when(documentService.getDocumentByOnboardingId(onboarding.getId())).thenReturn(document);
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
 
-        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
+        when(pdvUserRegistryService.getUserById(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
                 .thenReturn(userResource);
 
         OnboardingWorkflow onboardingWorkflow = getOnboardingWorkflowInstitution(onboarding);
@@ -933,7 +916,7 @@ class OnboardingServiceTest {
         assertEquals(
                 OffsetDateTime.now().plusDays(expirationDays).toLocalDate(),
                 onboarding.getExpiringDate().toLocalDate());
-        verify(onboardingRepository).update(onboarding);
+        verify(onboardingRepositoryService).update(onboarding);
     }
 
     @Test
@@ -942,7 +925,7 @@ class OnboardingServiceTest {
         when(productService.getProductExpirationDate(onboarding.getProductId())).thenReturn(null);
 
         assertThrows(NullPointerException.class, () -> onboardingService.updateOnboardingExpiringDate(onboarding));
-        verify(onboardingRepository, never()).update(any(Onboarding.class));
+        verify(onboardingRepositoryService, never()).update(any(Onboarding.class));
     }
 
     @Test
@@ -953,7 +936,7 @@ class OnboardingServiceTest {
                 .thenThrow(new GenericOnboardingException("Product not found"));
 
         assertThrows(GenericOnboardingException.class, () -> onboardingService.updateOnboardingExpiringDate(onboarding));
-        verify(onboardingRepository, never()).update(any(Onboarding.class));
+        verify(onboardingRepositoryService, never()).update(any(Onboarding.class));
     }
 
     @Test
@@ -988,7 +971,7 @@ class OnboardingServiceTest {
         onboardingService.sendMailRegistrationForUserRequester(onboarding);
 
         // Assert
-        Mockito.verify(userApi).sendMailRequest(any(),
+        Mockito.verify(userNotificationService).sendMailRequest(any(),
                 Mockito.argThat(dto ->
                         dto.getInstitutionName().equals(expectedDto.getInstitutionName()) &&
                                 dto.getProductId().equals(expectedDto.getProductId()) &&
@@ -1016,11 +999,11 @@ class OnboardingServiceTest {
         onboarding.setUserRequester(userRequester);
         Mockito.when(userMapper.toUserPartyRole(PartyRole.MANAGER)).thenReturn(org.openapi.quarkus.user_json.model.PartyRole.MANAGER);
         Mockito.doThrow(new RuntimeException("Email failure"))
-                .when(userApi).sendMailRequest(Mockito.any(), Mockito.any());
+                .when(userNotificationService).sendMailRequest(Mockito.any(), Mockito.any());
 
         Assertions.assertDoesNotThrow(() -> onboardingService.sendMailRegistrationForUserRequester(onboarding));
 
-        Mockito.verify(userApi).sendMailRequest(Mockito.any(), Mockito.any());
+        Mockito.verify(userNotificationService).sendMailRequest(Mockito.any(), Mockito.any());
     }
 
     @Test
@@ -1033,14 +1016,14 @@ class OnboardingServiceTest {
         onboarding.setProductId(productId);
         onboarding.setUsers(List.of());
         // when
-        when(onboardingRepository.findByOnboardingUsers("institutionId", productId))
+        when(onboardingRepositoryService.findByOnboardingUsers("institutionId", productId))
                 .thenReturn(List.of(onboarding));
         // then
         List<String> onboardings = onboardingService.findByInstitutionAndProduct("institutionId", productId);
         assertNotNull(onboardings);
         assertTrue(onboardings.isEmpty());
 
-        Mockito.verify(onboardingRepository, times(1))
+        Mockito.verify(onboardingRepositoryService, times(1))
                 .findByOnboardingUsers("institutionId", productId);
 
     }
@@ -1058,7 +1041,7 @@ class OnboardingServiceTest {
         user.setId(userId);
         onboarding.setUsers(List.of(user));
         // when
-        when(onboardingRepository.findByOnboardingUsers("institutionId", productId))
+        when(onboardingRepositoryService.findByOnboardingUsers("institutionId", productId))
                 .thenReturn(List.of(onboarding));
         // then
         List<String> onboardings = onboardingService.findByInstitutionAndProduct("institutionId", productId);
@@ -1067,7 +1050,7 @@ class OnboardingServiceTest {
         assertEquals(1, onboardings.size());
         assertEquals(userId, onboardings.get(0));
 
-        Mockito.verify(onboardingRepository, times(1))
+        Mockito.verify(onboardingRepositoryService, times(1))
                 .findByOnboardingUsers("institutionId", productId);
 
     }
@@ -1075,14 +1058,14 @@ class OnboardingServiceTest {
     @Test
     void findByInstitutionAndProduct_EmptyList() {
         // when
-        when(onboardingRepository.findByOnboardingUsers("institutionId", productId))
+        when(onboardingRepositoryService.findByOnboardingUsers("institutionId", productId))
                 .thenReturn(List.of());
         // then
         List<String> onboardings = onboardingService.findByInstitutionAndProduct("institutionId", productId);
         assertNotNull(onboardings);
         assertTrue(onboardings.isEmpty());
 
-        Mockito.verify(onboardingRepository, times(1))
+        Mockito.verify(onboardingRepositoryService, times(1))
                 .findByOnboardingUsers("institutionId", productId);
 
     }
@@ -1096,7 +1079,7 @@ class OnboardingServiceTest {
 
         onboardingService.sendMailManagingInstitution(request);
 
-        Mockito.verify(userApi).sendMailRequest(eq("uuid-123"),
+        Mockito.verify(userNotificationService).sendMailRequest(eq("uuid-123"),
                 Mockito.argThat(dto ->
                         "Test Institution".equals(dto.getInstitutionName())
                                 && "prod-123".equals(dto.getProductId())
@@ -1113,11 +1096,11 @@ class OnboardingServiceTest {
         request.setUserMailUuid("uuid-123");
 
         Mockito.doThrow(new RuntimeException("Email failure"))
-                .when(userApi)
+                .when(userNotificationService)
                 .sendMailRequest(eq("uuid-123"), any(SendMailDto.class));
 
         Assertions.assertDoesNotThrow(() -> onboardingService.sendMailManagingInstitution(request));
 
-        Mockito.verify(userApi).sendMailRequest(eq("uuid-123"), any(SendMailDto.class));
+        Mockito.verify(userNotificationService).sendMailRequest(eq("uuid-123"), any(SendMailDto.class));
     }
 }
