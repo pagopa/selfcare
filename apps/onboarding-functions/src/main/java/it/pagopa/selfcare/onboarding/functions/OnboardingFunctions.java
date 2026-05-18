@@ -662,6 +662,7 @@ public class OnboardingFunctions {
                     MANAGING_INSTITUTION_ID, request.getManagingInstitutionId(),
                     MANAGING_INSTITUTION_DESCRIPTION, request.getManagingInstitutionDescription(),
                     USER_MAIL_UUID, request.getUserMailUuid()));
+    request.setUserMailUuid(request.getUserMailUuid().replace("ID_MAIL#",""));
     service.sendMailManagingInstitution(request);
   }
 
