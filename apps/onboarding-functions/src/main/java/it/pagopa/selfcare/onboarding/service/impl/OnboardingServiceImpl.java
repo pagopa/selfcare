@@ -7,6 +7,7 @@ import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePathConfig;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
+import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.dto.NotificationCountResult;
 import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
 import it.pagopa.selfcare.onboarding.dto.SendMailInput;
@@ -205,6 +206,19 @@ public class OnboardingServiceImpl implements OnboardingService {
       userApi.sendMailRequest(userRequester.getUserRequestUid(), sendMailDto);
     } catch (Exception e) {
       log.error("Impossible to send mail to user");
+    }
+  }
+
+  public void sendMailManagingInstitution(ManagingInstitutionSendEmail request) {
+    log.info("Sending mail to managing institution");
+    SendMailDto sendMailDto = new SendMailDto();
+    sendMailDto.setInstitutionName(request.getManagingInstitutionDescription());
+    sendMailDto.setProductId(request.getProductId());
+    sendMailDto.setUserMailUuid(request.getUserMailUuid());
+    try {
+      userApi.sendMailRequest(request.getUserMailUuid(), sendMailDto);
+    } catch (Exception e) {
+      log.error("Impossible to send mail to managing institution");
     }
   }
 

@@ -6,5 +6,5 @@ public interface UserService {
 
   void deleteByIdAndInstitutionIdAndProductId(String institutionId, String productId);
 
-  List<String> findEmailByInstitutionAndProducts(String institutionId, List<String> products);
+  List<String> findEmailUuidByInstitutionAndProducts(String institutionId, List<String> products);
 }

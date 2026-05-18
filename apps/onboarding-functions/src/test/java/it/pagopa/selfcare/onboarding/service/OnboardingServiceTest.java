@@ -8,6 +8,7 @@ import it.pagopa.selfcare.onboarding.common.*;
 import it.pagopa.selfcare.onboarding.dto.NotificationCountResult;
 import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
 import it.pagopa.selfcare.onboarding.dto.SendMailInput;
+import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.mapper.UserMapper;
@@ -1084,5 +1085,39 @@ class OnboardingServiceTest {
         Mockito.verify(onboardingRepository, times(1))
                 .findByOnboardingUsers("institutionId", productId);
 
+    }
+
+    @Test
+    void testSendMailManagingInstitution_Success() {
+        ManagingInstitutionSendEmail request = new ManagingInstitutionSendEmail();
+        request.setManagingInstitutionDescription("Test Institution");
+        request.setProductId("prod-123");
+        request.setUserMailUuid("uuid-123");
+
+        onboardingService.sendMailManagingInstitution(request);
+
+        Mockito.verify(userApi).sendMailRequest(eq("uuid-123"),
+                Mockito.argThat(dto ->
+                        "Test Institution".equals(dto.getInstitutionName())
+                                && "prod-123".equals(dto.getProductId())
+                                && "uuid-123".equals(dto.getUserMailUuid())
+                )
+        );
+    }
+
+    @Test
+    void testSendMailManagingInstitution_Exception() {
+        ManagingInstitutionSendEmail request = new ManagingInstitutionSendEmail();
+        request.setManagingInstitutionDescription("Test Institution");
+        request.setProductId("prod-123");
+        request.setUserMailUuid("uuid-123");
+
+        Mockito.doThrow(new RuntimeException("Email failure"))
+                .when(userApi)
+                .sendMailRequest(eq("uuid-123"), any(SendMailDto.class));
+
+        Assertions.assertDoesNotThrow(() -> onboardingService.sendMailManagingInstitution(request));
+
+        Mockito.verify(userApi).sendMailRequest(eq("uuid-123"), any(SendMailDto.class));
     }
 }

@@ -25,10 +25,12 @@ import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.BUILD_C
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.GET_LATEST_DOCUMENT_ACTIVITY;
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.GET_MANAGING_INSTITUTION_ACTIVITY;
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.GET_SIGNING_CONFIGURATION_ACTIVITY;
-import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.GET_USER_EMAIL_ACTIVITY;
+import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.GET_USER_EMAIL_UUID_ACTIVITY;
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.SAVE_TOKEN_WITH_CONTRACT_ACTIVITY_NAME;
+import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION;
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.SEND_MAIL_REGISTRATION_FOR_CONTRACT;
 import static it.pagopa.selfcare.onboarding.utils.Utils.getManagingInstitutionEmailRequestString;
+import static it.pagopa.selfcare.onboarding.utils.Utils.getManagingInstitutionSendEmailString;
 import static it.pagopa.selfcare.onboarding.utils.Utils.getOnboardingString;
 import static it.pagopa.selfcare.onboarding.utils.Utils.getOnboardingWorkflowString;
 import static it.pagopa.selfcare.onboarding.utils.Utils.readEmailList;
@@ -106,24 +108,34 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
                 document.getProductId(),
                 onboardingWorkflow.getOnboarding().getId());
 
-        // chiamare function che tramite userApi ottiene la lista di email associata all'institution
         String emailsString =
             ctx.callActivity(
-                    GET_USER_EMAIL_ACTIVITY,
+                    GET_USER_EMAIL_UUID_ACTIVITY,
                     managingInstitutionEmailRequestString,
                     optionsRetry,
                     String.class)
                 .await();
 
-        List<String> emails = readEmailList(objectMapper, emailsString);
+        List<String> emailsUuid = readEmailList(objectMapper, emailsString);
+        log.info("Found {} email(s) for institution {} and product {}",
+            emailsUuid.size(),
+            managingInstitution.getInstitutionId(),
+            document.getProductId());
 
-
-        // TODO
-        // ciclare sulla lista di email invocando function SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION per invio email
-        // VEDI: SEND_MAIL_REGISTRATION_FOR_USER
-        emails.forEach(email -> {
-
-        });
+        emailsUuid.forEach(
+            emailUuid -> {
+              ctx.callActivity(
+                      SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION,
+                      getManagingInstitutionSendEmailString(
+                          objectMapper,
+                          managingInstitution.getInstitutionId(),
+                          managingInstitution.getDescription(),
+                          document.getProductId(),
+                          emailUuid),
+                      optionsRetry,
+                      String.class)
+                  .await();
+            });
 
         return Optional.of(OnboardingStatus.PENDING_IN_REVIEW);
     }

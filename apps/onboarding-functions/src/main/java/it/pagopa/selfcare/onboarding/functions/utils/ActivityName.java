@@ -48,7 +48,7 @@ public class ActivityName {
   public static final String GET_LATEST_DOCUMENT_ACTIVITY = "GetLatestDocument";
   public static final String GET_SIGNING_CONFIGURATION_ACTIVITY = "GetSigningConfiguration";
   public static final String GET_MANAGING_INSTITUTION_ACTIVITY = "GetManagingInstitution";
-  public static final String GET_USER_EMAIL_ACTIVITY = "GetUserEmail";
+  public static final String GET_USER_EMAIL_UUID_ACTIVITY = "GetUserEmailUuid";
   private ActivityName() {
   }
 }

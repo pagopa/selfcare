@@ -25,9 +25,11 @@ import it.pagopa.selfcare.onboarding.service.CompletionService;
 import it.pagopa.selfcare.onboarding.service.DocumentService;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.service.TelemetryService;
+import it.pagopa.selfcare.onboarding.service.UserService;
 import it.pagopa.selfcare.onboarding.utils.Utils;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
+import it.pagopa.selfcare.product.entity.ManagingInstitution;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.SigningConfiguration;
 import it.pagopa.selfcare.product.service.ProductService;
@@ -68,6 +70,8 @@ class OnboardingFunctionsTest {
 
   @InjectMock DocumentService documentService;
 
+  @InjectMock UserService userService;
+
   @Inject ObjectMapper objectMapper;
 
   final String onboardingStringBase = "{\"id\":\"onboardingId\", \"productId\":\"prod-test\"}";
@@ -92,6 +96,10 @@ class OnboardingFunctionsTest {
           "{\"id\":\"id\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":{\"id\":\"inst123\"},\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}";
 
   final String latestDocumentString = "{ \"id\": \"doc-001\", \"type\": \"INSTITUTION\", \"onboardingId\": \"onb-123\", \"productId\": \"prod-456\", \"attachmentName\": \"contract_attachment.pdf\", \"checksum\": \"a3f5c2d1e8b7094f6a2e1d3c5b8f7e2a1\", \"contractVersion\": \"1.0.0\", \"contractTemplate\": \"STANDARD_TEMPLATE\", \"contractSigned\": \"false\", \"contractFilename\": \"contract_2026_05_06.pdf\", \"rootOnboardingId\": \"onb-root-789\", \"createdAt\": \"2026-05-06T09:00:00\", \"updatedAt\": \"2026-05-06T10:30:00\", \"deletedAt\": null, \"activatedAt\": \"2026-05-06T09:15:00\", \"signingStep\": 1 }";
+
+  final String managingInstitutionEmailRequestString = "{ \"managingInstitutionId\": \"inst-12345\", \"productId\": \"prod-67890\", \"onboardingId\": \"onb-abcdef\" }";
+
+  final String managingInstitutionSendEmailString = "{ \"managingInstitutionId\": \"12345678901\", \"productId\": \"prod-001\", \"managingInstitutionDescription\": \"Istituto Gestore di esempio\", \"userMailUuid\": \"2f3a1c4e-8b6d-4f2a-9c1e-7d8a6b5c4d3e\" }";
 
   static ExecutionContext executionContext;
 
@@ -1256,6 +1264,16 @@ class OnboardingFunctionsTest {
   }
 
   @Test
+  void sendMailNotificationManagerInstitution() {
+    when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
+    doNothing().when(service).sendMailManagingInstitution(any());
+
+    function.sendMailNotificationManagerInstitution(managingInstitutionSendEmailString, executionContext);
+
+    verify(service, times(1)).sendMailManagingInstitution(any());
+  }
+
+  @Test
   void sendMailRegistrationForUserRequester() {
 
     when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
@@ -1307,6 +1325,26 @@ class OnboardingFunctionsTest {
     function.getSigningConfiguration(onboardingStringBase, executionContext);
 
     verify(productService, times(1)).getProductIsValid(any());
+  }
+
+  @Test
+  void getManagingInstitutions() {
+    when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
+    when(productService.getProductIsValid(any())).thenReturn(createDummyProduct());
+
+    function.getManagingInstitutions(onboardingStringBase, executionContext);
+
+    verify(productService, times(1)).getProductIsValid(any());
+  }
+
+  @Test
+  void getUserEmailUuid() {
+    when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
+    when(userService.findEmailUuidByInstitutionAndProducts(any(), anyList())).thenReturn(List.of("emailUuid"));
+
+    function.getUserEmailUuid(managingInstitutionEmailRequestString, executionContext);
+
+    verify(userService, times(1)).findEmailUuidByInstitutionAndProducts(any(), any());
   }
 
   @Test
@@ -1901,13 +1939,24 @@ class OnboardingFunctionsTest {
     when(orchestrationContext.callActivity(eq(GET_SIGNING_CONFIGURATION_ACTIVITY), any(), any(), eq(SigningConfiguration.class)))
             .thenReturn(getSigningConfigurationActivity);
 
+    ManagingInstitution managingInstitution = new ManagingInstitution();
+    managingInstitution.setInstitutionId("inst-123");
+    managingInstitution.setDescription("Managing Institution");
+    Task<ManagingInstitution> getManagingInstitutionTask = mockTaskWithValue(managingInstitution);
+    when(orchestrationContext.callActivity(eq(GET_MANAGING_INSTITUTION_ACTIVITY), any(), any(), eq(ManagingInstitution.class)))
+            .thenReturn(getManagingInstitutionTask);
+
+    String emailsJson = Utils.getEmailListString(objectMapper, List.of("email-uuid"));
+    Task<String> getUserEmailUuidTask = mockTaskWithValue(emailsJson);
+    when(orchestrationContext.callActivity(eq(GET_USER_EMAIL_UUID_ACTIVITY), any(), any(), eq(String.class)))
+            .thenReturn(getUserEmailUuidTask);
+
     function.onboardingsOrchestrator(orchestrationContext, executionContext);
 
-    ArgumentCaptor<String> captorActivity = ArgumentCaptor.forClass(String.class);
-    verify(orchestrationContext, times(2))
-            .callActivity(captorActivity.capture(), any(), any(), any());
-    assertEquals(GET_LATEST_DOCUMENT_ACTIVITY, captorActivity.getAllValues().get(0));
-    assertEquals(GET_SIGNING_CONFIGURATION_ACTIVITY, captorActivity.getAllValues().get(1));
+    verify(orchestrationContext).callActivity(eq(GET_LATEST_DOCUMENT_ACTIVITY), any(), any(), eq(String.class));
+    verify(orchestrationContext).callActivity(eq(GET_SIGNING_CONFIGURATION_ACTIVITY), any(), any(), eq(SigningConfiguration.class));
+    verify(orchestrationContext).callActivity(eq(GET_MANAGING_INSTITUTION_ACTIVITY), any(), any(), eq(ManagingInstitution.class));
+    verify(orchestrationContext).callActivity(eq(GET_USER_EMAIL_UUID_ACTIVITY), any(), any(), eq(String.class));
 
     verify(service, times(1)).updateOnboardingStatus(onboarding.getId(), OnboardingStatus.PENDING_IN_REVIEW);
   }

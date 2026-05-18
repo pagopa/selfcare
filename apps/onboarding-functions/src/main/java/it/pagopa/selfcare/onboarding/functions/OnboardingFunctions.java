@@ -15,8 +15,9 @@ import com.microsoft.durabletask.azurefunctions.DurableOrchestrationTrigger;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.config.AggregateBatchConfig;
 import it.pagopa.selfcare.onboarding.config.RetryPolicyConfig;
+import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.dto.OnboardingAggregateOrchestratorInput;
-import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionEmailRequest;
+import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionGetEmailRequest;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.OnboardingAttachment;
 import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
@@ -640,10 +641,23 @@ public class OnboardingFunctions {
 
   @FunctionName(SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION)
   public void sendMailNotificationManagerInstitution(
-          @DurableActivityTrigger(name = "emailString") String emailString,
+          @DurableActivityTrigger(name = "managingInstitutionSendEmailString") String managingInstitutionSendEmailString,
           final ExecutionContext context) {
-    // TODO add telemetry
-    // TODO call service
+    ManagingInstitutionSendEmail request =
+            readManagingInstitutionSendEmail(objectMapper, managingInstitutionSendEmailString);
+    telemetryService.trackFunction(
+            SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION,
+            String.format(
+                    FORMAT_LOGGER_ONBOARDING_STRING,
+                    SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION,
+                    managingInstitutionSendEmailString),
+            SeverityLevel.Information,
+            Map.of(
+                    "productId", request.getProductId(),
+                    "managingInstitutionId", request.getManagingInstitutionId(),
+                    "managingInstitutionDescription", request.getManagingInstitutionDescription(),
+                    "userMailUuid", request.getUserMailUuid()));
+    service.sendMailManagingInstitution(request);
   }
 
   @FunctionName(SEND_MAIL_REGISTRATION_FOR_USER_REQUESTER)
@@ -1016,11 +1030,11 @@ public class OnboardingFunctions {
     return productService.getProductIsValid(onboarding.getProductId()).getManagingInstitutions();
   }
 
-  @FunctionName(GET_USER_EMAIL_ACTIVITY)
-  public String getUserEmail(
+  @FunctionName(GET_USER_EMAIL_UUID_ACTIVITY)
+  public String getUserEmailUuid(
       @DurableActivityTrigger(name = "managingInstitutionEmailRequestString") String managingInstitutionEmailRequestString,
       final ExecutionContext context) {
-    ManagingInstitutionEmailRequest request =
+    ManagingInstitutionGetEmailRequest request =
         readManagingInstitutionEmailRequest(objectMapper, managingInstitutionEmailRequestString);
     telemetryService.trackFunction(
             GET_MANAGING_INSTITUTION_ACTIVITY,
@@ -1033,10 +1047,10 @@ public class OnboardingFunctions {
                     "onboardingId", request.getOnboardingId(),
                     "productId", request.getProductId(),
                     "managingInstitutionId", request.getManagingInstitutionId()));
-    List<String> emails = userService.findEmailByInstitutionAndProducts(
+    List<String> emailsUuid = userService.findEmailUuidByInstitutionAndProducts(
         request.getManagingInstitutionId(),
         List.of(request.getProductId()));
-    return getEmailListString(objectMapper, emails);
+    return getEmailListString(objectMapper, emailsUuid);
   }
 
   private void ensureSuccessfulDocumentResponse(

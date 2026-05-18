@@ -8,7 +8,8 @@ import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.dto.AckPayloadRequest;
 import it.pagopa.selfcare.onboarding.dto.AggregatesBatchOrchestratorInput;
-import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionEmailRequest;
+import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionGetEmailRequest;
+import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.dto.OnboardingAggregateOrchestratorInput;
 import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
@@ -162,15 +163,37 @@ public class Utils {
       String onboardingId) {
     try {
       return objectMapper.writeValueAsString(
-          new ManagingInstitutionEmailRequest(managingInstitutionId, productId, onboardingId));
+          new ManagingInstitutionGetEmailRequest(managingInstitutionId, productId, onboardingId));
     } catch (JsonProcessingException e) {
       throw new FunctionOrchestratedException(e);
     }
   }
 
-  public static ManagingInstitutionEmailRequest readManagingInstitutionEmailRequest(ObjectMapper objectMapper, String request) {
+  public static ManagingInstitutionGetEmailRequest readManagingInstitutionEmailRequest(ObjectMapper objectMapper, String request) {
     try {
-      return objectMapper.readValue(request, ManagingInstitutionEmailRequest.class);
+      return objectMapper.readValue(request, ManagingInstitutionGetEmailRequest.class);
+    } catch (JsonProcessingException e) {
+      throw new FunctionOrchestratedException(e);
+    }
+  }
+
+  public static String getManagingInstitutionSendEmailString(
+          ObjectMapper objectMapper,
+          String managingInstitutionId,
+          String managingInstitutionDescription,
+          String productId,
+          String userMailUuid) {
+    try {
+      return objectMapper.writeValueAsString(
+          new ManagingInstitutionSendEmail(managingInstitutionId, productId, managingInstitutionDescription, userMailUuid));
+    } catch (JsonProcessingException e) {
+      throw new FunctionOrchestratedException(e);
+    }
+  }
+
+  public static ManagingInstitutionSendEmail readManagingInstitutionSendEmail(ObjectMapper objectMapper, String request) {
+    try {
+      return objectMapper.readValue(request, ManagingInstitutionSendEmail.class);
     } catch (JsonProcessingException e) {
       throw new FunctionOrchestratedException(e);
     }

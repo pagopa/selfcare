@@ -8,7 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_json.api.InstitutionApi;
 import org.openapi.quarkus.user_json.model.DeletedUserCountResponse;
-import org.openapi.quarkus.user_json.model.UserProductResponse;
+import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,20 +32,22 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    public List<String> findEmailByInstitutionAndProducts(String institutionId, List<String> products) {
-        List<UserProductResponse> userProductResponses = institutionApi.getInstitutionUsersUsingGET(
+    public List<String> findEmailUuidByInstitutionAndProducts(String institutionId, List<String> products) {
+        List<UserInstitutionResponse> userInstitutionResponses = institutionApi.retrieveUserInstitutions(
                 institutionId,
+                null,
                 products,
+                null,
                 null,
                 null);
 
-        if (Objects.isNull(userProductResponses) || userProductResponses.isEmpty()) {
+        if (Objects.isNull(userInstitutionResponses) || userInstitutionResponses.isEmpty()) {
             log.error("No users found for institution '{}' and products '{}'", institutionId, products);
             return List.of();
         }
 
-        List<String> emails = userProductResponses.stream()
-                .map(UserProductResponse::getEmail)
+        List<String> emails = userInstitutionResponses.stream()
+                .map(UserInstitutionResponse::getUserMailUuid)
                 .filter(StringUtils::isNotBlank)
                 .distinct()
                 .toList();
