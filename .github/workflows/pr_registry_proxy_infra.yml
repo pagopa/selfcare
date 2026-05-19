@@ -37,16 +37,6 @@ jobs:
       use_private_agent: true
       use_labels: true
       override_labels: dev
-    # uses: ./.github/workflows/call_code_review_infra.yml
-    # name: '[DEV-AR] Registry Proxy Infra Code Review'
-    # if: ${{ !startsWith(github.ref_name, 'releases/') }}
-    # secrets: inherit
-    # with:
-    #   environment: dev
-    #   dir: ./infra/resources/registry-proxy/dev-ar
-    #   tf_environment: dev-ar
-    #   env_vars: |
-    #     TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
 
   code_review_uat_ar:
     uses: pagopa/dx/.github/workflows/infra_plan.yaml@main

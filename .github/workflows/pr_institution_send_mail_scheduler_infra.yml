@@ -25,37 +25,46 @@ on:
 
 jobs:
   code_review_dev_ar:
-    uses: ./.github/workflows/call_code_review_infra.yml
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
     name: '[DEV-AR] Institution SendMailScheduler Infra Code Review'
     if: ${{ !startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
     with:
-      environment: dev
-      dir: ./infra/resources/institution-send-mail-scheduler/dev-ar
-      tf_environment: dev-ar
+      environment: dev-ar
+      base_path: infra/resources/institution-send-mail-scheduler
+      override_github_environment: dev
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+      use_private_agent: true
+      use_labels: true
+      override_labels: dev
 
   code_review_uat_ar:
-    uses: ./.github/workflows/call_code_review_infra.yml
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
     name: '[UAT-AR] Institution SendMailScheduler Infra Code Review'
     if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
     with:
-      environment: uat
-      dir: ./infra/resources/institution-send-mail-scheduler/uat-ar
-      tf_environment: uat-ar
+      environment: uat-ar
+      base_path: infra/resources/institution-send-mail-scheduler
+      override_github_environment: uat
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+      use_private_agent: true
+      use_labels: true
+      override_labels: uat
 
   code_review_prod_ar:
-    uses: ./.github/workflows/call_code_review_infra.yml
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
     name: '[PROD-AR] Institution SendMailScheduler Infra Code Review'
     if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
     with:
-      environment: prod
-      dir: ./infra/resources/institution-send-mail-scheduler/prod-ar
-      tf_environment: prod-ar
+      environment: prod-ar
+      base_path: infra/resources/institution-send-mail-scheduler
+      override_github_environment: prod
       env_vars: |
         TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+      use_private_agent: true
+      use_labels: true
+      override_labels: prod
