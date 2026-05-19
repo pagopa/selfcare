@@ -663,7 +663,7 @@ public class OnboardingFunctions {
                     MANAGING_INSTITUTION_ID, managingInstitutionSendEmail.getManagingInstitutionId(),
                     MANAGING_INSTITUTION_DESCRIPTION, managingInstitutionSendEmail.getManagingInstitutionDescription(),
                     USER_MAIL_UUID, managingInstitutionSendEmail.getUserMailUuid()));
-    service.sendMailManagingInstitution(managingInstitutionSendEmail);
+    onboardingService.sendMailManagingInstitution(managingInstitutionSendEmail);
   }
 
   @FunctionName(SEND_MAIL_REGISTRATION_FOR_USER_REQUESTER)
