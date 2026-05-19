@@ -1781,7 +1781,9 @@
     },
     "/onboarding/{onboardingId}": {
       "delete": {
-        "tags": [],
+        "tags": [
+          "Onboarding Controller"
+        ],
         "summary": "Perform delete operation of an onboarding request",
         "description": "Perform delete operation of an onboarding request receiving onboarding id, then invokes async process to set DELETED as status for institution and user onboardings.",
         "operationId": "deleteOnboarding",
@@ -1820,7 +1822,9 @@
     },
     "/onboarding/{onboardingId}/complete": {
       "put": {
-        "tags": [],
+        "tags": [
+          "Onboarding Controller"
+        ],
         "summary": "Complete onboarding by verifying and uploading contract, then trigger async activities.",
         "description": "Perform complete operation of an onboarding request receiving onboarding id and contract signed by the institution.It checks the contract's signature and upload the contract on an azure storageAt the end, function triggers async activities related to complete onboarding that consist of create the institution, activate the onboarding and sending data to notification queue.",
         "operationId": "completeOnboardingUsingPUT",
@@ -3380,6 +3384,11 @@
             "items": {
               "$ref": "#/components/schemas/AggregateInstitutionDto"
             }
+          },
+          "isTest": {
+            "type": "boolean",
+            "description": "True if institution is a test institution",
+            "example": false
           }
         }
       },
@@ -4754,6 +4763,9 @@
           },
           "iban": {
             "type": "string"
+          },
+          "isTest": {
+            "type": "boolean"
           }
         }
       },
@@ -4867,6 +4879,9 @@
             "items": {
               "type": "string"
             }
+          },
+          "isTest": {
+            "type": "boolean"
           }
         }
       },
@@ -5021,6 +5036,7 @@
           "REQUEST",
           "TOBEVALIDATED",
           "PENDING",
+          "PENDING_IN_REVIEW",
           "COMPLETED",
           "FAILED",
           "REJECTED",
@@ -5388,6 +5404,9 @@
             "items": {
               "type": "string"
             }
+          },
+          "isTest": {
+            "type": "boolean"
           },
           "paymentServiceProvider": {
             "$ref": "#/components/schemas/PaymentServiceProviderRequest1"

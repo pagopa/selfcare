@@ -1,0 +1,54 @@
+name: Release - APIM
+
+permissions:
+  contents: read
+  id-token: write
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'infra/resources/api/**'
+
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options:
+          - dev
+          - uat
+          - prod
+
+jobs:
+  release_dev_ar:
+    uses: ./.github/workflows/call_release_infra.yml
+    name: '[Dev] APIM'
+    if: ${{ ((startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev') }}
+    secrets: inherit
+    with:
+      environment: dev
+      dir: infra/resources/api/dev-ar
+      runner: "self-hosted"
+
+  release_uat_ar:
+    uses: ./.github/workflows/call_release_infra.yml
+    name: '[UAT] APIM'
+    if: ${{ ((startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat') }}
+    secrets: inherit
+    with:
+      environment: uat
+      dir: infra/resources/api/uat-ar
+      runner: "self-hosted"
+
+  release_prod_ar:
+    uses: ./.github/workflows/call_release_infra.yml
+    name: '[Prod] APIM'
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod
+      dir: infra/resources/api/prod-ar
+      runner: "self-hosted"
+

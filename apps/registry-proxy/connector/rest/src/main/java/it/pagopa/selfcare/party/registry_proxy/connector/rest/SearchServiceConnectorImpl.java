@@ -53,12 +53,12 @@ public class SearchServiceConnectorImpl implements SearchServiceConnector {
     List<String> enabledProducts = Objects.isNull(products) ? List.of() : products;
     SearchServiceResponse searchServiceResponse = azureSearchRestClient.searchInstitution(search, filter, top, skip, select, orderby);
     List<SearchServiceInstitution> institutions = new ArrayList<>();
-    Optional.of(searchServiceResponse).ifPresent(response -> {
+    Optional.of(searchServiceResponse).ifPresent(response ->
       institutions.addAll(response.getValue().stream()
         .map(SearchServiceInstitution::createSearchServiceInstitution)
         .map(searchServiceInstitution -> enabledProducts.contains("all") ? searchServiceInstitution : searchServiceInstitution.updateProductsEnable(enabledProducts))
-        .toList());
-    });
+        .toList())
+    );
     return institutions;
   }
 
@@ -77,7 +77,7 @@ public class SearchServiceConnectorImpl implements SearchServiceConnector {
 
   String optimizeSearchString(String search) {
     return Optional.ofNullable(search).map(s ->
-            Arrays.stream(s.trim().split("\\s+"))
+            Arrays.stream(s.trim().replace(".", "").split("[^\\p{L}\\p{N}]+"))
                 .filter(token -> token.length() >= SEARCH_MIN_TOKEN_LENGTH)
                 .map(token -> "\\\"" + token + "\\\"")
                 .collect(Collectors.joining(" ")))

@@ -23,9 +23,21 @@ jobs:
             src:
               - '${{ inputs.path_openapi_docs }}'
 
+      - name: Setup Node
+        if: steps.changes.outputs.src == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
       - name: Install Optic
         if: steps.changes.outputs.src == 'true'
-        run: npm install --location global @useoptic/optic
+        run: |
+          mkdir -p optic-install
+          cd optic-install
+
+          npm init -y
+          npm pkg set overrides.ajv="8.17.1"
+          npm install @useoptic/optic@1.0.9
         shell: bash
 
       - name: Extract branch name
@@ -37,5 +49,8 @@ jobs:
       - name: Check Open API by Optic
         if: steps.changes.outputs.src == 'true'
         id: optic_diff
-        run: optic diff ${{ inputs.path_openapi_docs }} --base origin/${{ steps.extract_branch.outputs.branch }} --check
+        run: |
+          ./optic-install/node_modules/.bin/optic diff "${{ inputs.path_openapi_docs }}" \
+            --base "origin/${{ steps.extract_branch.outputs.branch }}" \
+            --check
         shell: bash

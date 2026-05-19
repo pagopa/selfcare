@@ -17,41 +17,9 @@ module "local" {
 }
 
 locals {
-  ca_base_name = "selc-${module.local.config.env_short}-ext-api-backend"
-  ca_name      = "${local.ca_base_name}-ca"
-  # storage_logs    = "selc${module.local.config.env_short}stlogs"
-  # storage_logs_rg = "selc-${module.local.config.env_short}-logs-storage-rg"
-
-  # pnpg_suffix = var.is_pnpg == true ? "-pnpg" : ""
-  # project     = "selc-${var.env_short}"
-  # env_url     = var.env_short == "p" ? "" : ".${var.env}"
-  # env         = var.env
-
-  # container_app_environment_name = "${local.project}${local.pnpg_suffix}-${var.cae_name}"
-  # ca_resource_group_name         = "${local.project}-container-app${var.suffix_increment}-rg"
+  ca_base_name             = "selc-${module.local.config.env_short}-ext-api-backend"
   monitor_rg_name          = "${module.local.config.prefix}-${module.local.config.env_short}-monitor-rg"
   monitor_appinsights_name = "${module.local.config.prefix}-${module.local.config.env_short}-appinsights"
-
-
-  lock_enable = false
-
-  # networking
-  cidr_subnet_apim = ["10.1.161.0/24"]
-
-
-  # apim
-  apim_publisher_name = "pagoPA SelfCare DEV"
-  apim_sku            = "Developer_1"
-
-  # aks
-  private_dns_name            = "selc.internal.dev.selfcare.pagopa.it"
-  private_onboarding_dns_name = "selc-${module.local.config.env_short}-onboarding-ms-ca.gentleflower-c63e62fe.westeurope.azurecontainerapps.io"
-  # ca_suffix_dns_private_name      = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
-  ca_pnpg_suffix_dns_private_name = "blackhill-644148c0.westeurope.azurecontainerapps.io"
-
-  # app_gateway
-  app_gateway_api_certificate_name      = "api-dev-selfcare-pagopa-it"
-  app_gateway_api_pnpg_certificate_name = "api-pnpg-dev-selfcare-pagopa-it"
 
   container_app = {
     min_replicas = module.local.config.container_app.min_replicas
@@ -61,44 +29,7 @@ locals {
     memory       = "1Gi"
   }
 
-  spring_boot_health_probes = [
-    {
-      httpGet = {
-        path   = "/actuator/health"
-        port   = 8080
-        scheme = "HTTP"
-      }
-      timeoutSeconds      = 30
-      type                = "Liveness"
-      failureThreshold    = 3
-      initialDelaySeconds = 1
-    },
-    {
-      httpGet = {
-        path   = "/actuator/health"
-        port   = 8080
-        scheme = "HTTP"
-      }
-      timeoutSeconds      = 30
-      type                = "Readiness"
-      failureThreshold    = 30
-      initialDelaySeconds = 30
-    },
-    {
-      httpGet = {
-        path   = "/actuator/health"
-        port   = 8080
-        scheme = "HTTP"
-      }
-      timeoutSeconds      = 30
-      type                = "Startup"
-      failureThreshold    = 30
-      initialDelaySeconds = 60
-    }
-  ]
-
   app_settings = [
-
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
       value = "external-api"
@@ -171,7 +102,6 @@ locals {
     "USERVICE_USER_REGISTRY_API_KEY"         = "user-registry-api-key"
     "JWT_TOKEN_PUBLIC_KEY"                   = "jwt-public-key"
     "BLOB_STORAGE_PRODUCT_CONNECTION_STRING" = "blob-storage-product-connection-string"
-
   }
 
   probes = [

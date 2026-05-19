@@ -7,11 +7,12 @@ on:
     inputs:
       api_prefix:
         type: choice
-        description: API Prefix
+        description: Hostname prefix
         options:
           - "-"
           - "api"
           - "api-pnpg"
+          - "pnpg"
         required: true
       environment:
         type: choice
@@ -19,12 +20,12 @@ on:
         options:
           - dev
           - uat
-          # - prod
+          - prod
         required: true
         default: dev
       target:
         type: choice
-        description: Target type
+        description: Base domain
         options:
           - areariservata
           - selfcare
@@ -40,55 +41,96 @@ permissions:
   id-token: write
 
 jobs:
-  setup:
+  validate-dispatch-inputs:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
-    outputs:
-      prefix: ${{ steps.prefix.outputs.value }}
-      domain: ${{ steps.domain.outputs.value }}
-      api_prefix: ${{ steps.api_prefix.outputs.value }}
     steps:
-      - name: Set env prefix
-        id: prefix
-        run: echo "value=${ENV:0:1}" >> "$GITHUB_OUTPUT"
-        env:
-          ENV: ${{ inputs.environment }}
-
-      - name: Set domain prefix
-        id: domain
+      - name: Validate pnpg hostname
         run: |
-          if [[ "$ENV" == "prod" ]]; then
-            echo "value=" >> "$GITHUB_OUTPUT"
-          else
-            echo "value=${ENV}." >> "$GITHUB_OUTPUT"
+          if [[ "${{ inputs.api_prefix }}" == "pnpg" && "${{ inputs.target }}" != "selfcare" ]]; then
+            echo "The pnpg hostname prefix is supported only with the selfcare base domain." >&2
+            exit 1
           fi
-        env:
-          ENV: ${{ inputs.environment }}
-      
-      - name: Set api prefix
-        id: api_prefix
-        run: |
-          if [[ "$ENV" == "-" ]]; then
-            echo "value=" >> "$GITHUB_OUTPUT"
-          else
-            echo "value=${{ inputs.api_prefix }}." >> "$GITHUB_OUTPUT"
-          fi
-        env:
-          ENV: ${{ inputs.environment }}
 
-  renew-certificate:
-    needs: setup
+  renew-certificate-dispatch:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: validate-dispatch-inputs
     uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@main
     secrets: inherit
     with:
-      force_renewal: ${{ inputs.force_renewal || false }}
-      key_vault_name: "selc-${{ needs.setup.outputs.prefix }}-kv"
-      csr_common_name: "${{ needs.setup.outputs.domain }}${{ inputs.target }}.pagopa.it"
-      dns_zone: "${{ needs.setup.outputs.domain }}${{ inputs.target }}.pagopa.it"
-      dns_zone_resource_group: "selc-${{ needs.setup.outputs.prefix }}-vnet-rg"
+      force_renewal: ${{ inputs.force_renewal }}
+      key_vault_name: "selc-${{ inputs.environment == 'prod' && 'p' || inputs.environment == 'uat' && 'u' || 'd' }}-kv"
+      csr_common_name: "${{ inputs.api_prefix != '-' && format('{0}.', inputs.api_prefix) || '' }}${{ inputs.environment != 'prod' && format('{0}.', inputs.environment) || '' }}${{ inputs.target }}.pagopa.it"
+      dns_zone: "${{ inputs.api_prefix != '-' && format('{0}.', inputs.api_prefix) || '' }}${{ inputs.environment != 'prod' && format('{0}.', inputs.environment) || '' }}${{ inputs.target }}.pagopa.it"
+      dns_zone_resource_group: "selc-${{ inputs.environment == 'prod' && 'p' || inputs.environment == 'uat' && 'u' || 'd' }}-vnet-rg"
       environment: ${{ inputs.environment }}
 
-      # arm_client_id: ${{ secrets.ARM_CLIENT_ID }}
-      # arm_subscription_id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      # arm_tenant_id: ${{ secrets.ARM_TENANT_ID }}
-      # lets_encrypt_private_key_json: ${{ secrets.LETS_ENCRYPT_PRIVATE_KEY_JSON }}
-      # lets_encrypt_registration_json: ${{ secrets.LETS_ENCRYPT_REGISTRATION_JSON }}
+  renew-certificate-schedule:
+    if: ${{ github.event_name == 'schedule' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - environment: dev
+            api_prefix: "-"
+            target: areariservata
+          - environment: dev
+            api_prefix: api
+            target: areariservata
+          - environment: dev
+            api_prefix: "-"
+            target: selfcare
+          - environment: dev
+            api_prefix: api
+            target: selfcare
+          - environment: dev
+            api_prefix: api-pnpg
+            target: selfcare
+          - environment: dev
+            api_prefix: pnpg
+            target: selfcare
+          - environment: uat
+            api_prefix: "-"
+            target: areariservata
+          - environment: uat
+            api_prefix: api
+            target: areariservata
+          - environment: uat
+            api_prefix: "-"
+            target: selfcare
+          - environment: uat
+            api_prefix: api
+            target: selfcare
+          - environment: uat
+            api_prefix: api-pnpg
+            target: selfcare
+          - environment: uat
+            api_prefix: pnpg
+            target: selfcare
+          - environment: prod
+            api_prefix: "-"
+            target: areariservata
+          - environment: prod
+            api_prefix: api
+            target: areariservata
+          - environment: prod
+            api_prefix: "-"
+            target: selfcare
+          - environment: prod
+            api_prefix: api
+            target: selfcare
+          - environment: prod
+            api_prefix: api-pnpg
+            target: selfcare
+          - environment: prod
+            api_prefix: pnpg
+            target: selfcare
+    uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@main
+    secrets: inherit
+    with:
+      force_renewal: false
+      key_vault_name: "selc-${{ matrix.environment == 'prod' && 'p' || matrix.environment == 'uat' && 'u' || 'd' }}-kv"
+      csr_common_name: "${{ matrix.api_prefix != '-' && format('{0}.', matrix.api_prefix) || '' }}${{ matrix.environment != 'prod' && format('{0}.', matrix.environment) || '' }}${{ matrix.target }}.pagopa.it"
+      dns_zone: "${{ matrix.api_prefix != '-' && format('{0}.', matrix.api_prefix) || '' }}${{ matrix.environment != 'prod' && format('{0}.', matrix.environment) || '' }}${{ matrix.target }}.pagopa.it"
+      dns_zone_resource_group: "selc-${{ matrix.environment == 'prod' && 'p' || matrix.environment == 'uat' && 'u' || 'd' }}-vnet-rg"
+      environment: ${{ matrix.environment }}
