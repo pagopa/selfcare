@@ -59,7 +59,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     private final ProductService productService;
     private final PdvUserRegistryService pdvUserRegistryService;
     private final UserService userService;
-    private final InfocamereService infocamereService;
+    private final RegistryProxyService registryProxyService;
     private final OnboardingRepositoryService onboardingRepositoryService;
 
     private final MailTemplatePathConfig mailTemplatePathConfig;
@@ -80,7 +80,7 @@ public class OnboardingServiceImpl implements OnboardingService {
             OnboardingRepositoryService onboardingRepositoryService,
             PdvUserRegistryService pdvUserRegistryService,
             UserService userService,
-            InfocamereService infocamereService) {
+            RegistryProxyService registryProxyService) {
         this.productService = productService;
         this.notificationService = notificationService;
         this.documentService = documentService;
@@ -92,7 +92,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         this.onboardingRepositoryService = onboardingRepositoryService;
         this.pdvUserRegistryService = pdvUserRegistryService;
         this.userService = userService;
-        this.infocamereService = infocamereService;
+        this.registryProxyService = registryProxyService;
     }
 
     public Optional<Onboarding> getOnboarding(String onboardingId) {
@@ -205,7 +205,7 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     public void saveVisuraForMerchant(Onboarding onboarding) {
         var taxCode = onboarding.getInstitution().getTaxCode();
-        var bytes = infocamereService.getInstitutionVisuraByTaxCode(taxCode);
+        var bytes = registryProxyService.getInstitutionVisuraByTaxCode(taxCode);
         final String filename = String.format("VISURA_%s.xml", taxCode);
         org.openapi.quarkus.document_json.api.DocumentContentControllerApi.SaveVisuraForMerchantMultipartForm request =
                 new org.openapi.quarkus.document_json.api.DocumentContentControllerApi

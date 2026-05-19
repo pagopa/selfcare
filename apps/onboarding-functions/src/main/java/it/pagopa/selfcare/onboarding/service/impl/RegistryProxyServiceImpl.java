@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.onboarding.service.impl;
 
-import it.pagopa.selfcare.onboarding.service.InfocamereService;
+import it.pagopa.selfcare.onboarding.service.RegistryProxyService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -9,12 +9,12 @@ import org.openapi.quarkus.party_registry_proxy_json.api.PdndVisuraInfoCamereCon
 
 @ApplicationScoped
 @Slf4j
-public class InfocamereServiceImpl implements InfocamereService {
+public class RegistryProxyServiceImpl implements RegistryProxyService {
 
   private final PdndVisuraInfoCamereControllerApi pdndVisuraInfoCamereApi;
 
   @Inject
-  public InfocamereServiceImpl(@RestClient PdndVisuraInfoCamereControllerApi pdndVisuraInfoCamereApi) {
+  public RegistryProxyServiceImpl(@RestClient PdndVisuraInfoCamereControllerApi pdndVisuraInfoCamereApi) {
     this.pdndVisuraInfoCamereApi = pdndVisuraInfoCamereApi;
   }
 
