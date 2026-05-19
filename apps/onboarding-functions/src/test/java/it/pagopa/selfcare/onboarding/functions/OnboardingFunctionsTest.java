@@ -1955,8 +1955,9 @@ class OnboardingFunctionsTest {
     ManagingInstitution managingInstitution = new ManagingInstitution();
     managingInstitution.setInstitutionId("inst-123");
     managingInstitution.setDescription("Managing Institution");
-    Task<ManagingInstitution> getManagingInstitutionTask = mockTaskWithValue(managingInstitution);
-    when(orchestrationContext.callActivity(eq(GET_MANAGING_INSTITUTION_ACTIVITY), any(), any(), eq(ManagingInstitution.class)))
+    ManagingInstitution[] managingInstitutions = new ManagingInstitution[] { managingInstitution };
+    Task<ManagingInstitution[]> getManagingInstitutionTask = mockTaskWithValue(managingInstitutions);
+    when(orchestrationContext.callActivity(eq(GET_MANAGING_INSTITUTION_ACTIVITY), any(), any(), eq(ManagingInstitution[].class)))
             .thenReturn(getManagingInstitutionTask);
 
     String emailsJson = Utils.getEmailListString(objectMapper, List.of(UserMail.builder().build()));
@@ -1968,7 +1969,7 @@ class OnboardingFunctionsTest {
 
     verify(orchestrationContext).callActivity(eq(GET_LATEST_DOCUMENT_ACTIVITY), any(), any(), eq(String.class));
     verify(orchestrationContext).callActivity(eq(GET_SIGNING_CONFIGURATION_ACTIVITY), any(), any(), eq(SigningConfiguration.class));
-    verify(orchestrationContext).callActivity(eq(GET_MANAGING_INSTITUTION_ACTIVITY), any(), any(), eq(ManagingInstitution.class));
+    verify(orchestrationContext).callActivity(eq(GET_MANAGING_INSTITUTION_ACTIVITY), any(), any(), eq(ManagingInstitution[].class));
     verify(orchestrationContext).callActivity(eq(GET_USER_EMAIL_UUID_ACTIVITY), any(), any(), eq(String.class));
 
     verify(service, times(1)).updateOnboardingStatus(onboarding.getId(), OnboardingStatus.PENDING_IN_REVIEW);
