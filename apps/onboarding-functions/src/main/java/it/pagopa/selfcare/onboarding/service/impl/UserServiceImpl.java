@@ -14,7 +14,6 @@ import org.openapi.quarkus.user_json.api.InstitutionApi;
 import org.openapi.quarkus.user_json.api.UserApi;
 import org.openapi.quarkus.user_json.model.DeletedUserCountResponse;
 import org.openapi.quarkus.user_json.model.SendMailDto;
-import org.openapi.quarkus.user_json.model.User;
 import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
 
 import java.util.List;
@@ -35,7 +34,7 @@ public class UserServiceImpl implements UserService {
 
     public void deleteByIdAndInstitutionIdAndProductId(String institutionId, String productId) {
         log.debug("Deleting user for institution {} and product {}", institutionId, productId);
-        DeletedUserCountResponse response =  institutionApi.deleteUserInstitutionProductUsers(institutionId, productId);
+        DeletedUserCountResponse response = institutionApi.deleteUserInstitutionProductUsers(institutionId, productId);
         if (Objects.isNull(response) || response.getDeletedUserCount() < 1L) {
             log.error("Error during user deletion: {}", response);
         }
