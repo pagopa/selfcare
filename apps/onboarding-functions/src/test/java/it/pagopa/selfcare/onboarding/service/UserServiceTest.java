@@ -8,15 +8,19 @@ import static org.mockito.Mockito.*;
 
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.dto.UserMail;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.openapi.quarkus.core_json.model.OnboardedProductResponse;
 import org.openapi.quarkus.user_json.api.InstitutionApi;
+import org.openapi.quarkus.user_json.api.UserApi;
 import org.openapi.quarkus.user_json.model.DeletedUserCountResponse;
 import java.util.List;
 
+import org.openapi.quarkus.user_json.model.SendMailDto;
 import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
 
 @QuarkusTest
@@ -27,6 +31,8 @@ class UserServiceTest {
 
   @RestClient @InjectMock
   InstitutionApi institutionApi;
+  @RestClient @InjectMock
+  UserApi userApi;
 
   private final String productId = "productId";
   private final String institutionId = "institutionId";
@@ -149,6 +155,63 @@ class UserServiceTest {
     assertEquals(List.of("user-1", "user-2"), result.stream().map(UserMail::getUserId).toList());
     verify(institutionApi, times(1))
         .retrieveUserInstitutions(eq(institutionId), isNull(), eq(products), isNull(), isNull(), isNull());
+  }
+
+  @Test
+  void getActiveManagersByInstitutionAndProduct_shouldCallApiWithExpectedFilters() {
+    // given
+    List<UserInstitutionResponse> expected = List.of(new UserInstitutionResponse());
+    when(
+      institutionApi.retrieveUserInstitutions(
+        eq("institution-id"),
+        isNull(),
+        eq(List.of("product-id")),
+        eq(List.of(String.valueOf(PartyRole.MANAGER))),
+        eq(List.of(String.valueOf(OnboardedProductResponse.StatusEnum.ACTIVE))),
+        isNull()))
+      .thenReturn(expected);
+
+    // when
+    List<UserInstitutionResponse> actual = userService.getActiveManagersByInstitutionAndProduct(
+      "institution-id",
+      "product-id",
+      OnboardedProductResponse.StatusEnum.ACTIVE);
+
+    // then
+    assertEquals(expected, actual);
+    verify(institutionApi)
+      .retrieveUserInstitutions(
+        eq("institution-id"),
+        isNull(),
+        eq(List.of("product-id")),
+        eq(List.of(String.valueOf(PartyRole.MANAGER))),
+        eq(List.of(String.valueOf(OnboardedProductResponse.StatusEnum.ACTIVE))),
+        isNull());
+  }
+
+  @Test
+  void sendMailRequest_shouldDelegateToApi() {
+    // given
+    SendMailDto mailDto = new SendMailDto();
+
+    // when
+    userService.sendMailRequest("user-id", mailDto);
+
+    // then
+    verify(userApi).sendMailRequest("user-id", mailDto);
+  }
+
+  @Test
+  void sendMailRequest_shouldNotThrowWhenApiFails() {
+    // given
+    SendMailDto mailDto = new SendMailDto();
+    doThrow(new RuntimeException("boom")).when(userApi).sendMailRequest("user-id", mailDto);
+
+    // when
+    userService.sendMailRequest("user-id", mailDto);
+
+    // then
+    verify(userApi).sendMailRequest("user-id", mailDto);
   }
 
   private UserInstitutionResponse createUserInstitutionResponse(String emailUuid, String userId) {

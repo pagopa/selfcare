@@ -51,11 +51,9 @@ class OnboardingServiceTest {
     @InjectMock
     PdvUserRegistryService pdvUserRegistryService;
     @InjectMock
-    UserInstitutionRestService userInstitutionRestService;
+    UserService userService;
     @InjectMock
-    UserNotificationService userNotificationService;
-    @InjectMock
-    InfocamereService infocamereService;
+    RegistryProxyService registryProxyService;
     @InjectMock
     NotificationService notificationService;
     @InjectMock
@@ -435,7 +433,7 @@ class OnboardingServiceTest {
         onboardingService.sendMailRegistrationForUser(onboarding);
 
         // Assert
-        Mockito.verify(userNotificationService).sendMailRequest(any(),
+        Mockito.verify(userService).sendMailRequest(any(),
                 Mockito.argThat(dto ->
                         dto.getInstitutionName().equals(expectedDto.getInstitutionName()) &&
                                 dto.getProductId().equals(expectedDto.getProductId()) &&
@@ -461,7 +459,7 @@ class OnboardingServiceTest {
         user.setUserMailUuid("uuid-123");
         onboarding.setUsers(List.of(user));
 
-        Mockito.when(infocamereService.getInstitutionVisuraByTaxCode(any()))
+        Mockito.when(registryProxyService.getInstitutionVisuraByTaxCode(any()))
                 .thenReturn("test".getBytes(StandardCharsets.UTF_8));
         Mockito.when(documentService.saveVisuraForMerchant(any()))
                 .thenReturn(Response.ok().build());
@@ -469,7 +467,7 @@ class OnboardingServiceTest {
         onboardingService.saveVisuraForMerchant(onboarding);
 
         // Assert
-        Mockito.verify(infocamereService).getInstitutionVisuraByTaxCode(Mockito.any());
+        Mockito.verify(registryProxyService).getInstitutionVisuraByTaxCode(Mockito.any());
         Mockito.verify(documentService).saveVisuraForMerchant(any());
     }
 
@@ -487,11 +485,11 @@ class OnboardingServiceTest {
         onboarding.setUsers(List.of(user));
 
         Mockito.doThrow(new RuntimeException("Error during download"))
-                .when(infocamereService).getInstitutionVisuraByTaxCode(Mockito.any());
+                .when(registryProxyService).getInstitutionVisuraByTaxCode(Mockito.any());
 
         Assertions.assertThrows(RuntimeException.class, () -> onboardingService.saveVisuraForMerchant(onboarding));
 
-        Mockito.verify(infocamereService).getInstitutionVisuraByTaxCode(Mockito.any());
+        Mockito.verify(registryProxyService).getInstitutionVisuraByTaxCode(Mockito.any());
         Mockito.verifyNoInteractions(documentService);
     }
 
@@ -509,11 +507,11 @@ class OnboardingServiceTest {
         onboarding.setUsers(List.of(user));
         Mockito.when(userMapper.toUserPartyRole(PartyRole.MANAGER)).thenReturn(org.openapi.quarkus.user_json.model.PartyRole.MANAGER);
         Mockito.doThrow(new RuntimeException("Email failure"))
-                .when(userNotificationService).sendMailRequest(Mockito.any(), Mockito.any());
+                .when(userService).sendMailRequest(Mockito.any(), Mockito.any());
 
-        Assertions.assertThrows(RuntimeException.class, () -> userNotificationService.sendMailRequest(Mockito.any(), Mockito.any()));
+        Assertions.assertThrows(RuntimeException.class, () -> userService.sendMailRequest(Mockito.any(), Mockito.any()));
 
-        Mockito.verify(userNotificationService).sendMailRequest(Mockito.any(), Mockito.any());
+        Mockito.verify(userService).sendMailRequest(Mockito.any(), Mockito.any());
     }
 
     @Test
@@ -703,7 +701,7 @@ class OnboardingServiceTest {
         userInstitutionResponse.setInstitutionId(onboarding.getInstitution().getId());
         userInstitutionResponse.setUserId("previousManagerId");
 
-        when(userInstitutionRestService.getActiveManagersByInstitutionAndProduct(any(), any(), any()))
+        when(userService.getActiveManagersByInstitutionAndProduct(any(), any(), any()))
                 .thenReturn(List.of(userInstitutionResponse));
 
         doNothing()
@@ -971,7 +969,7 @@ class OnboardingServiceTest {
         onboardingService.sendMailRegistrationForUserRequester(onboarding);
 
         // Assert
-        Mockito.verify(userNotificationService).sendMailRequest(any(),
+        Mockito.verify(userService).sendMailRequest(any(),
                 Mockito.argThat(dto ->
                         dto.getInstitutionName().equals(expectedDto.getInstitutionName()) &&
                                 dto.getProductId().equals(expectedDto.getProductId()) &&
@@ -999,11 +997,11 @@ class OnboardingServiceTest {
         onboarding.setUserRequester(userRequester);
         Mockito.when(userMapper.toUserPartyRole(PartyRole.MANAGER)).thenReturn(org.openapi.quarkus.user_json.model.PartyRole.MANAGER);
         Mockito.doThrow(new RuntimeException("Email failure"))
-                .when(userNotificationService).sendMailRequest(Mockito.any(), Mockito.any());
+                .when(userService).sendMailRequest(Mockito.any(), Mockito.any());
 
         Assertions.assertThrows(RuntimeException.class, () -> onboardingService.sendMailRegistrationForUserRequester(onboarding));
 
-        Mockito.verify(userNotificationService).sendMailRequest(Mockito.any(), Mockito.any());
+        Mockito.verify(userService).sendMailRequest(Mockito.any(), Mockito.any());
     }
 
     @Test
@@ -1080,7 +1078,7 @@ class OnboardingServiceTest {
 
         onboardingService.sendMailManagingInstitution(request);
 
-        Mockito.verify(userNotificationService).sendMailRequest(eq("user-1"),
+        Mockito.verify(userService).sendMailRequest(eq("user-1"),
                 Mockito.argThat(dto ->
                         "Test Institution".equals(dto.getInstitutionName())
                                 && "prod-123".equals(dto.getProductId())
@@ -1098,11 +1096,11 @@ class OnboardingServiceTest {
         request.setUserId("user-1");
 
         Mockito.doThrow(new RuntimeException("Email failure"))
-                .when(userNotificationService)
+                .when(userService)
                 .sendMailRequest(eq("uuid-123"), any(SendMailDto.class));
 
         Assertions.assertDoesNotThrow(() -> onboardingService.sendMailManagingInstitution(request));
 
-        Mockito.verify(userNotificationService).sendMailRequest(eq("user-1"), any(SendMailDto.class));
+        Mockito.verify(userService).sendMailRequest(eq("user-1"), any(SendMailDto.class));
     }
 }
