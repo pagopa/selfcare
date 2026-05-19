@@ -3,19 +3,16 @@ package it.pagopa.selfcare.onboarding.service.impl;
 import com.microsoft.azure.functions.ExecutionContext;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.onboarding.config.MailTemplatePathConfig;
-import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.dto.NotificationCountResult;
 import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
 import it.pagopa.selfcare.onboarding.dto.SendMailInput;
 import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
-import it.pagopa.selfcare.onboarding.mapper.AttachmentPdfRequestMapper;
-import it.pagopa.selfcare.onboarding.mapper.ContractPdfRequestMapper;
-import it.pagopa.selfcare.onboarding.mapper.DocumentBuilderRequestMapper;
 import it.pagopa.selfcare.onboarding.service.*;
+import it.pagopa.selfcare.onboarding.utils.DocumentBuilder;
 import it.pagopa.selfcare.onboarding.utils.GenericError;
+import it.pagopa.selfcare.onboarding.utils.MailBuilder;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
@@ -62,21 +59,15 @@ public class OnboardingServiceImpl implements OnboardingService {
     private final RegistryProxyService registryProxyService;
     private final OnboardingRepositoryService onboardingRepositoryService;
 
-    private final MailTemplatePathConfig mailTemplatePathConfig;
-    private final MailTemplatePlaceholdersConfig mailTemplatePlaceholdersConfig;
-    private final ContractPdfRequestMapper contractPdfRequestMapper;
-    private final AttachmentPdfRequestMapper attachmentPdfRequestMapper;
-    private final DocumentBuilderRequestMapper documentBuilderRequestMapper;
+    private final MailBuilder mailBuilder;
+    private final DocumentBuilder documentBuilder;
 
     public OnboardingServiceImpl(
             ProductService productService,
-            MailTemplatePathConfig mailTemplatePathConfig,
-            MailTemplatePlaceholdersConfig mailTemplatePlaceholdersConfig,
+            MailBuilder mailBuilder,
             NotificationService notificationService,
             DocumentService documentService,
-            ContractPdfRequestMapper contractPdfRequestMapper,
-            AttachmentPdfRequestMapper attachmentPdfRequestMapper,
-            DocumentBuilderRequestMapper documentBuilderRequestMapper,
+            DocumentBuilder documentBuilder,
             OnboardingRepositoryService onboardingRepositoryService,
             PdvUserRegistryService pdvUserRegistryService,
             UserService userService,
@@ -84,11 +75,8 @@ public class OnboardingServiceImpl implements OnboardingService {
         this.productService = productService;
         this.notificationService = notificationService;
         this.documentService = documentService;
-        this.mailTemplatePathConfig = mailTemplatePathConfig;
-        this.mailTemplatePlaceholdersConfig = mailTemplatePlaceholdersConfig;
-        this.contractPdfRequestMapper = contractPdfRequestMapper;
-        this.attachmentPdfRequestMapper = attachmentPdfRequestMapper;
-        this.documentBuilderRequestMapper = documentBuilderRequestMapper;
+        this.mailBuilder = mailBuilder;
+        this.documentBuilder = documentBuilder;
         this.onboardingRepositoryService = onboardingRepositoryService;
         this.pdvUserRegistryService = pdvUserRegistryService;
         this.userService = userService;
@@ -112,13 +100,13 @@ public class OnboardingServiceImpl implements OnboardingService {
         UserResource manager = getUserResource(onboarding);
         Product product = productService.getProductIsValid(onboarding.getProductId());
         ContractPdfRequest request =
-                contractPdfRequestMapper.toRequest(
+                documentBuilder.toContractPdfRequest(
                         onboarding,
                         manager,
                         delegates,
                         product,
                         onboardingWorkflow.getContractTemplatePath(product),
-                        mailTemplatePlaceholdersConfig.rejectOnboardingUrlValue());
+                        mailBuilder.rejectOnboardingUrl());
 
         documentService.createContractPdf(request);
     }
@@ -133,7 +121,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         Product product = productService.getProductIsValid(onboarding.getProductId());
         AttachmentTemplate attachment = onboardingAttachment.getAttachment();
         AttachmentPdfRequest request =
-                attachmentPdfRequestMapper.toRequest(
+                documentBuilder.toAttachmentPdfRequest(
                         onboarding, attachment, product, getUserResource(onboarding));
 
         documentService.createAttachmentPdf(request);
@@ -143,7 +131,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         Onboarding onboarding = onboardingWorkflow.getOnboarding();
         Product product = productService.getProductIsValid(onboarding.getProductId());
         DocumentBuilderRequest request =
-                documentBuilderRequestMapper.toRequest(onboarding, product, onboardingWorkflow);
+                documentBuilder.toContractDocumentBuilderRequest(onboarding, product, onboardingWorkflow);
         documentService.saveDocument(request);
     }
 
@@ -152,7 +140,8 @@ public class OnboardingServiceImpl implements OnboardingService {
         Product product = productService.getProductIsValid(onboarding.getProductId());
         AttachmentTemplate attachmentTemplate = onboardingAttachment.getAttachment();
         DocumentBuilderRequest request =
-                documentBuilderRequestMapper.toRequest(onboarding, product, attachmentTemplate, DocumentType.ATTACHMENT);
+                documentBuilder.toAttachmentDocumentBuilderRequest(
+                        onboarding, product, attachmentTemplate, DocumentType.ATTACHMENT);
         documentService.saveDocument(request);
     }
 
@@ -221,9 +210,8 @@ public class OnboardingServiceImpl implements OnboardingService {
         Onboarding onboarding = onboardingWorkflow.getOnboarding();
         SendMailInput sendMailInput = builderWithProductAndUserRequest(onboarding);
 
-        final String templatePath = onboardingWorkflow.getEmailRegistrationPath(mailTemplatePathConfig);
-        final String confirmTokenUrl =
-                onboardingWorkflow.getConfirmTokenUrl(mailTemplatePlaceholdersConfig);
+        final String templatePath = mailBuilder.registrationTemplatePath(onboardingWorkflow);
+        final String confirmTokenUrl = mailBuilder.confirmTokenUrl(onboardingWorkflow);
 
         String expirationDate = productService.getProductExpirationDate(onboarding.getProductId()).toString();
 
@@ -261,8 +249,8 @@ public class OnboardingServiceImpl implements OnboardingService {
                 "",
                 product.getTitle(),
                 "description",
-                onboardingWorkflow.getEmailRegistrationPath(mailTemplatePathConfig),
-                onboardingWorkflow.getConfirmTokenUrl(mailTemplatePlaceholdersConfig), expirationDate);
+                mailBuilder.registrationTemplatePath(onboardingWorkflow),
+                mailBuilder.confirmTokenUrl(onboardingWorkflow), expirationDate);
     }
 
     public void sendMailRegistrationApprove(Onboarding onboarding) {
