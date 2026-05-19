@@ -12,6 +12,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.common.DocumentType;
+import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.constants.CustomError;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
@@ -21,6 +22,7 @@ import it.pagopa.selfcare.onboarding.service.RegistryProxyService;
 import it.pagopa.selfcare.onboarding.service.util.OnboardingUtils;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.product.entity.SigningConfiguration;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -111,6 +113,7 @@ class OnboardingUtilsTest {
         onboarding.setId(UUID.randomUUID().toString());
         onboarding.setInstitution(new it.pagopa.selfcare.onboarding.entity.Institution());
         onboarding.getInstitution().setInstitutionType(it.pagopa.selfcare.onboarding.common.InstitutionType.PA);
+        onboarding.setStatus(OnboardingStatus.PENDING_IN_REVIEW);
 
         Product product = new Product();
         product.setId("productId");
@@ -121,7 +124,9 @@ class OnboardingUtilsTest {
         Map<String, ContractTemplate> contractMappings = new HashMap<>();
         contractMappings.put("PA", contractTemplate);
         product.setInstitutionContractMappings(contractMappings);
-
+        SigningConfiguration signingConfiguration = new SigningConfiguration();
+        signingConfiguration.setSkipSignerIdentityCheck(true);
+        product.setSigningConfiguration(signingConfiguration);
 
 
         File file = new File("file");
