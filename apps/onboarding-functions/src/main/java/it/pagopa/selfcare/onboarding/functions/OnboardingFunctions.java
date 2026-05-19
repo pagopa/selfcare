@@ -68,20 +68,22 @@ public class OnboardingFunctions {
   public static final String MANAGING_INSTITUTION_DESCRIPTION = "managingInstitutionDescription";
   public static final String USER_MAIL_UUID = "userMailUuid";
 
-  private final OnboardingService service;
+  private final OnboardingService onboardingService;
   private final CompletionService completionService;
   private final ContractService contractService;
-  private final ObjectMapper objectMapper;
-  private final TaskOptions optionsRetry;
-  private final OnboardingMapper onboardingMapper;
-  private final TelemetryService telemetryService;
-  private final ProductService productService;
-  private final AggregateBatchConfig aggregateBatchConfig;
   private final DocumentService documentService;
   private final UserService userService;
+  private final TelemetryService telemetryService;
+  private final ProductService productService;
+
+  private final ObjectMapper objectMapper;
+  private final TaskOptions optionsRetry;
+
+  private final OnboardingMapper onboardingMapper;
+  private final AggregateBatchConfig aggregateBatchConfig;
 
   public OnboardingFunctions(
-      OnboardingService service,
+      OnboardingService onboardingService,
       ObjectMapper objectMapper,
       RetryPolicyConfig retryPolicyConfig,
       CompletionService completionService,
@@ -92,7 +94,7 @@ public class OnboardingFunctions {
       DocumentService documentService,
       TelemetryService telemetryService,
       UserService userService) {
-    this.service = service;
+    this.onboardingService = onboardingService;
     this.objectMapper = objectMapper;
     this.completionService = completionService;
     this.contractService = contractService;
@@ -318,7 +320,7 @@ public class OnboardingFunctions {
 
     try {
       onboarding =
-          service
+          onboardingService
               .getOnboarding(onboardingId)
               .orElseThrow(
                   () ->
@@ -363,7 +365,7 @@ public class OnboardingFunctions {
 
       Optional<OnboardingStatus> optNextStatus = workflowExecutor.execute(ctx, onboarding);
       optNextStatus.ifPresent(
-          onboardingStatus -> service.updateOnboardingStatus(onboardingId, onboardingStatus));
+          onboardingStatus -> onboardingService.updateOnboardingStatus(onboardingId, onboardingStatus));
     } catch (TaskFailedException | ResourceNotFoundException ex) {
       handleOrchestratorException(ctx, functionContext, onboardingId, ex);
       throw ex;
@@ -383,7 +385,7 @@ public class OnboardingFunctions {
             onboardingWorkflowString),
         SeverityLevel.Information,
         Map.of("onboardingWorkflow", onboardingWorkflowString));
-    service.createContract(readOnboardingWorkflowValue(objectMapper, onboardingWorkflowString));
+    onboardingService.createContract(readOnboardingWorkflowValue(objectMapper, onboardingWorkflowString));
   }
 
   /** This HTTP-triggered function invokes an orchestration to build attachments and save tokens */
@@ -504,7 +506,7 @@ public class OnboardingFunctions {
         SeverityLevel.Warning,
         "Error during workflow execution: " + ex.getMessage(),
         Map.of(ONBOARDING_ID, onboardingId));
-    service.updateOnboardingStatusAndInstanceId(onboardingId, OnboardingStatus.FAILED, ctx.getInstanceId());
+    onboardingService.updateOnboardingStatusAndInstanceId(onboardingId, OnboardingStatus.FAILED, ctx.getInstanceId());
   }
 
   /** This is the activity function that gets invoked by the orchestrator function. */
@@ -526,7 +528,7 @@ public class OnboardingFunctions {
             onboardingAttachmentString),
         SeverityLevel.Information,
         properties);
-    service.createAttachment(onboardingAttachment);
+    onboardingService.createAttachment(onboardingAttachment);
   }
 
   /** This is the activity function that gets invoked by the orchestrator function. */
@@ -548,7 +550,7 @@ public class OnboardingFunctions {
             onboardingWorkflowString),
         SeverityLevel.Information,
         properties);
-    service.saveTokenWithContract(
+    onboardingService.saveTokenWithContract(
         readOnboardingWorkflowValue(objectMapper, onboardingWorkflowString));
   }
 
@@ -570,7 +572,7 @@ public class OnboardingFunctions {
             onboardingAttachmentString),
         SeverityLevel.Information,
         properties);
-    service.saveTokenWithAttachment(onboardingAttachment);
+    onboardingService.saveTokenWithAttachment(onboardingAttachment);
   }
 
   /** This is the activity function that gets invoked by the orchestrator function. */
@@ -589,7 +591,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboardingWorkflow.getOnboarding().getId(),
             PRODUCT_ID, onboardingWorkflow.getOnboarding().getProductId()));
-    service.sendMailRegistrationForContract(onboardingWorkflow);
+    onboardingService.sendMailRegistrationForContract(onboardingWorkflow);
   }
 
   @FunctionName(SEND_MAIL_REGISTRATION_FOR_CONTRACT_WHEN_APPROVE_ACTIVITY)
@@ -607,7 +609,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboardingWorkflow.getOnboarding().getId(),
             PRODUCT_ID, onboardingWorkflow.getOnboarding().getProductId()));
-    service.sendMailRegistrationForContractWhenApprove(onboardingWorkflow);
+    onboardingService.sendMailRegistrationForContractWhenApprove(onboardingWorkflow);
   }
 
   @FunctionName(SEND_MAIL_REGISTRATION_REQUEST_ACTIVITY)
@@ -625,7 +627,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    service.sendMailRegistration(onboarding);
+    onboardingService.sendMailRegistration(onboarding);
   }
 
   /** This is the activity function that gets invoked by the orchestrator function. */
@@ -642,7 +644,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    service.sendMailRegistrationForUser(onboarding);
+    onboardingService.sendMailRegistrationForUser(onboarding);
   }
 
   @FunctionName(SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION)
@@ -679,7 +681,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    service.sendMailRegistrationForUserRequester(onboarding);
+    onboardingService.sendMailRegistrationForUserRequester(onboarding);
   }
 
   /** This is the activity function that gets invoked by the orchestrator function. */
@@ -695,7 +697,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    service.saveVisuraForMerchant(onboarding);
+    onboardingService.saveVisuraForMerchant(onboarding);
   }
 
 
@@ -714,7 +716,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    service.sendMailRegistrationApprove(onboarding);
+    onboardingService.sendMailRegistrationApprove(onboarding);
   }
 
   @FunctionName(SEND_MAIL_ONBOARDING_APPROVE_ACTIVITY)
@@ -732,7 +734,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    service.sendMailOnboardingApprove(onboarding);
+    onboardingService.sendMailOnboardingApprove(onboarding);
   }
 
   @FunctionName(CREATE_INSTITUTION_ACTIVITY)
@@ -995,7 +997,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    service.updateOnboardingExpiringDate(onboarding);
+    onboardingService.updateOnboardingExpiringDate(onboarding);
   }
 
   @FunctionName(GET_SIGNING_CONFIGURATION_ACTIVITY)
