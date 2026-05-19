@@ -58,8 +58,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     private final DocumentService documentService;
     private final ProductService productService;
     private final PdvUserRegistryService pdvUserRegistryService;
-    private final UserInstitutionRestService userInstitutionRestService;
-    private final UserNotificationService userNotificationService;
+    private final UserService userService;
     private final InfocamereService infocamereService;
     private final OnboardingRepositoryService onboardingRepositoryService;
 
@@ -80,8 +79,7 @@ public class OnboardingServiceImpl implements OnboardingService {
             DocumentBuilderRequestMapper documentBuilderRequestMapper,
             OnboardingRepositoryService onboardingRepositoryService,
             PdvUserRegistryService pdvUserRegistryService,
-            UserInstitutionRestService userInstitutionRestService,
-            UserNotificationService userNotificationService,
+            UserService userService,
             InfocamereService infocamereService) {
         this.productService = productService;
         this.notificationService = notificationService;
@@ -93,8 +91,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         this.documentBuilderRequestMapper = documentBuilderRequestMapper;
         this.onboardingRepositoryService = onboardingRepositoryService;
         this.pdvUserRegistryService = pdvUserRegistryService;
-        this.userInstitutionRestService = userInstitutionRestService;
-        this.userNotificationService = userNotificationService;
+        this.userService = userService;
         this.infocamereService = infocamereService;
     }
 
@@ -182,7 +179,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         sendMailDto.setProductId(onboarding.getProductId());
         sendMailDto.setUserMailUuid(user.getUserMailUuid());
 
-        userNotificationService.sendMailRequest(user.getId(), sendMailDto);
+        userService.sendMailRequest(user.getId(), sendMailDto);
     }
 
     public void sendMailRegistrationForUserRequester(Onboarding onboarding) {
@@ -194,7 +191,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         sendMailDto.setProductId(onboarding.getProductId());
         sendMailDto.setUserMailUuid(userRequester.getUserMailUuid());
 
-        userNotificationService.sendMailRequest(userRequester.getUserRequestUid(), sendMailDto);
+        userService.sendMailRequest(userRequester.getUserRequestUid(), sendMailDto);
     }
 
     public void sendMailManagingInstitution(ManagingInstitutionSendEmail request) {
@@ -203,7 +200,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         sendMailDto.setInstitutionName(request.getManagingInstitutionDescription());
         sendMailDto.setProductId(request.getProductId());
         sendMailDto.setUserMailUuid(request.getUserMailUuid());
-        userNotificationService.sendMailRequest(request.getUserId(), sendMailDto);
+        userService.sendMailRequest(request.getUserId(), sendMailDto);
     }
 
     public void saveVisuraForMerchant(Onboarding onboarding) {
@@ -547,7 +544,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         }
 
         final String institutionId = onboardings.get(0).getInstitution().getId();
-        return userInstitutionRestService.getActiveManagersByInstitutionAndProduct(
+        return userService.getActiveManagersByInstitutionAndProduct(
                 institutionId, onboarding.getProductId(), OnboardedProductResponse.StatusEnum.ACTIVE);
     }
 
