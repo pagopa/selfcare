@@ -65,7 +65,7 @@ locals {
     },
     {
       name  = "SIGNATURE_VALIDATION_ENABLED"
-      value = "false"
+      value = "true"
     },
     {
       name  = "PAGOPA_SIGNATURE_SOURCE"
