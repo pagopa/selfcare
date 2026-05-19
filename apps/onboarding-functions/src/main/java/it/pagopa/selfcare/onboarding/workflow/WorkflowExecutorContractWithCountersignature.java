@@ -89,6 +89,13 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
         SigningContext signingContext = loadSigningContext(ctx, onboardingWorkflow);
 
         if (signingContext.signingStep() < signingContext.requiredSignatures()) {
+            log.info(
+                    "Contract with countersignature with onboardingId={} is still in {}, signingStep={}, requiredSignatures={}, product={}",
+                    onboardingWorkflow.getOnboarding().getId(),
+                    OnboardingStatus.PENDING_IN_REVIEW,
+                    signingContext.signingStep(),
+                    signingContext.requiredSignatures(),
+                    onboardingWorkflow.getOnboarding().getProductId());
             List<ManagingInstitution> managingInstitutions = retrieveManagingInstitutions(ctx, signingContext.onboardingString());
             ManagingInstitution managingInstitution = resolveManagingInstitutionForStep(
                     managingInstitutions,
@@ -97,6 +104,7 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
             notifyManagingInstitution(ctx, managingInstitution, signingContext.document(), onboardingWorkflow.getOnboarding().getId());
             return Optional.empty();
         }
+        log.info("Contract with onboardingId={} set to {} state", onboardingWorkflow.getOnboarding().getId(), OnboardingStatus.COMPLETED);
         return onboardingCompletionActivity(ctx, onboardingWorkflow);
     }
 
