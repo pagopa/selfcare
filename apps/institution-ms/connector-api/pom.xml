@@ -34,7 +34,7 @@
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-onboarding-sdk-product</artifactId>
-            <version>0.16.0</version>
+            <version>0.16.1</version>
         </dependency>
         <dependency>
             <groupId>org.mongodb</groupId>
