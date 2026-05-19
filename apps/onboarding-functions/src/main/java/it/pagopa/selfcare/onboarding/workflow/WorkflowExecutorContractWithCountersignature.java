@@ -184,7 +184,7 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
                 .orElseThrow(
                         () -> new GenericOnboardingException(
                                 String.format("No managing institution found for product=%s and signing step=%d",
-                                        productId, signingStep)));
+                                        productId, signingStep+1)));
     }
 
     /**

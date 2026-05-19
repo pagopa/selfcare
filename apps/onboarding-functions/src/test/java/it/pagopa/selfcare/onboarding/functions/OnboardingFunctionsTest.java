@@ -1868,7 +1868,9 @@ class OnboardingFunctionsTest {
   }
 
   @Test
-  void onboardingOrchestratorContractWithCounterSignature_whenStatusPendingInReview() {
+  void onboardingOrchestratorContractWithCounterSignature_whenStatusPendingInReview_nextStatusIsPendingInReview() {
+    // Scenario: onboarding is already PENDING_IN_REVIEW but signing step is still lower than required
+    // so executePendingInReviewState should notify managing institution(s) and return Optional.empty()
     Onboarding onboarding = new Onboarding();
     List<User> users = new ArrayList<>();
     User user = new User();
@@ -1879,19 +1881,96 @@ class OnboardingFunctionsTest {
     onboarding.setUsers(users);
     onboarding.setInstitution(new Institution());
 
+    SigningConfiguration signingConfiguration = new SigningConfiguration();
+    // required signatures greater than current signing step (latestDocumentString has signingStep = 1)
+    signingConfiguration.setRequiredSignatures(3);
+
     TaskOrchestrationContext orchestrationContext = mockTaskOrchestrationContext(onboarding);
+    Task<String> getLatestDocumentTask = mockTaskWithValue(latestDocumentString);
+    when(orchestrationContext.callActivity(eq(GET_LATEST_DOCUMENT_ACTIVITY), any(), any(), eq(String.class)))
+            .thenReturn(getLatestDocumentTask);
+    Task<SigningConfiguration> getSigningConfigurationActivity = mockTaskWithValue(signingConfiguration);
+    when(orchestrationContext.callActivity(eq(GET_SIGNING_CONFIGURATION_ACTIVITY), any(), any(), eq(SigningConfiguration.class)))
+            .thenReturn(getSigningConfigurationActivity);
+
+    ManagingInstitution managingInstitution = new ManagingInstitution();
+    managingInstitution.setInstitutionId("inst-123");
+    managingInstitution.setDescription("Managing Institution");
+    managingInstitution.setSigningStep(2);
+    ManagingInstitution[] managingInstitutions = new ManagingInstitution[] { managingInstitution };
+    Task<ManagingInstitution[]> getManagingInstitutionTask = mockTaskWithValue(managingInstitutions);
+    when(orchestrationContext.callActivity(eq(GET_MANAGING_INSTITUTION_ACTIVITY), any(), any(), eq(ManagingInstitution[].class)))
+            .thenReturn(getManagingInstitutionTask);
+
+    String emailsJson = Utils.getEmailListString(objectMapper, List.of(UserMail.builder().build()));
+    Task<String> getUserEmailUuidTask = mockTaskWithValue(emailsJson);
+    when(orchestrationContext.callActivity(eq(GET_USER_EMAIL_UUID_ACTIVITY), any(), any(), eq(String.class)))
+            .thenReturn(getUserEmailUuidTask);
 
     function.onboardingsOrchestrator(orchestrationContext, executionContext);
 
-    ArgumentCaptor<String> captorActivity = ArgumentCaptor.forClass(String.class);
-    verify(orchestrationContext, times(5))
-            .callActivity(captorActivity.capture(), any(), any(), any());
-    assertEquals(CREATE_INSTITUTION_ACTIVITY, captorActivity.getAllValues().get(0));
-    assertEquals(CREATE_ONBOARDING_ACTIVITY, captorActivity.getAllValues().get(1));
-    assertEquals(STORE_ONBOARDING_ACTIVATEDAT, captorActivity.getAllValues().get(2));
-    assertEquals(CREATE_USERS_ACTIVITY, captorActivity.getAllValues().get(3));
-    assertEquals(SEND_MAIL_COMPLETION_ACTIVITY, captorActivity.getAllValues().get(4));
+    // verify the executor called the activities needed to decide and notify managing institution
+    verify(orchestrationContext).callActivity(eq(GET_LATEST_DOCUMENT_ACTIVITY), any(), any(), eq(String.class));
+    verify(orchestrationContext).callActivity(eq(GET_SIGNING_CONFIGURATION_ACTIVITY), any(), any(), eq(SigningConfiguration.class));
+    verify(orchestrationContext).callActivity(eq(GET_MANAGING_INSTITUTION_ACTIVITY), any(), any(), eq(ManagingInstitution[].class));
+    verify(orchestrationContext).callActivity(eq(GET_USER_EMAIL_UUID_ACTIVITY), any(), any(), eq(String.class));
 
+    // since executePendingInReviewState should return Optional.empty(), onboarding status must NOT be updated
+    verify(service, times(0)).updateOnboardingStatus(eq(onboarding.getId()), any());
+  }
+
+  @Test
+  void onboardingOrchestratorContractWithCounterSignature_executePendingInReviewState_whenCompletionCalled() {
+    // Scenario: signing step is >= required signatures so onboardingCompletionActivity must be executed
+    Onboarding onboarding = new Onboarding();
+    List<User> users = new ArrayList<>();
+    User user = new User();
+    users.add(user);
+    onboarding.setId("onboardingId");
+    onboarding.setStatus(OnboardingStatus.PENDING_IN_REVIEW);
+    onboarding.setWorkflowType(WorkflowType.CONTRACT_WITH_COUNTERSIGNATURE);
+    onboarding.setUsers(users);
+    onboarding.setInstitution(new Institution());
+
+    SigningConfiguration signingConfiguration = new SigningConfiguration();
+    // latestDocumentString has signingStep = 1; set requiredSignatures = 1 so condition is false
+    signingConfiguration.setRequiredSignatures(1);
+
+    TaskOrchestrationContext orchestrationContext = mockTaskOrchestrationContext(onboarding);
+    Task<String> getLatestDocumentTask = mockTaskWithValue(latestDocumentString);
+    when(orchestrationContext.callActivity(eq(GET_LATEST_DOCUMENT_ACTIVITY), any(), any(), eq(String.class)))
+            .thenReturn(getLatestDocumentTask);
+    Task<SigningConfiguration> getSigningConfigurationActivity = mockTaskWithValue(signingConfiguration);
+    when(orchestrationContext.callActivity(eq(GET_SIGNING_CONFIGURATION_ACTIVITY), any(), any(), eq(SigningConfiguration.class)))
+            .thenReturn(getSigningConfigurationActivity);
+
+    // Stub create institution/onboarding/users/completion activities used by onboardingCompletionActivity
+    Task<String> createInstitutionTask = mockTaskWithValue("inst-001");
+    when(orchestrationContext.callActivity(eq(CREATE_INSTITUTION_ACTIVITY), any(), any(), eq(String.class)))
+            .thenReturn(createInstitutionTask);
+    Task<String> createOnboardingTask = mockTaskWithValue("onb-with-inst");
+    when(orchestrationContext.callActivity(eq(CREATE_ONBOARDING_ACTIVITY), any(), any(), eq(String.class)))
+            .thenReturn(createOnboardingTask);
+    Task<String> storeActivatedAtTask = mockTaskWithValue("ok");
+    when(orchestrationContext.callActivity(eq(STORE_ONBOARDING_ACTIVATEDAT), any(), any(), eq(String.class)))
+            .thenReturn(storeActivatedAtTask);
+    Task<String> createUsersTask = mockTaskWithValue("users-created");
+    when(orchestrationContext.callActivity(eq(CREATE_USERS_ACTIVITY), any(), any(), eq(String.class)))
+            .thenReturn(createUsersTask);
+    Task<String> sendMailCompletionTask = mockTaskWithValue("sent");
+    when(orchestrationContext.callActivity(eq(SEND_MAIL_COMPLETION_ACTIVITY), any(), any(), eq(String.class)))
+            .thenReturn(sendMailCompletionTask);
+
+    function.onboardingsOrchestrator(orchestrationContext, executionContext);
+
+    // Verify completion activities were invoked
+    verify(orchestrationContext).callActivity(eq(CREATE_INSTITUTION_ACTIVITY), any(), any(), eq(String.class));
+    verify(orchestrationContext).callActivity(eq(CREATE_ONBOARDING_ACTIVITY), any(), any(), eq(String.class));
+    verify(orchestrationContext).callActivity(eq(STORE_ONBOARDING_ACTIVATEDAT), any(), any(), eq(String.class));
+    verify(orchestrationContext).callActivity(eq(CREATE_USERS_ACTIVITY), any(), any(), eq(String.class));
+    verify(orchestrationContext).callActivity(eq(SEND_MAIL_COMPLETION_ACTIVITY), any(), any(), eq(String.class));
+
+    // Since onboardingCompletionActivity returns COMPLETED, onboarding status must be updated
     verify(service, times(1)).updateOnboardingStatus(onboarding.getId(), OnboardingStatus.COMPLETED);
   }
 
@@ -1917,11 +1996,17 @@ class OnboardingFunctionsTest {
     Task<SigningConfiguration> getSigningConfigurationActivity = mockTaskWithValue(signingConfiguration);
     when(orchestrationContext.callActivity(eq(GET_SIGNING_CONFIGURATION_ACTIVITY), any(), any(), eq(SigningConfiguration.class)))
             .thenReturn(getSigningConfigurationActivity);
+    ManagingInstitution managingInstitution = new ManagingInstitution();
+    managingInstitution.setInstitutionId("inst-123");
+    ManagingInstitution[] managingInstitutions = new ManagingInstitution[] { managingInstitution };
+    Task<ManagingInstitution[]> getManagingInstitutionTask = mockTaskWithValue(managingInstitutions);
+    when(orchestrationContext.callActivity(eq(GET_MANAGING_INSTITUTION_ACTIVITY), any(), any(), eq(ManagingInstitution[].class)))
+            .thenReturn(getManagingInstitutionTask);
 
     function.onboardingsOrchestrator(orchestrationContext, executionContext);
 
     ArgumentCaptor<String> captorActivity = ArgumentCaptor.forClass(String.class);
-    verify(orchestrationContext, times(2))
+    verify(orchestrationContext, times(3))
             .callActivity(captorActivity.capture(), any(), any(), any());
     assertEquals(GET_LATEST_DOCUMENT_ACTIVITY, captorActivity.getAllValues().get(0));
     assertEquals(GET_SIGNING_CONFIGURATION_ACTIVITY, captorActivity.getAllValues().get(1));
@@ -1955,6 +2040,7 @@ class OnboardingFunctionsTest {
     ManagingInstitution managingInstitution = new ManagingInstitution();
     managingInstitution.setInstitutionId("inst-123");
     managingInstitution.setDescription("Managing Institution");
+    managingInstitution.setSigningStep(2);
     ManagingInstitution[] managingInstitutions = new ManagingInstitution[] { managingInstitution };
     Task<ManagingInstitution[]> getManagingInstitutionTask = mockTaskWithValue(managingInstitutions);
     when(orchestrationContext.callActivity(eq(GET_MANAGING_INSTITUTION_ACTIVITY), any(), any(), eq(ManagingInstitution[].class)))
