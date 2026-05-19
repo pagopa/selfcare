@@ -10,7 +10,7 @@ locals {
 
 resource "null_resource" "upload_developer_index_v2" {
   triggers = {
-    file_sha1 = filesha1("${path.module}/../../external-api/${var.env}-ar/developer/external/v2/index.html")
+    file_sha1 = filesha1("${path.module}/../../api/${var.env}-ar/developer/external/v2/index.html")
   }
 
   provisioner "local-exec" {
@@ -34,7 +34,7 @@ resource "null_resource" "upload_developer_index_v2" {
 
 resource "null_resource" "upload_support_developer_index_v1" {
   triggers = {
-    file_sha1 = filesha1("${path.module}/../../external-api/${var.env}-ar/developer/support/v1/index.html")
+    file_sha1 = filesha1("${path.module}/../../api/${var.env}-ar/developer/support/v1/index.html")
   }
 
   provisioner "local-exec" {
@@ -58,7 +58,7 @@ resource "null_resource" "upload_support_developer_index_v1" {
 
 resource "null_resource" "upload_internal_developer_index_v1" {
   triggers = {
-    file_sha1 = filesha1("${path.module}/../../external-api/${var.env}-ar/developer/internal/v1/index.html")
+    file_sha1 = filesha1("${path.module}/../../api/${var.env}-ar/developer/internal/v1/index.html")
   }
 
   provisioner "local-exec" {
@@ -82,7 +82,7 @@ resource "null_resource" "upload_internal_developer_index_v1" {
 
 resource "null_resource" "upload_billing_developer_index_v1" {
   triggers = {
-    file_sha1 = filesha1("${path.module}/../../external-api/${var.env}-ar/developer/billing-portal/v1/index.html")
+    file_sha1 = filesha1("${path.module}/../../api/${var.env}-ar/developer/billing-portal/v1/index.html")
   }
 
   provisioner "local-exec" {
@@ -106,7 +106,7 @@ resource "null_resource" "upload_billing_developer_index_v1" {
 
 resource "null_resource" "upload_support_pnpg_developer_index_v1" {
   triggers = {
-    file_sha1 = filesha1("${path.module}/../../external-api/${var.env}-ar/developer/support-pnpg/v1/index.html")
+    file_sha1 = filesha1("${path.module}/../../api/${var.env}-ar/developer/support-pnpg/v1/index.html")
   }
 
   provisioner "local-exec" {

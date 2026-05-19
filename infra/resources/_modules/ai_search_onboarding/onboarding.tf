@@ -14,13 +14,16 @@ resource "restapi_object" "search_index" {
       {
         "name" : "autocomplete_analyzer",
         "@odata.type" : "#Microsoft.Azure.Search.CustomAnalyzer",
+        "charFilters": [
+          "remove_dots"
+        ],
         "tokenizer" : "autocomplete_tokenizer",
         "tokenFilters" : ["lowercase", "asciifolding"]
       },
       {
         "name" : "autocomplete_search_analyzer",
         "@odata.type" : "#Microsoft.Azure.Search.CustomAnalyzer",
-        "tokenizer" : "lowercase",
+        "tokenizer" : "standard_v2",
         "tokenFilters" : ["lowercase", "asciifolding"]
       }
     ],
@@ -29,8 +32,17 @@ resource "restapi_object" "search_index" {
         "name" : "autocomplete_tokenizer",
         "@odata.type" : "#Microsoft.Azure.Search.EdgeNGramTokenizer",
         "minGram" : 3,
-        "maxGram" : 10,
+        "maxGram" : 15,
         "tokenChars" : ["letter", "digit"]
+      }
+    ],
+    "charFilters": [
+      {
+        "name": "remove_dots",
+        "@odata.type": "#Microsoft.Azure.Search.MappingCharFilter",
+        "mappings": [
+          ".=>"
+        ]
       }
     ],
     "fields" : [

@@ -36,4 +36,3 @@ provider "azurerm" {
 provider "github" {
   owner = "pagopa"
 }
-
