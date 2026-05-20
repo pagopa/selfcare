@@ -7,13 +7,14 @@ on:
   workflow_run:
     workflows:
       - "Publish core infra"
+      - "Release App"
+      - "Release Functions"
       - "Auth - Trigger Release"
       - "IAM - Trigger Release"
       - "Product - Trigger Release"
       - "Product CDC - Trigger Release"
       - "Onboarding - Trigger Release"
       - "Onboarding BFF - Trigger Release"
-      - "Release Functions"
       - "Document MS - Trigger Release"
       - "Registry Proxy - Trigger Release"
       - "Webhook - Trigger Release"
