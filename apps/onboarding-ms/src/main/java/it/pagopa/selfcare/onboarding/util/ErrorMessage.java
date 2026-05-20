@@ -74,6 +74,8 @@ public enum ErrorMessage {
     GET_USER_ERROR("0000", "Error while searching user given UserID"),
     ATTACHMENT_UPLOAD_ERROR("0000", "Attachment already uploaded"),
 
+    DOCUMENT_SIZE_EXCEEDED("0140", "Uploaded file exceeds allowed size"),
+
     GENERIC_ERROR("0000", "Generic Error");
 
 
