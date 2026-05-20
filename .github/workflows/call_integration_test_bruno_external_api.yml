@@ -37,10 +37,8 @@ jobs:
         run: bru run . -r --env-file Selfcare-External-Integration-Environment.json --reporter-json integration-test-result.json --reporter-skip-all-headers
       - name: Send bruno report
         shell: bash
-        working-directory: ${{ inputs.path }}
         run: node convert_bruno.js
       - name: "Send message on Slack"
         shell: bash
-        working-directory: ${{ inputs.path }}
         run: >
           curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} -H 'Content-type: application/json' -d @stats.json
