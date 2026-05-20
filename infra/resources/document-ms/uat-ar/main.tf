@@ -78,6 +78,10 @@ locals {
     {
       name  = "NAMIRIAL_BASE_URL"
       value = "https://selc-u-namirial-sws-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
+      name  = "DOCUMENT_MS_UPLOAD_MAX_BODY_SIZE"
+      value = "10M"
     }
   ]
 
