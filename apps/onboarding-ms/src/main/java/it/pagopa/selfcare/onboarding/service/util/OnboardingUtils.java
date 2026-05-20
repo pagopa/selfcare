@@ -8,6 +8,7 @@ import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.constants.CustomError;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
+import it.pagopa.selfcare.onboarding.exception.PayloadTooLargeException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.model.FormItem;
 import it.pagopa.selfcare.onboarding.service.RegistryProxyService;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static it.pagopa.selfcare.onboarding.constants.CustomError.*;
+import static it.pagopa.selfcare.onboarding.util.ErrorMessage.DOCUMENT_SIZE_EXCEEDED;
 import static jakarta.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
 @Slf4j
@@ -33,12 +35,11 @@ public class OnboardingUtils {
 
 
     private final RegistryProxyService registryProxyService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public OnboardingUtils(RegistryProxyService registryProxyService) {
         this.registryProxyService = registryProxyService;
     }
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public Uni<UOResource> getUoFromRecipientCode(String recipientCode) {
         return registryProxyService.findUoByRecipientCode(recipientCode, null)
@@ -71,8 +72,8 @@ public class OnboardingUtils {
         request.fileName = formItem.getFileName();
         if (OnboardingStatus.PENDING_IN_REVIEW.equals(onboarding.getStatus())) {
             request.skipSignerIdentityCheck =
-              Objects.nonNull(product.getSigningConfiguration())
-                  && product.getSigningConfiguration().isSkipSignerIdentityCheck();
+                    Objects.nonNull(product.getSigningConfiguration())
+                            && product.getSigningConfiguration().isSkipSignerIdentityCheck();
         }
 
         String institutionType = onboarding.getInstitution().getInstitutionType().name();
@@ -94,7 +95,7 @@ public class OnboardingUtils {
      * Gestisce due scenari:
      * 1. Il REST client ritorna un Uni con Response di errore (onItem path)
      * 2. Il REST client lancia WebApplicationException su non-2xx (onFailure path)
-     *
+     * <p>
      * In entrambi i casi, estrae codice e dettaglio dal Problem JSON di document-ms
      * (title = code, detail = message) e propaga un {@link InvalidRequestException}.
      */
@@ -102,6 +103,12 @@ public class OnboardingUtils {
         return responseUni
                 .onFailure(WebApplicationException.class).recoverWithUni(ex -> {
                     WebApplicationException wae = (WebApplicationException) ex;
+                    if (wae.getResponse() != null
+                            && wae.getResponse().getStatus() == Response.Status.REQUEST_ENTITY_TOO_LARGE.getStatusCode()) {
+                        return Uni.createFrom().failure(new PayloadTooLargeException(
+                                "Uploaded file exceeds allowed size",
+                                "DOC-413"));
+                    }
                     InvalidRequestException parsed = extractDocumentError(wae.getResponse(), operation, onboardingId);
                     return Uni.createFrom().failure(Objects.requireNonNullElse(parsed, ex));
                 })
@@ -114,14 +121,17 @@ public class OnboardingUtils {
                             && SUCCESSFUL.equals(response.getStatusInfo().getFamily());
 
                     if (!isSuccess) {
+                        if (status == Response.Status.REQUEST_ENTITY_TOO_LARGE.getStatusCode()) {
+                            if (Objects.nonNull(response)) response.close();
+                            return Uni.createFrom().failure(new PayloadTooLargeException(
+                                    DOCUMENT_SIZE_EXCEEDED.getMessage(),
+                                    DOCUMENT_SIZE_EXCEEDED.getCode()));
+                        }
                         InvalidRequestException parsed = extractDocumentError(response, operation, onboardingId);
                         if (Objects.nonNull(response)) response.close();
-                        if (parsed != null) {
-                            return Uni.createFrom().failure(parsed);
-                        }
-                        return Uni.createFrom().failure(new WebApplicationException(
+                        return Uni.createFrom().failure(Objects.requireNonNullElseGet(parsed, () -> new WebApplicationException(
                                 String.format("Document service call failed while trying to %s for onboarding %s. status=%s",
-                                        operation, onboardingId, status), status));
+                                        operation, onboardingId, status), status)));
                     }
 
                     response.close();
