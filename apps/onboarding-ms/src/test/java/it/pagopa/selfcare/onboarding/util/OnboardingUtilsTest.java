@@ -16,6 +16,7 @@ import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.constants.CustomError;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
+import it.pagopa.selfcare.onboarding.exception.PayloadTooLargeException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.model.FormItem;
 import it.pagopa.selfcare.onboarding.service.RegistryProxyService;
@@ -179,5 +180,22 @@ class OnboardingUtilsTest {
         Throwable failure = subscriber.getFailure();
         assertEquals("Only CAdES allowed", failure.getMessage());
         assertEquals("002-1003", ((InvalidRequestException) failure).getCode());
+    }
+
+    @Test
+    void givenResponseWith413_whenEnsureSuccessfulDocumentResponse_thenThrowPayloadTooLargeException() {
+        // given
+        Response response = Response.status(Response.Status.REQUEST_ENTITY_TOO_LARGE).build();
+
+        // when
+        UniAssertSubscriber<Void> subscriber = onboardingUtils
+                .ensureSuccessfulDocumentResponse(Uni.createFrom().item(response), "upload signed contract", "onb-123")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        subscriber.assertFailedWith(PayloadTooLargeException.class);
+        Throwable failure = subscriber.getFailure();
+        assertEquals("Uploaded file exceeds allowed size", failure.getMessage());
+        assertEquals("0140", ((PayloadTooLargeException) failure).getCode());
     }
 }
