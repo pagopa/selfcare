@@ -20,6 +20,7 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
       - name: "Download Bruno environment"
+        working-directory: ${{ inputs.path }}
         env:
           INTEGRATION_ENVIRONMENT_BRUNO: ${{ secrets.INTEGRATION_ENVIRONMENT_BRUNO }}
         run: 'echo "$INTEGRATION_ENVIRONMENT_BRUNO" | base64 --decode > Selfcare-External-Integration-Environment.json'

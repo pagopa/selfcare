@@ -52,7 +52,7 @@ jobs:
     secrets: inherit
     with:
       environment: dev
-      path: apps/external-api/src/test/resources/integration_test/bruno
+      path: apps/external-api/integration-test/bruno
 
   test_uat:
     uses: ./.github/workflows/call_integration_test_bruno_external_api.yml
@@ -62,4 +62,4 @@ jobs:
     secrets: inherit
     with:
       environment: uat
-      path: apps/external-api/src/test/resources/integration_test/bruno
+      path: apps/external-api/integration-test/bruno
