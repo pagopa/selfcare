@@ -48,13 +48,14 @@ public class SearchServiceImpl implements SearchService {
 
   @Override
   public List<SearchServiceInstitution> searchInstitution(String search, Long top) {
+    final long limit = top != null && top > 0L && top < Long.MAX_VALUE ? top : 50L;
     final Set<String> institutionIds = new HashSet<>();
     return Stream.iterate(0L, p -> p + 1)
-        .map(p -> searchOnboarding(search, null, null, List.of("COMPLETED", "DELETED"), p, top * 2L, List.of("description_ASC")))
+        .map(p -> searchOnboarding(search, null, null, List.of("COMPLETED", "DELETED"), p, limit * 2L, List.of("description_ASC")))
         .takeWhile(result -> !result.getOnboardings().isEmpty())
         .flatMap(result -> result.getOnboardings().stream())
         .filter(onboarding -> Optional.ofNullable(onboarding.getInstitutionId()).map(institutionIds::add).orElse(false))
-        .limit(top)
+        .limit(limit)
         .map(o -> {
           final SearchServiceInstitution inst = new SearchServiceInstitution();
           inst.setId(o.getInstitutionId());
