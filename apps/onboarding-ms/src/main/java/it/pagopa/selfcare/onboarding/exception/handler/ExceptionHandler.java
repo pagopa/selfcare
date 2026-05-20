@@ -64,6 +64,16 @@ public class ExceptionHandler {
                 .build();
     }
 
+    @ServerExceptionMapper
+    public Response toResponse(PayloadTooLargeException exception) {
+        log.error(LOG_ERROR_SYNTAX, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
+        Problem problem = problem(exception.getMessage(), Response.Status.REQUEST_ENTITY_TOO_LARGE.getStatusCode(), exception.getCode());
+        return Response
+                .status(Response.Status.REQUEST_ENTITY_TOO_LARGE)
+                .entity(problem)
+                .build();
+    }
+
     private Problem problem(String errorMessage, Integer status, String code) {
         Problem problem = new Problem();
         problem.setStatus(status);
