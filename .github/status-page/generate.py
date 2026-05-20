@@ -114,6 +114,16 @@ INFRA_ROWS = [
             "workflow": "publish_onboarding_dashboard_events_infra.yml",
         },
     },
+    {
+        "label": "APIM",
+        "definition_workflow": "release_apim.yml",
+        "variables": ["env", "target=ar"],
+        "combos": AR_ONLY_COLUMNS,
+        "source": {
+            "type": "infra_job",
+            "workflow": "release_apim.yml",
+        },
+    },
 ]
 
 APP_ROWS = [
