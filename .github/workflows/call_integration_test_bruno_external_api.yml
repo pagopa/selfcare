@@ -46,7 +46,7 @@ jobs:
             echo "integration-test-result.json not found, skipping Bruno report conversion"
             exit 0
           fi
-          node convert_bruno.js
+          node convert_bruno.js "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
       - name: "Send message on Slack"
         if: ${{ always() }}
         shell: bash
