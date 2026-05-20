@@ -9,7 +9,7 @@ services:
       - "./db:/docker-entrypoint-initdb.d"
 
   azurite:
-    image: mcr.microsoft.com/azure-storage/azurite:latest
+    image: mcr.microsoft.com/azure-storage/azurite:${AZURITE_IMAGE_TAG:-latest}
     ports:
       - "10000:10000"
       - "10001:10001"
@@ -22,8 +22,8 @@ services:
 
   azure-cli:
     build:
-      context: "."
-      dockerfile: "Dockerfile-azure-cli"
+      context: ../../../../../..
+      dockerfile: ./selfcare/apps/onboarding-functions/src/test/resources/Dockerfile-azure-cli
     depends_on:
       - azurite
     volumes:
@@ -64,7 +64,7 @@ services:
 
   user-ms:
     platform: linux/amd64
-    image: ghcr.io/pagopa/selfcare-user-ms:latest
+    image: ghcr.io/pagopa/selfcare-user-ms:${USER_MS_IMAGE_TAG:-latest}
     ports:
       - "8087:8087"
     env_file:
@@ -78,7 +78,7 @@ services:
 
   institution-ms:
     platform: linux/amd64
-    image: ghcr.io/pagopa/selfcare-institution-ms:latest
+    image: ghcr.io/pagopa/selfcare-institution-ms:${INSTITUTION_MS_IMAGE_TAG:-latest}
     ports:
       - "8082:8082"
     networks:
@@ -106,7 +106,7 @@ services:
 
   document-ms:
     platform: linux/amd64
-    image: ghcr.io/pagopa/selfcare-document-ms:latest
+    image: ghcr.io/pagopa/selfcare-document-ms:${DOCUMENT_MS_IMAGE_TAG:-latest}
     depends_on:
       - azurite
       - mongo-db
