@@ -1,0 +1,108 @@
+{
+  "name": "selc.dev",
+  "variables": [
+    {
+      "name": "apiBaseUrl",
+      "value": "https://api.dev.selfcare.pagopa.it",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "productId",
+      "value": "prod-pn",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "apimKeyPN",
+      "value": "${apimKeyPN}",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "apimKeyDataVaultPNPG",
+      "value": "${apimKeyDataVaultPNPG}",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "apimKeyInternal",
+      "value": "${apimKeyInternal}",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "apimKeySupport",
+      "value": "${apimKeySupport}",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "institutionId",
+      "value": "a634f83b-e8e4-49c9-86cc-307f6aa31bbb",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "taxCode",
+      "value": "00876320409",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "onboardingId",
+      "value": "91aa1f7d-25db-4294-942d-10100cab1d47",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "status",
+      "value": "COMPLETED",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "page",
+      "value": "0",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "size",
+      "value": "20",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "tokenStatus",
+      "value": "PENDING",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "userId",
+      "value": "6a33a28c-8415-4741-86ad-229ac274932e",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    }
+  ],
+  "info": {
+    "type": "bruno-environment",
+    "exportedAt": "2026-05-20T14:23:28.123Z",
+    "exportedUsing": "Bruno/v3.3.0"
+  }
+}
