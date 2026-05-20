@@ -23,7 +23,7 @@ services:
   azure-cli:
     build:
       context: ../../../../..
-      dockerfile: ./selfcare/apps/onboarding-functions/src/test/resources/Dockerfile-azure-cli
+      dockerfile: ./apps/onboarding-functions/src/test/resources/Dockerfile-azure-cli
     depends_on:
       - azurite
     volumes:
@@ -37,8 +37,8 @@ services:
   onboarding-function:
     platform: linux/amd64
     build:
-      context: ../../../../../..
-      dockerfile: ./selfcare/apps/onboarding-functions/src/test/resources/Dockerfile-fn
+      context: ../../../../..
+      dockerfile: ./apps/onboarding-functions/src/test/resources/Dockerfile-fn
       secrets:
         - maven_settings
     ports:
