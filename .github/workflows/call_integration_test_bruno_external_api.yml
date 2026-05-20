@@ -32,13 +32,32 @@ jobs:
         shell: bash
         run: npm install -g @usebruno/cli
       - name: Run bruno cli
+        id: bruno
+        continue-on-error: true
         shell: bash
         working-directory: ${{ inputs.path }}
         run: bru run . -r --env-file Selfcare-External-Integration-Environment.json --reporter-json integration-test-result.json --reporter-skip-all-headers
       - name: Send bruno report
+        if: ${{ always() }}
         shell: bash
-        run: node convert_bruno.js
+        working-directory: ${{ inputs.path }}
+        run: |
+          if [ ! -f integration-test-result.json ]; then
+            echo "integration-test-result.json not found, skipping Bruno report conversion"
+            exit 0
+          fi
+          node convert_bruno.js
       - name: "Send message on Slack"
+        if: ${{ always() }}
         shell: bash
-        run: >
+        working-directory: ${{ inputs.path }}
+        run: |
+          if [ ! -f stats.json ]; then
+            echo "stats.json not found, skipping Slack notification"
+            exit 0
+          fi
           curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} -H 'Content-type: application/json' -d @stats.json
+      - name: Fail job when Bruno collection fails
+        if: ${{ always() && steps.bruno.outcome == 'failure' }}
+        shell: bash
+        run: exit 1
