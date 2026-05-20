@@ -22,7 +22,7 @@ services:
 
   azure-cli:
     build:
-      context: ../../../../../..
+      context: ../../../../..
       dockerfile: ./selfcare/apps/onboarding-functions/src/test/resources/Dockerfile-azure-cli
     depends_on:
       - azurite

@@ -2,6 +2,6 @@ FROM mcr.microsoft.com/azure-cli@sha256:5ecf42d8362e25717b35c994aa714ed399be7b4e
 COPY infra/core/resources /workspace/resources/resources
 COPY infra/core/contracts_template/contracts/template /workspace/contracts-blob
 
-COPY selfcare/apps/onboarding-functions/src/test/resources/fn/dummy-accordo_di_adesione.html /workspace/dummy-accordo_di_adesione.html
+COPY apps/onboarding-functions/src/test/resources/fn/dummy-accordo_di_adesione.html /workspace/dummy-accordo_di_adesione.html
 
 CMD ["/bin/sh", "-c", "/init_azurite.sh"]
