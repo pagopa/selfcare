@@ -57,7 +57,13 @@ jobs:
             exit 0
           fi
           curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} -H 'Content-type: application/json' -d @stats.json
-      - name: Fail job when Bruno collection fails
+      - name: Fail job when Bruno collection has failing requests
         if: ${{ always() && steps.bruno.outcome == 'failure' }}
         shell: bash
-        run: exit 1
+        working-directory: ${{ inputs.path }}
+        run: |
+          echo "Bruno collection has failing requests. Slack notification was sent before failing the job."
+          if [ -f integration-test-result.json ]; then
+            node -e 'const fs = require("fs"); const report = JSON.parse(fs.readFileSync("integration-test-result.json", "utf8")); const summary = (report[0] || {}).summary || {}; console.error(`Summary: total=${summary.totalRequests ?? "n/a"} passed=${summary.passedRequests ?? "n/a"} failed=${summary.failedRequests ?? "n/a"} skipped=${summary.skippedRequests ?? "n/a"} errors=${summary.errorRequests ?? "n/a"}`);'
+          fi
+          exit 1
