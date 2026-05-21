@@ -11,7 +11,6 @@ import it.pagopa.selfcare.party.registry_proxy.web.model.OnboardingIndexSearchRe
 import it.pagopa.selfcare.party.registry_proxy.web.model.mapper.OnboardingMapper;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +19,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -45,21 +46,13 @@ public class SearchController {
     operationId = "retrieveInstitutionOnSearchEngine"
    )
   public ResponseEntity<List<SearchServiceInstitution>> searchInstitutions(
-    @Parameter(description = "${swagger.model.*.products}")
-    @RequestParam(required = false) List<String> products,
-    @Parameter(description = "${swagger.model.*.institution.types}")
-    @RequestParam(required = false) List<String> institutionTypes,
-    @Parameter(description = "${swagger.model.institution.taxCode}")
-    @RequestParam(required = false) String taxCode,
     @Parameter(description = "${swagger.model.*.searchText}")
     @RequestParam(defaultValue = "*") String searchText,
     @Parameter(description = "${swagger.model.*.limit}")
-    @RequestParam(defaultValue = "50") int top,
-    @Parameter(description = "${swagger.model.*.page}")
-    @RequestParam(defaultValue = "0") int skip) {
+    @RequestParam(defaultValue = "50") Long top) {
 
     try {
-      List<SearchServiceInstitution> institutions = searchService.searchInstitution(searchText, products, institutionTypes, taxCode, top, skip, null, null);
+      final List<SearchServiceInstitution> institutions = searchService.searchInstitution(searchText, top);
 
       return ResponseEntity.ok(institutions);
 

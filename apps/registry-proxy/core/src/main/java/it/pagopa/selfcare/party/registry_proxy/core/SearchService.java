@@ -12,8 +12,7 @@ public interface SearchService {
 
   List<Map<String, String>> subscribe();
 
-  boolean indexInstitution(String institutionId);
-  List<SearchServiceInstitution> searchInstitution(String search, List<String> products, List<String> institutionTypes, String taxCode, Integer top, Integer skip, String select, String orderby);
+  List<SearchServiceInstitution> searchInstitution(String search, Long top);
 
   boolean indexOnboarding(OnboardingIndex onboardingIndex);
   OnboardingIndexSearch searchOnboarding(String searchText, List<String> products, List<String> institutionTypes, List<String> statuses, Long page, Long pageSize, List<String> orderBy);
