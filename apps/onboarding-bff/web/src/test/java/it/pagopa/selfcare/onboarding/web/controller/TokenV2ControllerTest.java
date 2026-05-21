@@ -13,6 +13,7 @@ import it.pagopa.selfcare.onboarding.connector.model.onboarding.User;
 import it.pagopa.selfcare.onboarding.core.TokenService;
 import it.pagopa.selfcare.onboarding.core.UserInstitutionService;
 import it.pagopa.selfcare.onboarding.core.UserService;
+import it.pagopa.selfcare.onboarding.web.constants.PermissionConstants;
 import it.pagopa.selfcare.onboarding.web.config.WebTestConfig;
 import it.pagopa.selfcare.onboarding.web.handler.TokenExceptionHandler;
 import it.pagopa.selfcare.onboarding.web.model.OnboardingRequestResource;
@@ -28,6 +29,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -39,10 +41,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -124,7 +128,7 @@ class TokenV2ControllerTest {
      */
     @Test
     void retrieveOnboardingRequest() throws Exception {
-
+        // given
         OnboardingData onboardingData = new OnboardingData();
         InstitutionUpdate institutionUpdate = new InstitutionUpdate();
         institutionUpdate.setTaxCode("taxCode");
@@ -134,7 +138,7 @@ class TokenV2ControllerTest {
         when(tokenService.getOnboardingWithUserInfo(onboardingId))
                 .thenReturn(onboardingData);
 
-        //when
+        // when
         MvcResult result = mvc.perform(MockMvcRequestBuilders
                         .get("/v2/tokens/{onboardingId}", onboardingId)
                         .contentType(APPLICATION_JSON_VALUE)
@@ -146,7 +150,7 @@ class TokenV2ControllerTest {
                 result.getResponse().getContentAsString(),
                 OnboardingRequestResource.class
         );
-        //then
+        // then
 
         assertEquals(institutionUpdate.getTaxCode(), response.getInstitutionInfo().getFiscalCode());
 
@@ -154,23 +158,55 @@ class TokenV2ControllerTest {
                 .getOnboardingWithUserInfo(onboardingId);
     }
 
+    @Test
+    void retrieveOnboardingRequest_shouldBeProtectedByViewPermission() throws NoSuchMethodException {
+        // given
+        Method method = TokenV2Controller.class.getMethod("retrieveOnboardingRequest", String.class);
+
+        // when
+        PreAuthorize preAuthorize = method.getAnnotation(PreAuthorize.class);
+
+        // then
+        assertNotNull(preAuthorize);
+        assertEquals(
+                "@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_VIEW_ACCOUNT_PAGE + "')",
+                preAuthorize.value()
+        );
+    }
+
+    @Test
+    void rejectOnboardingRequest_shouldBeProtectedByApprovePermission() throws NoSuchMethodException {
+        // given
+        Method method = TokenV2Controller.class.getMethod("rejectOnboarding", String.class, ReasonForRejectDto.class);
+
+        // when
+        PreAuthorize preAuthorize = method.getAnnotation(PreAuthorize.class);
+
+        // then
+        assertNotNull(preAuthorize);
+        assertEquals(
+                "@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE + "')",
+                preAuthorize.value()
+        );
+    }
+
     /**
      * Method under test: {@link TokenV2Controller#approveOnboarding(String)}
      */
     @Test
     void approveOnboardingRequest() throws Exception {
-
+        // given
         final String onboardingId = UUID.randomUUID().toString();
         doNothing().when(tokenService).approveOnboarding(onboardingId);
 
-        //when
+        // when
         mvc.perform(MockMvcRequestBuilders
                         .post("/v2/tokens/{onboardingId}/approve", onboardingId)
                         .contentType(APPLICATION_JSON_VALUE)
                         .accept(APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk())
                 .andReturn();
-        //then
+        // then
 
         verify(tokenService, times(1))
                 .approveOnboarding(onboardingId);
