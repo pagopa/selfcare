@@ -13,6 +13,7 @@ import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.core.TokenService;
 import it.pagopa.selfcare.onboarding.core.UserInstitutionService;
 import it.pagopa.selfcare.onboarding.core.UserService;
+import it.pagopa.selfcare.onboarding.web.constants.PermissionConstants;
 import it.pagopa.selfcare.onboarding.web.model.OnboardingRequestResource;
 import it.pagopa.selfcare.onboarding.web.model.OnboardingVerify;
 import it.pagopa.selfcare.onboarding.web.model.ReasonForRejectDto;
@@ -24,6 +25,7 @@ import org.apache.commons.io.IOUtils;
 import org.owasp.encoder.Encode;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -139,6 +141,7 @@ public class TokenV2Controller {
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.tokens.retrieveOnboardingRequest}",
             description = "${swagger.tokens.retrieveOnboardingRequest}", operationId = "retrieveOnboardingRequestUsingGET")
+    @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_VIEW_ACCOUNT_PAGE + "')")
     public OnboardingRequestResource retrieveOnboardingRequest(@ApiParam("${swagger.tokens.onboardingId}")
                                                                @PathVariable("onboardingId")
                                                                String onboardingId) {
@@ -166,6 +169,7 @@ public class TokenV2Controller {
     @Operation(description = "${swagger.tokens.approveOnboardingRequest}",
             summary = "${swagger.tokens.approveOnboardingRequest}", operationId = "approveOnboardingUsingPOST")
     @PostMapping("/{onboardingId}/approve")
+    @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE + "')")
     public void approveOnboarding(@ApiParam("${swagger.tokens.onboardingId}")
                                   @PathVariable("onboardingId") String onboardingId) {
         log.debug("approve onboarding identified with {}", onboardingId);
@@ -186,6 +190,7 @@ public class TokenV2Controller {
     @Operation(summary = "Service to reject a specific onboarding request",
             description = "Service to reject a specific onboarding request", operationId = "rejectOnboardingUsingPOST")
     @PostMapping("/{onboardingId}/reject")
+    @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE + "')")
     public void rejectOnboarding(@ApiParam("${swagger.tokens.onboardingId}")
                                  @PathVariable("onboardingId") String onboardingId,
                                  @RequestBody ReasonForRejectDto reasonForRejectDto) {
