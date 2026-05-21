@@ -1086,6 +1086,7 @@
             "in": "query",
             "required": false,
             "schema": {
+              "minimum": 0,
               "type": "integer",
               "format": "int64",
               "default": 0
@@ -1106,8 +1107,10 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string",
-              "default": "description asc"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         ],
@@ -1229,6 +1232,91 @@
                   "items": {
                     "$ref": "#/components/schemas/SearchServiceInstitution"
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
+    "/institutions/ipa": {
+      "get": {
+        "tags": [
+          "institution"
+        ],
+        "summary": "Retrieve IPA institutions",
+        "description": "Retrieves a list of IPA institutions from the Azure AI Search index with optional text search and category filter",
+        "operationId": "searchIpaInstitutionsOnSearchEngine",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Optional search field. Users can provide a search string to filter results",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "*"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter from origin category",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Desired page number for result pagination. It is optional, and the default value is 1 when not specified",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Maximum number of items per page. It is optional, and the default value is 10 when not specified",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstitutionsResource"
                 }
               }
             }
@@ -3260,6 +3348,79 @@
           "lastModified": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "InstitutionsResource": {
+        "required": [
+          "count",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InstitutionResource1"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "InstitutionResource1": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "originId": {
+            "type": "string"
+          },
+          "o": {
+            "type": "string"
+          },
+          "ou": {
+            "type": "string"
+          },
+          "aoo": {
+            "type": "string"
+          },
+          "taxCode": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "digitalAddress": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "zipCode": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "static",
+              "IPA",
+              "ANAC",
+              "IVASS",
+              "INFOCAMERE"
+            ]
+          },
+          "istatCode": {
+            "type": "string"
+          },
+          "updateDate": {
+            "type": "string"
           }
         }
       },
