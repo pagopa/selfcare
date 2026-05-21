@@ -14,28 +14,35 @@ fs.readFile('integration-test-result.json', 'utf8', function (err, data) {
   });
 });
 
-function convert(payload) {
-  var block =
-  {
-    "blocks": [
-      {
-        "type": "section",
-        "text": {
-          "type": "mrkdwn",
-          "text": "*:dog: External API Integration Tests*"
-        }
-      },
-      {
-        "type": "section",
-        "fields": [
-          {
-            "type": "mrkdwn",
-            "text": `*Requests:*\ntotal: ${payload["totalRequests"]} passed: ${payload["passedRequests"]} failed: ${payload["failedRequests"]}\nskipped: ${payload["skippedRequests"]} error: ${payload["errorRequests"]}`
-          }
-        ]
+function convert(payload, workflowUrl) {
+  var blocks = [
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*:dog: External API Integration Tests*"
       }
-    ]
+    },
+    {
+      "type": "section",
+      "fields": [
+        {
+          "type": "mrkdwn",
+          "text": `*Requests:*\ntotal: ${payload["totalRequests"]} passed: ${payload["passedRequests"]} failed: ${payload["failedRequests"]}\nskipped: ${payload["skippedRequests"]} error: ${payload["errorRequests"]}`
+        }
+      ]
+    }
+  ];
+
+  if (workflowUrl) {
+    blocks.push({
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": `*Workflow:* <${workflowUrl}|Open GitHub Actions run>`
+      }
+    });
   }
 
-  return block
+  return { "blocks": blocks };
 }
