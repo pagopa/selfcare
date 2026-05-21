@@ -216,11 +216,8 @@ public class OnboardingServiceImpl implements OnboardingService {
         String expirationDate = productService.getProductExpirationDate(onboarding.getProductId()).toString();
 
         notificationService.sendMailRegistrationForContract(
-                onboarding.getId(),
-                onboarding.getInstitution().getDigitalAddress(),
                 sendMailInput,
-                templatePath,
-                confirmTokenUrl, expirationDate);
+                confirmTokenUrl, expirationDate, onboardingWorkflow);
     }
 
     public void sendMailRegistrationForContractAggregator(Onboarding onboarding) {

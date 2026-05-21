@@ -7,7 +7,6 @@ import com.microsoft.azure.functions.ExecutionContext;
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
-import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePathConfig;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
 import it.pagopa.selfcare.onboarding.dto.FileMailData;
@@ -16,6 +15,7 @@ import it.pagopa.selfcare.onboarding.entity.MailTemplate;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
+import it.pagopa.selfcare.product.entity.EmailTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.apache.commons.text.StringSubstitutor;
@@ -127,8 +127,10 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void sendMailRegistrationForContract(String onboardingId, String destination, SendMailInput sendMailInput, String templatePath, String confirmTokenUrl, String expirationDate) {
+    public void sendMailRegistrationForContract(SendMailInput sendMailInput, String confirmTokenUrl, String expirationDate, OnboardingWorkflow onboardingWorkflow) {
         // Prepare data for email
+        Onboarding onboarding = onboardingWorkflow.getOnboarding();
+        final String onboardingId = onboarding.getId();
         Map<String, String> mailParameters = new HashMap<>();
         mailParameters.put(templatePlaceholdersConfig.productName(), sendMailInput.getProduct().getTitle());
         Optional.ofNullable(sendMailInput.getUserRequestName()).ifPresent(value -> mailParameters.put(templatePlaceholdersConfig.userName(), value));
@@ -142,7 +144,8 @@ public class NotificationServiceImpl implements NotificationService {
         Optional.ofNullable(sendMailInput.getPreviousManagerSurname()).ifPresent(value -> mailParameters.put(templatePlaceholdersConfig.previousManagerSurname(), value));
         mailParameters.put(templatePlaceholdersConfig.expirationDate(), expirationDate);
 
-        sendMailWithFile(List.of(destination), templatePath, mailParameters, sendMailInput.getProduct().getTitle(), null);
+        String templatePath = getTemplateMailPath(sendMailInput.getProduct(), onboardingWorkflow.getEmailRegistrationPath(templatePathConfig), onboarding);
+        sendMailWithFile(List.of(onboarding.getInstitution().getDigitalAddress()), templatePath, mailParameters, sendMailInput.getProduct().getTitle(), null);
 
     }
 
@@ -162,33 +165,35 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void sendCompletedEmail(String institutionName, List<String> destinationMails, Product product, InstitutionType institutionType, OnboardingWorkflow onboardingWorkflow) {
-        String templatePath;
+    public void sendCompletedEmail(List<String> destinationMails, Product product, OnboardingWorkflow onboardingWorkflow) {
         Onboarding onboarding = onboardingWorkflow.getOnboarding();
-
-        if (product.getEmailTemplate(institutionType.name(), onboarding.getWorkflowType().name(), onboarding.getStatus().name()).isPresent()) {
-            templatePath = product.getEmailTemplate(institutionType.name(), onboarding.getWorkflowType().name(), onboarding.getStatus().name()).get().getPath();
-        } else {
-            templatePath = onboardingWorkflow.getEmailCompletionPath(templatePathConfig);
-        }
+        String templatePath = getTemplateMailPath(product, onboardingWorkflow.getEmailCompletionPath(templatePathConfig), onboarding);
 
         Map<String, String> mailParameter = new HashMap<>();
-        mailParameter.put(templatePlaceholdersConfig.businessName(), institutionName);
+        mailParameter.put(templatePlaceholdersConfig.businessName(), onboarding.getInstitution().getDescription());
         mailParameter.put(templatePlaceholdersConfig.completeProductName(), product.getTitle());
         mailParameter.put(templatePlaceholdersConfig.completeSelfcareName(), templatePlaceholdersConfig.completeSelfcarePlaceholder());
 
         sendMailWithFile(destinationMails, templatePath, mailParameter, product.getTitle(), retrieveFileMetadataPagopaLogo());
     }
 
-
     @Override
-    public void sendMailRejection(List<String> destinationMails, Product product, String reasonForReject) {
-
+    public void sendDeletedEmail(List<String> destinationMails, Product product, Onboarding onboarding) {
+        String templatePath = getTemplateMailPath(product, templatePathConfig.deletePath(), onboarding);
         Map<String, String> mailParameter = new HashMap<>();
         mailParameter.put(templatePlaceholdersConfig.completeProductName(), product.getTitle());
-        mailParameter.put(templatePlaceholdersConfig.reasonForReject(), reasonForReject);
+        sendMailWithFile(destinationMails, templatePath, mailParameter, product.getTitle(), retrieveFileMetadataPagopaLogo());
+
+    }
+
+    @Override
+    public void sendMailRejection(List<String> destinationMails, Product product, Onboarding onboarding) {
+        String templatePath = getTemplateMailPath(product, templatePathConfig.rejectPath(), onboarding);
+        Map<String, String> mailParameter = new HashMap<>();
+        mailParameter.put(templatePlaceholdersConfig.completeProductName(), product.getTitle());
+        mailParameter.put(templatePlaceholdersConfig.reasonForReject(), onboarding.getReasonForReject());
         mailParameter.put(templatePlaceholdersConfig.rejectOnboardingUrlPlaceholder(), templatePlaceholdersConfig.rejectOnboardingUrlValue() + product.getId());
-        sendMailWithFile(destinationMails, templatePathConfig.rejectPath(), mailParameter, product.getTitle(), retrieveFileMetadataPagopaLogo());
+        sendMailWithFile(destinationMails, templatePath, mailParameter, product.getTitle(), retrieveFileMetadataPagopaLogo());
     }
 
     @Override
@@ -275,6 +280,21 @@ public class NotificationServiceImpl implements NotificationService {
         } catch (Exception e) {
             context.getLogger().severe(String.format(FORMAT_STRING_MSG, ERROR_DURING_SEND_MAIL, e.getMessage()));
             throw new GenericOnboardingException(ERROR_DURING_SEND_MAIL.getMessage());
+        }
+    }
+
+    private String getTemplateMailPath(Product product, String defaultTemplatePath, Onboarding onboarding) {
+        Optional<EmailTemplate> emailTemplateOpt =
+                product.getEmailTemplate(
+                        onboarding.getInstitution().getInstitutionType().name(),
+                        onboarding.getWorkflowType().name(),
+                        onboarding.getStatus().name());
+        if (emailTemplateOpt.isPresent()) {
+            log.debug("Using custom email template path");
+            return emailTemplateOpt.get().getPath();
+        } else {
+            log.debug("Using default email template from config");
+            return defaultTemplatePath;
         }
     }
 }

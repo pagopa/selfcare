@@ -25,4 +25,7 @@ public interface MailTemplatePathConfig {
     String rejectPath();
     String registrationRequestPath();
     String registrationApprovePath();
+
+    // TODO aggiungere nelle properties il path
+    String deletePath();
 }

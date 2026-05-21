@@ -24,6 +24,7 @@ public class ActivityName {
   public static final String CREATE_INSTITUTION_ACTIVITY = "CreateInstitution";
   public static final String CREATE_ONBOARDING_ACTIVITY = "CreateOnboarding";
   public static final String SEND_MAIL_COMPLETION_ACTIVITY = "SendMailCompletion";
+  public static final String SEND_MAIL_DELETE_ACTIVITY = "SendMailDelete";
   public static final String SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION = "SendMailNotificationManagingInstitution";
   public static final String SEND_MAIL_REJECTION_ACTIVITY = "SendMailRejection";
   public static final String STORE_ONBOARDING_ACTIVATEDAT = "StoreOnboardingActivatedAt";

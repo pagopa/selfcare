@@ -2,6 +2,7 @@ package it.pagopa.selfcare.onboarding.functions;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.microsoft.applicationinsights.telemetry.SeverityLevel;
 import com.microsoft.azure.functions.*;
 import com.microsoft.azure.functions.annotation.*;
 import com.microsoft.durabletask.DurableTaskClient;
@@ -14,19 +15,25 @@ import it.pagopa.selfcare.onboarding.dto.NotificationCountResult;
 import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.dto.QueueEvent;
+import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
 import it.pagopa.selfcare.onboarding.exception.NotificationException;
+import it.pagopa.selfcare.onboarding.service.CompletionService;
 import it.pagopa.selfcare.onboarding.service.NotificationEventResenderService;
 import it.pagopa.selfcare.onboarding.service.NotificationEventService;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
+import it.pagopa.selfcare.onboarding.service.TelemetryService;
 import jakarta.ws.rs.core.MediaType;
 import org.apache.http.HttpHeaders;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
 
 import static it.pagopa.selfcare.onboarding.functions.CommonFunctions.FORMAT_LOGGER_ONBOARDING_STRING;
+import static it.pagopa.selfcare.onboarding.functions.OnboardingFunctions.ONBOARDING_ID;
+import static it.pagopa.selfcare.onboarding.functions.OnboardingFunctions.PRODUCT_ID;
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.*;
 import static it.pagopa.selfcare.onboarding.utils.Utils.*;
 
@@ -37,16 +44,21 @@ public class NotificationFunctions {
   private final OnboardingService onboardingService;
   private final NotificationEventResenderService notificationEventResenderService;
   private final ObjectMapper objectMapper;
-
+  private final TelemetryService telemetryService;
+  private final CompletionService completionService;
 
   public NotificationFunctions(ObjectMapper objectMapper,
                                NotificationEventService notificationEventService,
                                OnboardingService onboardingService,
-                               NotificationEventResenderService notificationEventResenderService) {
+                               NotificationEventResenderService notificationEventResenderService,
+                               TelemetryService telemetryService,
+                               CompletionService completionService) {
     this.objectMapper = objectMapper;
     this.notificationEventService = notificationEventService;
     this.onboardingService = onboardingService;
     this.notificationEventResenderService = notificationEventResenderService;
+    this.telemetryService = telemetryService;
+    this.completionService = completionService;
   }
 
   /**
@@ -221,6 +233,21 @@ public class NotificationFunctions {
 
     context.getLogger().info(() -> "Resend notifications activity completed, nextFilter = " + nextFilters);
     return Objects.nonNull(nextFilters) ? objectMapper.writeValueAsString(nextFilters) : null;
+  }
+
+  @FunctionName(SEND_MAIL_DELETE_ACTIVITY)
+  public void sendMailCompletion(
+          @DurableActivityTrigger(name = "onboardingString") String onboardingId,
+          final ExecutionContext context) {
+    telemetryService.trackFunction(
+            SEND_MAIL_COMPLETION_ACTIVITY,
+            String.format(
+                    FORMAT_LOGGER_ONBOARDING_STRING,
+                    SEND_MAIL_COMPLETION_ACTIVITY,
+                    onboardingId),
+            SeverityLevel.Information,
+            Map.of(ONBOARDING_ID, onboardingId));
+    completionService.sendDeletedEmail(onboardingId);
   }
 
 }

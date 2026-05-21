@@ -99,19 +99,20 @@ public class CompletionServiceImpl implements CompletionService {
     private final NotificationService notificationService;
     private final ProductService productService;
     private final OnboardingMapper onboardingMapper;
+    private final OnboardingService onboardingService;
     private final boolean hasToSendEmail;
     private final boolean forceInstitutionCreation;
     private static final String USERS_FIELD_LIST = "fiscalCode,familyName,name";
 
     public CompletionServiceImpl(ProductService productService,
-                                    NotificationService notificationService,
-                                    OnboardingMapper onboardingMapper,
-                                    UserMapper userMapper,
-                                    ProductMapper productMapper,
-                                    InstitutionMapper institutionMapper,
-                                    OnboardingRepository onboardingRepository, ObjectMapper objectMapper,
-                                    @ConfigProperty(name = "onboarding-functions.persist-users.send-mail") boolean hasToSendEmail,
-                                    @ConfigProperty(name = "onboarding-functions.force-institution-persist") boolean forceInstitutionCreation) {
+                                 NotificationService notificationService,
+                                 OnboardingMapper onboardingMapper,
+                                 UserMapper userMapper,
+                                 ProductMapper productMapper,
+                                 InstitutionMapper institutionMapper,
+                                 OnboardingRepository onboardingRepository, ObjectMapper objectMapper, OnboardingService onboardingService,
+                                 @ConfigProperty(name = "onboarding-functions.persist-users.send-mail") boolean hasToSendEmail,
+                                 @ConfigProperty(name = "onboarding-functions.force-institution-persist") boolean forceInstitutionCreation) {
         this.institutionMapper = institutionMapper;
         this.onboardingRepository = onboardingRepository;
         this.objectMapper = objectMapper;
@@ -120,6 +121,7 @@ public class CompletionServiceImpl implements CompletionService {
         this.onboardingMapper = onboardingMapper;
         this.userMapper = userMapper;
         this.productMapper = productMapper;
+        this.onboardingService = onboardingService;
         this.hasToSendEmail = hasToSendEmail;
         this.forceInstitutionCreation = forceInstitutionCreation;
     }
@@ -199,9 +201,21 @@ public class CompletionServiceImpl implements CompletionService {
         List<String> destinationMails = getDestinationMails(onboarding);
         destinationMails.add(onboarding.getInstitution().getDigitalAddress());
         Product product = productService.getProductIsValid(onboarding.getProductId());
-        notificationService.sendCompletedEmail(onboarding.getInstitution().getDescription(),
-                destinationMails, product, onboarding.getInstitution().getInstitutionType(),
-                onboardingWorkflow);
+        notificationService.sendCompletedEmail(destinationMails, product, onboardingWorkflow);
+    }
+
+    @Override
+    public void sendDeletedEmail(String onboardingId) {
+        Optional<Onboarding> onboardingOpt = onboardingService.getOnboarding(onboardingId);
+        if (Objects.isNull(onboardingOpt.get().getInstitution().getDigitalAddress())) {
+            log.warn("Digital address is null for onboarding {}, skipping completed email notification", onboardingId);
+            return;
+        }
+        Onboarding onboarding = onboardingOpt.get();
+        List<String> destinationMails = getDestinationMails(onboarding);
+        destinationMails.add(onboarding.getInstitution().getDigitalAddress());
+        Product product = productService.getProductIsValid(onboarding.getProductId());
+        notificationService.sendDeletedEmail(destinationMails, product, onboarding);
     }
 
     @Override
@@ -258,7 +272,7 @@ public class CompletionServiceImpl implements CompletionService {
     public void sendMailRejection(ExecutionContext context, Onboarding onboarding) {
         List<String> destinationMails = Collections.singletonList(onboarding.getInstitution().getDigitalAddress());
         Product product = productService.getProductIsValid(onboarding.getProductId());
-        notificationService.sendMailRejection(destinationMails, product, onboarding.getReasonForReject());
+        notificationService.sendMailRejection(destinationMails, product, onboarding);
     }
 
     @Override
