@@ -184,7 +184,7 @@ public class InstitutionFunctions {
     String enrichedFilters = objectMapper.writeValueAsString(entityFilter);
 
     ctx.callActivity(
-                    DELETE_TOKEN_CONTRACT_ACTIVITY_NAME,
+                    SEND_MAIL_DELETE_ACTIVITY,
                     enrichedFilters,
                     optionsRetry,
                     String.class)

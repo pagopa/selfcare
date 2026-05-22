@@ -221,11 +221,15 @@ public class CompletionServiceImpl implements CompletionService {
     @Override
     public void sendDeletedEmail(String onboardingId) {
         Optional<Onboarding> onboardingOpt = onboardingService.getOnboarding(onboardingId);
-        if (Objects.isNull(onboardingOpt.get().getInstitution().getDigitalAddress())) {
-            log.warn("Digital address is null for onboarding {}, skipping completed email notification", onboardingId);
+        if (onboardingOpt.isEmpty()) {
+            log.warn("Onboarding {} not found, skipping deleted email notification", onboardingId);
             return;
         }
         Onboarding onboarding = onboardingOpt.get();
+        if (Objects.isNull(onboarding.getInstitution().getDigitalAddress())) {
+            log.warn("Digital address is null for onboarding {}, skipping deleted email notification", onboardingId);
+            return;
+        }
         // TODO only for CED RN, asap for all delete action
         if (PROD_CED.getValue().equalsIgnoreCase(onboarding.getProductId())) {
             List<String> destinationMails = getDestinationMails(onboarding);

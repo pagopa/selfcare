@@ -17,6 +17,7 @@ public interface NotificationService {
 
     void sendMailOnboardingApprove(String institutionName, String name, String username, String productName, String onboardingId);
 
+    //TODO
     void sendMailRegistrationForContract(String onboardingId, String destination, String name, String username, String productName, String institutionName, String templatePath, String confirmTokenUrl, String expirationDate);
 
     void sendMailRegistrationForContract(SendMailInput sendMailInput, String confirmTokenUrl, String expirationDate, OnboardingWorkflow onboardingWorkflow);

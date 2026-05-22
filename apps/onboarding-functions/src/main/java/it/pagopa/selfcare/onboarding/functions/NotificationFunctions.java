@@ -240,10 +240,10 @@ public class NotificationFunctions {
           @DurableActivityTrigger(name = "onboardingString") String onboardingId,
           final ExecutionContext context) {
     telemetryService.trackFunction(
-            SEND_MAIL_COMPLETION_ACTIVITY,
+            SEND_MAIL_DELETE_ACTIVITY,
             String.format(
                     FORMAT_LOGGER_ONBOARDING_STRING,
-                    SEND_MAIL_COMPLETION_ACTIVITY,
+                    SEND_MAIL_DELETE_ACTIVITY,
                     onboardingId),
             SeverityLevel.Information,
             Map.of(ONBOARDING_ID, onboardingId));
