@@ -413,7 +413,7 @@ public class NotificationServiceImpl implements NotificationService {
                 onboarding.getInstitution().getInstitutionType().name(),
                 onboarding.getWorkflowType().name(),
                 onboarding.getStatus().name());
-        log.info("Get all email templates for product {}: {}", product.getAlias(), product.getEmailTemplates());
+        logEmailTemplatesMap(product);
         Optional<EmailTemplate> emailTemplateOpt =
                 product.getEmailTemplate(
                         onboarding.getInstitution().getInstitutionType().name(),
@@ -426,6 +426,40 @@ public class NotificationServiceImpl implements NotificationService {
         } else {
             log.debug("Using default email template from config: {}", defaultTemplatePath);
             return defaultTemplatePath;
+        }
+    }
+
+    private static void logEmailTemplatesMap(Product product) {
+        // Log structured view of the email templates map to ease debugging
+        Map<String, Map<String, List<EmailTemplate>>> templates = product.getEmailTemplates();
+        if (templates == null) {
+            log.info("Email templates map is null for product {}", product.getAlias());
+        } else {
+            templates.forEach(
+                    (institutionType, workflowMap) -> {
+                        log.info("Email templates institutionType {} workflowTypes {}",
+                                institutionType,
+                                workflowMap != null ? workflowMap.keySet() : null);
+                        if (workflowMap != null) {
+                            workflowMap.forEach(
+                                    (workflowType, emailTemplates) -> {
+                                        if (emailTemplates == null) {
+                                            log.info("Email templates institutionType {} workflowType {}: none",
+                                                    institutionType,
+                                                    workflowType);
+                                            return;
+                                        }
+                                        emailTemplates.forEach(
+                                                template -> log.info(
+                                                        "Email template entry institutionType {} workflowType {} status {} path {} version {}",
+                                                        institutionType,
+                                                        workflowType,
+                                                        template.getStatus(),
+                                                        template.getPath(),
+                                                        template.getVersion()));
+                                    });
+                        }
+                    });
         }
     }
 }
