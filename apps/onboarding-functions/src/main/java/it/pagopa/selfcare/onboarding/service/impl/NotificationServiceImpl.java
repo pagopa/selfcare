@@ -409,16 +409,21 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     private String getTemplateMailPath(Product product, String defaultTemplatePath, Onboarding onboarding) {
+        log.info("Retrieving emailTemplate given institutionType {}, workflowType: {}, status: {}",
+                onboarding.getInstitution().getInstitutionType().name(),
+                onboarding.getWorkflowType().name(),
+                onboarding.getStatus().name());
         Optional<EmailTemplate> emailTemplateOpt =
                 product.getEmailTemplate(
                         onboarding.getInstitution().getInstitutionType().name(),
                         onboarding.getWorkflowType().name(),
                         onboarding.getStatus().name());
         if (emailTemplateOpt.isPresent()) {
-            log.debug("Using custom email template path");
-            return emailTemplateOpt.get().getPath();
+            String emailTemplatePath = emailTemplateOpt.get().getPath();
+            log.debug("Using custom email template path: {}", emailTemplatePath);
+            return emailTemplatePath;
         } else {
-            log.debug("Using default email template from config");
+            log.debug("Using default email template from config: {}", defaultTemplatePath);
             return defaultTemplatePath;
         }
     }
